@@ -17,7 +17,9 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
     const [level, setLevel] = useState('');
     const [isGroup, setIsGroup] = useState(false);
 
-    const applyFilters = useCallback(() => {
+    
+    // Apply filters
+    useEffect(() => {
         console.log('Applying filters', {
             searchText,
             selectedCategories,
@@ -36,11 +38,7 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
             level,
             isGroup,
         });
-    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, onFilterChange]);
-
-    useEffect(() => {
-        applyFilters();
-    },  [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, applyFilters])
+    },  [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, onFilterChange])
 
     const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(event.target.value);

@@ -29,3 +29,4 @@ jobs:
         with:
           branch: gh-pages  # The branch the action should deploy to.
           folder: build  # The folder the action should deploy.
+          token: ${{ secrets.PAT }} # Use the PAT you stored in your repository's secrets
