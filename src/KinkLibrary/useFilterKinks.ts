@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Kinks } from './types';
 
 export type CategoryWithCount = {
@@ -56,7 +56,7 @@ export const useFilterKinks = (allKinks: Kinks) => {
   }, [allKinks])
 
 
-  const onFilterChange = (filters: Filters) => {
+  const onFilterChange = useCallback((filters: Filters) => {
     const filtered = allKinks.filter((kink) => {
       const matchesSearchText = filters.searchText === '' || kink.idea_title.toLowerCase().includes(filters.searchText.toLowerCase()) || kink.idea_description.toLowerCase().includes(filters.searchText.toLowerCase());
 
@@ -83,7 +83,7 @@ export const useFilterKinks = (allKinks: Kinks) => {
 
 
     setFilteredKinks(sortedFiltered);
-  };
+  }, [allKinks]);
 
   // Return both the filtered list of kinks and the function to change the filters
   return { filteredKinks, onFilterChange, categories };

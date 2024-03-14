@@ -26,7 +26,6 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
             needsSupplies,
             level,
             isGroup,
-
         })
         onFilterChange({
             searchText,
