@@ -36,44 +36,40 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
             level,
             isGroup,
         });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup]);
+    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, onFilterChange]);
 
     useEffect(() => {
         applyFilters();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    },  [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup])
+    },  [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, applyFilters])
 
     const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(event.target.value);
     };
 
     const handleCategoryChange = (value: string[] | string) => {
-        // Type assertion to string[] is needed if the value could be a single string or string[] depending on the context
         setSelectedCategories(Array.isArray(value) ? value : [value]);
-    };
-
-    const handleFavoriteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setIsFavorite(event.target.checked);
-    };
-
-    const handleStatusChange = (value: string[] | string) => {
-        setStatus(value[0]);
     };
 
     const handleNeedsSuppliesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNeedsSupplies(event.target.checked);
     };
 
-    const handleLevelChange = (value: string[] | string) => {
-        setLevel(value[0]);
+    const handleFavoriteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setIsFavorite(event.target.checked);
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setIsGroup(event.target.checked);
     };
 
-    
+    const handleStatusChange = (value: string[] | string) => {
+        setStatus(value[0]);
+    };
+
+    const handleLevelChange = (value: string[] | string) => {
+        setLevel(value[0]);
+    };
+
 
     return (
         <div>
