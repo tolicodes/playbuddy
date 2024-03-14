@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Typography, TextField, FormControl, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import FilterChips from './FilterChips';
 import { CategoryWithCount } from './useFilterKinks';
