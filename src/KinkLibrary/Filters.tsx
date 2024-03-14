@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Typography, TextField, FormControl, FormGroup, FormControlLabel, Checkbox, Button, Select, MenuItem, InputLabel, SelectChangeEvent } from '@mui/material';
 import FilterChips from './FilterChips';
 import { CategoryWithCount } from './useFilterKinks';
@@ -17,9 +17,31 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
     const [level, setLevel] = useState('');
     const [isGroup, setIsGroup] = useState(false);
 
+    const applyFilters = useCallback(() => {
+        console.log('Applying filters', {
+            searchText,
+            selectedCategories,
+            isFavorite,
+            status,
+            needsSupplies,
+            level,
+            isGroup,
+
+        })
+        onFilterChange({
+            searchText,
+            selectedCategories,
+            isFavorite,
+            status,
+            needsSupplies,
+            level,
+            isGroup,
+        });
+    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, onFilterChange])
+
     useEffect(() => {
         applyFilters();
-    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup])
+    }, [applyFilters])
 
     const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(event.target.value);
@@ -43,34 +65,14 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
     };
 
     const handleLevelChange = (value: string[] | string) => {
-        setStatus(value[0]);
+        setLevel(value[0]);
     };
 
     const handleGroupChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setIsGroup(event.target.checked);
     };
 
-    const applyFilters = () => {
-        console.log('Applying filters', {
-            searchText,
-            selectedCategories,
-            isFavorite,
-            status,
-            needsSupplies,
-            level,
-            isGroup,
-
-        })
-        onFilterChange({
-            searchText,
-            selectedCategories,
-            isFavorite,
-            status,
-            needsSupplies,
-            level,
-            isGroup,
-        });
-    };
+    
 
     return (
         <div>
