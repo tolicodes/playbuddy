@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Typography, TextField, FormControl, FormGroup, FormControlLabel, Checkbox, Button, Select, MenuItem, InputLabel, SelectChangeEvent } from '@mui/material';
+import { Typography, TextField, FormControl, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import FilterChips from './FilterChips';
 import { CategoryWithCount } from './useFilterKinks';
 
@@ -37,11 +37,13 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
             level,
             isGroup,
         });
-    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup, onFilterChange])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup]);
 
     useEffect(() => {
         applyFilters();
-    }, [applyFilters])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    },  [searchText, selectedCategories, isFavorite, status, needsSupplies, level, isGroup])
 
     const handleSearchTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setSearchText(event.target.value);
