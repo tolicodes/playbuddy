@@ -1,7 +1,6 @@
 {
   "name": "kink-buddy",
   "version": "0.1.0",
-  "homepage": "https://tolicodes.github.io/kink-buddy",
   "private": true,
 
   "dependencies": {
