@@ -3,62 +3,54 @@ import { useLoadKinks } from '../KinkLibrary/useLoadKinks';
 import { CategoryWithCount, useExtraCategories } from '../KinkLibrary/useExtraCategories';
 
 import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-
+import { styled } from '@mui/system';
 
 import CategoryIcon, { categoryIcons } from './CategoryIcon';
 
 
-
-const useStyles = makeStyles({
-    root: {
-        flexGrow: 1,
-        padding: '20px',
-    },
-    card: {
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    iconContainer: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: '16px',
-    },
-    labelContainer: {
-        textAlign: 'center', // Center the text for longer labels
-    },
-    icon: {
-        fontSize: '48px',
-    },
+const StyledCard = styled(Card)({
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
 });
 
-const CategoryGridItem = ({ category }: { category: CategoryWithCount }) => {
-    const classes = useStyles();
+const IconContainer = styled('div')({
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: '16px',
+});
 
+const LabelContainer = styled('div')({
+    textAlign: 'center', // Center the text for longer labels
+});
+
+
+const CategoryGridItem = ({ category }: { category: CategoryWithCount }) => {
     return (
-        <Card className={classes.card}>
+        <StyledCard>
             <CardContent>
-                <div className={classes.iconContainer}>
+                <IconContainer>
                     <CategoryIcon category={category.value as keyof typeof categoryIcons} />
-                </div>
-                <div className={classes.labelContainer}>
+                </IconContainer>
+                <LabelContainer>
                     <Typography variant="h6">{category.value}</Typography>
-                </div>
+                </LabelContainer>
             </CardContent>
-        </Card>
+        </StyledCard>
     );
 };
 
-// Usage example in a grid layout similar to your previous setup
-const CategoryGrid = ({ categories }: { categories: CategoryWithCount[] }) => {
-    const classes = useStyles();
+const StyledRoot = styled('div')(({ theme }) => ({
+    flexGrow: 1,
+    padding: theme.spacing(3), // Use theme spacing for consistency
+}));
 
+const CategoryGrid = ({ categories }: { categories: CategoryWithCount[] }) => {
     return (
-        <div className={classes.root}>
+        <StyledRoot>
             <Grid container spacing={3}>
                 {categories.map((category, index) => (
                     <Grid item xs={6} sm={4} md={2} key={index}>
@@ -66,7 +58,7 @@ const CategoryGrid = ({ categories }: { categories: CategoryWithCount[] }) => {
                     </Grid>
                 ))}
             </Grid>
-        </div>
+        </StyledRoot>
     );
 };
 
@@ -104,23 +96,23 @@ const GameSetup: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: 0 }}>
-            <Box sx={{  backgroundColor: '#f0f0f0', p: 2 }}>
+            <Box sx={{ backgroundColor: '#f0f0f0', p: 2 }}>
                 <Typography variant="h4">KinkBuddy</Typography>
             </Box>
 
-            <Box sx={{  p: 2 }}>
+            <Box sx={{ p: 2 }}>
                 <Typography>Pick a level and 3+ categories, then click "Adventure" to begin your Adventure!</Typography>
             </Box>
 
-            <Box sx={{  p: 2 }}>
-                <LevelButtons/>
+            <Box sx={{ p: 2 }}>
+                <LevelButtons />
             </Box>
 
             <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
                 <CategoryGrid categories={sortedAndLimitedCategories} />
             </Box>
 
-            <Box sx={{  backgroundColor: '#f0f0f0',  p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ backgroundColor: '#f0f0f0', p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Button variant="contained" size="large" sx={{ backgroundColor: '#4caf50', '&:hover': { backgroundColor: '#388e3c' } }}>
                     Adventure!
                 </Button>

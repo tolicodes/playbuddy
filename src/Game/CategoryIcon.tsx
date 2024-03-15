@@ -1,7 +1,7 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCompass, faHeart, faHandshake, faUserFriends, faGlobeAmericas, faFeather, faComments, faMask, faExclamationTriangle, faSpa, faBolt, faHandcuffs, faDragon, faShieldAlt, faLink, faLaughBeam, faEye, faFire, faStreetView, faHourglassHalf, faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { makeStyles } from '@mui/styles';
+import { styled } from '@mui/system';
 
 
 export const categoryIcons: Record<string, IconDefinition> = {
@@ -25,21 +25,18 @@ export const categoryIcons: Record<string, IconDefinition> = {
   "Intensity": faFire,
   "Public": faStreetView,
   "Anticipation": faHourglassHalf
-}
+};
 
-const useStyles = makeStyles({
-  icon: {
-    fontSize: '48px',
-    marginBottom: '16px'
-  }
-});
+const StyledFontAwesomeIcon = styled(FontAwesomeIcon)({
+  fontSize: '48px',
+  marginBottom: '16px'
+})
 
 const CategoryIcon = ({ category }: { category: keyof typeof categoryIcons }) => {
-  const classes = useStyles();
   const defaultIcon = faQuestionCircle;
   const categoryIcon = categoryIcons[category] as IconDefinition;
 
-  return <FontAwesomeIcon icon={categoryIcon || defaultIcon} className={classes.icon} />
+  return <StyledFontAwesomeIcon icon={categoryIcon || defaultIcon}  />
 };
 
 export default CategoryIcon;
