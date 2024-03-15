@@ -3,14 +3,15 @@ import { Container, Grid, Card, CardContent, Typography, Chip } from '@mui/mater
 import Filters from './Filters';
 import { useLoadKinks } from './useLoadKinks';
 import { useFilterKinks } from './useFilterKinks';
+import { Header } from '../Header';
 
 const levelColors = {
     easy: '#b7e4c7', // Muted green
     medium: '#a2d2ff', // Muted blue
     advanced: '#e5989b', // Muted red
     xxxtreme: '#343a40', // Muted black (dark gray)
-  };
-  
+};
+
 
 const KinkList = () => {
     const allKinks = useLoadKinks();
@@ -18,7 +19,9 @@ const KinkList = () => {
     const { filteredKinks, onFilterChange, categories } = useFilterKinks(allKinks);
 
     return (
-        <main>
+        <>
+            <Header />
+
             <Container>
                 <Filters categories={categories} onFilterChange={onFilterChange} />
 
@@ -61,7 +64,7 @@ const KinkList = () => {
                     ))}
                 </Grid>
             </Container>
-        </main>
+        </>
     );
 };
 

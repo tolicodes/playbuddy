@@ -1,23 +1,23 @@
 import React from 'react';
-import Container from '@mui/material/Container';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme';
 import CssBaseline from '@mui/material/CssBaseline';
 
-// import GameSetup from './Game/GameSetup';
+import GameSetup from './Game/GameSetup';
 import KinkLibrary from './KinkLibrary/KinkLibrary';
-import { Typography } from '@mui/material';
 
 function App() {
   return (
     <>
       <CssBaseline /> {/* This is for baseline styles */}
       <ThemeProvider theme={theme}>
-        {/* <GameSetup /> */}
-        <Container>
-          <Typography variant="h3">KinkBuddy</Typography>
-          <KinkLibrary />
-        </Container>
+        <Router>
+          <Routes>
+            <Route path="game" element={<GameSetup />} />
+            <Route path="/" element={<KinkLibrary />} />
+          </Routes>
+        </Router>
       </ThemeProvider>
     </>
   );

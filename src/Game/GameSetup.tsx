@@ -6,6 +6,7 @@ import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material'
 import { styled } from '@mui/system';
 
 import CategoryIcon, { categoryIcons } from './CategoryIcon';
+import { Header } from '../Header';
 
 
 const StyledCard = styled(Card)({
@@ -96,9 +97,7 @@ const GameSetup: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: 0 }}>
-            <Box sx={{ backgroundColor: '#f0f0f0', p: 2 }}>
-                <Typography variant="h4">KinkBuddy</Typography>
-            </Box>
+            <Header/>
 
             <Box sx={{ p: 2 }}>
                 <Typography>Pick a level and 3+ categories, then click "Adventure" to begin your Adventure!</Typography>
