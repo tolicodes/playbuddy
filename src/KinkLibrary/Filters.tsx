@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Typography, TextField, FormControl, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import FilterChips from './FilterChips';
-import { CategoryWithCount } from './useFilterKinks';
+import { CategoryWithCount } from './useExtraCategories';
 
 interface FiltersProps {
     categories: CategoryWithCount[];

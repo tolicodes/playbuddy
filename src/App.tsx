@@ -1,16 +1,25 @@
 import React from 'react';
 import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-// import GameSetup from './GameSetup';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './theme';
+import CssBaseline from '@mui/material/CssBaseline';
+
+// import GameSetup from './Game/GameSetup';
 import KinkLibrary from './KinkLibrary/KinkLibrary';
+import { Typography } from '@mui/material';
 
 function App() {
   return (
-    <Container>
-      <Typography variant="h4">Welcome to KinkBuddy!</Typography>
-      <KinkLibrary />
-      {/* <GameSetup /> */}
-    </Container>
+    <>
+      <CssBaseline /> {/* This is for baseline styles */}
+      <ThemeProvider theme={theme}>
+        {/* <GameSetup /> */}
+        <Container>
+          <Typography variant="h3">KinkBuddy</Typography>
+          <KinkLibrary />
+        </Container>
+      </ThemeProvider>
+    </>
   );
 }
 
