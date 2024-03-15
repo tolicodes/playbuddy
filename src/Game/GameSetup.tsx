@@ -2,47 +2,12 @@ import React from 'react';
 import { useLoadKinks } from '../KinkLibrary/useLoadKinks';
 import { CategoryWithCount, useExtraCategories } from '../KinkLibrary/useExtraCategories';
 
-import { Grid, Card, CardContent, Typography, Box, Button } from '@mui/material';
+import { Grid, Typography, Box, Button } from '@mui/material';
 import { styled } from '@mui/system';
 
-import CategoryIcon, { categoryIcons } from './CategoryIcon';
 import { Header } from '../Header';
-
-
-const StyledCard = styled(Card)({
-    height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-});
-
-const IconContainer = styled('div')({
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: '16px',
-});
-
-const LabelContainer = styled('div')({
-    textAlign: 'center', // Center the text for longer labels
-});
-
-
-const CategoryGridItem = ({ category }: { category: CategoryWithCount }) => {
-    return (
-        <StyledCard>
-            <CardContent>
-                <IconContainer>
-                    <CategoryIcon category={category.value as keyof typeof categoryIcons} />
-                </IconContainer>
-                <LabelContainer>
-                    <Typography variant="h6">{category.value}</Typography>
-                </LabelContainer>
-            </CardContent>
-        </StyledCard>
-    );
-};
+import CategoryGridItem from './CategoryGridItem';
+import LevelButtons from './LevelButtons';
 
 const StyledRoot = styled('div')(({ theme }) => ({
     flexGrow: 1,
@@ -60,27 +25,6 @@ const CategoryGrid = ({ categories }: { categories: CategoryWithCount[] }) => {
                 ))}
             </Grid>
         </StyledRoot>
-    );
-};
-
-const LevelButtons = () => {
-    return (
-        <Box sx={{ p: 1 }}>
-            <Grid container spacing={2}>
-                <Grid item xs={6} sm={3}>
-                    <Button fullWidth variant="contained" sx={{ backgroundColor: '#4caf50', '&:hover': { backgroundColor: '#388e3c' } }}>Easy</Button>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                    <Button fullWidth variant="contained" sx={{ backgroundColor: '#2196f3', '&:hover': { backgroundColor: '#1976d2' } }}>Moderate</Button>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                    <Button fullWidth variant="contained" sx={{ backgroundColor: '#f44336', '&:hover': { backgroundColor: '#d32f2f' } }}>Advanced</Button>
-                </Grid>
-                <Grid item xs={6} sm={3}>
-                    <Button fullWidth variant="contained" sx={{ backgroundColor: '#000000', '&:hover': { backgroundColor: '#303030' } }}>Xtreme</Button>
-                </Grid>
-            </Grid>
-        </Box>
     );
 };
 
