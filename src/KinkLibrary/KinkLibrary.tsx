@@ -8,7 +8,7 @@ const levelColors = {
     easy: '#b7e4c7', // Muted green
     medium: '#a2d2ff', // Muted blue
     advanced: '#e5989b', // Muted red
-    xtreme: '#343a40', // Muted black (dark gray)
+    xxxtreme: '#343a40', // Muted black (dark gray)
   };
   
 
@@ -40,7 +40,7 @@ const KinkList = () => {
                                                 style={{
                                                     margin: '2px',
                                                     backgroundColor: levelColors[kink.level],
-                                                    color: kink.level === 'xtreme' ? '#ffffff' : '#000000', // Ensure text is readable on black background
+                                                    color: kink.level === 'xxxtreme' ? '#ffffff' : '#000000', // Ensure text is readable on black background
                                                 }}
                                                 variant="outlined"
                                             />

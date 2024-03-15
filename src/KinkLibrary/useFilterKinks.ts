@@ -13,14 +13,17 @@ interface Filters {
 }
 
 export const useFilterKinks = (allKinks: Kinks) => {
-  const [filteredKinks, setFilteredKinks] = useState<Kinks>([]);
-
-  useEffect(() => {
-    setFilteredKinks(allKinks); // Initially, display all kinks
-  }, [allKinks]);
-
-  const categories = useExtraCategories(allKinks);
-
+  const sortKinks = useCallback((kinks: Kinks) => {
+    // After filtering, sort so favorites always come first
+    return kinks.sort((a, b) => {
+      // If both or neither are favorite, they remain in their original order
+      if (a.favorite === b.favorite) return 0;
+      // If 'a' is favorite but 'b' is not, 'a' should come first
+      if (a.favorite && !b.favorite) return -1;
+      // If 'b' is favorite but 'a' is not, 'b' should come first
+      return 1;
+    });
+  }, [])
 
   const onFilterChange = useCallback((filters: Filters) => {
     const filtered = allKinks.filter((kink) => {
@@ -37,16 +40,22 @@ export const useFilterKinks = (allKinks: Kinks) => {
       return matchesSearchText && matchesCategories && matchesFavorite && matchesStatus && matchesLevel;
     });
 
-    // After filtering, sort so favorites always come first
-    const sortedFiltered = filtered.sort((a, b) => {
-      if (a.favorite === b.favorite) return 0;
-      if (a.favorite && !b.favorite) return -1;
-      return 1;
-    });
-
+    const sortedFiltered = sortKinks(filtered);
 
     setFilteredKinks(sortedFiltered);
-  }, [allKinks]);
+  }, [allKinks, sortKinks]);
+
+  const [filteredKinks, setFilteredKinks] = useState<Kinks>([]);
+
+  useEffect(() => {
+    const sortedKinks = sortKinks(allKinks);
+    setFilteredKinks(sortedKinks);
+    console.log({
+      sortedKinks
+    })
+  }, [allKinks, sortKinks]);
+
+  const categories = useExtraCategories(allKinks);
 
   // Return both the filtered list of kinks and the function to change the filters
   return { filteredKinks, onFilterChange, categories };

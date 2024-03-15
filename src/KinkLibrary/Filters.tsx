@@ -94,7 +94,7 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
 
 
             <FilterChips
-                options={['easy', 'medium', 'advanced', 'xtreme']}
+                options={['easy', 'medium', 'advanced', 'xxxtreme']}
                 selected={level}
                 onSelect={handleLevelChange}
             />
@@ -105,14 +105,6 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
                 selected={status}
                 onSelect={handleStatusChange}
             />
-
-            {/* 
-            <TextField select label="Level" value={level} onChange={handleLevelChange} fullWidth margin="normal">
-                <MenuItem value="easy">Easy</MenuItem>
-                <MenuItem value="medium">Medium</MenuItem>
-                <MenuItem value="advanced">Advanced</MenuItem>
-                <MenuItem value="xtreme">Xtreme</MenuItem>
-            </TextField> */}
         </div>
     );
 };

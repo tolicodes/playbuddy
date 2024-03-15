@@ -4,7 +4,7 @@ export type Kink = {
     categories: string[];
     favorite?: boolean;
     status: 'done' | 'todo';
-    level: 'easy' | 'medium' | 'advanced' | 'xtreme'
+    level: 'easy' | 'medium' | 'advanced' | 'xxxtreme'
     is_group: boolean;
     needs_supplies: string;
   };
