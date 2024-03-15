@@ -1,4 +1,6 @@
-import { Card, CardContent, Typography, styled } from '@mui/material';
+import React from 'react';
+import { Card, Grid, CardContent, Typography } from '@mui/material';
+import { styled } from '@mui/system';
 
 import CategoryIcon, { categoryIcons } from './CategoryIcon';
 import { CategoryWithCount } from '../KinkLibrary/useExtraCategories';
@@ -38,4 +40,24 @@ const CategoryGridItem = ({ category }: { category: CategoryWithCount }) => {
     );
 };
 
-export default CategoryGridItem
+const StyledRoot = styled('div')(({ theme }) => ({
+    flexGrow: 1,
+    padding: theme.spacing(3), // Use theme spacing for consistency
+}));
+
+const CategoryGrid = ({ categories }: { categories: CategoryWithCount[] }) => {
+    return (
+        <StyledRoot>
+            <Grid container spacing={3}>
+                {categories.map((category, index) => (
+                    <Grid item xs={6} sm={4} md={2} key={index}>
+                        <CategoryGridItem category={category} />
+                    </Grid>
+                ))}
+            </Grid>
+        </StyledRoot>
+    );
+};
+
+
+export default CategoryGrid

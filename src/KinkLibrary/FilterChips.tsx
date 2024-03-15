@@ -5,7 +5,7 @@ interface Option {
     value: string;
     label?: string;
     color?: string;
-    count?: number; // New property to store item count
+    count?: number; 
 }
 
 // Extending Option type to include strings for simplified usage

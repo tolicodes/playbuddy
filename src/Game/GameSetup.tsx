@@ -1,33 +1,11 @@
 import React from 'react';
 import { useLoadKinks } from '../KinkLibrary/useLoadKinks';
-import { CategoryWithCount, useExtraCategories } from '../KinkLibrary/useExtraCategories';
+import { useExtraCategories } from '../KinkLibrary/useExtraCategories';
 
-import { Grid, Typography, Box, Button } from '@mui/material';
-import { styled } from '@mui/system';
-
+import { Typography, Box, Button } from '@mui/material';
 import { Header } from '../Header';
-import CategoryGridItem from './CategoryGridItem';
+import CategoryGrid from './CategoryGrid';
 import LevelButtons from './LevelButtons';
-
-const StyledRoot = styled('div')(({ theme }) => ({
-    flexGrow: 1,
-    padding: theme.spacing(3), // Use theme spacing for consistency
-}));
-
-const CategoryGrid = ({ categories }: { categories: CategoryWithCount[] }) => {
-    return (
-        <StyledRoot>
-            <Grid container spacing={3}>
-                {categories.map((category, index) => (
-                    <Grid item xs={6} sm={4} md={2} key={index}>
-                        <CategoryGridItem category={category} />
-                    </Grid>
-                ))}
-            </Grid>
-        </StyledRoot>
-    );
-};
-
 
 const GameSetup: React.FC = () => {
     const kinks = useLoadKinks();
@@ -61,7 +39,6 @@ const GameSetup: React.FC = () => {
                 </Button>
             </Box>
         </Box>
-
     );
 }
 

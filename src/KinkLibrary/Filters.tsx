@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Typography, TextField, FormControl, FormGroup, FormControlLabel, Checkbox } from '@mui/material';
 import FilterChips from './FilterChips';
 import { CategoryWithCount } from './useExtraCategories';
+import { Level, Status } from './types';
 
 interface FiltersProps {
     categories: CategoryWithCount[];
@@ -94,14 +95,14 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
 
 
             <FilterChips
-                options={['easy', 'medium', 'advanced', 'xxxtreme']}
+                options={Object.values(Level)}
                 selected={level}
                 onSelect={handleLevelChange}
             />
 
             <Typography>Status</Typography>
             <FilterChips
-                options={['todo', 'done']}
+                options={Object.values(Status)}
                 selected={status}
                 onSelect={handleStatusChange}
             />

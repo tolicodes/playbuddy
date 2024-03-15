@@ -4,13 +4,7 @@ import Filters from './Filters';
 import { useLoadKinks } from './useLoadKinks';
 import { useFilterKinks } from './useFilterKinks';
 import { Header } from '../Header';
-
-const levelColors = {
-    easy: '#b7e4c7', // Muted green
-    medium: '#a2d2ff', // Muted blue
-    advanced: '#e5989b', // Muted red
-    xxxtreme: '#343a40', // Muted black (dark gray)
-};
+import { LEVEL_COLORS, LEVEL_TEXT_COLORS } from './types';
 
 
 const KinkList = () => {
@@ -42,8 +36,8 @@ const KinkList = () => {
                                                 label={kink.level.charAt(0).toUpperCase() + kink.level.slice(1)} // Capitalize the first letter for display
                                                 style={{
                                                     margin: '2px',
-                                                    backgroundColor: levelColors[kink.level],
-                                                    color: kink.level === 'xxxtreme' ? '#ffffff' : '#000000', // Ensure text is readable on black background
+                                                    backgroundColor: LEVEL_COLORS[kink.level],
+                                                    color: LEVEL_TEXT_COLORS[kink.level] // Ensure text is readable on black background
                                                 }}
                                                 variant="outlined"
                                             />
