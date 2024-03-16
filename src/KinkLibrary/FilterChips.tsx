@@ -1,5 +1,6 @@
 import React from 'react';
 import { Chip } from '@mui/material';
+import CategoryIcon, { categoryIcons } from '../Game/CategoryIcon';
 
 interface Option {
     value: string;
@@ -63,6 +64,7 @@ const FilterChips: React.FC<FilterChipsProps> = ({
         <div>
             {sortedAndLimitedOptions.map((option) => (
                 <Chip
+                    // icon={<CategoryIcon category={option.value} size={'small'} />}
                     key={option.value}
                     label={`${option.label} ${option.count ? `(${option.count})` : ''}`}
                     onClick={() => handleSelect(option.value)}

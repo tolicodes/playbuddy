@@ -9,8 +9,11 @@ import { KinkCard } from './KinkCard';
 
 const KinkList = () => {
     const allKinks = useLoadKinks();
+    console.log(allKinks.map((k) => k.idea_title).join('\n'))
 
     const { filteredKinks, onFilterChange, categories } = useFilterKinks(allKinks);
+
+    console.log(categories.map((cat) => cat.value).join('\n'))
 
     return (
         <>
