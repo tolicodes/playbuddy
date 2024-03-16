@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import KinkCardHeader from './KinkCardHeader';
+import KinkCard from './KinkCard';
 import { Level, Status } from './types';
 
 
 const meta = {
-  title: 'Game/KinkCardHeader',
-  component: KinkCardHeader,
+  title: 'Game/KinkCard',
+  component: KinkCard,
   tags: ['autodocs'],
 } as Meta
 
