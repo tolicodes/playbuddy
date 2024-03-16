@@ -1226,15 +1226,14 @@
   - Fantasy
   - Insecurity
   - Cuckhold
-- idea_title: PDA
+- idea_title: PDA (Public Display of Affection)
   level: moderate
   at_home: false
-  materials_required: Discretion, Public Space
   idea_description: Pushing the boundaries of public displays of affection to explore
-
   categories:
   - Public
   - Thrill
+  - Exhibitionism
   
 - idea_title: Spooning
   level: easy
@@ -1250,12 +1249,17 @@
   level: moderate
   at_home: true
   
-  idea_description: Engaging in sexual activity without making noise, adding an element
-    of challenge and excitement to the experience.
+  idea_description: If you make a sound, you'll get caught!!
+    Great for doing in public places. Maybe your parent's house, or a friend's. 
+    A variation is to go down on your partner while they are on a zoom call.
+
+    Of course your job is to make her squeal ;) 
   categories:
   - Challenge
   - Stealth
   - Excitement
+  - Risk
+  - Exhibitionism
 - idea_title: Leverage Cuteness and Love
   level: easy
   at_home: true
@@ -1289,9 +1293,8 @@
 - idea_title: Flash Boobs Randomly
   level: moderate
   at_home: false
-  materials_required: Quick Access Clothing
   idea_description: A spontaneous act of exhibitionism, done discreetly in public
-    for a thrill and to spark excitement in the relationship.
+    for a thrill
   categories:
   - Spontaneity
   - Exhibitionism
@@ -1309,7 +1312,6 @@
 - idea_title: Acrobatic Sex
   level: advanced
   at_home: true
-  materials_required: Physical Flexibility, Space
   idea_description: Experimenting with unusual and challenging positions for a playful,
     adventurous, and physically engaging experience.
   categories:
@@ -1339,11 +1341,9 @@
 - idea_title: Lick Every Part of the Body
   level: moderate
   at_home: true
-  
   idea_description: Exploring one's partner's body through the act of licking, discovering
     sensitive areas and preferences for a heightened experience.
   categories:
-  
   - Sensation Play
   - Intimacy
 - idea_title: Edible Panties
@@ -1355,12 +1355,14 @@
   categories:
   - Playfulness
   - Foreplay
-- idea_title: Sex Party
+- idea_title: Play (Sex) Party
   level: advanced
-  at_home: true
+  at_home: false
   materials_required: Private Venue
   idea_description: Attending a sex party can offer insights into polyamorous or swinging
     lifestyles, providing an environment for observation and potential participation.
+
+    You don't have to do anything if you go
   categories:
   - Polyamory
   - Swinging
@@ -1409,9 +1411,7 @@
 - idea_title: Masturbating Under the Table
   level: moderate
   at_home: false
-  materials_required: Discretion
-  idea_description: Engaging in covert sexual stimulation under a table in a public
-    setting, adding a layer of excitement and risk.
+  idea_description: Jerk off your partner during dinner at a fancy restaurant
   categories:
   - Stealth
   - Public
@@ -1431,7 +1431,6 @@
 - idea_title: Worship Sex
   level: moderate
   at_home: true
-  
   idea_description: An intimate practice where one partner adores and reveres the
     other's body, emphasizing deep respect and devotion.
   categories:
@@ -1547,23 +1546,23 @@
     sexual pleasure, potentially exploring double penetration setups.
   categories:
   - Automated Pleasure
-  
   - DP
   status: todo
 - idea_title: Double and Triple Penetration
   level: advanced
   at_home: true
+  is_group: true
   materials_required: Sex Toys/Partners
-  idea_description: Curiosity about the intense sensations and dynamics of double
-    and triple penetration, exploring various combinations for heightened pleasure.
+  idea_description: Double penetration (butt, vagina),
+    Triple penetration  (butt, vagina, mouth), double anal, double vaginal. So many combos.
   categories:
-  
   - Intensity
-  - DP/TP
+  - DP
   status: todo
 - idea_title: Gangbang
   level: advanced
   at_home: true
+  is_group: true
   idea_description: The fantasy or plan to engage in a gangbang, an experience involving
     multiple partners.
   categories:
@@ -1573,6 +1572,7 @@
 - idea_title: Cuckhold Scenario
   level: advanced
   at_home: true
+  is_group: true
   idea_description: Exploring the dynamic of watching a partner engage sexually with
     someone else, emphasizing trust and consent within the cuckolding scenario.
   categories:
@@ -1584,6 +1584,7 @@
 - idea_title: Sex Games with Friends
   level: moderate
   at_home: true
+  is_group: true
   materials_required: Games
   idea_description: Engaging in light-hearted sex games like truth or dare or strip
   categories:
@@ -1591,11 +1592,11 @@
   - Playfulness
   status: todo
 - idea_title: Naked Twister
-  level: moderate
+  level: advanced
+  is_group: true
   at_home: true
   materials_required: Twister Game, Space
-  idea_description: Playing Twister without clothes adds an element of vulnerability
-    and fun, deepening trust among participants.
+  idea_description: Playing Twister without clothes leads to some happy accidents
   categories:
   - Vulnerability
   - Trust
@@ -1622,7 +1623,7 @@
   - Intimacy
   
   status: todo
-- idea_title: Paint and Canvas Sex
+- idea_title: Sex on a Canvas
   level: advanced
   at_home: true
   materials_required: Paint, Canvas, Body Safe Paint
@@ -1642,7 +1643,6 @@
   categories:
   - Thrill
   - Public Risk
-  
   status: todo
 - idea_title: Train/Bus Sex
   level: advanced
@@ -1667,7 +1667,7 @@
   - Intimacy
   status: todo
 - idea_title: Sex Under a Waterfall
-  level: advanced
+  level: moderate
   at_home: false
   materials_required: Waterfall Location, Privacy
   idea_description: Combining the natural beauty and sound of a waterfall with the
@@ -1678,29 +1678,24 @@
   - Romance
   status: todo
 - idea_title: Sex with a Trans Person
-  level: advanced
+  level: easy
   at_home: true
   idea_description: Engaging in sexual activity with a transgender person
   categories:
-  - Respect
-  - Understanding
+  - Gender Diversity
   status: todo
 - idea_title: Sex with Someone Gender Diverse
-  level: advanced
+  level: easy
   at_home: true
   idea_description: Engaging in intimacy with someone who identifies with a gender
     different from their sex assigned at birth
   categories:
   - Gender Diversity
-  
-  status:- idea_title: Sex with Someone Gender Diverse
-  status: todo
 - idea_title: Gagging on Blowjob
   level: advanced
   at_home: true
   materials_required: Trust, Safe Signal
   idea_description: Exploring deep throat techniques during oral sex, where communication
-
   categories:
   - Oral Technique
   - Communication
@@ -1715,7 +1710,6 @@
   categories:
   - Pet Play
   - BDSM
-  
   status: todo
 - idea_title: Furry Sex
   level: advanced
@@ -1741,13 +1735,11 @@
 - idea_title: Rip Off Partner's Clothes
   level: moderate
   at_home: true
-  materials_required: Clothes that can be easily removed
   idea_description: A consensual and passionate act of removing a partner's clothes
     with intensity, adding to the excitement and spontaneity of the moment.
   categories:
   - Passion
   - Spontaneity
-  
   status: todo
 - idea_title: Kidnapping Fantasy
   level: advanced
@@ -1758,18 +1750,14 @@
   categories:
   - Role Play
   - Fantasy
-  
   status: todo
 - idea_title: Dating Someone Younger
   level: advanced
   at_home: true
-  
   idea_description: Exploring the dynamics and experiences of dating someone significantly
-    younger, focusing on mutual respect and understanding.
+    younger
   categories:
   - Age Gap
-  - Respect
-  - Understanding
   status: todo
 - idea_title: Alien Abduction Fantasy
   level: advanced
@@ -1796,14 +1784,14 @@
 - idea_title: Sex Swing
   level: advanced
   at_home: true
+  favorite: true
   materials_required: Sex Swing, Installation tools
   idea_description: A sex swing presents an opportunity to explore different positions
     with ease, enhancing sexual experiences through increased mobility and novelty.
   categories:
-  
   - Novelty
   - Mobility
-  status: todo
+  status: done
 - idea_title: Hammock Sex
   level: advanced
   at_home: true
@@ -1824,7 +1812,6 @@
   categories:
   - BDSM
   - Power Dynamics
-  
   status: todo
 - idea_title: Dragon Dildo
   level: moderate
@@ -1834,7 +1821,6 @@
     explore imaginative and physical sensations in a new, playful context.
   categories:
   - Fantasy
-  
   - Playfulness
   status: todo
 - idea_title: Giving an Enema
@@ -1848,12 +1834,11 @@
   - Trust
   - Intimacy
   status: todo
-- idea_title: DP with Pegging and Oral
+- idea_title: Pegged in Ass With Blowjob (Guy)
   level: advanced
   at_home: true
   materials_required: Strap-on
-  idea_description: Combining pegging with oral sex for a double penetration experience,
-    focusing on communication for maximum pleasure and comfort.
+  idea_description: Combining pegging with oral sex for a double penetration experience for guys
   categories:
   - DP
   - Pegging
@@ -1879,7 +1864,6 @@
   categories:
   - Oral
   - Communication
-  
   status: todo
 - idea_title: Fisting
   level: advanced
@@ -1890,7 +1874,6 @@
   categories:
   - Trust
   - Patience
-  
   status: todo
 - idea_title: Wearing Opposite Clothes
   level: moderate
@@ -1900,7 +1883,6 @@
     the opposite gender, exploring expressions of identity and breaking societal norms.
   categories:
   - Expression
-  
   - Gender Norms
   status: todo
 - idea_title: Sex Up High
@@ -1922,7 +1904,6 @@
     play, providing a sense of security for those who are squeamish.
   categories:
   - Safety
-  
   - Cleanliness
   status: todo
 - idea_title: Giant Dildo
@@ -2036,14 +2017,42 @@
 - idea_title: Blowjob Contest
   level: xxxtreme
   at_home: true
-  materials_required: Participants
-  idea_description: A playful competition involving oral sex, emphasizing the importance
-    of consent, enjoyment, and mutual respect among all participants.
+  is_group: true
+  idea_description: 5 givers and 5 recievers team up. The first team to cum/orgasm wins.
+    Can be done with eating a girl out too! 
   categories:
   - Game
+  - Camp
   - Playfulness
   - Competition
   - Group Sex
+  - Oral
+  status: todo
+- idea_title: Cum Taste Test
+  level: xxxtreme
+  is_group: true
+  at_home: true
+  idea_description: 5 givers and receivers shuffle up. After their partner finishes, can they tell who they blew just by the taste?
+  categories:
+  - Game
+  - Camp
+  - Playfulness
+  - Competition
+  - Group Sex
+  - Oral
+  status: todo
+- idea_title: Orgasm Relay Race
+  level: xxxtreme
+  is_group: true
+  at_home: true
+  idea_description: It's like a regular relay race, but you must make your partner cum/orgasm before they start the next leg
+  categories:
+  - Game
+  - Camp
+  - Playfulness
+  - Competition
+  - Group Sex
+  - Oral
   status: todo
 - idea_title: Sensory Deprivation Sex
   level: advanced
@@ -2584,6 +2593,8 @@
   at_home: false
   idea_description: Explore vulnerability and trust through naked and acro yoga sessions, where physical intimacy 
     and support foster deeper connections and a new appreciation for one's body and the bodies of others.
+
+    You can also give head in folded leaf pose.
   categories:
     - Physical Intimacy
     - Trust Building
@@ -2606,6 +2617,9 @@
   materials_required: Pool
   idea_description: Swimming, but with an adult twist. Naked swimming and interactive games in the water encourage freedom of expression, 
     body positivity, and a sense of shared adventure in a safe and consensual environment.
+
+    All sorts of games are possible, such as pool twister. We all joined hands and then flipped over each other trying to untangle each other. 
+    Here, anything is fair game if you can reach ;)
   categories:
     - Physical Activity
     - Group Play
@@ -2624,10 +2638,11 @@
     - Boundary Exploration
     - Trust Building
     - Game
+    - Camp
     - Group
 
-- idea_title: Creative Body Painting
-  level: easy
+- idea_title: Body Painting
+  level: moderate
   at_home: true
   materials_required: Paint supplies
   idea_description: Transform each other's bodies into canvases for artistic expression, where nudity becomes a source of 
@@ -2636,6 +2651,8 @@
     - Creative Expression
     - Body Positivity
     - Sensory Exploration
+    - Camp
+    - Group
 
 - idea_title: Blindfolded Taste Test
   level: moderate
@@ -2647,38 +2664,328 @@
     - Sensory Exploration
     - Playful Competition
     - Communication
+- idea_title: Scripted Date Night 
+  level: advanced
+  at_home: false
+  is_group: true
+  idea_description: Another couple controls your date night. Couples craft unique date nights for each other 
+    -- from the activity to what restaurant to eat at, to what they  will do when they come home ;). 
+    
+    Couples must follow scripts to the letter. 
 
-- idea_title: Date Night Roulette
+    A good entry level to swinging.
+  categories:
+    - Swinging
+    - Roleplay
+    - Cuckhold
+- idea_title: Scripted Date Night Partner Swap.
+  level: xxxtreme
+  at_home: false
+  is_group: true
+  idea_description: They xxxtreme version of Scripted Date Night, where you swap partenrs. 
+    Couples craft unique date nights for each other -- from the activity to what restaurant to eat at, to what they 
+    will do when they come home. Couples must follow scripts to the letter. 
+  categories:
+    - Polyamory
+    - Swinging
+    - Roleplay
+    - Cuckhold
+
+
+- idea_title: Scripted Date Night Partner Swap
+  level: xxxtreme
+  at_home: false
+  is_group: true
+  idea_description: |
+    The xxxtreme version of Scripted Date Night, where you swap partners. 
+    Couples craft unique date nights for each other -- from the activity to what restaurant to eat at, to what they 
+    will do when they come home. Couples must follow scripts to the letter.
+  categories:
+    - Polyamory
+    - Swinging
+    - Roleplay
+    - Cuckhold
+
+- idea_title: Interrogation Play
+  level: advanced
+  at_home: true
+  is_group: false
+  idea_description: |
+    Engaging in a roleplay scenario where one partner interrogates the other, 
+    incorporating elements of dominance, submission, and possibly sensory deprivation.
+  categories:
+    - Roleplay
+    - BDSM
+    - Sensory Deprivation
+
+- idea_title: Pegging
   level: moderate
   at_home: true
-  materials_required: Date night props
-  idea_description: Couples craft unique date nights for each other, following scripts to the letter. 
-    A creative way to experience new forms of intimacy and connection, guided by the imagination of others.
+  is_group: false
+  idea_description: |
+    A sexual practice where a person performs anal sex on another person 
+    by penetrating the other's anus with a strap-on dildo.
+
+    Good way for guys to try out receiveing anal with their female partners
   categories:
-    - Creative Expression
-    - Role Playing
+    - Anal Play
+    - Roleplay
+
+- idea_title: Needle Play
+  level: xxxtreme
+  at_home: true
+  is_group: false
+  idea_description: |
+    A form of BDSM play involving the insertion of sterile needles 
+    under the skin. It requires knowledge of anatomy and attention to safety.
+  categories:
+    - BDSM
+    - Pain Play
+
+- idea_title: Sensory Deprivation
+  level: moderate
+  at_home: true
+  is_group: false
+  idea_description: |
+    Limiting or removing one or more senses to heighten others, often used in 
+    BDSM contexts to enhance the sensory experience of the submissive.
+  categories:
+    - BDSM
+    - Sensory Play
+
+- idea_title: Impact Play
+  level: moderate
+  at_home: true
+  is_group: false
+  idea_description: |
+    A form of BDSM involving striking the body to induce pain and pleasure, 
+    using hands, paddles, whips, or other objects.
+  categories:
+    - BDSM
+    - Pain Play
+
+- idea_title: Sensation Play with Fur, Wartenberg Wheels, and Vampire Gloves
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: |
+    Exploring various tactile sensations using soft fur, the prickly touch 
+    of Wartenberg wheels, or the light scratches from vampire gloves.
+  categories:
+    - Sensory Play
+    - BDSM
+
+- idea_title: Humiliation Play
+  level: advanced
+  at_home: true
+  is_group: false
+  idea_description: |
+    Engaging in psychological play involving verbal or physical actions 
+    aimed at making the submissive feel embarrassed or degraded.
+  categories:
+    - BDSM
+    - Psychological Play
+- idea_title: Objectification including Forniphilia and Utility D/s
+  level: moderate
+  at_home: true
+  is_group: false
+  idea_description: |
+    A form of BDSM play where a person is treated as an object or piece of
+    furniture, often incorporating aspects of dominance and submission.
+  categories:
+    - BDSM
+    - Objectification
+    - Forniphilia
+
+- idea_title: Edging
+  level: moderate
+  at_home: true
+  is_group: false
+  idea_description: |
+    Bringing oneself or a partner to the brink of orgasm, then stopping or 
+    slowing down stimulation to delay climax and enhance eventual orgasmic intensity.
+  categories:
+    - Orgasm Control
+
+- idea_title: Figging
+  level: advanced
+  at_home: true
+  is_group: false
+  idea_description: |
+    The practice of inserting a piece of skinned ginger root into the anus 
+    or vagina to create a burning sensation. Historically used as a form of 
+    punishment ;)
+  categories:
+    - BDSM
+    - Pain Play
+
+- idea_title: Erotic Photography
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: |
+    Capturing sensual or sexual moments through photography. Share them with each
+    other, or online ;)
+  categories:
+    - Creativity
+    - Intimacy
+    - Exhibitionism
+    - Modeling
+
+- idea_title: Free Use
+  level: advanced
+  at_home: true
+  is_group: false
+  idea_description: |
+    A consensual dynamic where one person is available for sexual use by 
+    their partner at any time and in almost any manner.
+  categories:
+    - Consent
+    - Roleplay
+    - BDSM
+
+- idea_title: Fucking Machines
+  level: advanced
+  at_home: true
+  is_group: false
+  idea_description: |
+    The use of mechanical devices to automate sexual stimulation, providing 
+    relentless and consistent motion for intense experiences.
+  categories:
+    - Sex Toys
+    - Machine Play
+
+- idea_title: Teledildonics - Internet-controlled Sex Toys
+  level: advanced
+  at_home: true
+  is_group: false
+  idea_description: |
+    Using advanced sex toys that can be controlled over the internet, 
+    allowing partners to pleasure each other from a distance.
+  categories:
+    - Technology
+    - Long Distance
+
+- idea_title: Cupping
+  level: moderate
+  at_home: true
+  is_group: false
+  idea_description: |
+    A form of alternative therapy involving placing cups on the skin 
+    to create suction, often used for relaxation, blood flow, and as a
+    form of sensual play.
+  categories:
+    - Sensation Play
+    - Wellness
+- idea_title: Sex Day
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: Spend the entire day in bed together, exploring each other's 
+    bodies, desires, and fantasies without leaving the bed for anything other 
+      than necessities.
+  categories:
+    - Intimacy
+    - Relaxation
+
+- idea_title: Spooning
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: |
+    Lying behind your partner, holding them tight, your bodies as one.
+    
+    Perfect for aftercare or lazy mornings.
+  categories:
+    - Comfort
+    - Cuddling
+
+- idea_title: Leveraging Cuteness
+  level: moderate
+  at_home: false
+  is_group: false
+  idea_description: Use your adorable relationship to get perks and benefits 
+    while out and about. It's amazing what a loving couple can achieve with 
+    just a smile.
+
+    My ex and I would sneak into pools and other venues just by pretending we 
+    belonged! Even if they knew we didn't, they didn't care.
+  categories:
+    - Public
     - Adventure
+    - Risk
 
-# TODO
-# - Interrogation Play
-# Pegging
-# Needle play
-# Sensory deprivation.
+- idea_title: Candlelit Sex
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: Turn off the lights and let candles illuminate your 
+    passionate encounter. The flickering light adds a romantic ambiance that
+    can't be beaten.
+  categories:
+    - Romance
+    - Sensual
 
-# Impact play
-# Sensation play including fur, Wartenberg wheels, and vampire gloves.
+- idea_title: Sex with Music
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: Create a playlist of both your favorite tunes or find 
+    something new and let the rhythm guide your bodies together in harmony.
+  categories:
+    - Atmosphere
+    - Intimacy
 
-# Humiliation play: giving and receiving.
+- idea_title: Sing Romantic Songs
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: Take turns serenading each other with romantic songs. 
+    Whether it's a heartfelt ballad or a sultry serenade, music can deeply 
+    enhance the connection.
+  categories:
+    - Intimacy
+    - Connection
 
-# Objectification including forniphilia and utility D/s.
-# Edging
-# Figging.
+- idea_title: Eating off Partner's Body
+  level: easy
+  at_home: true
+  is_group: false
+  idea_description: Elevate your sensory experience by arranging edible treats 
+    on your partner's body and slowly savoring each one. A delicious form of foreplay.
+  categories:
+    - Sensation Play
+    - Food Play
 
-# Erotic photography.
 
-# Free use
 
-# Fucking machines
 
-# Teledildonics - Internet-controlled sex toys
-# Cupping.
+# 10. Watching a live sex show (maybe joining in??).
+# 11. Face fucking: Aggressive blowjob.
+# 12. Fisting: Putting your entire fist in someone’s vagina/ass.
+# 13. Wearing opposite clothes: If you’re a cis man, what would it be like to wear a dress?
+# 14. Sex up high: Like a roof or a water tower.
+# 15. Knife play: I don’t know if I’m ready for this one yet.
+# 16. Cum smoothie: This is another weird one.
+# 17. Latex gloves: Great to play around in the ass if you’re squeamish.
+# 18. Giant dildo: Would be really hot to see my partner take a giant dildo.
+
+# 19. Sex somewhere abandoned: Like maybe an abandoned house.
+# 20. Graveyard sex: Spooky!!
+# 21. Squirting: I think I made someone squirt once.
+# 22. Playing with fear: Doing scary things but including sex.
+# 23. Sex therapy: Discuss something traumatic during sex.
+# 24. Sex in a walk-in freezer.
+# 25. Sex in the snow: Tried it at the very beginning of my sex life.
+# 26. Sex with someone pregnant: This would be interesting.
+
+# 27. Blowjob contest: I’d love to be blindfolded and given multiple blowjobs and choose the winner.
+# 28. Rape fantasy: I’d imagine it could be healing to reframe an awful experience.
+# 29. Sensory deprivation sex: Sex in one of those sensory deprivation tanks must be amazing.
+# 76. Hunting prey — go to a forest and hunt your partner. When you catch them you get to do whatever you want with them.
+
+# 1. Write a sex contract: Like in 50 shades of gray. With soft limits and hard limits.
+# 2. Cuckhold in Sex Club and then Romantic Evening.
+# 3. Kidnapping Fantasy: Creative and elaborate, consent to general rules/limits but everything else is a total surprise
+# 4. oh that could be a fun role play, where I am the judge jury and sexecutioner nd   I am a psychotherapist on trial for fucking patients? Hahahaha To be fair your horn-er, she is criminally insane, but mostly horny
+# - Subsspace
