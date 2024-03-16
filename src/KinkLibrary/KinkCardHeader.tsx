@@ -2,7 +2,6 @@ import React from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import GroupIcon from '@mui/icons-material/Group';
 import { Kink, LEVEL_MAP } from './types'; // Make sure the import path matches your file structure
 
