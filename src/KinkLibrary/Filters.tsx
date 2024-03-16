@@ -21,15 +21,6 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
     
     // Apply filters
     useEffect(() => {
-        console.log('Applying filters', {
-            searchText,
-            selectedCategories,
-            isFavorite,
-            status,
-            needsSupplies,
-            level,
-            isGroup,
-        })
         onFilterChange({
             searchText,
             selectedCategories,
