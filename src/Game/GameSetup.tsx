@@ -5,7 +5,6 @@ import LevelButtons from "./LevelButtons"
 import { useState } from "react"
 import { Level } from "../KinkLibrary/types"
 import { CategoryWithCount } from "../KinkLibrary/useExtraCategories"
-import Filters from '../KinkLibrary/Filters';
 
 export const GameSetup = ({
     categories,

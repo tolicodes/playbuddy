@@ -1,6 +1,5 @@
 import React from 'react';
 import { Chip } from '@mui/material';
-import CategoryIcon, { categoryIcons } from '../Game/CategoryIcon';
 
 interface Option {
     value: string;
