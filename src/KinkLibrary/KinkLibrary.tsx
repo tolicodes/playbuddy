@@ -1,10 +1,10 @@
-import React from 'react';
-import { Container, Grid, Card, CardContent, Typography, Chip } from '@mui/material';
+import { Container, Grid } from '@mui/material';
+
 import Filters from './Filters';
 import { useLoadKinks } from './useLoadKinks';
 import { useFilterKinks } from './useFilterKinks';
 import { Header } from '../Header';
-import { LEVEL_COLORS, LEVEL_TEXT_COLORS } from './types';
+import { KinkCard } from './KinkCard';
 
 
 const KinkList = () => {
@@ -22,38 +22,7 @@ const KinkList = () => {
                 <Grid container spacing={3}>
                     {filteredKinks.map((kink, index) => (
                         <Grid item xs={12} md={6} lg={4} key={index}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h5" component="h2">{kink.idea_title}</Typography>
-
-                                    {kink.favorite && <Chip label="Favorite" color="warning" style={{ marginRight: '4px' }} />}
-
-                                    <Chip label={kink.status || 'todo'} color={kink.status === 'done' ? 'success' : 'primary'} style={{ marginRight: '4px' }} />
-
-                                    {
-                                        kink.level && (
-                                            <Chip
-                                                label={kink.level.charAt(0).toUpperCase() + kink.level.slice(1)} // Capitalize the first letter for display
-                                                style={{
-                                                    margin: '2px',
-                                                    backgroundColor: LEVEL_COLORS[kink.level],
-                                                    color: LEVEL_TEXT_COLORS[kink.level] // Ensure text is readable on black background
-                                                }}
-                                                variant="outlined"
-                                            />
-                                        )}
-                                    {kink.is_group && <Chip label="Group" color="default" variant="outlined" style={{ margin: '2px' }} />}
-
-                                    <div>
-                                        {kink.categories.map((category, catIndex) => (
-                                            <Chip label={category} color="secondary" variant="outlined" key={catIndex} style={{ margin: '2px' }} />
-                                        ))}
-
-                                    </div>
-                                    <Typography variant="body2">{kink.idea_description}</Typography>
-                                    {kink.needs_supplies && <Typography variant="body2">{kink.needs_supplies}</Typography>}
-                                </CardContent>
-                            </Card>
+                            <KinkCard kink={kink} />
                         </Grid>
                     ))}
                 </Grid>

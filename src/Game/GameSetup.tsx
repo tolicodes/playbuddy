@@ -26,7 +26,7 @@ const GameSetup: React.FC = () => {
             </Box>
 
             <Box sx={{ p: 2 }}>
-                <LevelButtons />
+                <LevelButtons onClickLevel={() => {}}/>
             </Box>
 
             <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>

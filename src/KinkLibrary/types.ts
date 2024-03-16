@@ -24,21 +24,18 @@ export enum Status {
 }
 
 export const LEVELS = [
-  { label: Level.Easy, color: '#A8E6CF', hoverColor: '#81C7A5', textColor: '#000000' }, // Pastel green
-  { label: Level.Moderate, color: '#FFD3B6', hoverColor: '#FFB997',  textColor: '#000000' }, // Pastel orange
-  { label: Level.Advanced, color: '#FFAAA5', hoverColor: '#FF8B94',  textColor: '#000000' }, // Pastel red
-  { label: Level.Xxxtreme, color: '#FFECB3', hoverColor: '#FFDB8B',  textColor: '#000000' }, // Pastel yellow
+  { label: Level.Easy, color: '#4caf50', hoverColor: '#388e3c',  },
+  { label: Level.Moderate, color: '#ff9800', hoverColor: '#f57c00', },
+  { label: Level.Advanced, color: '#f44336', hoverColor: '#d32f2f',  },
+  { label: Level.Xxxtreme, color: '#9e9e9e', hoverColor: '#616161',  },
 ];
 
+const remapLevels = (levels: typeof LEVELS) => {
+  const remapped = levels.reduce((acc, level) => {
+    acc[level.label] = { ...level };
+    return acc;
+  }, {} as Record<Level, typeof LEVELS[number]>);
+  return remapped;
+};
 
-// Create a map of level to color
-export const LEVEL_COLORS = LEVELS.reduce((acc, level) => {
-  acc[level.label] = level.color;
-  return acc;
-}, {} as Record<Level, string>);
-
-// Create a map of level to color
-export const LEVEL_TEXT_COLORS = LEVELS.reduce((acc, level) => {
-  acc[level.label] = level.textColor;
-  return acc;
-}, {} as Record<Level, string>);
+export const LEVEL_MAP = remapLevels(LEVELS);

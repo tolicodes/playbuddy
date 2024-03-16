@@ -1,19 +1,24 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import LevelButtons from './LevelButtons';
+import { Level } from '../KinkLibrary/types';
+import { action } from '@storybook/addon-actions';
 
-const meta = {
+const meta: Meta<typeof LevelButtons> = {
   title: 'Game/LevelButtons',
   component: LevelButtons,
-  tags: ['autodocs'],
   argTypes: {
-    
+    selectedLevel: {
+      control: 'select',
+      options: Object.values(Level), // Make sure this only includes string values
+    },
   },
-} satisfies Meta<typeof LevelButtons>;
+};
 
 export default meta;
-type Story = StoryObj<typeof meta>;
 
-export const Primary: Story = {
+export const Primary: StoryObj<typeof meta> = {
   args: {
+    selectedLevel: Level.Easy, // Provide a default selection
+    onClickLevel: action('onClickLevel')
   },
 };
