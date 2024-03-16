@@ -1,10 +1,10 @@
-import { Container, Grid } from '@mui/material';
+import { Container } from '@mui/material';
 
 import Filters from './Filters';
 import { useLoadKinks } from './useLoadKinks';
 import { useFilterKinks } from './useFilterKinks';
 import { Header } from '../Header';
-import { KinkCard } from './KinkCard';
+import KinkCardGrid from './KinkCardGrid';
 
 
 const KinkList = () => {
@@ -19,13 +19,7 @@ const KinkList = () => {
             <Container>
                 <Filters categories={categories} onFilterChange={onFilterChange} />
 
-                <Grid container spacing={3}>
-                    {filteredKinks.map((kink, index) => (
-                        <Grid item xs={12} md={6} lg={4} key={index}>
-                            <KinkCard kink={kink} />
-                        </Grid>
-                    ))}
-                </Grid>
+                <KinkCardGrid kinks={filteredKinks} />
             </Container>
         </>
     );

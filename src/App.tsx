@@ -4,7 +4,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme';
 import CssBaseline from '@mui/material/CssBaseline';
 
-import GameSetup from './Game/GameSetup';
+import GameSetup from './Game/Game';
 import KinkLibrary from './KinkLibrary/KinkLibrary';
 
 function App() {

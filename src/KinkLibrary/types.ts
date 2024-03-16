@@ -24,10 +24,10 @@ export enum Status {
 }
 
 export const LEVELS = [
-  { label: Level.Easy, color: '#4caf50', hoverColor: '#388e3c',  },
-  { label: Level.Moderate, color: '#ff9800', hoverColor: '#f57c00', },
-  { label: Level.Advanced, color: '#f44336', hoverColor: '#d32f2f',  },
-  { label: Level.Xxxtreme, color: '#9e9e9e', hoverColor: '#616161',  },
+  { label: Level.Easy, color: '#4caf50',  },
+  { label: Level.Moderate, color: '#ff9800',  },
+  { label: Level.Advanced, color: '#f44336',  },
+  { label: Level.Xxxtreme, color: '#9e9e9e',  },
 ];
 
 const remapLevels = (levels: typeof LEVELS) => {
