@@ -26,7 +26,7 @@ const Game: React.FC = () => {
 
     const shuffleKinks = (kinks: Kink[]) => {
         const shuffledKinks = kinks.sort(() => 0.5 - Math.random());
-        setRandomKinks(shuffledKinks.slice(0, 4))
+        setRandomKinks(shuffledKinks.slice(0, 3))
     }
 
     return (
