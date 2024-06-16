@@ -50,7 +50,7 @@ export const GameSetup = ({
                 />
             </Box>
 
-            <Box sx={{ backgroundColor: '#f0f0f0', p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ backgroundColor: '#f0f0f0', p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', bottom: 0, width: '100%' }}>
                 <Button
                     variant="contained" size="large"
                     sx={{

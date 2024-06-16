@@ -3,10 +3,10 @@ export type Kink = {
     idea_description: string;
     categories: string[];
     favorite?: boolean;
-    status: Status
-    level: Level
-    is_group: boolean;
-    needs_supplies: string;
+    status?: Status
+    level?: Level
+    is_group?: boolean;
+    needs_supplies?: string;
   };
   
 export type Kinks = Kink[];

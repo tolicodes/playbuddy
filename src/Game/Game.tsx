@@ -47,7 +47,7 @@ const Game: React.FC = () => {
             {mode === Mode.setup &&
                 <GameSetup
                     categories={categories}
-                    onFilterChange={(filters) => {
+                    onFilterChange={(filters: any) => {
                         onFilterChange(filters)
                         setMode(Mode.adventure)
                     }}
