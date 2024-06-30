@@ -1,3 +1,1 @@
-export const MainContent = () => {
-
-}
+export const MainContent = () => {};

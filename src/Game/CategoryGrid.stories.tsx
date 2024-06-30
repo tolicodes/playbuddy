@@ -13,23 +13,30 @@ type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {
   args: {
-    categories: [{
-      value: 'Exploration',
-      count: 1
-    }, {
-      value: 'Intimacy',
-      count: 1
-    }, {
-      value: 'BDSM',
-      count: 1
-    }],
-    selectedCategories: [{
-      value: 'Intimacy',
-      count: 1
-    }, {
-      value: 'BDSM',
-      count: 1
-    }],
+    categories: [
+      {
+        value: 'Exploration',
+        count: 1,
+      },
+      {
+        value: 'Intimacy',
+        count: 1,
+      },
+      {
+        value: 'BDSM',
+        count: 1,
+      },
+    ],
+    selectedCategories: [
+      {
+        value: 'Intimacy',
+        count: 1,
+      },
+      {
+        value: 'BDSM',
+        count: 1,
+      },
+    ],
     setSelectedCategories: action('setSelectedCategories'),
   },
 };

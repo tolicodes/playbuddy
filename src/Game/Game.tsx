@@ -10,53 +10,74 @@ import GameSetup from './GameSetup';
 import { useUserFavorites } from '../KinkLibrary/useUserFavorites';
 
 const Game: React.FC = () => {
-    const kinks = useLoadKinks();
-    const { filteredKinks, onFilterChange, categories } = useFilterKinks(kinks);
-    const favoriteKinks = useUserFavorites()
+  const kinks = useLoadKinks();
+  const { filteredKinks, onFilterChange, categories } = useFilterKinks(kinks);
+  const favoriteKinks = useUserFavorites();
 
-    enum Mode {
-        setup,
-        adventure,
-    }
-    const [mode, setMode] = useState<Mode>(Mode.setup);
+  enum Mode {
+    setup,
+    adventure,
+  }
+  const [mode, setMode] = useState<Mode>(Mode.setup);
 
-    const [randomKinks, setRandomKinks] = useState<Kink[]>([]);
+  const [randomKinks, setRandomKinks] = useState<Kink[]>([]);
 
-    useEffect(() => {
-        shuffleKinks(filteredKinks)
-    }, [filteredKinks]);
+  useEffect(() => {
+    shuffleKinks(filteredKinks);
+  }, [filteredKinks]);
 
-    const shuffleKinks = (kinks: Kink[]) => {
-        const shuffledKinks = kinks.sort(() => 0.5 - Math.random());
-        setRandomKinks(shuffledKinks.slice(0, 3))
-    }
+  const shuffleKinks = (kinks: Kink[]) => {
+    const shuffledKinks = kinks.sort(() => 0.5 - Math.random());
+    setRandomKinks(shuffledKinks.slice(0, 3));
+  };
 
-    return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', padding: 0 }}>
-            <Header />
-            {mode === Mode.adventure && (
-                <>
-                    <Box sx={{ p: 2 }}>
-                        <Typography variant="h6">Your Adventure</Typography>
-                        <Button variant={'contained'} onClick={() => setMode(Mode.setup)}>Change Adventure</Button>
-                        <Button variant={'contained'} onClick={() => shuffleKinks(filteredKinks)}>Shuffle</Button>
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        padding: 0,
+      }}
+    >
+      <Header />
+      {mode === Mode.adventure && (
+        <>
+          <Box sx={{ p: 2 }}>
+            <Typography variant="h6">Your Adventure</Typography>
+            <Button
+              variant={'contained'}
+              onClick={() => setMode(Mode.setup)}
+            >
+              Change Adventure
+            </Button>
+            <Button
+              variant={'contained'}
+              onClick={() => shuffleKinks(filteredKinks)}
+            >
+              Shuffle
+            </Button>
 
-                        <KinkCardGrid kinks={randomKinks} favoriteKinks={favoriteKinks} />
-                    </Box>
-                </>
-            )
-            }
-            {mode === Mode.setup &&
-                <GameSetup
-                    categories={categories}
-                    onFilterChange={(filters: any) => {
-                        onFilterChange(filters)
-                        setMode(Mode.adventure)
-                    }}
-                />
-            }
-        </Box>
-    )
-}
+            <KinkCardGrid
+              kinks={randomKinks}
+              favoriteKinks={favoriteKinks}
+              onAddFavorite={() => {}}
+              onRemoveFavorite={() => {}}
+            />
+          </Box>
+        </>
+      )}
+      {mode === Mode.setup && (
+        <GameSetup
+          categories={categories}
+          onFilterChange={(filters: any) => {
+            onFilterChange(filters);
+            setMode(Mode.adventure);
+          }}
+        />
+      )}
+    </Box>
+  );
+};
 
 export default Game;

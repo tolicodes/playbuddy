@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Select from 'react-select';
 
-interface Option  {
+interface Option {
   value: string;
   label: string;
 }
@@ -15,9 +15,12 @@ interface MultiSelectEditorProps {
 }
 
 const MultiSelectEditor: React.FC<MultiSelectEditorProps> = (props) => {
-  const initialSelectedOptions = props.value?.map(val => ({ value: val, label: val })) || [];
+  const initialSelectedOptions =
+    props.value?.map((val) => ({ value: val, label: val })) || [];
 
-  const [selectedOptions, setSelectedOptions] = useState<Option[]>(initialSelectedOptions);
+  const [selectedOptions, setSelectedOptions] = useState<Option[]>(
+    initialSelectedOptions,
+  );
 
   const ref = useRef<any>(null);
 
@@ -32,10 +35,9 @@ const MultiSelectEditor: React.FC<MultiSelectEditorProps> = (props) => {
   };
 
   const handleBlur = () => {
-    const newValue = selectedOptions.map(option => option.value);
+    const newValue = selectedOptions.map((option) => option.value);
     props.api.stopEditing(false);
     props.node.setDataValue(props.colDef.field, newValue);
-
   };
 
   return (
@@ -47,7 +49,7 @@ const MultiSelectEditor: React.FC<MultiSelectEditorProps> = (props) => {
       isMulti
       autoFocus
       menuPortalTarget={document.body} // To avoid clipping issues
-      styles={{ menuPortal: base => ({ ...base, zIndex: 9999, }) }}
+      styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
       onBlur={handleBlur}
     />
   );

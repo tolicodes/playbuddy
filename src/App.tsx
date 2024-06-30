@@ -16,10 +16,22 @@ function App() {
       <ThemeProvider theme={theme}>
         <Router>
           <Routes>
-            <Route path="game" element={<GameSetup />} />
-            <Route path="/" element={<KinkLibrary />} />
-            <Route path="/favorite" element={<FavoriteKinks />} />
-            <Route path="/admin" element={<KinkAdminTable />} />
+            <Route
+              path="game"
+              element={<GameSetup />}
+            />
+            <Route
+              path="/"
+              element={<KinkLibrary />}
+            />
+            <Route
+              path="/favorite"
+              element={<FavoriteKinks />}
+            />
+            <Route
+              path="/admin"
+              element={<KinkAdminTable />}
+            />
           </Routes>
         </Router>
       </ThemeProvider>

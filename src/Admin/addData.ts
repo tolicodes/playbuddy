@@ -1,5 +1,5 @@
-import { Kink } from "../KinkLibrary/types";
-import { supabase } from "../supabaseClient";
+import { Kink } from '../KinkLibrary/types';
+import { supabase } from '../supabaseClient';
 
 export const addKinkData = async (data: Partial<Kink>) => {
   const { data: insertedData, error } = await supabase

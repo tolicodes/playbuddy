@@ -7,24 +7,32 @@ import { Header } from '../Common/Header';
 import KinkCardGrid from './KinkCardGrid';
 import { useUserFavorites } from './useUserFavorites';
 
-
 const KinkList = () => {
-    const allKinks = useLoadKinks();
-    const favoriteKinks = useUserFavorites()
+  const allKinks = useLoadKinks();
+  const favoriteKinks = useUserFavorites();
 
-    const { filteredKinks, onFilterChange, categories } = useFilterKinks(allKinks);
+  const { filteredKinks, onFilterChange, categories } =
+    useFilterKinks(allKinks);
 
-    return (
-        <>
-            <Header />
+  return (
+    <>
+      <Header />
 
-            <Container>
-                <Filters categories={categories} onFilterChange={onFilterChange} />
+      <Container>
+        <Filters
+          categories={categories}
+          onFilterChange={onFilterChange}
+        />
 
-                <KinkCardGrid kinks={filteredKinks} favoriteKinks={favoriteKinks} />
-            </Container>
-        </>
-    );
+        <KinkCardGrid
+          kinks={filteredKinks}
+          favoriteKinks={favoriteKinks}
+          onAddFavorite={() => { }}
+          onRemoveFavorite={() => { }}
+        />
+      </Container>
+    </>
+  );
 };
 
 export default KinkList;

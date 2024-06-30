@@ -18,12 +18,17 @@ const findDuplicates = (kinks) => {
   const fuse = new Fuse(kinks, {
     includeScore: true,
     keys: ['idea_title'],
-    threshold: 0.3 // Adjust this threshold as needed
+    threshold: 0.3, // Adjust this threshold as needed
   });
   let tableData = [];
 
   kinks.forEach((kink, index) => {
-    const results = fuse.search(kink.idea_title).filter(result => result.score <= 0.3 && result.item.idea_title !== kink.idea_title);
+    const results = fuse
+      .search(kink.idea_title)
+      .filter(
+        (result) =>
+          result.score <= 0.3 && result.item.idea_title !== kink.idea_title,
+      );
     if (results.length > 0) {
       let rowData = { Initial: kink.idea_title };
       results.forEach((similarTitle, i) => {

@@ -19,6 +19,6 @@ export default meta;
 export const Primary: StoryObj<typeof meta> = {
   args: {
     selectedLevel: Level.Easy, // Provide a default selection
-    onClickLevel: action('onClickLevel')
+    onClickLevel: action('onClickLevel'),
   },
 };

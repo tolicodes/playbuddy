@@ -1,16 +1,22 @@
-import React from "react";
-import { Grid, Button, Box } from "@mui/material";
-import { LEVELS, Level } from "../KinkLibrary/types";
+import React from 'react';
+import { Grid, Button, Box } from '@mui/material';
+import { LEVELS, Level } from '../KinkLibrary/types';
 
 interface LevelButtonsProps {
   selectedLevel?: Level;
   onClickLevel: (level: Level) => void;
 }
 
-const LevelButtons: React.FC<LevelButtonsProps> = ({ selectedLevel, onClickLevel }) => {
+const LevelButtons: React.FC<LevelButtonsProps> = ({
+  selectedLevel,
+  onClickLevel,
+}) => {
   return (
     <Box sx={{ p: 1 }}>
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={2}
+      >
         {LEVELS.map((level, index) => {
           const isSelected = selectedLevel === level.label;
           // Common styles for hover and isSelected
@@ -27,27 +33,36 @@ const LevelButtons: React.FC<LevelButtonsProps> = ({ selectedLevel, onClickLevel
             color: level.color,
             borderColor: level.color,
             fontWeight: 'normal',
-          }
+          };
 
           const hoverStyles = {
             '&:hover': selectedAndHoverStyles,
           };
 
-          const currentStyles = isSelected ? selectedAndHoverStyles : unselectedStyles;
+          const currentStyles = isSelected
+            ? selectedAndHoverStyles
+            : unselectedStyles;
 
           // Button styles
           const buttonSx = {
             ...currentStyles,
             ...hoverStyles,
-          }
+          };
 
           return (
-            <Grid item xs={6} sm={3} key={index}>
+            <Grid
+              item
+              xs={6}
+              sm={3}
+              key={index}
+            >
               <Button
                 fullWidth
-                variant={"outlined"}
+                variant={'outlined'}
                 sx={buttonSx}
-                onClick={() => { onClickLevel(level.label) }}
+                onClick={() => {
+                  onClickLevel(level.label);
+                }}
               >
                 {level.label}
               </Button>

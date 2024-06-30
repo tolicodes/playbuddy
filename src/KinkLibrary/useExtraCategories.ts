@@ -1,44 +1,44 @@
-import { useEffect, useState } from "react";
-import { Kinks } from "./types";
+import { useEffect, useState } from 'react';
+import { Kinks } from './types';
 
 export type CategoryWithCount = {
-    value: string;
-    count: number;
+  value: string;
+  count: number;
 };
 
-
 const useExtraCategories = (allKinks: Kinks) => {
-    const extractCategories = (kinks: Kinks): CategoryWithCount[] => {
-        const categoryCounts = new Map<string, number>();
+  const extractCategories = (kinks: Kinks): CategoryWithCount[] => {
+    const categoryCounts = new Map<string, number>();
 
-        kinks.forEach(kink => {
-            kink.categories.forEach(category => {
-                const currentCount = categoryCounts.get(category) || 0;
-                categoryCounts.set(category, currentCount + 1);
-            });
-        });
+    kinks.forEach((kink) => {
+      kink.categories.forEach((category) => {
+        const currentCount = categoryCounts.get(category) || 0;
+        categoryCounts.set(category, currentCount + 1);
+      });
+    });
 
-        // Convert the map to an array of objects with name and count
-        const categoriesWithCounts: CategoryWithCount[] = Array.from(categoryCounts).map(([value, count]) => ({
-            value,
-            count,
-        }));
+    // Convert the map to an array of objects with name and count
+    const categoriesWithCounts: CategoryWithCount[] = Array.from(
+      categoryCounts,
+    ).map(([value, count]) => ({
+      value,
+      count,
+    }));
 
-        // Optionally, sort categories by count or name
-        categoriesWithCounts.sort((a, b) => b.count - a.count);
+    // Optionally, sort categories by count or name
+    categoriesWithCounts.sort((a, b) => b.count - a.count);
 
-        return categoriesWithCounts;
-    };
+    return categoriesWithCounts;
+  };
 
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
 
-    const [categories, setCategories] = useState<CategoryWithCount[]>([]);
+  useEffect(() => {
+    const categoriesWithCounts = extractCategories(allKinks);
+    setCategories(categoriesWithCounts);
+  }, [allKinks]);
 
-    useEffect(() => {
-        const categoriesWithCounts = extractCategories(allKinks);
-        setCategories(categoriesWithCounts);
-    }, [allKinks])
+  return categories;
+};
 
-    return categories;
-}
-
-export { useExtraCategories};
+export { useExtraCategories };
