@@ -29,7 +29,6 @@ export const GameSetup = ({
             selectedCategories: selectedCategories.map(category => category.value),
         });
 
-        console.log('Adventure!', selectedLevel, selectedCategories);
     }
 
     return (

@@ -24,7 +24,7 @@ const mockRowData = [
         idea_title: "Example Kink",
         idea_description: "Description of the example kink.",
         categories: ["Category1", "Category2"],
-        favorite: true,
+        recommended: true,
         status: "done",
         level: "easy",
         is_group: false,

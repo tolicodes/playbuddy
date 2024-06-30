@@ -21,7 +21,7 @@ const kink = {
         "Bonding",
         "Emotional"
     ],
-    favorite: true,
+    recommended: true,
     status: Status.Done,
     level: Level.Easy,
     is_group: true,

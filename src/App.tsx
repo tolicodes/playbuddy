@@ -6,6 +6,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import GameSetup from './Game/Game';
 import KinkLibrary from './KinkLibrary/KinkLibrary';
+import KinkAdminTable from './Admin/KinkAdminTable';
+import FavoriteKinks from './User/FavoriteKinks';
 
 function App() {
   return (
@@ -16,6 +18,8 @@ function App() {
           <Routes>
             <Route path="game" element={<GameSetup />} />
             <Route path="/" element={<KinkLibrary />} />
+            <Route path="/favorite" element={<FavoriteKinks />} />
+            <Route path="/admin" element={<KinkAdminTable />} />
           </Routes>
         </Router>
       </ThemeProvider>

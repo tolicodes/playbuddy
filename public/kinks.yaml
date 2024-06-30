@@ -24,7 +24,7 @@
   - Webcam Modeling
   - Self Esteem Enhancement
   - Audience
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 
@@ -152,7 +152,7 @@
   - Sensation Play
   - Pain Play
   - Temperature Play
-  favorite: false
+  recommended: false
   status: todo
   to_do_priority: 3
 
@@ -169,7 +169,7 @@
   - Orgasm Denial
   - Risk
   - Power Play
-  favorite: false
+  recommended: false
   status: todo
   to_do_priority: 1
 
@@ -184,7 +184,7 @@
   - Artistic
   - Skill Development
   - BDSM
-  favorite: false
+  recommended: false
   status: todo
   to_do_priority: 2
 
@@ -227,7 +227,7 @@
   - Sensory Play
   
   - Intimacy
-  favorite: false
+  recommended: false
   status: done
   to_do_priority: 2
 - idea_title: Make Up Sex
@@ -294,7 +294,7 @@
   - Physical Play
   - Primal
   - Bonding
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Fuck Out the Argument
@@ -310,7 +310,7 @@
   - Primal
   - Bonding
   - Emotional
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Naked Massage
@@ -335,7 +335,7 @@
   - Sensual
   - Slippery
   - Caution
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Massage Storytelling
@@ -349,7 +349,7 @@
   - Creativity
   - Sensual
   - Narrative
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Record a Sexy Visualization
@@ -389,7 +389,7 @@
   - Cosplay
   - Fantasy
   - Dress Up
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Role Play
@@ -404,7 +404,7 @@
   - Fantasy
   - Imagination
   - Role Play
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Meet up as Strangers
@@ -442,7 +442,7 @@
   - BDSM
   - Sensation Play
   - Intensity
-  favorite: false
+  recommended: false
   status: todo
   to_do_priority: 2
 - idea_title: Restraints
@@ -467,7 +467,7 @@
   - BDSM
   - Control
   - Mute Sensation
-  favorite: false
+  recommended: false
   status: todo
   to_do_priority: 3
 - idea_title: Pull Hair
@@ -491,7 +491,7 @@
   - Vocal Expression
   - Exhibitionism
   - Thrill
-  favorite: true
+  recommended: true
   status: done
   to_do_priority: 1
 - idea_title: Watching Partner Masturbate
@@ -2235,7 +2235,7 @@
   status: todo
 - idea_title: Funny Videos
   level: xxxtreme
-  favorite: true
+  recommended: true
   at_home: true
   idea_description: An elaborate role-play scenario involving consensual 'kidnapping'
     to explore the thrill of the unknown and the power dynamics of dominance and submission.
@@ -2249,7 +2249,7 @@
   status: done
 - idea_title: Laughter
   level: easy
-  favorite: true
+  recommended: true
   at_home: true
   idea_description: Sex doesn't need to be serious all the time. Incorporating humor
     and laughter into sexual activities can create a lighthearted and joyful atmosphere,
@@ -2261,7 +2261,7 @@
   status: done
 - idea_title: Sex Swing
   level: moderate
-  favorite: true
+  recommended: true
   at_home: false
   idea_description: Play parties and clubs often have sex swings available for use,
     providing a unique and thrilling experience for couples or groups. The swing
@@ -2275,7 +2275,7 @@
   status: done
 - idea_title: Kinky Improv
   level: moderate
-  favorite: true
+  recommended: true
   at_home: false
   idea_description: An activity at many kink and BDSM events, kinky improv involves
     participants acting out various scenes and scenarios, often with humorous or
@@ -2292,7 +2292,7 @@
   status: done
 - idea_title: Falling Asleep while Inside
   level: moderate
-  favorite: true
+  recommended: true
   at_home: false
   idea_description: Sometimes you tire yourself out, and you both fall asleep with 
     a finger, hand, or other appendage inside your partner. It's a sweet and intimate
@@ -2304,7 +2304,7 @@
   status: done
 - idea_title: Doctor Roleplay
   level: moderate
-  favorite: true
+  recommended: true
   at_home: false
   idea_description: A doctor needs to examine you thoroughly, and you're more than
     willing to comply. This role-play scenario allows for exploration of power dynamics,
@@ -2320,7 +2320,7 @@
   status: todo
   level: advanced
   at_home: false
-  favorite: true
+  recommended: true
   materials_required: Cozy cabin by a private lake
   idea_description: A retreat that transcends the traditional notion of sex, focusing on exploration, connection, and the seamless 
     integration of intimate experiences into everyday activities. This camp aims to recreate the joy of summer camps with an adult twist, 
@@ -2381,7 +2381,7 @@
 
 - idea_title: Naked Acro Yoga / Yoga
   level: moderate
-  favorite: true
+  recommended: true
   at_home: false
   idea_description: Explore vulnerability and trust through naked and acro yoga sessions, where physical intimacy 
     and support foster deeper connections and a new appreciation for one's body and the bodies of others.
@@ -2684,7 +2684,7 @@
   level: easy
   at_home: true
   is_group: false
-  idea_description: Create a playlist of both your favorite tunes or find 
+  idea_description: Create a playlist of both your recommended tunes or find 
     something new and let the rhythm guide your bodies together in harmony.
   categories:
     - Atmosphere

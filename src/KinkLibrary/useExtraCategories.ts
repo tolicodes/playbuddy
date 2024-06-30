@@ -25,7 +25,7 @@ const useExtraCategories = (allKinks: Kinks) => {
         }));
 
         // Optionally, sort categories by count or name
-        categoriesWithCounts.sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+        categoriesWithCounts.sort((a, b) => b.count - a.count);
 
         return categoriesWithCounts;
     };

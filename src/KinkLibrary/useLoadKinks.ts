@@ -1,19 +1,27 @@
-
-import { useState, useEffect } from 'react';
-import yaml from 'js-yaml';
-
-import { Kinks } from './types';
+// useLoadKinks.ts
+import { useState, useEffect } from 'react'
+import { supabase } from '../supabaseClient'
+import { Kinks } from './types'
 
 export const useLoadKinks = (): Kinks => {
-    const [allKinks, setAllKinks] = useState<Kinks>([]);
-  
-    useEffect(() => {
-      fetch('/kinks.yaml')
-        .then((response) => response.text())
-        .then((text) => yaml.load(text))
-        .then((data) => setAllKinks(data as Kinks))
-        .catch((error) => console.error('Error loading YAML: ', error));
-    }, []);
-  
-    return allKinks;
-  };
+  const [allKinks, setAllKinks] = useState<Kinks>([])
+
+  useEffect(() => {
+    const fetchKinks = async () => {
+      const { data: kinks, error } = await supabase
+        .from('kinks')
+        .select('*')
+        .order('id', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching kinks:', error)
+      } else {
+        setAllKinks(kinks || [])
+      }
+    }
+
+    fetchKinks()
+  }, [])
+
+  return allKinks
+}

@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { useLoadKinks } from '../KinkLibrary/useLoadKinks';
 
 import { Typography, Box, Button } from '@mui/material';
-import { Header } from '../Header';
+import { Header } from '../Common/Header';
 import { Kink } from '../KinkLibrary/types';
 import { useFilterKinks } from '../KinkLibrary/useFilterKinks';
 import KinkCardGrid from '../KinkLibrary/KinkCardGrid';
 import GameSetup from './GameSetup';
+import { useUserFavorites } from '../KinkLibrary/useUserFavorites';
 
 const Game: React.FC = () => {
     const kinks = useLoadKinks();
     const { filteredKinks, onFilterChange, categories } = useFilterKinks(kinks);
+    const favoriteKinks = useUserFavorites()
 
     enum Mode {
         setup,
@@ -39,7 +41,7 @@ const Game: React.FC = () => {
                         <Button variant={'contained'} onClick={() => setMode(Mode.setup)}>Change Adventure</Button>
                         <Button variant={'contained'} onClick={() => shuffleKinks(filteredKinks)}>Shuffle</Button>
 
-                        <KinkCardGrid kinks={randomKinks} />
+                        <KinkCardGrid kinks={randomKinks} favoriteKinks={favoriteKinks} />
                     </Box>
                 </>
             )

@@ -6,7 +6,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import GroupIcon from '@mui/icons-material/Group';
 import { Kink, LEVEL_MAP } from './types'; // Make sure the import path matches your file structure
 
-export const KinkCard = ({ kink }: { kink: Kink }) => {
+export const KinkCard = ({ kink, isFavoriteKink, onAddFavorite, onRemoveFavorite }: { kink: Kink, isFavoriteKink: boolean, onAddFavorite: (id: string) => void, onRemoveFavorite: (id: string) => void}) => {
     return (
         <Card>
             <CardContent>
@@ -22,11 +22,14 @@ export const KinkCard = ({ kink }: { kink: Kink }) => {
                     {/* Left-aligned title */}
                     <Typography variant="h5" component="h2">{kink.idea_title}</Typography>
 
-                    {/* Right-aligned icons for Done and Favorite */}
+                    {/* Right-aligned icons for Done and Recommended */}
                     {/* full width for the icons */}
                     <Box sx={{ display: 'flex' }}>
                         {kink.status === 'done' && <CheckCircleIcon sx={{ color: 'green', fontSize: '25px', marginLeft: '8px' }} />}
-                        {kink.favorite && <StarIcon sx={{ color: 'orange', fontSize: '25px', marginLeft: '8px' }} />}
+                        {kink.recommended && <StarIcon sx={{ color: 'orange', fontSize: '25px', marginLeft: '8px' }} />}
+                        <button onClick={() => onAddFavorite(kink.id)}>{isFavoriteKink ? 
+                        'Remove Favorite' : 'Add Favorite'
+}</button>
                     </Box>
                 </Box>
 

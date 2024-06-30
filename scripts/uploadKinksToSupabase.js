@@ -7,7 +7,7 @@ const yaml = require('js-yaml');
 // Function to load JSON data
 const loadData = () => {
     const data = fs.readFileSync('./public/kinks.yaml', 'utf8');
-    return yaml.load(data);s
+    return yaml.load(data);
 };
   
 
@@ -23,7 +23,7 @@ const upsertData = async (data) => {
         materials_required: item.materials_required,
         idea_description: item.idea_description,
         categories: item.categories,
-        favorite: item.favorite,
+        recommended: item.recommended,
         status: item.status,
         to_do_priority: item.to_do_priority,
       }, {

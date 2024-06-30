@@ -1,8 +1,9 @@
 export type Kink = {
+  id: string;
     idea_title: string;
     idea_description: string;
     categories: string[];
-    favorite?: boolean;
+    recommended?: boolean;
     status?: Status
     level?: Level
     is_group?: boolean;

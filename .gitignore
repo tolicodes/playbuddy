@@ -49,3 +49,5 @@ yarn-error.log*
 .netlify
 
 *storybook.log
+
+supabaseClient.ts

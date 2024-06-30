@@ -20,10 +20,6 @@ const findDuplicates = (kinks) => {
     keys: ['idea_title'],
     threshold: 0.3 // Adjust this threshold as needed
   });
-
-  const seenTitles = new Set();
-  const duplicates = [];
-
   let tableData = [];
 
   kinks.forEach((kink, index) => {

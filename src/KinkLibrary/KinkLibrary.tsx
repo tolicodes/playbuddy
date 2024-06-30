@@ -3,17 +3,16 @@ import { Container } from '@mui/material';
 import Filters from './Filters';
 import { useLoadKinks } from './useLoadKinks';
 import { useFilterKinks } from './useFilterKinks';
-import { Header } from '../Header';
+import { Header } from '../Common/Header';
 import KinkCardGrid from './KinkCardGrid';
+import { useUserFavorites } from './useUserFavorites';
 
 
 const KinkList = () => {
     const allKinks = useLoadKinks();
-    console.log(allKinks.map((k) => k.idea_title).join('\n'))
+    const favoriteKinks = useUserFavorites()
 
     const { filteredKinks, onFilterChange, categories } = useFilterKinks(allKinks);
-
-    console.log(categories.map((cat) => cat.value).join('\n'))
 
     return (
         <>
@@ -22,7 +21,7 @@ const KinkList = () => {
             <Container>
                 <Filters categories={categories} onFilterChange={onFilterChange} />
 
-                <KinkCardGrid kinks={filteredKinks} />
+                <KinkCardGrid kinks={filteredKinks} favoriteKinks={favoriteKinks} />
             </Container>
         </>
     );

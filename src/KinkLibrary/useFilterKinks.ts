@@ -5,7 +5,7 @@ import { useExtraCategories } from './useExtraCategories';
 interface Filters {
   searchText?: string;
   selectedCategories?: string[];
-  isFavorite?: boolean;
+  isRecommended?: boolean;
   status?: Status; // Assuming status can be 'done', 'todo', or any string. Adjust as necessary.
   needsSupplies?: boolean;
   level?: Level; // Assuming level is a string that matches certain criteria. Adjust as necessary.
@@ -14,13 +14,13 @@ interface Filters {
 
 export const useFilterKinks = (allKinks: Kinks) => {
   const sortKinks = useCallback((kinks: Kinks) => {
-    // After filtering, sort so favorites always come first
+    // After filtering, sort so recommendeds always come first
     return kinks.sort((a, b) => {
-      // If both or neither are favorite, they remain in their original order
-      if (a.favorite === b.favorite) return 0;
-      // If 'a' is favorite but 'b' is not, 'a' should come first
-      if (a.favorite && !b.favorite) return -1;
-      // If 'b' is favorite but 'a' is not, 'b' should come first
+      // If both or neither are recommended, they remain in their original order
+      if (a.recommended === b.recommended) return 0;
+      // If 'a' is recommended but 'b' is not, 'a' should come first
+      if (a.recommended && !b.recommended) return -1;
+      // If 'b' is recommended but 'a' is not, 'b' should come first
       return 1;
     });
   }, [])
@@ -33,13 +33,13 @@ export const useFilterKinks = (allKinks: Kinks) => {
         filters.selectedCategories.length === 0 || 
         kink.categories.some(category => filters.selectedCategories?.includes(category));
 
-      const matchesFavorite = !filters.isFavorite || kink.favorite;
+      const matchesRecommended = !filters.isRecommended || kink.recommended;
 
       const matchesStatus = !filters.status || kink.status === filters.status;
 
       const matchesLevel = !filters.level || kink.level === filters.level;
 
-      return matchesSearchText && matchesCategories && matchesFavorite && matchesStatus && matchesLevel;
+      return matchesSearchText && matchesCategories && matchesRecommended && matchesStatus && matchesLevel;
     });
 
     const sortedFiltered = sortKinks(filtered);
@@ -52,9 +52,6 @@ export const useFilterKinks = (allKinks: Kinks) => {
   useEffect(() => {
     const sortedKinks = sortKinks(allKinks);
     setFilteredKinks(sortedKinks);
-    console.log({
-      sortedKinks
-    })
   }, [allKinks, sortKinks]);
 
   const categories = useExtraCategories(allKinks);
