@@ -20,7 +20,6 @@ export const GameSetup = ({
   categories: CategoryWithCount[];
   onFilterChange: (filters: any) => void;
 }) => {
-  // TODO: Refactor with FilterChips
   // Sort options by count (descending) and apply the limit
   const sortedAndLimitedCategories = categories
     .sort((a, b) => (b.count || 0) - (a.count || 0))

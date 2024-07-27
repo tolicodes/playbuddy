@@ -12,10 +12,7 @@
     "@mui/system": "^5.15.13",
     "@supabase/supabase-js": "^2.39.8",
     "@tanstack/react-query": "^5.49.2",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
     "@types/node": "^16.18.89",
     "@types/react": "^18.2.65",
     "@types/react-dom": "^18.2.22",
@@ -72,6 +69,9 @@
     "@storybook/react": "^8.0.0",
     "@storybook/react-webpack5": "^8.0.0",
     "@storybook/test": "^8.0.0",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@types/jest": "^29.5.12",
     "@types/js-yaml": "^4.0.9",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "^19.0.4",
@@ -81,10 +81,12 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-storybook": "^0.8.0",
     "gh-pages": "^6.1.1",
+    "jest": "^29.7.0",
     "prettier": "^3.3.2",
     "prop-types": "^15.8.1",
     "storybook": "^8.0.0",
     "storybook-addon-deep-controls": "^0.6.1",
+    "ts-jest": "^29.2.3",
     "webpack": "^5.90.3"
   }
 }
