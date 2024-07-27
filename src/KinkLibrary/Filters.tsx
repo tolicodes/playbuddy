@@ -8,8 +8,8 @@ import {
   Checkbox,
 } from '@mui/material';
 import FilterChips from './FilterChips';
-import { CategoryWithCount } from './useExtraCategories';
-import { Level, Status } from './types';
+import { Level, Status } from '../Common/types';
+import { CategoryWithCount } from './utils/getCategoriesWithCounts';
 
 interface FiltersProps {
   categories: CategoryWithCount[];

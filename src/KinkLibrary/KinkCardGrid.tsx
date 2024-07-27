@@ -1,15 +1,15 @@
 import { Grid } from '@mui/material';
 import KinkCard from './KinkCard';
-import { Kink } from './types';
+import { Kink } from '../Common/types';
 
 const KinkCardGrid = ({
   kinks,
-  favoriteKinks,
+  favoriteKinkIds: favoriteKinks,
   onAddFavorite,
   onRemoveFavorite,
 }: {
   kinks: Kink[];
-  favoriteKinks?: string[];
+  favoriteKinkIds?: string[];
   onAddFavorite: (id: string) => void;
   onRemoveFavorite: (id: string) => void;
 }) => {

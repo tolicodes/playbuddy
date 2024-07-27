@@ -32,7 +32,7 @@ const mockRowData = [
 ];
 
 export const Primary: Story = {
-  // args: {
-  //     rowData: mockRowData,
-  // }
+  args: {
+    rowData: mockRowData,
+  }
 };

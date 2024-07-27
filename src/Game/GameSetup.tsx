@@ -1,10 +1,17 @@
-import { Typography, Button } from '@mui/material';
-import { Box } from '@mui/system';
+import React, { useState } from 'react';
+import { Typography } from '@mui/material';
+
 import CategoryGrid from './CategoryGrid';
 import LevelButtons from './LevelButtons';
-import { useState } from 'react';
-import { Level } from '../KinkLibrary/types';
-import { CategoryWithCount } from '../KinkLibrary/useExtraCategories';
+import { Level } from '../Common/types';
+import { CategoryWithCount } from '../KinkLibrary/utils/getCategoriesWithCounts';
+
+import {
+  StyledContainer,
+  StyledScrollableBox,
+  StyledFooter,
+  AdventureButton,
+} from './GameSetup.styles';
 
 export const GameSetup = ({
   categories,
@@ -33,53 +40,37 @@ export const GameSetup = ({
 
   return (
     <>
-      <Box sx={{ p: 2 }}>
+      <StyledContainer>
         <Typography>
           Pick a level and 3+ categories, then click "Adventure" to begin your
           Adventure!
         </Typography>
-      </Box>
+      </StyledContainer>
 
-      <Box sx={{ p: 2 }}>
+      <StyledContainer>
         <LevelButtons
           selectedLevel={selectedLevel}
           onClickLevel={setSelectedLevel}
         />
-      </Box>
+      </StyledContainer>
 
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+      <StyledScrollableBox>
         <CategoryGrid
           selectedCategories={selectedCategories}
           setSelectedCategories={setSelectedCategories}
           categories={sortedAndLimitedCategories}
         />
-      </Box>
+      </StyledScrollableBox>
 
-      <Box
-        sx={{
-          backgroundColor: '#f0f0f0',
-          p: 2,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'fixed',
-          bottom: 0,
-          width: '100%',
-        }}
-      >
-        <Button
+      <StyledFooter>
+        <AdventureButton
           variant="contained"
           size="large"
-          sx={{
-            backgroundColor: '#4caf50',
-            fontWeight: 'bold',
-            '&:hover': { backgroundColor: '#388e3c' },
-          }}
           onClick={onClickAdventure}
         >
           Adventure!
-        </Button>
-      </Box>
+        </AdventureButton>
+      </StyledFooter>
     </>
   );
 };

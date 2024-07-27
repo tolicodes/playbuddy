@@ -1,18 +1,35 @@
+import { useCallback, useState } from 'react';
+
 import { Container } from '@mui/material';
 
+import { useGetKinks } from '../Common/hooks/useGetKinks';
+import { filterKinksAndCategories } from './utils/filterKinksAndCategories';
+import { useGetFavoriteKinks } from '../User/FavoriteKinks/useGetFavoriteKinks';
+import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/favoriteKinkMutations';
+
 import Filters from './Filters';
-import { useLoadKinks } from './useLoadKinks';
-import { useFilterKinks } from './useFilterKinks';
 import { Header } from '../Common/Header';
 import KinkCardGrid from './KinkCardGrid';
-import { useUserFavorites } from './useUserFavorites';
+import { CategoryWithCount } from './utils/getCategoriesWithCounts';
 
 const KinkList = () => {
-  const allKinks = useLoadKinks();
-  const favoriteKinks = useUserFavorites();
+  const { kinks = [], isLoading } = useGetKinks();
+  const { favoriteKinkIds } = useGetFavoriteKinks();
+  const [filteredKinks, setFilteredKinks] = useState(kinks);
+  const [categories, setCategories] = useState<CategoryWithCount[]>([]);
 
-  const { filteredKinks, onFilterChange, categories } =
-    useFilterKinks(allKinks);
+  const onFilterChange = useCallback((filters: any) => {
+    const { kinks: filterKinks, categories } = filterKinksAndCategories(kinks, filters);
+    setFilteredKinks(filterKinks);
+    setCategories(categories);
+  }, [kinks]);
+
+  const { mutate: addFavoriteKink, } = useAddFavoriteKink();
+  const { mutate: removeFavoriteKink, } = useRemoveFavoriteKink();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <>
@@ -21,14 +38,14 @@ const KinkList = () => {
       <Container>
         <Filters
           categories={categories}
-          onFilterChange={onFilterChange}
+          onFilterChange={(filters) => onFilterChange(filters)}
         />
 
         <KinkCardGrid
           kinks={filteredKinks}
-          favoriteKinks={favoriteKinks}
-          onAddFavorite={() => { }}
-          onRemoveFavorite={() => { }}
+          favoriteKinkIds={favoriteKinkIds}
+          onAddFavorite={addFavoriteKink}
+          onRemoveFavorite={removeFavoriteKink}
         />
       </Container>
     </>

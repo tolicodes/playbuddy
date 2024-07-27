@@ -1,13 +1,12 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Theme
-import { supabase } from '../supabaseClient';
-import { Kink, Level, Status } from '../KinkLibrary/types';
+import { Kink, Level, Status } from '../Common/types';
 import MultiSelectEditor from './MultiSelectEditor';
-import { useFilterKinks } from '../KinkLibrary/useFilterKinks';
-import { updateKinkData } from './updateKinkData';
-import { addKinkData } from './addData';
+import { updateKink } from './utils/updateKink';
+import { addKinkData } from './utils/insertKink';
+import { getCategoryStrings } from '../KinkLibrary/utils/getCategoriesWithCounts';
 
 // Define your column definitions with the appropriate field types
 const columnDefs = [
@@ -73,60 +72,41 @@ const columnDefs = [
   },
 ];
 
+const DEFAULT_ROW_DATA: Partial<Kink> = {
+  idea_title: '',
+  idea_description: '',
+  categories: [],
+  recommended: false,
+  status: Status.Todo,
+  level: Level.Easy,
+  is_group: false,
+  needs_supplies: '',
+};
+
 const buildColumnDefs = (categories: string[]) => {
   return columnDefs.map((columnDef) =>
     columnDef.field === 'categories'
       ? {
-          ...columnDef,
-          cellEditorParams: {
-            options: categories.map((category) => ({
-              label: category,
-              value: category,
-            })),
-          },
-        }
+        ...columnDef,
+        cellEditorParams: {
+          options: categories.map((category) => ({
+            label: category,
+            value: category,
+          })),
+        },
+      }
       : columnDef,
   );
 };
 
+
+
 const KinkAdminTable: React.FC = () => {
   const [rowData, setRowData] = useState<Kink[]>([]);
-
-  const { categories } = useFilterKinks(rowData);
-  const [categoryStrings, setCategoryStrings] = useState<string[]>([]);
-
-  useEffect(() => {
-    setCategoryStrings(categories.map((category) => category.value));
-  }, [categories]);
-
-  useEffect(() => {
-    const fetchKinks = async () => {
-      const { data: kinks, error } = await supabase
-        .from('kinks')
-        .select('*')
-        .order('id', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching kinks:', error);
-      } else {
-        setRowData(kinks ? kinks : []);
-      }
-    };
-
-    fetchKinks();
-  }, []);
+  const categoryStrings = useMemo(() => getCategoryStrings(rowData), [rowData]);
 
   const [pinnedTopRowData, setPinnedTopRowData] = useState<any[]>([
-    {
-      idea_title: '',
-      idea_description: '',
-      categories: [],
-      recommended: false,
-      status: Status.Todo,
-      level: Level.Easy,
-      is_group: false,
-      needs_supplies: '',
-    },
+    DEFAULT_ROW_DATA
   ]);
 
   const onCellValueChanged = useCallback(
@@ -139,7 +119,7 @@ const KinkAdminTable: React.FC = () => {
         const updatedData: Partial<Kink> = {
           [params.colDef.field]: params.newValue,
         };
-        updateKinkData(params.data.id, updatedData);
+        updateKink(params.data.id, updatedData);
       }
     },
     [pinnedTopRowData],
@@ -154,16 +134,7 @@ const KinkAdminTable: React.FC = () => {
     if (insertedData) {
       setRowData([...rowData, insertedData]);
       setPinnedTopRowData([
-        {
-          idea_title: '',
-          idea_description: '',
-          categories: [],
-          recommended: false,
-          status: Status.Todo,
-          level: Level.Easy,
-          is_group: false,
-          needs_supplies: '',
-        },
+        DEFAULT_ROW_DATA
       ]);
     }
   };

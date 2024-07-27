@@ -1,6 +1,54 @@
-import React from 'react';
-import { Grid, Button, Box } from '@mui/material';
-import { LEVELS, Level } from '../KinkLibrary/types';
+import { Button, Grid, Box } from '@mui/material';
+import { styled } from '@mui/system';
+import { LEVELS, Level } from '../Common/types';
+
+// Styled container for the LevelButtons component
+export const StyledBox = styled(Box)({
+  padding: 8,
+});
+
+// Styled grid container
+export const StyledGridContainer = styled(Grid)({
+  container: 'true',
+  spacing: 2,
+});
+
+// Styled grid item
+export const StyledGridItem = styled(Grid)({
+  item: true,
+  xs: 6,
+  sm: 3,
+});
+
+// Dynamic styles for buttons
+export const getButtonStyles = (isSelected: boolean, levelColor: string) => {
+  const selectedAndHoverStyles = {
+    backgroundColor: levelColor,
+    color: '#FFFFFF',
+    borderColor: levelColor,
+    fontWeight: 'bold',
+  };
+
+  const unselectedStyles = {
+    backgroundColor: '#fff',
+    color: levelColor,
+    borderColor: levelColor,
+    fontWeight: 'normal',
+  };
+
+  const hoverStyles = {
+    '&:hover': selectedAndHoverStyles,
+  };
+
+  const currentStyles = isSelected
+    ? selectedAndHoverStyles
+    : unselectedStyles;
+
+  return {
+    ...currentStyles,
+    ...hoverStyles,
+  };
+};
 
 interface LevelButtonsProps {
   selectedLevel?: Level;
@@ -12,53 +60,17 @@ const LevelButtons: React.FC<LevelButtonsProps> = ({
   onClickLevel,
 }) => {
   return (
-    <Box sx={{ p: 1 }}>
-      <Grid
-        container
-        spacing={2}
-      >
+    <StyledBox>
+      <StyledGridContainer>
         {LEVELS.map((level, index) => {
           const isSelected = selectedLevel === level.label;
-          // Common styles for hover and isSelected
-          const selectedAndHoverStyles = {
-            backgroundColor: level.color,
-            color: '#FFFFFF',
-            borderColor: level.color,
-            fontWeight: 'bold',
-          };
-
-          // unselected styles
-          const unselectedStyles = {
-            backgroundColor: '#fff',
-            color: level.color,
-            borderColor: level.color,
-            fontWeight: 'normal',
-          };
-
-          const hoverStyles = {
-            '&:hover': selectedAndHoverStyles,
-          };
-
-          const currentStyles = isSelected
-            ? selectedAndHoverStyles
-            : unselectedStyles;
-
-          // Button styles
-          const buttonSx = {
-            ...currentStyles,
-            ...hoverStyles,
-          };
+          const buttonSx = getButtonStyles(isSelected, level.color);
 
           return (
-            <Grid
-              item
-              xs={6}
-              sm={3}
-              key={index}
-            >
+            <StyledGridItem key={index}>
               <Button
                 fullWidth
-                variant={'outlined'}
+                variant="outlined"
                 sx={buttonSx}
                 onClick={() => {
                   onClickLevel(level.label);
@@ -66,11 +78,11 @@ const LevelButtons: React.FC<LevelButtonsProps> = ({
               >
                 {level.label}
               </Button>
-            </Grid>
+            </StyledGridItem>
           );
         })}
-      </Grid>
-    </Box>
+      </StyledGridContainer>
+    </StyledBox>
   );
 };
 

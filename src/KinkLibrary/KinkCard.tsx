@@ -4,7 +4,7 @@ import { Box, Card, CardContent, Chip, Typography } from '@mui/material';
 import StarIcon from '@mui/icons-material/Star';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import GroupIcon from '@mui/icons-material/Group';
-import { Kink, LEVEL_MAP } from './types'; // Make sure the import path matches your file structure
+import { Kink, LEVEL_MAP } from '../Common/types'; // Make sure the import path matches your file structure
 
 export const KinkCard = ({
   kink,
@@ -50,7 +50,13 @@ export const KinkCard = ({
                 sx={{ color: 'orange', fontSize: '25px', marginLeft: '8px' }}
               />
             )}
-            <button onClick={() => onAddFavorite(kink.id)}>
+            <button onClick={() => {
+              if (isFavoriteKink) {
+                onRemoveFavorite(kink.id)
+              } else {
+                onAddFavorite(kink.id)
+              }
+            }}>
               {isFavoriteKink ? 'Remove Favorite' : 'Add Favorite'}
             </button>
           </Box>

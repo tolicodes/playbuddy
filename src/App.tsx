@@ -7,34 +7,37 @@ import CssBaseline from '@mui/material/CssBaseline';
 import GameSetup from './Game/Game';
 import KinkLibrary from './KinkLibrary/KinkLibrary';
 import KinkAdminTable from './Admin/KinkAdminTable';
-import FavoriteKinks from './User/FavoriteKinks';
+import FavoriteKinks from './User/FavoriteKinks/FavoriteKinks';
+import QueryProvider from './Common/QueryProvider';
 
 function App() {
   return (
     <>
-      <CssBaseline /> {/* This is for baseline styles */}
-      <ThemeProvider theme={theme}>
-        <Router>
-          <Routes>
-            <Route
-              path="game"
-              element={<GameSetup />}
-            />
-            <Route
-              path="/"
-              element={<KinkLibrary />}
-            />
-            <Route
-              path="/favorite"
-              element={<FavoriteKinks />}
-            />
-            <Route
-              path="/admin"
-              element={<KinkAdminTable />}
-            />
-          </Routes>
-        </Router>
-      </ThemeProvider>
+      <QueryProvider>
+        <CssBaseline /> {/* This is for baseline styles */}
+        <ThemeProvider theme={theme}>
+          <Router>
+            <Routes>
+              <Route
+                path="game"
+                element={<GameSetup />}
+              />
+              <Route
+                path="/"
+                element={<KinkLibrary />}
+              />
+              <Route
+                path="/favorite"
+                element={<FavoriteKinks />}
+              />
+              <Route
+                path="/admin"
+                element={<KinkAdminTable />}
+              />
+            </Routes>
+          </Router>
+        </ThemeProvider>
+      </QueryProvider>
     </>
   );
 }

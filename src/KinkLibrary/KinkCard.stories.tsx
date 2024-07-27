@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import KinkCard from './KinkCard';
-import { Level, Status } from './types';
+import { Level, Status } from '../Common/types';
 
 const meta = {
   title: 'Game/KinkCard',

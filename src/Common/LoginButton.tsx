@@ -1,12 +1,9 @@
-import { User } from '@supabase/supabase-js';
-import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
+import { useEffect } from 'react';
+import { supabase } from './supabaseClient';
 import GoogleButton from 'react-google-button';
+import { useGetUser } from '../User/hooks/useGetUser';
 
 const LoginButton: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -35,18 +32,9 @@ const LoginButton: React.FC = () => {
     });
   };
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data } = await supabase.auth.getUser();
+  const { user, isLoading } = useGetUser();
 
-      setUser(data.user);
-      setLoading(false);
-    };
-
-    fetchUser();
-  }, []);
-
-  if (loading) return <span></span>;
+  if (isLoading) return <span>Loading</span>;
 
   return user ? (
     <div>

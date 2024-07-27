@@ -31,7 +31,7 @@ export const LEVELS = [
   { label: Level.Xxxtreme, color: '#9e9e9e' },
 ];
 
-const remapLevels = (levels: typeof LEVELS) => {
+const levelsToMap = (levels: typeof LEVELS) => {
   const remapped = levels.reduce(
     (acc, level) => {
       acc[level.label] = { ...level };
@@ -42,4 +42,4 @@ const remapLevels = (levels: typeof LEVELS) => {
   return remapped;
 };
 
-export const LEVEL_MAP = remapLevels(LEVELS);
+export const LEVEL_MAP = levelsToMap(LEVELS);
