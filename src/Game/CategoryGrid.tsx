@@ -68,7 +68,7 @@ const CategoryGrid = ({
           );
 
           return (
-            <StyledGridItem
+            <Grid item xs={6} sm={4} md={2}
               key={index}
             >
               <CategoryGridItem
@@ -76,7 +76,7 @@ const CategoryGrid = ({
                 selected={categoryIsSelected}
                 onClick={() => onClickCard(category, categoryIsSelected)}
               />
-            </StyledGridItem>
+            </Grid>
           );
         })}
       </Grid>

@@ -37,20 +37,26 @@ const Game: React.FC = () => {
   const { mutate: addFavoriteKink } = useAddFavoriteKink();
   const { mutate: removeFavoriteKink } = useRemoveFavoriteKink();
 
+  // Memoized calculation of filtered kinks, random kinks, and categories
+  const { filteredKinks, categories } = useMemo(() => {
+    const { kinks: filteredKinks, categories } = filterKinksAndCategories(kinks, filters);
+    return {
+      filteredKinks,
+      categories,
+    };
+  }, [kinks, filters]);
+
+  const [randomSeed, setRandomSeed] = useState(0);
+
   // Function to shuffle kinks and select the top 3
   const shuffleKinks = (kinks: Kink[]) => {
     return kinks.sort(() => 0.5 - Math.random()).slice(0, 3);
   };
 
-  // Memoized calculation of filtered kinks, random kinks, and categories
-  const { randomKinks, filteredKinks, categories } = useMemo(() => {
-    const { kinks: filteredKinks, categories } = filterKinksAndCategories(kinks, filters);
-    return {
-      filteredKinks,
-      randomKinks: shuffleKinks(filteredKinks),
-      categories,
-    };
-  }, [kinks, filters]);
+
+  const randomKinks = useMemo(() => {
+    return shuffleKinks(filteredKinks);
+  }, [randomSeed])
 
   // Display loading state while kinks are being fetched
   if (isLoading) {
@@ -81,7 +87,7 @@ const Game: React.FC = () => {
             </Button>
             <Button
               variant="contained"
-              onClick={() => shuffleKinks(filteredKinks)}
+              onClick={() => setRandomSeed(Math.random())}
             >
               Shuffle
             </Button>

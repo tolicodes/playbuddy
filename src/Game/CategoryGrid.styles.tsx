@@ -29,9 +29,6 @@ export const StyledRoot = styled('div')(({ theme }) => ({
     padding: theme.spacing(3), // Use theme spacing for consistency
 }));
 
-export const StyledGridItem = styled(Grid)({
-    item: true,
-    xs: 6,
-    sm: 4,
-    md: 2,
-});
+export const StyledGridItem = (() => (props: any) => (
+    <Grid item xs={6} sm={4} md={2} {...props} />
+))
