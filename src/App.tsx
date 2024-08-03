@@ -9,6 +9,7 @@ import KinkLibrary from './KinkLibrary/KinkLibrary';
 import KinkAdminTable from './Admin/KinkAdminTable';
 import FavoriteKinks from './User/FavoriteKinks/FavoriteKinks';
 import QueryProvider from './Common/QueryProvider';
+import { EventCalendar } from './EventCalendar/EventCalendar';
 
 function App() {
   return (
@@ -33,6 +34,10 @@ function App() {
               <Route
                 path="/admin"
                 element={<KinkAdminTable />}
+              />
+              <Route
+                path="/calendar"
+                element={<EventCalendar />}
               />
             </Routes>
           </Router>

@@ -3,7 +3,7 @@ import { Typography, Box, Button } from '@mui/material';
 
 // Custom hooks for fetching kinks and favorite kinks
 import { useGetKinks } from '../Common/hooks/useGetKinks';
-import { useGetFavoriteKinks } from '../User/FavoriteKinks/useGetFavoriteKinks';
+import { useGetFavoriteKinks } from '../User/FavoriteKinks/hooks/useGetFavoriteKinks';
 
 // Types
 import { Kink } from '../Common/types';
@@ -15,7 +15,7 @@ import GameSetup from './GameSetup';
 
 // Utility functions
 import { filterKinksAndCategories } from '../KinkLibrary/utils/filterKinksAndCategories';
-import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/favoriteKinkMutations';
+import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/hooks/favoriteKinkMutations';
 
 // Enum for game modes
 enum Mode {

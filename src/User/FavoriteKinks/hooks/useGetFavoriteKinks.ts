@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../Common/supabaseClient';
-import { useGetUser } from '../hooks/useGetUser';
+import { supabase } from '../../../Common/supabaseClient';
+import { useGetUser } from '../../hooks/useGetUser';
 
 export const getFavoriteKinks = async (userId: string) => {
   const { data, error } = await supabase
-    .from('favorites')
-    .select(`kink_id`)
-    .eq('profile_id', userId);
+    .from('user_kink_data')
+    .select('kink_id')
+    .eq('user_id', userId)
+    .eq('is_favorite', true);
 
   if (error) {
     throw new Error('Error fetching favorite kinks: ' + error.message);
@@ -14,7 +15,6 @@ export const getFavoriteKinks = async (userId: string) => {
 
   return data?.map((favorite: any) => favorite.kink_id) || [];
 };
-
 
 type FavoriteKinkId = string;
 
@@ -28,9 +28,9 @@ export const useGetFavoriteKinks = (): UseGetFavoriteKinksResult => {
 
   const userId = user?.id;
   const { data: favoriteKinkIds = [], isLoading: isLoadingFavoriteKinks } = useQuery({
-    queryKey: ['favoriteKinks', userId],
+    queryKey: ['userKinkMetadata', userId],
     queryFn: () => getFavoriteKinks(userId as string),
-    enabled: !!userId
+    enabled: !!userId,
   });
 
   if (isLoadingUser || isLoadingFavoriteKinks) {

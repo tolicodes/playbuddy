@@ -4,8 +4,8 @@ import { Container } from '@mui/material';
 
 import { useGetKinks } from '../Common/hooks/useGetKinks';
 import { filterKinksAndCategories } from './utils/filterKinksAndCategories';
-import { useGetFavoriteKinks } from '../User/FavoriteKinks/useGetFavoriteKinks';
-import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/favoriteKinkMutations';
+import { useGetFavoriteKinks } from '../User/FavoriteKinks/hooks/useGetFavoriteKinks';
+import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/hooks/favoriteKinkMutations';
 
 import Filters from './Filters';
 import { Header } from '../Common/Header';

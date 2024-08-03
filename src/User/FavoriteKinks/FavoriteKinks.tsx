@@ -1,7 +1,7 @@
 import { useGetKinks } from '../../Common/hooks/useGetKinks';
 import KinkCardGrid from '../../KinkLibrary/KinkCardGrid';
-import { useAddFavoriteKink, useRemoveFavoriteKink } from './favoriteKinkMutations';
-import { useGetFavoriteKinks } from './useGetFavoriteKinks';
+import { useAddFavoriteKink, useRemoveFavoriteKink } from './hooks/favoriteKinkMutations';
+import { useGetFavoriteKinks } from './hooks/useGetFavoriteKinks';
 
 const FavoriteKinks = () => {
   const { kinks = [], isLoading } = useGetKinks();
