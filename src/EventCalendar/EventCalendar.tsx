@@ -66,13 +66,13 @@ export const EventFilters = ({ onFilterOrganizers }: EventFiltersReturn) => {
             }
         });
         return organizerSet;
-    }, [events]);
+    }, []);
 
     const [filterOrganizers, setFilterOrganizers] = useState<OrganizerAndColor[]>([...organizers]);
 
     useEffect(() => {
         onFilterOrganizers(filterOrganizers);
-    }, [])
+    }, [filterOrganizers, onFilterOrganizers]);
 
     return (
         <div>

@@ -14,6 +14,10 @@ export const Header = () => {
     navigate('/');
   };
 
+  const handleClickCalendar = () => {
+    navigate('/calendar');
+  }
+
   return (
     <Box
       sx={{
@@ -30,6 +34,11 @@ export const Header = () => {
       >
         KinkBuddy
       </Typography>
+      <Button
+        onClick={handleClickCalendar}
+      >
+        Calendar
+      </Button>
       <Button
         variant="contained"
         startIcon={<SportsEsportsIcon />}

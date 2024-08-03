@@ -8,7 +8,6 @@ import { useGetFavoriteKinks } from '../User/FavoriteKinks/hooks/useGetFavoriteK
 import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/hooks/favoriteKinkMutations';
 
 import Filters from './Filters';
-import { Header } from '../Common/Header';
 import KinkCardGrid from './KinkCardGrid';
 import { CategoryWithCount } from './utils/getCategoriesWithCounts';
 
@@ -33,8 +32,6 @@ const KinkList = () => {
 
   return (
     <>
-      <Header />
-
       <Container>
         <Filters
           categories={categories}

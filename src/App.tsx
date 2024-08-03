@@ -10,6 +10,7 @@ import KinkAdminTable from './Admin/KinkAdminTable';
 import FavoriteKinks from './User/FavoriteKinks/FavoriteKinks';
 import QueryProvider from './Common/QueryProvider';
 import { EventCalendar } from './EventCalendar/EventCalendar';
+import { Header } from './Common/Header';
 
 function App() {
   return (
@@ -17,7 +18,10 @@ function App() {
       <QueryProvider>
         <CssBaseline /> {/* This is for baseline styles */}
         <ThemeProvider theme={theme}>
+
           <Router>
+            <Header />
+
             <Routes>
               <Route
                 path="game"

@@ -49,14 +49,14 @@ const Game: React.FC = () => {
   const [randomSeed, setRandomSeed] = useState(0);
 
   // Function to shuffle kinks and select the top 3
-  const shuffleKinks = (kinks: Kink[]) => {
-    return kinks.sort(() => 0.5 - Math.random()).slice(0, 3);
+  const shuffleKinks = (kinks: Kink[], randomSeed: number) => {
+    return kinks.sort(() => 0.5 - randomSeed).slice(0, 3);
   };
 
 
   const randomKinks = useMemo(() => {
-    return shuffleKinks(filteredKinks);
-  }, [randomSeed])
+    return shuffleKinks(filteredKinks, randomSeed);
+  }, [randomSeed, filteredKinks])
 
   // Display loading state while kinks are being fetched
   if (isLoading) {

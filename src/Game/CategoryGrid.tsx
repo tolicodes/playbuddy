@@ -4,7 +4,7 @@ import { Grid, CardContent, Typography } from '@mui/material';
 import CategoryIcon, { categoryIcons } from './CategoryIcon';
 import { CategoryWithCount } from '../KinkLibrary/utils/getCategoriesWithCounts';
 
-import { StyledCard, IconContainer, LabelContainer, StyledRoot, StyledGridItem } from './CategoryGrid.styles';
+import { StyledCard, IconContainer, LabelContainer, StyledRoot } from './CategoryGrid.styles';
 
 const CategoryGridItem = ({
   category,
