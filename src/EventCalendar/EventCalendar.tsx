@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import tippy, { hideAll } from 'tippy.js';
+import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css'; // optional for styling
 
 
@@ -46,7 +46,7 @@ export const EventCalendar = () => {
         });
 
         setCurrentViewEvents(eventsInView);
-    }, [currentViewStart, currentViewEnd]);
+    }, [currentViewStart, currentViewEnd, events]);
 
 
     // ORGANIZER FILTERING
@@ -85,8 +85,6 @@ export const EventCalendar = () => {
                     const props = event.extendedProps;
 
                     const content = getTooltipContent(props, event);
-
-                    // hideAll(); // Hide all other tooltips
 
                     tippy(info.el, {
                         delay: 100, // ms
