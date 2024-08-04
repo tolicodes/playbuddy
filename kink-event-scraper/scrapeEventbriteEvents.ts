@@ -1,26 +1,7 @@
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 
-// Define the structure of the event object
-interface Event {
-    id: string;
-    name: string;
-    start_date: string;
-    end_date: string;
-    start_time: string;
-    end_time: string;
-    timezone: string;
-    location: string;
-    price: string;
-    imageUrl: string;
-    organizer: string;
-    organizerUrl: string;
-    eventUrl: string;
-    summary: string;
-    tags: string[];
-    min_ticket_price: string;
-    max_ticket_price: string;
-}
+import { Event } from './types';
 
 // Function to scrape event details
 const scrapeEventDetails = async (apiUrl: string): Promise<Event[]> => {
@@ -48,6 +29,7 @@ const scrapeEventDetails = async (apiUrl: string): Promise<Event[]> => {
             tags: event.tags.map((tag: any) => tag.display_name),
             min_ticket_price: event.ticket_availability.minimum_ticket_price.display,
             max_ticket_price: event.ticket_availability.maximum_ticket_price.display,
+            source: 'Eventbrite'
         }));
 
         return events;
@@ -58,7 +40,7 @@ const scrapeEventDetails = async (apiUrl: string): Promise<Event[]> => {
 };
 
 // Function to scrape organizer page
-const scrapeOrganizerPage = async (organizerUrl: string): Promise<Event[]> => {
+const scrapeEventbriteOrganizerPage = async (organizerUrl: string): Promise<Event[]> => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
@@ -98,4 +80,4 @@ const scrapeOrganizerPage = async (organizerUrl: string): Promise<Event[]> => {
 };
 
 // Default export function
-export default scrapeOrganizerPage;
+export default scrapeEventbriteOrganizerPage;
