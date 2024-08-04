@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import listPlugin from '@fullcalendar/list'; // Import the list plugin
+
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css'; // optional for styling
 
@@ -67,6 +69,11 @@ export const EventCalendar = () => {
         });
     }, [filteredOrganizers, currentViewEvents, currentViewOrganizers]);
 
+    // Determine the initial view based on screen size
+    const initialView = useMemo(() => {
+        return window.matchMedia('(max-width: 767px)').matches ? 'listMonth' : 'dayGridMonth';
+    }, []);
+
     return (
         <>
             {/* We pass currentView events because the EventFilters will do the filtering */}
@@ -77,8 +84,13 @@ export const EventCalendar = () => {
                     setCurrentViewStart(arg.start);
                     setCurrentViewEnd(arg.end);
                 }}
-                plugins={[dayGridPlugin]}
-                initialView="dayGridMonth"
+                plugins={[dayGridPlugin, listPlugin]}
+                initialView={initialView}
+                views={{
+                    listMonth: {
+                        buttonText: 'Agenda'
+                    }
+                }}
                 events={mapEventsToFullCalendar(filteredEvents, currentViewOrganizers)}
                 eventMouseEnter={function (info) {
                     const event = info.event;
@@ -94,6 +106,7 @@ export const EventCalendar = () => {
                         arrow: true,
                         theme: 'light', // Optional: you can use tippy.js themes
                         interactive: true,
+
                     });
                 }}
             />

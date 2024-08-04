@@ -69,7 +69,7 @@ export const mapEventsToFullCalendar = (events: Event[], organizers: OrganizerMe
                 title: event.name,
                 start: event.start_date,
                 end: event.end_date,
-                url: event.eventUrl,
+                // url: event.eventUrl,
                 extendedProps: {
                     ...event
                 }
@@ -80,7 +80,7 @@ export const mapEventsToFullCalendar = (events: Event[], organizers: OrganizerMe
 // the getTooltipContent function takes a tippy props object and an event object and returns a string that represents the content of the tooltip
 export const getTooltipContent = (props: any, event: any) => {
     return `
-    <div style="width:300px; max-height: 400px; overflow-y: auto;">
+    <div style="width:300px; max-height: 200px; overflow-y: auto;">
       <img src="${props.imageUrl}" alt="${event.title}" style="width: 100%; height: auto;"/>
       <h3> <a style="color: white" href="${props.eventUrl}" target="_blank">${event.title}</a></h3>
       <p><a style="$e="color: white" hre{props.organizerUrl}" target="_blank">${props.organizer}</a></p>
