@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import Papa from 'papaparse'
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list'; // Import the list plugin
@@ -10,9 +11,26 @@ import 'tippy.js/dist/tippy.css'; // optional for styling
 import { Event } from "../Common/types";
 import { EventFilters } from './EventFilters';
 import { getAvailableOrganizers, getEvents, getTooltipContent, mapEventsToFullCalendar, OrganizerMeta } from './calendarUtils';
+import { Button } from '@mui/material';
 
 
+const downloadCsv = (data: string) => {
+    if (!data) return;
 
+    const blob = new Blob([data], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'data.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+const jsonToCsv = (json: any): string => {
+    return Papa.unparse(json);
+};
 
 export const EventCalendar = () => {
     const events = useMemo(() => getEvents(), []);
@@ -74,10 +92,19 @@ export const EventCalendar = () => {
         return window.matchMedia('(max-width: 767px)').matches ? 'listMonth' : 'dayGridMonth';
     }, []);
 
+    const onClickDownsloadCSV = () => {
+        const csvData = jsonToCsv(events);
+        downloadCsv(csvData);
+    }
+
     return (
         <>
             {/* We pass currentView events because the EventFilters will do the filtering */}
             <EventFilters onFilterOrganizers={onFilterOrganizers} organizers={currentViewOrganizers} />
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={onClickDownsloadCSV}>Download CSV</Button>
             <FullCalendar
                 ref={calendarRef}
                 datesSet={(arg) => {

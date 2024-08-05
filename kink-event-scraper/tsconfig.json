@@ -2,8 +2,11 @@
   "compilerOptions": {
     "target": "ES6",
     "module": "commonjs",
+    "lib": ["ES6", "DOM"],
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*"]
 }
