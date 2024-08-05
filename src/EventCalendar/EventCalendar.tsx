@@ -92,9 +92,18 @@ export const EventCalendar = () => {
         return window.matchMedia('(max-width: 767px)').matches ? 'listMonth' : 'dayGridMonth';
     }, []);
 
-    const onClickDownsloadCSV = () => {
+    const onClickDownloadCSV = () => {
         const csvData = jsonToCsv(events);
         downloadCsv(csvData);
+    }
+
+    const onClickGoogleCal = () => {
+        const icsUrl = 'http://kinks.toli.love/calendar.ics';
+        const encodedUrl = encodeURIComponent(icsUrl);
+        const googleCalendarLink = `https://www.google.com/calendar/render?cid=${encodedUrl}`;
+
+        console.log(googleCalendarLink);
+        // window.location = googleCalendarLink;
     }
 
     return (
@@ -104,39 +113,47 @@ export const EventCalendar = () => {
             <Button
                 variant="contained"
                 color="primary"
-                onClick={onClickDownsloadCSV}>Download CSV</Button>
-            <FullCalendar
-                ref={calendarRef}
-                datesSet={(arg) => {
-                    setCurrentViewStart(arg.start);
-                    setCurrentViewEnd(arg.end);
-                }}
-                plugins={[dayGridPlugin, listPlugin]}
-                initialView={initialView}
-                views={{
-                    listMonth: {
-                        buttonText: 'Agenda'
-                    }
-                }}
-                events={mapEventsToFullCalendar(filteredEvents, currentViewOrganizers)}
-                eventMouseEnter={function (info) {
-                    const event = info.event;
-                    const props = event.extendedProps;
+                onClick={onClickDownloadCSV}>Download CSV</Button>
+            <Button
+                variant="contained"
+                color="primary"
+                onClick={onClickGoogleCal}>Google Cal</Button>
 
-                    const content = getTooltipContent(props, event);
+            <div style={{ height: '100vh' }}>
+                <FullCalendar
+                    ref={calendarRef}
+                    datesSet={(arg) => {
+                        setCurrentViewStart(arg.start);
+                        setCurrentViewEnd(arg.end);
+                    }}
+                    plugins={[dayGridPlugin, listPlugin]}
+                    initialView={initialView}
+                    views={{
+                        listMonth: {
+                            buttonText: 'Agenda'
+                        }
+                    }}
+                    height="100%"
+                    events={mapEventsToFullCalendar(filteredEvents, currentViewOrganizers)}
+                    eventMouseEnter={function (info) {
+                        const event = info.event;
+                        const props = event.extendedProps;
 
-                    tippy(info.el, {
-                        delay: 100, // ms
-                        content: content,
-                        allowHTML: true,
-                        placement: 'top',
-                        arrow: true,
-                        theme: 'light', // Optional: you can use tippy.js themes
-                        interactive: true,
+                        const content = getTooltipContent(props, event);
 
-                    });
-                }}
-            />
+                        tippy(info.el, {
+                            delay: 100, // ms
+                            content: content,
+                            allowHTML: true,
+                            placement: 'auto', // Use 'auto' for automatic placement
+                            arrow: true,
+                            theme: 'light', // Optional: you can use tippy.js themes
+                            interactive: true,
+
+                        });
+                    }}
+                />
+            </div>
         </>
     );
 };
