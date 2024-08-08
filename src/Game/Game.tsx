@@ -9,7 +9,6 @@ import { useGetFavoriteKinks } from '../User/FavoriteKinks/hooks/useGetFavoriteK
 import { Kink } from '../Common/types';
 
 // Components
-import { Header } from '../Common/Header';
 import KinkCardGrid from '../KinkLibrary/KinkCardGrid';
 import GameSetup from './GameSetup';
 

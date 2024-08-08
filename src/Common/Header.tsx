@@ -1,10 +1,9 @@
 import { Box, Typography, Button } from '@mui/material';
-import SportsEsportsIcon from '@mui/icons-material/SportsEsports'; // Import the game icon
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import LoginButton from './LoginButton';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+import { faCalendar, faGamepad } from '@fortawesome/free-solid-svg-icons';
 
 export const Header = () => {
   const navigate = useNavigate(); // Initialize the useNavigate hook
@@ -44,11 +43,11 @@ export const Header = () => {
         <Button
           onClick={handleClickCalendar}
         >
-          <FontAwesomeIcon icon={faCalendarAlt} size="2x" style={{ width: '30px' }} />
+          <FontAwesomeIcon icon={faCalendar} size="2x" />
         </Button>
-        <div onClick={handlePlayGameClick} style={{ padding: '0px' }}>
-          <SportsEsportsIcon style={{ width: '30px' }} />
-        </div>
+        <Button onClick={handlePlayGameClick} style={{ padding: '0px' }}>
+          <FontAwesomeIcon icon={faGamepad} size="2x" />
+        </Button>
       </div>
       <LoginButton />
     </Box>

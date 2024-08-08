@@ -5,6 +5,7 @@ import { OptionType } from "../Common/types";
 interface GenericFilterProps {
     onFilterChange: (selectedOptions: OptionType[]) => void;
     options: OptionType[];
+    entityName: string;
 }
 
 const customStyles: StylesConfig<OptionType, true> = {
@@ -65,7 +66,7 @@ function getContrastingColor(color: string): string {
     return yiq >= 128 ? '#000000' : '#ffffff';
 }
 
-export const EventFilters = ({ onFilterChange, options }: GenericFilterProps) => {
+export const EventFilters = ({ onFilterChange, options, entityName }: GenericFilterProps) => {
     const sortedOptions = options
         .map((option) => ({
             ...option,
@@ -84,6 +85,7 @@ export const EventFilters = ({ onFilterChange, options }: GenericFilterProps) =>
     return (
         <Select
             isMulti
+            placeholder={`Filter by ${entityName}`}
             name="generic-filter-tags"
             options={sortedOptions}
             className="basic-multi-select"

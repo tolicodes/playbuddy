@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { supabase } from './supabaseClient';
-import GoogleButton from 'react-google-button';
 import { useGetUser } from '../User/hooks/useGetUser';
 import { Button } from '@mui/material';
 

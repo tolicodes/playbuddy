@@ -8,7 +8,10 @@ import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import { Event, OptionType } from "../Common/types";
 import { EventFilters } from './EventFilters';
-import { getAvailableGroups, getAvailableOrganizers, getEvents, getTooltipContent, getWhatsappEvents, mapEventsToFullCalendar } from './calendarUtils';
+import {
+    // getAvailableGroups, 
+    getAvailableOrganizers, getEvents, getTooltipContent, getWhatsappEvents, mapEventsToFullCalendar
+} from './calendarUtils';
 
 const downloadCsv = (data: string) => {
     if (!data) return;
@@ -65,26 +68,22 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
         setFilteredOrganizers(organizers);
     }, []);
 
-    const currentViewGroups = useMemo(() => getAvailableGroups(currentViewEvents), [currentViewEvents]);
-    const [filteredGroups, setFilteredGroups] = useState<OptionType[]>(currentViewGroups);
-    const onFilterGroups = useCallback((groups: OptionType[]) => {
-        setFilteredGroups(groups);
-    }, []);
+    // const currentViewGroups = useMemo(() => getAvailableGroups(currentViewEvents), [currentViewEvents]);
+    // const [filteredGroups, setFilteredGroups] = useState<OptionType[]>(currentViewGroups);
+    // const onFilterGroups = useCallback((groups: OptionType[]) => {
+    //     setFilteredGroups(groups);
+    // }, []);
 
 
     const filteredEvents: Event[] = useMemo(() => {
         const organizers = filteredOrganizers.length === 0 ? currentViewOrganizers : filteredOrganizers;
-        const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
+        // const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
         return currentViewEvents.filter((event) => {
             return organizers.map((org) => org.value).includes(event.organizer || '')
             // && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
         });
     }, [filteredOrganizers, currentViewEvents, currentViewOrganizers]);
 
-    console.log({
-        filteredEvents,
-        events
-    })
 
     const initialView = useMemo(() => {
         return window.matchMedia('(max-width: 767px)').matches ? 'listMonth' : 'dayGridMonth';
@@ -105,7 +104,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
 
     return (
         <>
-            <EventFilters onFilterChange={onFilterOrganizers} options={currentViewOrganizers} />
+            <EventFilters onFilterChange={onFilterOrganizers} options={currentViewOrganizers} entityName="organizers" />
             {
                 // type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} />
 
