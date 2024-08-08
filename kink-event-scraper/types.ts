@@ -1,6 +1,6 @@
 export interface SourceMetadata {
-  url: string;
-  timestamp_scraped: number;
+  url?: string;
+  timestamp_scraped?: number;
 
   // group id
   source_origination_group_id?: string;

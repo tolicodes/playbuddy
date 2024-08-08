@@ -31,12 +31,48 @@ export const getAvailableOrganizers = (events: Event[]): OptionType[] => {
     }, [] as (OptionType)[]);
 }
 
+export const getAvailableGroups = (events: Event[]): OptionType[] => {
+    return events.reduce((acc, event, index) => {
+        if (!event.source_origination_group_name) return acc;
+
+        const existingGroup = acc.find((group) => group.value === event.source_origination_group_name);
+
+        if (existingGroup) {
+            existingGroup.count += 1;
+        } else {
+            acc.push({
+                label: event.source_origination_group_name,
+                value: event.source_origination_group_name,
+                color: colors[acc.length % colors.length],
+                count: 1,
+            });
+        }
+
+        return acc;
+    }, [] as (OptionType)[]);
+}
+
+const fillInMissingData = (events: Event[]): Event[] => {
+    return events.map((event) => {
+        return {
+            ...event,
+            organizer: event.organizer || 'Unknown',
+            source_origination_group_name: event.source_origination_group_name || 'Unknown',
+            source_origination_group_id: event.source_origination_group_id || 'Unknown',
+            source_origination_platform: event.source_origination_platform || 'Unknown',
+            source_ticketing_platform: event.source_ticketing_platform || 'Unknown',
+            url: event.url || 'Unknown',
+            timestamp_scraped: event.timestamp_scraped || 0,
+        };
+    });
+}
+
 export const getEvents = (): Event[] => {
-    return events as Event[];
+    return fillInMissingData(events as Event[]);
 }
 
 export const getWhatsappEvents = () => {
-    return whatsappEvents as Event[];
+    return fillInMissingData(whatsappEvents);
 }
 
 
