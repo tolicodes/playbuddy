@@ -3,6 +3,9 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports'; // Import the
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import LoginButton from './LoginButton';
 
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCalendarAlt } from '@fortawesome/free-solid-svg-icons';
+
 export const Header = () => {
   const navigate = useNavigate(); // Initialize the useNavigate hook
 
@@ -22,30 +25,31 @@ export const Header = () => {
     <Box
       sx={{
         backgroundColor: '#f0f0f0',
-        p: 2,
+        p: .5,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
       }}
     >
       <Typography
-        variant="h4"
+        variant="h6"
         onClick={handeHomeClick}
       >
         KinkBuddy
       </Typography>
-      <Button
-        onClick={handleClickCalendar}
-      >
-        Calendar
-      </Button>
-      <Button
-        variant="contained"
-        startIcon={<SportsEsportsIcon />}
-        onClick={handlePlayGameClick}
-      >
-        Play Game
-      </Button>
+
+      <div style={{
+        display: 'flex', alignItems: 'center'
+      }}>
+        <Button
+          onClick={handleClickCalendar}
+        >
+          <FontAwesomeIcon icon={faCalendarAlt} size="2x" style={{ width: '30px' }} />
+        </Button>
+        <div onClick={handlePlayGameClick} style={{ padding: '0px' }}>
+          <SportsEsportsIcon style={{ width: '30px' }} />
+        </div>
+      </div>
       <LoginButton />
     </Box>
   );

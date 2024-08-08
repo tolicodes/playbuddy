@@ -20,37 +20,39 @@ function App() {
         <ThemeProvider theme={theme}>
 
           <Router>
-            <Header />
+            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+              <Header />
 
-            <Routes>
-              <Route
-                path="game"
-                element={<GameSetup />}
-              />
-              <Route
-                path="/"
-                element={<KinkLibrary />}
-              />
-              <Route
-                path="/favorite"
-                element={<FavoriteKinks />}
-              />
-              <Route
-                path="/admin"
-                element={<KinkAdminTable />}
-              />
-              <Route
-                path="/calendar"
-                element={<EventCalendar />}
-              />
-              <Route
-                path="/calendar/whatsapp"
-                element={<EventCalendar type="Whatsapp" />}
-              />
-            </Routes>
+              <Routes>
+                <Route
+                  path="game"
+                  element={<GameSetup />}
+                />
+                <Route
+                  path="/"
+                  element={<KinkLibrary />}
+                />
+                <Route
+                  path="/favorite"
+                  element={<FavoriteKinks />}
+                />
+                <Route
+                  path="/admin"
+                  element={<KinkAdminTable />}
+                />
+                <Route
+                  path="/calendar"
+                  element={<EventCalendar />}
+                />
+                <Route
+                  path="/calendar/whatsapp"
+                  element={<EventCalendar type="Whatsapp" />}
+                />
+              </Routes>
+            </div>
           </Router>
         </ThemeProvider>
-      </QueryProvider>
+      </QueryProvider >
     </>
   );
 }

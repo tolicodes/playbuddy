@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import GoogleButton from 'react-google-button';
 import { useGetUser } from '../User/hooks/useGetUser';
+import { Button } from '@mui/material';
 
 const LoginButton: React.FC = () => {
   useEffect(() => {
@@ -43,10 +44,12 @@ const LoginButton: React.FC = () => {
         src={user.user_metadata.avatar_url}
         alt="user avatar"
       />
-      <span>{user.user_metadata.full_name}</span>
     </div>
   ) : (
-    <GoogleButton onClick={signUpUser}>Sign Up</GoogleButton>
+    <Button onClick={signUpUser}>
+      <img style={{ width: '30px', marginRight: '5px' }} src="/google-logo.png" alt="Google logo" className="google-logo" />
+      <span> Login</span>
+    </Button>
   );
 };
 

@@ -72,8 +72,6 @@ const Game: React.FC = () => {
         padding: 0,
       }}
     >
-      <Header />
-
       {/* Adventure mode shows the kinks */}
       {mode === Mode.adventure && (
         <>

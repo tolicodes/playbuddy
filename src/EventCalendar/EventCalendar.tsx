@@ -110,24 +110,31 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
                 // type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} />
 
             }
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={onClickDownloadCSV}
-            >
-                Download CSV
-            </Button>
-            <Button
-                variant="contained"
-                color="primary"
-                onClick={onClickGoogleCal}
-            >
-                Google Cal
-            </Button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    style={{ width: '100%', marginRight: '10px' }}
 
-            <div style={{ height: '100vh' }}>
+                    onClick={onClickDownloadCSV}
+                >
+                    Download CSV
+                </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    style={{ width: '100%' }}
+
+                    onClick={onClickGoogleCal}
+                >
+                    Google Cal
+                </Button>
+            </div>
+
+            <div style={{ flex: 1, padding: '10px' }}>
                 <FullCalendar
                     ref={calendarRef}
+                    height="100%"
                     datesSet={(arg) => {
                         setCurrentViewStart(arg.start);
                         setCurrentViewEnd(arg.end);
@@ -139,7 +146,6 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
                             buttonText: 'Agenda'
                         }
                     }}
-                    height="100%"
                     events={mapEventsToFullCalendar(filteredEvents, currentViewOrganizers)}
                     eventMouseEnter={(info) => {
                         const event = info.event;
