@@ -109,7 +109,6 @@ export const useAddFavoriteKink = () => {
   return useOptimisticUpdate(
     upsertFavoriteKink,
     (old, kinkId) => {
-      console.log('adding favorite kink', kinkId, old);
       const exists = old.some(kink => kink.kink_id === kinkId);
       // insert or update the kink in the user's favorite kinks
       if (exists) {

@@ -64,3 +64,11 @@ export interface Event {
   max_ticket_price: string;
   source: string;
 }
+
+
+export interface OptionType {
+  label: string;
+  value: string;
+  color: string;
+  count: number;
+}

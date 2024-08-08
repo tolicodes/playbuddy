@@ -43,6 +43,10 @@ function App() {
                 path="/calendar"
                 element={<EventCalendar />}
               />
+              <Route
+                path="/calendar/whatsapp"
+                element={<EventCalendar type="Whatsapp" />}
+              />
             </Routes>
           </Router>
         </ThemeProvider>
