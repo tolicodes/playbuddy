@@ -1,4 +1,4 @@
-import { Box, Typography, Button } from '@mui/material';
+import { Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import LoginButton from './LoginButton';
 
