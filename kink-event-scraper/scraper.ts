@@ -5,6 +5,8 @@ import { createIcal } from './helpers/ical';
 
 import scrapeURLs from './helpers/scrapeURLs';
 import scrapeWhatsapp from './scrapers/scrapeWhatsapp';
+import { scrapePluraEvents } from './scrapers/scrapePluraEvents';
+import scrapeEventbriteEventsFromOrganizerPage from './scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage';
 
 export const filterEvents = (events: Event[]) => {
     // these are default Plura events that we want to exclude from the calendar
@@ -35,19 +37,22 @@ export const filterEvents = (events: Event[]) => {
 };
 
 const main = async () => {
-    // const organizers = JSON.parse(fs.readFileSync('eventbriteOrganizers.json', 'utf-8'));
+    // const organizers = JSON.parse(fs.readFileSync('./data/eventbrite_organizers.json', 'utf-8'));
     // const allEvents = [];
 
     // for (const organizer of organizers) {
-    //     const events = await scrapeOrganizerEvents(organizer.url);
+    //     const events = await scrapeEventbriteEventsFromOrganizerPage(organizer.url, {
+    //         source_ticketing_platform: 'Eventbrite',
+    //         url: organizer.url,
+    //     });
     //     allEvents.push(...events);
     // }
 
-    // fs.writeFileSync('all_events.json', JSON.stringify(allEvents, null, 2);
+    // fs.writeFileSync('./data/all_events.json', JSON.stringify(allEvents, null, 2));
     // console.log('All events data saved to all_events.json');
 
     // const events = await scrapePluraEvents();
-    // fs.writeFileSync('all_plura_events.json', JSON.stringify(events, null, 2));
+    // fs.writeFileSync('./data/all_plura_events.json', JSON.stringify(events, null, 2));
 
     // const whatsappLinksOut = await scrapeWhatsapp();
 

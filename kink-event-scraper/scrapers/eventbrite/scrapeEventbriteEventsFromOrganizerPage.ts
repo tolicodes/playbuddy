@@ -68,9 +68,10 @@ const scrapeEventbriteEventsFromOrganizerPage = async (
       });
     });
 
-    const timeoutPromise = new Promise<string>((_, reject) => {
+    const timeoutPromise = new Promise<string>((resolve, reject) => {
       setTimeout(() => {
-        reject('');
+        console.log(`Organizer URL ${organizerUrl} contains no events`)
+        resolve('')
       }, 10000);
     });
 
@@ -78,6 +79,9 @@ const scrapeEventbriteEventsFromOrganizerPage = async (
 
     // Wait for the API request URL or timeout
     const apiUrl = await Promise.race([apiPromise, timeoutPromise]);
+    if (!apiUrl) {
+      return [];
+    }
     console.log('Captured API URL:', apiUrl);
 
     // Scrape event details using the captured API URL

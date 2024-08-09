@@ -5,11 +5,11 @@ import scrapeEventbriteEventsFromOrganizerPage from './scrapeEventbriteEventsFro
 import { Event, SourceMetadata } from '../../types';
 
 const scrapeEventbriteAllOrganizerEventsFromEventPage = async (
-  eventId: string,
+  url: string,
   sourceMetadata: SourceMetadata,
 ): Promise<Event[] | null> => {
   try {
-    const { data } = await axios.get(sourceMetadata.url);
+    const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
     const organizerUrl =

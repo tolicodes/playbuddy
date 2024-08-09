@@ -21,35 +21,46 @@ export const Header = () => {
   }
 
   return (
-    <Box
-      sx={{
+    <div
+      style={{
         backgroundColor: '#f0f0f0',
-        p: .5,
+        // p: .5,
         display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        // justifyContent: 'space-between',
+        alignItems: ' center',
+        padding: '.5rem 1rem'
       }}
     >
-      <Typography
-        variant="h6"
-        onClick={handeHomeClick}
-      >
-        KinkBuddy
-      </Typography>
-
       <div style={{
-        display: 'flex', alignItems: 'center'
+        display: 'flex',
+        alignItems: 'center'
       }}>
-        <Button
-          onClick={handleClickCalendar}
+        <Typography
+          variant="h6"
+          onClick={handeHomeClick}
+          style={{ cursor: 'pointer', marginRight: '1rem' }}
         >
-          <FontAwesomeIcon icon={faCalendar} size="2x" />
-        </Button>
-        <Button onClick={handlePlayGameClick} style={{ padding: '0px' }}>
-          <FontAwesomeIcon icon={faGamepad} size="2x" />
-        </Button>
+          KinkBuddy
+        </Typography>
+
+        <div style={{
+          display: 'flex',
+          gap: '5px '
+          // alignItems: 'center'
+        }}>
+          <Button
+            onClick={handleClickCalendar}
+            variant='contained'
+            style={{ marginRight: '1rem' }}
+          >
+            <FontAwesomeIcon icon={faCalendar} size="2x" />
+          </Button>
+          <Button onClick={handlePlayGameClick} variant='contained'>
+            <FontAwesomeIcon icon={faGamepad} size="2x" />
+          </Button>
+        </div>
       </div>
       <LoginButton />
-    </Box>
+    </div >
   );
 };

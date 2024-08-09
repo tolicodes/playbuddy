@@ -86,8 +86,8 @@ export const mapEventsToFullCalendar = (events: Event[], organizers: OptionType[
                 id: event.id,
                 title: event.name,
                 // TODO: we will only have a start_date field
-                start: new Date(`${event.start_date}${event.start_time ? `T${event.start_time}` : ''}`),
-                end: new Date(`${event.end_date}${event.end_time ? `T${event.end_time}` : ''}`),
+                start: new Date(`${event.start_date}${event.start_time ? ` ${event.start_time} UTC` : ''}`),
+                end: new Date(`${event.end_date}${event.end_time ? ` ${event.end_time} UTC` : ''}`),
                 extendedProps: {
                     ...event
                 }
