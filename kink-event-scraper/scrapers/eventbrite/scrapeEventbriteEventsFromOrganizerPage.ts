@@ -1,13 +1,15 @@
 import puppeteer from 'puppeteer';
 import axios from 'axios';
 
-import { Event, SourceMetadata } from '../../types';
+import { Event, ScraperParams, SourceMetadata } from '../../types';
+import { localDateTimeToISOString } from '../../helpers/dateUtils';
 
 // Function to scrape event details
-const scrapeEventDetails = async (
-  apiUrl: string,
-  sourceMetadata: SourceMetadata,
-): Promise<Event[]> => {
+const scrapeEventDetails = async ({
+  url: apiUrl,
+  sourceMetadata,
+  urlCache,
+}: ScraperParams): Promise<Event[]> => {
   try {
     // Make a request to the Eventbrite API endpoint
     const response = await axios.get(apiUrl);
@@ -15,13 +17,13 @@ const scrapeEventDetails = async (
 
     // Extract relevant event details
     const events = data.events.map((event: any): Event => {
+      const start_date = localDateTimeToISOString(event.start_date, event.start_time);
+      const end_date = localDateTimeToISOString(event.end_date, event.end_time);
       return {
-        id: event.id,
+        id: `eventbrite-${event.id}`,
         name: event.name,
-        start_date: event.start_date,
-        end_date: event.end_date,
-        start_time: event.start_time,
-        end_time: event.end_time,
+        start_date,
+        end_date,
         timezone: event.timezone,
         location: event.primary_venue.address.localized_address_display,
         price: event.ticket_availability.minimum_ticket_price.display,
@@ -47,11 +49,13 @@ const scrapeEventDetails = async (
   }
 };
 
+
 // Function to scrape organizer page
-const scrapeEventbriteEventsFromOrganizerPage = async (
-  organizerUrl: string,
-  sourceMetadata: SourceMetadata,
-): Promise<Event[]> => {
+// We don't use URL cache here because it doesn't cost us anything to overwrite
+const scrapeEventbriteEventsFromOrganizerPage = async ({
+  url,
+  sourceMetadata,
+}: ScraperParams): Promise<Event[]> => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
@@ -70,12 +74,12 @@ const scrapeEventbriteEventsFromOrganizerPage = async (
 
     const timeoutPromise = new Promise<string>((resolve, reject) => {
       setTimeout(() => {
-        console.log(`Organizer URL ${organizerUrl} contains no events`)
+        console.log(`Organizer URL ${url} contains no events`)
         resolve('')
       }, 10000);
     });
 
-    await page.goto(organizerUrl, { waitUntil: 'networkidle2' });
+    await page.goto(url, { waitUntil: 'networkidle2' });
 
     // Wait for the API request URL or timeout
     const apiUrl = await Promise.race([apiPromise, timeoutPromise]);
@@ -85,7 +89,7 @@ const scrapeEventbriteEventsFromOrganizerPage = async (
     console.log('Captured API URL:', apiUrl);
 
     // Scrape event details using the captured API URL
-    const events = await scrapeEventDetails(apiUrl, sourceMetadata);
+    const events = await scrapeEventDetails({ url: apiUrl, sourceMetadata });
     return events;
   } catch (error) {
     // Fail silently by returning an empty array
@@ -93,6 +97,29 @@ const scrapeEventbriteEventsFromOrganizerPage = async (
   } finally {
     await browser.close();
   }
+};
+
+export const scrapeEventbriteEventsFromOrganizersURLs = async ({
+  organizerURLs,
+  sourceMetadata,
+  urlCache,
+}: {
+  organizerURLs: string[];
+  sourceMetadata: SourceMetadata;
+  urlCache: string[]
+}): Promise<Event[]> => {
+  const events = [];
+
+  for (const organizerURL of organizerURLs) {
+    const organizerEvents = await scrapeEventbriteEventsFromOrganizerPage({
+      url: organizerURL,
+      sourceMetadata,
+      urlCache
+    });
+    events.push(...organizerEvents);
+  }
+
+  return events;
 };
 
 // Default export function

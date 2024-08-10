@@ -1,12 +1,12 @@
 // import { scrapePluraEvents } from './scrapePluraEvents';
 import fs from 'fs';
-import { Event } from './types';
+import { Event, SourceMetadata } from './types';
 import { createIcal } from './helpers/ical';
 
 import scrapeURLs from './helpers/scrapeURLs';
-import scrapeWhatsapp from './scrapers/scrapeWhatsapp';
+import { scrapeWhatsappLinks } from './scrapers/scrapeWhatsapp';
 import { scrapePluraEvents } from './scrapers/scrapePluraEvents';
-import scrapeEventbriteEventsFromOrganizerPage from './scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage';
+import { scrapeEventbriteEventsFromOrganizersURLs } from './scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage';
 
 export const filterEvents = (events: Event[]) => {
     // these are default Plura events that we want to exclude from the calendar
@@ -14,10 +14,6 @@ export const filterEvents = (events: Event[]) => {
         'e7179b3b-b4f8-40df-8d87-f205b0caaeb1', // New York LGBTQ+ Community Events Calendar
         '036f8010-9910-435f-8119-2025a046f452', // NYC Kink Community Events Calendar
     ];
-
-    console.log({
-        events
-    })
 
     const filteredEvents = events.filter(
         (event) => !EXCLUDE_EVENT_IDS.includes(event.id),
@@ -36,70 +32,151 @@ export const filterEvents = (events: Event[]) => {
     return dedupedEvents;
 };
 
+const getAllEvents = () => {
+    if (!fs.existsSync('./data/all_events.json')) {
+        return [];
+    }
+    return JSON.parse(fs.readFileSync('./data/all_events.json', 'utf-8'))
+}
+
+const writeAllEvents = (events: Event[]) => {
+    fs.writeFileSync('./data/all_events.json', JSON.stringify(events, null, 2))
+}
+
+const writeAllEventsToFrontend = (events: Event[]) => {
+    fs.writeFileSync('../src/EventCalendar/all_events.json', JSON.stringify(events, null, 2))
+}
+
+
+const writeAllWhatsappEventsToFrontend = (events: Event[]) => {
+    fs.writeFileSync('../src/EventCalendar/whatsapp_events.json', JSON.stringify(events, null, 2))
+}
+
+
+const getKinkEventbriteOrganizerURLs = () => {
+    if (!fs.existsSync('./data/kink_eventbrite_organizers.json')) {
+        return [];
+    }
+    const organizers = JSON.parse(fs.readFileSync('./data/kink_eventbrite_organizers.json', 'utf-8'))
+    return organizers.map((organizer: any) => organizer.url);
+}
+
+const getKinkEventbriteEvents = () => {
+    if (!fs.existsSync('./data/all_kink_eventbrite_events.json')) {
+        return [];
+    }
+    return JSON.parse(fs.readFileSync('./data/all_kink_eventbrite_events.json', 'utf-8'))
+}
+
+const writeKinkEventbriteEvents = (events: Event[]) => {
+    fs.writeFileSync('./data/all_kink_eventbrite_events.json', JSON.stringify(events, null, 2))
+}
+
+const getPluraEvents = () => {
+    if (!fs.existsSync('./data/all_plura_events.json')) {
+        return [];
+    }
+    return JSON.parse(fs.readFileSync('./data/all_plura_events.json', 'utf-8'))
+}
+
+const writePluraEvents = (events: Event[]) => {
+    fs.writeFileSync('./data/all_plura_events.json', JSON.stringify(events, null, 2))
+}
+
+const getWhatsappLinks = () => {
+    if (!fs.existsSync('./data/whatsapp_links.json')) {
+        return [];
+    }
+    return JSON.parse(fs.readFileSync('./data/whatsapp_links.json', 'utf-8'))
+}
+
+const writeWhatsappLinks = (SourceMetadata: SourceMetadata[]) => {
+    fs.writeFileSync('./data/whatsapp_links.json', JSON.stringify(SourceMetadata, null, 2))
+}
+
+const getWhatsappEvents = () => {
+
+    if (!fs.existsSync('./data/all_whatsapp_events.json')) {
+        return [];
+    }
+    return JSON.parse(fs.readFileSync('./data/all_whatsapp_events.json', 'utf-8'))
+}
+
+const writeWhatsappEvents = (events: Event[]) => {
+    fs.writeFileSync('./data/all_whatsapp_events.json', JSON.stringify(events, null, 2))
+}
+
+const getURLCache = (events: Event[]): string[] => {
+    return events.map((event: Event) => event.eventUrl);
+}
+
 const main = async () => {
-    // const organizers = JSON.parse(fs.readFileSync('./data/eventbrite_organizers.json', 'utf-8'));
-    // const allEvents = [];
+    // GENERAL SETUP
 
-    // for (const organizer of organizers) {
-    //     const events = await scrapeEventbriteEventsFromOrganizerPage(organizer.url, {
-    //         source_ticketing_platform: 'Eventbrite',
-    //         url: organizer.url,
-    //     });
-    //     allEvents.push(...events);
-    // }
+    const allEventsOld = getAllEvents();
+    const kinkEventbriteOrganizerURLs = getKinkEventbriteOrganizerURLs();
 
-    // fs.writeFileSync('./data/all_events.json', JSON.stringify(allEvents, null, 2));
-    // console.log('All events data saved to all_events.json');
+    // all event cache
+    const urlCache = getURLCache(allEventsOld)
 
-    // const events = await scrapePluraEvents();
-    // fs.writeFileSync('./data/all_plura_events.json', JSON.stringify(events, null, 2));
+    // new events
+    // we will append new events to this array without scraping urlCache
+    const allEvents = [...allEventsOld];
 
-    // const whatsappLinksOut = await scrapeWhatsapp();
+    // SCRAPE EVENTBRITE EVENTS
+    const kinkEventbriteEventsOut = await scrapeEventbriteEventsFromOrganizersURLs({
+        organizerURLs: kinkEventbriteOrganizerURLs,
+        sourceMetadata: {
+            source_ticketing_platform: 'Eventbrite',
+            dataset: 'Kink'
+        },
+        urlCache,
+    })
 
-    // // Save the links to a JSON file
-    // fs.writeFileSync(
-    //     './data/whatsapp_links.json',
-    //     JSON.stringify(whatsappLinksOut, null, 2),
-    // );
-    // console.log('Links saved to ./data/whatsapp_links.json');
+    writeKinkEventbriteEvents(kinkEventbriteEventsOut);
 
-    // const whatsappLinks = JSON.parse(
-    //     fs.readFileSync('./data/whatsapp_links.json', 'utf-8'),
-    // );
+    // SCRAPE PLURA EVENTS
+    const pluraEventsOut = await scrapePluraEvents({
+        sourceMetadata: {
+            source_ticketing_platform: 'Plura',
+            dataset: 'Kink'
+        },
+    });
+    writePluraEvents(pluraEventsOut);
 
-    // const whatsappEventsOut = await scrapeURLs(whatsappLinks);
-    // fs.writeFileSync(
-    //     './data/all_whatsapp_events.json',
-    //     JSON.stringify(whatsappEventsOut, null, 2),
-    // );
+    // SCRAPE WHATSAPP EVENTS
+    const whatsappLinksOut = await scrapeWhatsappLinks();
 
-    // const whatsappEvents = JSON.parse(fs.readFileSync('./data/all_whatsapp_events.json', 'utf-8'));
+    writeWhatsappLinks(whatsappLinksOut)
 
-    const pluraEvents = JSON.parse(
-        fs.readFileSync('./data/all_plura_events.json', 'utf-8'),
-    );
-    const eventbriteEvents = JSON.parse(
-        fs.readFileSync('./data/all_eventbrite_events.json', 'utf-8'),
-    );
+    const whatsappLinks = getWhatsappLinks();
 
+    const whatsappEventsOut = await scrapeURLs(whatsappLinks, urlCache);
+    writeWhatsappEvents(whatsappEventsOut);
+
+    // Combine All Events
+
+    const pluraEvents = getPluraEvents();
+    const kinkEventbriteEvents = getKinkEventbriteEvents();
+    const whatsappEvents = getWhatsappEvents()
+
+    // Filter them to exclude certain events and dedupe
     const filteredEvents = filterEvents([
         ...pluraEvents,
-        ...eventbriteEvents,
+        ...kinkEventbriteEvents,
+        // For now keeping them out since they're not all kink related
+        // ...whatsappEvents
     ]);
 
-    fs.writeFileSync(
-        '../src/EventCalendar/all_events.json',
-        JSON.stringify(filteredEvents, null, 2),
-    );
-
-    // const filteredWhatsappEvents = filterEvents(whatsappEvents);
-
-    // fs.writeFileSync(
-    //     '../src/EventCalendar/whatsapp_events.json',
-    //     JSON.stringify(filteredWhatsappEvents, null, 2),
-    // );
+    writeAllEvents(filteredEvents);
+    writeAllEventsToFrontend(filteredEvents);
 
 
+    // Separate calendar for whatsapp events
+    const filteredWhatsappEvents = filterEvents(whatsappEvents);
+    writeAllWhatsappEventsToFrontend(filteredWhatsappEvents)
+
+    // Write iCal feed
     createIcal(filteredEvents);
 };
 

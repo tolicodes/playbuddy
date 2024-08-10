@@ -18,21 +18,20 @@ export const createIcal = (events: Event[]) => {
 
     // Convert JSON data to iCalendar events
     jsonData.forEach((event: Event) => {
-        const start = new Date(`${event.start_date}${event.start_time ? ` ${event.start_time} UTC` : ''}`);
-        const end = new Date(`${event.end_date}${event.end_time ? ` ${event.end_time} UTC` : ''}`);
-
+        const start_date = new Date(event.start_date);
+        const end_date = new Date(event.end_date);
         // check if start and end dates are valid
         const isValidDate = (date: Date) => {
             return date instanceof Date && !isNaN(date.getTime());
         };
 
-        if (!isValidDate(start) || !isValidDate(end)) {
+        if (!isValidDate(start_date) || !isValidDate(end_date)) {
             return;
         }
 
         const icalEvent: ICalEventData = {
-            start,
-            end,
+            start: start_date,
+            end: end_date,
             summary: event.name,
             description: `${event.eventUrl} ${event.summary}`,
             location: event.location,

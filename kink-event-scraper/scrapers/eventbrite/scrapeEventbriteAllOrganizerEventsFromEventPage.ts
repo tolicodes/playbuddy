@@ -2,12 +2,13 @@ import axios from 'axios';
 
 import cheerio from 'cheerio';
 import scrapeEventbriteEventsFromOrganizerPage from './scrapeEventbriteEventsFromOrganizerPage';
-import { Event, SourceMetadata } from '../../types';
+import { Event, ScraperParams } from '../../types';
 
-const scrapeEventbriteAllOrganizerEventsFromEventPage = async (
-  url: string,
-  sourceMetadata: SourceMetadata,
-): Promise<Event[] | null> => {
+const scrapeEventbriteAllOrganizerEventsFromEventPage = async ({
+  url,
+  sourceMetadata,
+  urlCache,
+}: ScraperParams): Promise<Event[] | null> => {
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
@@ -20,10 +21,10 @@ const scrapeEventbriteAllOrganizerEventsFromEventPage = async (
       return null;
     }
 
-    const events = await scrapeEventbriteEventsFromOrganizerPage(
-      organizerUrl,
+    const events = await scrapeEventbriteEventsFromOrganizerPage({
+      url: organizerUrl,
       sourceMetadata,
-    );
+    });
 
     const eventsWithMetadata = events.map((event) => ({
       ...event,

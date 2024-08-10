@@ -10,6 +10,7 @@ export interface SourceMetadata {
   source_origination_platform?: 'WhatsApp';
   // the ticketing platform it's sold on
   source_ticketing_platform?: 'Eventbrite' | 'Plura' | 'Partiful';
+  dataset?: 'Kink' | 'Whatsapp POC'
 }
 
 // Define the structure of the event object
@@ -32,3 +33,9 @@ export type Event = {
   min_ticket_price: string;
   max_ticket_price: string;
 } & SourceMetadata;
+
+export type ScraperParams = {
+  url: string,
+  sourceMetadata: SourceMetadata,
+  urlCache?: string[],
+}

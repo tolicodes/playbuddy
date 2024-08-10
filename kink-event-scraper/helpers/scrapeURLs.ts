@@ -1,13 +1,10 @@
-import { Event, SourceMetadata } from '../types';
+import { Event, ScraperParams, SourceMetadata } from '../types';
 import scrapePartifulEvent from '../scrapers/scrapePartifulEvent';
 import scrapeEventbriteAllOrganizerEventsFromEventPage from '../scrapers/eventbrite/scrapeEventbriteAllOrganizerEventsFromEventPage';
 
 type ScrapersConfig = {
   [domain: string]: {
-    scraper: (
-      eventId: string,
-      sourceMetadata: SourceMetadata,
-    ) => Promise<Event[] | null>;
+    scraper: (params: ScraperParams) => Promise<Event[] | null>;
     eventRegex: RegExp;
     eventRegexIndex: number;
   };
@@ -41,21 +38,31 @@ const dedupeByLink = (arr: SourceMetadata[]): SourceMetadata[] => {
   });
 };
 
-export const scrapeURLs = async (links: SourceMetadata[]): Promise<Event[]> => {
+export const scrapeURLs = async (links: SourceMetadata[], urlCache: string[]): Promise<Event[]> => {
   const events: Event[] = [];
 
-  // Remove duplicate URLs
-  const dedupedLinks = dedupeByLink(links);
+  const filteredFromCache = links.filter((link) => {
+    if (!link.url) return false;
+    return !urlCache.includes(link.url);
+  })
+
+  const dupes = links.filter((link) => {
+    if (!link.url) return false;
+    return urlCache.includes(link.url);
+  })
 
   console.log({
-    links,
-    dedupedLinks,
-  });
+    dupes
+  })
+
+  // Remove duplicate URLs
+  const dedupedLinks = dedupeByLink(filteredFromCache);
 
   // Process each link sequentially
   for (let i = 0; i < dedupedLinks.length; i++) {
     const sourceMetadata = dedupedLinks[i];
     const url = sourceMetadata.url;
+    if (!url) continue;
     console.log(`[${i}/${dedupedLinks.length}] Processing URL: ${url}`);
     const domain = new URL(url).hostname.replace('www.', '');
 
@@ -75,7 +82,11 @@ export const scrapeURLs = async (links: SourceMetadata[]): Promise<Event[]> => {
       try {
         // Set a timeout of 30 seconds (30000 milliseconds)
         const eventsScraped = await Promise.race([
-          scraper(eventId, sourceMetadata),
+          scraper({
+            url: eventId,
+            sourceMetadata,
+            urlCache
+          }),
           timeout(15000),
         ]);
 

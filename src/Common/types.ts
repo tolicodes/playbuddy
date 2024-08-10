@@ -56,6 +56,7 @@ export interface SourceMetadata {
   source_origination_platform?: 'WhatsApp' | 'Unknown';
   // the ticketing platform it's sold on
   source_ticketing_platform?: 'Eventbrite' | 'Plura' | 'Partiful' | 'Unknown';
+  dataset?: 'Kink' | 'Whatsapp POC'
 }
 
 // Define the structure of the event object
@@ -86,3 +87,4 @@ export interface OptionType {
   color: string;
   count: number;
 }
+

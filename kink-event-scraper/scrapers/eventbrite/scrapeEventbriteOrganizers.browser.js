@@ -15,8 +15,6 @@ const scrapeOrganizers = () => {
     organizers.push({ name, url });
   });
 
-  console.log({ organizers });
-
   // Optionally, you can save the data to a JSON file if you have a server-side environment.
   // Here, we're just returning the data.
   return organizers;

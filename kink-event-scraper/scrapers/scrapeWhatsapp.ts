@@ -1,6 +1,5 @@
 import { Client, LocalAuth, Message, Chat } from 'whatsapp-web.js';
 import qrcode from 'qrcode-terminal';
-import fs from 'fs';
 import { SourceMetadata } from '../types';
 
 const SCRAPE_GROUPS: string[] = [
@@ -10,7 +9,7 @@ const SCRAPE_GROUPS: string[] = [
     'TREE 💃🌳🕺🏻 RAVE',
 ];
 
-export const scrapeWhatsapp = (): Promise<SourceMetadata[]> => {
+export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
     return new Promise<SourceMetadata[]>((resolve, reject) => {
         const client = new Client({
             authStrategy: new LocalAuth({ clientId: 'client-one' }), // Specify a clientId to differentiate between different sessions
@@ -88,5 +87,3 @@ export const scrapeWhatsapp = (): Promise<SourceMetadata[]> => {
         client.initialize();
     });
 };
-
-export default scrapeWhatsapp;

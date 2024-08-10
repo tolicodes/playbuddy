@@ -76,18 +76,46 @@ export const getWhatsappEvents = () => {
 }
 
 
+const getEndDateAdjusted = (start_date: string, end_date: string) => {
+    const startDate = new Date(start_date);
+    let endDate = new Date(end_date);
+
+    // Create a new Date object for start_date's midnight and next day's midnight
+    const startMidnight = new Date(startDate);
+    startMidnight.setHours(0, 0, 0, 0);
+
+    const nextDayMidnight = new Date(startMidnight);
+    nextDayMidnight.setDate(nextDayMidnight.getDate() + 1);
+
+    console.log({
+        endDate,
+        nextDayMidnight
+    })
+
+    if (endDate > nextDayMidnight) {
+        endDate = new Date(startDate);
+        // Set end_date to the last moment of the previous day (23:59:59.999)
+        endDate.setHours(23, 59, 59, 999);
+    }
+
+    return endDate;
+}
+
 // the mapEvents function takes an array of events and an organizerColorsMap and returns an array of events that are formatted for the FullCalendar component
 export const mapEventsToFullCalendar = (events: Event[], organizers: OptionType[]) => {
     const mappedEvents = events
         .filter((event) => event.organizer)
         .map((event) => {
+            // if the end date is tomorrow, we end at midnight, otherwise we end at 11:59pm
+            const endDateAdjusted = getEndDateAdjusted(event.start_date, event.end_date);
+
             return {
                 color: organizers.find((organizer) => organizer.value === event.organizer)?.color,
                 id: event.id,
                 title: event.name,
                 // TODO: we will only have a start_date field
-                start: new Date(`${event.start_date}${event.start_time ? ` ${event.start_time} UTC` : ''}`),
-                end: new Date(`${event.end_date}${event.end_time ? ` ${event.end_time} UTC` : ''}`),
+                start: event.start_date,
+                end: endDateAdjusted,
                 extendedProps: {
                     ...event
                 }
@@ -104,8 +132,8 @@ export const getTooltipContent = (props: any, event: any) => {
       <img src="${props.imageUrl}" alt="${event.title}" style="width: 100%; height: auto;"/>
       <h3> <a style="color: white" href="${props.eventUrl}" target="_blank">${event.title}</a></h3>
       <p><a style="$e="color: white" hre{props.organizerUrl}" target="_blank">${props.organizer}</a></p>
-      ${event.start && new Date(event.start).toLocaleString()}
-      ${event.end && '-' + new Date(event.end).toLocaleString()} (${props.timezone})
+      ${event.extendedProps.start_date && new Date(event.extendedProps.start_date).toLocaleString()}
+      ${event.extendedProps.end_date && '- ' + new Date(event.extendedProps.end_date).toLocaleString()} (${props.timezone})
       <p><strong>Location:</strong> ${props.location}</p>
       ${props.price && `<p><strong>Price:</strong> ${props.price} ${props.min_ticket_price && `(${props.min_ticket_price} - ${props.max_ticket_price})`}</p>`}
       <p>${props.summary}</p>
