@@ -146,7 +146,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
                         }
                     }}
                     events={mapEventsToFullCalendar(filteredEvents, currentViewOrganizers)}
-                    eventMouseEnter={(info) => {
+                    eventDidMount={(info) => {
                         const event = info.event;
                         const props = event.extendedProps;
 
@@ -162,6 +162,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
                             interactive: true,
                         });
                     }}
+
                 />
             </div>
         </>

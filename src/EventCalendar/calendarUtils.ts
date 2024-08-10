@@ -113,7 +113,6 @@ export const mapEventsToFullCalendar = (events: Event[], organizers: OptionType[
                 color: organizers.find((organizer) => organizer.value === event.organizer)?.color,
                 id: event.id,
                 title: event.name,
-                // TODO: we will only have a start_date field
                 start: event.start_date,
                 end: endDateAdjusted,
                 extendedProps: {
@@ -125,6 +124,50 @@ export const mapEventsToFullCalendar = (events: Event[], organizers: OptionType[
     return mappedEvents;
 };
 
+function createSourceString(props: any) {
+    const {
+        timestamp_scraped,
+        source_origination_group_id,
+        source_origination_group_name,
+        source_origination_platform,
+        source_ticketing_platform,
+        dataset
+    } = props;
+
+    let result = '';
+
+    if (source_origination_platform) {
+        result += `Origination Platform: ${source_origination_platform},`;
+    }
+
+    if (source_origination_group_name) {
+        result += ` Group Name: ${source_origination_group_name},`;
+    }
+
+    if (source_origination_group_id) {
+        result += ` Group ID: ${source_origination_group_id},`;
+    }
+
+    if (source_ticketing_platform) {
+        result += ` Ticketing Platform: ${source_ticketing_platform},`;
+    }
+
+    if (timestamp_scraped) {
+        const date = new Date(timestamp_scraped);
+        result += ` Timestamp Scraped: ${date.toISOString()},`;
+    }
+
+    if (dataset) {
+        result += ` Dataset: ${dataset},`;
+    }
+
+    // Remove the trailing comma if it exists
+    result = result.trim().replace(/,$/, '');
+
+    return result;
+}
+
+
 // the getTooltipContent function takes a tippy props object and an event object and returns a string that represents the content of the tooltip
 export const getTooltipContent = (props: any, event: any) => {
     return `
@@ -132,13 +175,13 @@ export const getTooltipContent = (props: any, event: any) => {
       <img src="${props.imageUrl}" alt="${event.title}" style="width: 100%; height: auto;"/>
       <h3> <a style="color: white" href="${props.eventUrl}" target="_blank">${event.title}</a></h3>
       <p><a style="$e="color: white" hre{props.organizerUrl}" target="_blank">${props.organizer}</a></p>
-      ${event.extendedProps.start_date && new Date(event.extendedProps.start_date).toLocaleString()}
-      ${event.extendedProps.end_date && '- ' + new Date(event.extendedProps.end_date).toLocaleString()} (${props.timezone})
+      ${props.start_date && new Date(props.start_date).toLocaleString()}
+      ${props.end_date && '- ' + new Date(props.end_date).toLocaleString()} (${props.timezone})
       <p><strong>Location:</strong> ${props.location}</p>
       ${props.price && `<p><strong>Price:</strong> ${props.price} ${props.min_ticket_price && `(${props.min_ticket_price} - ${props.max_ticket_price})`}</p>`}
       <p>${props.summary}</p>
       <p><strong>Tags:</strong> ${props.tags && props.tags.join(', ')}</p>
-      <p>Source: ${props.source} ${props.referrer_name ? `(${props.referrer_name} - ${props.referrer_source})` : ''}</p>
+      <p><strong>Source:</strong> ${createSourceString(props)}</p>
     </div>
   `;
 };
