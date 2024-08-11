@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
-import Papa from 'papaparse';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
@@ -9,27 +8,11 @@ import 'tippy.js/dist/tippy.css';
 import { Event, OptionType } from "../Common/types";
 import { EventFilters } from './EventFilters';
 import {
+    downloadCsv,
+    getAvailableGroups,
     // getAvailableGroups, 
-    getAvailableOrganizers, getEvents, getTooltipContent, getWhatsappEvents, mapEventsToFullCalendar
+    getAvailableOrganizers, getEvents, getTooltipContent, getWhatsappEvents, jsonToCsv, mapEventsToFullCalendar
 } from './calendarUtils';
-
-const downloadCsv = (data: string) => {
-    if (!data) return;
-
-    const blob = new Blob([data], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'data.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-};
-
-const jsonToCsv = (json: any): string => {
-    return Papa.unparse(json);
-};
 
 export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     const events = useMemo(() => type === 'Whatsapp' ? getWhatsappEvents() : getEvents(), [type]);
@@ -68,19 +51,23 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
         setFilteredOrganizers(organizers);
     }, []);
 
-    // const currentViewGroups = useMemo(() => getAvailableGroups(currentViewEvents), [currentViewEvents]);
-    // const [filteredGroups, setFilteredGroups] = useState<OptionType[]>(currentViewGroups);
-    // const onFilterGroups = useCallback((groups: OptionType[]) => {
-    //     setFilteredGroups(groups);
-    // }, []);
+    const currentViewGroups = useMemo(() => getAvailableGroups(currentViewEvents), [currentViewEvents]);
+    const [filteredGroups, setFilteredGroups] = useState<OptionType[]>(currentViewGroups);
+    const onFilterGroups = useCallback((groups: OptionType[]) => {
+        setFilteredGroups(groups);
+    }, []);
 
 
     const filteredEvents: Event[] = useMemo(() => {
         const organizers = filteredOrganizers.length === 0 ? currentViewOrganizers : filteredOrganizers;
-        // const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
+        const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
+        console.log({
+            groups,
+            currentViewEvents
+        })
         return currentViewEvents.filter((event) => {
             return organizers.map((org) => org.value).includes(event.organizer || '')
-            // && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
+                && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
         });
     }, [filteredOrganizers, currentViewEvents, currentViewOrganizers]);
 
@@ -106,7 +93,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
         <>
             <EventFilters onFilterChange={onFilterOrganizers} options={currentViewOrganizers} entityName="organizers" />
             {
-                // type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} />
+                type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} entityName="groups" />
 
             }
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>

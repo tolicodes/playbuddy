@@ -33,7 +33,8 @@ export const Header = () => {
     >
       <div style={{
         display: 'flex',
-        alignItems: 'center'
+        alignItems: 'center',
+        flex: 1
       }}>
         <Typography
           variant="h6"
@@ -45,13 +46,13 @@ export const Header = () => {
 
         <div style={{
           display: 'flex',
-          gap: '5px '
+          gap: '5px',
+          flex: 1,
           // alignItems: 'center'
         }}>
           <Button
             onClick={handleClickCalendar}
             variant='contained'
-            style={{ marginRight: '1rem' }}
           >
             <FontAwesomeIcon icon={faCalendar} size="2x" />
           </Button>

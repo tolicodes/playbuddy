@@ -1,3 +1,5 @@
+import Papa from 'papaparse';
+
 import { Event } from "../Common/types";
 
 import events from './all_events.json'
@@ -34,6 +36,9 @@ export const getAvailableOrganizers = (events: Event[]): OptionType[] => {
 export const getAvailableGroups = (events: Event[]): OptionType[] => {
     return events.reduce((acc, event, index) => {
         if (!event.source_origination_group_name) return acc;
+        console.log({
+            name: event
+        })
 
         const existingGroup = acc.find((group) => group.value === event.source_origination_group_name);
 
@@ -86,11 +91,6 @@ const getEndDateAdjusted = (start_date: string, end_date: string) => {
 
     const nextDayMidnight = new Date(startMidnight);
     nextDayMidnight.setDate(nextDayMidnight.getDate() + 1);
-
-    console.log({
-        endDate,
-        nextDayMidnight
-    })
 
     if (endDate > nextDayMidnight) {
         endDate = new Date(startDate);
@@ -184,4 +184,22 @@ export const getTooltipContent = (props: any, event: any) => {
       <p><strong>Source:</strong> ${createSourceString(props)}</p>
     </div>
   `;
+};
+
+export const downloadCsv = (data: string) => {
+    if (!data) return;
+
+    const blob = new Blob([data], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'data.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+};
+
+export const jsonToCsv = (json: any): string => {
+    return Papa.unparse(json);
 };
