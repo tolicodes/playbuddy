@@ -69,7 +69,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
             return organizers.map((org) => org.value).includes(event.organizer || '')
                 && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
         });
-    }, [filteredOrganizers, currentViewEvents, currentViewOrganizers]);
+    }, [filteredOrganizers, currentViewEvents, currentViewOrganizers, currentViewGroups, filteredGroups]);
 
 
     const initialView = useMemo(() => {
