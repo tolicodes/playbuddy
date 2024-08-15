@@ -49,3 +49,4 @@ yarn-error.log*
 .netlify
 
 *storybook.log
+kink-event-scraper/openai_key.json

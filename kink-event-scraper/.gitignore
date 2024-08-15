@@ -1,2 +1,5 @@
 node_modules
 .wwebjs*
+gmail_token.json
+gmail_credentials.json
+openai_token.json

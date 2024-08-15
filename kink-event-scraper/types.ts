@@ -19,9 +19,6 @@ export type Event = {
   name: string;
   start_date: string;
   end_date: string;
-  start_time?: string;
-  end_time?: string;
-  timezone?: string;
   location: string;
   price: string;
   imageUrl: string;
