@@ -18,9 +18,14 @@ function App() {
       <QueryProvider>
         <CssBaseline /> {/* This is for baseline styles */}
         <ThemeProvider theme={theme}>
-
           <Router>
-            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <div
+              style={{
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
               <Header />
 
               <Routes>
@@ -29,7 +34,7 @@ function App() {
                   element={<GameSetup />}
                 />
                 <Route
-                  path="/"
+                  path="/kinks"
                   element={<KinkLibrary />}
                 />
                 <Route
@@ -39,6 +44,10 @@ function App() {
                 <Route
                   path="/admin"
                   element={<KinkAdminTable />}
+                />
+                <Route
+                  path="/"
+                  element={<EventCalendar />}
                 />
                 <Route
                   path="/calendar"
@@ -52,7 +61,7 @@ function App() {
             </div>
           </Router>
         </ThemeProvider>
-      </QueryProvider >
+      </QueryProvider>
     </>
   );
 }
