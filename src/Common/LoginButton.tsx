@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { supabase } from './supabaseClient';
 import { useGetUser } from '../User/hooks/useGetUser';
 import { Button } from '@mui/material';
+import { faSignIn } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const LoginButton: React.FC = () => {
   useEffect(() => {
@@ -46,8 +48,10 @@ const LoginButton: React.FC = () => {
     </div>
   ) : (
     <Button onClick={signUpUser}>
-      <img style={{ width: '30px', marginRight: '5px' }} src="/google-logo.png" alt="Google logo" className="google-logo" />
-      <span> Login</span>
+      <FontAwesomeIcon
+        icon={faSignIn}
+        size="2x"
+      />
     </Button>
   );
 };

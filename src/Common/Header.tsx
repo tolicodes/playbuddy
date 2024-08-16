@@ -3,7 +3,11 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import LoginButton from './LoginButton';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCalendar, faGamepad } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCalendar,
+  faGamepad,
+  faHandcuffs,
+} from '@fortawesome/free-solid-svg-icons';
 
 export const Header = () => {
   const navigate = useNavigate(); // Initialize the useNavigate hook
@@ -18,7 +22,11 @@ export const Header = () => {
 
   const handleClickCalendar = () => {
     navigate('/calendar');
-  }
+  };
+
+  const handleKinksClick = () => {
+    navigate('/kinks');
+  };
 
   return (
     <div
@@ -28,14 +36,16 @@ export const Header = () => {
         display: 'flex',
         // justifyContent: 'space-between',
         alignItems: ' center',
-        padding: '.5rem 1rem'
+        padding: '.5rem 1rem',
       }}
     >
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        flex: 1
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flex: 1,
+        }}
+      >
         <Typography
           variant="h6"
           onClick={handeHomeClick}
@@ -44,24 +54,44 @@ export const Header = () => {
           KinkBuddy
         </Typography>
 
-        <div style={{
-          display: 'flex',
-          gap: '5px',
-          flex: 1,
-          // alignItems: 'center'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '5px',
+            flex: 1,
+            // alignItems: 'center'
+          }}
+        >
           <Button
             onClick={handleClickCalendar}
-            variant='contained'
+            variant="contained"
           >
-            <FontAwesomeIcon icon={faCalendar} size="2x" />
+            <FontAwesomeIcon
+              icon={faCalendar}
+              size="2x"
+            />
           </Button>
-          <Button onClick={handlePlayGameClick} variant='contained'>
-            <FontAwesomeIcon icon={faGamepad} size="2x" />
+          <Button
+            onClick={handlePlayGameClick}
+            variant="contained"
+          >
+            <FontAwesomeIcon
+              icon={faGamepad}
+              size="2x"
+            />
+          </Button>
+          <Button
+            onClick={handleKinksClick}
+            variant="contained"
+          >
+            <FontAwesomeIcon
+              icon={faHandcuffs}
+              size="2x"
+            />
           </Button>
         </div>
       </div>
       <LoginButton />
-    </div >
+    </div>
   );
 };
