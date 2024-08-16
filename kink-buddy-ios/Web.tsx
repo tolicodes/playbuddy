@@ -1,15 +1,12 @@
-// App.tsx or App.js
 import React from 'react';
 import { SafeAreaView, StyleSheet } from 'react-native';
 import { WebView } from 'react-native-webview';
-import { Text, View } from '@/components/Themed';
 
 
-const App = () => {
+const Web = () => {
   return (
     <SafeAreaView style={styles.container}>
       <WebView source={{ uri: "https://www.kinkbuddy.org/" }} />
-
     </SafeAreaView>
   );
 };
@@ -21,4 +18,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default App; 
+export default Web; 
