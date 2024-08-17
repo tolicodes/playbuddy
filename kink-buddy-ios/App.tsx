@@ -1,9 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Web from './Web';
+import Calendar from './Calendar'
 
 export default function App() {
   return (
-    <Web />
+    // <Web />
+    <Calendar />
   );
 }
 
