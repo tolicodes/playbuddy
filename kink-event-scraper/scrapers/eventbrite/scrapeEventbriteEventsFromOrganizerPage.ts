@@ -24,7 +24,6 @@ const scrapeEventDetails = async ({
         name: event.name,
         start_date,
         end_date,
-        timezone: event.timezone,
         location: event.primary_venue.address.localized_address_display,
         price: event.ticket_availability.minimum_ticket_price.display,
         imageUrl: event.image.url,
