@@ -4,24 +4,30 @@
     "slug": "kink-buddy-ios",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.jpeg",
+    "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/images/splash.jpeg",
+      "image": "./assets/splash.jpeg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tolicodes1.kinkbuddyios"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.jpeg",
         "backgroundColor": "#ffffff"
       }
     },
     "web": {
       "favicon": "./assets/images/favicon.jpeg"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "eba61152-7f99-4394-82fa-6a11a7ccd46a"
+      }
     }
   }
 }
