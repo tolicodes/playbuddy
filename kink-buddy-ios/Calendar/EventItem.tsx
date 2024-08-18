@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import moment from 'moment';
-import { Event } from '../utils/api';
+import { Event } from './types';
 
 type EventItemProps = {
     event: Event;
@@ -15,6 +15,7 @@ const EventItem: React.FC<EventItemProps> = ({ event, onPress }) => {
                 <Image source={{ uri: event.imageUrl }} style={styles.eventImage} />
                 <View style={styles.eventDetails}>
                     <Text style={styles.eventTitle}>{event.name}</Text>
+                    <Text style={styles.eventTime}>{event.organizer}</Text>
                     <Text style={styles.eventTime}>
                         {event.start_time ? moment(event.start_time, 'HH:mm:ss').format('h:mm A') : ''}
                         {' - '}

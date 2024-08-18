@@ -1,37 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, SectionList, StyleSheet, Image, Animated, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, SectionList, StyleSheet, Image, Animated, TouchableOpacity, Dimensions, Linking, SafeAreaView, ScrollView } from 'react-native';
 import axios from 'axios';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import RNPickerSelect from 'react-native-picker-select';
+import { Event } from './types';
 
-export type SourceMetadata = {
-    source_origination_group_id?: string;
-    source_origination_group_name?: string;
-    source_origination_platform?: 'WhatsApp' | 'Unknown';
-    source_ticketing_platform?: 'Eventbrite' | 'Plura' | 'Partiful' | 'Unknown';
-    dataset?: 'Kink' | 'Whatsapp POC';
-};
-
-export type Event = {
-    id: string;
-    name: string;
-    start_date: string;
-    end_date: string;
-    start_time?: string;
-    end_time?: string;
-    timezone?: string;
-    location: string;
-    price: string;
-    imageUrl: string;
-    organizer: string;
-    organizerUrl: string;
-    eventUrl: string;
-    summary: string;
-    tags: string[];
-    min_ticket_price: string;
-    max_ticket_price: string;
-};
 
 const { width } = Dimensions.get('window');
 
@@ -40,7 +14,7 @@ const CalendarEventList: React.FC = () => {
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [selectedOrganizer, setSelectedOrganizer] = useState<string | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-    const slideAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(width)).current;
     const sectionListRef = useRef<SectionList<Event>>(null); // Reference to SectionList
 
     useEffect(() => {
@@ -69,15 +43,18 @@ const CalendarEventList: React.FC = () => {
         if (filteredEvents.length > 0) {
             const today = moment().format('MMM D, YYYY');
             const sectionIndex = sections.findIndex(section => section.title === today);
+
             if (sectionIndex !== -1 && sectionListRef.current) {
-                // sectionListRef.current.scrollToLocation({
-                //     sectionIndex,
-                //     itemIndex: 0,
-                //     animated: true,
-                // });
+                setTimeout(() => {
+                    sectionListRef.current?.scrollToLocation({
+                        sectionIndex,
+                        itemIndex: -1,
+                        animated: true,
+                    });
+                }, 500)
             }
         }
-    }, [filteredEvents]);
+    }, [filteredEvents, selectedOrganizer]);
 
     const slideIn = () => {
         Animated.timing(slideAnim, {
@@ -95,33 +72,35 @@ const CalendarEventList: React.FC = () => {
         }).start(() => setSelectedEvent(null));
     };
 
-    const renderEvent = ({ item }: { item: Event }) => (
-        <TouchableOpacity onPress={() => {
-            setSelectedEvent(item);
-            slideIn();
-        }}>
-            <View style={styles.eventContainer}>
-                <Image source={{ uri: item.imageUrl }} style={styles.eventImage} />
-                <View style={styles.eventDetails}>
-                    <Text style={styles.eventTitle}>{item.name}</Text>
-                    <Text style={styles.eventTime}>
-                        {item.start_time ? moment(item.start_time, 'HH:mm:ss').format('h:mm A') : ''}
-                        {' - '}
-                        {item.end_time ? moment(item.end_time, 'HH:mm:ss').format('h:mm A') : ''}
-                    </Text>
-                    <Text style={styles.eventLocation}>{item.location}</Text>
-                    <Text style={styles.eventPrice}>
-                        {item.min_ticket_price !== item.max_ticket_price
-                            ? `$${item.min_ticket_price} - $${item.max_ticket_price}`
-                            : item.price}
-                    </Text>
-                </View>
-            </View>
-        </TouchableOpacity>
-    );
+    const renderListItem = ({ item, index }: { item: Event }) => {
+        const formattedDate = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
 
-    const renderSectionHeader = ({ section }: { section: { title: string } }) => (
-        <Text style={styles.sectionHeader}>{section.title}</Text>
+        // THIS ONE!
+        return (
+            <TouchableOpacity onPress={() => {
+                setSelectedEvent(item);
+                slideIn();
+
+            }}>
+                <View style={styles.eventContainer}>
+                    <Image source={{ uri: item.imageUrl }} style={styles.eventImage} />
+                    <View style={styles.eventDetails}>
+                        <Text style={styles.eventTitle}>{item.name}</Text>
+
+                        <Text style={styles.eventOrganizer}>{item.organizer}</Text>
+
+                        <Text style={styles.eventTime}>
+                            {formattedDate}
+                        </Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        )
+    };
+
+    // @ts-ignore
+    const renderSectionHeader = ({ section: { title } }: any) => (
+        <Text style={styles.sectionHeader}>{title}</Text>
     );
 
     // Ensure filteredEvents is always an array before using reduce
@@ -143,13 +122,15 @@ const CalendarEventList: React.FC = () => {
         acc[date] = { marked: true, dotColor: 'blue' };
         return acc;
     }, {});
+
     const handleDayPress = (day: any) => {
         const date = moment(day.dateString).format('MMM D, YYYY');
         const sectionIndex = sections.findIndex(section => section.title === date);
+
         if (sectionIndex !== -1 && sectionListRef.current) {
             sectionListRef.current.scrollToLocation({
                 sectionIndex,
-                itemIndex: 0,
+                itemIndex: -1,
                 animated: true,
             });
         }
@@ -160,58 +141,68 @@ const CalendarEventList: React.FC = () => {
         value: organizer,
     }));
 
+
     return (
-        <View style={styles.container}>
-            {/* <RNPickerSelect
-                onValueChange={(value) => setSelectedOrganizer(value)}
-                items={organizerOptions}
-                placeholder={{ label: "Filter by Organizer", value: null }}
-                style={pickerSelectStyles}
-            /> */}
-            <Calendar
-                markedDates={markedDates}
-                onDayPress={handleDayPress}
-                style={styles.calendar}
-                theme={{
-                    selectedDayBackgroundColor: 'blue',
-                    todayTextColor: 'blue',
-                    dotColor: 'blue',
-                    arrowColor: 'blue',
-                }}
-            />
-            <SectionList
-                ref={sectionListRef} // Set reference to SectionList
-                sections={sections}
-                renderItem={renderEvent}
-                // renderSectionHeader={renderSectionHeader}
-                keyExtractor={item => item.id}
-            // ListEmptyComponent={<Text style={styles.noEventsText}>No events for this day.</Text>}
-            />
+        <SafeAreaView style={styles.container}>
+
+            {!selectedEvent && (
+                <>
+                    <Calendar
+                        markedDates={markedDates}
+                        onDayPress={handleDayPress}
+                        style={styles.calendar}
+                        theme={{
+                            selectedDayBackgroundColor: 'blue',
+                            todayTextColor: 'blue',
+                            dotColor: 'blue',
+                            arrowColor: 'blue',
+                        }}
+                    />
+                    <RNPickerSelect
+                        onValueChange={(value) => setSelectedOrganizer(value)}
+                        items={organizerOptions}
+                        value={selectedOrganizer}
+                        placeholder={{ label: "Filter by Organizer", value: '' }}
+                        style={pickerSelectStyles}
+                    />
+                    <SectionList
+                        ref={sectionListRef} // Set reference to SectionList
+                        sections={sections}
+                        stickySectionHeadersEnabled={true}
+                        renderItem={renderListItem}
+                        renderSectionHeader={renderSectionHeader}
+                        keyExtractor={(item, i) => item.name + item.id}
+                        onScrollToIndexFailed={() => { console.log('scroll fail') }}
+                        ListEmptyComponent={<Text>No events for this day.</Text>}
+                    />
+                </>)
+            }
 
             {selectedEvent && (
                 <Animated.View style={[styles.fullViewContainer, { transform: [{ translateX: slideAnim }] }]}>
-                    <TouchableOpacity onPress={slideOut}>
-                        <Text style={styles.backButton}>Back</Text>
-                    </TouchableOpacity>
-                    <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
-                    {/* <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
-                        <Text style={styles.fullViewTitle}>{selectedEvent.name}</Text>
-                    </TouchableOpacity> */}
-                    <Text style={styles.fullViewTime}>
-                        {selectedEvent.start_time ? moment(selectedEvent.start_time, 'HH:mm:ss').format('h:mm A') : ''}
-                        {' - '}
-                        {selectedEvent.end_time ? moment(selectedEvent.end_time, 'HH:mm:ss').format('h:mm A') : ''}
-                    </Text>
-                    <Text style={styles.fullViewLocation}>{selectedEvent.location}</Text>
-                    <Text style={styles.fullViewPrice}>
-                        {selectedEvent.min_ticket_price !== selectedEvent.max_ticket_price
-                            ? `$${selectedEvent.min_ticket_price} - $${selectedEvent.max_ticket_price}`
-                            : selectedEvent.price}
-                    </Text>
-                    <Text style={styles.fullViewSummary}>{selectedEvent.summary}</Text>
+                    <ScrollView>
+                        <TouchableOpacity onPress={slideOut}>
+                            <Text style={styles.backButton}>Back</Text>
+                        </TouchableOpacity>
+                        <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
+                        <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
+                            <Text style={styles.fullViewTitle}>{selectedEvent.name}</Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.eventOrganizer}>{selectedEvent.organizer}</Text>
+
+                        <Text style={styles.eventTime}>
+                            {`${moment(selectedEvent.start_date).format('MMM D, YYYY')} ${moment(selectedEvent.start_date).format('hA')} - ${moment(selectedEvent.end_date).format('hA')}`}
+                        </Text>
+                        {selectedEvent.price && <Text style={styles.fullViewPrice}>
+                            {selectedEvent.price}
+                        </Text>}
+                        <Text style={styles.fullViewSummary}>{selectedEvent.summary}</Text>
+                    </ScrollView>
                 </Animated.View>
-            )}
-        </View>
+            )
+            }
+        </SafeAreaView >
     );
 };
 
@@ -244,6 +235,9 @@ const pickerSelectStyles = StyleSheet.create({
         top: 10,
         right: 12,
     },
+    viewContainer: {
+        padding: 10
+    }
 });
 
 const styles = StyleSheet.create({
@@ -296,9 +290,8 @@ const styles = StyleSheet.create({
         color: '#333',
     },
     fullViewContainer: {
-        position: 'absolute',
-        top: 0,
-        left: width,
+        position: 'relative',
+        left: 0,
         width: '100%',
         height: '100%',
         backgroundColor: '#fff',
@@ -340,6 +333,10 @@ const styles = StyleSheet.create({
         color: 'blue',
         marginBottom: 20,
     },
+    eventOrganizer: {
+        fontSize: 14,
+        color: 'black',
+    }
 });
 
 export default CalendarEventList;
