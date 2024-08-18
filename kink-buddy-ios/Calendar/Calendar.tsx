@@ -1,24 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, SectionList, StyleSheet, Image, Animated, TouchableOpacity, Dimensions, Linking, SafeAreaView, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Text, SectionList, StyleSheet, Animated, Dimensions, SafeAreaView } from 'react-native';
 import axios from 'axios';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import RNPickerSelect from 'react-native-picker-select';
 import { Event } from './types';
+import { ListItem } from './ListItem';
+import { EventDetail } from './EventDetail';
 
-
-const { width } = Dimensions.get('window');
+const EVENTS_API_URL = 'https://kinkbuddy.org/all_events.json'
+const { width: windowWidth } = Dimensions.get('window');
 
 const CalendarEventList: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
     const [selectedOrganizer, setSelectedOrganizer] = useState<string | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-    const slideAnim = useRef(new Animated.Value(width)).current;
+    const slideAnim = useRef(new Animated.Value(windowWidth)).current;
     const sectionListRef = useRef<SectionList<Event>>(null); // Reference to SectionList
 
     useEffect(() => {
-        axios.get<Event[]>('https://kinkbuddy.org/all_events.json')
+        axios.get<Event[]>(EVENTS_API_URL)
             .then(response => {
                 setEvents(response.data);
                 setFilteredEvents(response.data);
@@ -54,74 +56,37 @@ const CalendarEventList: React.FC = () => {
                 }, 500)
             }
         }
-    }, [filteredEvents, selectedOrganizer]);
-
-    const slideIn = () => {
-        Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const slideOut = () => {
-        Animated.timing(slideAnim, {
-            toValue: width,
-            duration: 300,
-            useNativeDriver: true,
-        }).start(() => setSelectedEvent(null));
-    };
-
-    const renderListItem = ({ item, index }: { item: Event }) => {
-        const formattedDate = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
-
-        // THIS ONE!
-        return (
-            <TouchableOpacity onPress={() => {
-                setSelectedEvent(item);
-                slideIn();
-
-            }}>
-                <View style={styles.eventContainer}>
-                    <Image source={{ uri: item.imageUrl }} style={styles.eventImage} />
-                    <View style={styles.eventDetails}>
-                        <Text style={styles.eventTitle}>{item.name}</Text>
-
-                        <Text style={styles.eventOrganizer}>{item.organizer}</Text>
-
-                        <Text style={styles.eventTime}>
-                            {formattedDate}
-                        </Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
-        )
-    };
-
-    // @ts-ignore
-    const renderSectionHeader = ({ section: { title } }: any) => (
-        <Text style={styles.sectionHeader}>{title}</Text>
-    );
+    }, [filteredEvents]);
 
     // Ensure filteredEvents is always an array before using reduce
-    const groupedEvents = Array.isArray(filteredEvents) ? filteredEvents.reduce((acc: Record<string, Event[]>, event) => {
+    const groupedEvents = useMemo(() => Array.isArray(filteredEvents) ? filteredEvents.reduce((acc: Record<string, Event[]>, event) => {
         const date = moment(event.start_date).format('YYYY-MM-DD');
         if (!acc[date]) {
             acc[date] = [];
         }
         acc[date].push(event);
         return acc;
-    }, {}) : {};
+    }, {}) : {}, [filteredEvents]);
 
-    const sections = Object.keys(groupedEvents).map(date => ({
+    const sections = useMemo(() => Object.keys(groupedEvents).map(date => ({
         title: moment(date).format('MMM D, YYYY'),
         data: groupedEvents[date],
-    }));
+    })), [groupedEvents]);
 
-    const markedDates = Object.keys(groupedEvents).reduce((acc: any, date) => {
-        acc[date] = { marked: true, dotColor: 'blue' };
-        return acc;
-    }, {});
+    const markedDates = useMemo(() => {
+        return Object.keys(groupedEvents).reduce((acc: any, date) => {
+            acc[date] = { marked: true, dotColor: 'blue' };
+            return acc;
+        }, {});
+    }, [groupedEvents]);
+
+    const organizerOptions = useMemo(() => {
+        return Array.from(new Set(events.map(event => event.organizer))).map(organizer => ({
+            label: organizer,
+            value: organizer,
+        }));
+    }, [events]);
+
 
     const handleDayPress = (day: any) => {
         const date = moment(day.dateString).format('MMM D, YYYY');
@@ -136,15 +101,30 @@ const CalendarEventList: React.FC = () => {
         }
     };
 
-    const organizerOptions = Array.from(new Set(events.map(event => event.organizer))).map(organizer => ({
-        label: organizer,
-        value: organizer,
-    }));
+    const slideIn = () => {
+        Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const slideOut = () => {
+        Animated.timing(slideAnim, {
+            toValue: windowWidth,
+            duration: 300,
+            useNativeDriver: true,
+        }).start(() => setSelectedEvent(null));
+    };
+
+    // @ts-ignore
+    const renderSectionHeader = ({ section: { title } }: any) => (
+        <Text style={styles.sectionHeader}>{title}</Text>
+    );
 
 
     return (
         <SafeAreaView style={styles.container}>
-
             {!selectedEvent && (
                 <>
                     <Calendar
@@ -169,7 +149,9 @@ const CalendarEventList: React.FC = () => {
                         ref={sectionListRef} // Set reference to SectionList
                         sections={sections}
                         stickySectionHeadersEnabled={true}
-                        renderItem={renderListItem}
+                        renderItem={
+                            ({ item }: { item: Event }) => <ListItem item={item} setSelectedEvent={setSelectedEvent} slideIn={slideIn} />
+                        }
                         renderSectionHeader={renderSectionHeader}
                         keyExtractor={(item, i) => item.name + item.id}
                         onScrollToIndexFailed={() => { console.log('scroll fail') }}
@@ -179,27 +161,7 @@ const CalendarEventList: React.FC = () => {
             }
 
             {selectedEvent && (
-                <Animated.View style={[styles.fullViewContainer, { transform: [{ translateX: slideAnim }] }]}>
-                    <ScrollView>
-                        <TouchableOpacity onPress={slideOut}>
-                            <Text style={styles.backButton}>Back</Text>
-                        </TouchableOpacity>
-                        <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
-                        <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
-                            <Text style={styles.fullViewTitle}>{selectedEvent.name}</Text>
-                        </TouchableOpacity>
-
-                        <Text style={styles.eventOrganizer}>{selectedEvent.organizer}</Text>
-
-                        <Text style={styles.eventTime}>
-                            {`${moment(selectedEvent.start_date).format('MMM D, YYYY')} ${moment(selectedEvent.start_date).format('hA')} - ${moment(selectedEvent.end_date).format('hA')}`}
-                        </Text>
-                        {selectedEvent.price && <Text style={styles.fullViewPrice}>
-                            {selectedEvent.price}
-                        </Text>}
-                        <Text style={styles.fullViewSummary}>{selectedEvent.summary}</Text>
-                    </ScrollView>
-                </Animated.View>
+                <EventDetail selectedEvent={selectedEvent} slideAnim={slideAnim} slideOut={slideOut} />
             )
             }
         </SafeAreaView >
@@ -248,39 +210,7 @@ const styles = StyleSheet.create({
     calendar: {
         marginBottom: 10,
     },
-    eventContainer: {
-        flexDirection: 'row',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
-    eventImage: {
-        width: 50,
-        height: 50,
-        marginRight: 16,
-    },
-    eventDetails: {
-        flex: 1,
-    },
-    eventTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    eventTime: {
-        fontSize: 14,
-        color: '#666',
-    },
-    eventLocation: {
-        fontSize: 14,
-        color: '#666',
-    },
-    eventPrice: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 4,
-    },
+
     sectionHeader: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -289,54 +219,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         color: '#333',
     },
-    fullViewContainer: {
-        position: 'relative',
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#fff',
-        padding: 20,
-    },
-    fullViewImage: {
-        width: '100%',
-        height: 200,
-        marginBottom: 20,
-    },
-    fullViewTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#1e90ff',
-        marginBottom: 20,
-    },
-    fullViewTime: {
-        fontSize: 18,
-        color: '#666',
-        marginTop: 10,
-    },
-    fullViewLocation: {
-        fontSize: 18,
-        color: '#666',
-        marginTop: 10,
-    },
-    fullViewPrice: {
-        fontSize: 18,
-        color: '#666',
-        marginTop: 10,
-    },
-    fullViewSummary: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 20,
-    },
-    backButton: {
-        fontSize: 18,
-        color: 'blue',
-        marginBottom: 20,
-    },
-    eventOrganizer: {
-        fontSize: 14,
-        color: 'black',
-    }
 });
 
 export default CalendarEventList;

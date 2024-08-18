@@ -1,43 +1,35 @@
-import React from 'react';
-import { View, Text, Image, Animated, StyleSheet, TouchableOpacity } from 'react-native';
-import { Event } from '../utils/api';
 import moment from 'moment';
+import { View, Text, SectionList, StyleSheet, Image, Animated, TouchableOpacity, Dimensions, Linking, SafeAreaView, ScrollView } from 'react-native';
+import { Event } from './types';
 
-type EventDetailProps = {
-    event: Event;
-    slideAnim: Animated.Value;
-    slideOut: () => void;
-};
-
-const EventDetail: React.FC<EventDetailProps> = ({ event, slideAnim, slideOut }) => {
-    return (
-        <Animated.View style={[styles.fullViewContainer, { transform: [{ translateX: slideAnim }] }]}>
+export const EventDetail = ({ selectedEvent, slideAnim, slideOut }: { selectedEvent: Event, slideAnim: Animated.Value, slideOut: () => void }) => {
+    return (<Animated.View style={[styles.fullViewContainer, { transform: [{ translateX: slideAnim }] }]}>
+        <ScrollView>
             <TouchableOpacity onPress={slideOut}>
                 <Text style={styles.backButton}>Back</Text>
             </TouchableOpacity>
-            <Image source={{ uri: event.imageUrl }} style={styles.fullViewImage} />
-            <Text style={styles.fullViewTitle}>{event.name}</Text>
-            <Text style={styles.fullViewTime}>
-                {event.start_time ? moment(event.start_time, 'HH:mm:ss').format('h:mm A') : ''}
-                {' - '}
-                {event.end_time ? moment(event.end_time, 'HH:mm:ss').format('h:mm A') : ''}
+            <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
+            <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
+                <Text style={styles.fullViewTitle}>{selectedEvent.name}</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.eventOrganizer}>{selectedEvent.organizer}</Text>
+
+            <Text style={styles.eventTime}>
+                {`${moment(selectedEvent.start_date).format('MMM D, YYYY')} ${moment(selectedEvent.start_date).format('hA')} - ${moment(selectedEvent.end_date).format('hA')}`}
             </Text>
-            <Text style={styles.fullViewLocation}>{event.location}</Text>
-            <Text style={styles.fullViewPrice}>
-                {event.min_ticket_price !== event.max_ticket_price
-                    ? `$${event.min_ticket_price} - $${event.max_ticket_price}`
-                    : event.price}
-            </Text>
-            <Text style={styles.fullViewSummary}>{event.summary}</Text>
-        </Animated.View>
-    );
-};
+            {selectedEvent.price && <Text style={styles.fullViewPrice}>
+                {selectedEvent.price}
+            </Text>}
+            <Text style={styles.fullViewSummary}>{selectedEvent.summary}</Text>
+        </ScrollView>
+    </Animated.View>)
+}
 
 const styles = StyleSheet.create({
     fullViewContainer: {
-        position: 'absolute',
-        top: 0,
-        left: Dimensions.get('window').width,
+        position: 'relative',
+        left: 0,
         width: '100%',
         height: '100%',
         backgroundColor: '#fff',
@@ -79,6 +71,12 @@ const styles = StyleSheet.create({
         color: 'blue',
         marginBottom: 20,
     },
-});
-
-export default EventDetail;
+    eventOrganizer: {
+        fontSize: 14,
+        color: 'black',
+    },
+    eventTime: {
+        fontSize: 14,
+        color: '#666',
+    },
+})
