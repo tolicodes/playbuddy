@@ -3,7 +3,7 @@ import { Text, SectionList, StyleSheet, Animated, Dimensions, SafeAreaView } fro
 import axios from 'axios';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
-import RNPickerSelect from 'react-native-picker-select';
+import { Picker } from '@react-native-picker/picker';
 import { Event } from './types';
 import { ListItem } from './ListItem';
 import { EventDetail } from './EventDetail';
@@ -84,6 +84,7 @@ const CalendarEventList: React.FC = () => {
         return Array.from(new Set(events.map(event => event.organizer))).map(organizer => ({
             label: organizer,
             value: organizer,
+            key: organizer
         }));
     }, [events]);
 
@@ -122,6 +123,9 @@ const CalendarEventList: React.FC = () => {
         <Text style={styles.sectionHeader}>{title}</Text>
     );
 
+    console.log({
+        organizerOptions
+    })
 
     return (
         <SafeAreaView style={styles.container}>
@@ -143,13 +147,6 @@ const CalendarEventList: React.FC = () => {
                             }
                         }}
                     />
-                    <RNPickerSelect
-                        onValueChange={(value) => setSelectedOrganizer(value)}
-                        items={organizerOptions}
-                        value={selectedOrganizer}
-                        placeholder={{ label: "Filter by Organizer", value: '' }}
-                        style={pickerSelectStyles}
-                    />
                     <SectionList
                         ref={sectionListRef} // Set reference to SectionList
                         sections={sections}
@@ -165,9 +162,10 @@ const CalendarEventList: React.FC = () => {
                 </>)
             }
 
-            {selectedEvent && (
-                <EventDetail selectedEvent={selectedEvent} slideAnim={slideAnim} slideOut={slideOut} />
-            )
+            {
+                selectedEvent && (
+                    <EventDetail selectedEvent={selectedEvent} slideAnim={slideAnim} slideOut={slideOut} />
+                )
             }
         </SafeAreaView >
     );
