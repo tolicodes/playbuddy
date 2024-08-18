@@ -136,6 +136,11 @@ const CalendarEventList: React.FC = () => {
                             todayTextColor: 'blue',
                             dotColor: 'blue',
                             arrowColor: 'blue',
+                            'stylesheet.day.basic': {
+                                base: {
+                                    margin: .2,  // Reduce margin around each day
+                                },
+                            }
                         }}
                     />
                     <RNPickerSelect

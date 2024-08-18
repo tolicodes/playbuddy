@@ -3,7 +3,6 @@ import moment from 'moment';
 
 export const localDateTimeToISOString = (date: string, time: string): string => {
     const dateTime = `${date} ${time}`;
-    console.log('dateTime', dateTime);
     return fromZonedTime(dateTime, 'America/New_York').toISOString();
 }
 

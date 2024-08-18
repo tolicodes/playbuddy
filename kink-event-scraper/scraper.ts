@@ -33,109 +33,78 @@ export const filterEvents = (events: Event[]) => {
     return dedupedEvents;
 };
 
-const getAllEvents = () => {
-    if (!fs.existsSync('./data/all_events.json')) {
-        return [];
-    }
-    return JSON.parse(fs.readFileSync('./data/all_events.json', 'utf-8'))
-}
+type URLCache = string[]
 
-const writeAllEvents = (events: Event[]) => {
-    fs.writeFileSync('./data/all_events.json', JSON.stringify(events, null, 2))
-}
-
-const writeAllEventsToFrontend = (events: Event[]) => {
-    fs.writeFileSync('../src/EventCalendar/all_events.json', JSON.stringify(events, null, 2))
-}
-
-const writeAllWhatsappEventsToFrontend = (events: Event[]) => {
-    fs.writeFileSync('../src/EventCalendar/whatsapp_events.json', JSON.stringify(events, null, 2))
-}
-
-const getURLCache = (events: Event[]): string[] => {
+const getURLCache = (events: Event[]): URLCache => {
     return events.map((event: Event) => event.eventUrl);
 }
 
-// EVENTBRITE
-const getKinkEventbriteOrganizerURLs = () => {
-    if (!fs.existsSync('./data/kink_eventbrite_organizers.json')) {
-        return [];
+interface FilePath {
+    path: string;
+}
+
+const fileOperations = {
+    readJSON: (path: keyof typeof DATA_FILES) => {
+        if (!fs.existsSync(path)) {
+            return [];
+        }
+        return JSON.parse(fs.readFileSync(path, 'utf-8'));
+    },
+
+    writeJSON: (path: keyof typeof DATA_FILES, data: any) => {
+        console.log(path)
+        fs.writeFileSync(path, JSON.stringify(data, null, 2));
     }
-    const organizers = JSON.parse(fs.readFileSync('./data/kink_eventbrite_organizers.json', 'utf-8'))
-    return organizers.map((organizer: any) => organizer.url);
-}
+};
 
-const getKinkEventbriteEvents = () => {
-    if (!fs.existsSync('./data/all_kink_eventbrite_events.json')) {
-        return [];
-    }
-    return JSON.parse(fs.readFileSync('./data/all_kink_eventbrite_events.json', 'utf-8'))
-}
+const DATA_FILES: Record<string, FilePath> = {
+    all: {
+        path: './data/all_events.json'
+    },
+    all_fe: {
+        path: '../src/EventCalendar/all_events.json'
+    },
 
-const writeKinkEventbriteEvents = (events: Event[]) => {
-    fs.writeFileSync('./data/all_kink_eventbrite_events.json', JSON.stringify(events, null, 2))
-}
+    whatsapp_links: {
+        path: './data/whatsapp_links.json',
+    },
+    whatsapp_events: {
+        path: './data/all_whatsapp_events.json',
+    },
+    whatsapp_fe: {
+        path: '../src/EventCalendar/whatsapp_events.json'
+    },
 
-// PLURA
-const getPluraEvents = () => {
-    if (!fs.existsSync('./data/all_plura_events.json')) {
-        return [];
-    }
-    return JSON.parse(fs.readFileSync('./data/all_plura_events.json', 'utf-8'))
-}
 
-const writePluraEvents = (events: Event[]) => {
-    fs.writeFileSync('./data/all_plura_events.json', JSON.stringify(events, null, 2))
-}
+    // actually URLs
+    // DATASET input
+    kink_eventbrite_organizer_urls: {
+        path: './data/datasets/kink_eventbrite_organizer_urls.json',
+    },
 
-// WHATSAPP
-const getWhatsappLinks = () => {
-    if (!fs.existsSync('./data/whatsapp_links.json')) {
-        return [];
-    }
-    return JSON.parse(fs.readFileSync('./data/whatsapp_links.json', 'utf-8'))
-}
+    kink_eventbrite_events: {
+        path: './data/all_kink_eventbrite_events.json',
+    },
 
-const writeWhatsappLinks = (SourceMetadata: SourceMetadata[]) => {
-    fs.writeFileSync('./data/whatsapp_links.json', JSON.stringify(SourceMetadata, null, 2))
-}
+    plura: {
+        path: './data/all_plura_events.json',
+    },
 
-const getWhatsappEvents = () => {
+    tantra_ny: {
+        path: './data/organizers/tantra_ny_events.json',
+    },
+};
 
-    if (!fs.existsSync('./data/all_whatsapp_events.json')) {
-        return [];
-    }
-    return JSON.parse(fs.readFileSync('./data/all_whatsapp_events.json', 'utf-8'))
-}
+const getFromFile = (source: string) => {
+    return fileOperations.readJSON(DATA_FILES[source].path);
+};
 
-const writeWhatsappEvents = (events: Event[]) => {
-    fs.writeFileSync('./data/all_whatsapp_events.json', JSON.stringify(events, null, 2))
-}
+const writeFile = (source: string, events: any[]) => {
+    fileOperations.writeJSON(DATA_FILES[source].path, events);
+};
 
-// ORGANIZERS
-// Tantra NY
-const ORGANIZER_FILES = {
-    'tantra_ny': './data/organizers/tantra_ny_events.json',
-}
-const getOrganizerTantraNYEvents = () => {
-    if (!fs.existsSync(ORGANIZER_FILES['tantra_ny'])) {
-        return [];
-    }
-    return JSON.parse(fs.readFileSync(ORGANIZER_FILES['tantra_ny'], 'utf-8'))
-}
-
-const writeOrganizerTantraNYEvents = (events: Event[]) => {
-    fs.writeFileSync(ORGANIZER_FILES['tantra_ny'], JSON.stringify(events, null, 2))
-}
-
-const main = async () => {
-    // GENERAL SETUP
-
-    const allEventsOld = getAllEvents();
-    const kinkEventbriteOrganizerURLs = getKinkEventbriteOrganizerURLs();
-
-    // all event cache
-    const urlCache = getURLCache(allEventsOld)
+const scrapeKinkEventbrite = async (urlCache: URLCache) => {
+    const kinkEventbriteOrganizerURLs = getFromFile('kink_eventbrite_organizer_urls').map((organizer: any) => organizer.url)
 
     // SCRAPE EVENTBRITE EVENTS
     const kinkEventbriteEventsOut = await scrapeEventbriteEventsFromOrganizersURLs({
@@ -147,8 +116,10 @@ const main = async () => {
         urlCache,
     })
 
-    writeKinkEventbriteEvents(kinkEventbriteEventsOut);
+    writeFile('kink_eventbrite_events', kinkEventbriteEventsOut);
+}
 
+const scrapePlura = async (urlCache: URLCache) => {
     // SCRAPE PLURA EVENTS
     const pluraEventsOut = await scrapePluraEvents({
         sourceMetadata: {
@@ -156,8 +127,10 @@ const main = async () => {
             dataset: 'Kink'
         },
     });
-    writePluraEvents(pluraEventsOut);
+    writeFile('plura', pluraEventsOut);
+}
 
+const scrapeOrganizerTantraNYEvents = async (urlCache: URLCache) => {
     const organizerTantraNYEventsOut = await scrapeOrganizerTantraNY({
         url: 'https://tantrany.com/api/events-listings.json.php?user=toli',
         sourceMetadata: {
@@ -166,39 +139,49 @@ const main = async () => {
         }
     });
 
-    writeOrganizerTantraNYEvents(organizerTantraNYEventsOut);
+    writeFile('tantra_ny', organizerTantraNYEventsOut);
+}
 
-    // // SCRAPE WHATSAPP EVENTS
-    // const whatsappLinksOut = await scrapeWhatsappLinks();
+const scrapeWhatsapp = async (urlCache: URLCache) => {
+    // SCRAPE WHATSAPP EVENTS
+    const whatsappLinksOut = await scrapeWhatsappLinks();
 
-    // writeWhatsappLinks(whatsappLinksOut)
+    writeFile('whatsapp_links', whatsappLinksOut)
 
-    // const whatsappLinks = getWhatsappLinks();
+    const whatsappEventsOut = await scrapeURLs(whatsappLinksOut, urlCache);
+    writeFile('whatsapp_events', whatsappEventsOut);
+}
 
-    // const whatsappEventsOut = await scrapeURLs(whatsappLinks, urlCache);
-    // writeWhatsappEvents(whatsappEventsOut);
+const main = async () => {
+    // GENERAL SETUP
+    const allEventsOld = getFromFile('all');
+    const urlCache = getURLCache(allEventsOld)
+
+    console.log('start')
+    const allScrapers = await Promise.all([
+        scrapeKinkEventbrite(urlCache),
+        scrapePlura(urlCache),
+        scrapeOrganizerTantraNYEvents(urlCache),
+        // scrapeWhatsapp(urlCache)
+    ]);
 
     // Combine All Events
-
-    const pluraEvents = getPluraEvents();
-    const kinkEventbriteEvents = getKinkEventbriteEvents();
-    const tantraNYEvents = getOrganizerTantraNYEvents();
-    // const whatsappEvents = getWhatsappEvents();
-
+    const pluraEvents = getFromFile('plura');
+    const kinkEventbriteEvents = getFromFile('kink_eventbrite_events');
+    const tantraNYEvents = getFromFile('tantra_ny');
 
     // Filter them to exclude certain events and dedupe
     const filteredEvents = filterEvents([
         ...pluraEvents,
         ...kinkEventbriteEvents,
         ...tantraNYEvents
-        // For now keeping them out since they're not all kink related
-        // ...whatsappEvents
     ]);
 
-    writeAllEvents(filteredEvents);
-    writeAllEventsToFrontend(filteredEvents);
+    writeFile('all', filteredEvents);
+    writeFile('all_fe', filteredEvents);
 
     // // Separate calendar for whatsapp events
+    // const whatsappEvents = getFromFile('whatsapp');
     // const filteredWhatsappEvents = filterEvents(whatsappEvents);
     // writeAllWhatsappEventsToFrontend(filteredWhatsappEvents)
 
