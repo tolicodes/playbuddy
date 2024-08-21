@@ -6,7 +6,7 @@ import { WebView } from 'react-native-webview';
 const Web = () => {
   return (
     <SafeAreaView style={styles.container}>
-      <WebView source={{ uri: "https://www.kinkbuddy.org/" }} />
+      <WebView source={{ uri: "https://www.kinkbuddy.org/kinks" }} />
     </SafeAreaView>
   );
 };
