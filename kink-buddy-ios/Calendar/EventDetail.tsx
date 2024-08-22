@@ -1,13 +1,10 @@
 import moment from 'moment';
-import { View, Text, SectionList, StyleSheet, Image, Animated, TouchableOpacity, Dimensions, Linking, SafeAreaView, ScrollView } from 'react-native';
-import { Event } from './types';
+import { Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
 
-export const EventDetail = ({ selectedEvent, slideAnim, slideOut }: { selectedEvent: Event, slideAnim: Animated.Value, slideOut: () => void }) => {
-    return (<Animated.View style={[styles.fullViewContainer, { transform: [{ translateX: slideAnim }] }]}>
-        <ScrollView>
-            <TouchableOpacity onPress={slideOut}>
-                <Text style={styles.backButton}>Back</Text>
-            </TouchableOpacity>
+export const EventDetail = ({ route, navigation }: any) => {
+    const selectedEvent = route.params.selectedEvent;
+    return (
+        <ScrollView style={{ padding: 20 }}>
             <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
             <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
                 <Text style={styles.fullViewTitle}>{selectedEvent.name}</Text>
@@ -22,8 +19,7 @@ export const EventDetail = ({ selectedEvent, slideAnim, slideOut }: { selectedEv
                 {selectedEvent.price}
             </Text>}
             <Text style={styles.fullViewSummary}>{selectedEvent.summary}</Text>
-        </ScrollView>
-    </Animated.View>)
+        </ScrollView>)
 }
 
 const styles = StyleSheet.create({

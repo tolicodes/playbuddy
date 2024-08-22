@@ -36,6 +36,7 @@ export default () => {
               return <IonIcon name="ellipsis-horizontal" size={size} color={color} />;
             }
           },
+          headerShown: false
         })}
       // tabBarOptions={{
       //   activeTintColor: 'tomato',

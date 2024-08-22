@@ -1,13 +1,12 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Event } from './types';
 import moment from 'moment';
-export const ListItem = ({ item, setSelectedEvent, slideIn }: { item: Event, setSelectedEvent: (event: Event) => void, slideIn: () => void }) => {
+export const ListItem = ({ item, setSelectedEvent }: { item: Event, setSelectedEvent: (event: Event) => void, }) => {
     const formattedDate = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
 
     return (
         <TouchableOpacity onPress={() => {
             setSelectedEvent(item);
-            slideIn();
 
         }}>
             <View style={styles.eventContainer}>

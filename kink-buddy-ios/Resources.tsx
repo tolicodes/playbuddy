@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type LinkItem = {
     id: string;
@@ -27,13 +28,13 @@ const LinkList: React.FC = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={styles.container}>
             <FlatList
                 data={links}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id}
             />
-        </View>
+        </SafeAreaView>
     );
 };
 

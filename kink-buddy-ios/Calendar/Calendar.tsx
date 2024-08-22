@@ -3,21 +3,32 @@ import { Text, SectionList, StyleSheet, Animated, Dimensions, SafeAreaView } fro
 import axios from 'axios';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
-import { Picker } from '@react-native-picker/picker';
 import { Event } from './types';
 import { ListItem } from './ListItem';
 import { EventDetail } from './EventDetail';
+import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
+
 
 const EVENTS_API_URL = 'https://kinkbuddy.org/all_events.json'
-const { width: windowWidth } = Dimensions.get('window');
 
-const CalendarEventList: React.FC = () => {
+
+type RootStackParamList = {
+    'Main': undefined;
+    'Event Details': { selectedEvent: Event };
+};
+
+const EventsList: React.FC = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-    const [selectedOrganizer, setSelectedOrganizer] = useState<string | null>(null);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-    const slideAnim = useRef(new Animated.Value(windowWidth)).current;
     const sectionListRef = useRef<SectionList<Event>>(null); // Reference to SectionList
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+
+    useEffect(() => {
+        if (!selectedEvent) return
+        navigation.navigate('Event Details', { selectedEvent })
+    }, [selectedEvent])
 
     useEffect(() => {
         axios.get<Event[]>(EVENTS_API_URL)
@@ -29,16 +40,6 @@ const CalendarEventList: React.FC = () => {
                 console.error('Error fetching events:', error);
             });
     }, []);
-
-    useEffect(() => {
-        // Filter events based on the selected organizer
-        if (selectedOrganizer) {
-            const filtered = events.filter(event => event.organizer === selectedOrganizer);
-            setFilteredEvents(filtered);
-        } else {
-            setFilteredEvents(events);
-        }
-    }, [selectedOrganizer, events]);
 
     useEffect(() => {
         // Automatically scroll to today's section when the list loads
@@ -102,108 +103,44 @@ const CalendarEventList: React.FC = () => {
         }
     };
 
-    const slideIn = () => {
-        Animated.timing(slideAnim, {
-            toValue: 0,
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const slideOut = () => {
-        Animated.timing(slideAnim, {
-            toValue: windowWidth,
-            duration: 300,
-            useNativeDriver: true,
-        }).start(() => setSelectedEvent(null));
-    };
-
     // @ts-ignore
     const renderSectionHeader = ({ section: { title } }: any) => (
         <Text style={styles.sectionHeader}>{title}</Text>
     );
 
-    console.log({
-        organizerOptions
-    })
-
     return (
         <SafeAreaView style={styles.container}>
-            {!selectedEvent && (
-                <>
-                    <Calendar
-                        markedDates={markedDates}
-                        onDayPress={handleDayPress}
-                        style={styles.calendar}
-                        theme={{
-                            selectedDayBackgroundColor: 'blue',
-                            todayTextColor: 'blue',
-                            dotColor: 'blue',
-                            arrowColor: 'blue',
-                            'stylesheet.day.basic': {
-                                base: {
-                                    margin: .2,  // Reduce margin around each day
-                                },
-                            }
-                        }}
-                    />
-                    <SectionList
-                        ref={sectionListRef} // Set reference to SectionList
-                        sections={sections}
-                        stickySectionHeadersEnabled={true}
-                        renderItem={
-                            ({ item }: { item: Event }) => <ListItem item={item} setSelectedEvent={setSelectedEvent} slideIn={slideIn} />
-                        }
-                        renderSectionHeader={renderSectionHeader}
-                        keyExtractor={(item, i) => item.name + item.id}
-                        onScrollToIndexFailed={() => { console.log('scroll fail') }}
-                        ListEmptyComponent={<Text>No events for this day.</Text>}
-                    />
-                </>)
-            }
-
-            {
-                selectedEvent && (
-                    <EventDetail selectedEvent={selectedEvent} slideAnim={slideAnim} slideOut={slideOut} />
-                )
-            }
+            <Calendar
+                markedDates={markedDates}
+                onDayPress={handleDayPress}
+                style={styles.calendar}
+                theme={{
+                    selectedDayBackgroundColor: 'blue',
+                    todayTextColor: 'blue',
+                    dotColor: 'blue',
+                    arrowColor: 'blue',
+                    'stylesheet.day.basic': {
+                        base: {
+                            margin: .2,  // Reduce margin around each day
+                        },
+                    }
+                }}
+            />
+            <SectionList
+                ref={sectionListRef} // Set reference to SectionList
+                sections={sections}
+                stickySectionHeadersEnabled={true}
+                renderItem={
+                    ({ item }: { item: Event }) => <ListItem item={item} setSelectedEvent={setSelectedEvent} />
+                }
+                renderSectionHeader={renderSectionHeader}
+                keyExtractor={(item, i) => item.name + item.id}
+                onScrollToIndexFailed={() => { console.log('scroll fail') }}
+                ListEmptyComponent={<Text>Loading</Text>}
+            />
         </SafeAreaView >
     );
 };
-
-const pickerSelectStyles = StyleSheet.create({
-    inputIOS: {
-        fontSize: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 10,
-        borderWidth: 1,
-        borderColor: 'gray',
-        borderRadius: 4,
-        color: 'black',
-        paddingRight: 30, // to ensure the text is never behind the icon
-        backgroundColor: '#fff',
-        marginBottom: 10,
-    },
-    inputAndroid: {
-        fontSize: 16,
-        paddingHorizontal: 10,
-        paddingVertical: 8,
-        borderWidth: 0.5,
-        borderColor: 'purple',
-        borderRadius: 8,
-        color: 'black',
-        paddingRight: 30,
-        backgroundColor: '#fff',
-        marginBottom: 10,
-    },
-    iconContainer: {
-        top: 10,
-        right: 12,
-    },
-    viewContainer: {
-        padding: 10
-    }
-});
 
 const styles = StyleSheet.create({
     container: {
@@ -224,4 +161,27 @@ const styles = StyleSheet.create({
     },
 });
 
-export default CalendarEventList;
+
+const CalendarStack = createStackNavigator();
+
+const CalendarWrapper = () => {
+    return (
+        <CalendarStack.Navigator>
+            <CalendarStack.Screen name="Main" component={EventsList}
+                options={{
+                    headerShown: false, // Turn off the header for the Main screen
+                }}
+            />
+            <CalendarStack.Screen
+                name="Event Details"
+                component={EventDetail}
+                options={{
+                    headerShown: true,
+                    headerTitle: 'Event Details',
+                }}
+            />
+        </CalendarStack.Navigator>
+    );
+}
+
+export default CalendarWrapper;
