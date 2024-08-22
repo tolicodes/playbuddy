@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Linking, StyleSheet, Button } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as Sentry from '@sentry/react-native';
 
 type LinkItem = {
     id: string;
@@ -29,6 +30,7 @@ const LinkList: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            <Button title='Try!' onPress={() => { Sentry.captureException(new Error('First error')) }} />
             <FlatList
                 data={links}
                 renderItem={renderItem}

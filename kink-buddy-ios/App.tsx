@@ -21,7 +21,7 @@ type RootTabParamList = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-export default () => {
+const App = () => {
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -39,10 +39,6 @@ export default () => {
           },
           headerShown: false
         })}
-      // tabBarOptions={{
-      //   activeTintColor: 'tomato',
-      //   inactiveTintColor: 'gray',
-      // }}
       >
         <Tab.Screen name="Calendar" component={Calendar} />
         <Tab.Screen name="Kinks" component={Web} />
@@ -53,8 +49,16 @@ export default () => {
   );
 };
 
-
 Sentry.init({
-  dsn: "your Sentry DSN",
-  // other options
+  dsn: "https://1fc36126dc6d94f30dc69cee2c5b46ea@o4507822914338816.ingest.us.sentry.io/4507822915387392",
+  // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
+  // We recommend adjusting this value in production.
+  tracesSampleRate: 1.0,
+  _experiments: {
+    // profilesSampleRate is relative to tracesSampleRate.
+    // Here, we'll capture profiles for 100% of transactions.
+    profilesSampleRate: 1.0,
+  },
 });
+
+export default Sentry.wrap(App);
