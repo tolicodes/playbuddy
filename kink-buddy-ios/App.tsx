@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import * as Sentry from "@sentry/react-native";
 
 
 import Web from './Web';
@@ -52,11 +53,8 @@ export default () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+
+Sentry.init({
+  dsn: "your Sentry DSN",
+  // other options
 });
