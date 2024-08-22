@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kink Buddy Calendar",
     "slug": "kink-buddy-ios",
-    "version": "1.1.1",
+    "version": "1.1.3",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -21,14 +21,14 @@
         "foregroundImage": "./assets/icon.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tolicodes1.kinkbuddy"
+      "package": "com.tolicodes1.kinkbuddyios"
     },
     "web": {
       "favicon": "./assets/images/favicon.jpeg"
     },
     "extra": {
       "eas": {
-        "projectId": "eba61152-7f99-4394-82fa-6a11a7ccd46a"
+        "projectId": "06bc28a9-e7a8-42b0-9dea-2ad45021e60c"
       }
     }
   }
