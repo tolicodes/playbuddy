@@ -25,11 +25,13 @@ const EventsList: React.FC = () => {
     const sectionListRef = useRef<SectionList<Event>>(null); // Reference to SectionList
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
+    // Navigate to Event Details screen when selectedEvent changes
     useEffect(() => {
         if (!selectedEvent) return
         navigation.navigate('Event Details', { selectedEvent })
     }, [selectedEvent])
 
+    // Fetch events from API on component mount
     useEffect(() => {
         axios.get<Event[]>(EVENTS_API_URL)
             .then(response => {
@@ -41,8 +43,8 @@ const EventsList: React.FC = () => {
             });
     }, []);
 
+    // Automatically scroll to today's section when the list loads
     useEffect(() => {
-        // Automatically scroll to today's section when the list loads
         if (filteredEvents.length > 0) {
             const today = moment().format('MMM D, YYYY');
             const sectionIndex = sections.findIndex(section => section.title === today);
@@ -59,7 +61,7 @@ const EventsList: React.FC = () => {
         }
     }, [filteredEvents]);
 
-    // Ensure filteredEvents is always an array before using reduce
+    // Group events by date
     const groupedEvents = useMemo(() => Array.isArray(filteredEvents) ? filteredEvents.reduce((acc: Record<string, Event[]>, event) => {
         const date = moment(event.start_date).format('YYYY-MM-DD');
         if (!acc[date]) {
@@ -69,11 +71,13 @@ const EventsList: React.FC = () => {
         return acc;
     }, {}) : {}, [filteredEvents]);
 
+    // Create sections for SectionList by date
     const sections = useMemo(() => Object.keys(groupedEvents).map(date => ({
         title: moment(date).format('MMM D, YYYY'),
         data: groupedEvents[date],
     })), [groupedEvents]);
 
+    // Mark dates with events on the calendar
     const markedDates = useMemo(() => {
         return Object.keys(groupedEvents).reduce((acc: any, date) => {
             acc[date] = { marked: true, dotColor: 'blue' };
@@ -81,6 +85,7 @@ const EventsList: React.FC = () => {
         }, {});
     }, [groupedEvents]);
 
+    // Create options for the organizer filter
     const organizerOptions = useMemo(() => {
         return Array.from(new Set(events.map(event => event.organizer))).map(organizer => ({
             label: organizer,
@@ -89,20 +94,22 @@ const EventsList: React.FC = () => {
         }));
     }, [events]);
 
-
+    // When day is pressed on the calendar, scroll to the corresponding section
     const handleDayPress = (day: any) => {
         const date = moment(day.dateString).format('MMM D, YYYY');
         const sectionIndex = sections.findIndex(section => section.title === date);
 
         if (sectionIndex !== -1 && sectionListRef.current) {
             sectionListRef.current.scrollToLocation({
+                // Bug fix: scrollToLocation doesn't work for the first section
                 sectionIndex,
-                itemIndex: -1,
+                itemIndex: sectionIndex === 0 ? 0 : -1,
                 animated: true,
             });
         }
     };
 
+    // Date header for each section
     // @ts-ignore
     const renderSectionHeader = ({ section: { title } }: any) => (
         <Text style={styles.sectionHeader}>{title}</Text>
@@ -110,6 +117,7 @@ const EventsList: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
+            {/* Shows the actual calendar on top */}
             <Calendar
                 markedDates={markedDates}
                 onDayPress={handleDayPress}
@@ -126,8 +134,10 @@ const EventsList: React.FC = () => {
                     }
                 }}
             />
+
+            {/*  List of events */}
             <SectionList
-                ref={sectionListRef} // Set reference to SectionList
+                ref={sectionListRef} // Set reference to SectionList so that we can scroll
                 sections={sections}
                 stickySectionHeadersEnabled={true}
                 renderItem={
@@ -161,12 +171,13 @@ const styles = StyleSheet.create({
     },
 });
 
-
+// For navigation
 const CalendarStack = createStackNavigator();
 
 const CalendarWrapper = () => {
     return (
         <CalendarStack.Navigator>
+            {/*  Event List */}
             <CalendarStack.Screen name="Main" component={EventsList}
                 options={{
                     headerShown: false, // Turn off the header for the Main screen

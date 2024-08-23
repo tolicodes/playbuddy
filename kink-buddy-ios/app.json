@@ -15,7 +15,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
       "aps-environment": "development",
-      "buildNumber": "3"
+      "buildNumber": "3",
+      "runtimeVersion": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +24,10 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.tolicodes1.kinkbuddyios",
-      "versionCode": 3
+      "versionCode": 3,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "web": {
       "favicon": "./assets/images/favicon.jpeg"
@@ -32,6 +36,12 @@
       "eas": {
         "projectId": "06bc28a9-e7a8-42b0-9dea-2ad45021e60c"
       }
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/06bc28a9-e7a8-42b0-9dea-2ad45021e60c"
     }
   }
 }

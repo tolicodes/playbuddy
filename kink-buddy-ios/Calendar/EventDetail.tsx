@@ -1,13 +1,19 @@
 import moment from 'moment';
 import { Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-export const EventDetail = ({ route, navigation }: any) => {
+
+export const EventDetail = ({ route }: any) => {
     const selectedEvent = route.params.selectedEvent;
+
     return (
         <ScrollView style={{ padding: 20 }}>
             <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
             <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
-                <Text style={styles.fullViewTitle}>{selectedEvent.name}</Text>
+                <Text style={styles.fullViewTitle}>
+                    {selectedEvent.name}
+                    <MaterialIcons name="open-in-new" size={24} color="blue" />
+                </Text>
             </TouchableOpacity>
 
             <Text style={styles.eventOrganizer}>{selectedEvent.organizer}</Text>
@@ -15,6 +21,7 @@ export const EventDetail = ({ route, navigation }: any) => {
             <Text style={styles.eventTime}>
                 {`${moment(selectedEvent.start_date).format('MMM D, YYYY')} ${moment(selectedEvent.start_date).format('hA')} - ${moment(selectedEvent.end_date).format('hA')}`}
             </Text>
+
             {selectedEvent.price && <Text style={styles.fullViewPrice}>
                 {selectedEvent.price}
             </Text>}
@@ -39,13 +46,11 @@ const styles = StyleSheet.create({
     fullViewTitle: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#1e90ff',
-        marginBottom: 20,
+        color: 'blue',
     },
     fullViewTime: {
         fontSize: 18,
-        color: '#666',
-        marginTop: 10,
+        color: 'black',
     },
     fullViewLocation: {
         fontSize: 18,
@@ -61,11 +66,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         marginTop: 20,
-    },
-    backButton: {
-        fontSize: 18,
-        color: 'blue',
-        marginBottom: 20,
     },
     eventOrganizer: {
         fontSize: 14,

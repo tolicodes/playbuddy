@@ -6,11 +6,11 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import * as Sentry from "@sentry/react-native";
 
 
-import Web from './Web';
+import Web from './Pages/Web';
 import Calendar from './Calendar/Calendar'
 import { NavigationContainer } from '@react-navigation/native';
-import Resources from './Resources'
-import Moar from './Moar';
+import Resources from './Pages/Resources'
+import Moar from './Pages/Moar';
 
 type RootTabParamList = {
   Calendar: undefined;

@@ -7,7 +7,6 @@ export const ListItem = ({ item, setSelectedEvent }: { item: Event, setSelectedE
     return (
         <TouchableOpacity onPress={() => {
             setSelectedEvent(item);
-
         }}>
             <View style={styles.eventContainer}>
                 <Image source={{ uri: item.imageUrl }} style={styles.eventImage} />
