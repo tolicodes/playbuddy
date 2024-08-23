@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kink Buddy Calendar",
     "slug": "kink-buddy-ios",
-    "version": "2.0.1",
+    "version": "2.1.3",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -14,7 +14,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
-      "aps-environment": "development",
       "buildNumber": "3",
       "runtimeVersion": "1.0.0"
     },

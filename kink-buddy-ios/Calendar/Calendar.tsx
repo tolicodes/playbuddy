@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Text, SectionList, StyleSheet, Animated, Dimensions, SafeAreaView } from 'react-native';
+import { Text, SectionList, StyleSheet, SafeAreaView } from 'react-native';
 import axios from 'axios';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
+
 import { Event } from './types';
 import { ListItem } from './ListItem';
 import { EventDetail } from './EventDetail';
@@ -177,7 +178,7 @@ const CalendarStack = createStackNavigator();
 const CalendarWrapper = () => {
     return (
         <CalendarStack.Navigator>
-            {/*  Event List */}
+            {/*  Event */}
             <CalendarStack.Screen name="Main" component={EventsList}
                 options={{
                     headerShown: false, // Turn off the header for the Main screen
