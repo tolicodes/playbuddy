@@ -32,16 +32,6 @@
       "eas": {
         "projectId": "06bc28a9-e7a8-42b0-9dea-2ad45021e60c"
       }
-    },
-    "plugins": [
-      [
-        "@sentry/react-native/expo",
-        {
-          "url": "https://sentry.io/",
-          "project": "react-native",
-          "organization": "toli-z2"
-        }
-      ]
-    ]
+    }
   }
 }
