@@ -1,5 +1,5 @@
-import { connectRedisClient } from "../../connections/redisClient";
-import { supabaseClient } from "../../connections/supabaseClient";
+import { connectRedisClient } from "./connections/redisClient";
+import { supabaseClient } from "./connections/supabaseClient";
 import { createIcal } from "./helpers/ical";
 
 exports.handler = async function (event, context) {
