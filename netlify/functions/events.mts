@@ -41,7 +41,7 @@ exports.handler = async function (event, context) {
         organizer_url: event.organizer.url,
       }));
 
-      const responseData = JSON.stringify(jsonData);
+      responseData = JSON.stringify(jsonData);
 
       // Cache the new data in Redis
       await redisClient.setEx(cacheKey, 600, responseData); // Cache for 10 minutes
