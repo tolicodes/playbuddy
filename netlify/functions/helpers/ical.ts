@@ -1,23 +1,15 @@
 import { ICalCalendar, ICalEventData } from 'ical-generator';
 import * as fs from 'fs';
-import { Event } from '../types';
+import { Event } from '../../../kink-event-scraper/types';
 
 export const createIcal = (events: Event[]) => {
-    const allEvents = fs.readFileSync(
-        '../src/EventCalendar/all_events.json',
-        'utf-8',
-    );
-
-    // Example JSON data
-    const jsonData: Event[] = JSON.parse(allEvents);
-
     // Create a new iCalendar
     const calendar: ICalCalendar = new ICalCalendar({
         name: 'KinkBuddy Events Calendar',
     });
 
     // Convert JSON data to iCalendar events
-    jsonData.forEach((event: Event) => {
+    events.forEach((event: Event) => {
         const start_date = new Date(event.start_date);
         const end_date = new Date(event.end_date);
         // check if start and end dates are valid
@@ -41,5 +33,5 @@ export const createIcal = (events: Event[]) => {
 
     const calString = calendar.toString();
 
-    fs.writeFileSync('../public/calendar.ics', calString);
+    return calString
 };

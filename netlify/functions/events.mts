@@ -1,5 +1,6 @@
 import { connectRedisClient } from "../../connections/redisClient";
 import { supabaseClient } from "../../connections/supabaseClient";
+import { createIcal } from "./helpers/ical";
 
 exports.handler = async function (event, context) {
   const cacheKey = 'events';
@@ -10,14 +11,15 @@ exports.handler = async function (event, context) {
     console.log('Connected to Redis');
 
     const cacheData = await redisClient.get(cacheKey);
-    console.log('Cache data:', cacheData);
+    console.log('Cache data');
+
+    let responseData;
+    let jsonData;
 
     if (cacheData) {
       // Return cached data
-      return {
-        statusCode: 200,
-        body: cacheData,
-      };
+      responseData = cacheData;
+      jsonData = JSON.parse(cacheData);
     } else {
       // Fetch data from Supabase if not in cache
       const { data, error } = await supabaseClient
@@ -31,24 +33,36 @@ exports.handler = async function (event, context) {
         throw new Error(error.message);
       }
 
-      console.log('Fetched data from Supabase:', data);
+      console.log('Fetched data from Supabase');
 
-      const formattedData = data.map(event => ({
+      jsonData = data.map(event => ({
         ...event,
         organizer: event.organizer.name,
         organizer_url: event.organizer.url,
       }));
 
-      const responseData = JSON.stringify(formattedData);
+      const responseData = JSON.stringify(jsonData);
 
       // Cache the new data in Redis
       await redisClient.setEx(cacheKey, 600, responseData); // Cache for 10 minutes
+    }
 
+    if (event.queryStringParameters && event.queryStringParameters.format === 'ical') {
+      // Handle the request for iCal format
       return {
         statusCode: 200,
-        body: responseData,
-      };
-    }
+        headers: {
+          'Content-Type': 'text/calendar',
+        },
+        body: createIcal(jsonData),
+      }
+    };
+
+    return {
+      statusCode: 200,
+      body: responseData,
+    };
+
   } catch (error) {
     console.error('Error:', error);
     return {

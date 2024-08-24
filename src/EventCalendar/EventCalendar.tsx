@@ -11,7 +11,7 @@ import {
     downloadCsv,
     getAvailableGroups,
     // getAvailableGroups, 
-    getAvailableOrganizers, getEvents, getTooltipContent, getWhatsappEvents, jsonToCsv, mapEventsToFullCalendar
+    getAvailableOrganizers, getEvents, getTooltipContent, jsonToCsv, mapEventsToFullCalendar
 } from './calendarUtils';
 
 export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {

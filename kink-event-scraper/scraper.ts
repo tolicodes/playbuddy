@@ -1,7 +1,7 @@
 // import { scrapePluraEvents } from './scrapePluraEvents';
 import fs from 'fs';
 import { Event, SourceMetadata } from './types';
-import { createIcal } from './helpers/ical';
+import { createIcal } from '../netlify/functions/helpers/ical';
 
 import scrapeURLs from './helpers/scrapeURLs';
 import { scrapeWhatsappLinks } from './scrapers/scrapeWhatsapp';
@@ -177,18 +177,12 @@ const main = async () => {
         ...tantraNYEvents
     ]);
 
-    writeFile('all', filteredEvents);
-    writeFile('all_fe', filteredEvents);
-
     writeEventsToDB(filteredEvents);
 
     // // Separate calendar for whatsapp events
     // const whatsappEvents = getFromFile('whatsapp');
     // const filteredWhatsappEvents = filterEvents(whatsappEvents);
     // writeAllWhatsappEventsToFrontend(filteredWhatsappEvents)
-
-    // Write iCal feed
-    createIcal(filteredEvents);
 };
 
 main();
