@@ -45,7 +45,6 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
 
         const eventsInView = events.filter((event) => {
             const eventStart = new Date(event.start_date);
-            console.log('eventStart', eventStart, event.start_date);
             return eventStart >= currentViewStart && eventStart <= currentViewEnd;
         });
 
@@ -86,7 +85,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     }
 
     const onClickGoogleCal = () => {
-        const icsUrl = 'http://kinks.toli.love/calendar.ics';
+        const icsUrl = 'http://kinkbuddy.org/.netlify/functions/events?format=ical';
         const encodedUrl = encodeURIComponent(icsUrl);
         const googleCalendarLink = `https://www.google.com/calendar/render?cid=${encodedUrl}`;
 
