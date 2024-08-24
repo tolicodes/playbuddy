@@ -15,7 +15,7 @@ const EVENTS_API_URL = 'https://kinkbuddy.org/.netlify/functions/events'
 
 
 type RootStackParamList = {
-    'Main': undefined;
+    'Event List': undefined;
     'Event Details': { selectedEvent: Event };
 };
 
@@ -179,7 +179,7 @@ const CalendarWrapper = () => {
     return (
         <CalendarStack.Navigator>
             {/*  Event */}
-            <CalendarStack.Screen name="Main" component={EventsList}
+            <CalendarStack.Screen name="Event List" component={EventsList}
                 options={{
                     headerShown: false, // Turn off the header for the Main screen
                 }}

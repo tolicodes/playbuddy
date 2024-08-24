@@ -11,7 +11,6 @@ import 'react-native-gesture-handler';
 import Web from './Pages/Web';
 import Calendar from './Calendar/Calendar'
 import { NavigationContainer } from '@react-navigation/native';
-import Resources from './Pages/Resources'
 import Moar from './Pages/Moar';
 import { useEffect } from 'react';
 
@@ -57,8 +56,6 @@ const App = () => {
               return <FAIcon name="calendar" size={size} color={color} />;
             } else if (route.name === 'Kinks') {
               return <MaterialIcon name="handcuffs" size={size} color={color} />;
-            } else if (route.name === 'Resources') {
-              return <FAIcon name="book" size={size} color={color} />;
             } else if (route.name === "Moar") {
               return <IonIcon name="ellipsis-horizontal" size={size} color={color} />;
             }
@@ -68,7 +65,6 @@ const App = () => {
       >
         <Tab.Screen name="Calendar" component={Calendar} />
         <Tab.Screen name="Kinks" component={Web} />
-        <Tab.Screen name="Resources" component={Resources} />
         <Tab.Screen name="Moar" component={Moar} />
       </Tab.Navigator>
     </NavigationContainer>

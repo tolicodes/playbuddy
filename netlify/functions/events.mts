@@ -11,7 +11,7 @@ exports.handler = async function (event, context) {
     console.log('Connected to Redis');
 
     const cacheData = await redisClient.get(cacheKey);
-    console.log('Cache data');
+    console.log('Cache data', !!cacheData);
 
     let responseData;
     let jsonData;
