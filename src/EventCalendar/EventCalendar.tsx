@@ -15,7 +15,13 @@ import {
 } from './calendarUtils';
 
 export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
-    const events = useMemo(() => type === 'Whatsapp' ? getWhatsappEvents() : getEvents(), [type]);
+    const [events, setEvents] = useState<Event[]>([]);
+    useEffect(() => {
+        console.log('Fetching events');
+        getEvents().then((events) => {
+            setEvents(events);
+        });
+    }, []);
 
     const calendarRef = useRef<FullCalendar>(null);
 
@@ -39,6 +45,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
 
         const eventsInView = events.filter((event) => {
             const eventStart = new Date(event.start_date);
+            console.log('eventStart', eventStart, event.start_date);
             return eventStart >= currentViewStart && eventStart <= currentViewEnd;
         });
 
@@ -61,10 +68,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     const filteredEvents: Event[] = useMemo(() => {
         const organizers = filteredOrganizers.length === 0 ? currentViewOrganizers : filteredOrganizers;
         const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
-        console.log({
-            groups,
-            currentViewEvents
-        })
+
         return currentViewEvents.filter((event) => {
             return organizers.map((org) => org.value).includes(event.organizer || '')
                 && groups.map((group) => group.value).includes(event.source_origination_group_name || '');

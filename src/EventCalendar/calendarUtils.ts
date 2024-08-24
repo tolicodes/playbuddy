@@ -2,9 +2,10 @@ import Papa from 'papaparse';
 
 import { Event } from "../Common/types";
 
-import events from './all_events.json'
 import whatsappEvents from './all_whatsapp_events.json'
 import { OptionType } from "../Common/types";
+
+import axios from 'axios';
 
 export const colors = [
     '#7986CB', '#33B679', '#8E24AA', '#E67C73', '#F6BF26', '#F4511E', '#039BE5', '#616161',
@@ -36,9 +37,6 @@ export const getAvailableOrganizers = (events: Event[]): OptionType[] => {
 export const getAvailableGroups = (events: Event[]): OptionType[] => {
     return events.reduce((acc, event, index) => {
         if (!event.source_origination_group_name) return acc;
-        console.log({
-            name: event
-        })
 
         const existingGroup = acc.find((group) => group.value === event.source_origination_group_name);
 
@@ -71,8 +69,19 @@ const fillInMissingData = (events: Event[]): Event[] => {
         };
     });
 }
+async function fetchEventsWithOrganizerDetails(): Promise<Event[]> {
+    try {
+        const { data } = await axios.get<Event[]>(`/.netlify/functions/events`);
 
-export const getEvents = (): Event[] => {
+        return data as Event[];
+    } catch (error) {
+        console.error(error);
+        return [];
+    }
+}
+
+export const getEvents = async (): Promise<Event[]> => {
+    const events = await fetchEventsWithOrganizerDetails();
     return fillInMissingData(events as Event[]);
 }
 

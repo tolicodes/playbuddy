@@ -1,43 +1,5 @@
 [
   {
-    "id": "organizer-tantra_ny-6027",
-    "name": "Tantra Singles Happy Hour",
-    "start_date": "2024-08-20T00:30:00.000Z",
-    "end_date": "2024-08-20T01:30:00.000Z",
-    "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
-    "price": "0",
-    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
-    "organizer": "Tantra NY",
-    "organizerUrl": "https://tantrany.com",
-    "eventUrl": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-989732515597?aff=4toli",
-    "summary": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5590",
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-08-24T21:30:00.000Z",
-    "end_date": "2024-08-25T00:30:00.000Z",
-    "location": "Kula Yoga Williamsburg - 101 North 3rd St. #113 Brooklyn, NY 11249",
-    "price": "0",
-    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
-    "organizer": "Tantra NY",
-    "organizerUrl": "https://tantrany.com",
-    "eventUrl": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-927610827957?aff=4toli",
-    "summary": "Tantra Speed Date - New York (Soho)",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-5867",
     "name": "The 90-Day Relationship Experiment",
     "start_date": "2024-08-25T17:00:00.000Z",
@@ -49,25 +11,6 @@
     "organizerUrl": "https://tantrany.com",
     "eventUrl": "https://www.eventbrite.com/e/the-90-day-relationship-experimenttm-free-informational-call-tickets-964755619027?aff=4toli",
     "summary": "The 90-Day Relationship Experiment™ - Free Info Call",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5171",
-    "name": "The Intimacy Hour",
-    "start_date": "2024-08-25T21:30:00.000Z",
-    "end_date": "2024-08-25T22:30:00.000Z",
-    "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
-    "price": "0",
-    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
-    "organizer": "Tantra NY",
-    "organizerUrl": "https://tantrany.com",
-    "eventUrl": "https://www.eventbrite.com/e/the-intimacy-hour-conversations-on-love-sex-and-relationships-tickets-869660456837?aff=4toli",
-    "summary": "The Intimacy Hour",
     "tags": [
       "tantra"
     ],
@@ -114,10 +57,29 @@
     "source_origination_platform": "organizer_api"
   },
   {
+    "id": "organizer-tantra_ny-5171",
+    "name": "The Intimacy Hour",
+    "start_date": "2024-09-01T17:00:00.000Z",
+    "end_date": "2024-09-01T18:00:00.000Z",
+    "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
+    "price": "0",
+    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
+    "organizer": "Tantra NY",
+    "organizerUrl": "https://tantrany.com",
+    "eventUrl": "https://www.eventbrite.com/e/the-intimacy-hour-conversations-on-love-sex-and-relationships-tickets-869660456837?aff=4toli",
+    "summary": "The Intimacy Hour",
+    "tags": [
+      "tantra"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "source_origination_platform": "organizer_api"
+  },
+  {
     "id": "organizer-tantra_ny-6029",
     "name": "Tantra Singles Happy Hour",
-    "start_date": "2024-09-03T00:30:00.000Z",
-    "end_date": "2024-09-03T01:30:00.000Z",
+    "start_date": "2024-09-04T00:30:00.000Z",
+    "end_date": "2024-09-04T01:30:00.000Z",
     "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
     "price": "0",
     "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",

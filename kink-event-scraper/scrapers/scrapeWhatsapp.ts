@@ -21,8 +21,6 @@ export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
         });
 
         client.on('ready', async () => {
-            console.log('Client is ready!');
-
             try {
                 // Get all the groups
                 console.log('Fetching chats...');
@@ -81,7 +79,7 @@ export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
         });
 
         client.on('disconnected', (reason) => {
-            console.log('Client was logged out', reason);
+            console.log('Whatsapp Client was logged out', reason);
         });
 
         client.initialize();

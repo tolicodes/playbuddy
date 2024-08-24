@@ -40,7 +40,7 @@ const parseDateTimeString = (dateTimeString: string): ParsedDateTime => {
   const endTimePeriod = endTime.slice(-2).toLowerCase(); // Last two characters (am/pm) of end time
   const startTimePeriod =
     startTime.includes('pm') ||
-    (endTimePeriod === 'pm' && !startTime.includes('am'))
+      (endTimePeriod === 'pm' && !startTime.includes('am'))
       ? 'pm'
       : 'am';
 
@@ -127,8 +127,6 @@ const scrapeEventbritePage = async (
       max_ticket_price: maxTicketPrice,
       source: 'Eventbrite',
     };
-
-    console.log({ event });
 
     return [event];
   } catch (error) {

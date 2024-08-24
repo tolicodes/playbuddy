@@ -10,6 +10,5 @@ export const addKinkData = async (data: Partial<Kink>) => {
     throw new Error('Error inserting kink data: ' + error.message);
   }
 
-  console.log('Inserted data:', insertedData);
   return insertedData;
 };

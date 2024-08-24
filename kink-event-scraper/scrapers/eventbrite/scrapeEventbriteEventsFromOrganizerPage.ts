@@ -59,6 +59,9 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
   const page = await browser.newPage();
 
   try {
+    // keeps track of the timeout for request (below)
+    let timeout: NodeJS.Timeout;
+
     // Listen for the API request
     const apiPromise = new Promise<string>((resolve, reject) => {
       page.on('request', (request) => {
@@ -66,13 +69,15 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
         if (
           url.includes('https://www.eventbrite.com/api/v3/destination/event')
         ) {
+          timeout && clearTimeout(timeout);
           resolve(url);
         }
       });
     });
 
+
     const timeoutPromise = new Promise<string>((resolve, reject) => {
-      setTimeout(() => {
+      timeout = setTimeout(() => {
         console.log(`Organizer URL ${url} contains no events`)
         resolve('')
       }, 10000);

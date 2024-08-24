@@ -8,6 +8,5 @@ export const updateKink = async (id: number, kinkData: Partial<Kink>) => {
     throw new Error('Error updating kink data: ' + error.message);
   }
 
-  console.log('Data updated successfully', data);
   return data;
 };

@@ -13,7 +13,7 @@ async function listGmailMessages(auth: OAuth2Client, email: string): Promise<str
 
     const messages = res.data.messages;
     if (!messages) {
-        console.log('No messages found.');
+        console.error('No messages found.');
         return []
     }
     return messages.map((message) => message.id!);
@@ -43,10 +43,9 @@ async function getGmailMessage(gmail: gmail_v1.Gmail, messageId: string): Promis
     }
 
     if (emailData) {
-        // console.log('Email Content:', emailData);
         return emailData;
     } else {
-        console.log('No email content found for message ID:', messageId);
+        console.error('No email content found for message ID:', messageId);
         return '';
     }
 }

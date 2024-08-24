@@ -17,7 +17,7 @@ const scrapeEventbriteAllOrganizerEventsFromEventPage = async ({
       $('[data-testid="organizer-name"] a').attr('href') || '';
 
     if (!organizerUrl) {
-      console.log('No organizer URL found');
+      console.error('No organizer URL found');
       return null;
     }
 

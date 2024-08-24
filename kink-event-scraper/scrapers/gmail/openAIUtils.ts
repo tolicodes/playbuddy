@@ -54,8 +54,5 @@ export async function extractEventDetailsFromEmail(emailText: string): Promise<v
         return;
     }
 
-    console.log(completion.choices[0]?.message?.content);
-
-    console.log('OpenAI Response:', JSON.parse(completion.choices[0]?.message?.content));
     console.timeEnd('OpenAI Request');
 }

@@ -16,6 +16,7 @@ export interface SourceMetadata {
 // Define the structure of the event object
 export type Event = {
   id: string;
+  original_id?: string;
   name: string;
   start_date: string;
   end_date: string;

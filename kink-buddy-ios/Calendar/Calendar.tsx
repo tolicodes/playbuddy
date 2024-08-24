@@ -11,7 +11,7 @@ import { createStackNavigator, StackNavigationProp } from '@react-navigation/sta
 import { useNavigation } from '@react-navigation/native';
 
 
-const EVENTS_API_URL = 'https://kinkbuddy.org/all_events.json'
+const EVENTS_API_URL = 'https://kinkbuddy.org/.netlify/functions/events'
 
 
 type RootStackParamList = {

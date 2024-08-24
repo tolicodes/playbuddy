@@ -20,10 +20,6 @@ async function main() {
             details.push(detailsForEmail);
         }
 
-        console.log({
-            details
-        })
-
     } catch (error) {
         console.error(error);
     }

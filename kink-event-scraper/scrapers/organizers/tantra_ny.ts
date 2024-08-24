@@ -40,11 +40,9 @@ export const scrapeOrganizerTantraNY = async ({
       };
     });
 
-    console.log(events);
-
     return events;
   } catch (error) {
-    console.log(error)
+    console.error(error)
     // Fail silently by returning an empty array
     return [];
   }

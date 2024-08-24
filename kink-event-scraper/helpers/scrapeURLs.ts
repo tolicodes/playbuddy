@@ -51,10 +51,6 @@ export const scrapeURLs = async (links: SourceMetadata[], urlCache: string[]): P
     return urlCache.includes(link.url);
   })
 
-  console.log({
-    dupes
-  })
-
   // Remove duplicate URLs
   const dedupedLinks = dedupeByLink(filteredFromCache);
 
@@ -69,7 +65,7 @@ export const scrapeURLs = async (links: SourceMetadata[], urlCache: string[]): P
     const scraperConfig = SCRAPERS[domain];
 
     if (!scraperConfig) {
-      console.log(`No scraper available for domain: ${domain}`);
+      console.error(`No scraper available for domain: ${domain}`);
       continue;
     }
 
@@ -101,7 +97,7 @@ export const scrapeURLs = async (links: SourceMetadata[], urlCache: string[]): P
         }
       }
     } else {
-      console.log(`No event ID found for URL: ${url}`);
+      console.error(`No event ID found for URL: ${url}`);
     }
   }
 

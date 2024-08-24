@@ -8,6 +8,7 @@ import { scrapeWhatsappLinks } from './scrapers/scrapeWhatsapp';
 import { scrapePluraEvents } from './scrapers/scrapePluraEvents';
 import { scrapeEventbriteEventsFromOrganizersURLs } from './scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage';
 import { scrapeOrganizerTantraNY } from './scrapers/organizers/tantra_ny';
+import { writeEventsToDB } from './helpers/writeEventsToDB';
 
 export const filterEvents = (events: Event[]) => {
     // these are default Plura events that we want to exclude from the calendar
@@ -20,17 +21,18 @@ export const filterEvents = (events: Event[]) => {
         (event) => !EXCLUDE_EVENT_IDS.includes(event.id),
     ) as Event[];
 
-    const dedupedEvents = filteredEvents.reduce((acc: Event[], event) => {
-        const existingEvent = acc.find(
-            (e) => e.name === event.name && e.start_date === event.start_date,
-        );
-        if (!existingEvent) {
-            acc.push(event);
-        }
-        return acc;
-    }, []);
+    // const dedupedEvents = filteredEvents.reduce((acc: Event[], event) => {
+    //     const existingEvent = acc.find(
+    //         (e) => e.name === event.name && e.start_date === event.start_date,
+    //     );
+    //     if (!existingEvent) {
+    //         acc.push(event);
+    //     }
+    //     return acc;
+    // }, []);
 
-    return dedupedEvents;
+    // return dedupedEvents;
+    return filteredEvents;
 };
 
 type URLCache = string[]
@@ -52,7 +54,6 @@ const fileOperations = {
     },
 
     writeJSON: (path: keyof typeof DATA_FILES, data: any) => {
-        console.log(path)
         fs.writeFileSync(path, JSON.stringify(data, null, 2));
     }
 };
@@ -157,7 +158,6 @@ const main = async () => {
     const allEventsOld = getFromFile('all');
     const urlCache = getURLCache(allEventsOld)
 
-    console.log('start')
     const allScrapers = await Promise.all([
         scrapeKinkEventbrite(urlCache),
         scrapePlura(urlCache),
@@ -179,6 +179,8 @@ const main = async () => {
 
     writeFile('all', filteredEvents);
     writeFile('all_fe', filteredEvents);
+
+    writeEventsToDB(filteredEvents);
 
     // // Separate calendar for whatsapp events
     // const whatsappEvents = getFromFile('whatsapp');

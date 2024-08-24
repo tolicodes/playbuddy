@@ -59,10 +59,6 @@ async function scrapePartifulEvent({
             ...sourceMetadata,
         };
 
-        console.log({
-            eventDetails,
-        });
-
         return [eventDetails];
     } catch (error) {
         console.error('Error scraping Partiful event:', error);
