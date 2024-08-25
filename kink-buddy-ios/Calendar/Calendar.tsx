@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Text, SectionList, StyleSheet, SafeAreaView } from 'react-native';
+import { Text, SectionList, StyleSheet, SafeAreaView, Button, View } from 'react-native';
 import axios from 'axios';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
@@ -11,12 +11,16 @@ import { createStackNavigator, StackNavigationProp } from '@react-navigation/sta
 import { useNavigation } from '@react-navigation/native';
 
 
-const EVENTS_API_URL = 'https://kinkbuddy.org/.netlify/functions/events'
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Filters } from './Filters';
+
+const EVENTS_API_URL = 'https://rational-autumn-417712-73c6w6zqza-ue.a.run.app/events'
 
 
 type RootStackParamList = {
     'Event List': undefined;
     'Event Details': { selectedEvent: Event };
+    Filters: undefined;
 };
 
 const EventsList: React.FC = () => {
@@ -136,6 +140,17 @@ const EventsList: React.FC = () => {
                 }}
             />
 
+            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+                <Icon name="filter" size={30} color="blue" />
+                <Button
+                    title="Show Filters (By Organizer)"
+                    onPress={() => navigation.navigate('Filters')}
+                />
+                <Icon name="filter" size={30} color="blue" />
+
+            </View>
+
+
             {/*  List of events */}
             <SectionList
                 ref={sectionListRef} // Set reference to SectionList so that we can scroll
@@ -190,6 +205,14 @@ const CalendarWrapper = () => {
                 options={{
                     headerShown: true,
                     headerTitle: 'Event Details',
+                }}
+            />
+            <CalendarStack.Screen
+                name="Filters"
+                component={Filters}
+                options={{
+                    headerShown: true,
+                    headerTitle: 'Filters',
                 }}
             />
         </CalendarStack.Navigator>
