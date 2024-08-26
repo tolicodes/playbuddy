@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { Alert, Linking } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
@@ -47,6 +47,8 @@ const App = () => {
     checkForUpdates();
   }, []);
 
+  const DummyComponent = () => <></>
+
   return (
     <NavigationContainer>
       <Tab.Navigator
@@ -64,7 +66,15 @@ const App = () => {
         })}
       >
         <Tab.Screen name="Calendar" component={Calendar} />
-        <Tab.Screen name="Kinks" component={Web} />
+        <Tab.Screen name="Kinks" component={DummyComponent}
+
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault(); // Prevent the default action of navigating to the screen
+              Linking.openURL('https://kinkbuddy.org/kinks'); // Open the external link
+            },
+          }}
+        />
         <Tab.Screen name="Moar" component={Moar} />
       </Tab.Navigator>
     </NavigationContainer>
