@@ -14,7 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Filters } from './Filters';
 
-const EVENTS_API_URL = 'https://rational-autumn-417712-73c6w6zqza-ue.a.run.app/events'
+const EVENTS_API_URL = 'https://api.kinkbuddy.org/events'
 
 
 type RootStackParamList = {

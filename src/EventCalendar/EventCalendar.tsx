@@ -85,7 +85,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     }
 
     const onClickGoogleCal = () => {
-        const icsUrl = 'http://rational-autumn-417712-73c6w6zqza-ue.a.run.app/events?format=ical';
+        const icsUrl = 'http://api.kinkbuddy.org/events?format=ical';
         const encodedUrl = encodeURIComponent(icsUrl);
         const googleCalendarLink = `https://www.google.com/calendar/render?cid=${encodedUrl}`;
 
