@@ -140,7 +140,7 @@ const EventsList: React.FC = () => {
                 }}
             />
 
-            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+            {/* <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
                 <Icon name="filter" size={30} color="blue" />
                 <Button
                     title="Show Filters (By Organizer)"
@@ -148,7 +148,7 @@ const EventsList: React.FC = () => {
                 />
                 <Icon name="filter" size={30} color="blue" />
 
-            </View>
+            </View> */}
 
 
             {/*  List of events */}
@@ -207,14 +207,14 @@ const CalendarWrapper = () => {
                     headerTitle: 'Event Details',
                 }}
             />
-            <CalendarStack.Screen
+            {/* <CalendarStack.Screen
                 name="Filters"
                 component={Filters}
                 options={{
                     headerShown: true,
                     headerTitle: 'Filters',
                 }}
-            />
+            /> */}
         </CalendarStack.Navigator>
     );
 }
