@@ -10,10 +10,6 @@ import { EventDetail } from './EventDetail';
 import { createStackNavigator, StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 
-
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { Filters } from './Filters';
-
 const EVENTS_API_URL = 'https://api.kinkbuddy.org/events'
 
 
@@ -58,7 +54,7 @@ const EventsList: React.FC = () => {
                 setTimeout(() => {
                     sectionListRef.current?.scrollToLocation({
                         sectionIndex,
-                        itemIndex: -1,
+                        itemIndex: sectionIndex === 0 ? 0 : -1,
                         animated: true,
                     });
                 }, 500)

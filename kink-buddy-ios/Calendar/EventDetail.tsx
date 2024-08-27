@@ -1,6 +1,7 @@
 import moment from 'moment';
 import { Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import Markdown from 'react-native-markdown-display';
 
 
 export const EventDetail = ({ route }: any) => {
@@ -25,7 +26,9 @@ export const EventDetail = ({ route }: any) => {
             {selectedEvent.price && <Text style={styles.fullViewPrice}>
                 {selectedEvent.price}
             </Text>}
-            <Text style={styles.fullViewSummary}>{selectedEvent.summary}</Text>
+            <Markdown>
+                {selectedEvent.summary}
+            </Markdown>
         </ScrollView>)
 }
 
@@ -61,11 +64,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#666',
         marginTop: 10,
-    },
-    fullViewSummary: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 20,
     },
     eventOrganizer: {
         fontSize: 14,

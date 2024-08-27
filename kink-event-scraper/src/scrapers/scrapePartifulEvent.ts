@@ -49,8 +49,6 @@ async function scrapePartifulEvent({
         const summary = await extractHtmlToMarkdown(page, "div.description")
         const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
 
-
-
         const eventDetails: Event = {
             id: eventId,
             name,

@@ -28,6 +28,7 @@
     "logs:tail": "gcloud beta run services logs tail $SERVICE --project=$PROJECT --region=$REGION"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
     "@types/express": "4.17.21",
     "@types/jest": "29.5.10",
     "@types/supertest": "2.0.16",
@@ -49,6 +50,7 @@
   "dependencies": {
     "@google-cloud/logging": "11.0.0",
     "@supabase/supabase-js": "^2.45.2",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "4.18.2",
     "ical-generator": "^7.2.0",

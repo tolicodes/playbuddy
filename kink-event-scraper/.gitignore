@@ -6,4 +6,4 @@ openai_token.json
 openai_key.json
 .env
 types/
-dist
+dist/

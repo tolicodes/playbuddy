@@ -51,3 +51,5 @@ yarn-error.log*
 *storybook.log
 kink-event-scraper/openai_key.json
 scripts/supabaseClient.js
+/kink-event-scraper/dist
+/kink-event-scraper/dist

@@ -2,6 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
+import cors from "cors";
 
 import { connectRedisClient } from "./connections/redisClient.js";
 import { supabaseClient } from "./connections/supabaseClient.js";
@@ -12,6 +13,14 @@ export const app = express();
 // Request middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: "*", // Allow all origins
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allow specific HTTP methods
+    allowedHeaders: "Content-Type,Authorization", // Allow specific headers
+  }),
+);
 
 app.head("/", (req: Request, res: Response): void => {
   res.send();

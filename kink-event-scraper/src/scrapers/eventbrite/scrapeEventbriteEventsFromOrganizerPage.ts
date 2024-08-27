@@ -54,6 +54,7 @@ const scrapeEventDetails = async ({
 
     return events;
   } catch (error) {
+    console.log(`Error scraping Eventbrite events`, error);
     // Fail silently by returning an empty array
     return [];
   }
@@ -102,10 +103,11 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
     if (!apiUrl) {
       return [];
     }
-    console.log("Captured API URL:", apiUrl);
+    console.log("Captured API URL:", apiUrl, `for organizer URL: ${url}`);
 
     // Scrape event details using the captured API URL
     const events = await scrapeEventDetails({ url: apiUrl, sourceMetadata });
+    console.log('organizer events', events);
     return events;
   } catch (error) {
     // Fail silently by returning an empty array
@@ -134,6 +136,8 @@ export const scrapeEventbriteEventsFromOrganizersURLs = async ({
     });
     events.push(...organizerEvents);
   }
+
+  console.log('events', events);
 
   return events;
 };
