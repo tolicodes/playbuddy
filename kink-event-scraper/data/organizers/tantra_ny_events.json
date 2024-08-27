@@ -1,24 +1,5 @@
 [
   {
-    "id": "organizer-tantra_ny-6028",
-    "name": "Tantra Singles Happy Hour",
-    "start_date": "2024-08-27T00:30:00.000Z",
-    "end_date": "2024-08-27T01:30:00.000Z",
-    "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
-    "price": "0",
-    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
-    "organizer": "Tantra NY",
-    "organizerUrl": "https://tantrany.com",
-    "eventUrl": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990190996927?aff=4toli",
-    "summary": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-5274",
     "name": "Tantra Speed Date®",
     "start_date": "2024-08-31T21:30:00.000Z",
@@ -87,6 +68,25 @@
     "organizerUrl": "https://tantrany.com",
     "eventUrl": "https://www.eventbrite.com/e/tantra-speed-date-philadelphia-tickets-911328767877?aff=4toli",
     "summary": "Tantra Speed Date - Philadelphia!",
+    "tags": [
+      "tantra"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "source_origination_platform": "organizer_api"
+  },
+  {
+    "id": "organizer-tantra_ny-6100",
+    "name": "The 90-Day Relationship Experiment",
+    "start_date": "2024-09-06T23:00:00.000Z",
+    "end_date": "2024-09-07T01:00:00.000Z",
+    "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
+    "price": "0",
+    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
+    "organizer": "Tantra NY",
+    "organizerUrl": "https://tantrany.com",
+    "eventUrl": "https://www.eventbrite.com/e/singles-night-out-blind-date-90-min-crash-course-tickets-1001294507827?aff=4toli",
+    "summary": "Blind Date - A Relationship Experiment",
     "tags": [
       "tantra"
     ],

@@ -27,7 +27,7 @@ async function upsertOrganizer(
 }
 
 // Function to upsert an event
-async function upsertEvent(event: Event): Promise<void> {
+async function upsertEvent(event: Event): Promise<number | undefined> {
   try {
     if (!event.organizer || !event.organizerUrl) {
       console.error("Event is missing organizer or organizerUrl:", event);
@@ -81,17 +81,26 @@ async function upsertEvent(event: Event): Promise<void> {
         console.error("Error inserting event:", insertError);
       } else {
         console.log(`Event ${event.name} inserted successfully.`);
+        return 1;
       }
     } else {
       console.log(`Event ${event.name} already exists.`);
+      return 0;
     }
   } catch (error) {
     console.error("Error upserting event:", error);
   }
+
+  return 0;
 }
 
 export const writeEventsToDB = async (events: Event[]): Promise<void> => {
+  let addedCount = 0;
   for (const event of events) {
-    await upsertEvent(event);
+    const success = await upsertEvent(event);
+    addedCount += success || 0;
   }
+
+  console.log(`Processed ${events.length} events.`);
+  console.log(`Successfully added ${addedCount} events.`);
 };

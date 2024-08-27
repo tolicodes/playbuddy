@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Event, SourceMetadata } from "../types.js";
 import { fillInEndTime } from "../helpers/dateUtils.js";
+import TurndownService from 'turndown';
 
 const apiUrl = "https://api.joinbloom.community/events?perPage=10000";
 
@@ -13,9 +14,16 @@ export const scrapePluraEvents = async ({
   const response = await axios.get(apiUrl);
   const data = response.data;
 
+  // Initialize Turndown service
+  const turndownService = new TurndownService();
+
+  // Convert HTML to Markdown
+
   const events: Event[] = data.hangouts
     .filter((event: any) => event.location?.city === "New York")
     .map((event: any) => {
+      const detailsMarkdown = turndownService.turndown(event.details);
+
       return {
         id: event.id,
         name: event.eventName,
@@ -29,7 +37,7 @@ export const scrapePluraEvents = async ({
         organizer: event.organization?.name,
         organizerUrl: event.organization?.referral?.url,
         eventUrl: event.shareUrl,
-        summary: event.details.replace(/<[^>]*>?/gm, ""), // Removing HTML tags from the summary
+        summary: detailsMarkdown,
         tags: [],
         min_ticket_price: "", // Assuming the min ticket price can be blank
         max_ticket_price: "", // Assuming the max ticket price can be blank

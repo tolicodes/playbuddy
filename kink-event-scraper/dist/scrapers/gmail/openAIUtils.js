@@ -19,7 +19,7 @@ export async function extractEventDetailsFromEmail(emailText) {
         max_ticket_price: string;
     }`;
     const modelPrompt = `Extract the event details in JSON from the following email. Use JSON format as shown below:\n\n' + ${EVENT_FORMAT}.
-    - Summary should be the full content of the description in the email.
+    - Summary should be the full content of the description in the email in markdown.
     - start_date and end_date should be in iso
     - price should be a number
     - tags should be play party, workshop, bdsm, ropes, etc.

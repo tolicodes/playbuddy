@@ -1,8 +1,10 @@
 import puppeteer from "puppeteer";
 import axios from "axios";
+import TurndownService from 'turndown';
 
 import { Event, ScraperParams, SourceMetadata } from "../../types.js";
 import { localDateTimeToISOString } from "../../helpers/dateUtils.js";
+import { extractHtmlToMarkdown } from "../../helpers/extractHtmlToMarkdown.js";
 
 // Function to scrape event details
 const scrapeEventDetails = async ({
@@ -22,6 +24,12 @@ const scrapeEventDetails = async ({
         event.start_time,
       );
       const end_date = localDateTimeToISOString(event.end_date, event.end_time);
+
+      const turndownService = new TurndownService();
+      const summaryMarkdown = turndownService.turndown(event.description.html);
+
+      console.log('summaryMarkdown', summaryMarkdown);
+
       return {
         id: `eventbrite-${event.id}`,
         name: event.name,
@@ -33,7 +41,7 @@ const scrapeEventDetails = async ({
         organizer: event.primary_organizer.name,
         organizerUrl: event.primary_organizer.url,
         eventUrl: event.url,
-        summary: event.summary,
+        summary: summaryMarkdown,
         tags: event.tags.map((tag: any) => tag.display_name),
         min_ticket_price:
           event.ticket_availability.minimum_ticket_price.display,

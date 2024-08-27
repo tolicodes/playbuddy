@@ -3,6 +3,8 @@ import cheerio from "cheerio";
 
 import { Event, ScraperParams } from "../types.js";
 import { convertPartifulDateTime } from "../helpers/dateUtils.js";
+import { extractHtmlToMarkdown } from "../helpers/extractHtmlToMarkdown.js";
+
 
 async function scrapePartifulEvent({
     url: eventId,
@@ -44,8 +46,10 @@ async function scrapePartifulEvent({
         const imageUrl = $("section div img").attr("src") || "";
         const organizer = $(".icon-crown-fancy").next().next().text().trim();
         const organizerUrl = ""; // Currently not extracting, need to fix this
-        const summary = $("div.description").text().trim();
+        const summary = await extractHtmlToMarkdown(page, "div.description")
         const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
+
+
 
         const eventDetails: Event = {
             id: eventId,

@@ -1,11 +1,11 @@
 import Papa from 'papaparse';
+import axios from 'axios';
+import { marked } from 'marked';
 
 import { Event } from "../Common/types";
 
 import whatsappEvents from './all_whatsapp_events.json'
 import { OptionType } from "../Common/types";
-
-import axios from 'axios';
 
 export const colors = [
     '#7986CB', '#33B679', '#8E24AA', '#E67C73', '#F6BF26', '#F4511E', '#039BE5', '#616161',
@@ -71,7 +71,7 @@ const fillInMissingData = (events: Event[]): Event[] => {
 }
 async function fetchEventsWithOrganizerDetails(): Promise<Event[]> {
     try {
-        const { data } = await axios.get<Event[]>(`/.netlify/functions/events`);
+        const { data } = await axios.get<Event[]>(`https://api.kinkbuddy.org/events`);
 
         return data as Event[];
     } catch (error) {
@@ -179,6 +179,8 @@ function createSourceString(props: any) {
 
 // the getTooltipContent function takes a tippy props object and an event object and returns a string that represents the content of the tooltip
 export const getTooltipContent = (props: any, event: any) => {
+    const description = marked(props.summary || '');
+
     return `
     <div style="width:300px; max-height: 300px; overflow-y: auto;">
       <img src="${props.imageUrl}" alt="${event.title}" style="width: 100%; height: auto;"/>
@@ -188,7 +190,7 @@ export const getTooltipContent = (props: any, event: any) => {
       ${props.end_date && '- ' + new Date(props.end_date).toLocaleString()} (${props.timezone})
       <p><strong>Location:</strong> ${props.location}</p>
       ${props.price && `<p><strong>Price:</strong> ${props.price} ${props.min_ticket_price && `(${props.min_ticket_price} - ${props.max_ticket_price})`}</p>`}
-      <p>${props.summary}</p>
+      ${description}
       <p><strong>Tags:</strong> ${props.tags && props.tags.join(', ')}</p>
       <p><strong>Source:</strong> ${createSourceString(props)}</p>
     </div>
