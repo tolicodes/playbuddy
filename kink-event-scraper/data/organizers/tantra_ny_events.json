@@ -1,24 +1,5 @@
 [
   {
-    "id": "organizer-tantra_ny-5867",
-    "name": "The 90-Day Relationship Experiment",
-    "start_date": "2024-08-25T17:00:00.000Z",
-    "end_date": "2024-08-25T18:00:00.000Z",
-    "location": "The Loft (Tribeca) - 17 Park Place New York, NY 10007",
-    "price": "0",
-    "imageUrl": "https://tantrany.com//speed-dating/images/cities/new_york.png",
-    "organizer": "Tantra NY",
-    "organizerUrl": "https://tantrany.com",
-    "eventUrl": "https://www.eventbrite.com/e/the-90-day-relationship-experimenttm-free-informational-call-tickets-964755619027?aff=4toli",
-    "summary": "The 90-Day Relationship Experiment™ - Free Info Call",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-6028",
     "name": "Tantra Singles Happy Hour",
     "start_date": "2024-08-27T00:30:00.000Z",
