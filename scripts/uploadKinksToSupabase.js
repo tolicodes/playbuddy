@@ -1,6 +1,10 @@
+// Run this from the root
+// source .env 
+// SUPABASE_HOST=$SUPABASE_HOST SUPABASE_ADMIN_KEY=$SUPABASE_ADMIN_KEY node scripts/uploadKinksToSupabase.js
+
 const fs = require('fs');
 
-const { supabase } = require('./supabaseClient');
+const { supabaseClient } = require('./supabaseClient');
 
 const yaml = require('js-yaml');
 
@@ -13,7 +17,7 @@ const loadData = () => {
 // Function to perform the upsert operation
 const upsertData = async (data) => {
   for (const item of data) {
-    const { data: upsertData, error } = await supabase.from('kinks').upsert(
+    const { data: upsertData, error } = await supabaseClient.from('kinks').upsert(
       {
         idea_title: item.idea_title,
         level: item.level,
@@ -31,9 +35,10 @@ const upsertData = async (data) => {
     );
 
     if (error) {
+      console.error(error)
       console.error('Upsert error:', error);
     } else {
-      console.log('Upserted:', upsertData);
+      console.log('Upserted:', item.idea_title);
     }
   }
 };

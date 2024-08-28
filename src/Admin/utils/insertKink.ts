@@ -1,8 +1,8 @@
 import { Kink } from '../../Common/types';
-import { supabase } from '../../Common/supabaseClient';
+import { supabaseClient } from '../../Common/supabaseClient';
 
 export const addKinkData = async (data: Partial<Kink>) => {
-  const { data: insertedData, error } = await supabase
+  const { data: insertedData, error } = await supabaseClient
     .from('kinks')
     .insert(data);
 

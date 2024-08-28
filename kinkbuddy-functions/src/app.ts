@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from "express";
+import express, { Request, Response } from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
@@ -10,94 +10,85 @@ import { createIcal } from "./helpers/ical.js";
 
 export const app = express();
 
-// Request middleware
+// Middleware setup
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 app.use(
   cors({
-    origin: "*", // Allow all origins
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Allow specific HTTP methods
-    allowedHeaders: "Content-Type,Authorization", // Allow specific headers
+    origin: "*",
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    allowedHeaders: "Content-Type,Authorization",
   }),
 );
 
-app.head("/", (req: Request, res: Response): void => {
-  res.send();
-});
+const fetchAndCacheData = async (
+  redisClient: any,
+  cacheKey: string,
+  supabaseQuery: () => any,
+): Promise<string> => {
+  const cacheData = await redisClient.get(cacheKey);
+  if (cacheData) return cacheData;
+
+  const { data, error } = await supabaseQuery();
+  if (error) throw new Error(error.message);
+
+  const responseData = JSON.stringify(data);
+  await redisClient.setEx(cacheKey, 600, responseData); // Cache for 10 minutes
+
+  return responseData;
+};
 
 app.get("/events", async (req: Request, res: Response): Promise<void> => {
   const cacheKey = "events";
-  let redisClient;
-
-  console.log("toli");
+  const today = new Date().toISOString().split("T")[0];
 
   try {
-    redisClient = await connectRedisClient();
-    console.log("Connected to Redis");
+    const redisClient = await connectRedisClient();
 
-    const cacheData = await redisClient.get(cacheKey);
-    console.log("Cache data", !!cacheData);
+    const responseData = await fetchAndCacheData(redisClient, cacheKey, () =>
+      // @ts-ignore
+      supabaseClient
+        .from("events")
+        .select("*, organizer:organizers(name, url)")
+        .gte("start_date", today),
+    );
 
-    let responseData;
-    let jsonData;
-
-    // If there is cache data in Redis, return it
-    if (cacheData) {
-      // Return cached data
-      responseData = cacheData;
-      jsonData = JSON.parse(cacheData);
-    }
-
-    // Fetch data from Supabase if not in cache
-    else {
-      const { data, error } = await supabaseClient.from("events").select(`
-          *,
-          organizer:organizers(name, url)
-        `);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      console.log("Fetched data from Supabase");
-
-      jsonData = data.map((event) => ({
-        ...event,
-        organizer: event.organizer.name,
-        organizer_url: event.organizer.url,
-      }));
-
-      // will return later
-      responseData = JSON.stringify(jsonData);
-
-      // Cache the new data in Redis
-      await redisClient.setEx(cacheKey, 600, responseData); // Cache for 10 minutes
-    }
-
-    // Handle the request for iCal format
     if (req.query.format === "ical") {
-      console.log("Sending ical format");
-      await res
+      res
         .status(200)
         .set("Content-Type", "text/calendar")
-        .send(createIcal(jsonData));
-      return;
+        .send(createIcal(JSON.parse(responseData)));
+    } else {
+      res.status(200).send(responseData);
     }
 
-    // at the end always return JSON of response data, unless iCal
-    // whether we fetched from cache or Supabase
-    await res.status(200).send(responseData);
+    redisClient.quit();
   } catch (error) {
     console.error("Error:", error);
-    // @ts-ignore
-    res.status(500).send({ error: error.message });
-  } finally {
-    redisClient?.quit();
+    res.status(500).send({ error: error });
+  }
+});
+
+app.get("/kinks", async (req: Request, res: Response): Promise<void> => {
+  const cacheKey = "kinks";
+
+  try {
+    const redisClient = await connectRedisClient();
+
+    const responseData = await fetchAndCacheData(redisClient, cacheKey, () =>
+      supabaseClient.from("kinks").select("*"),
+    );
+
+    res.status(200).send(responseData);
+    redisClient.quit();
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send({ error: error });
   }
 });
 
 let server: Server;
+
 export async function start(port: number | string): Promise<Server> {
   return new Promise((resolve) => {
     server = app
@@ -117,34 +108,31 @@ export async function start(port: number | string): Promise<Server> {
       });
   });
 }
+
 export async function stop(signal?: string | Error): Promise<void> {
   if (signal instanceof Error) {
     process.exitCode = 1;
     console.error(`error: ${signal.message}`);
-    console.log("stop (error)");
+  } else if (signal) {
+    console.log(`stop (${signal})`);
   } else {
-    if (signal) {
-      console.log(`stop (${signal})`);
-    } else {
-      console.log("stop");
-    }
+    console.log("stop");
   }
+
   if (server) {
     try {
-      await new Promise<void>((resolve, reject) => {
-        server.close((err) => {
-          err ? reject(err) : resolve();
-        });
-      });
+      await new Promise<void>((resolve, reject) =>
+        server.close((err) => (err ? reject(err) : resolve())),
+      );
     } catch (error: any) {
       process.exitCode = 1;
       console.error(error.message);
     }
   }
+
   console.log("Server stopped");
 }
 
-// If this module is the main module, then start the server
 if (import.meta.url.endsWith(process.argv[1]!)) {
   const port = process.env["PORT"] || "8080";
   await start(port);

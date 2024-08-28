@@ -1,10 +1,11 @@
 import Papa from 'papaparse';
 import axios from 'axios';
 import { marked } from 'marked';
+import moment from 'moment'
 
-import { Event } from "../Common/types";
+import { Event } from "../Common/commonTypes";
 
-import whatsappEvents from './all_whatsapp_events.json'
+// import whatsappEvents from './all_whatsapp_events.json'
 import { OptionType } from "../Common/types";
 
 export const colors = [
@@ -17,14 +18,14 @@ export const getAvailableOrganizers = (events: Event[]): OptionType[] => {
     return events.reduce((acc, event, index) => {
         if (!event.organizer) return acc;
 
-        const existingOrganizer = acc.find((org) => org.value === event.organizer);
+        const existingOrganizer = acc.find((org) => org.value === event.organizer.name);
 
         if (existingOrganizer) {
             existingOrganizer.count += 1;
         } else {
             acc.push({
-                label: event.organizer,
-                value: event.organizer,
+                label: event.organizer.name,
+                value: event.organizer.name,
                 color: colors[acc.length % colors.length],
                 count: 1,
             });
@@ -33,7 +34,6 @@ export const getAvailableOrganizers = (events: Event[]): OptionType[] => {
         return acc;
     }, [] as (OptionType)[]);
 }
-
 export const getAvailableGroups = (events: Event[]): OptionType[] => {
     return events.reduce((acc, event, index) => {
         if (!event.source_origination_group_name) return acc;
@@ -55,39 +55,21 @@ export const getAvailableGroups = (events: Event[]): OptionType[] => {
     }, [] as (OptionType)[]);
 }
 
-const fillInMissingData = (events: Event[]): Event[] => {
-    return events.map((event) => {
-        return {
-            ...event,
-            organizer: event.organizer || 'Unknown',
-            source_origination_group_name: event.source_origination_group_name || 'Unknown',
-            source_origination_group_id: event.source_origination_group_id || 'Unknown',
-            source_origination_platform: event.source_origination_platform || 'Unknown',
-            source_ticketing_platform: event.source_ticketing_platform || 'Unknown',
-            url: event.url || 'Unknown',
-            timestamp_scraped: event.timestamp_scraped || 0,
-        };
-    });
-}
-async function fetchEventsWithOrganizerDetails(): Promise<Event[]> {
+export const getEvents = async (): Promise<Event[]> => {
     try {
         const { data } = await axios.get<Event[]>(`https://api.kinkbuddy.org/events`);
 
-        return data as Event[];
+        return data;
+
     } catch (error) {
         console.error(error);
         return [];
     }
 }
 
-export const getEvents = async (): Promise<Event[]> => {
-    const events = await fetchEventsWithOrganizerDetails();
-    return fillInMissingData(events as Event[]);
-}
-
-export const getWhatsappEvents = () => {
-    return fillInMissingData(whatsappEvents);
-}
+// export const getWhatsappEvents = () => {
+//     return fillInMissingData(whatsappEvents);
+// }
 
 
 const getEndDateAdjusted = (start_date: string, end_date: string) => {
@@ -119,7 +101,7 @@ export const mapEventsToFullCalendar = (events: Event[], organizers: OptionType[
             const endDateAdjusted = getEndDateAdjusted(event.start_date, event.end_date);
 
             return {
-                color: organizers.find((organizer) => organizer.value === event.organizer)?.color,
+                color: organizers.find((organizer) => organizer.value === event.organizer.name)?.color,
                 id: event.id,
                 title: event.name,
                 start: event.start_date,
@@ -180,16 +162,16 @@ function createSourceString(props: any) {
 // the getTooltipContent function takes a tippy props object and an event object and returns a string that represents the content of the tooltip
 export const getTooltipContent = (props: any, event: any) => {
     const description = marked(props.summary || '');
+    const date = `${moment(event.start_date).format('MMM D, YYYY')} ${moment(event.start_date).format('hA')} - ${moment(event.end_date).format('hA')}`
 
     return `
     <div style="width:300px; max-height: 300px; overflow-y: auto;">
-      <img src="${props.imageUrl}" alt="${event.title}" style="width: 100%; height: auto;"/>
+      <img src="${props.image_url}" alt="${event.title}" style="width: 100%; height: auto;"/>
       <h3> <a style="color: white" href="${props.eventUrl}" target="_blank">${event.title}</a></h3>
-      <p><a style="$e="color: white" hre{props.organizerUrl}" target="_blank">${props.organizer}</a></p>
-      ${props.start_date && new Date(props.start_date).toLocaleString()}
-      ${props.end_date && '- ' + new Date(props.end_date).toLocaleString()} (${props.timezone})
-      <p><strong>Location:</strong> ${props.location}</p>
-      ${props.price && `<p><strong>Price:</strong> ${props.price} ${props.min_ticket_price && `(${props.min_ticket_price} - ${props.max_ticket_price})`}</p>`}
+      <p><a style="color: white" href=${props.organizer.url}" target="_blank">${props.organizer.name}</a></p>
+      <p>${date}</p>
+      ${props.location && `<p><strong>Location:</strong> ${props.location}</p>`}
+      ${props.price && `<p><strong>Price:</strong> ${props.price}</p>`}
       ${description}
       <p><strong>Tags:</strong> ${props.tags && props.tags.join(', ')}</p>
       <p><strong>Source:</strong> ${createSourceString(props)}</p>

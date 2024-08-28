@@ -5,7 +5,13 @@ import listPlugin from '@fullcalendar/list';
 import { Button } from '@mui/material';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
-import { Event, OptionType } from "../Common/types";
+
+
+import { EVENTS_ICAL_URL } from '../Common/config';
+
+import { OptionType } from "../Common/types";
+import { Event } from '../Common/commonTypes';
+
 import { EventFilters } from './EventFilters';
 import {
     downloadCsv,
@@ -17,7 +23,6 @@ import {
 export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     const [events, setEvents] = useState<Event[]>([]);
     useEffect(() => {
-        console.log('Fetching events');
         getEvents().then((events) => {
             setEvents(events);
         });
@@ -66,14 +71,14 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
 
     const filteredEvents: Event[] = useMemo(() => {
         const organizers = filteredOrganizers.length === 0 ? currentViewOrganizers : filteredOrganizers;
-        const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
+        // const groups = filteredGroups.length === 0 ? currentViewGroups : filteredGroups;
+
 
         return currentViewEvents.filter((event) => {
-            return organizers.map((org) => org.value).includes(event.organizer || '')
-                && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
+            return organizers.map((org) => org.value).includes(event.organizer.name || '')
+            // && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
         });
-    }, [filteredOrganizers, currentViewEvents, currentViewOrganizers, currentViewGroups, filteredGroups]);
-
+    }, [filteredOrganizers, currentViewEvents, currentViewOrganizers, filteredGroups]);
 
     const initialView = useMemo(() => {
         return window.matchMedia('(max-width: 767px)').matches ? 'listMonth' : 'dayGridMonth';
@@ -85,8 +90,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     }
 
     const onClickGoogleCal = () => {
-        const icsUrl = 'http://api.kinkbuddy.org/events?format=ical';
-        const encodedUrl = encodeURIComponent(icsUrl);
+        const encodedUrl = encodeURIComponent(EVENTS_ICAL_URL);
         const googleCalendarLink = `https://www.google.com/calendar/render?cid=${encodedUrl}`;
 
         window.location.href = googleCalendarLink;

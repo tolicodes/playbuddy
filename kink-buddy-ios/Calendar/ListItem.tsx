@@ -1,5 +1,5 @@
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { Event } from './types';
+import { Event } from '../commonTypes';
 import moment from 'moment';
 export const ListItem = ({ item, setSelectedEvent }: { item: Event, setSelectedEvent: (event: Event) => void, }) => {
     const formattedDate = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
@@ -9,10 +9,10 @@ export const ListItem = ({ item, setSelectedEvent }: { item: Event, setSelectedE
             setSelectedEvent(item);
         }}>
             <View style={styles.eventContainer}>
-                <Image source={{ uri: item.imageUrl }} style={styles.eventImage} />
+                <Image source={{ uri: item.image_url }} style={styles.eventImage} />
                 <View style={styles.eventDetails}>
                     <Text style={styles.eventTitle}>{item.name}</Text>
-                    <Text style={styles.eventOrganizer}>{item.organizer}</Text>
+                    <Text style={styles.eventOrganizer}>{item.organizer.name}</Text>
                     <Text style={styles.eventTime}>{formattedDate}</Text>
                 </View>
             </View>

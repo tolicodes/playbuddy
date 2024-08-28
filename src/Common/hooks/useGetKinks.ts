@@ -1,19 +1,9 @@
-import { supabase } from '../supabaseClient';
 import { Kink } from '../types';
 import { useQuery } from '@tanstack/react-query';
 
 const getKinks = async (): Promise<Kink[]> => {
-  const { data: kinks, error } = await supabase
-    .from('kinks')
-    .select('*')
-    .order('id', { ascending: true });
-
-
-  if (error) {
-    throw new Error('Error fetching kinks: ' + error.message);
-  }
-
-  return kinks;
+  const response = await fetch('https://api.kinkbuddy.org/kinks');
+  return response.json();
 };
 
 type UseGetKinkReturn = {

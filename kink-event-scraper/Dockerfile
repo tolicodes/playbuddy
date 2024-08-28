@@ -28,6 +28,10 @@ RUN npm install
 # Bundle app source code
 COPY . .
 
+RUN npm run build
+
+RUN ls -la
+
 # Expose the port on which your app will run
 EXPOSE 8080
 

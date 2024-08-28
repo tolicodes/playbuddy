@@ -1,6 +1,7 @@
 import axios from "axios";
 
-import { Event, ScraperParams, SourceMetadata } from "../../types.js";
+import { Event } from "../../commonTypes.js";
+import { ScraperParams } from "../types.js";
 
 const API_URL = "https://tantrany.com/api/events-listings.json.php?user=toli";
 const ORGANIZER_PAGE = "https://tantrany.com";
@@ -24,16 +25,23 @@ export const scrapeOrganizerTantraNY = async ({
 
       return {
         id: `organizer-tantra_ny-${event.EventId}`,
+        organizer: {
+          name: "Tantra NY",
+          url: ORGANIZER_PAGE,
+        },
+
         name: event.ProductName,
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
+
+        ticket_url: event.URL,
+        event_url: event.URL,
+        image_url: `${ORGANIZER_PAGE}/${event.ImgFileURL}`,
+
         location,
         price: "0",
-        imageUrl: `${ORGANIZER_PAGE}/${event.ImgFileURL}`,
-        organizer: "Tantra NY",
-        organizerUrl: ORGANIZER_PAGE,
-        eventUrl: event.URL,
-        summary: event.EventTitle,
+
+        description: event.EventTitle,
         tags: ["tantra"],
         source_ticketing_platform: "Eventbrite",
         ...sourceMetadata,

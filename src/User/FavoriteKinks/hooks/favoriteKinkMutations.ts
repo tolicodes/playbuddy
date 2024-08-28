@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient, MutationFunction } from '@tanstack/react-query';
-import { supabase } from '../../../Common/supabaseClient';
+import { supabaseClient } from '../../../Common/supabaseClient';
 import { getUser } from '../../hooks/useGetUser';
 import { User } from '@supabase/supabase-js';
 
@@ -16,8 +16,6 @@ interface UserKinkData {
 
 type UserKinkMetadata = UserKinkData[];
 type Context = { previousUserKinkMetadata?: UserKinkMetadata };
-
-
 
 const useOptimisticUpdate = (
   mutationFn: MutationFunction<MutationResponse, string>,
@@ -77,7 +75,7 @@ const useOptimisticUpdate = (
 const upsertFavoriteKink = async (kinkId: string): Promise<MutationResponse> => {
   const user = await getUser();
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('user_kink_data')
     .upsert({ user_id: user.id, kink_id: kinkId, is_favorite: true }, { onConflict: 'user_id,kink_id' });
 
@@ -92,7 +90,7 @@ const upsertFavoriteKink = async (kinkId: string): Promise<MutationResponse> => 
 const removeFavoriteKink = async (kinkId: string): Promise<MutationResponse> => {
   const user = await getUser();
 
-  const { error } = await supabase
+  const { error } = await supabaseClient
     .from('user_kink_data')
     .update({ is_favorite: false })
     .eq('user_id', user.id)

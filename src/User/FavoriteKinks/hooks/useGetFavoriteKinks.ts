@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../../Common/supabaseClient';
+import { supabaseClient } from '../../../Common/supabaseClient';
 import { useGetUser } from '../../hooks/useGetUser';
 
 export const getFavoriteKinks = async (userId: string) => {
-  const { data, error } = await supabase
+  const { data, error } = await supabaseClient
     .from('user_kink_data')
     .select('kink_id')
     .eq('user_id', userId)

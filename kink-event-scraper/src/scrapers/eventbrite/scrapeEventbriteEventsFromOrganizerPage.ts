@@ -2,9 +2,12 @@ import puppeteer from "puppeteer";
 import axios from "axios";
 import TurndownService from 'turndown';
 
-import { Event, ScraperParams, SourceMetadata } from "../../types.js";
+import { ScraperParams } from "../types.js";
+import { Event, SourceMetadata } from "../../commonTypes.js";
+import { puppeteerConfig } from "../../config.js";
+
 import { localDateTimeToISOString } from "../../helpers/dateUtils.js";
-import { extractHtmlToMarkdown } from "../../helpers/extractHtmlToMarkdown.js";
+import { EVENTBRITE_EVENTS_API } from "../../env.js";
 
 // Function to scrape event details
 const scrapeEventDetails = async ({
@@ -26,27 +29,28 @@ const scrapeEventDetails = async ({
       const end_date = localDateTimeToISOString(event.end_date, event.end_time);
 
       const turndownService = new TurndownService();
-      const summaryMarkdown = turndownService.turndown(event.description.html);
-
-      console.log('summaryMarkdown', summaryMarkdown);
+      const summaryMarkdown = turndownService.turndown(event.summary);
 
       return {
-        id: `eventbrite-${event.id}`,
+        original_id: `eventbrite-${event.id}`,
+        organizer: {
+          name: event.primary_organizer.name,
+          url: event.primary_organizer.url,
+          original_id: `eventbrite-${event.primary_organizer.id}`,
+        },
         name: event.name,
         start_date,
         end_date,
-        location: event.primary_venue.address.localized_address_display,
+        ticket_url: event.url,
+        image_url: event.image.url,
+        event_url: event.url,
+
+        location: event.primary_venue?.address.localized_address_display,
         price: event.ticket_availability.minimum_ticket_price.display,
-        imageUrl: event.image.url,
-        organizer: event.primary_organizer.name,
-        organizerUrl: event.primary_organizer.url,
-        eventUrl: event.url,
-        summary: summaryMarkdown,
+
+        description: summaryMarkdown,
         tags: event.tags.map((tag: any) => tag.display_name),
-        min_ticket_price:
-          event.ticket_availability.minimum_ticket_price.display,
-        max_ticket_price:
-          event.ticket_availability.maximum_ticket_price.display,
+
         source_ticketing_platform: "Eventbrite",
         ...sourceMetadata,
       };
@@ -66,10 +70,7 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
   url,
   sourceMetadata,
 }: ScraperParams): Promise<Event[]> => {
-  const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    headless: true
-  });
+  const browser = await puppeteer.launch(puppeteerConfig);
   const page = await browser.newPage();
 
   try {
@@ -81,7 +82,7 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
       page.on("request", (request) => {
         const url = request.url();
         if (
-          url.includes("https://www.eventbrite.com/api/v3/destination/event")
+          url.includes(EVENTBRITE_EVENTS_API)
         ) {
           timeout && clearTimeout(timeout);
           resolve(url);
@@ -107,9 +108,9 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
 
     // Scrape event details using the captured API URL
     const events = await scrapeEventDetails({ url: apiUrl, sourceMetadata });
-    console.log('organizer events', events);
     return events;
   } catch (error) {
+    console.error(`Error scraping Eventbrite events from organizer page`, error);
     // Fail silently by returning an empty array
     return [];
   } finally {

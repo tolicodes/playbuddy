@@ -1,5 +1,5 @@
 import { ICalCalendar, ICalEventData } from "ical-generator";
-import { Event } from "./types.js";
+import { Event } from "../commonTypes.js";
 
 export const createIcal = (events: Event[]) => {
   // Create a new iCalendar
@@ -24,7 +24,7 @@ export const createIcal = (events: Event[]) => {
       start: start_date,
       end: end_date,
       summary: event.name,
-      description: `${event.eventUrl} ${event.summary}`,
+      description: `${event.event_url} ${event.description}`,
       location: event.location,
     };
     calendar.createEvent(icalEvent);

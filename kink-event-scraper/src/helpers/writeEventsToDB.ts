@@ -1,18 +1,20 @@
-import { Event } from "../types.js";
+import { Event } from "../commonTypes.js";
 
 import { supabaseClient } from "../connections/supabaseClient.js";
 
 // Function to upsert an organizer and return its ID
-async function upsertOrganizer(
-  organizerName: string,
-  organizerUrl: string,
-): Promise<string> {
+async function upsertOrganizer({
+  name, url, original_id
+}: {
+  name: string, url: string, original_id?: string
+}): Promise<string> {
+  console.log(name, url, original_id)
   // @ts-ignore
   const { data, error } = await supabaseClient
     .from("organizers")
     // @ts-ignore
     .upsert(
-      { name: organizerName, url: organizerUrl },
+      { name, url, original_id },
       { onConflict: ["name"] },
     )
     .select("id")
@@ -29,16 +31,13 @@ async function upsertOrganizer(
 // Function to upsert an event
 async function upsertEvent(event: Event): Promise<number | undefined> {
   try {
-    if (!event.organizer || !event.organizerUrl) {
+    if (!event.organizer || !event.organizer.name) {
       console.error("Event is missing organizer or organizerUrl:", event);
       return;
     }
 
     // Upsert Organizer and get its ID
-    const organizerId: string = await upsertOrganizer(
-      event.organizer,
-      event.organizerUrl,
-    );
+    const organizerId: string = await upsertOrganizer(event.organizer);
     if (!organizerId) {
       return;
     }
@@ -55,21 +54,24 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     if (!existingEvent) {
       // Insert new event if it doesn't exist
       const { error: insertError } = await supabaseClient.from("events").insert({
-        original_id: event.id,
+        original_id: event.original_id,
+        organizer_id: organizerId,
+
         name: event.name,
         start_date: event.start_date,
         end_date: event.end_date,
+
+        ticket_url: event.ticket_url,
+        event_url: event.event_url,
+        image_url: event.image_url,
+
         location: event.location,
         price: event.price,
-        imageUrl: event.imageUrl,
-        organizer_id: organizerId,
-        eventUrl: event.eventUrl,
-        summary: event.summary,
+
+        description: event.description,
         tags: event.tags,
-        min_ticket_price: event.min_ticket_price,
-        max_ticket_price: event.max_ticket_price,
-        url: event.url,
-        timestamp_scraped: event.timestamp_scraped,
+
+        timestamp_scraped: event.timestamp_scraped || new Date(),
         source_origination_group_id: event.source_origination_group_id,
         source_origination_group_name: event.source_origination_group_name,
         source_origination_platform: event.source_origination_platform,

@@ -1,9 +1,11 @@
 import puppeteer from "puppeteer";
 import cheerio from "cheerio";
 
-import { Event, ScraperParams } from "../types.js";
+import { ScraperParams } from "./types.js";
+import { Event } from "../commonTypes.js";
 import { convertPartifulDateTime } from "../helpers/dateUtils.js";
 import { extractHtmlToMarkdown } from "../helpers/extractHtmlToMarkdown.js";
+import { puppeteerConfig } from "../config.js";
 
 
 async function scrapePartifulEvent({
@@ -12,11 +14,7 @@ async function scrapePartifulEvent({
     urlCache,
 }: ScraperParams): Promise<Event[] | null> {
     const url = `https://partiful.com/e/${eventId}`;
-    const browser = await puppeteer.launch({
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-
-    });
+    const browser = await puppeteer.launch(puppeteerConfig);
     const page = await browser.newPage();
 
     try {
@@ -41,29 +39,28 @@ async function scrapePartifulEvent({
         const priceText = $(".icon-ticket").next().text().trim();
         const priceMatch = priceText.match(/\$\d+(\.\d+)?/);
         const price = priceMatch ? priceMatch[0] : "";
-        const min_ticket_price = "";
-        const max_ticket_price = "";
         const imageUrl = $("section div img").attr("src") || "";
         const organizer = $(".icon-crown-fancy").next().next().text().trim();
         const organizerUrl = ""; // Currently not extracting, need to fix this
-        const summary = await extractHtmlToMarkdown(page, "div.description")
+        const description = await extractHtmlToMarkdown(page, "div.description")
         const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
 
         const eventDetails: Event = {
-            id: eventId,
+            original_id: `plura-${eventId}`,
+            organizer: {
+                name: organizer,
+                url: organizerUrl,
+            },
             name,
             start_date,
             end_date,
+            image_url: imageUrl,
+            event_url: url,
+            ticket_url: url,
             location,
             price,
-            imageUrl,
-            organizer,
-            organizerUrl,
-            eventUrl: url,
-            summary,
+            description,
             tags,
-            min_ticket_price,
-            max_ticket_price,
             source_ticketing_platform: "Partiful",
             ...sourceMetadata,
         };

@@ -9,15 +9,15 @@ export const EventDetail = ({ route }: any) => {
 
     return (
         <ScrollView style={{ padding: 20 }}>
-            <Image source={{ uri: selectedEvent.imageUrl }} style={styles.fullViewImage} />
-            <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.eventUrl)}>
+            <Image source={{ uri: selectedEvent.image_url }} style={styles.fullViewImage} />
+            <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.event_url)}>
                 <Text style={styles.fullViewTitle}>
                     {selectedEvent.name}
                     <MaterialIcons name="open-in-new" size={24} color="blue" />
                 </Text>
             </TouchableOpacity>
 
-            <Text style={styles.eventOrganizer}>{selectedEvent.organizer}</Text>
+            <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
 
             <Text style={styles.eventTime}>
                 {`${moment(selectedEvent.start_date).format('MMM D, YYYY')} ${moment(selectedEvent.start_date).format('hA')} - ${moment(selectedEvent.end_date).format('hA')}`}
@@ -27,7 +27,7 @@ export const EventDetail = ({ route }: any) => {
                 {selectedEvent.price}
             </Text>}
             <Markdown>
-                {selectedEvent.summary}
+                {selectedEvent.description}
             </Markdown>
         </ScrollView>)
 }

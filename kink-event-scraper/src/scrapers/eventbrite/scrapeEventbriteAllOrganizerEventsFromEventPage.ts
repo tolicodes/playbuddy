@@ -2,7 +2,8 @@ import axios from "axios";
 
 import cheerio from "cheerio";
 import scrapeEventbriteEventsFromOrganizerPage from "./scrapeEventbriteEventsFromOrganizerPage.js";
-import { Event, ScraperParams } from "../../types.js";
+import { Event } from "../../commonTypes.js";
+import { ScraperParams } from "../types.js";
 
 const scrapeEventbriteAllOrganizerEventsFromEventPage = async ({
   url,

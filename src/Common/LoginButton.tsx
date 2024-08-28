@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { supabase } from './supabaseClient';
+import { supabaseClient } from './supabaseClient';
 import { useGetUser } from '../User/hooks/useGetUser';
 import { Button } from '@mui/material';
 import { faSignIn } from '@fortawesome/free-solid-svg-icons';
@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const LoginButton: React.FC = () => {
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    supabaseClient.auth.onAuthStateChange((event, session) => {
       if (session) {
         localStorage.setItem('supabase.auth.token', JSON.stringify(session));
       } else {
@@ -18,7 +18,7 @@ const LoginButton: React.FC = () => {
     const savedSession = localStorage.getItem('supabase.auth.token');
     if (savedSession) {
       const session = JSON.parse(savedSession);
-      supabase.auth.setSession({
+      supabaseClient.auth.setSession({
         access_token: session.access_token,
         refresh_token: session.refresh_token,
       });
@@ -26,7 +26,7 @@ const LoginButton: React.FC = () => {
   }, []);
 
   const signUpUser = async () => {
-    supabase.auth.signInWithOAuth({
+    supabaseClient.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: window.location.toString(),

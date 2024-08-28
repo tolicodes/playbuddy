@@ -1,6 +1,6 @@
 import { Client, LocalAuth, Message, Chat } from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
-import { SourceMetadata } from "../types.js";
+import { SourceMetadata } from "../commonTypes.js";
 
 const SCRAPE_GROUPS: string[] = [
   "Rad Nu Yorkerz",

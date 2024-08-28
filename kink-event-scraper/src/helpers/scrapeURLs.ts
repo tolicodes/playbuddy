@@ -1,4 +1,5 @@
-import { Event, ScraperParams, SourceMetadata } from "../types.js";
+import { Event, SourceMetadata } from "../commonTypes.js";
+import { ScraperParams } from './types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
 import scrapeEventbriteAllOrganizerEventsFromEventPage from "../scrapers/eventbrite/scrapeEventbriteAllOrganizerEventsFromEventPage.js";
 
@@ -32,8 +33,8 @@ const timeout = (ms: number) =>
 const dedupeByLink = (arr: SourceMetadata[]): SourceMetadata[] => {
   const seen = new Set();
   return arr.filter((item) => {
-    const duplicate = seen.has(item.url);
-    seen.add(item.url);
+    const duplicate = seen.has(item.source_url);
+    seen.add(item.source_url);
     return !duplicate;
   });
 };
@@ -45,13 +46,13 @@ export const scrapeURLs = async (
   const events: Event[] = [];
 
   const filteredFromCache = links.filter((link) => {
-    if (!link.url) return false;
-    return !urlCache.includes(link.url);
+    if (!link.source_url) return false;
+    return !urlCache.includes(link.source_url);
   });
 
   const dupes = links.filter((link) => {
-    if (!link.url) return false;
-    return urlCache.includes(link.url);
+    if (!link.source_url) return false;
+    return urlCache.includes(link.source_url);
   });
 
   // Remove duplicate URLs
@@ -60,7 +61,7 @@ export const scrapeURLs = async (
   // Process each link sequentially
   for (let i = 0; i < dedupedLinks.length; i++) {
     const sourceMetadata = dedupedLinks[i];
-    const url = sourceMetadata.url;
+    const url = sourceMetadata.source_url;
     if (!url) continue;
     console.log(`[${i}/${dedupedLinks.length}] Processing URL: ${url}`);
     const domain = new URL(url).hostname.replace("www.", "");
