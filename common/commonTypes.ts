@@ -1,9 +1,9 @@
-// only edit /common/types.ts 
+// only edit /common/commonTypes.ts 
 // These are copied
 
 
 export interface Event extends SourceMetadata {
-    id?: string;
+    id: string;
     original_id?: string;
     organizer: {
         original_id?: string;

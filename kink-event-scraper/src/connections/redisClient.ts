@@ -3,8 +3,9 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const redisPassword = process.env.REDIS_PASSWORD;
+const redisHost = process.env.REDIS_HOST;
 const redisClient = createClient({
-  url: `redis://default:${redisPassword}@redis-19131.c239.us-east-1-2.ec2.redns.redis-cloud.com:19131`,
+  url: `redis://default:${redisPassword}@${redisHost}`,
 });
 
 export const connectRedisClient = async () => {

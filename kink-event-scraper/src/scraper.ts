@@ -1,5 +1,5 @@
 import fs from "fs";
-import { Event } from "./types.js";
+import { Event } from "./commonTypes.js";
 
 import scrapeURLs from "./helpers/scrapeURLs.js";
 // import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp";
@@ -25,7 +25,7 @@ export const filterEvents = (events: Event[]) => {
 type URLCache = string[];
 
 const getURLCache = (events: Event[]): URLCache => {
-    return events.map((event: Event) => event.eventUrl);
+    return events.map((event: Event) => event.event_url);
 };
 
 interface FilePath {

@@ -7,7 +7,7 @@ SOURCE_FILES=("common/commonTypes.ts" "common/config.ts")
 TARGET_DIRECTORIES=(
   "kink-buddy-ios"
   "kink-event-scraper/src"
-  "kinkbuddy-functions"
+  "kinkbuddy-functions/src"
   "src/common"
 )
 

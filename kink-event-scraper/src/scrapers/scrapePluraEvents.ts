@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Event, SourceMetadata } from "../commonTypes.js";
-import { fillInEndTime } from "../helpers/dateUtils.js";
+import { fillInEndTime } from "../helpers/partifulDateUtils.js";
 import TurndownService from 'turndown';
 
 const apiUrl = "https://api.joinbloom.community/events?perPage=10000";

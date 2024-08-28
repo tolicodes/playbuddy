@@ -6,7 +6,7 @@ import { ScraperParams } from "../types.js";
 import { Event, SourceMetadata } from "../../commonTypes.js";
 import { puppeteerConfig } from "../../config.js";
 
-import { localDateTimeToISOString } from "../../helpers/dateUtils.js";
+import { localDateTimeToISOString } from "../../helpers/partifulDateUtils.js";
 import { EVENTBRITE_EVENTS_API } from "../../env.js";
 
 // Function to scrape event details
@@ -32,6 +32,8 @@ const scrapeEventDetails = async ({
       const summaryMarkdown = turndownService.turndown(event.summary);
 
       return {
+        // actually assigned by the DB, need to fill it in
+        id: `eventbrite-${event.id}`,
         original_id: `eventbrite-${event.id}`,
         organizer: {
           name: event.primary_organizer.name,

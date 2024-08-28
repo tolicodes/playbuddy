@@ -8,7 +8,7 @@ async function upsertOrganizer({
 }: {
   name: string, url: string, original_id?: string
 }): Promise<string> {
-  console.log(name, url, original_id)
+  console.log('Upserting', name, url, original_id)
   // @ts-ignore
   const { data, error } = await supabaseClient
     .from("organizers")
@@ -51,44 +51,45 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
       )
       .single();
 
-    if (!existingEvent) {
-      // Insert new event if it doesn't exist
-      const { error: insertError } = await supabaseClient.from("events").insert({
-        original_id: event.original_id,
-        organizer_id: organizerId,
-
-        name: event.name,
-        start_date: event.start_date,
-        end_date: event.end_date,
-
-        ticket_url: event.ticket_url,
-        event_url: event.event_url,
-        image_url: event.image_url,
-
-        location: event.location,
-        price: event.price,
-
-        description: event.description,
-        tags: event.tags,
-
-        timestamp_scraped: event.timestamp_scraped || new Date(),
-        source_origination_group_id: event.source_origination_group_id,
-        source_origination_group_name: event.source_origination_group_name,
-        source_origination_platform: event.source_origination_platform,
-        source_ticketing_platform: event.source_ticketing_platform,
-        dataset: event.dataset,
-      });
-
-      if (insertError) {
-        console.error("Error inserting event:", insertError);
-      } else {
-        console.log(`Event ${event.name} inserted successfully.`);
-        return 1;
-      }
-    } else {
+    if (existingEvent) {
       console.log(`Event ${event.name} already exists.`);
       return 0;
     }
+
+    // Insert new event if it doesn't exist
+    const { error: insertError } = await supabaseClient.from("events").insert({
+      original_id: event.original_id,
+      organizer_id: organizerId,
+
+      name: event.name,
+      start_date: event.start_date,
+      end_date: event.end_date,
+
+      ticket_url: event.ticket_url,
+      event_url: event.event_url,
+      image_url: event.image_url,
+
+      location: event.location,
+      price: event.price,
+
+      description: event.description,
+      tags: event.tags,
+
+      timestamp_scraped: event.timestamp_scraped || new Date(),
+      source_origination_group_id: event.source_origination_group_id,
+      source_origination_group_name: event.source_origination_group_name,
+      source_origination_platform: event.source_origination_platform,
+      source_ticketing_platform: event.source_ticketing_platform,
+      dataset: event.dataset,
+    });
+
+    if (insertError) {
+      console.error("Error inserting event:", insertError);
+    } else {
+      console.log(`Event ${event.name} inserted successfully.`);
+      return 1;
+    }
+
   } catch (error) {
     console.error("Error upserting event:", error);
   }

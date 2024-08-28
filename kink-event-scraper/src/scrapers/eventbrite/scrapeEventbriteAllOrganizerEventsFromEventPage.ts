@@ -35,7 +35,7 @@ const scrapeEventbriteAllOrganizerEventsFromEventPage = async ({
     return eventsWithMetadata;
   } catch (error) {
     console.error(
-      `Error scraping Eventbrite organizer from event page ${sourceMetadata.url}:`,
+      `Error scraping Eventbrite organizer from event page ${sourceMetadata.source_url}:`,
       error,
     );
     throw new Error("Error scraping Eventbrite organizer from event page");

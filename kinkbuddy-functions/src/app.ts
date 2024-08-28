@@ -33,7 +33,7 @@ const fetchAndCacheData = async (
   if (error) throw new Error(error.message);
 
   const responseData = JSON.stringify(data);
-  await redisClient.setEx(cacheKey, 600, responseData); // Cache for 10 minutes
+  await redisClient.set(cacheKey, responseData, "EX", 600); // Cache for 10 minutes
 
   return responseData;
 };
@@ -61,8 +61,6 @@ app.get("/events", async (req: Request, res: Response): Promise<void> => {
     } else {
       res.status(200).send(responseData);
     }
-
-    redisClient.quit();
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: error });
@@ -80,7 +78,6 @@ app.get("/kinks", async (req: Request, res: Response): Promise<void> => {
     );
 
     res.status(200).send(responseData);
-    redisClient.quit();
   } catch (error) {
     console.error("Error:", error);
     res.status(500).send({ error: error });

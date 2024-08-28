@@ -1,4 +1,4 @@
-import { Alert, Linking } from 'react-native';
+import { Alert, AppState, AppStateStatus } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
@@ -6,13 +6,10 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import * as Updates from 'expo-updates';
 import 'react-native-gesture-handler';
 
-
-
-import Web from './Pages/Web';
 import Calendar from './Calendar/Calendar'
 import { NavigationContainer } from '@react-navigation/native';
 import Moar from './Pages/Moar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 type RootTabParamList = {
   Calendar: undefined;
@@ -23,31 +20,30 @@ type RootTabParamList = {
 
 const Tab = createBottomTabNavigator<RootTabParamList>();
 
-const App = () => {
-  useEffect(() => {
-    const checkForUpdates = async () => {
-      try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          Alert.alert(
-            'Update available',
-            'A new update is available and will be applied when you restart the app.',
-            [
-              { text: 'Restart Now', onPress: () => Updates.reloadAsync() },
-              { text: 'Later', style: 'cancel' }
-            ]
-          );
-        }
-      } catch (error) {
-        // console.error(error);
+const useCheckForAppUpdates = () => {
+  async function checkForAppUpdates() {
+    try {
+      const update = await Updates.checkForUpdateAsync();
+      if (update.isAvailable) {
+        console.log('Update is available');
+        await Updates.fetchUpdateAsync();
+        // ... notify user of update ...
+        Updates.reloadAsync();
       }
-    };
+    } catch (e) {
+      console.error(e);
+    }
+  }
 
-    checkForUpdates();
+  useEffect(() => {
+    checkForAppUpdates();
   }, []);
+}
 
-  const DummyComponent = () => <></>
+const App = () => {
+  useCheckForAppUpdates();
+
+  // const DummyComponent = () => <></>
 
   return (
     <NavigationContainer>
@@ -66,7 +62,7 @@ const App = () => {
         })}
       >
         <Tab.Screen name="Calendar" component={Calendar} />
-        <Tab.Screen name="Kinks" component={DummyComponent}
+        {/* <Tab.Screen name="Kinks" component={DummyComponent}
 
           listeners={{
             tabPress: (e) => {
@@ -74,7 +70,7 @@ const App = () => {
               Linking.openURL('https://kinkbuddy.org/kinks'); // Open the external link
             },
           }}
-        />
+        /> */}
         <Tab.Screen name="Moar" component={Moar} />
       </Tab.Navigator>
     </NavigationContainer>

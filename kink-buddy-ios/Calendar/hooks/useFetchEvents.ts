@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Event } from '../../commmonTypes';
+import { Event } from '../../commonTypes';
 import { EVENTS_API_URL } from '../../config';
 
-export const useFetchEvents = () => {
+export const useFetchEvents = (appState: string) => {
     const [events, setEvents] = useState<Event[]>([]);
     const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
 
@@ -16,7 +16,7 @@ export const useFetchEvents = () => {
             .catch(error => {
                 console.error('Error fetching events:', error);
             });
-    }, []);
+    }, [appState]);
 
     return { events, filteredEvents, setFilteredEvents };
 };

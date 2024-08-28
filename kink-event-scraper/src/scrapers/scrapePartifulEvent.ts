@@ -3,7 +3,7 @@ import cheerio from "cheerio";
 
 import { ScraperParams } from "./types.js";
 import { Event } from "../commonTypes.js";
-import { convertPartifulDateTime } from "../helpers/dateUtils.js";
+import { convertPartifulDateTime } from "../helpers/partifulDateUtils.js";
 import { extractHtmlToMarkdown } from "../helpers/extractHtmlToMarkdown.js";
 import { puppeteerConfig } from "../config.js";
 
@@ -46,6 +46,8 @@ async function scrapePartifulEvent({
         const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
 
         const eventDetails: Event = {
+            // satisying typescript
+            id: `plura-${eventId}`,
             original_id: `plura-${eventId}`,
             organizer: {
                 name: organizer,

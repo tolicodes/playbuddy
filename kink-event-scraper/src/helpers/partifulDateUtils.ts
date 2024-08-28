@@ -9,13 +9,6 @@ export const localDateTimeToISOString = (
   return fromZonedTime(dateTime, "America/New_York").toISOString();
 };
 
-/**
- * Converts a date and time string into ISO 8601 format with an optional end time.
- * @param {Object} params - The input parameters.
- * @param {string} params.startDate - The starting date in ISO format.
- * @param {string} params.timeString - The human-readable time string.
- * @returns {Object} - An object containing start_date and end_date in ISO format.
- */
 export const convertPartifulDateTime = ({
   dateString,
   timeString,

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, SectionList, StyleSheet, SafeAreaView } from 'react-native';
+import { Text, SectionList, StyleSheet, SafeAreaView, AppState, AppStateStatus } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
@@ -16,8 +16,32 @@ type RootStackParamList = {
     Filters: undefined;
 };
 
+function useRefreshEventsOnAppStateChange() {
+    const [appState, setAppState] = useState(AppState.currentState);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", handleAppStateChange);
+
+        return () => {
+            subscription.remove();
+        };
+    }, []);
+
+    const handleAppStateChange = (nextAppState: AppStateStatus) => {
+        if (appState.match(/inactive|background/) && nextAppState === "active") {
+            console.log("App has come to the foreground!");
+            // Do something when app comes to the foreground
+        }
+
+        setAppState(nextAppState);
+    }
+
+    return { appState };
+}
+
 const EventsList: React.FC = () => {
-    const { filteredEvents } = useFetchEvents();
+    const { appState } = useRefreshEventsOnAppStateChange();
+    const { filteredEvents } = useFetchEvents(appState);
 
     const { sections, markedDates } = useGroupedEvents(filteredEvents);
 

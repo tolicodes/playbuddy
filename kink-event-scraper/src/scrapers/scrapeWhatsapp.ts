@@ -55,7 +55,7 @@ export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
             const urls = message.body.match(domainRegex);
             if (urls && urls.length > 0) {
               linkMatches.push({
-                url: urls[0], // Only save the first matched link
+                source_url: urls[0], // Only save the first matched link
                 source_origination_group_id: group.id._serialized,
                 source_origination_group_name: group.name,
                 source_origination_platform: "WhatsApp",

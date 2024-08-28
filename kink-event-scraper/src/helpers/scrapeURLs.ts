@@ -1,5 +1,5 @@
 import { Event, SourceMetadata } from "../commonTypes.js";
-import { ScraperParams } from './types.js'
+import { ScraperParams } from '../scrapers/types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
 import scrapeEventbriteAllOrganizerEventsFromEventPage from "../scrapers/eventbrite/scrapeEventbriteAllOrganizerEventsFromEventPage.js";
 
