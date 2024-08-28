@@ -15,7 +15,7 @@ import { Event } from '../Common/commonTypes';
 import { EventFilters } from './EventFilters';
 import {
     downloadCsv,
-    getAvailableGroups,
+    // getAvailableGroups,
     // getAvailableGroups, 
     getAvailableOrganizers, getEvents, getTooltipContent, jsonToCsv, mapEventsToFullCalendar
 } from './calendarUtils';
@@ -62,11 +62,11 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
         setFilteredOrganizers(organizers);
     }, []);
 
-    const currentViewGroups = useMemo(() => getAvailableGroups(currentViewEvents), [currentViewEvents]);
-    const [filteredGroups, setFilteredGroups] = useState<OptionType[]>(currentViewGroups);
-    const onFilterGroups = useCallback((groups: OptionType[]) => {
-        setFilteredGroups(groups);
-    }, []);
+    // const currentViewGroups = useMemo(() => getAvailableGroups(currentViewEvents), [currentViewEvents]);
+    // const [filteredGroups, setFilteredGroups] = useState<OptionType[]>(currentViewGroups);
+    // const onFilterGroups = useCallback((groups: OptionType[]) => {
+    //     setFilteredGroups(groups);
+    // }, []);
 
 
     const filteredEvents: Event[] = useMemo(() => {
@@ -78,7 +78,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
             return organizers.map((org) => org.value).includes(event.organizer.name || '')
             // && groups.map((group) => group.value).includes(event.source_origination_group_name || '');
         });
-    }, [filteredOrganizers, currentViewEvents, currentViewOrganizers, filteredGroups]);
+    }, [filteredOrganizers, currentViewEvents, currentViewOrganizers]);
 
     const initialView = useMemo(() => {
         return window.matchMedia('(max-width: 767px)').matches ? 'listMonth' : 'dayGridMonth';
@@ -100,7 +100,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
         <>
             <EventFilters onFilterChange={onFilterOrganizers} options={currentViewOrganizers} entityName="organizers" />
             {
-                type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} entityName="groups" />
+                // type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} entityName="groups" />
 
             }
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
