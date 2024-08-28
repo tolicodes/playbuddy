@@ -168,7 +168,7 @@ export const getTooltipContent = (props: any, event: any) => {
     <div style="width:300px; max-height: 300px; overflow-y: auto;">
       <img src="${props.image_url}" alt="${event.title}" style="width: 100%; height: auto;"/>
       <h3> <a style="color: white" href="${props.eventUrl}" target="_blank">${event.title}</a></h3>
-      <p><a style="color: white" href=${props.organizer.url}" target="_blank">${props.organizer.name}</a></p>
+      <p><a style="color: white" href="${props.organizer.url}" target="_blank">${props.organizer.name}</a></p>
       <p>${date}</p>
       ${props.location && `<p><strong>Location:</strong> ${props.location}</p>`}
       ${props.price && `<p><strong>Price:</strong> ${props.price}</p>`}

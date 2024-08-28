@@ -148,8 +148,8 @@ export const scrapeEvents = async () => {
     const urlCache = getURLCache(allEventsOld);
 
     const allScrapers = await Promise.all([
-        scrapeKinkEventbrite(urlCache),
-        scrapePlura(urlCache),
+        // scrapeKinkEventbrite(urlCache),
+        // scrapePlura(urlCache),
         scrapeOrganizerTantraNYEvents(urlCache),
         //     // scrapeWhatsapp(urlCache)
     ]);
@@ -161,12 +161,12 @@ export const scrapeEvents = async () => {
 
     // Filter them to exclude certain events and dedupe
     const filteredEvents = filterEvents([
-        ...pluraEvents,
-        ...kinkEventbriteEvents,
+        // ...pluraEvents,
+        // ...kinkEventbriteEvents,
         ...tantraNYEvents,
     ]);
 
-    writeEventsToDB(filteredEvents);
+    await writeEventsToDB(filteredEvents);
 
     return filteredEvents
 

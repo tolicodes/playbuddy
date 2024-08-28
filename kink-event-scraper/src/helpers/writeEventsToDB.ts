@@ -3,26 +3,47 @@ import { Event } from "../commonTypes.js";
 import { supabaseClient } from "../connections/supabaseClient.js";
 
 // Function to upsert an organizer and return its ID
+// we will check aliases as well
 async function upsertOrganizer({
-  name, url, original_id
+  name,
+  url,
+  original_id,
 }: {
-  name: string, url: string, original_id?: string
+  name: string;
+  url: string;
+  original_id?: string;
 }): Promise<string> {
-  console.log('Upserting', name, url, original_id)
-  // @ts-ignore
-  const { data, error } = await supabaseClient
+  console.log("Upserting", name, url, original_id);
+
+  // Check if the organizer exists by name or alias
+  const { data: existingOrganizer, error: fetchError } = await supabaseClient
+    .from("organizers")
+    .select("name")
+    .or(`name.eq.${name},aliases.cs.{${name}}`)
+    .single();
+
+  if (fetchError && fetchError.code !== "PGRST116") { // PGRST116: no rows returned
+    console.error("Error fetching organizer:", fetchError);
+    throw fetchError;
+  }
+
+  // If an organizer exists with the name or alias, use the original name
+  const organizerName = existingOrganizer ? existingOrganizer.name : name;
+
+  // Upsert the organizer
+  const { data, error: upsertError } = await supabaseClient
     .from("organizers")
     // @ts-ignore
     .upsert(
-      { name, url, original_id },
-      { onConflict: ["name"] },
+      { name: organizerName, url, original_id },
+      { onConflict: ["name"] }
     )
     .select("id")
     .single();
 
-  if (error) {
-    console.error("Error upserting organizer:", error);
-    throw error;
+  if (upsertError) {
+    console.error("Error upserting organizer:", upsertError);
+    throw upsertError;
   }
 
   return data?.id ?? "";
@@ -46,8 +67,21 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     const { data: existingEvent } = await supabaseClient
       .from("events")
       .select("id")
+      // original_id matches
+      // OR start_date and organizer_id matches
+      // OR start_date and title matches
       .or(
-        `original_id.eq.${event.original_id},and(start_date.eq.${event.start_date},organizer_id.eq.${organizerId})`,
+        `or(
+          original_id.eq.${event.original_id},
+          and(
+            start_date.eq.${event.start_date},
+            organizer_id.eq.${organizerId}
+          ),
+          and(
+            start_date.eq.${event.start_date},
+            title.eq.${event.name}
+          )
+        )`
       )
       .single();
 
@@ -97,7 +131,7 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
   return 0;
 }
 
-export const writeEventsToDB = async (events: Event[]): Promise<void> => {
+export const writeEventsToDB = async (events: Event[]): Promise<number> => {
   let addedCount = 0;
   for (const event of events) {
     const success = await upsertEvent(event);
@@ -106,4 +140,5 @@ export const writeEventsToDB = async (events: Event[]): Promise<void> => {
 
   console.log(`Processed ${events.length} events.`);
   console.log(`Successfully added ${addedCount} events.`);
+  return addedCount;
 };

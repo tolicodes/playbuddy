@@ -3,7 +3,8 @@ CREATE TABLE organizers (
     id SERIAL PRIMARY KEY,
     original_id TEXT,
     name TEXT NOT NULL,
-    url TEXT NOT NULL
+    url TEXT NOT NULL,
+    aliases text array
 );
 
 ALTER TABLE organizers ADD CONSTRAINT unique_organizer_name UNIQUE (name);
@@ -45,7 +46,7 @@ CREATE TABLE kinks (
     level TEXT,
     materials_required TEXT,
     idea_description TEXT,
-    categories JSONB,
+    categories text array,
     recommended BOOLEAN DEFAULT FALSE,
     status TEXT,
     to_do_priority TEXT,

@@ -26,7 +26,7 @@ export const scrapeOrganizerTantraNY = async ({
       return {
         id: `organizer-tantra_ny-${event.EventId}`,
         organizer: {
-          name: "Tantra NY",
+          name: "The Tantra Institute",
           url: ORGANIZER_PAGE,
         },
 
@@ -36,12 +36,12 @@ export const scrapeOrganizerTantraNY = async ({
 
         ticket_url: event.URL,
         event_url: event.URL,
-        image_url: `${ORGANIZER_PAGE}/${event.ImgFileURL}`,
+        image_url: event.ImgSrc,
 
         location,
         price: "0",
 
-        description: event.EventTitle,
+        description: event.DescShort,
         tags: ["tantra"],
         source_ticketing_platform: "Eventbrite",
         ...sourceMetadata,
