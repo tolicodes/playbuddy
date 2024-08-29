@@ -36,7 +36,7 @@ async function upsertOrganizer({
     // @ts-ignore
     .upsert(
       { name: organizerName, url, original_id },
-      { onConflict: ["name"] }
+      { onConflict: "name" }
     )
     .select("id")
     .single();
@@ -64,26 +64,33 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     }
 
     // Check for existing event by original_id or by start_date and organizer_id
-    const { data: existingEvent } = await supabaseClient
+    const { data: existingEvent, error: fetchError } = await supabaseClient
       .from("events")
       .select("id")
       // original_id matches
       // OR start_date and organizer_id matches
       // OR start_date and title matches
-      .or(
-        `or(
-          original_id.eq.${event.original_id},
-          and(
-            start_date.eq.${event.start_date},
-            organizer_id.eq.${organizerId}
-          ),
-          and(
-            start_date.eq.${event.start_date},
-            title.eq.${event.name}
-          )
-        )`
-      )
+
+      // original_id.eq.${event.original_id},
+      // and(
+      //   start_date.eq.${event.start_date},
+      //   organizer_id.eq.${organizerId}
+      // ),
+      // and(
+      //   start_date.eq.${event.start_date},
+      //   name.eq.${event.name}
+      // )
+
+      // for some reason it doesn't like when I format it like above
+
+      .or(`original_id.eq.${event.original_id},and(start_date.eq.${event.start_date},organizer_id.eq.${organizerId}),and(start_date.eq.${event.start_date},name.eq.${event.name})`)
+
       .single();
+
+    if (fetchError && fetchError.code !== "PGRST116") {
+      console.error("Error fetching existing event:", fetchError);
+      return;
+    }
 
     if (existingEvent) {
       console.log(`Event ${event.name} already exists.`);
