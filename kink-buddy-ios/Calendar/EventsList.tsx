@@ -1,59 +1,69 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, SectionList, StyleSheet, SafeAreaView, AppState, AppStateStatus } from 'react-native';
+import { Text, SectionList, StyleSheet, SafeAreaView, AppState, AppStateStatus, TouchableOpacity, View } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
 
-import { Event } from '../commmonTypes';
+import { Event } from '../../Common/commonTypes';
 import { ListItem } from './ListItem';
-import { useFetchEvents } from './hooks/useFetchEvents';
 import { useGroupedEvents } from './hooks/useGroupedEvents';
+import { TextInput } from 'react-native-gesture-handler';
+import FAIcon from 'react-native-vector-icons/FontAwesome';
+import { useCalendarContext } from './CalendarContext';
+import { CalendarStack } from './types';
 
-type RootStackParamList = {
-    'Event List': undefined;
-    'Event Details': { selectedEvent: Event };
-    Filters: undefined;
-};
-
-function useRefreshEventsOnAppStateChange() {
-    const [appState, setAppState] = useState(AppState.currentState);
-
-    useEffect(() => {
-        const subscription = AppState.addEventListener("change", handleAppStateChange);
-
-        return () => {
-            subscription.remove();
-        };
-    }, []);
-
-    const handleAppStateChange = (nextAppState: AppStateStatus) => {
-        if (appState.match(/inactive|background/) && nextAppState === "active") {
-            console.log("App has come to the foreground!");
-            // Do something when app comes to the foreground
-        }
-
-        setAppState(nextAppState);
-    }
-
-    return { appState };
+interface CustomDayComponentProps {
+    date: any;
+    state: 'selected' | 'disabled' | 'today' | undefined;
+    marking: { marked?: boolean, dotColor?: string } | undefined;
+    onPress: (date: any) => void;
 }
 
-const EventsList: React.FC = () => {
-    const { appState } = useRefreshEventsOnAppStateChange();
-    const { filteredEvents } = useFetchEvents(appState);
 
+const CustomDayComponent: React.FC<CustomDayComponentProps> = ({ date, state, marking, onPress }) => {
+    return (
+        <TouchableOpacity
+            onPress={() => {
+                onPress(date);
+            }}
+        >
+            <View style={styles.dayContainer}>
+                <Text style={[styles.dayText, state === 'selected' && styles.selectedDayText]}>
+                    {date.day}
+                </Text>
+                {marking?.marked && (
+                    <View style={[styles.dot, { backgroundColor: marking.dotColor || '#000' }]} />
+                )}
+            </View>
+        </TouchableOpacity>
+
+    );
+};
+
+const EventsList: React.FC = () => {
+    const { filters, setFilters, filteredEvents } = useCalendarContext();
+
+    const [searchQuery, setSearchQuery] = useState('');
     const { sections, markedDates } = useGroupedEvents(filteredEvents);
 
     const sectionListRef = useRef<SectionList<Event>>(null);
-    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const navigation = useNavigation<CalendarStack>();
 
     // Navigate to Event Details screen when selectedEvent changes
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
     useEffect(() => {
         if (!selectedEvent) return
         navigation.navigate('Event Details', { selectedEvent })
     }, [selectedEvent])
+
+    useEffect(() => {
+        setFilters({
+            ...filters,
+            search: searchQuery
+        });
+    }, [searchQuery]);
+
 
     const handleDayPress = (day: any) => {
         const date = moment(day.dateString).format('MMM D, YYYY');
@@ -68,24 +78,44 @@ const EventsList: React.FC = () => {
         }
     };
 
+    const onPressOpenFilters = () => {
+        navigation.navigate('Filters')
+    }
+
+    const hasFilters = !!filters.organizers.length;
+
     return (
         <SafeAreaView style={styles.container}>
             <Calendar
                 markedDates={markedDates}
                 onDayPress={handleDayPress}
                 style={styles.calendar}
+                dayComponent={({ date, state, onPress, marking }: CustomDayComponentProps) => <CustomDayComponent date={date} state={state} marking={marking} onPress={onPress} />}
+
                 theme={{
                     selectedDayBackgroundColor: 'blue',
                     todayTextColor: 'blue',
                     dotColor: 'blue',
                     arrowColor: 'blue',
-                    'stylesheet.day.basic': {
-                        base: {
-                            margin: .2,
-                        },
-                    }
+                    lineHeight: 10,
                 }}
             />
+
+            <View style={styles.searchContainer}>
+                <TextInput
+                    style={styles.searchBox}
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChangeText={text => setSearchQuery(text)}
+                />
+                <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
+                    <FAIcon
+                        name="filter"
+                        size={30}
+                        color={hasFilters ? "#007AFF" : "#8E8E93"}
+                    />
+                </TouchableOpacity>
+            </View>
 
             <SectionList
                 ref={sectionListRef}
@@ -95,7 +125,7 @@ const EventsList: React.FC = () => {
                 renderSectionHeader={({ section }: any) => <Text style={styles.sectionHeader}>{section.title}</Text>}
                 keyExtractor={(item, i) => item.name + item.id}
                 onScrollToIndexFailed={() => { console.log('scroll fail') }}
-                ListEmptyComponent={<Text>Loading</Text>}
+                ListEmptyComponent={<Text style={styles.emptyList}>No Results</Text>}
             />
         </SafeAreaView >
     );
@@ -109,6 +139,9 @@ const styles = StyleSheet.create({
     calendar: {
         marginBottom: 10,
     },
+    emptyList: {
+        padding: 20
+    },
     sectionHeader: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -116,6 +149,52 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 20,
         color: '#333',
+    },
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        padding: 20,
+        paddingBottom: 0
+    },
+    searchBox: {
+        height: 40,
+        flex: 1,
+        borderColor: '#DDD',
+        borderWidth: 1,
+        paddingHorizontal: 10,
+        marginBottom: 20,
+        borderRadius: 8,
+        backgroundColor: '#fff',
+        fontSize: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        elevation: 2,
+    },
+    filterIcon: {
+        // hack to center the icon vertically
+        marginTop: -20,
+        marginLeft: 10,
+        alignSelf: 'center',
+    },
+    dayContainer: {
+        height: 20, // Reduced height of the day component
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    dayText: {
+        fontSize: 14, // You can reduce the font size if needed
+    },
+    selectedDayText: {
+        color: 'blue', // Example of customizing selected day color
+    },
+    dot: {
+        width: 5,
+        height: 5,
+        borderRadius: 2.5,
+        marginTop: 1,
     },
 });
 
