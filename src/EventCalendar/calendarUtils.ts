@@ -162,12 +162,12 @@ function createSourceString(props: any) {
 // the getTooltipContent function takes a tippy props object and an event object and returns a string that represents the content of the tooltip
 export const getTooltipContent = (props: any, event: any) => {
     const description = marked(props.summary || '');
-    const date = `${moment(event.start_date).format('MMM D, YYYY')} ${moment(event.start_date).format('hA')} - ${moment(event.end_date).format('hA')}`
+    const date = `${moment(props.start_date).format('MMM D, YYYY')} ${moment(props.start_date).format('hA')} - ${moment(props.end_date).format('hA')}`
 
     return `
     <div style="width:300px; max-height: 300px; overflow-y: auto;">
-      <img src="${props.image_url}" alt="${event.title}" style="width: 100%; height: auto;"/>
-      <h3> <a style="color: white" href="${props.eventUrl}" target="_blank">${event.title}</a></h3>
+      <img src="${props.image_url}" alt="${props.name}" style="width: 100%; height: auto;"/>
+      <h3> <a style="color: white" href="${props.event_url}" target="_blank">${props.name}</a></h3>
       <p><a style="color: white" href="${props.organizer.url}" target="_blank">${props.organizer.name}</a></p>
       <p>${date}</p>
       ${props.location && `<p><strong>Location:</strong> ${props.location}</p>`}
