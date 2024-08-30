@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import moment from 'moment';
-import { Event } from '../../commmonTypes';
+import { Event } from '../../commonTypes';
 
 export const useGroupedEvents = (filteredEvents: Event[]) => {
     const groupedEvents = useMemo(() => Array.isArray(filteredEvents) ? filteredEvents.reduce((acc: Record<string, Event[]>, event) => {

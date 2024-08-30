@@ -3,6 +3,7 @@ import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
 import cors from "cors";
+import moment from 'moment';
 
 import { connectRedisClient } from "./connections/redisClient.js";
 import { supabaseClient } from "./connections/supabaseClient.js";
@@ -40,8 +41,10 @@ const fetchAndCacheData = async (
 
 app.get("/events", async (req: Request, res: Response): Promise<void> => {
   const cacheKey = "events";
-  const today = new Date().toISOString().split("T")[0];
+  // NYC midnight in UTC
+  const nycMidnightUTC = moment.tz('America/New_York').startOf('day').utc().format();
 
+  const todayUTC = nycMidnightUTC.split("T")[0];
   try {
     const redisClient = await connectRedisClient();
 
@@ -49,8 +52,8 @@ app.get("/events", async (req: Request, res: Response): Promise<void> => {
       // @ts-ignore
       supabaseClient
         .from("events")
-        .select("*, organizer:organizers(name, url)")
-        .gte("start_date", today),
+        .select("*, organizer:organizers(id, name, url)")
+        .gte("start_date", todayUTC),
     );
 
     if (req.query.format === "ical") {

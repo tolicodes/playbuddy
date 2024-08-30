@@ -6,6 +6,7 @@ export interface Event extends SourceMetadata {
     id: string;
     original_id?: string;
     organizer: {
+        id: string;
         original_id?: string;
 
         name: string;
