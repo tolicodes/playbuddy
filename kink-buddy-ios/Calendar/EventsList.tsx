@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, SectionList, StyleSheet, SafeAreaView, AppState, AppStateStatus, TouchableOpacity, View } from 'react-native';
+import { Text, SectionList, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
@@ -19,14 +19,9 @@ interface CustomDayComponentProps {
     onPress: (date: any) => void;
 }
 
-
 const CustomDayComponent: React.FC<CustomDayComponentProps> = ({ date, state, marking, onPress }) => {
     return (
-        <TouchableOpacity
-            onPress={() => {
-                onPress(date);
-            }}
-        >
+        <TouchableOpacity onPress={() => onPress(date)}>
             <View style={styles.dayContainer}>
                 <Text style={[styles.dayText, state === 'selected' && styles.selectedDayText]}>
                     {date.day}
@@ -36,34 +31,41 @@ const CustomDayComponent: React.FC<CustomDayComponentProps> = ({ date, state, ma
                 )}
             </View>
         </TouchableOpacity>
-
     );
 };
 
 const EventsList: React.FC = () => {
+    const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const { filters, setFilters, filteredEvents } = useCalendarContext();
-
     const [searchQuery, setSearchQuery] = useState('');
     const { sections, markedDates } = useGroupedEvents(filteredEvents);
-
     const sectionListRef = useRef<SectionList<Event>>(null);
     const navigation = useNavigation<CalendarStack>();
+    const animatedHeight = useRef(new Animated.Value(250)).current;  // Persist across renders
 
-    // Navigate to Event Details screen when selectedEvent changes
+    // Handle event selection
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     useEffect(() => {
-        if (!selectedEvent) return
-        navigation.navigate('Event Details', { selectedEvent })
-    }, [selectedEvent])
+        if (selectedEvent) {
+            navigation.navigate('Event Details', { selectedEvent });
+        }
+    }, [selectedEvent]);
 
     useEffect(() => {
-        setFilters({
-            ...filters,
-            search: searchQuery
-        });
+        setFilters({ ...filters, search: searchQuery });
     }, [searchQuery]);
 
+    // Toggle calendar expansion
+    const onPressCalendar = () => {
+        Animated.timing(animatedHeight, {
+            toValue: isCalendarExpanded ? 0 : 250, // Toggle between 0 and the actual content height
+            duration: 300,
+            useNativeDriver: false, // Height animations cannot use native driver
+        }).start();
+
+        setIsCalendarExpanded(!isCalendarExpanded);
+    };
 
     const handleDayPress = (day: any) => {
         const date = moment(day.dateString).format('MMM D, YYYY');
@@ -79,29 +81,39 @@ const EventsList: React.FC = () => {
     };
 
     const onPressOpenFilters = () => {
-        navigation.navigate('Filters')
-    }
+        navigation.navigate('Filters');
+    };
 
     const hasFilters = !!filters.organizers.length;
 
     return (
         <SafeAreaView style={styles.container}>
-            <Calendar
-                markedDates={markedDates}
-                onDayPress={handleDayPress}
-                style={styles.calendar}
-                dayComponent={({ date, state, onPress, marking }: CustomDayComponentProps) => <CustomDayComponent date={date} state={state} marking={marking} onPress={onPress} />}
-
-                theme={{
-                    selectedDayBackgroundColor: 'blue',
-                    todayTextColor: 'blue',
-                    dotColor: 'blue',
-                    arrowColor: 'blue',
-                    lineHeight: 10,
-                }}
-            />
+            <Animated.View style={[styles.calendar, { height: animatedHeight }]}>
+                <Calendar
+                    markedDates={markedDates}
+                    onDayPress={handleDayPress}
+                    dayComponent={({ date, state, onPress, marking }: CustomDayComponentProps) => (
+                        <CustomDayComponent
+                            date={date}
+                            state={state}
+                            marking={marking}
+                            onPress={onPress}
+                        />
+                    )}
+                    theme={{
+                        selectedDayBackgroundColor: 'blue',
+                        todayTextColor: 'blue',
+                        dotColor: 'blue',
+                        arrowColor: 'blue',
+                        lineHeight: 10,
+                    }}
+                />
+            </Animated.View>
 
             <View style={styles.searchContainer}>
+                <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
+                    <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
+                </TouchableOpacity>
                 <TextInput
                     style={styles.searchBox}
                     placeholder="Search..."
@@ -109,11 +121,7 @@ const EventsList: React.FC = () => {
                     onChangeText={text => setSearchQuery(text)}
                 />
                 <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
-                    <FAIcon
-                        name="filter"
-                        size={30}
-                        color={hasFilters ? "#007AFF" : "#8E8E93"}
-                    />
+                    <FAIcon name="filter" size={30} color={hasFilters ? "#007AFF" : "#8E8E93"} />
                 </TouchableOpacity>
             </View>
 
@@ -121,10 +129,13 @@ const EventsList: React.FC = () => {
                 ref={sectionListRef}
                 sections={sections}
                 stickySectionHeadersEnabled={true}
-                renderItem={({ item }: { item: Event }) => <ListItem item={item} setSelectedEvent={setSelectedEvent} />}
-                renderSectionHeader={({ section }: any) => <Text style={styles.sectionHeader}>{section.title}</Text>}
+                renderItem={({ item }: { item: Event }) => (
+                    <ListItem item={item} setSelectedEvent={setSelectedEvent} />
+                )}
+                renderSectionHeader={({ section }: any) => (
+                    <Text style={styles.sectionHeader}>{section.title}</Text>
+                )}
                 keyExtractor={(item, i) => item.name + item.id}
-                onScrollToIndexFailed={() => { console.log('scroll fail') }}
                 ListEmptyComponent={<Text style={styles.emptyList}>No Results</Text>}
             />
         </SafeAreaView >
@@ -137,10 +148,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
     },
     calendar: {
-        marginBottom: 10,
+        width: '100%',
+        overflow: 'hidden',
     },
     emptyList: {
-        padding: 20
+        padding: 20,
     },
     sectionHeader: {
         fontSize: 18,
@@ -155,7 +167,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
         padding: 20,
-        paddingBottom: 0
+        paddingBottom: 0,
+        backgroundColor: 'white',
     },
     searchBox: {
         height: 40,
@@ -174,21 +187,25 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     filterIcon: {
-        // hack to center the icon vertically
         marginTop: -20,
         marginLeft: 10,
         alignSelf: 'center',
     },
+    calendarIcon: {
+        marginTop: -20,
+        marginRight: 10,
+        alignSelf: 'center',
+    },
     dayContainer: {
-        height: 20, // Reduced height of the day component
+        height: 20, // Adjust this value as needed
         justifyContent: 'center',
         alignItems: 'center',
     },
     dayText: {
-        fontSize: 14, // You can reduce the font size if needed
+        fontSize: 14, // Adjust this value as needed
     },
     selectedDayText: {
-        color: 'blue', // Example of customizing selected day color
+        color: 'blue',
     },
     dot: {
         width: 5,
