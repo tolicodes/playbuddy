@@ -16,14 +16,14 @@ interface OrganizerMultiSelectProps {
 // Dropdown item component to render each organizer option with checkmark (selected) and color dot
 const DropdownItem: React.FC<{ item: OrganizerFilterOption, isSelected: boolean, dotColor: string }> = ({ item, isSelected, dotColor }) => {
     return (
-        <View style={styles.dropdownItem}>
+        <View style={[styles.dropdownItem, { backgroundColor: isSelected ? 'green' : 'white' }]}>
             <View style={isSelected ? styles.checkmarkContainerFull : styles.checkmarkContainerBlank}>
                 <FAIcon name="check" size={14} color="white" />
             </View>
 
             {/* Organizer color dot */}
             <View style={[styles.colorDot, { backgroundColor: item.color }]} />
-            <Text style={styles.itemText}>{item.name}</Text>
+            <Text style={[styles.itemText, { color: isSelected ? 'white' : 'black' }]}>{item.name}</Text>
         </View>
     );
 };
@@ -105,6 +105,8 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         backgroundColor: 'green',
         justifyContent: 'center',
+        borderColor: 'white',
+        borderWidth: 2,
         alignItems: 'center',
     },
     checkmarkContainerBlank: {

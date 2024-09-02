@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useMemo, useEffect } from 'react';
 import { getAvailableOrganizers, OrganizerFilterOption, useRefreshEventsOnAppStateChange } from './calendarUtils';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { useFetchEvents } from './hooks/useFetchEvents';
 import { Event } from './../commonTypes';
 
@@ -34,6 +36,26 @@ export const useCalendarContext = (): CalendarContextType => {
     return context;
 };
 
+const saveFiltersToLocalStorage = async (filters: FilterState) => {
+    try {
+        const jsonValue = JSON.stringify(filters);
+        await AsyncStorage.setItem('@filters', jsonValue);
+    } catch (e) {
+        console.error('Failed to save filters', e);
+    }
+};
+
+const loadFiltersFromLocalStorage = async (): Promise<FilterState | null> => {
+    try {
+        const jsonValue = await AsyncStorage.getItem('@filters');
+        return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (e) {
+        console.error('Failed to load filters', e);
+        return null;
+    }
+};
+
+
 // Props type for the CalendarProvider
 type CalendarProviderProps = {
     children: ReactNode;
@@ -48,6 +70,29 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
 
     // State for filters
     const [filters, setFilters] = useState<FilterState>({ organizers: [], search: '' });
+
+
+    const [filtersLoadedFromLocalStorage, setFiltersLoadedFromLocalStorage] = useState(false);
+    // SAVING FILTERS TO LOCAL STORAGE
+
+    // Save filters to local storage when they change
+    useEffect(() => {
+        // Don't save filters to local storage if they haven't been loaded yet (first render)
+        // Prevents bugs where empty filters are saved before they are loaded
+        if (!filtersLoadedFromLocalStorage) return;
+
+        saveFiltersToLocalStorage(filters)
+    }, [filters, filtersLoadedFromLocalStorage]);
+
+    // Load filters from local storage on initial render
+    useEffect(() => {
+        loadFiltersFromLocalStorage().then((loadedFilters) => {
+            if (loadedFilters) {
+                setFilters(loadedFilters);
+                setFiltersLoadedFromLocalStorage(true)
+            }
+        });
+    }, []);
 
     // Memoized organizers based on the current events
     const organizers = useMemo(() => getAvailableOrganizers(events), [events]);
