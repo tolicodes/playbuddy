@@ -1,47 +1,40 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, Button } from 'react-native';
 import { MultiSelect } from 'react-native-element-dropdown';
 import { useCalendarContext } from './CalendarContext';
 import { useNavigation } from '@react-navigation/native';
 import { CalendarStack } from './types';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-
-
-interface Organizer {
-    id: string;
-    name: string;
-}
+import { OrganizerFilterOption } from './calendarUtils';
 
 interface OrganizerMultiSelectProps {
-    organizers: Organizer[];
+    organizers: OrganizerFilterOption[];
     onChangeFilteredOrganizers: (selectedOrganizerIds: string[]) => void;
     selectedOrganizers: string[];
 }
 
-const DropdownItem = ({ item, isSelected }) => {
-    return (<View
-        style={{
-            ...styles.dropdown,
-            flexDirection: 'row', // Add this line to place items side by side
-            backgroundColor: isSelected ? '#e0e0e0' : 'white',
-            alignItems: 'center', // Ensure items are centered vertically
-            padding: 10, // Add padding if needed
-        }}
-    >
-        <View style={isSelected ? styles.checkmarkContainerFull : styles.checkmarkContainerBlank}>
-            <FAIcon name="check" size={14} color="white" />
+// Dropdown item component to render each organizer option with checkmark (selected) and color dot
+const DropdownItem: React.FC<{ item: OrganizerFilterOption, isSelected: boolean, dotColor: string }> = ({ item, isSelected, dotColor }) => {
+    return (
+        <View style={styles.dropdownItem}>
+            <View style={isSelected ? styles.checkmarkContainerFull : styles.checkmarkContainerBlank}>
+                <FAIcon name="check" size={14} color="white" />
+            </View>
+
+            {/* Organizer color dot */}
+            <View style={[styles.colorDot, { backgroundColor: item.color }]} />
+            <Text style={styles.itemText}>{item.name}</Text>
         </View>
+    );
+};
 
-        <Text style={{ flex: 1, marginLeft: 10 }}>{item.name}</Text>
-    </View>)
-}
-
+// Multi-select dropdown component for selecting organizers
 export const OrganizerMultiSelect: React.FC<OrganizerMultiSelectProps> = ({ organizers, onChangeFilteredOrganizers, selectedOrganizers }) => {
+    const navigation = useNavigation<CalendarStack>();
+
     const handleSelect = (items: string[]) => {
         onChangeFilteredOrganizers(items);
     };
-
-    const navigation = useNavigation<CalendarStack>();
 
     return (
         <View style={styles.container}>
@@ -62,16 +55,16 @@ export const OrganizerMultiSelect: React.FC<OrganizerMultiSelectProps> = ({ orga
                 renderItem={(item) => {
                     const isSelected = selectedOrganizers.includes(item.id);
                     return (
-                        <DropdownItem item={item} isSelected={isSelected} />
+                        <DropdownItem item={item} isSelected={isSelected} dotColor={item.color} />
                     );
                 }}
             />
-
             <Button onPress={() => navigation.navigate('Event List')} title="Done" />
         </View>
     );
 };
 
+// Styles for the component
 const styles = StyleSheet.create({
     container: {
         padding: 16,
@@ -81,31 +74,30 @@ const styles = StyleSheet.create({
     dropdown: {
         backgroundColor: '#fff',
         padding: 12,
-        // borderWidth: 1,
-        // borderColor: '#ddd',
     },
-
     itemContainerStyle: {
         backgroundColor: 'green',
         borderColor: '#ddd',
     },
-
-    // Pills
     selectedStyle: {
         backgroundColor: 'green',
         color: 'white',
         borderColor: '#ddd',
         borderRadius: 8,
         padding: 8,
-
     },
     selectedTextStyle: {
         color: 'white',
         fontSize: 16,
     },
-
     placeholderStyle: {
         color: '#888',
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        backgroundColor: 'white',
+        alignItems: 'center',
+        padding: 10,
     },
     checkmarkContainerFull: {
         width: 24,
@@ -122,14 +114,25 @@ const styles = StyleSheet.create({
         backgroundColor: 'white',
         justifyContent: 'center',
         alignItems: 'center',
-    }
+    },
+    colorDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        marginLeft: 10,
+    },
+    itemText: {
+        flex: 1,
+        marginLeft: 10,
+    },
 });
 
+// Filters component that uses the OrganizerMultiSelect
 export const Filters: React.FC = () => {
     const { organizers, filters, setFilters } = useCalendarContext();
 
     const onChangeFilteredOrganizers = (selectedOrganizerIds: string[]) => {
-        // Handle change in selected organizers
+        // sets filter back in context
         setFilters((prevFilters) => ({
             ...prevFilters,
             organizers: selectedOrganizerIds,
@@ -139,11 +142,10 @@ export const Filters: React.FC = () => {
     return (
         <View style={styles.container}>
             <OrganizerMultiSelect
-                // id, name, count
                 organizers={organizers}
                 selectedOrganizers={filters.organizers}
                 onChangeFilteredOrganizers={onChangeFilteredOrganizers}
             />
         </View>
     );
-}
+};

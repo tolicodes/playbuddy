@@ -4,35 +4,16 @@ import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 
-import { Event } from '../../Common/commonTypes';
-import { ListItem } from './ListItem';
-import { useGroupedEvents } from './hooks/useGroupedEvents';
+import { Event } from '../../../Common/commonTypes';
+import { ListItem } from '../ListItem';
+import { useGroupedEvents } from '../hooks/useGroupedEvents';
 import { TextInput } from 'react-native-gesture-handler';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { useCalendarContext } from './CalendarContext';
-import { CalendarStack } from './types';
+import { EventWithMetadata, useCalendarContext } from '../CalendarContext';
+import { CalendarStack } from '../types';
+import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 
-interface CustomDayComponentProps {
-    date: any;
-    state: 'selected' | 'disabled' | 'today' | undefined;
-    marking: { marked?: boolean, dotColor?: string } | undefined;
-    onPress: (date: any) => void;
-}
-
-const CustomDayComponent: React.FC<CustomDayComponentProps> = ({ date, state, marking, onPress }) => {
-    return (
-        <TouchableOpacity onPress={() => onPress(date)}>
-            <View style={styles.dayContainer}>
-                <Text style={[styles.dayText, state === 'selected' && styles.selectedDayText]}>
-                    {date.day}
-                </Text>
-                {marking?.marked && (
-                    <View style={[styles.dot, { backgroundColor: marking.dotColor || '#000' }]} />
-                )}
-            </View>
-        </TouchableOpacity>
-    );
-};
+const CALENDAR_HEIGHT = 250;
 
 const EventsList: React.FC = () => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
@@ -41,7 +22,7 @@ const EventsList: React.FC = () => {
     const { sections, markedDates } = useGroupedEvents(filteredEvents);
     const sectionListRef = useRef<SectionList<Event>>(null);
     const navigation = useNavigation<CalendarStack>();
-    const animatedHeight = useRef(new Animated.Value(250)).current;  // Persist across renders
+    const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
 
     // Handle event selection
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -59,7 +40,7 @@ const EventsList: React.FC = () => {
     // Toggle calendar expansion
     const onPressCalendar = () => {
         Animated.timing(animatedHeight, {
-            toValue: isCalendarExpanded ? 0 : 250, // Toggle between 0 and the actual content height
+            toValue: isCalendarExpanded ? 0 : CALENDAR_HEIGHT, // Toggle between 0 and the actual content height
             duration: 300,
             useNativeDriver: false, // Height animations cannot use native driver
         }).start();
@@ -92,12 +73,9 @@ const EventsList: React.FC = () => {
                 <Calendar
                     markedDates={markedDates}
                     onDayPress={handleDayPress}
-                    dayComponent={({ date, state, onPress, marking }: CustomDayComponentProps) => (
-                        <CustomDayComponent
-                            date={date}
-                            state={state}
-                            marking={marking}
-                            onPress={onPress}
+                    dayComponent={(props: CustomCalendarDayProps) => (
+                        <CustomCalendarDay
+                            {...props}
                         />
                     )}
                     theme={{
@@ -129,9 +107,14 @@ const EventsList: React.FC = () => {
                 ref={sectionListRef}
                 sections={sections}
                 stickySectionHeadersEnabled={true}
-                renderItem={({ item }: { item: Event }) => (
-                    <ListItem item={item} setSelectedEvent={setSelectedEvent} />
-                )}
+                renderItem={({ item: event }: { item: EventWithMetadata }) => {
+                    return (
+                        <ListItem
+                            item={event}
+                            setSelectedEvent={setSelectedEvent}
+                        />
+                    )
+                }}
                 renderSectionHeader={({ section }: any) => (
                     <Text style={styles.sectionHeader}>{section.title}</Text>
                 )}
@@ -195,23 +178,6 @@ const styles = StyleSheet.create({
         marginTop: -20,
         marginRight: 10,
         alignSelf: 'center',
-    },
-    dayContainer: {
-        height: 20, // Adjust this value as needed
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    dayText: {
-        fontSize: 14, // Adjust this value as needed
-    },
-    selectedDayText: {
-        color: 'blue',
-    },
-    dot: {
-        width: 5,
-        height: 5,
-        borderRadius: 2.5,
-        marginTop: 1,
     },
 });
 

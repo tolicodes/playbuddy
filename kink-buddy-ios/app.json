@@ -41,6 +41,12 @@
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/06bc28a9-e7a8-42b0-9dea-2ad45021e60c"
-    }
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "expo": {
+      "scheme": "com.supabase"
+    }  
   }
 }

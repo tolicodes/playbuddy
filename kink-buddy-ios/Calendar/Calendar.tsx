@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, View } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
-import EventsList from './EventsList';
+import EventsList from './EventsList/EventsList';
 import { EventDetail } from './EventDetail';
 import { Filters } from './Filters';
 import CalendarProvider from './CalendarContext';
