@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import { Event } from '../../../Common/commonTypes';
 import { ListItem } from '../ListItem';
-import { useGroupedEvents } from '../hooks/useGroupedEvents';
+import { SECTION_DATE_FORMAT, useGroupedEvents } from '../hooks/useGroupedEvents';
 import { TextInput } from 'react-native-gesture-handler';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { EventWithMetadata, useCalendarContext } from '../CalendarContext';
@@ -48,8 +48,8 @@ const EventsList: React.FC = () => {
         setIsCalendarExpanded(!isCalendarExpanded);
     };
 
-    const handleDayPress = (day: any) => {
-        const date = moment(day.dateString).format('MMM D, YYYY');
+    const onPressDay = (day: any) => {
+        const date = moment(day.dateString).format(SECTION_DATE_FORMAT);
         const sectionIndex = sections.findIndex(section => section.title === date);
 
         if (sectionIndex !== -1 && sectionListRef.current) {
@@ -72,7 +72,7 @@ const EventsList: React.FC = () => {
             <Animated.View style={[styles.calendar, { height: animatedHeight }]}>
                 <Calendar
                     markedDates={markedDates}
-                    onDayPress={handleDayPress}
+                    onDayPress={onPressDay}
                     dayComponent={(props: CustomCalendarDayProps) => (
                         <CustomCalendarDay
                             {...props}
