@@ -46,7 +46,11 @@
       "expo-secure-store"
     ],
     "expo": {
-      "scheme": "com.supabase"
+      "scheme": "com.tolicodes1.kinkbuddyios",
+      "platforms": ["ios", "android", "web"],
+      "ios": {
+        "associatedDomains": ["applinks:kinkbuddy.org"]
+      }
     }  
   }
 }

@@ -1,15 +1,18 @@
-import { Alert, AppState, AppStateStatus } from 'react-native';
+import { Alert, AppState, AppStateStatus, Linking } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import * as Updates from 'expo-updates';
 import 'react-native-gesture-handler';
+import { supabase } from './supabaseCiient';
 
 import Calendar from './Calendar/Calendar'
 import { NavigationContainer } from '@react-navigation/native';
 import Moar from './Pages/Moar';
 import { useEffect, useState } from 'react';
+import Account from './Auth/Account';
+import Auth from './Auth/Auth';
 
 type RootTabParamList = {
   Calendar: undefined;
@@ -40,13 +43,14 @@ const useCheckForAppUpdates = () => {
   }, []);
 }
 
+
+
 const App = () => {
   useCheckForAppUpdates();
 
-  // const DummyComponent = () => <></>
-
   return (
     <NavigationContainer>
+
       <Tab.Navigator
         screenOptions={({ route }) => ({
           tabBarIcon: ({ color, size }) => {

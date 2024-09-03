@@ -22,23 +22,25 @@ export default () => {
 
                     options={({ navigation }) => ({
                         title: 'Events', // Customize your screen title here
-                        // headerRight: () => (
-                        //     <TouchableOpacity
-                        //         style={{ marginRight: 15 }}
-                        //         onPress={() => navigation.navigate('Login')} // replace 'Login' with your actual login screen name
-                        //     >
-                        //         <View style={{
-                        //             width: 30,
-                        //             height: 30,
-                        //             borderRadius: 20,
-                        //             backgroundColor: '#007AFF', // Circle color (bright orange)
-                        //             justifyContent: 'center',
-                        //             alignItems: 'center',
-                        //         }}>
-                        //             <FAIcon name="user" size={20} color="#FFFFFF" />
-                        //         </View>
-                        //     </TouchableOpacity>
-                        // ),
+                        headerRight: () => (
+                            <TouchableOpacity
+                                style={{ marginRight: 15 }}
+                                onPress={() => navigation.navigate('Login')} // replace 'Login' with your actual login screen name
+                            >
+                                <View style={{
+                                    width: 30,
+                                    height: 30,
+                                    borderRadius: 20,
+                                    backgroundColor: 'white',
+                                    borderColor: '#007AFF',
+                                    borderWidth: 1,
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}>
+                                    <FAIcon name="user" size={20} color="#007AFF" />
+                                </View>
+                            </TouchableOpacity>
+                        ),
                     })}
                 />
                 <CalendarStack.Screen
