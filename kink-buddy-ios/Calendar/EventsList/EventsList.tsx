@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, SectionList, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View } from 'react-native';
+import { Text, TextInput, SectionList, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
@@ -7,7 +7,6 @@ import { useNavigation } from '@react-navigation/native';
 import { Event } from '../../../Common/commonTypes';
 import { ListItem } from '../ListItem';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from '../hooks/useGroupedEvents';
-import { TextInput } from 'react-native-gesture-handler';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { EventWithMetadata, useCalendarContext } from '../CalendarContext';
 import { CalendarStack } from '../types';

@@ -1,49 +1,70 @@
-import React, { useState } from 'react'
-import { Alert, StyleSheet, View, AppState } from 'react-native'
-import { supabase } from '../supabaseCiient'
-import { Button, Input } from '@rneui/themed'
-
-// Tells Supabase Auth to continuously refresh the session automatically if
-// the app is in the foreground. When this is added, you will continue to receive
-// `onAuthStateChange` events with the `TOKEN_REFRESHED` or `SIGNED_OUT` event
-// if the user's session is terminated. This should only be registered once.
-AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-        supabase.auth.startAutoRefresh()
-    } else {
-        supabase.auth.stopAutoRefresh()
-    }
-})
+import React, { useState, useEffect } from 'react';
+import { Alert, StyleSheet, View, AppState } from 'react-native';
+import { supabase } from '../supabaseCiient';
+import { Button, Input } from '@rneui/themed';
+import { useUserContext } from './UserContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Auth() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false)
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const navigation = useNavigation();
+
+    const { setUserId } = useUserContext();
+
+    // Set up AppState listener once, when component mounts
+    useEffect(() => {
+        const appStateListener = AppState.addEventListener('change', (state) => {
+            if (state === 'active') {
+                supabase.auth.startAutoRefresh();
+            } else {
+                supabase.auth.stopAutoRefresh();
+            }
+        });
+
+        return () => {
+            appStateListener.remove(); // Clean up listener on unmount
+        };
+    }, []);
 
     async function signInWithEmail() {
-        setLoading(true)
-        const { error } = await supabase.auth.signInWithPassword({
+        setLoading(true);
+        const { data: { session }, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
-        })
+        });
 
-        if (error) Alert.alert(error.message)
-        setLoading(false)
+        if (error) {
+            Alert.alert(error.message);
+        } else if (session) {
+            // Store userid in context
+            setUserId(session.user.id);
+            navigation.navigate('Event List');
+        }
+
+        setLoading(false);
     }
 
     async function signUpWithEmail() {
-        setLoading(true)
-        const {
-            data: { session },
-            error,
-        } = await supabase.auth.signUp({
+        setLoading(true);
+        const { data: { session }, error } = await supabase.auth.signUp({
             email: email,
             password: password,
-        })
+        });
 
-        if (error) Alert.alert(error.message)
-        if (!session) Alert.alert('Please check your inbox for email verification!')
-        setLoading(false)
+        if (error) {
+            Alert.alert(error.message);
+        } else if (!session) {
+            Alert.alert('Please check your inbox for email verification!');
+        } else if (session) {
+            // Store userId in context if session exists
+            setUserId(session.user.id);
+            navigation.navigate('Event List');
+        }
+
+        setLoading(false);
     }
 
     return (
@@ -70,13 +91,13 @@ export default function Auth() {
                 />
             </View>
             <View style={[styles.verticallySpaced, styles.mt20]}>
-                <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail()} />
+                <Button title="Sign in" disabled={loading} onPress={signInWithEmail} />
             </View>
             <View style={styles.verticallySpaced}>
-                <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail()} />
+                <Button title="Sign up" disabled={loading} onPress={signUpWithEmail} />
             </View>
         </View>
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -92,4 +113,4 @@ const styles = StyleSheet.create({
     mt20: {
         marginTop: 20,
     },
-})
+});

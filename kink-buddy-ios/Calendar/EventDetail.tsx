@@ -5,7 +5,7 @@ import Markdown from 'react-native-markdown-display';
 
 
 export const EventDetail = ({ route }: any) => {
-    const selectedEvent = route.params.selectedEvent;
+    const { selectedEvent } = route.params;
 
     return (
         <ScrollView style={{ padding: 20 }}>

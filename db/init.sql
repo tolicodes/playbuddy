@@ -53,3 +53,12 @@ CREATE TABLE kinks (
     created_at timestamptz DEFAULT NOW(),
     updated_at timestamptz DEFAULT NOW()
 );
+
+
+CREATE TABLE event_wishlist (
+    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id uuid REFERENCES auth.users (id) ON DELETE CASCADE,
+    event_id int4 REFERENCES events (id) ON DELETE CASCADE,
+    created_at timestamp with time zone DEFAULT current_timestamp
+);
+

@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useFetchEvents } from './hooks/useFetchEvents';
 import { Event } from './../commonTypes';
+import { useFetchWishlistEvents, useToggleWishlistEvent } from './hooks/useFetchWishlistEvents';
 
 // Type definition for the filter state
 type FilterState = {
@@ -14,6 +15,7 @@ type FilterState = {
 // Type definition for Event with additional metadata
 export type EventWithMetadata = Event & {
     organizerDotColor?: string; // Color associated with the event's organizer
+    isOnWishlist?: boolean
 };
 
 // Type definition for the context value
@@ -22,6 +24,8 @@ type CalendarContextType = {
     setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
     organizers: OrganizerFilterOption[];
     filteredEvents: EventWithMetadata[];
+    toggleWishlistEvent: any
+    wishlistEvents: EventWithMetadata[]
 };
 
 // Creating the context with an undefined initial value
@@ -65,15 +69,20 @@ type CalendarProviderProps = {
 const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     // Refresh events based on app state changes
     const { appState } = useRefreshEventsOnAppStateChange();
+
     // Fetch events based on the app state, like when the user navigates away from the app and back
     const { events } = useFetchEvents(appState);
+
+    // Load wishlist
+    const { data: wishlistEventIds } = useFetchWishlistEvents(); // Use React Query to fetch wishlist
+    console.log('wishlistEventIds', wishlistEventIds)
 
     // State for filters
     const [filters, setFilters] = useState<FilterState>({ organizers: [], search: '' });
 
 
-    const [filtersLoadedFromLocalStorage, setFiltersLoadedFromLocalStorage] = useState(false);
     // SAVING FILTERS TO LOCAL STORAGE
+    const [filtersLoadedFromLocalStorage, setFiltersLoadedFromLocalStorage] = useState(false);
 
     // Save filters to local storage when they change
     useEffect(() => {
@@ -94,6 +103,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
         });
     }, []);
 
+    // BUILD ORGANIZER DOT MAP
     // Memoized organizers based on the current events
     const organizers = useMemo(() => getAvailableOrganizers(events), [events]);
 
@@ -114,6 +124,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
         [organizersByCount]
     );
 
+    // FILTER EVENTS
     // Memoized filtered and sorted events based on filters
     const filteredEvents = useMemo(() => {
         const organizerIds = filters.organizers; // Selected organizer IDs
@@ -138,16 +149,29 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
         // Add metadata and sort by organizer count
         return searchFilteredEvents.map(event => ({
             ...event,
-            organizerDotColor: organizerDotColorMap[event.organizer?.id]?.color || '' // Assign dot color
+            organizerDotColor: organizerDotColorMap[event.organizer?.id]?.color || '', // Assign dot color
+            // Check if the event is on the wishlist
+            isOnWishlist: wishlistEventIds?.includes(event.id)
         })).sort((a, b) => {
             const aIndex = organizersByCount.findIndex(organizer => organizer.id === a.organizer?.id);
             const bIndex = organizersByCount.findIndex(organizer => organizer.id === b.organizer?.id);
             return aIndex - bIndex; // Sort by index (priority)
         });
-    }, [events, filters, organizersByCount, organizerDotColorMap]);
+    }, [events, filters, organizersByCount, organizerDotColorMap, wishlistEventIds]);
+
+    const toggleWishlistEvent = useToggleWishlistEvent();
+
+    const wishlistEvents = useMemo(() => {
+        return events
+            .map(event => ({
+                ...event,
+                isOnWishlist: wishlistEventIds?.includes(event.id)
+            }))
+            .filter(event => event.isOnWishlist);
+    }, [wishlistEventIds, events]);
 
     return (
-        <CalendarContext.Provider value={{ filters, setFilters, organizers, filteredEvents }}>
+        <CalendarContext.Provider value={{ filters, setFilters, organizers, filteredEvents, toggleWishlistEvent, wishlistEvents }}>
             {children}
         </CalendarContext.Provider>
     );
