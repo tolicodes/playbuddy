@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Button } from 'react-native';
 import { MultiSelect } from 'react-native-element-dropdown';
 import { useCalendarContext } from './CalendarContext';
 import { useNavigation } from '@react-navigation/native';
-import { CalendarStack } from './types';
+import { NavStack } from './types';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { OrganizerFilterOption } from './calendarUtils';
 
@@ -30,7 +30,7 @@ const DropdownItem: React.FC<{ item: OrganizerFilterOption, isSelected: boolean,
 
 // Multi-select dropdown component for selecting organizers
 export const OrganizerMultiSelect: React.FC<OrganizerMultiSelectProps> = ({ organizers, onChangeFilteredOrganizers, selectedOrganizers }) => {
-    const navigation = useNavigation<CalendarStack>();
+    const navigation = useNavigation<NavStack>();
 
     const handleSelect = (items: string[]) => {
         onChangeFilteredOrganizers(items);

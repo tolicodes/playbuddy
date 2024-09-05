@@ -15,7 +15,7 @@ type FilterState = {
 // Type definition for Event with additional metadata
 export type EventWithMetadata = Event & {
     organizerDotColor?: string; // Color associated with the event's organizer
-    isOnWishlist?: boolean
+    isOnWishlist?: boolean;
 };
 
 // Type definition for the context value
@@ -24,8 +24,8 @@ type CalendarContextType = {
     setFilters: React.Dispatch<React.SetStateAction<FilterState>>;
     organizers: OrganizerFilterOption[];
     filteredEvents: EventWithMetadata[];
-    toggleWishlistEvent: any
-    wishlistEvents: EventWithMetadata[]
+    toggleWishlistEvent: any;
+    wishlistEvents: EventWithMetadata[];
 };
 
 // Creating the context with an undefined initial value
@@ -59,7 +59,6 @@ const loadFiltersFromLocalStorage = async (): Promise<FilterState | null> => {
     }
 };
 
-
 // Props type for the CalendarProvider
 type CalendarProviderProps = {
     children: ReactNode;
@@ -75,22 +74,18 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
 
     // Load wishlist
     const { data: wishlistEventIds } = useFetchWishlistEvents(); // Use React Query to fetch wishlist
-    console.log('wishlistEventIds', wishlistEventIds)
 
     // State for filters
     const [filters, setFilters] = useState<FilterState>({ organizers: [], search: '' });
-
 
     // SAVING FILTERS TO LOCAL STORAGE
     const [filtersLoadedFromLocalStorage, setFiltersLoadedFromLocalStorage] = useState(false);
 
     // Save filters to local storage when they change
     useEffect(() => {
-        // Don't save filters to local storage if they haven't been loaded yet (first render)
-        // Prevents bugs where empty filters are saved before they are loaded
         if (!filtersLoadedFromLocalStorage) return;
 
-        saveFiltersToLocalStorage(filters)
+        saveFiltersToLocalStorage(filters);
     }, [filters, filtersLoadedFromLocalStorage]);
 
     // Load filters from local storage on initial render
@@ -98,77 +93,65 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
         loadFiltersFromLocalStorage().then((loadedFilters) => {
             if (loadedFilters) {
                 setFilters(loadedFilters);
-                setFiltersLoadedFromLocalStorage(true)
+                setFiltersLoadedFromLocalStorage(true);
             }
         });
     }, []);
 
     // BUILD ORGANIZER DOT MAP
-    // Memoized organizers based on the current events
     const organizers = useMemo(() => getAvailableOrganizers(events), [events]);
 
-    // Memoized organizers sorted by count (most frequent first)
-    // This is used to assign priority to the organizers in the day view dots
+    // Sort organizers by count and map their colors
     const organizersByCount = useMemo(() =>
-        organizers.sort((a, b) => b.count - a.count), [organizers]);
+        organizers.sort((a, b) => b.count - a.count), [organizers]
+    );
 
-    // Memoized map of organizer IDs to their color and priority (for day view dots)
     const organizerDotColorMap = useMemo(() =>
         organizersByCount.reduce((acc, organizer, i) => {
             acc[organizer.id] = {
-                color: organizer.color, // Assign color to the organizer
-                priority: i             // Assign priority based on order
+                color: organizer.color,
+                priority: i
             };
             return acc;
         }, {} as { [key: string]: { color: string; priority: number; } }),
         [organizersByCount]
     );
 
-    // FILTER EVENTS
-    // Memoized filtered and sorted events based on filters
-    const filteredEvents = useMemo(() => {
-        const organizerIds = filters.organizers; // Selected organizer IDs
-        const searchTerm = filters.search.toLowerCase(); // Lowercased search term
-
-        // Filter events by selected organizers
-        const organizerFilteredEvents = events.filter(event => {
-            const organizerId = event.organizer?.id || '';
-            return !organizerIds.length || organizerIds.includes(organizerId); // Include all if no filter
-        });
-
-        // Further filter events by the search term
-        const searchFilteredEvents = organizerFilteredEvents.filter(item => {
-            const eventName = item.name?.toLowerCase() || '';
-            const organizerName = item.organizer?.name?.toLowerCase() || '';
-            return eventName.includes(searchTerm)
-                || organizerName.includes(searchTerm)
-                || item.description?.toLowerCase().includes(searchTerm)
-                || !searchTerm; // Include all if no search term
-        });
-
-        // Add metadata and sort by organizer count
-        return searchFilteredEvents.map(event => ({
+    // Apply metadata (organizer color and wishlist flag) to all events
+    const eventsWithMetadata = useMemo(() => {
+        return events.map(event => ({
             ...event,
-            organizerDotColor: organizerDotColorMap[event.organizer?.id]?.color || '', // Assign dot color
-            // Check if the event is on the wishlist
+            organizerDotColor: organizerDotColorMap[event.organizer?.id]?.color || '',
             isOnWishlist: wishlistEventIds?.includes(event.id)
-        })).sort((a, b) => {
-            const aIndex = organizersByCount.findIndex(organizer => organizer.id === a.organizer?.id);
-            const bIndex = organizersByCount.findIndex(organizer => organizer.id === b.organizer?.id);
-            return aIndex - bIndex; // Sort by index (priority)
+        }));
+    }, [events, organizerDotColorMap, wishlistEventIds]);
+
+    // FILTER REGULAR EVENTS BASED ON FILTERS
+    const filteredEvents = useMemo(() => {
+        const organizerIds = filters.organizers;
+        const searchTerm = filters.search.toLowerCase();
+
+        return eventsWithMetadata.filter(event => {
+            const organizerId = event.organizer?.id || '';
+            const eventName = event.name?.toLowerCase() || '';
+            const organizerName = event.organizer?.name?.toLowerCase() || '';
+
+            // Filter by organizer and search term
+            return (
+                (!organizerIds.length || organizerIds.includes(organizerId)) &&
+                (eventName.includes(searchTerm) ||
+                    organizerName.includes(searchTerm) ||
+                    event.description?.toLowerCase()?.includes(searchTerm))
+            );
         });
-    }, [events, filters, organizersByCount, organizerDotColorMap, wishlistEventIds]);
+    }, [eventsWithMetadata, filters]);
+
+    // WISHLIST EVENTS
+    const wishlistEvents = useMemo(() => {
+        return eventsWithMetadata.filter(event => event.isOnWishlist);
+    }, [eventsWithMetadata]);
 
     const toggleWishlistEvent = useToggleWishlistEvent();
-
-    const wishlistEvents = useMemo(() => {
-        return events
-            .map(event => ({
-                ...event,
-                isOnWishlist: wishlistEventIds?.includes(event.id)
-            }))
-            .filter(event => event.isOnWishlist);
-    }, [wishlistEventIds, events]);
 
     return (
         <CalendarContext.Provider value={{ filters, setFilters, organizers, filteredEvents, toggleWishlistEvent, wishlistEvents }}>

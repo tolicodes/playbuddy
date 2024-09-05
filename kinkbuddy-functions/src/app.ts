@@ -3,11 +3,10 @@ import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
 import cors from "cors";
-import moment from 'moment';
 
-import { connectRedisClient } from "./connections/redisClient.js";
-import { supabaseClient } from "./connections/supabaseClient.js";
-import { createIcal } from "./helpers/ical.js";
+// Import routes
+import eventsRoute from './routes/events.js';
+import kinksRoute from './routes/kinks.js';
 
 export const app = express();
 
@@ -19,73 +18,12 @@ app.use(
     origin: "*",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Content-Type,Authorization",
-  }),
+  })
 );
 
-const fetchAndCacheData = async (
-  redisClient: any,
-  cacheKey: string,
-  supabaseQuery: () => any,
-): Promise<string> => {
-  const cacheData = await redisClient.get(cacheKey);
-  if (cacheData) return cacheData;
-
-  const { data, error } = await supabaseQuery();
-  if (error) throw new Error(error.message);
-
-  const responseData = JSON.stringify(data);
-  await redisClient.set(cacheKey, responseData, "EX", 600); // Cache for 10 minutes
-
-  return responseData;
-};
-
-app.get("/events", async (req: Request, res: Response): Promise<void> => {
-  const cacheKey = "events";
-  // NYC midnight in UTC
-  const nycMidnightUTC = moment.tz('America/New_York').startOf('day').utc().format();
-
-  const todayUTC = nycMidnightUTC.split("T")[0];
-  try {
-    const redisClient = await connectRedisClient();
-
-    const responseData = await fetchAndCacheData(redisClient, cacheKey, () =>
-      // @ts-ignore
-      supabaseClient
-        .from("events")
-        .select("*, organizer:organizers(id, name, url)")
-        .gte("start_date", todayUTC),
-    );
-
-    if (req.query.format === "ical") {
-      res
-        .status(200)
-        .set("Content-Type", "text/calendar")
-        .send(createIcal(JSON.parse(responseData)));
-    } else {
-      res.status(200).send(responseData);
-    }
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).send({ error: error });
-  }
-});
-
-app.get("/kinks", async (req: Request, res: Response): Promise<void> => {
-  const cacheKey = "kinks";
-
-  try {
-    const redisClient = await connectRedisClient();
-
-    const responseData = await fetchAndCacheData(redisClient, cacheKey, () =>
-      supabaseClient.from("kinks").select("*"),
-    );
-
-    res.status(200).send(responseData);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).send({ error: error });
-  }
-});
+// Routes setup
+app.use('/events', eventsRoute); // For event-related routes
+app.use('/kinks', kinksRoute);   // For kinks-related routes
 
 let server: Server;
 

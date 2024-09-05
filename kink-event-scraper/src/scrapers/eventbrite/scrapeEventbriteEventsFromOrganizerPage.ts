@@ -47,8 +47,8 @@ const scrapeEventDetails = async ({
         image_url: event.image.url,
         event_url: event.url,
 
-        location: event.primary_venue?.address.localized_address_display,
-        price: event.ticket_availability.minimum_ticket_price.display,
+        location: event.primary_venue?.address?.localized_address_display,
+        price: event.ticket_availability?.minimum_ticket_price?.display,
 
         description: summaryMarkdown,
         tags: event.tags.map((tag: any) => tag.display_name),

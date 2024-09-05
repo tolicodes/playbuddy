@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context"
-import EventSectionList from "./EventsList/EventSectionList"
+import EventSectionList from "../Calendar/EventsList/EventSectionList"
 
 export default () => {
     return (

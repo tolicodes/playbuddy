@@ -4,7 +4,7 @@ import { EventWithMetadata, useCalendarContext } from "../CalendarContext";
 import { useGroupedEvents } from "../hooks/useGroupedEvents";
 import { ListItem } from "../ListItem";
 import { useNavigation } from "@react-navigation/native";
-import { CalendarStack } from "../types";
+import { NavStack } from "../types";
 import { Event } from "../../commonTypes";
 
 export default () => {
@@ -12,15 +12,13 @@ export default () => {
     const { sections } = useGroupedEvents(wishlistEvents);
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
-    const navigation = useNavigation<CalendarStack>();
+    const navigation = useNavigation<NavStack>();
 
     useEffect(() => {
         if (selectedEvent) {
             navigation.navigate('Event Details', {
                 selectedEvent,
-                navigateBack: () => {
-                    navigation.navigate('Wishlist');
-                }
+                origin: 'Wishlist',
             });
         }
     }, [selectedEvent]);

@@ -83,7 +83,7 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
 
       // for some reason it doesn't like when I format it like above
 
-      .or(`original_id.eq.${event.original_id},and(start_date.eq.${event.start_date},organizer_id.eq.${organizerId}),and(start_date.eq.${event.start_date},name.eq.${event.name})`)
+      .or(`original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`)
 
       .single();
 

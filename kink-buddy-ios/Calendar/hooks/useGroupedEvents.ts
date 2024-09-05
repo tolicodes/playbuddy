@@ -35,10 +35,12 @@ export const useGroupedEvents = (filteredEvents: EventWithMetadata[]) => {
         return Object.entries(groupedEvents).reduce((acc: Record<string, { marked: boolean; dotColor: string[] }>, [date, events]) => {
             // Extract dot colors for each event's organizer and filter out undefined values
             // Should already be deduplicated and sorted by event count
-            const dots = events
-                .map((event: EventWithMetadata) => event.organizerDotColor)
-                // some might not have a color, don't show them
-                .filter((color: string | undefined) => !!color);
+            const dots = Array.from(new Set(
+                events
+                    .map((event: EventWithMetadata) => event.organizerDotColor)
+                    // some might not have a color, don't show them
+                    .filter((color: string | undefined) => !!color)
+            ));
 
             // Assign marked date with the corresponding dot colors
             acc[date] = acc[date] || { marked: true, dotColor: dots };

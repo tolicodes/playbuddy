@@ -16,7 +16,7 @@ export const scrapeOrganizerTantraNY = async ({
     const data = await axios.get(API_URL);
 
     // Extract relevant event details
-    const events = data.data.map((event: any): Event => {
+    const events = Object.values(data.data).map((event: any): Event => {
       const startDate = new Date(`${event.Date} ${event.StartTime}`);
       const endDate = new Date(startDate);
       endDate.setHours(endDate.getHours() + parseFloat(event.HoursDuration));

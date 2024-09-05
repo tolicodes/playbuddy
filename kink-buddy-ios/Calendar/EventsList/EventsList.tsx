@@ -9,7 +9,7 @@ import { ListItem } from '../ListItem';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from '../hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { EventWithMetadata, useCalendarContext } from '../CalendarContext';
-import { CalendarStack } from '../types';
+import { NavStack } from '../types';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 
 const CALENDAR_HEIGHT = 250;
@@ -20,15 +20,18 @@ const EventsList: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const { sections, markedDates } = useGroupedEvents(filteredEvents);
     const sectionListRef = useRef<SectionList<Event>>(null);
-    const navigation = useNavigation<CalendarStack>();
+    const navigation = useNavigation<NavStack>();
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
+
+    // Track item heights
+    const [itemHeights, setItemHeights] = useState<{ [key: string]: number }>({});
 
     // Handle event selection
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     useEffect(() => {
         if (selectedEvent) {
-            navigation.navigate('Event Details', { selectedEvent });
+            navigation.navigate('Event Details', { selectedEvent, origin: 'Events List' });
         }
     }, [selectedEvent]);
 
@@ -108,10 +111,13 @@ const EventsList: React.FC = () => {
                 stickySectionHeadersEnabled={true}
                 renderItem={({ item: event }: { item: EventWithMetadata }) => {
                     return (
-                        <ListItem
-                            item={event}
-                            setSelectedEvent={setSelectedEvent}
-                        />
+                        <View
+                        >
+                            <ListItem
+                                item={event}
+                                setSelectedEvent={setSelectedEvent}
+                            />
+                        </View>
                     )
                 }}
                 renderSectionHeader={({ section }: any) => (
@@ -119,6 +125,9 @@ const EventsList: React.FC = () => {
                 )}
                 keyExtractor={(item, i) => item.name + item.id}
                 ListEmptyComponent={<Text style={styles.emptyList}>No Results</Text>}
+                onScrollToIndexFailed={() => { }}
+
+
             />
         </SafeAreaView >
     );
