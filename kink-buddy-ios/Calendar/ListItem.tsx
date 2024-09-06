@@ -41,7 +41,10 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
                         />
                         {item.organizer?.name}
                     </Text>
-                    <Text style={styles.eventTitle}>{item.name}</Text>
+                    <Text style={styles.eventTitle}
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                    >{item.name}</Text>
                     <Text style={styles.eventTime}>{formattedDate}</Text>
                 </View>
                 {
@@ -58,6 +61,7 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
 
 const styles = StyleSheet.create({
     eventContainer: {
+        height: 100,
         flexDirection: 'row',
         paddingVertical: 16,
         paddingHorizontal: 20,
@@ -67,6 +71,10 @@ const styles = StyleSheet.create({
     },
     eventDetails: {
         flex: 1,
+        height: 100,
+        // marginTop: 20,
+        justifyContent: 'center', // Aligns all content vertically centered
+
     },
     eventImage: {
         width: 50,

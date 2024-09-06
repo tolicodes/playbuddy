@@ -112,6 +112,7 @@ const EventsList: React.FC = () => {
                 renderItem={({ item: event }: { item: EventWithMetadata }) => {
                     return (
                         <View
+                            style={{ height: 100 }}
                         >
                             <ListItem
                                 item={event}
@@ -125,7 +126,10 @@ const EventsList: React.FC = () => {
                 )}
                 keyExtractor={(item, i) => item.name + item.id}
                 ListEmptyComponent={<Text style={styles.emptyList}>No Results</Text>}
-                onScrollToIndexFailed={() => { }}
+                onScrollToIndexFailed={(e) => {
+                    console.log('onScrollToIndexFailed', e);
+                }}
+                initialNumToRender={200}
 
 
             />
