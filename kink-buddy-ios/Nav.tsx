@@ -14,12 +14,14 @@ import Login from './Auth/Login';
 import Wishlist from './Pages/Wishlist';
 import Moar from './Pages/Moar';
 import { NavStackParamList } from './Calendar/types';
+import Communities from './Pages/Communities';
 
 type RootTabParamList = {
     Calendar: undefined;
     Kinks: undefined;
     Moar: undefined;
     Wishlist: undefined;
+    Communities: undefined
 };
 
 const Stack = createStackNavigator<NavStackParamList>();
@@ -39,13 +41,39 @@ const TabNavigator = () => {
                         return <IonIcon name="ellipsis-horizontal" size={size} color={color} />;
                     } else if (route.name === 'Wishlist') {
                         return <FAIcon name="heart" size={size} color={color} />;
+                    } else if (route.name === 'Communities') {
+                        return <FAIcon name="users" size={size} color={color} />;
                     }
                 },
-                headerShown: false,
+                // headerShown: false,
             })}
         >
-            <Tab.Screen name="Calendar" component={EventsList} />
+            <Tab.Screen name="Calendar" component={EventsList}
+                options={({ navigation }) => ({
+                    title: 'Events', // Customize your screen title here
+                    headerRight: () => (
+                        <TouchableOpacity
+                            style={{ marginRight: 15 }}
+                            onPress={() => navigation.navigate('Login')} // replace 'Login' with your actual login screen name
+                        >
+                            <View style={{
+                                width: 30,
+                                height: 30,
+                                borderRadius: 20,
+                                backgroundColor: 'white',
+                                borderColor: '#007AFF',
+                                borderWidth: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <FAIcon name="user" size={20} color="#007AFF" />
+                            </View>
+                        </TouchableOpacity>
+                    ),
+                })}
+            />
             <Tab.Screen name="Wishlist" component={Wishlist} />
+            {/* <Tab.Screen name="Communities" component={Communities} /> */}
             <Tab.Screen name="Moar" component={Moar} />
         </Tab.Navigator>
     );
@@ -64,6 +92,8 @@ export default () => {
                 />
 
                 {/* Stack screens */}
+
+
                 <Stack.Screen
                     name="Event Details"
                     component={EventDetail}
@@ -96,6 +126,10 @@ export default () => {
                     component={Wishlist}
                     options={{ headerShown: true, headerTitle: 'Wishlist' }}
                 />
+                {/* <Stack.Screen name="CommunityEvents" component={CommunityEvents}
+                    options={{ headerShown: true, headerTitle: 'Wishlist' }}
+                /> */}
+
             </Stack.Navigator>
         </NavigationContainer>
     );

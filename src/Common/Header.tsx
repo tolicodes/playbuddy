@@ -1,6 +1,5 @@
 import { Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
-// import LoginButton from './LoginButton';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -91,7 +90,6 @@ export const Header = () => {
           </Button>
         </div>
       </div>
-      {/* <LoginButton /> */}
     </div>
   );
 };
