@@ -31,7 +31,7 @@ const EventsList: React.FC = () => {
 
     useEffect(() => {
         if (selectedEvent) {
-            navigation.navigate('Event Details', { selectedEvent, origin: 'Events List' });
+            navigation.navigate('Event Details', { selectedEvent, origin: 'Calendar' });
         }
     }, [selectedEvent]);
 
