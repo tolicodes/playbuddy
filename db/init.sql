@@ -62,3 +62,10 @@ CREATE TABLE event_wishlist (
     created_at timestamp with time zone DEFAULT current_timestamp
 );
 
+
+CREATE TABLE users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(), -- Generate unique ID for each row
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE, -- Foreign key linking to auth.users
+    share_code TEXT, -- Custom column for share_code
+    created_at TIMESTAMP DEFAULT NOW() -- Timestamp for when the user was created
+);

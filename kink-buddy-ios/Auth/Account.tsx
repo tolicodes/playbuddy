@@ -5,16 +5,16 @@ import { Session } from '@supabase/supabase-js';
 import { useUserContext } from './UserContext';
 
 export default function Account({ session }: { session: Session }) {
-    const { setUserId } = useUserContext();
+    const { setUserId, user } = useUserContext();
     const onPressSignOut = async () => {
         supabase.auth.signOut();
         setUserId(null);
-        console.log('signed out');
 
     }
     return (
         <View style={styles.container}>
             <Text style={styles.emailText}>Logged in As: {session?.user?.email}</Text>
+            <Text>Wishlist Share Code: {user?.share_code}</Text>
             <Button title="Sign Out" onPress={onPressSignOut} />
         </View>
     );

@@ -46,12 +46,9 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
                     >{item.name}</Text>
                     <Text style={styles.eventTime}>{formattedDate}</Text>
                 </View>
-                {
-                    // Display a star icon if the event is on the wishlist
-                    // Only Show if logged in
-                }
+
                 {userId && <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
-                    <FAIcon name={item.isOnWishlist ? 'heart' : 'heart-o'} size={20} color="red" />
+                    <FAIcon name={item.isOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
                 </TouchableOpacity>}
             </View>
         </TouchableOpacity>

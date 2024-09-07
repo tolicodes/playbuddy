@@ -19,8 +19,6 @@ const fetchWishlistEvents = async (userId: string) => {
         throw new Error(`Error fetching wishlist: ${error.message}`);
     }
 
-    console.log('fetching wishlist events', data);
-
     return data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
 };
 
@@ -91,11 +89,9 @@ export const useToggleWishlistEvent = () => {
             // Optimistically update the cache
             queryClient.setQueryData<string[]>(['wishlistEvents', userId], (oldWishlist = []) => {
                 const newWishlist = isOnWishlist ? [...oldWishlist, eventId] : oldWishlist.filter(id => id !== eventId)
-                console.log('newWishlist', newWishlist);
                 return newWishlist;
             }
             );
-            console.og
 
             // Return the snapshot of the previous wishlist for rollback in case of error
             return { previousWishlist };

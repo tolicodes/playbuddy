@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, ReactNode, useMemo, useEffe
 import { getAvailableOrganizers, OrganizerFilterOption, useRefreshEventsOnAppStateChange } from './calendarUtils';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { supabase } from '../supabaseCiient';
+
 import { useFetchEvents } from './hooks/useFetchEvents';
 import { Event } from './../commonTypes';
 import { useFetchWishlistEvents, useToggleWishlistEvent } from './hooks/useFetchWishlistEvents';
@@ -26,6 +28,8 @@ type CalendarContextType = {
     filteredEvents: EventWithMetadata[];
     toggleWishlistEvent: any;
     wishlistEvents: EventWithMetadata[];
+    setFriendWishlistCode: (shareCode: string) => Promise<void>;
+    friendWishlistEvents: EventWithMetadata[];
 };
 
 // Creating the context with an undefined initial value
@@ -92,7 +96,6 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     // Load filters from local storage on initial render
     useEffect(() => {
         loadFiltersFromLocalStorage().then((loadedFilters) => {
-            console.log('loaded filters', loadedFilters);
             if (loadedFilters) {
                 setFilters(loadedFilters);
                 setFiltersLoadedFromLocalStorage(true);
@@ -158,8 +161,52 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
 
     const toggleWishlistEvent = useToggleWishlistEvent();
 
+    // FRIEND WISHLIST
+    const [friendWishlistEventIds, setFriendWishlistEventIds] = useState<string[]>([]);
+
+    const setFriendWishlistCode = async (shareCode: string | null) => {
+        if (!shareCode) {
+            setFriendWishlistEventIds([]);
+            return
+        }
+
+        try {
+            // Step 1: Fetch user ID based on the share code
+            const { data: userData, error: userError } = await supabase
+                .from('users')
+                .select('user_id')
+                .eq('share_code', shareCode)
+                .single();
+
+            if (userError || !userData) {
+                throw new Error('Failed to find user with this share code');
+            }
+
+            const userId = userData.user_id;
+
+            // Step 2: Fetch favorites for that user
+            const { data: wishlistData, error: wishlistError } = await supabase
+                .from('event_wishlist')
+                .select('event_id')
+                .eq('user_id', userId);
+
+            if (wishlistError || !wishlistData) {
+                throw new Error('Failed to fetch wishlist for the user');
+            }
+
+            // Step 3: Store the friend's wishlist in the state
+            setFriendWishlistEventIds(wishlistData.map((item: { event_id: string }) => item.event_id));
+        } catch (error) {
+            console.error('Error fetching friend’s wishlist:', error);
+        }
+    };
+
+    const friendWishlistEvents = useMemo(() => {
+        return filteredEvents.filter(event => friendWishlistEventIds.includes(event.id));
+    }, [friendWishlistEventIds, filteredEvents]);
+
     return (
-        <CalendarContext.Provider value={{ filters, setFilters, organizers, filteredEvents, toggleWishlistEvent, wishlistEvents }}>
+        <CalendarContext.Provider value={{ filters, setFilters, organizers, filteredEvents, toggleWishlistEvent, wishlistEvents, setFriendWishlistCode, friendWishlistEvents }}>
             {children}
         </CalendarContext.Provider>
     );

@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Event } from '../../Common/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { useCalendarContext } from './CalendarContext';
+import { EventWithMetadata, useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
 
@@ -15,14 +15,26 @@ const CALENDAR_HEIGHT = 250;
 
 type EventCalendarViewProps = {
     isOnWishlist?: boolean
+    isFriendWishlist?: boolean
 }
 
-const EventCalendarView = ({ isOnWishlist = false }: EventCalendarViewProps = {}) => {
+const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
-    const { filters, setFilters, filteredEvents, wishlistEvents } = useCalendarContext();
+    const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents } = useCalendarContext();
     const [searchQuery, setSearchQuery] = useState('');
-    const events = isOnWishlist ? wishlistEvents : filteredEvents;
-    const { sections, markedDates } = useGroupedEvents(events);
+
+    let eventsUsed;
+    if (isOnWishlist) {
+        eventsUsed = wishlistEvents
+    }
+    else if (isFriendWishlist) {
+        eventsUsed = friendWishlistEvents
+    }
+    else {
+        eventsUsed = filteredEvents
+    }
+
+    const { sections, markedDates } = useGroupedEvents(eventsUsed);
     const sectionListRef = useRef<SectionList<Event>>(null);
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
     const navigation = useNavigation();
@@ -64,25 +76,6 @@ const EventCalendarView = ({ isOnWishlist = false }: EventCalendarViewProps = {}
 
     return (
         <SafeAreaView style={styles.container}>
-            <Animated.View style={[styles.calendar, { height: animatedHeight }]}>
-                <Calendar
-                    markedDates={markedDates}
-                    onDayPress={onPressDay}
-                    dayComponent={(props: CustomCalendarDayProps) => (
-                        <CustomCalendarDay
-                            {...props}
-                        />
-                    )}
-                    theme={{
-                        selectedDayBackgroundColor: 'blue',
-                        todayTextColor: 'blue',
-                        dotColor: 'blue',
-                        arrowColor: 'blue',
-                        lineHeight: 10,
-                    }}
-                />
-            </Animated.View>
-
             <View style={styles.searchContainer}>
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
                     <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
@@ -101,6 +94,24 @@ const EventCalendarView = ({ isOnWishlist = false }: EventCalendarViewProps = {}
                 />
 
             </View>
+
+            <Animated.View style={[styles.calendar, { height: animatedHeight }]}>
+                <Calendar
+                    markedDates={markedDates}
+                    onDayPress={onPressDay}
+                    dayComponent={(props: CustomCalendarDayProps) => (
+                        <CustomCalendarDay
+                            {...props}
+                        />
+                    )}
+                    theme={{
+                        selectedDayBackgroundColor: 'blue',
+                        todayTextColor: 'blue',
+                        arrowColor: 'blue',
+                        lineHeight: 10,
+                    }}
+                />
+            </Animated.View>
 
             <EventList
                 sections={sections}
@@ -138,6 +149,7 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         padding: 20,
         paddingBottom: 0,
+        paddingTop: 0,
         backgroundColor: 'white',
     },
     searchBox: {

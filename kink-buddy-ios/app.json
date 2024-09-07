@@ -6,6 +6,8 @@
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
+    "scheme": "kinkbuddy",
+    "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/splash.jpeg",
       "resizeMode": "contain",
@@ -13,12 +15,13 @@
     },
     "ios": {
       "supportsTablet": true,
+      "associatedDomains": ["applinks:kinkbuddy.org"],
+
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
       "buildNumber": "3",
       "runtimeVersion": "1.0.0"
     },
     "android": {
-
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.jpeg",
         "backgroundColor": "#ffffff"
@@ -46,12 +49,6 @@
     "plugins": [
       "expo-secure-store"
     ],
-    "expo": {
-      "scheme": "com.tolicodes1.kinkbuddyios",
-      "platforms": ["ios", "android", "web"],
-      "ios": {
-        "associatedDomains": ["applinks:kinkbuddy.org"]
-      }
-    }  
+      
   }
 }
