@@ -5,8 +5,6 @@ import Auth from "./Auth"
 import { useNavigation } from "@react-navigation/native"
 
 export default () => {
-    const navigation = useNavigation();
-
     const [session, setSession] = useState<any | null>(null)
 
     useEffect(() => {

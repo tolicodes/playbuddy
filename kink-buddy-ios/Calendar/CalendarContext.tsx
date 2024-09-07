@@ -83,6 +83,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
 
     // Save filters to local storage when they change
     useEffect(() => {
+        // on load we want to wait for filters to be loaded from local storage
         if (!filtersLoadedFromLocalStorage) return;
 
         saveFiltersToLocalStorage(filters);
@@ -91,6 +92,7 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
     // Load filters from local storage on initial render
     useEffect(() => {
         loadFiltersFromLocalStorage().then((loadedFilters) => {
+            console.log('loaded filters', loadedFilters);
             if (loadedFilters) {
                 setFilters(loadedFilters);
                 setFiltersLoadedFromLocalStorage(true);
@@ -122,8 +124,11 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
         return events.map(event => ({
             ...event,
             organizerDotColor: organizerDotColorMap[event.organizer?.id]?.color || '',
+            organizerPriority: organizerDotColorMap[event.organizer?.id]?.priority || Infinity,
             isOnWishlist: wishlistEventIds?.includes(event.id)
-        }));
+        }))
+            .sort((a, b) => a.organizerPriority - b.organizerPriority);  // Sort by organizer's priority
+
     }, [events, organizerDotColorMap, wishlistEventIds]);
 
     // FILTER REGULAR EVENTS BASED ON FILTERS
@@ -148,8 +153,8 @@ const CalendarProvider: React.FC<CalendarProviderProps> = ({ children }) => {
 
     // WISHLIST EVENTS
     const wishlistEvents = useMemo(() => {
-        return eventsWithMetadata.filter(event => event.isOnWishlist);
-    }, [eventsWithMetadata]);
+        return filteredEvents.filter(event => event.isOnWishlist);
+    }, [filteredEvents]);
 
     const toggleWishlistEvent = useToggleWishlistEvent();
 

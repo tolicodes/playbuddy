@@ -41,7 +41,7 @@ export default function Auth() {
         } else if (session) {
             // Store userid in context
             setUserId(session.user.id);
-            navigation.navigate('Event List');
+            navigation.navigate('Event Calendar');
         }
 
         setLoading(false);
@@ -61,7 +61,7 @@ export default function Auth() {
         } else if (session) {
             // Store userId in context if session exists
             setUserId(session.user.id);
-            navigation.navigate('Event List');
+            navigation.navigate('Event Calendar');
         }
 
         setLoading(false);

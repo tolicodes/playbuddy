@@ -2,61 +2,43 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../../supabaseCiient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Fetch the user ID from AsyncStorage
-async function getUserId() {
+// Utility function to get the user ID from AsyncStorage
+const getUserIdFromStorage = async () => {
     const userId = await AsyncStorage.getItem('@userId');
-    return userId || null; // Return null if no userId is found
-}
-
-// Hook to get user ID and track it using React Query
-export const useGetUserId = () => {
-    return useQuery({
-        queryKey: ['userId'],
-        queryFn: getUserId,
-        staleTime: Infinity, // Cache user ID indefinitely
-    });
+    return userId || null;
 };
 
-// Fetch the wishlist event IDs for a user
-async function fetchWishlistEvents(userId: string) {
+// Fetch the wishlist event IDs for a user from Supabase
+const fetchWishlistEvents = async (userId: string) => {
     const { data, error } = await supabase
         .from('event_wishlist')
         .select('event_id')
         .eq('user_id', userId);
 
     if (error) {
-        throw new Error('Error fetching wishlist: ' + error.message);
+        throw new Error(`Error fetching wishlist: ${error.message}`);
     }
 
+    console.log('fetching wishlist events', data);
+
     return data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
-}
-
-// Hook to fetch wishlist events, ensuring userId is available
-export const useFetchWishlistEvents = () => {
-    const { data: userId } = useGetUserId();
-
-    return useQuery({
-        queryKey: userId ? ['wishlistEvents', userId] : ['wishlistEvents'], // Only include userId if defined
-        queryFn: () => fetchWishlistEvents(userId as string), // Ensure userId is a string
-        enabled: !!userId, // Only run query if userId exists
-    });
 };
 
-// Save event to wishlist
-async function saveWishlistEvent(eventId: string, userId: string) {
+// Function to save an event to the wishlist
+const saveWishlistEvent = async (eventId: string, userId: string) => {
     const { error } = await supabase
         .from('event_wishlist')
         .insert([{ user_id: userId, event_id: eventId }]);
 
     if (error) {
-        throw new Error('Error saving event to wishlist: ' + error.message);
+        throw new Error(`Error saving event to wishlist: ${error.message}`);
     }
 
     return true;
-}
+};
 
-// Remove event from wishlist
-async function deleteWishlistEvent(eventId: string, userId: string) {
+// Function to remove an event from the wishlist
+const deleteWishlistEvent = async (eventId: string, userId: string) => {
     const { error } = await supabase
         .from('event_wishlist')
         .delete()
@@ -64,51 +46,71 @@ async function deleteWishlistEvent(eventId: string, userId: string) {
         .eq('event_id', eventId);
 
     if (error) {
-        throw new Error('Error deleting event from wishlist: ' + error.message);
+        throw new Error(`Error deleting event from wishlist: ${error.message}`);
     }
 
     return true;
-}
+};
 
-// Use mutation for saving/removing events from wishlist with optimistic update
+// Hook to get the user ID using React Query
+export const useGetUserId = () => {
+    return useQuery({
+        queryKey: ['userId'],
+        queryFn: getUserIdFromStorage,
+        staleTime: Infinity, // Cache user ID indefinitely
+    });
+};
+
+// Hook to fetch wishlist events for a specific user
+export const useFetchWishlistEvents = () => {
+    const { data: userId } = useGetUserId();
+
+    return useQuery({
+        queryKey: ['wishlistEvents', userId],
+        queryFn: () => fetchWishlistEvents(userId as string),
+        enabled: !!userId, // Only run the query if the userId is available
+        staleTime: 1000 * 60 * 10, // 10 minutes stale time
+    });
+};
+
+// Hook for toggling the wishlist event with optimistic updates
 export const useToggleWishlistEvent = () => {
     const queryClient = useQueryClient();
     const { data: userId } = useGetUserId();
 
     return useMutation({
-        mutationFn: async ({ eventId, isOnWishlist }: { eventId: string, isOnWishlist: boolean }) => {
-            if (!userId) throw new Error('No user ID available');
-            if (isOnWishlist) {
-                return saveWishlistEvent(eventId, userId);
-            } else {
-                return deleteWishlistEvent(eventId, userId);
+        mutationFn: async ({ eventId, isOnWishlist }: { eventId: string; isOnWishlist: boolean }) => {
+            if (!userId) {
+                throw new Error('No user ID available');
             }
+            return isOnWishlist ? saveWishlistEvent(eventId, userId) : deleteWishlistEvent(eventId, userId);
         },
         onMutate: async ({ eventId, isOnWishlist }) => {
-            // Optimistic update: Cancel any outgoing refetches
-            await queryClient.cancelQueries({ queryKey: ['wishlistEvents', userId] });
-
-            // Snapshot the previous value
             const previousWishlist = queryClient.getQueryData<string[]>(['wishlistEvents', userId]);
 
             // Optimistically update the cache
-            queryClient.setQueryData<string[]>(['wishlistEvents', userId], (old = []) =>
-                isOnWishlist
-                    ? [...old, eventId] // Add eventId if it's being added to the wishlist
-                    : old.filter(id => id !== eventId) // Remove eventId if it's being removed
+            queryClient.setQueryData<string[]>(['wishlistEvents', userId], (oldWishlist = []) => {
+                const newWishlist = isOnWishlist ? [...oldWishlist, eventId] : oldWishlist.filter(id => id !== eventId)
+                console.log('newWishlist', newWishlist);
+                return newWishlist;
+            }
             );
+            console.og
 
+            // Return the snapshot of the previous wishlist for rollback in case of error
             return { previousWishlist };
         },
         onError: (err, _, context) => {
-            // Rollback on error
+            console.error('Error toggling wishlist event:', err);
+            // Rollback to the previous wishlist state on error
             if (context?.previousWishlist) {
                 queryClient.setQueryData(['wishlistEvents', userId], context.previousWishlist);
             }
         },
+
         onSettled: () => {
-            // Refetch wishlist events after mutation completes
-            queryClient.invalidateQueries({ queryKey: ['wishlistEvents', userId] });
+            // Optionally refetch wishlist events only if needed
+            // queryClient.invalidateQueries({ queryKey: ['wishlistEvents', userId] });
         },
     });
 };

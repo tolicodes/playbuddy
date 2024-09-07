@@ -1,39 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, TextInput, SectionList, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View } from 'react-native';
+import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
 
-import { Event } from '../../../Common/commonTypes';
-import { ListItem } from '../ListItem';
-import { SECTION_DATE_FORMAT, useGroupedEvents } from '../hooks/useGroupedEvents';
+import { Event } from '../../Common/commonTypes';
+import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { EventWithMetadata, useCalendarContext } from '../CalendarContext';
-import { NavStack } from '../types';
+import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
+import EventList from './EventList';
 
 const CALENDAR_HEIGHT = 250;
 
-const EventsList: React.FC = () => {
+type EventCalendarViewProps = {
+    isOnWishlist?: boolean
+}
+
+const EventCalendarView = ({ isOnWishlist = false }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
-    const { filters, setFilters, filteredEvents } = useCalendarContext();
+    const { filters, setFilters, filteredEvents, wishlistEvents } = useCalendarContext();
     const [searchQuery, setSearchQuery] = useState('');
-    const { sections, markedDates } = useGroupedEvents(filteredEvents);
+    const events = isOnWishlist ? wishlistEvents : filteredEvents;
+    const { sections, markedDates } = useGroupedEvents(events);
     const sectionListRef = useRef<SectionList<Event>>(null);
-    const navigation = useNavigation<NavStack>();
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
+    const navigation = useNavigation();
 
-    // Track item heights
-    const [itemHeights, setItemHeights] = useState<{ [key: string]: number }>({});
-
-    // Handle event selection
-    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-
-    useEffect(() => {
-        if (selectedEvent) {
-            navigation.navigate('Event Details', { selectedEvent, origin: 'Calendar' });
-        }
-    }, [selectedEvent]);
 
     useEffect(() => {
         setFilters({ ...filters, search: searchQuery });
@@ -94,45 +87,27 @@ const EventsList: React.FC = () => {
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
                     <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
                 </TouchableOpacity>
+                <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
+                    <FAIcon name="filter" size={30} color={hasFilters ? "#007AFF" : "#8E8E93"} />
+                </TouchableOpacity>
+
                 <TextInput
-                    style={styles.searchBox}
+                    style={[styles.searchBox, searchQuery
+                        ? { borderColor: '#007AFF', borderWidth: 3 }
+                        : { borderColor: '#DDD' }]}
                     placeholder="Search..."
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
                 />
-                <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
-                    <FAIcon name="filter" size={30} color={hasFilters ? "#007AFF" : "#8E8E93"} />
-                </TouchableOpacity>
+
             </View>
 
-            <SectionList
-                ref={sectionListRef}
+            <EventList
                 sections={sections}
-                stickySectionHeadersEnabled={true}
-                renderItem={({ item: event }: { item: EventWithMetadata }) => {
-                    return (
-                        <View
-                            style={{ height: 100 }}
-                        >
-                            <ListItem
-                                item={event}
-                                setSelectedEvent={setSelectedEvent}
-                            />
-                        </View>
-                    )
-                }}
-                renderSectionHeader={({ section }: any) => (
-                    <Text style={styles.sectionHeader}>{section.title}</Text>
-                )}
-                keyExtractor={(item, i) => item.name + item.id}
-                ListEmptyComponent={<Text style={styles.emptyList}>No Results</Text>}
-                onScrollToIndexFailed={(e) => {
-                    console.log('onScrollToIndexFailed', e);
-                }}
-                initialNumToRender={200}
-
-
+                screen={'Calendar'}
+                sectionListRef={sectionListRef}
             />
+
         </SafeAreaView >
     );
 };
@@ -184,6 +159,7 @@ const styles = StyleSheet.create({
     filterIcon: {
         marginTop: -20,
         marginLeft: 10,
+        marginRight: 20,
         alignSelf: 'center',
     },
     calendarIcon: {
@@ -193,4 +169,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default EventsList;
+export default EventCalendarView;

@@ -21,7 +21,6 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
     const handleToggleEventWishlist = () => {
         // flip the old value
         toggleWishlistEvent.mutate({ eventId: item.id, isOnWishlist: !item.isOnWishlist });
-        console.log('toggleWishlistEvent', item.id, !item.isOnWishlist);
     };
 
     return (
