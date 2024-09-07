@@ -191,12 +191,12 @@ const CommunitiesScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, padding: 16 },
-    segmentedControl: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 20 },
-    segmentedButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#f4f4f4' },
+    segmentedControl: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
+    segmentedButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#f4f4f4', borderColor: '#007AFF', borderWidth: 1, width: 100, alignItems: 'center' },
     selectedButton: { backgroundColor: '#007AFF' },
     segmentedText: { color: '#333', fontWeight: 'bold' },
     segmentedTextSelected: { color: 'white', fontWeight: 'bold' },
-    section: { padding: 16 },
+    section: { padding: 16, paddingVertical: 0 },
     sectionTitle: { fontSize: 20, fontWeight: 'bold', marginVertical: 10 },
     input: { borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, marginBottom: 10, height: 40 },
     joinButton: { backgroundColor: '#007AFF', borderRadius: 8, paddingVertical: 12, alignItems: 'center' },

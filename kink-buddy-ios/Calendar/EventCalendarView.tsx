@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList } from 'react-native';
+import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Text } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
@@ -77,6 +77,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.searchContainer}>
+
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
                     <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
                 </TouchableOpacity>
@@ -88,7 +89,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
                     style={[styles.searchBox, searchQuery
                         ? { borderColor: '#007AFF', borderWidth: 3 }
                         : { borderColor: '#DDD' }]}
-                    placeholder="Search..."
+                    placeholder="Search events (filters on left)"
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
                 />
@@ -131,6 +132,7 @@ const styles = StyleSheet.create({
     calendar: {
         width: '100%',
         overflow: 'hidden',
+        marginBottom: 10,
     },
     emptyList: {
         padding: 20,
@@ -143,6 +145,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         color: '#333',
     },
+    controlLabel: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -151,6 +158,7 @@ const styles = StyleSheet.create({
         paddingBottom: 0,
         paddingTop: 0,
         backgroundColor: 'white',
+        marginBottom: -20
     },
     searchBox: {
         height: 40,
