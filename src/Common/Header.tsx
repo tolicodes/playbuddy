@@ -1,7 +1,8 @@
 import { Typography, Button } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigation } from '@react-navigation/native';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { NavStack } from '../../kink-buddy-ios/types';
 import {
   faCalendar,
   faGamepad,
@@ -9,7 +10,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 
 export const Header = () => {
-  const navigate = useNavigate(); // Initialize the useNavigate hook
+  const navigate = useNavigation<NavStack>();
 
   const handlePlayGameClick = () => {
     navigate('/game'); // Navigate to /game when the button is clicked

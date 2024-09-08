@@ -1,6 +1,8 @@
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../../supabaseCiient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../../supabaseCiient';
+import { EventWithMetadata } from '../../types';
 
 // Utility function to get the user ID from AsyncStorage
 const getUserIdFromStorage = async () => {
@@ -50,8 +52,8 @@ const deleteWishlistEvent = async (eventId: string, userId: string) => {
     return true;
 };
 
-// Hook to get the user ID using React Query
-export const useGetUserId = () => {
+// Hook to fetch the user ID using React Query
+const useGetUserId = () => {
     return useQuery({
         queryKey: ['userId'],
         queryFn: getUserIdFromStorage,
@@ -59,8 +61,8 @@ export const useGetUserId = () => {
     });
 };
 
-// Hook to fetch wishlist events for a specific user
-export const useFetchWishlistEvents = () => {
+// Hook to fetch wishlist events for the current user
+const useFetchWishlistEvents = () => {
     const { data: userId } = useGetUserId();
 
     return useQuery({
@@ -71,8 +73,8 @@ export const useFetchWishlistEvents = () => {
     });
 };
 
-// Hook for toggling the wishlist event with optimistic updates
-export const useToggleWishlistEvent = () => {
+// Hook for toggling wishlist events with optimistic updates
+const useToggleWishlistEvent = () => {
     const queryClient = useQueryClient();
     const { data: userId } = useGetUserId();
 
@@ -88,12 +90,11 @@ export const useToggleWishlistEvent = () => {
 
             // Optimistically update the cache
             queryClient.setQueryData<string[]>(['wishlistEvents', userId], (oldWishlist = []) => {
-                const newWishlist = isOnWishlist ? [...oldWishlist, eventId] : oldWishlist.filter(id => id !== eventId)
-                return newWishlist;
-            }
-            );
+                return isOnWishlist
+                    ? [...oldWishlist, eventId]
+                    : oldWishlist.filter(id => id !== eventId);
+            });
 
-            // Return the snapshot of the previous wishlist for rollback in case of error
             return { previousWishlist };
         },
         onError: (err, _, context) => {
@@ -103,10 +104,66 @@ export const useToggleWishlistEvent = () => {
                 queryClient.setQueryData(['wishlistEvents', userId], context.previousWishlist);
             }
         },
-
-        onSettled: () => {
-            // Optionally refetch wishlist events only if needed
-            // queryClient.invalidateQueries({ queryKey: ['wishlistEvents', userId] });
-        },
     });
+};
+
+// Combined Hook to manage both user and friend's wishlist
+export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
+    const { data: wishlistEventIds } = useFetchWishlistEvents();
+    const [friendWishlistEventIds, setFriendWishlistEventIds] = useState<string[]>([]);
+
+    const setFriendWishlistCode = async (shareCode: string | null) => {
+        if (!shareCode) {
+            setFriendWishlistEventIds([]);
+            return;
+        }
+
+        try {
+            const { data: userData } = await supabase
+                .from('users')
+                .select('user_id')
+                .eq('share_code', shareCode)
+                .single();
+
+            const userId = userData?.user_id;
+
+            if (userId) {
+                const { data: wishlistData } = await supabase
+                    .from('event_wishlist')
+                    .select('event_id')
+                    .eq('user_id', userId);
+
+                if (!wishlistData) {
+                    setFriendWishlistEventIds([]);
+                    return;
+                }
+
+                setFriendWishlistEventIds(wishlistData.map((item: { event_id: string }) => item.event_id));
+            }
+        } catch (error) {
+            console.error('Error fetching friend’s wishlist:', error);
+        }
+    };
+
+    const friendWishlistEvents = useMemo(() => {
+        return eventsWithMetadata.filter(event => friendWishlistEventIds.includes(event.id));
+    }, [friendWishlistEventIds, eventsWithMetadata]);
+
+    const wishlistEvents = useMemo(() => {
+        return eventsWithMetadata.filter(event => wishlistEventIds?.includes(event.id));
+    }, [wishlistEventIds, eventsWithMetadata]);
+
+    const toggleWishlistEvent = useToggleWishlistEvent();
+
+    const isOnWishlist = (eventId: string) => {
+        return wishlistEventIds?.includes(eventId) || false;
+    }
+
+    return {
+        wishlistEvents,
+        friendWishlistEvents,
+        setFriendWishlistCode,
+        toggleWishlistEvent,
+        isOnWishlist,
+    };
 };

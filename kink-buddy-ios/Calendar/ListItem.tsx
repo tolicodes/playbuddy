@@ -3,7 +3,8 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
 import { Event } from '../commonTypes';
-import { EventWithMetadata, useCalendarContext } from './CalendarContext';
+import { EventWithMetadata } from '../types';
+import { useCalendarContext } from './CalendarContext';
 import { useUserContext } from '../Auth/UserContext';
 
 interface ListItemProps {
@@ -12,15 +13,18 @@ interface ListItemProps {
 }
 
 export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) => {
-    const { toggleWishlistEvent } = useCalendarContext(); // use the hook to handle wishlist
+    const { toggleWishlistEvent, isOnWishlist, } = useCalendarContext(); // use the hook to handle wishlist
 
     const { userId } = useUserContext(); // use the hook to get the user ID
 
     const formattedDate = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
 
+    const itemIsOnWishlist = isOnWishlist(item.id);
+    console.log('itemIsOnWishlist', itemIsOnWishlist);
+
     const handleToggleEventWishlist = () => {
         // flip the old value
-        toggleWishlistEvent.mutate({ eventId: item.id, isOnWishlist: !item.isOnWishlist });
+        toggleWishlistEvent.mutate({ eventId: item.id, isOnWishlist: !itemIsOnWishlist });
     };
 
     return (
@@ -34,7 +38,7 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
                                 width: 10,
                                 height: 10,
                                 borderRadius: 5,
-                                backgroundColor: item.organizerDotColor || 'white',
+                                backgroundColor: item.organizerColor || 'white',
                                 marginRight: 5,
                             }}
                         />
@@ -48,7 +52,7 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
                 </View>
 
                 {userId && <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
-                    <FAIcon name={item.isOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
+                    <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
                 </TouchableOpacity>}
             </View>
         </TouchableOpacity>

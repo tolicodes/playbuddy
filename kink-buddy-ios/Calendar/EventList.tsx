@@ -1,9 +1,9 @@
 import { SectionList, View, Text, StyleSheet } from "react-native";
-import { EventWithMetadata } from "./CalendarContext";
+import { EventWithMetadata } from "./../types";
 import { ListItem } from "./ListItem";
 import { useNavigation } from "@react-navigation/native";
-import { useRef, useState, useEffect } from "react";
-import { NavStack } from "./types";
+import { useState, useEffect } from "react";
+import { NavStack } from "../types";
 import { Event } from "../commonTypes";
 
 export default ({ sections, screen, sectionListRef }: { sections: any, screen: string, sectionListRef?: any }) => {

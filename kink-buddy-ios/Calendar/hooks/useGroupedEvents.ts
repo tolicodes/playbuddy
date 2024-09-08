@@ -1,18 +1,18 @@
 import { useMemo } from 'react';
 import moment from 'moment';
 import { Event } from '../../commonTypes';
-import { EventWithMetadata } from '../CalendarContext';
+import { EventWithMetadata } from '../../types';
 
 export const SECTION_DATE_FORMAT = 'MMM D, YYYY (dddd)';
 
 // Custom hook to group filtered events by date, create sections for rendering, 
 // and generate marked dates with organizer dots for the calendar.
-export const useGroupedEvents = (filteredEvents: EventWithMetadata[]) => {
+export const useGroupedEvents = (events: EventWithMetadata[]) => {
     // Sections is the list of events grouped by date
     const groupedEvents = useMemo(() => {
-        if (!Array.isArray(filteredEvents)) return {};
+        if (!Array.isArray(events)) return {};
 
-        return filteredEvents.reduce((acc: Record<string, Event[]>, event) => {
+        return events.reduce((acc: Record<string, Event[]>, event) => {
             const date = moment(event.start_date).format('YYYY-MM-DD'); // Format date to 'YYYY-MM-DD'
             if (!acc[date]) {
                 acc[date] = [];
@@ -20,7 +20,7 @@ export const useGroupedEvents = (filteredEvents: EventWithMetadata[]) => {
             acc[date].push(event); // Add event to the corresponding date group
             return acc;
         }, {});
-    }, [filteredEvents]);
+    }, [events]);
 
     // Convert grouped events into sections for SectionList
     const sections = useMemo(() => {
@@ -37,7 +37,7 @@ export const useGroupedEvents = (filteredEvents: EventWithMetadata[]) => {
             // Should already be deduplicated and sorted by event count
             const dots = Array.from(new Set(
                 events
-                    .map((event: EventWithMetadata) => event.organizerDotColor)
+                    .map((event: EventWithMetadata) => event.organizerColor)
                     // some might not have a color, don't show them
                     .filter((color: string | undefined) => !!color)
             ));

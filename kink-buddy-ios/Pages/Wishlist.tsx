@@ -78,8 +78,10 @@ export default ({ route }) => {
                     textAlign: 'center',
                     marginTop: 10,
                     marginBottom: 10,
-                }}>You are viewing your friend's wishlist</Text>
-                <Button onPress={() => setFriendWishlistCode(null)}>Back to your wishlist</Button>
+                }}>
+                    You are viewing your friend's wishlist
+                </Text>
+                <Button onPress={() => setFriendWishlistCode('')}>Back to your wishlist</Button>
                 <EventCalendarView isOnWishlist={true} isFriendWishlist={true} />
                 <ShareWishlistButton />
             </>

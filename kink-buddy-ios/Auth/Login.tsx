@@ -2,7 +2,6 @@ import { useState, useEffect } from "react"
 import { supabase } from "../supabaseCiient"
 import Account from "./Account"
 import Auth from "./Auth"
-import { useNavigation } from "@react-navigation/native"
 
 export default () => {
     const [session, setSession] = useState<any | null>(null)

@@ -1,10 +1,11 @@
 import * as Updates from 'expo-updates';
 import 'react-native-gesture-handler';
+import { Text } from 'react-native';
 
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { UserProvider } from './Auth/UserContext';
-import CalendarProvider from './Calendar/CalendarContext';
+import { CalendarProvider } from './Calendar/CalendarContext';
 import Nav from './Nav';
 
 

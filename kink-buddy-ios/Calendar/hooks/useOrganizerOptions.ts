@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Event } from '../../commmonTypes';
+import { Event } from '../../commonTypes';
 
 export const useOrganizerOptions = (events: Event[]) => {
     return useMemo(() => {

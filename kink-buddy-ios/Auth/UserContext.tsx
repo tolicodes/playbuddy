@@ -196,7 +196,6 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     return (
         <UserContext.Provider value={{ user, userId, loading, signInWithEmail, signUpWithEmail, setUserId }}>
-            {/* {!loading && children} */}
             {children}
         </UserContext.Provider>
     );

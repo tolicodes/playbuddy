@@ -2,10 +2,11 @@ import { useNavigation } from "@react-navigation/native";
 import React from "react"
 import { TouchableOpacity, View, Text } from "react-native"
 import FAIcon from 'react-native-vector-icons/FontAwesome';
+import { NavStack } from "../types";
 
 
 export default ({ showLoginText = false }) => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavStack>();
 
     return (
         <TouchableOpacity

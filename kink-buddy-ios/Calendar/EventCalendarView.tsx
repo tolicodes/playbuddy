@@ -7,7 +7,8 @@ import { useNavigation } from '@react-navigation/native';
 import { Event } from '../../Common/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { EventWithMetadata, useCalendarContext } from './CalendarContext';
+import { EventWithMetadata, NavStack } from '../types';
+import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
 
@@ -26,18 +27,16 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
     let eventsUsed;
     if (isOnWishlist) {
         eventsUsed = wishlistEvents
-    }
-    else if (isFriendWishlist) {
+    } else if (isFriendWishlist) {
         eventsUsed = friendWishlistEvents
-    }
-    else {
+    } else {
         eventsUsed = filteredEvents
     }
 
     const { sections, markedDates } = useGroupedEvents(eventsUsed);
     const sectionListRef = useRef<SectionList<Event>>(null);
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavStack>();
 
 
     useEffect(() => {

@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
-import { useNavigation, NavigationProp } from '@react-navigation/native';
-import { useCalendarContext } from './Calendar/CalendarContext';
+import { useNavigation } from '@react-navigation/native';
+import { NavStack } from './types';
 
 // Define your path-to-screen mapping with optional parameters
-const NAV_MAPPING: { [key: string]: keyof RootStackParamList } = {
+const NAV_MAPPING: { [key: string]: keyof NavStack } = {
     '': 'Calendar',
     'wishlist': 'Wishlist',
     'communities': 'Communities',
@@ -12,7 +12,7 @@ const NAV_MAPPING: { [key: string]: keyof RootStackParamList } = {
 };
 
 const handleNavigate = (
-    navigation: NavigationProp,
+    navigation: any,
     url: string,
 ) => {
     const { path, queryParams } = Linking.parse(url);
@@ -22,7 +22,7 @@ const handleNavigate = (
 };
 
 export default function DeepLinkHandler() {
-    const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+    const navigation = useNavigation<NavStack>();
 
     useEffect(() => {
         // Handle initial deep link

@@ -15,7 +15,7 @@ const links: LinkItem[] = [
         id: '1',
         title: 'List of Organizers',
         url: 'https://www.notion.so/bcc0be4e78bf47b0a593988fa5a4ec6f?v=ed152f9629a2457bbabb58bbaae42155&pvs=4',
-        icon: 'list-ul', // FontAwesome icon
+        icon: 'list-ul',
     },
     {
         id: '2',

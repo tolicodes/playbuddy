@@ -6,6 +6,7 @@ import DropdownItem from './DropdownItem';
 import { OrganizerFilterOption } from '../calendarUtils';
 import SubmitButtons from './SubmitButtons';
 import { useNavigation } from '@react-navigation/native';
+import { NavStack } from '../../types';
 
 interface OrganizerMultiSelectProps {
     organizers: OrganizerFilterOption[];
@@ -14,7 +15,7 @@ interface OrganizerMultiSelectProps {
 }
 
 const OrganizerMultiSelect: React.FC<OrganizerMultiSelectProps> = ({ organizers, onChangeFilteredOrganizers, selectedOrganizers }) => {
-    const navigator = useNavigation();
+    const navigator = useNavigation<NavStack>();
 
     const handleSelect = (items: string[]) => {
         onChangeFilteredOrganizers(items);
