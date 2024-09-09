@@ -5,10 +5,10 @@ SOURCE_FILES=("common/commonTypes.ts" "common/config.ts")
 
 # Define the target directories
 TARGET_DIRECTORIES=(
-  "kink-buddy-ios"
-  "kink-event-scraper/src"
-  "kinkbuddy-functions/src"
-  "src/common"
+  "playbuddy-mobile"
+  "playbuddy-scraper/src"
+  "playbuddy-api/src"
+  "playbuddy-web/src/common"
 )
 
 # Loop through each target directory and copy each source file
