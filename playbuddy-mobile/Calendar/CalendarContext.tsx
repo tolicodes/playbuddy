@@ -3,6 +3,7 @@ import { useFilters } from './hooks/useFilters';
 import { useEvents } from './hooks/useEvents';
 import { useWishlist } from './hooks/useWishlist';
 import { EventWithMetadata } from '../types';
+import { EXPLICIT_WORDS } from './calendarUtils';
 
 type CalendarContextType = {
     filters: any;
@@ -41,13 +42,20 @@ const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: any) => 
     return filteredEvents
 }
 
+const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
+    return eventsWithMetadata.filter(event => EXPLICIT_WORDS.every(word => !event.name.toLowerCase().includes(word.toLowerCase())));
+}
+
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
     const { eventsWithMetadata, organizers } = useEvents();
     const { wishlistEvents, friendWishlistEvents, setFriendWishlistCode, isOnWishlist, toggleWishlistEvent } = useWishlist(eventsWithMetadata);
 
-    const filteredEvents = useMemo(() =>
-        filterEvents(eventsWithMetadata, filters),
+    const filteredEvents = useMemo(() => {
+        const filtered = filterEvents(eventsWithMetadata, filters);
+        const withoutExplicit = removeExplicitEvents(filtered);
+        return withoutExplicit;
+    },
         [eventsWithMetadata, filters]
     );
 

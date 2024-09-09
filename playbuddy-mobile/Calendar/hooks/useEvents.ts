@@ -28,7 +28,6 @@ export const useFetchEvents = (appState?: string) => {
     const [events, setEvents] = useState<Event[]>([]);
 
     useEffect(() => {
-        console.log('API_URL.events', API_URL.events)
         axios.get<Event[]>(API_URL.events)
             .then(response => {
                 setEvents(response.data);
