@@ -28,7 +28,7 @@
     "test:smoke": "npm test -- ./test/smoke.test.ts",
     "test:coverage": "npm test -- --coverage",
     "test:serial": "npm test -- --runInBand",
-    "deploy": "gcloud run deploy $SERVICE --project=$PROJECT --region=$REGION --platform managed --allow-unauthenticated --source .",
+    "deploy": "source .env && gcloud run deploy $SERVICE --region=$REGION --platform managed --allow-unauthenticated --set-env-vars NODE_ENV=production,SUPABASE_ADMIN_KEY=$SUPABASE_ADMIN_KEY,REDIS_PASSWORD=$REDIS_PASSWORD,SUPABASE_HOST=$SUPABASE_HOST --source .",
     "logs": " gcloud beta run services logs read $SERVICE --project=$PROJECT --region=[REGION] --limit=10",
     "logs:tail": "gcloud beta run services logs tail $SERVICE --project=$PROJECT --region=$REGION"
   },
