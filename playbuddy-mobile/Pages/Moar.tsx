@@ -3,6 +3,8 @@ import { View, Text, FlatList, TouchableOpacity, Linking, StyleSheet } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
+import { MISC_URLS } from '../config'
+
 type LinkItem = {
     id: string;
     title: string;
@@ -20,13 +22,13 @@ const links: LinkItem[] = [
     {
         id: '2',
         title: 'Kinky Ideas (List of Kinks)',
-        url: 'https://kinkbuddy.org/kinks',
+        url: 'https://playbuddy.me/kinks',
         icon: 'lightbulb-o',
     },
     {
         id: '3',
         title: 'Kinky Game',
-        url: 'https://kinkbuddy.org/game',
+        url: 'https://playbuddy.me/game',
         icon: 'gamepad',
     },
     {
@@ -38,15 +40,11 @@ const links: LinkItem[] = [
 ];
 
 const getGoogleCalLink = () => {
-    const icsUrl = 'http://api.kinkbuddy.org/events?format=ical';
-    const encodedUrl = encodeURIComponent(icsUrl);
-    const googleCalendarLink = `https://www.google.com/calendar/render?cid=${encodedUrl}`;
-
-    return googleCalendarLink;
+    return MISC_URLS.addGoogleCalendar();
 };
 
 const getAddYourEventsLink = () => {
-    const subject = encodeURIComponent('[KinkBuddy] Add my event');
+    const subject = encodeURIComponent('[PlayBuddy] Add my event');
     const body = encodeURIComponent(
         `Hi! I would like to add my event to the event scraper.\n\n` +
         `My Organization Name: \n` +

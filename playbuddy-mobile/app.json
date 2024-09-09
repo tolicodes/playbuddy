@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Kink Buddy Calendar",
-    "slug": "kink-buddy-ios",
+    "name": "PlayBuddy Calendar",
+    "slug": "playbuddy",
     "version": "2.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
-    "scheme": "kinkbuddy",
+    "scheme": "playbuddy",
     "platforms": ["ios", "android", "web"],
     "splash": {
       "image": "./assets/splash.jpeg",
@@ -15,9 +15,9 @@
     },
     "ios": {
       "supportsTablet": true,
-      "associatedDomains": ["applinks:kinkbuddy.org"],
+      "associatedDomains": ["applinks:playbuddy.me"],
 
-      "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
+      "bundleIdentifier": "com.tolicodes1.playbuddy",
       "buildNumber": "3"
     },
     "android": {
@@ -25,7 +25,7 @@
         "foregroundImage": "./assets/icon.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tolicodes1.kinkbuddyios",
+      "package": "com.tolicodes1.playbuddy",
       "versionCode": 3
     },
     "web": {
@@ -44,7 +44,6 @@
     },
     "plugins": [
       "expo-secure-store"
-    ],
-      
+    ]
   }
 }

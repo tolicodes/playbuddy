@@ -9,7 +9,7 @@ import { Button } from '@rneui/themed';
 
 const getInstructions = (shareUrl: string) => `I made a list of kinky events I'd like to go to!
 
-You'll need to install KinkBuddy. It's still in beta, so you need follow these steps. But once
+You'll need to install PlayBuddy. It's still in beta, so you need follow these steps. But once
 you have it, you'll see all sorts of fun events we can go to events together!
 
 WISHLIST URL: ${shareUrl}
@@ -24,10 +24,10 @@ Android:
 2. Click the wishlist link above.
 
 Web:
-Wishlist isn’t available yet, but you can still browse events at http://kinkbuddy.org.
+Wishlist isn’t available yet, but you can still browse events at http://playbuddy.me.
 `;
 
-const WISHLIST_URL_BASE = 'kinkbuddy://wishlist/';
+const WISHLIST_URL_BASE = 'playbuddy://wishlist/';
 
 const ShareWishlistButton = () => {
     const { userProfile } = useUserContext();

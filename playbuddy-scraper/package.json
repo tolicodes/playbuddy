@@ -1,5 +1,5 @@
 {
-  "name": "kink-event-scraper",
+  "name": "playbuddy-scraper",
   "private": true,
   "description": "Node.js app with TypeScript for Cloud Run",
   "version": "0.1.0",

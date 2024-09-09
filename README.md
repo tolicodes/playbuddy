@@ -1,4 +1,4 @@
-# Kink Buddy
+# PlayBuddy
 
 ## Layout
 
@@ -22,5 +22,5 @@ Configure static hosting for playbuddy.me
 
 #### CloudRun
 
-1. Cloud Run > Domain Mappings > Add Mapping > kinkbuddy-functions > Cloud Run Domain Mappings > Verify New Domain > View in Search Console > Domain > Add TXT Record > Go back to Mapping > Refresh > Select Domain > Subdomain (api) > Done
-2. Same for scraper
+1. Cloud Run > Domain Mappings > Add Mapping > playbuddy-api > Cloud Run Domain Mappings > Verify New Domain > View in Search Console > Domain > Add TXT Record > Go back to Mapping > Refresh > Select Domain > Subdomain (api) > Done
+2. Same for playbuddy-scraper
