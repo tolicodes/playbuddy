@@ -22,8 +22,6 @@ const handleNavigate = (
         return;
     }
 
-    console.log({ name: screenName, params: queryParams })
-
     navigation.navigate({ name: screenName, params: queryParams });
 };
 
@@ -35,8 +33,6 @@ export default function DeepLinkHandler() {
         Linking.getInitialURL().then((url) => {
             if (url) {
                 handleNavigate(navigation, url);
-                console.log('url', url)
-
             }
         });
 
