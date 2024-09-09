@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kink Buddy Calendar",
     "slug": "kink-buddy-ios",
-    "version": "2.5.1",
+    "version": "2.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -18,8 +18,7 @@
       "associatedDomains": ["applinks:kinkbuddy.org"],
 
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
-      "buildNumber": "3",
-      "runtimeVersion": "1.0.0"
+      "buildNumber": "3"
     },
     "android": {
       "adaptiveIcon": {
@@ -27,10 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.tolicodes1.kinkbuddyios",
-      "versionCode": 3,
-      "runtimeVersion": {
-        "policy": "appVersion"
-      }
+      "versionCode": 3
     },
     "web": {
       "favicon": "./assets/images/favicon.jpeg"

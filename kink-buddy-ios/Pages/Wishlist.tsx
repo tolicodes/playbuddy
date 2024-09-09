@@ -30,11 +30,11 @@ Wishlist isn’t available yet, but you can still browse events at http://kinkbu
 const WISHLIST_URL_BASE = 'kinkbuddy://wishlist/';
 
 const ShareWishlistButton = () => {
-    const { user } = useUserContext();
+    const { userProfile } = useUserContext();
     // Function to handle sharing the wishlist
     const handleShare = async () => {
         try {
-            const shareURL = `${WISHLIST_URL_BASE}?share_code=${user?.share_code}`;
+            const shareURL = `${WISHLIST_URL_BASE}?share_code=${userProfile?.share_code}`;
             console.log('shareURL', shareURL)
             const shareMessage = getInstructions(shareURL);
 
@@ -70,6 +70,10 @@ export default ({ route }) => {
         setFilters({ search: '', organizers: [] });
     }, [])
 
+    const resetWishlist = () => {
+        setFriendWishlistCode('')
+    }
+
     if (friendWishlistEvents.length) {
         return (
             <>
@@ -81,7 +85,7 @@ export default ({ route }) => {
                 }}>
                     You are viewing your friend's wishlist
                 </Text>
-                <Button onPress={() => setFriendWishlistCode('')}>Back to your wishlist</Button>
+                <Button onPress={() => resetWishlist}>Back to your wishlist</Button>
                 <EventCalendarView isOnWishlist={true} isFriendWishlist={true} />
                 <ShareWishlistButton />
             </>

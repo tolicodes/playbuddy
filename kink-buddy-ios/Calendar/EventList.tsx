@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
     sectionHeader: {
         backgroundColor: 'lightgrey',
         padding: 10,
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: 'bold',
     },
     emptyList: {

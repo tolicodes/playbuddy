@@ -1,20 +1,19 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
-import { supabase } from '../supabaseCiient';
-import { Session } from '@supabase/supabase-js';
 import { useUserContext } from './UserContext';
+import { useNavigation } from '@react-navigation/native';
 
-export default function Account({ session }: { session: Session }) {
-    const { setUserId, user } = useUserContext();
+export default function Account() {
+    const { userProfile, signOut, } = useUserContext();
+    const { goBack } = useNavigation();
     const onPressSignOut = async () => {
-        supabase.auth.signOut();
-        setUserId(null);
-
+        signOut(goBack);
     }
+
     return (
         <View style={styles.container}>
-            <Text style={styles.emailText}>Logged in As: {session?.user?.email}</Text>
-            <Text>Wishlist Share Code: {user?.share_code}</Text>
+            <Text style={styles.emailText}>Logged in As: {userProfile?.email}</Text>
+            <Text>Wishlist Share Code: {userProfile?.share_code}</Text>
             <Button title="Sign Out" onPress={onPressSignOut} />
         </View>
     );

@@ -20,7 +20,6 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
     const formattedDate = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
 
     const itemIsOnWishlist = isOnWishlist(item.id);
-    console.log('itemIsOnWishlist', itemIsOnWishlist);
 
     const handleToggleEventWishlist = () => {
         // flip the old value

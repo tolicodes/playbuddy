@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
@@ -7,6 +7,8 @@ import cors from "cors";
 // Import routes
 import eventsRoute from './routes/events.js';
 import kinksRoute from './routes/kinks.js';
+import wishlistRoute from './routes/wishlist.js';
+// import { errorLogger } from "middleware/errorLogger.js";
 
 export const app = express();
 
@@ -18,12 +20,30 @@ app.use(
     origin: "*",
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     allowedHeaders: "Content-Type,Authorization",
+    credentials: true,
   })
 );
 
 // Routes setup
 app.use('/events', eventsRoute); // For event-related routes
 app.use('/kinks', kinksRoute);   // For kinks-related routes
+app.use('/wishlist', wishlistRoute);   // For kinks-related routes
+
+const errorLogger = (err: any, req: Request, res: Response, next: NextFunction) => {
+  console.log("Middleware Error Logger");
+  const errStatus = err.statusCode || 500;
+  const errMsg = err.message || 'Something went wrong';
+
+  res.status(errStatus).json({
+    success: false,
+    status: errStatus,
+    message: errMsg,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : {}
+  })
+};
+
+// Add the error logging middleware
+app.use(errorLogger);
 
 let server: Server;
 

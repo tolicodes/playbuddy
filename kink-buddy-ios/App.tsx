@@ -37,12 +37,11 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CalendarProvider>
-        <UserProvider>
+      <UserProvider>
+        <CalendarProvider>
           <Nav />
-        </UserProvider>
-      </CalendarProvider>
-
+        </CalendarProvider>
+      </UserProvider>
     </QueryClientProvider>
   );
 };

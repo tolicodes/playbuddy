@@ -2,11 +2,17 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Button, Input } from '@rneui/themed';
 import { useUserContext } from './UserContext';
+import { useNavigation } from '@react-navigation/native';
 
 export default function Auth() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { signInWithEmail, signUpWithEmail, loading } = useUserContext();
+    const { signInWithEmail, signUpWithEmail } = useUserContext();
+    const { goBack } = useNavigation();
+
+    const navigateBack = () => {
+        goBack();
+    }
 
     return (
         <View style={styles.container}>
@@ -32,10 +38,14 @@ export default function Auth() {
                 />
             </View>
             <View style={[styles.verticallySpaced, styles.mt20]}>
-                <Button title="Sign in" disabled={loading} onPress={() => signInWithEmail(email, password)} />
+                <Button title="Sign in" onPress={() => {
+                    signInWithEmail(email, password, navigateBack)
+                }} />
             </View>
             <View style={styles.verticallySpaced}>
-                <Button title="Sign up" disabled={loading} onPress={() => signUpWithEmail(email, password)} />
+                <Button title="Sign up" onPress={() =>
+                    signUpWithEmail(email, password, navigateBack)
+                } />
             </View>
         </View>
     );

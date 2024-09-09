@@ -1,19 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../supabaseCiient'; // Adjust this to the correct path
 import { Alert, AppState } from 'react-native';
+import { supabase } from '../supabaseCiient';
+import axios from 'axios';
 
 // Define the shape of the UserContext state
 interface UserContextType {
-    user: any; // This will hold the entire user object from Supabase, including shareCode and custom fields
     userId: string | null;
-    loading: boolean;
-    signInWithEmail: (email: string, password: string) => Promise<void>;
-    signUpWithEmail: (email: string, password: string) => Promise<void>;
-    setUserId: (id: string | null) => Promise<void>;
+    userProfile: any;
+
+    signInWithEmail: (email: string, password: string, callback: () => void) => Promise<void>;
+    signUpWithEmail: (email: string, password: string, callback: () => void) => Promise<void>;
+
+    signOut: (callback: () => void) => void;
+
+    authReady: boolean;
+
 }
 
-// Create the context with a default value
+// Create the UserContext
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Custom hook to use the UserContext
@@ -25,64 +29,60 @@ export const useUserContext = (): UserContextType => {
     return context;
 };
 
-// AsyncStorage key constants
-const USER_ID_STORAGE_KEY = '@userId';
-
-// Provider component
+// Main UserProvider component
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<any>(null); // Holds the current user from Supabase, including shareCode and custom fields
-    const [userId, setUserIdState] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false); // Track loading state for user fetch
+    const [session, setSession] = useState<any>(null);
+    const [userProfile, setUserProfile] = useState<any>(null);
+    const [authReady, setAuthReady] = useState(false);
 
-    // Load userId from AsyncStorage on initial render
-    useEffect(() => {
-        const loadUserId = async () => {
-            try {
-                const storedUserId = await AsyncStorage.getItem(USER_ID_STORAGE_KEY);
-                if (storedUserId) {
-                    setUserIdState(storedUserId);
-                }
-            } catch (error) {
-                console.error('Failed to load userId from AsyncStorage:', error);
-            }
-        };
-        loadUserId();
-    }, []);
+    const user = session?.user || null;
+    const userId = user?.id || null;
 
-    // Function to set the userId in both state and AsyncStorage
-    const setUserId = async (id: string | null) => {
-        try {
-            if (id) {
-                await AsyncStorage.setItem(USER_ID_STORAGE_KEY, id);
-            } else {
-                await AsyncStorage.removeItem(USER_ID_STORAGE_KEY);
-            }
-            setUserIdState(id);
-        } catch (error) {
-            console.error('Failed to save userId to AsyncStorage:', error);
-        }
-    };
-
-    // Function to fetch user profile from custom `users` table
+    // Fetch user profile from custom `users` table
     const fetchUserProfile = async (authUserId: string) => {
-        try {
-            const { data, error } = await supabase
-                .from('users')
-                .select('*')
-                .eq('user_id', authUserId)
-                .single(); // Fetch single user
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('user_id', authUserId)
+            .single();
 
-            if (error) {
-                console.error('Error fetching user profile from users table:', error);
-                return null;
-            }
-
-            return data;
-        } catch (error) {
+        if (error) {
             console.error('Error fetching user profile:', error);
             return null;
         }
+        return data;
     };
+
+    // Sign up and sign in operations
+    const signUpWithEmail = async (email: string, password: string, callback: () => void) => {
+        const { data: { session }, error } = await supabase.auth.signUp({ email, password });
+
+        if (!session?.user.id || error) {
+            Alert.alert(`Sign up: ${error.message}`);
+        } else {
+            await insertUserWithReferralCode(session?.user.id);
+
+            setSession(session);
+            callback();
+        }
+    };
+
+    const signInWithEmail = async (email: string, password: string, callback: () => void) => {
+        const { data: { session }, error } = await supabase.auth.signInWithPassword({ email, password });
+
+        if (error) {
+            Alert.alert(`Sign in: ${error.message}`);
+        } else {
+            setSession(session);
+            callback();
+        }
+    };
+
+    const signOut = async (callback: () => void) => {
+        supabase.auth.signOut();
+        setSession(null);
+        callback();
+    }
 
     const generateReferralCode = () => {
         return Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
@@ -99,87 +99,23 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         } else {
             return data;
         }
+        return data;
     };
 
-    // Handle sign-up operation
-    const signUpWithEmail = async (email: string, password: string) => {
-        setLoading(true);
-        const { data: { session }, error } = await supabase.auth.signUp({
-            email: email,
-            password: password,
-        });
-
-        if (error) {
-            Alert.alert(`Sign up: ${error.message}`);
-        } else if (!session) {
-            Alert.alert('Please check your inbox for email verification!');
-        } else if (session) {
-            await insertUserWithReferralCode(session.user.id);
-            const userProfile = await fetchUserProfile(session.user.id);
-            setUser({ ...session.user, ...userProfile });
-            setUserId(session.user.id);
-        }
-        setLoading(false);
-    };
-
-    // Handle sign-in operation
-    const signInWithEmail = async (email: string, password: string) => {
-        setLoading(true);
-        const { data: { session }, error } = await supabase.auth.signInWithPassword({
-            email: email,
-            password: password,
-        });
-
-        if (error) {
-            Alert.alert(`Sign in: ${error.message}`);
-        } else if (session) {
-            const userProfile = await fetchUserProfile(session.user.id);
-            setUser({ ...session.user, ...userProfile });
-            setUserId(session.user.id);
-        }
-        setLoading(false);
-    };
-
-    // Effect to fetch the current user from Supabase and handle auth state changes
+    // Fetch session and set up token refresh
     useEffect(() => {
-        // we only want to fetch if we aren't in the process of an operation
-        if (loading) return;
+        const getSession = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setSession(session);
 
-        const fetchCurrentUser = async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            if (error) {
-                console.error('Error fetching current user:', error);
-                setUser(null);
-            } else if (session) {
-                const userProfile = await fetchUserProfile(session.user.id);
-                setUser({ ...session.user, ...userProfile });
-                setUserId(session.user.id);
-            } else {
-                setUser(null);
-                setUserId(null);
-            }
-            setLoading(false);
+            // Start auto-refreshing the token if a session exists
+            supabase.auth.onAuthStateChange((_event, session) => setSession(session));
         };
 
-        fetchCurrentUser();
+        getSession();
+    }, []);
 
-        const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (session) {
-                const userProfile = await fetchUserProfile(session.user.id);
-                setUser({ ...session.user, ...userProfile });
-                setUserId(session.user.id);
-            } else {
-                setUser(null);
-                setUserId(null);
-            }
-        });
-
-        return () => {
-            authListener?.subscription.unsubscribe();
-        };
-    }, [loading]);
-
-    // Listen for AppState changes to start and stop token refresh
+    // Handle AppState to start/stop token refresh
     useEffect(() => {
         const appStateListener = AppState.addEventListener('change', (state) => {
             if (state === 'active') {
@@ -194,8 +130,38 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
     }, []);
 
+    // Fetch user profile when session changes
+    useEffect(() => {
+        if (!userId) return;
+        fetchUserProfile(userId).then((profile) => {
+            setUserProfile({
+                ...profile,
+                email: user?.email,
+            });
+        });
+    }, [userId]);
+
+    // Set up Axios interceptor for the token
+    useEffect(() => {
+        if (session?.access_token) {
+            axios.defaults.headers.common["Authorization"] = `Bearer ${session?.access_token}`;
+            setAuthReady(true);
+        } else {
+            // Optionally clear the Authorization header if the session is null
+            delete axios.defaults.headers.common["Authorization"];
+            setAuthReady(false);
+        }
+    }, [session?.access_token]);
+
     return (
-        <UserContext.Provider value={{ user, userId, loading, signInWithEmail, signUpWithEmail, setUserId }}>
+        <UserContext.Provider value={{
+            userId,
+            userProfile,
+            authReady,
+            signInWithEmail,
+            signUpWithEmail,
+            signOut,
+        }}>
             {children}
         </UserContext.Provider>
     );
