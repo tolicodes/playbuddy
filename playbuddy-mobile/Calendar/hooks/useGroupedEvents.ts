@@ -22,13 +22,16 @@ export const useGroupedEvents = (events: EventWithMetadata[]) => {
         }, {});
     }, [events]);
 
-    // Convert grouped events into sections for SectionList
     const sections = useMemo(() => {
-        return Object.keys(groupedEvents).map(date => ({
-            title: moment(date).format(SECTION_DATE_FORMAT), // Format the date for display
-            data: groupedEvents[date], // Events for that date
-        }));
+        return Object.keys(groupedEvents)
+            .map(date => ({
+                date,
+                title: moment(date).format(SECTION_DATE_FORMAT), // Format the date for display
+                data: groupedEvents[date], // Events for that date
+            }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date
     }, [groupedEvents]);
+
 
     // Create marked dates with dot colors for the calendar
     const markedDates = useMemo(() => {
