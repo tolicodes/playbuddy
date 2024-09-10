@@ -26,7 +26,7 @@ export const convertPartifulDateTime = ({
   }
 
   const startTimeMatch = timeMatch[1];
-  let endTimeMatch = timeMatch[2];
+  const endTimeMatch = timeMatch[2];
 
   // Parse the initial date
   const initialDate = moment(dateString);
@@ -75,7 +75,7 @@ export const fillInEndTime = (
   const start_date = moment(startDateTime);
 
   // By default, add 2 hours to the start time to get the end time
-  let end_date = start_date.clone().add(2, "hours");
+  const end_date = start_date.clone().add(2, "hours");
 
   return end_date.toISOString();
 };

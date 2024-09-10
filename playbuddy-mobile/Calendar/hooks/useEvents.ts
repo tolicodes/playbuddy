@@ -6,7 +6,11 @@ import { API_URL } from '../../config';
 import { getAvailableOrganizers } from '../calendarUtils';
 
 type OrganizerColorMap = { [key: string]: { color: string; priority: number } }
-function buildOrganizerColorMap(organizers: any) {
+type Organizer = {
+    id: string;
+    color: string;
+};
+function buildOrganizerColorMap(organizers: Organizer[]): OrganizerColorMap {
     return organizers.reduce((acc, organizer, i) => {
         acc[organizer.id] = {
             color: organizer.color,

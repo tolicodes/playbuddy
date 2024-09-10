@@ -1,5 +1,3 @@
-import { useState, useEffect } from "react"
-import { supabase } from "../supabaseCiient"
 import Account from "./Account"
 import Auth from "./Auth"
 import { useUserContext } from "./UserContext"

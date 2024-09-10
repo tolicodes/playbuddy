@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Alert, AppState } from 'react-native';
-import { supabase } from '../supabaseCiient';
+import { supabase } from '../supabaseClient';
 import axios from 'axios';
 
 // Define the shape of the UserContext state
@@ -39,6 +39,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const userId = user?.id || null;
 
     // Fetch user profile from custom `users` table
+    // TODO: convert to API call
     const fetchUserProfile = async (authUserId: string) => {
         const { data, error } = await supabase
             .from('users')
@@ -58,7 +59,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const { data: { session }, error } = await supabase.auth.signUp({ email, password });
 
         if (!session?.user.id || error) {
-            Alert.alert(`Sign up: ${error.message}`);
+            Alert.alert(`Sign up: ${error?.message}`);
         } else {
             await insertUserWithReferralCode(session?.user.id);
 

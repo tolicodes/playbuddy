@@ -1,38 +1,9 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { supabase } from '../../supabaseCiient';
 import { EventWithMetadata } from '../../types';
 import { useUserContext } from '../../Auth/UserContext';
 import { API_BASE_URL } from '../../config';
-
-// Function to save an event to the wishlist
-const saveWishlistEvent = async (eventId: string, userId: string) => {
-    const { error } = await supabase
-        .from('event_wishlist')
-        .insert([{ user_id: userId, event_id: eventId }]);
-
-    if (error) {
-        throw new Error(`Error saving event to wishlist: ${error.message}`);
-    }
-
-    return true;
-};
-
-// Function to remove an event from the wishlist
-const deleteWishlistEvent = async (eventId: string, userId: string) => {
-    const { error } = await supabase
-        .from('event_wishlist')
-        .delete()
-        .eq('user_id', userId)
-        .eq('event_id', eventId);
-
-    if (error) {
-        throw new Error(`Error deleting event from wishlist: ${error.message}`);
-    }
-
-    return true;
-};
 
 const useGetUserId = () => {
     const { userId } = useUserContext();
@@ -84,7 +55,7 @@ const useToggleWishlistEvent = () => {
                     // Remove from wishlist via the API
                     await axios.delete(`${API_BASE_URL}/wishlist/${eventId}`);
                 }
-            } catch (error) {
+            } catch (error: Error | any) {
                 throw new Error(`Error toggling wishlist event: ${error.response?.data?.error || error.message}`);
             }
         },
