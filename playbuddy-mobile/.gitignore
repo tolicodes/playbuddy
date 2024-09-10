@@ -37,3 +37,4 @@ yarn-error.*
 kink_buddy_iam.json
 .env.local
 io
+.env.local

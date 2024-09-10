@@ -11,6 +11,7 @@ import { EventWithMetadata, NavStack } from '../types';
 import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
+import WebsiteBanner from './WebsiteBanner';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -75,6 +76,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
 
     return (
         <SafeAreaView style={styles.container}>
+            <WebsiteBanner />
             <View style={styles.searchContainer}>
 
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>

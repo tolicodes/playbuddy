@@ -22,7 +22,7 @@
       "associatedDomains": [
         "applinks:playbuddy.me"
       ],
-      "bundleIdentifier": "com.tolicodes1.kinkbuddy",
+      "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
       "buildNumber": "3"
     },
     "android": {
@@ -48,7 +48,15 @@
       "url": "https://u.expo.dev/06bc28a9-e7a8-42b0-9dea-2ad45021e60c"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "toli-z2"
+        }
+      ]
     ],
     "owner": "tolicodes1"
   }
