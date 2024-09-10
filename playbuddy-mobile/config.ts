@@ -4,7 +4,8 @@ export const API_BASE_URL = 'https://api.playbuddy.me'
 
 export const API_URL = {
     events: `${API_BASE_URL}/events`,
-    eventsIcal: `${API_BASE_URL}/events?format=ical`,
+    // has to be http:// for google calendar to work
+    eventsIcal: `http://api.playbuddy.me/events?format=ical`,
     kinks: `${API_BASE_URL}/kinks`,
 }
 
