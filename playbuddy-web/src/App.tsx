@@ -11,6 +11,7 @@ import FavoriteKinks from './User/FavoriteKinks/FavoriteKinks';
 import QueryProvider from './Common/QueryProvider';
 import { EventCalendar } from './EventCalendar/EventCalendar';
 import { Header } from './Common/Header';
+import AppDownloadModal from './Common/AppDownloadModal';
 
 function App() {
   return (
@@ -27,6 +28,8 @@ function App() {
               }}
             >
               <Header />
+
+              <AppDownloadModal />
 
               <Routes>
                 <Route

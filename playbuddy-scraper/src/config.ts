@@ -20,3 +20,7 @@ export const puppeteerConfig = {
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
     headless: true
 }
+
+
+export const APP_STORE_URL = 'https://playbuddy.me/ios';
+export const GOOGLE_PLAY_URL = 'https://playbuddy.me/android';
