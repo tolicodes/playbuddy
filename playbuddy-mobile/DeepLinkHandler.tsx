@@ -3,6 +3,8 @@ import * as Linking from 'expo-linking';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack, NavStackProps } from './types';
 import * as Sentry from '@sentry/react-native';
+import URLParse from 'url-parse';
+
 
 
 // Define your path-to-screen mapping with optional parameters
@@ -17,8 +19,35 @@ const handleNavigate = (
     navigation: any,
     url: string,
 ) => {
-    const { path, queryParams } = Linking.parse(url);
+    console.log('Deep Link URL:', url);
+
+    const parsedUrl = new URLParse(url, true); // true to parse the query as an object
+
+
+    let path = '';
+    if (parsedUrl.protocol === 'playbuddy:') {
+        path = parsedUrl.hostname + parsedUrl.pathname;
+    } else {
+        path = parsedUrl.pathname.slice(1, parsedUrl.pathname.length); // get rid of first slash
+
+    }
+
+    // Handle paths with '--'
+    if (path.includes('--/')) {
+        path = path.split('--/')[1];
+    }
+
+    const queryParams = parsedUrl?.query;
+
+    // Assuming NAV_MAPPING is your path to screen mapping
     const screenName = NAV_MAPPING[path || ''] || ''; // default to Calendar
+
+    console.log({
+        path,
+        screenName,
+        queryParams
+    })
+
     Sentry.captureMessage(`Handle Nativate:`, {
         extra: {
             path,

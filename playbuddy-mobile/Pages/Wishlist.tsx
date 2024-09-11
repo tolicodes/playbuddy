@@ -1,3 +1,4 @@
+import React from 'react'
 import { Text, View, StyleSheet, Share, TouchableOpacity } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icon
 import { useCalendarContext } from "../Calendar/CalendarContext";
@@ -6,6 +7,8 @@ import { useEffect } from "react";
 import { useUserContext } from "../Auth/UserContext";
 import HeaderLoginButton from '../Auth/HeaderLoginButton';
 import { Button } from '@rneui/themed';
+import { RouteProp } from '@react-navigation/native';
+import { NavStack, NavStackProps } from '../types';
 
 const getInstructions = (shareUrl: string) => `I made a list of kinky events I'd like to go to!
 
@@ -27,7 +30,7 @@ Web:
 Wishlist isn’t available yet, but you can still browse events at http://playbuddy.me.
 `;
 
-const WISHLIST_URL_BASE = 'playbuddy://wishlist/';
+const WISHLIST_URL_BASE = 'playbuddy://wishlist';
 
 const ShareWishlistButton = () => {
     const { userProfile } = useUserContext();
@@ -35,7 +38,6 @@ const ShareWishlistButton = () => {
     const handleShare = async () => {
         try {
             const shareURL = `${WISHLIST_URL_BASE}?share_code=${userProfile?.share_code}`;
-            console.log('shareURL', shareURL)
             const shareMessage = getInstructions(shareURL);
 
             await Share.share({
@@ -54,11 +56,13 @@ const ShareWishlistButton = () => {
     );
 };
 
-export default ({ route }) => {
+const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) => {
     const { setFilters, setFriendWishlistCode, friendWishlistEvents } = useCalendarContext();
     const { userId } = useUserContext();
 
     const shareCode = route.params?.share_code;
+
+    console.log('shareCode', shareCode)
 
     useEffect(() => {
         if (shareCode) {
@@ -73,6 +77,8 @@ export default ({ route }) => {
     const resetWishlist = () => {
         setFriendWishlistCode('')
     }
+
+    console.log('friendWishlistEvents', friendWishlistEvents)
 
     if (friendWishlistEvents.length) {
         return (
@@ -134,3 +140,5 @@ const styles = StyleSheet.create({
         marginTop: 5, // Add some space between the icon and text
     },
 });
+
+export default Wishlist;

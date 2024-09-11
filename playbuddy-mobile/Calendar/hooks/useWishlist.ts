@@ -100,8 +100,10 @@ const useFetchFriendWishlist = (shareCode: string | null) => {
         queryFn: async () => {
             if (!shareCode) return [];
 
+            console.log('Fetching friend wishlist with share code:', shareCode);
+
             // Make a request to your Express backend
-            const response = await axios.get(`/wishlists/friend/${shareCode}`);
+            const response = await axios.get(`${API_BASE_URL}/wishlists/friend/${shareCode}`);
             return response.data.friendWishlistEventIds; // Return the array of event IDs
         },
         enabled: !!shareCode && !!authReady, // Only run the query if a shareCode is provided
@@ -114,8 +116,10 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 
     const { data: wishlistEventIds } = useFetchWishlistEvents();
     const { data: friendWishlistEventIds = [] } = useFetchFriendWishlist(shareCode);
+    console.log('friendWishlistEventIds', friendWishlistEventIds, shareCode);
 
     const setFriendWishlistCode = async (shareCode: string | null) => {
+        console.log('set share code', shareCode);
         setShareCode(shareCode);
     };
 
