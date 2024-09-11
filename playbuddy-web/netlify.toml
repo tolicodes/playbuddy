@@ -1,5 +1,17 @@
 [[redirects]]
+  from = "/ios"
+  to = "https://testflight.apple.com/join/EhT6eStJ"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/android"
+  to = "https://play.google.com/store/apps/details?id=com.tolicodes1.kinkbuddyios"
+  status = 301
+  force = true
+  
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
-

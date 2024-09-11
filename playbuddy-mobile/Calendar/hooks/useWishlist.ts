@@ -116,7 +116,6 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 
     const { data: wishlistEventIds } = useFetchWishlistEvents();
     const { data: friendWishlistEventIds = [] } = useFetchFriendWishlist(shareCode);
-    console.log('friendWishlistEventIds', friendWishlistEventIds, shareCode);
 
     const setFriendWishlistCode = async (shareCode: string | null) => {
         console.log('set share code', shareCode);
