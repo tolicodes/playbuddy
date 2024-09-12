@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Text } from 'react-native';
+import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';

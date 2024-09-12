@@ -18,12 +18,12 @@ you have it, you'll see all sorts of fun events we can go to events together!
 WISHLIST URL: ${shareUrl}
 
 Apple:
-1. Install via TestFlight. https://testflight.apple.com/join/EhT6eStJ
+1. Install via TestFlight. https://playbuddy.me/ios
 2. Click the wishlist link above.
 
 Android:
 1. Email toli@toli.me to join the beta.
-2. Download from Google Play. https://play.google.com/store/apps/details?id=com.tolicodes1.kinkbuddyios
+2. Download from Google Play. https://playbuddy.me/android
 2. Click the wishlist link above.
 
 Web:
