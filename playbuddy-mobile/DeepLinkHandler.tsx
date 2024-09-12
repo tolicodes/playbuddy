@@ -5,8 +5,6 @@ import { NavStack, NavStackProps } from './types';
 import * as Sentry from '@sentry/react-native';
 import URLParse from 'url-parse';
 
-
-
 // Define your path-to-screen mapping with optional parameters
 const NAV_MAPPING: { [key: string]: keyof NavStackProps } = {
     '': 'Calendar',

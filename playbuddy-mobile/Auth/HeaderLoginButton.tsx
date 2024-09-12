@@ -5,30 +5,35 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { NavStack } from "../types";
 
 
-export default ({ showLoginText = false }) => {
+const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean }) => {
     const navigation = useNavigation<NavStack>();
 
     return (
         <TouchableOpacity
-            style={{ marginRight: 15 }
+            style={{
+                marginRight: 15,
+                justifyContent: 'center', // Centers vertically
+                alignItems: 'center',     // Centers horizontally
+            }
             }
             onPress={() => navigation.navigate('Login')} // replace 'Login' with your actual login screen name
         >
             <View style={{
-                width: 30,
-                height: 30,
-                borderRadius: 20,
+                width: showLoginText ? 50 : 30,
+                height: showLoginText ? 50 : 30,
+                borderRadius: 30, // Ensure it's fully rounded (half of width/height)
                 backgroundColor: 'white',
                 borderColor: '#007AFF',
                 borderWidth: 1,
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexDirection: 'row',
+                justifyContent: 'center', // Centers vertically
+                alignItems: 'center',     // Centers horizontally
             }}>
-                <FAIcon name="user" size={20} color="#007AFF" />
+                <FAIcon name="user" size={showLoginText ? 40 : 20} color="#007AFF" />
             </View>
             {showLoginText && <Text>Login</Text>}
 
         </TouchableOpacity >
     )
 }
+
+export default HeaderLoginButton

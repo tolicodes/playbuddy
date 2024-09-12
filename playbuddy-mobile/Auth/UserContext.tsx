@@ -1,20 +1,22 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { Alert, AppState } from 'react-native';
 import { supabase } from '../supabaseClient';
 import axios from 'axios';
 
 // Define the shape of the UserContext state
+interface UserProfile {
+    user_id: string;
+    share_code: string;
+    email?: string;
+}
+
 interface UserContextType {
     userId: string | null;
-    userProfile: any;
-
+    userProfile: UserProfile | null;
     signInWithEmail: (email: string, password: string, callback: () => void) => Promise<void>;
     signUpWithEmail: (email: string, password: string, callback: () => void) => Promise<void>;
-
     signOut: (callback: () => void) => void;
-
     authReady: boolean;
-
 }
 
 // Create the UserContext
@@ -32,76 +34,85 @@ export const useUserContext = (): UserContextType => {
 // Main UserProvider component
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [session, setSession] = useState<any>(null);
-    const [userProfile, setUserProfile] = useState<any>(null);
+    const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [authReady, setAuthReady] = useState(false);
 
     const user = session?.user || null;
     const userId = user?.id || null;
 
-    // Fetch user profile from custom `users` table
-    // TODO: convert to API call
-    const fetchUserProfile = async (authUserId: string) => {
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('user_id', authUserId)
-            .single();
+    // Function to fetch user profile from the custom `users` table
+    const fetchUserProfile = useCallback(async (authUserId: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('user_id', authUserId)
+                .single();
 
-        if (error) {
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            return data as UserProfile;
+        } catch (error) {
             console.error('Error fetching user profile:', error);
             return null;
         }
-        return data;
-    };
+    }, []);
 
-    // Sign up and sign in operations
-    const signUpWithEmail = async (email: string, password: string, callback: () => void) => {
-        const { data: { session }, error } = await supabase.auth.signUp({ email, password });
-
-        if (!session?.user.id || error) {
-            Alert.alert(`Sign up: ${error?.message}`);
-        } else {
-            await insertUserWithReferralCode(session?.user.id);
-
-            setSession(session);
-            callback();
-        }
-    };
-
-    const signInWithEmail = async (email: string, password: string, callback: () => void) => {
-        const { data: { session }, error } = await supabase.auth.signInWithPassword({ email, password });
-
-        if (error) {
-            Alert.alert(`Sign in: ${error.message}`);
-        } else {
-            setSession(session);
-            callback();
-        }
-    };
-
-    const signOut = async (callback: () => void) => {
-        supabase.auth.signOut();
-        setSession(null);
-        callback();
-    }
-
-    const generateReferralCode = () => {
-        return Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
-    };
-
-    const insertUserWithReferralCode = async (userId: string) => {
-        const shareCode = generateReferralCode();
+    // Function to insert a user with a referral code
+    const insertUserWithReferralCode = useCallback(async (userId: string) => {
+        const shareCode = Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
         const { data, error } = await supabase
             .from('users')
             .insert([{ user_id: userId, share_code: shareCode }]);
 
         if (error) {
-            console.error('Error inserting user:', error);
-        } else {
-            return data;
+            throw new Error(error.message);
         }
+
         return data;
-    };
+    }, []);
+
+    // Sign up function
+    const signUpWithEmail = useCallback(async (email: string, password: string, callback: () => void) => {
+        try {
+            const { data: { session }, error } = await supabase.auth.signUp({ email, password });
+
+            if (error || !session?.user.id) {
+                throw new Error(error?.message || 'Sign up failed');
+            }
+
+            await insertUserWithReferralCode(session.user.id);
+            setSession(session);
+            callback();
+        } catch (error) {
+            Alert.alert(`Sign up: ${error.message}`);
+        }
+    }, [insertUserWithReferralCode]);
+
+    // Sign in function
+    const signInWithEmail = useCallback(async (email: string, password: string, callback: () => void) => {
+        try {
+            const { data: { session }, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            setSession(session);
+            callback();
+        } catch (error) {
+            Alert.alert(`Sign in: ${error.message}`);
+        }
+    }, []);
+
+    // Sign out function
+    const signOut = useCallback(async (callback: () => void) => {
+        await supabase.auth.signOut();
+        setSession(null);
+        callback();
+    }, []);
 
     // Fetch session and set up token refresh
     useEffect(() => {
@@ -134,35 +145,39 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Fetch user profile when session changes
     useEffect(() => {
         if (!userId) return;
+
         fetchUserProfile(userId).then((profile) => {
+            if (!profile) return;
             setUserProfile({
-                ...profile,
-                email: user?.email,
+                user_id: profile.user_id,
+                email: user.email,
+                share_code: profile.share_code,
             });
         });
-    }, [userId]);
+    }, [fetchUserProfile, userId]);
 
     // Set up Axios interceptor for the token
     useEffect(() => {
         if (session?.access_token) {
-            axios.defaults.headers.common["Authorization"] = `Bearer ${session?.access_token}`;
+            axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;
             setAuthReady(true);
         } else {
-            // Optionally clear the Authorization header if the session is null
-            delete axios.defaults.headers.common["Authorization"];
+            delete axios.defaults.headers.common['Authorization'];
             setAuthReady(false);
         }
     }, [session?.access_token]);
 
+    const value = useMemo(() => ({
+        userId,
+        userProfile,
+        authReady,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+    }), [userId, userProfile, authReady, signInWithEmail, signUpWithEmail, signOut]);
+
     return (
-        <UserContext.Provider value={{
-            userId,
-            userProfile,
-            authReady,
-            signInWithEmail,
-            signUpWithEmail,
-            signOut,
-        }}>
+        <UserContext.Provider value={value}>
             {children}
         </UserContext.Provider>
     );

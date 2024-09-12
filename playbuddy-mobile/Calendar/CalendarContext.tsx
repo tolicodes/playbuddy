@@ -1,21 +1,27 @@
-import { createContext, useContext, ReactNode, useMemo } from 'react';
-import { useFilters } from './hooks/useFilters';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import { useFilters, FilterState } from './hooks/useFilters';
 import { useEvents } from './hooks/useEvents';
 import { useWishlist } from './hooks/useWishlist';
 import { EventWithMetadata } from '../types';
-import { EXPLICIT_WORDS } from './calendarUtils';
+import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
+import { useUserContext } from '../Auth/UserContext';
+
+// Filter explicit events for apple test user
+const APPLE_USER_ID = '8fa0f95d-e0c2-447a-a639-6ec2c03d0e4f';
 
 type CalendarContextType = {
-    filters: any;
-    setFilters: any;
-    organizers: any;
-    filteredEvents: any;
-    wishlistEvents: any;
-    friendWishlistEvents: any;
-    setFriendWishlistCode: (shareCode: string | null) => void;
+    filters: FilterState;
+    setFilters: (filters: FilterState) => void;
+    organizers: OrganizerFilterOption[];
+    filteredEvents: EventWithMetadata[];
+    wishlistEvents: EventWithMetadata[];
+    friendWishlistEvents: EventWithMetadata[];
+    setFriendWishlistShareCode: (shareCode: string | null) => void;
+    friendWishlistShareCode: string | null;
     isOnWishlist: (eventId: string) => boolean;
-    toggleWishlistEvent: any
+    toggleWishlistEvent: any; // TODO: Add type
 };
+
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
@@ -27,8 +33,8 @@ export const useCalendarContext = () => {
     return context;
 };
 
-const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: any) => {
-    const filteredEvents = eventsWithMetadata.filter(event => {
+const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterState) => {
+    return eventsWithMetadata.filter(event => {
         const searchTerm = filters.search.toLowerCase();
         const organizerId = event.organizer?.id || '';
         const eventName = event.name?.toLowerCase() || '';
@@ -39,43 +45,63 @@ const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: any) => 
             (eventName.includes(searchTerm) || organizerName.includes(searchTerm))
         );
     });
-    return filteredEvents
-}
+};
 
+// Helper function to remove explicit events
 const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
-    return eventsWithMetadata.filter(event => EXPLICIT_WORDS.every(word => !event.name.toLowerCase().includes(word.toLowerCase())));
-}
+    return eventsWithMetadata.filter(event =>
+        EXPLICIT_WORDS.every(word => !event.name.toLowerCase().includes(word.toLowerCase()))
+    );
+};
 
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
     const { eventsWithMetadata, organizers } = useEvents();
-    const { wishlistEvents, friendWishlistEvents, setFriendWishlistCode, isOnWishlist, toggleWishlistEvent } = useWishlist(eventsWithMetadata);
+    const {
+        wishlistEvents,
+        friendWishlistEvents,
+        setFriendWishlistShareCode,
+        friendWishlistShareCode,
+        isOnWishlist,
+        toggleWishlistEvent,
+    } = useWishlist(eventsWithMetadata);
+    const { userId } = useUserContext();
 
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters);
         const withoutExplicit = removeExplicitEvents(filtered);
-        return withoutExplicit;
-    },
-        [eventsWithMetadata, filters]
-    );
+
+        // apple shouldn't see explicit events
+        return userId && userId !== APPLE_USER_ID ? filtered : withoutExplicit;
+    }, [eventsWithMetadata, filters, userId]);
+
+    // Memoize the context value to prevent unnecessary re-renders
+    const contextValue = useMemo(() => ({
+        filters,
+        setFilters,
+        organizers,
+        filteredEvents,
+        wishlistEvents,
+        friendWishlistEvents,
+        setFriendWishlistShareCode,
+        friendWishlistShareCode,
+        isOnWishlist,
+        toggleWishlistEvent,
+    }), [
+        filters,
+        setFilters,
+        organizers,
+        filteredEvents,
+        wishlistEvents,
+        friendWishlistEvents,
+        setFriendWishlistShareCode,
+        friendWishlistShareCode,
+        isOnWishlist,
+        toggleWishlistEvent,
+    ]);
 
     return (
-        <CalendarContext.Provider
-            value={{
-                filters,
-                setFilters,
-
-                organizers,
-
-                filteredEvents,
-
-                wishlistEvents,
-                friendWishlistEvents,
-                setFriendWishlistCode,
-                isOnWishlist,
-                toggleWishlistEvent,
-            }}
-        >
+        <CalendarContext.Provider value={contextValue}>
             {children}
         </CalendarContext.Provider>
     );

@@ -1,17 +1,22 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { View, Text, StyleSheet, Linking, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { NavStack } from '../types';
 
 const Banner = () => {
+    const navigation = useNavigation<NavStack>()
     return (
-        <View style={styles.banner}>
-            <Text style={styles.text}>
-                Due to App Store restrictions, some events are not available on the mobile app. Please go to{' '}
-                <TouchableOpacity onPress={() => Linking.openURL('https://playbuddy.me')}>
-                    <Text style={styles.link}>https://playbuddy.me</Text>
-                </TouchableOpacity>
-                {' '}for a full list of events.
-            </Text>
-        </View>
+        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <View style={styles.banner}>
+
+                <Text style={styles.text}>
+
+                    <Text style={styles.link}>Login</Text>
+                    {' '}to unlock more events and features!
+                </Text>
+            </View>
+        </TouchableOpacity>
+
     );
 };
 

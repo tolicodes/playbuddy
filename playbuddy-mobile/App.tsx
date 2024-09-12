@@ -1,6 +1,6 @@
+import React from 'react'
 import * as Updates from 'expo-updates';
 import 'react-native-gesture-handler';
-import { Button, Text } from 'react-native';
 
 import { useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';

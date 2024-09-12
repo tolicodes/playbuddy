@@ -8,7 +8,7 @@ import { useUserContext } from "../Auth/UserContext";
 import HeaderLoginButton from '../Auth/HeaderLoginButton';
 import { Button } from '@rneui/themed';
 import { RouteProp } from '@react-navigation/native';
-import { NavStack, NavStackProps } from '../types';
+import { NavStackProps } from '../types';
 
 const getInstructions = (shareUrl: string) => `I made a list of kinky events I'd like to go to!
 
@@ -57,30 +57,24 @@ const ShareWishlistButton = () => {
 };
 
 const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) => {
-    const { setFilters, setFriendWishlistCode, friendWishlistEvents } = useCalendarContext();
+    const { setFilters, setFriendWishlistShareCode, friendWishlistShareCode } = useCalendarContext();
     const { userId } = useUserContext();
 
-    const shareCode = route.params?.share_code;
-
-    console.log('shareCode', shareCode)
+    const shareCodeFromRoute = route.params?.share_code;
 
     useEffect(() => {
-        if (shareCode) {
-            setFriendWishlistCode(shareCode);
-        }
-    }, [shareCode]);
+        setFriendWishlistShareCode(shareCodeFromRoute || null);
+    }, [shareCodeFromRoute])
 
     useEffect(() => {
         setFilters({ search: '', organizers: [] });
     }, [])
 
     const resetWishlist = () => {
-        setFriendWishlistCode('')
+        setFriendWishlistShareCode(null)
     }
 
-    console.log('friendWishlistEvents', friendWishlistEvents)
-
-    if (friendWishlistEvents.length) {
+    if (friendWishlistShareCode) {
         return (
             <>
                 <Text style={{
@@ -91,7 +85,7 @@ const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) =>
                 }}>
                     You are viewing your friend's wishlist
                 </Text>
-                <Button onPress={() => resetWishlist}>Back to your wishlist</Button>
+                <Button onPress={resetWishlist}>Back to your wishlist</Button>
                 <EventCalendarView isOnWishlist={true} isFriendWishlist={true} />
                 <ShareWishlistButton />
             </>
@@ -99,18 +93,27 @@ const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) =>
     }
 
     return (
-        userId
+        (friendWishlistShareCode || userId)
             ? <>
-                < EventCalendarView isOnWishlist={true} />
+                <EventCalendarView isOnWishlist={true} isFriendWishlist={!!friendWishlistShareCode} />
                 <ShareWishlistButton />
             </>
             : (
-                <>
-                    <Text style={{ display: 'flex', textAlign: 'center', marginTop: 10 }}> Login to access wishlist</Text>
-                    <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: 10 }}>
+                <View style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',  // Centers vertically
+                    alignItems: 'center',      // Centers horizontally
+                    height: '100%',            // Ensure the height takes full screen
+                }}>
+                    <Text style={{ textAlign: 'center', marginTop: 10, fontSize: 20 }}>
+                        Login to access wishlist
+                    </Text>
+                    <View style={{ marginTop: 10, }}>
                         <HeaderLoginButton showLoginText={true} />
                     </View>
-                </>
+                </View>
+
             )
     )
 }

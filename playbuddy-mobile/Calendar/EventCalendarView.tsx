@@ -7,11 +7,12 @@ import { useNavigation } from '@react-navigation/native';
 import { Event } from '../../Common/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { EventWithMetadata, NavStack } from '../types';
+import { NavStack } from '../types';
 import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
 import WebsiteBanner from './WebsiteBanner';
+import { useUserContext } from '../Auth/UserContext';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -23,6 +24,7 @@ type EventCalendarViewProps = {
 const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents } = useCalendarContext();
+    const { userId } = useUserContext()
     const [searchQuery, setSearchQuery] = useState('');
 
     let eventsUsed;
@@ -76,7 +78,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
 
     return (
         <SafeAreaView style={styles.container}>
-            <WebsiteBanner />
+            {!userId && <WebsiteBanner />}
             <View style={styles.searchContainer}>
 
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>

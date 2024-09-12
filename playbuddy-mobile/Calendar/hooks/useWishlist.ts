@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { EventWithMetadata } from '../../types';
@@ -20,10 +20,8 @@ const fetchWishlistEvents = async () => {
         const response = await axios.get(`${API_BASE_URL}/wishlist`);
         return response.data;
     } catch (error) {
-        console.error('Error fetching wishlist events:', error);
-        return [];
+        throw new Error(`Error fetching wishlist events: ${error.message}`);
     }
-
 };
 
 // Hook to fetch wishlist events for the current user
@@ -100,46 +98,43 @@ const useFetchFriendWishlist = (shareCode: string | null) => {
         queryFn: async () => {
             if (!shareCode) return [];
 
-            console.log('Fetching friend wishlist with share code:', shareCode);
-
-            // Make a request to your Express backend
-            const response = await axios.get(`${API_BASE_URL}/wishlists/friend/${shareCode}`);
-            return response.data.friendWishlistEventIds; // Return the array of event IDs
+            const response = await axios.get(`${API_BASE_URL}/wishlist/friend/${shareCode}`);
+            return response.data; // Return the array of event IDs
         },
-        enabled: !!shareCode && !!authReady, // Only run the query if a shareCode is provided
+        enabled: !!authReady, // Only run the query if a shareCode is provided
     });
 };
 
 // Combined Hook to manage both user and friend's wishlist
 export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
-    const [shareCode, setShareCode] = useState<string | null>(null);
+    const [friendWishlistShareCode, setFriendWishlistShareCode] = useState<string | null>(null);
 
     const { data: wishlistEventIds } = useFetchWishlistEvents();
-    const { data: friendWishlistEventIds = [] } = useFetchFriendWishlist(shareCode);
+    const { data: friendWishlistEventIds = [] } = useFetchFriendWishlist(friendWishlistShareCode);
 
-    const setFriendWishlistCode = async (shareCode: string | null) => {
-        console.log('set share code', shareCode);
-        setShareCode(shareCode);
-    };
-
+    // Memoized function to calculate friend wishlist events
     const friendWishlistEvents = useMemo(() => {
-        return eventsWithMetadata.filter(event => friendWishlistEventIds.includes(event.id));
+        const events = eventsWithMetadata.filter(event => friendWishlistEventIds.includes(event.id));
+        return events;
     }, [friendWishlistEventIds, eventsWithMetadata]);
 
+    // Memoized function to calculate wishlist events
     const wishlistEvents = useMemo(() => {
         return eventsWithMetadata.filter(event => wishlistEventIds?.includes(event.id));
     }, [wishlistEventIds, eventsWithMetadata]);
 
-    const toggleWishlistEvent = useToggleWishlistEvent();
-
-    const isOnWishlist = (eventId: string) => {
+    // Memoized function to check if an event is on wishlist
+    const isOnWishlist = useCallback((eventId: string) => {
         return wishlistEventIds?.includes(eventId) || false;
-    }
+    }, [wishlistEventIds]);
+
+    const toggleWishlistEvent = useToggleWishlistEvent();
 
     return {
         wishlistEvents,
         friendWishlistEvents,
-        setFriendWishlistCode,
+        setFriendWishlistShareCode,
+        friendWishlistShareCode,
         toggleWishlistEvent,
         isOnWishlist,
     };

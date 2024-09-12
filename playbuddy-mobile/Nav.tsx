@@ -1,11 +1,9 @@
 import React from 'react';
-import { Text } from 'react-native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { NavigationContainer } from '@react-navigation/native';
-import * as Linking from 'expo-linking';
 
 import EventCalendarView from './Calendar/EventCalendarView';
 import { EventDetail } from './Calendar/EventDetail';
@@ -27,7 +25,6 @@ const rightHeaderOptions = () => ({
 
 // Create the Tab Navigator with both titles and icons
 const TabNavigator = () => {
-
     return (
         <>
             <DeepLinkHandler />
