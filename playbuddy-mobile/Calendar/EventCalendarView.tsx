@@ -28,10 +28,11 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
     const [searchQuery, setSearchQuery] = useState('');
 
     let eventsUsed;
-    if (isOnWishlist) {
-        eventsUsed = wishlistEvents
-    } else if (isFriendWishlist) {
+    if (isFriendWishlist) {
         eventsUsed = friendWishlistEvents
+    }
+    else if (isOnWishlist) {
+        eventsUsed = wishlistEvents
     } else {
         eventsUsed = filteredEvents
     }

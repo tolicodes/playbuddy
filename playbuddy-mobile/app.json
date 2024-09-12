@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy Calendar",
     "slug": "kink-buddy-ios",
-    "version": "3.0.0",
+    "version": "3.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -30,7 +30,7 @@
         "foregroundImage": "./assets/icon.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tolicodes1.kinkbuddy",
+      "package": "com.tolicodes1.kinkbuddyios",
       "versionCode": 3
     },
     "web": {
