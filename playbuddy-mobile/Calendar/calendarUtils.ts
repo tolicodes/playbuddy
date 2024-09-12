@@ -56,6 +56,7 @@ export function useRefreshEventsOnAppStateChange() {
         }
         // fail silently if the event listener is not available 
         catch (e) {
+            return;
         }
 
         return () => {
@@ -132,5 +133,13 @@ export const EXPLICIT_WORDS = [
     "facial",
     "handjob",
     "blowjob",
-    "tantra"
+    "tantra",
+    "CARE-FULL",
+    "HUMP",
+    "Testicular",
+    "Tantric",
+    "Play Party",
+    "S*x",
+    "K!nk",
+    "K!NK"
 ]
