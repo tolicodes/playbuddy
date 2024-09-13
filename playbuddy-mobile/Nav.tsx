@@ -14,6 +14,8 @@ import Moar from './Pages/Moar';
 import Communities from './Pages/Communities';
 import HeaderLoginButton from './Auth/HeaderLoginButton';
 import DeepLinkHandler from './DeepLinkHandler';
+import { TouchableOpacity } from 'react-native';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -36,6 +38,17 @@ const TabNavigator = () => {
                         if (route.name === 'Communities') return <FAIcon name="users" size={size} color={color} />;
                         if (route.name === 'Moar') return <IonIcon name="ellipsis-horizontal" size={size} color={color} />;
                     },
+                    tabBarButton: (props: any) => (
+                        <TouchableOpacity
+                            {...props}
+                            onPress={() => {
+                                // Log the event to Amplitude
+                                amplitude.logEvent('Tab Clicked', { tabName: route.name });
+                                // Navigate to the screen
+                                props.onPress();
+                            }}
+                        />
+                    ),
                 })}
             >
                 <Tab.Screen name="Calendar" component={EventCalendarView} options={rightHeaderOptions} />

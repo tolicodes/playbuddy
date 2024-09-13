@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { MISC_URLS } from '../config'
+import * as amplitude from '@amplitude/analytics-react-native';
 
 type LinkItem = {
     id: string;
@@ -75,6 +76,7 @@ const tools: LinkItem[] = [
 
 const Moar: React.FC = () => {
     const handlePress = (url: string) => {
+        amplitude.logEvent('moar_link_clicked', { url });
         Linking.openURL(url).catch((err) => console.error('An error occurred', err));
     };
 

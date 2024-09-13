@@ -1,7 +1,9 @@
+import React from 'react';
 import moment from 'moment';
 import { Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 
 export const EventDetail = ({ route }: any) => {
@@ -10,7 +12,10 @@ export const EventDetail = ({ route }: any) => {
     return (
         <ScrollView style={{ padding: 20 }}>
             <Image source={{ uri: selectedEvent.image_url }} style={styles.fullViewImage} />
-            <TouchableOpacity onPress={() => Linking.openURL(selectedEvent.event_url)}>
+            <TouchableOpacity onPress={() => {
+                amplitude.logEvent('event_detail_link_clicked', { event_url: selectedEvent.event_url })
+                Linking.openURL(selectedEvent.event_url)
+            }}>
                 <Text style={styles.fullViewTitle}>
                     {selectedEvent.name}
                     <MaterialIcons name="open-in-new" size={24} color="blue" />

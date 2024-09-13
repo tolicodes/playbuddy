@@ -8,6 +8,8 @@ import { UserProvider } from './Auth/UserContext';
 import { CalendarProvider } from './Calendar/CalendarContext';
 import Nav from './Nav';
 import * as Sentry from '@sentry/react-native';
+import * as amplitude from '@amplitude/analytics-react-native';
+amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
 Sentry.init({
   dsn: 'https://1fc36126dc6d94f30dc69cee2c5b46ea@o4507822914338816.ingest.us.sentry.io/4507822915387392',
@@ -16,33 +18,10 @@ Sentry.init({
   // enableSpotlight: __DEV__,
 });
 
-
-const useCheckForAppUpdates = () => {
-  async function checkForAppUpdates() {
-    try {
-      const update = await Updates.checkForUpdateAsync();
-      if (update.isAvailable) {
-        console.log('Update is available');
-        await Updates.fetchUpdateAsync();
-        // ... notify user of update ...
-        Updates.reloadAsync();
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-
-  useEffect(() => {
-    checkForAppUpdates();
-  }, []);
-}
-
 const queryClient = new QueryClient();
 
 
 const App = () => {
-  useCheckForAppUpdates();
-
   return (
     <QueryClientProvider client={queryClient}>
       <UserProvider>

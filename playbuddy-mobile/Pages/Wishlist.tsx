@@ -9,6 +9,7 @@ import HeaderLoginButton from '../Auth/HeaderLoginButton';
 import { Button } from '@rneui/themed';
 import { RouteProp } from '@react-navigation/native';
 import { NavStackProps } from '../types';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 const getInstructions = (shareUrl: string) => `I made a list of kinky events I'd like to go to!
 
@@ -36,6 +37,7 @@ const ShareWishlistButton = () => {
     const { userProfile } = useUserContext();
     // Function to handle sharing the wishlist
     const handleShare = async () => {
+        amplitude.logEvent('wishlist_shared');
         try {
             const shareURL = `${WISHLIST_URL_BASE}?share_code=${userProfile?.share_code}`;
             const shareMessage = getInstructions(shareURL);
@@ -71,6 +73,7 @@ const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) =>
     }, [])
 
     const resetWishlist = () => {
+        amplitude.logEvent('wishlist_reset');
         setFriendWishlistShareCode(null)
     }
 

@@ -6,6 +6,7 @@ import { Event } from '../commonTypes';
 import { EventWithMetadata } from '../types';
 import { useCalendarContext } from './CalendarContext';
 import { useUserContext } from '../Auth/UserContext';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -22,6 +23,7 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
     const itemIsOnWishlist = isOnWishlist(item.id);
 
     const handleToggleEventWishlist = () => {
+        amplitude.logEvent('event_wishlist_toggled', { event_id: item.id, is_on_wishlist: !itemIsOnWishlist });
         // flip the old value
         toggleWishlistEvent.mutate({ eventId: item.id, isOnWishlist: !itemIsOnWishlist });
     };

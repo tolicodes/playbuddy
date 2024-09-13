@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import * as amplitude from '@amplitude/analytics-react-native';
 
 export interface CustomCalendarDayProps {
     date: any;
@@ -12,7 +13,10 @@ export interface CustomCalendarDayProps {
 export const CustomCalendarDay: React.FC<CustomCalendarDayProps> = ({ date, state, marking, onPress }) => {
     return (
         // Click on date triggers onPress, which scrolls to that date
-        <TouchableOpacity onPress={() => onPress(date)}>
+        <TouchableOpacity onPress={() => {
+            amplitude.logEvent('calendar_day_clicked')
+            onPress(date)
+        }}>
             <View style={styles.dayContainer}>
                 {/* Display the day number, with special styling for selected days */}
                 <Text style={[styles.dayText, state === 'selected' && styles.selectedDayText]}>

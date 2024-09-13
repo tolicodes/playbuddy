@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { Alert, AppState } from 'react-native';
 import { supabase } from '../supabaseClient';
 import axios from 'axios';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 // Define the shape of the UserContext state
 interface UserProfile {
@@ -141,6 +142,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 throw new Error(`fetchAndSetUserProfile: ${error.message}`);
             }
 
+            amplitude.logEvent('Sign Up', { email });
+
             setAuthReady(true);
             setSession(session);
 
@@ -164,6 +167,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 throw new Error(`Sign in error: ${error.message}`);
             }
 
+            amplitude.logEvent('Sign In', { email });
+
             await fetchAndSetUserProfile(session?.user?.id);
 
             setSession(session);
@@ -181,6 +186,8 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             Alert.alert(`Sign out: ${error.message}`);
             throw new Error(`Sign out error: ${error}`);
         }
+
+        amplitude.logEvent('Sign Out');
 
         setSession(null);
         setUserProfile(null);
@@ -231,6 +238,16 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setAuthReady(false);
         }
     }, [session?.access_token]);
+
+    useEffect(() => {
+        amplitude.setUserId(authUserId);
+        const identifyEvent = new amplitude.Identify();
+        if (userProfile?.email) {
+            identifyEvent.set('email', userProfile?.email);
+        }
+
+        amplitude.identify(identifyEvent);
+    }, [authUserId, userProfile])
 
     const value = useMemo(() => ({
         userId: authUserId,

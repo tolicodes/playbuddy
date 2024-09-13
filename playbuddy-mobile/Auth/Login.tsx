@@ -1,8 +1,9 @@
+import React from 'react';
 import Account from "./Account"
 import Auth from "./Auth"
 import { useUserContext } from "./UserContext"
 
-export default () => {
+const Login = () => {
     const { userId } = useUserContext();
 
     return userId
@@ -10,5 +11,6 @@ export default () => {
         ? <Account key={userId} />
         // Login
         : <Auth />
-
 }
+
+export default Login;

@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NavStack, NavStackProps } from './types';
 import * as Sentry from '@sentry/react-native';
 import URLParse from 'url-parse';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 // Define your path-to-screen mapping with optional parameters
 const NAV_MAPPING: { [key: string]: keyof NavStackProps } = {
@@ -17,8 +18,6 @@ const handleNavigate = (
     navigation: any,
     url: string,
 ) => {
-    console.log('Deep Link URL:', url);
-
     const parsedUrl = new URLParse(url, true); // true to parse the query as an object
 
 
@@ -40,18 +39,10 @@ const handleNavigate = (
     // Assuming NAV_MAPPING is your path to screen mapping
     const screenName = NAV_MAPPING[path || ''] || ''; // default to Calendar
 
-    console.log({
+    amplitude.logEvent('deep_link_navigate', {
         path,
         screenName,
         queryParams
-    })
-
-    Sentry.captureMessage(`Handle Nativate:`, {
-        extra: {
-            path,
-            screenName,
-            queryParams
-        }
     });
 
     if (!screenName) {
@@ -68,7 +59,7 @@ export default function DeepLinkHandler() {
     useEffect(() => {
         // Handle initial deep link
         Linking.getInitialURL().then((url) => {
-            Sentry.captureMessage(`Initial URL: ${url}`);
+            amplitude.logEvent('initial_deep_link', { url });
             if (url) {
                 handleNavigate(navigation, url);
             }
@@ -76,8 +67,7 @@ export default function DeepLinkHandler() {
 
         // Listen to deep links
         const urlListener = Linking.addEventListener('url', (event) => {
-            Sentry.captureMessage(`Listener URL: ${event.url}`);
-
+            amplitude.logEvent('deep_link', { url: event.url });
             handleNavigate(navigation, event.url);
         });
 

@@ -13,6 +13,7 @@ import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
 import WebsiteBanner from './WebsiteBanner';
 import { useUserContext } from '../Auth/UserContext';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -49,6 +50,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
 
     // Toggle calendar expansion
     const onPressCalendar = () => {
+        amplitude.logEvent('calendar_toggle_clicked');
         Animated.timing(animatedHeight, {
             toValue: isCalendarExpanded ? 0 : CALENDAR_HEIGHT, // Toggle between 0 and the actual content height
             duration: 300,
@@ -59,6 +61,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
     };
 
     const onPressDay = (day: any) => {
+        amplitude.logEvent('calendar_day_clicked');
         const date = moment(day.dateString).format(SECTION_DATE_FORMAT);
         const sectionIndex = sections.findIndex(section => section.title === date);
 
@@ -72,6 +75,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
     };
 
     const onPressOpenFilters = () => {
+        amplitude.logEvent('calendar_filters_clicked');
         navigation.navigate('Filters');
     };
 

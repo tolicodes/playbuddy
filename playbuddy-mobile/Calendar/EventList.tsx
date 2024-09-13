@@ -1,3 +1,4 @@
+import React from "react";
 import { SectionList, View, Text, StyleSheet } from "react-native";
 import { EventWithMetadata } from "./../types";
 import { ListItem } from "./ListItem";
@@ -5,8 +6,9 @@ import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import { NavStack } from "../types";
 import { Event } from "../commonTypes";
+import * as amplitude from '@amplitude/analytics-react-native';
 
-export default ({ sections, screen, sectionListRef }: { sections: any, screen: string, sectionListRef?: any }) => {
+const EventList = ({ sections, sectionListRef }: { sections: any, screen: string, sectionListRef?: any }) => {
     const navigation = useNavigation<NavStack>();
 
     // Handle event click
@@ -29,7 +31,10 @@ export default ({ sections, screen, sectionListRef }: { sections: any, screen: s
                 >
                     <ListItem
                         item={event}
-                        setSelectedEvent={setSelectedEvent}
+                        setSelectedEvent={(event) => {
+                            amplitude.logEvent('event_list_item_clicked', { event_id: event.id });
+                            setSelectedEvent(event)
+                        }}
                     />
                 </View>
             )
@@ -40,7 +45,7 @@ export default ({ sections, screen, sectionListRef }: { sections: any, screen: s
         keyExtractor={(item, i) => item.name + item.id}
         ListEmptyComponent={<Text style={styles.emptyList}>No Results</Text>}
         onScrollToIndexFailed={(e) => {
-            console.log('onScrollToIndexFailed', e);
+            amplitude.logEvent('scroll_to_index_failed');
         }}
         initialNumToRender={200}
     />)
@@ -58,3 +63,5 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
 });
+
+export default EventList;

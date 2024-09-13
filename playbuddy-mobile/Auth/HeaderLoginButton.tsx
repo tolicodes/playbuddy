@@ -3,6 +3,7 @@ import React from "react"
 import { TouchableOpacity, View, Text } from "react-native"
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { NavStack } from "../types";
+import * as amplitude from '@amplitude/analytics-react-native';
 
 
 const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean }) => {
@@ -16,7 +17,10 @@ const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean 
                 alignItems: 'center',     // Centers horizontally
             }
             }
-            onPress={() => navigation.navigate('Login')} // replace 'Login' with your actual login screen name
+            onPress={() => {
+                amplitude.logEvent('login_button_clicked')
+                navigation.navigate('Login')
+            }}
         >
             <View style={{
                 width: showLoginText ? 50 : 30,

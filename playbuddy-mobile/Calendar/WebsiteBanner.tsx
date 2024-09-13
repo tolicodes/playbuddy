@@ -2,11 +2,15 @@ import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavStack } from '../types';
+import * as amplitude from '@amplitude/analytics-react-native';
 
 const Banner = () => {
     const navigation = useNavigation<NavStack>()
     return (
-        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+        <TouchableOpacity onPress={() => {
+            amplitude.logEvent('login_banner_clicked')
+            navigation.navigate('Login')
+        }}>
             <View style={styles.banner}>
 
                 <Text style={styles.text}>
