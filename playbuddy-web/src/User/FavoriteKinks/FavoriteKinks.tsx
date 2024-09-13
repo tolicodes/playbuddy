@@ -1,3 +1,4 @@
+import React from 'react';
 import { useGetKinks } from '../../Common/hooks/useGetKinks';
 import KinkCardGrid from '../../KinkLibrary/KinkCardGrid';
 import { useAddFavoriteKink, useRemoveFavoriteKink } from './hooks/favoriteKinkMutations';

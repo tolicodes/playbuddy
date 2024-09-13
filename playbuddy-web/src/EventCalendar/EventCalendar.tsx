@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -13,6 +14,7 @@ import { OptionType } from "../Common/types";
 import { Event } from '../Common/commonTypes';
 
 import { EventFilters } from './EventFilters';
+import * as amplitude from '@amplitude/analytics-browser';
 import {
     downloadCsv,
     // getAvailableGroups,
@@ -85,11 +87,13 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     }, []);
 
     const onClickDownloadCSV = () => {
+        amplitude.logEvent('Download CSV');
         const csvData = jsonToCsv(events);
         downloadCsv(csvData);
     }
 
     const onClickGoogleCal = () => {
+        amplitude.logEvent('Add Google Calendar');
         window.location.href = MISC_URLS.addGoogleCalendar();
     }
 

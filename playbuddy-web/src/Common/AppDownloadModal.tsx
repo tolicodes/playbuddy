@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from './config';
+import * as amplitude from '@amplitude/analytics-browser';
 const KinkEventsMessage = () => <p><strong>Kinky Events:</strong> Some extra kinky events aren’t available in the app store. You can view them on the website while we work to resolve this.</p>;
 
 // Styled components for Modal
@@ -84,7 +85,14 @@ const StoreModal = () => {
   };
 
   // Close modal
-  const handleClose = () => setShowModal(false);
+  const handleClose = () => {
+    amplitude.logEvent('store_modal_closed');
+    setShowModal(false);
+  }
+
+  useEffect(() => {
+    amplitude.logEvent('store_modal_shown', { platform });
+  }, [platform])
 
   useEffect(() => {
     if (detectMobilePlatform()) {
@@ -115,6 +123,7 @@ const StoreModal = () => {
                 href={APP_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => amplitude.logEvent('app_store_clicked')}
               >
                 <img
                   src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&releaseDate=1311120000&h=5b3127492d87ec2af62ff4d2a7492b70"
@@ -139,6 +148,7 @@ const StoreModal = () => {
                 href={GOOGLE_PLAY_URL}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => amplitude.logEvent('google_play_clicked')}
               >
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"

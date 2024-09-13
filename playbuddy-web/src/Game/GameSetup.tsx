@@ -5,6 +5,7 @@ import CategoryGrid from './CategoryGrid';
 import LevelButtons from './LevelButtons';
 import { Level } from '../Common/types';
 import { CategoryWithCount } from '../KinkLibrary/utils/getCategoriesWithCounts';
+import * as amplitude from '@amplitude/analytics-browser';
 
 import {
   StyledContainer,
@@ -31,10 +32,14 @@ export const GameSetup = ({
   >([]);
 
   const onClickAdventure = () => {
-    onFilterChange({
+    const filterOpts = {
       level: selectedLevel,
       selectedCategories: selectedCategories.map((category) => category.value),
-    });
+    };
+
+    amplitude.logEvent('adventure_start', filterOpts);
+
+    onFilterChange(filterOpts);
   };
 
   return (

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { AppBar, Toolbar, Typography, InputBase, Button } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import * as amplitude from '@amplitude/analytics-browser';
 
 export const NavBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    amplitude.logEvent('search_term_change', {
+      searchTerm: event.target.value,
+    });
     setSearchTerm(event.target.value);
   };
 

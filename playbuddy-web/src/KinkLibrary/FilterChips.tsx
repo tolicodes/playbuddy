@@ -1,5 +1,6 @@
 import React from 'react';
 import { Chip } from '@mui/material';
+import * as amplitude from '@amplitude/analytics-browser';
 
 interface Option {
   value: string;
@@ -42,6 +43,11 @@ const FilterChips: React.FC<FilterChipsProps> = ({
     .slice(0, top || normalizedOptions.length); // Use 'top' if specified, otherwise include all options
 
   const handleSelect = (optionValue: string) => {
+    amplitude.logEvent('filter_chip_selected', {
+      optionValue,
+      selected: !selected.includes(optionValue),
+    });
+
     if (mode === 'multiple') {
       if (Array.isArray(selected)) {
         if (selected.includes(optionValue)) {

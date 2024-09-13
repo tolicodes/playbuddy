@@ -15,6 +15,7 @@ import GameSetup from './GameSetup';
 // Utility functions
 import { filterKinksAndCategories } from '../KinkLibrary/utils/filterKinksAndCategories';
 import { useAddFavoriteKink, useRemoveFavoriteKink } from '../User/FavoriteKinks/hooks/favoriteKinkMutations';
+import * as amplitude from '@amplitude/analytics-browser';
 
 // Enum for game modes
 enum Mode {
@@ -78,13 +79,21 @@ const Game: React.FC = () => {
             <Typography variant="h6">Your Adventure</Typography>
             <Button
               variant="contained"
-              onClick={() => setMode(Mode.setup)}
+              onClick={() => {
+                amplitude.logEvent('Change Adventure');
+                setMode(Mode.setup)
+              }
+              }
             >
               Change Adventure
             </Button>
             <Button
               variant="contained"
-              onClick={() => setRandomSeed(Math.random())}
+              onClick={() => {
+                amplitude.logEvent('Shuffle Adventure');
+                setRandomSeed(Math.random())
+              }
+              }
             >
               Shuffle
             </Button>
@@ -103,6 +112,7 @@ const Game: React.FC = () => {
         <GameSetup
           categories={categories}
           onFilterChange={(filters: any) => {
+            amplitude.logEvent('Filter Kinks', { filters });
             setFilters(filters);
             setMode(Mode.adventure);
           }}

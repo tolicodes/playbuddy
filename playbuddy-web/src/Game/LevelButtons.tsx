@@ -1,6 +1,8 @@
+import React from 'react';
 import { Button, Grid, Box } from '@mui/material';
 import { styled } from '@mui/system';
 import { LEVELS, Level } from '../Common/types';
+import * as amplitude from '@amplitude/analytics-browser';
 
 // Styled container for the LevelButtons component
 export const StyledBox = styled(Box)({
@@ -73,6 +75,7 @@ const LevelButtons: React.FC<LevelButtonsProps> = ({
                 variant="outlined"
                 sx={buttonSx}
                 onClick={() => {
+                  amplitude.logEvent('level_selected', { level: level.label });
                   onClickLevel(level.label);
                 }}
               >

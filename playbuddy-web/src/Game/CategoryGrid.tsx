@@ -5,6 +5,7 @@ import CategoryIcon, { categoryIcons } from './CategoryIcon';
 import { CategoryWithCount } from '../KinkLibrary/utils/getCategoriesWithCounts';
 
 import { StyledCard, IconContainer, LabelContainer, StyledRoot } from './CategoryGrid.styles';
+import * as amplitude from '@amplitude/analytics-browser';
 
 const CategoryGridItem = ({
   category,
@@ -44,6 +45,11 @@ const CategoryGrid = ({
   setSelectedCategories: (categories: CategoryWithCount[]) => void;
 }) => {
   const onClickCard = (category: CategoryWithCount, categoryIsSelected: boolean) => {
+    amplitude.logEvent('category_selected', {
+      category: category.value,
+      selected: !categoryIsSelected,
+    });
+
     if (categoryIsSelected) {
       setSelectedCategories(
         selectedCategories.filter(
@@ -74,7 +80,14 @@ const CategoryGrid = ({
               <CategoryGridItem
                 category={category}
                 selected={categoryIsSelected}
-                onClick={() => onClickCard(category, categoryIsSelected)}
+                onClick={() => {
+                  amplitude.logEvent('category_selected', {
+                    category: category.value,
+                    selected: !categoryIsSelected,
+                  });
+
+                  onClickCard(category, categoryIsSelected)
+                }}
               />
             </Grid>
           );

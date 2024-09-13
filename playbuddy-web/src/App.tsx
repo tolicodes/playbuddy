@@ -13,6 +13,11 @@ import { EventCalendar } from './EventCalendar/EventCalendar';
 import { Header } from './Common/Header';
 import AppDownloadModal from './Common/AppDownloadModal';
 
+import * as amplitude from '@amplitude/analytics-browser';
+
+amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
+
+
 function App() {
   return (
     <>
