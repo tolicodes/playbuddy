@@ -100,6 +100,25 @@ const StoreModal = () => {
     }
   }, []);
 
+  const setDownloadModalShown = () => {
+    localStorage.setItem('downloadModalShown', 'true');
+  };
+
+  const isDownloadModalShown = () => {
+    return localStorage.getItem('downloadModalShown') === 'true';
+  };
+
+  // on mount check if the modal was already shown
+  useEffect(() => {
+    if (isDownloadModalShown()) {
+      setShowModal(false);
+      return;
+    }
+
+    // otherwise note it for next time to hide it
+    setDownloadModalShown();
+  }, [])
+
   if (!isMobile || !showModal) return null;
 
   return (
