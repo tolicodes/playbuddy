@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from './config';
 import * as amplitude from '@amplitude/analytics-browser';
-const KinkEventsMessage = () => <p><strong>Kinky Events:</strong> Some extra kinky events aren’t available in the app store. You can view them on the website while we work to resolve this.</p>;
+const KinkEventsMessage = () => <p><h4>KINKY EVENTS</h4> Some extra kinky events aren’t available in the app store. You can view them on the website while we work to resolve this.</p>;
 
 // Styled components for Modal
 const ModalOverlay = styled.div`
@@ -106,16 +106,13 @@ const StoreModal = () => {
     <ModalOverlay>
       <ModalContent>
         <CloseButton onClick={handleClose}>&times;</CloseButton>
-        <Title>Get a Better Experience</Title>
-        <Description>
-          You can get a much better experience by downloading the {platform === 'ios' ? 'iOS' : 'Android'} app.
-        </Description>
+        <Title>Download The App</Title>
 
         {platform === 'ios' ? (
           <>
             <p>
-              The app is currently in beta, meaning you'll have to install it via the TestFlight app. Follow this link
-              to download TestFlight and follow the instructions.
+              The app is currently in beta, meaning you'll have to install it via the TestFlight app. Click below to
+              download TestFlight and follow the instructions.
             </p>
             <KinkEventsMessage />
             <ButtonsContainer>
@@ -136,27 +133,14 @@ const StoreModal = () => {
         ) : (
           <>
             <p>
-              The app is currently in beta, meaning I have to <strong>add you to the super special invite-only list</strong>. Email me
-              at <a href="mailto:toli@toli.me">toli@toli.me</a> and I will set you right up!
+              Email <a href="mailto:toli@toli.me">toli@toli.me</a> and I will send you
+              a link to download the app.
+
             </p>
-            <p>
-              Once you're on the list click the link below to download the app.
-            </p>
+            <p><h4>WHY?</h4> The app is currently in beta, meaning I have to <strong>add you to the super special invite-only list 🤫</strong>.</p>
+
+
             <KinkEventsMessage />
-            <ButtonsContainer>
-              <StoreButton
-                href={GOOGLE_PLAY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => amplitude.logEvent('google_play_clicked')}
-              >
-                <img
-                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg"
-                  alt="Get it on Google Play"
-                  width="150"
-                />
-              </StoreButton>
-            </ButtonsContainer>
           </>
         )}
       </ModalContent>

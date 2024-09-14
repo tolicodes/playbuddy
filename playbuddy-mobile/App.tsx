@@ -7,6 +7,7 @@ import { CalendarProvider } from './Calendar/CalendarContext';
 import Nav from './Nav';
 import * as Sentry from '@sentry/react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
+
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
 Sentry.init({
