@@ -7,7 +7,7 @@ import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
 import { useUserContext } from '../Auth/UserContext';
 
 // Filter explicit events for apple test user
-const APPLE_USER_ID = '8fa0f95d-e0c2-447a-a639-6ec2c03d0e4f';
+const APPLE_USER_ID = '5d494e48-5457-4517-b183-dd1d8f2592a2';
 
 type CalendarContextType = {
     filters: FilterState;
