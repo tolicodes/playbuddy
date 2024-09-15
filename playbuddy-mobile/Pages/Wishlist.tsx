@@ -46,7 +46,7 @@ const ShareWishlistButton = () => {
                 message: shareMessage,
             });
         } catch (error) {
-            console.error('Error sharing wishlist', error);
+            throw new Error(`Error sharing wishlist: ${error.message}`);
         }
     };
 

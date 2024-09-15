@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList } from 'react-native';
+import { TextInput, Image, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 import { useNavigation } from '@react-navigation/native';
@@ -14,6 +14,7 @@ import EventList from './EventList';
 import WebsiteBanner from './WebsiteBanner';
 import { useUserContext } from '../Auth/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
+import { MISC_URLS } from '../config';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -79,6 +80,19 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
         navigation.navigate('Filters');
     };
 
+    const onPressGoogleCalendar = () => {
+        amplitude.logEvent('google_calendar_clicked', {
+            isOnWishlist,
+            authUserId: userId,
+        });
+
+        const params = isOnWishlist ? { wishlist: true, authUserId: userId || '' } : {};
+
+        const url = MISC_URLS.addGoogleCalendar(params);
+
+        Linking.openURL(url);
+    }
+
     const hasFilters = !!filters.organizers.length;
 
     return (
@@ -91,6 +105,13 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
                     <FAIcon name="filter" size={30} color={hasFilters ? "#007AFF" : "#8E8E93"} />
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.googleCalendarIcon} onPress={onPressGoogleCalendar}>
+                    <Image
+                        source={require('./images/google-calendar.png')}
+                        style={styles.googleCalendarImage}
+                    />
                 </TouchableOpacity>
 
                 <TextInput
@@ -196,6 +217,15 @@ const styles = StyleSheet.create({
         marginRight: 10,
         alignSelf: 'center',
     },
+    googleCalendarIcon: {
+        marginTop: -20,
+        marginRight: 10,
+        alignSelf: 'center',
+    },
+    googleCalendarImage: {
+        width: 30,  // Set your desired width
+        height: 30, // Set your desired height
+    }
 });
 
 export default EventCalendarView;

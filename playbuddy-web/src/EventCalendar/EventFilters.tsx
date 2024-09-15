@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Select, { MultiValue, StylesConfig } from "react-select";
 import { OptionType } from "../Common/types";
+import * as amplitude from '@amplitude/analytics-browser';
 
 interface GenericFilterProps {
     onFilterChange: (selectedOptions: OptionType[]) => void;
@@ -80,6 +81,7 @@ export const EventFilters = ({ onFilterChange, options, entityName }: GenericFil
         const selectedOptionList = selected as OptionType[];
         setSelectedOptions(selectedOptionList);
         onFilterChange(selectedOptionList);
+        amplitude.logEvent('filter_by', { entityName, selectedOptionList });
     };
 
     return (

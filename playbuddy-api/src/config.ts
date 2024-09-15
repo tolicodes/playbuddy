@@ -6,14 +6,18 @@ export const API_URL = {
     events: `${API_BASE_URL}/events`,
     // has to be http:// for google calendar to work
     eventsIcal: `http://api.playbuddy.me/events?format=ical`,
+    wishlistEventsIcal: `http://api.playbuddy.me/events?format=ical&wishlist=true`,
     kinks: `${API_BASE_URL}/kinks`,
 }
 
 export const MISC_URLS = {
-    addGoogleCalendar: () => {
-        const encodedUrl = encodeURIComponent(API_URL.eventsIcal);
+    addGoogleCalendar: ({ wishlist, authUserId }: { wishlist?: boolean, authUserId?: string } = {}) => {
+        const encodedUrl = encodeURIComponent(wishlist
+            ? `${API_URL.wishlistEventsIcal}&authUserId=${authUserId}`
+            : API_URL.eventsIcal
+        );
         return `https://www.google.com/calendar/render?cid=${encodedUrl}`;
-    }
+    },
 }
 
 export const puppeteerConfig = {

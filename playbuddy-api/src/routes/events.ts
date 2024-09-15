@@ -4,14 +4,14 @@ import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
+import { optionalAuthenticateRequest } from 'middleware/authenticateRequest.js';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response): Promise<void> => {
     const cacheKey = "events";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
-    const nycMidnightUTC = moment.tz('America/New_York').startOf('day').utc().format();
-    const todayUTC = nycMidnightUTC.split("T")[0];
+    const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
 
     try {
         const redisClient = await connectRedisClient();
@@ -21,22 +21,50 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             supabaseClient
                 .from("events")
                 .select("*, organizer:organizers(id, name, url)")
-                .gte("start_date", todayUTC),
+                .gte("start_date", nycMidnightUTC),
             flushCache // Pass the flushCache flag
         );
+
+        let response = JSON.parse(responseData)
+
+        // if we request the wishlist, we need to filter the events
+        if (req.query.wishlist) {
+            if (!req.query.authUserId) {
+                throw Error('User not specified');
+            }
+
+            // @ts-ignore
+            const { data: wishlistEvents, error } = await supabaseClient
+                .from("event_wishlist")
+                .select("event_id")
+                .eq("user_id", req.query.authUserId);
+
+
+            if (error) {
+                throw new Error(`Error fetching wishlist events: ${error.message}`);
+            }
+
+            const wishlistEventIds = wishlistEvents?.map((event: { event_id: string }) => event.event_id) || [];
+
+            response = response.filter((event: { id: string }) => {
+                return wishlistEventIds.includes(event.id);
+            });
+        }
 
         if (req.query.format === "ical") {
             res
                 .status(200)
                 .set("Content-Type", "text/calendar")
-                .send(createIcal(JSON.parse(responseData)));
+                .send(createIcal(response));
         } else {
-            res.status(200).send(responseData);
+            res.status(200).send(response);
         }
     } catch (error) {
         console.error("Error:", error);
         res.status(500).send({ error: error });
     }
 });
+
+
 
 export default router;
