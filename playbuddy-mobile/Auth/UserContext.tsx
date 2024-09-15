@@ -1,8 +1,20 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useCallback,
+    ReactNode,
+    useMemo,
+} from 'react';
 import { Alert, AppState } from 'react-native';
 import { supabase } from '../supabaseClient';
 import axios from 'axios';
 import * as amplitude from '@amplitude/analytics-react-native';
+import {
+    fetchUserProfile as fetchUserProfileUtil,
+    insertUserWithReferralCode as insertUserWithReferralCodeUtil,
+} from './auth_utils';
 
 // Define the shape of the UserContext state
 interface UserProfile {
@@ -14,9 +26,17 @@ interface UserProfile {
 interface UserContextType {
     userId: string | null;
     userProfile: UserProfile | null;
-    signInWithEmail: (email: string, password: string, callback: () => void) => Promise<void>;
-    signUpWithEmail: (email: string, password: string, callback: () => void) => Promise<void>;
-    signOut: (callback: () => void) => void;
+    signInWithEmail: (
+        email: string,
+        password: string,
+        callback: () => void
+    ) => Promise<void>;
+    signUpWithEmail: (
+        email: string,
+        password: string,
+        callback: () => void
+    ) => Promise<void>;
+    signOut: (callback: () => void) => Promise<void>;
     authReady: boolean;
 }
 
@@ -33,190 +53,263 @@ export const useUserContext = (): UserContextType => {
 };
 
 // Main UserProvider component
-
-// Sign Up Flow
-// 1. User signs up with email and password
-// 2. Supabase create a new user
-// 3. Create user profile in the custom `users` table with a referral code
-// 4. Fetch the user profile and set the session
-
-// Sign In Flow
-// 1. User signs in with email and password
-// 2. Supabase signs in the user
-// 3. Fetch the user profile and set the session
-
-// Sign Out Flow
-// 1. User signs out
-// 2. Supabase signs out the user
-// 3. Clear the session and user profile
-
-// Other
-// - Fetch user profile when the session changes
-// - Axios Interceptor will add the token to the header if the session exists
-
 export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // The auth takes a few steps
-    const [authReady, setAuthReady] = useState(false);
-
-    // Supabase Session
-    const [session, setSession] = useState<any>(null);
-
-    // User Table Profile
+    // State variables
+    const [authReady, setAuthReady] = useState(true);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(null);
 
-
-    // Derived state
-    // User ID from the auth table
-    const authUserId = session?.user?.id || null;
-
-    // Function to fetch user profile from the custom `users` table
-    const fetchUserProfile = useCallback(async (authUserId: string) => {
-        if (!authUserId) return null;
-
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('user_id', authUserId)
-            .single();
-
-        if (error) {
-            throw new Error(`Fetching User Profile: ${error.message}`);
+    // Helper functions for authentication flows
+    const setupAxiosAccessTokenInterceptor = useCallback((token: string) => {
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        } else {
+            delete axios.defaults.headers.common['Authorization'];
         }
-
-        return data as UserProfile;
     }, []);
 
-    const fetchAndSetUserProfile = async (authUserId: string) => {
-        if (!authReady || !authUserId) return;
+    const setAmplitudeIdentify = useCallback((authUserId: string, userProfile: UserProfile) => {
+        amplitude.setUserId(authUserId);
+        const identifyEvent = new amplitude.Identify();
 
-        try {
-            // we need to manually fetch the user profile before setting session
-            const profile = await fetchUserProfile(authUserId)
+        if (userProfile.email) {
+            identifyEvent.set('email', userProfile.email);
+        }
 
-            if (!profile) return;
+        amplitude.identify(identifyEvent);
+    }, []);
 
-            setUserProfile({
-                user_id: authUserId,
-                email: session?.user.email,
+    const fetchAndSetUserProfile = useCallback(
+        async (session: any) => {
+            if (!session?.user?.id) {
+                throw new Error('fetchAndSetUserProfile requires a valid user session');
+            }
+
+            const profile = await fetchUserProfileUtil(session.user.id);
+            if (!profile) {
+                throw new Error('User profile not found');
+            }
+            const updatedProfile = {
+                // copy from session
+                user_id: session.user.id,
+                email: session.user.email,
+                // copy from user table
                 share_code: profile.share_code,
-            });
-        } catch (error) {
-            throw new Error(`Session Changed Fetching Profile: ${error.message}`);
-        }
-    }
+            };
+            setUserProfile(updatedProfile);
+            return updatedProfile;
+        },
+        []
+    );
 
-    // Function to insert a user with a referral code
-    const insertUserWithReferralCode = useCallback(async (userId: string) => {
-        const shareCode = Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
-        const { data, error } = await supabase
-            .from('users')
-            .insert([{ user_id: userId, share_code: shareCode }]);
+    // Abstracted authentication flow
+    const runAuthFlow = useCallback(
+        async ({
+            email,
+            password,
+            callback,
+            flowType,
+        }: {
+            email: string;
+            password: string;
+            callback: () => void;
+            flowType: 'signUp' | 'signIn';
+        }) => {
+            try {
+                // Step 1: Set authReady to false
+                setAuthReady(false);
 
-        if (error) {
-            throw new Error(`insertUserWithReferralCode: ${error.message}`);
-        }
+                // Step 2: Perform Supabase authentication
+                let session;
+                if (flowType === 'signUp') {
+                    const { data, error } = await supabase.auth.signUp({ email, password });
+                    if (error || !data.session) {
+                        throw new Error(error?.message || 'Sign up failed');
+                    }
+                    session = data.session;
+                    await insertUserWithReferralCodeUtil(session.user.id);
+                } else {
+                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error || !data.session) {
+                        throw new Error(error?.message || 'Sign in failed');
+                    }
+                    session = data.session;
+                }
 
-        return data;
-    }, [authUserId]);
+                if (!session) {
+                    throw new Error('No session returned from Supabase');
+                }
+
+                // Step 3: Fetch user profile
+                const userProfile = await fetchAndSetUserProfile(session);
+
+                // Step 4: Set Axios interceptor
+                setupAxiosAccessTokenInterceptor(session.access_token);
+
+                // Step 5: Identify user in Amplitude
+                setAmplitudeIdentify(session.user.id, userProfile);
+
+                // Step 6: Log event in Amplitude
+                amplitude.logEvent(flowType === 'signUp' ? 'sign_up' : 'sign_in', { email });
+
+                // Step 7: Set authReady to true
+                setAuthReady(true);
+
+                // Step 8: Store the callback to be called after authReady is true
+                setPendingCallback(() => callback);
+            } catch (error) {
+                // Consistent error handling
+                const errorMessage = `Error ${flowType === 'signUp' ? 'Signing Up' : 'Signing In'}: ${error.message}`;
+                Alert.alert(errorMessage);
+                throw new Error(errorMessage);
+            }
+        },
+        [fetchAndSetUserProfile, setupAxiosAccessTokenInterceptor, setAmplitudeIdentify]
+    );
 
     // Sign up function
-    const signUpWithEmail = useCallback(async (email: string, password: string, callback: () => void) => {
-        try {
-            // complete all of this
-            setAuthReady(false);
-            const { data: { session }, error } = await supabase.auth.signUp({ email, password });
-
-            if (error || !session?.user.id) {
-                throw new Error(error?.message || 'Sign up failed');
-            }
-
-            try {
-                await insertUserWithReferralCode(session.user.id);
-            } catch (error) {
-                throw new Error(`Sign up Insert User: ${error.message}`);
-            }
-
-            try {
-                await fetchAndSetUserProfile(session?.user?.id);
-            } catch (error) {
-                throw new Error(`fetchAndSetUserProfile: ${error.message}`);
-            }
-
-            amplitude.logEvent('Sign Up', { email });
-
-            setAuthReady(true);
-            setSession(session);
-
-            // for navigation
-            callback();
-        } catch (error) {
-            Alert.alert(`Sign up: ${error.message}`);
-        }
-    }, [insertUserWithReferralCode, authUserId, fetchUserProfile]);
+    const signUpWithEmail = useCallback(
+        async (email: string, password: string, callback: () => void) => {
+            await runAuthFlow({
+                email,
+                password,
+                callback,
+                flowType: 'signUp',
+            });
+        },
+        [runAuthFlow]
+    );
 
     // Sign in function
-    const signInWithEmail = useCallback(async (email: string, password: string, callback: () => void) => {
-        try {
-            const { data: { session }, error } = await supabase.auth.signInWithPassword({ email, password });
-
-            if (!session?.user?.id) {
-                throw new Error('Sign in failed: no userID');
-            }
-
-            if (error) {
-                throw new Error(`Sign in error: ${error.message}`);
-            }
-
-            amplitude.logEvent('Sign In', { email });
-
-            await fetchAndSetUserProfile(session?.user?.id);
-
-            setSession(session);
-            callback();
-        } catch (error) {
-            Alert.alert(`Sign in: ${error.message}`);
-        }
-    }, []);
+    const signInWithEmail = useCallback(
+        async (email: string, password: string, callback: () => void) => {
+            await runAuthFlow({
+                email,
+                password,
+                callback,
+                flowType: 'signIn',
+            });
+        },
+        [runAuthFlow]
+    );
 
     // Sign out function
-    const signOut = useCallback(async (callback: () => void) => {
-        try {
-            await supabase.auth.signOut();
-        } catch (error) {
-            Alert.alert(`Sign out: ${error.message}`);
-            throw new Error(`Sign out error: ${error}`);
-        }
+    const signOut = useCallback(
+        async (callback: () => void) => {
+            try {
+                // Step 1: Set authReady to false
+                setAuthReady(false);
 
-        amplitude.logEvent('Sign Out');
+                // Step 2: Sign out from Supabase
+                const { error } = await supabase.auth.signOut();
+                if (error) {
+                    throw new Error(error.message);
+                }
 
-        setSession(null);
-        setUserProfile(null);
+                // Step 3: Log sign-out event in Amplitude
+                amplitude.logEvent('sign_out');
 
-        // navigate back to home
-        callback();
-    }, []);
+                // Step 4: Clear user profile
+                setUserProfile(null);
 
-    // Fetch session and set up token refresh upon mount
-    useEffect(() => {
-        const getSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setSession(session);
+                // Step 5: Remove Axios interceptor
+                setupAxiosAccessTokenInterceptor('');
 
-            // Start auto-refreshing the token if a session exists
-            supabase.auth.onAuthStateChange((_event, session) => setSession(session));
+                // Step 6: Set authReady to true
+                setAuthReady(true);
 
-            if (session?.user?.id) {
-                await fetchAndSetUserProfile(session.user.id);
+                // Step 7: Execute the callback immediately (no need to wait)
+                callback();
+            } catch (error) {
+                const errorMessage = `Error Signing Out: ${error.message}`;
+                Alert.alert(errorMessage);
+                throw new Error(errorMessage);
             }
+        },
+        [setupAxiosAccessTokenInterceptor]
+    );
+
+    // Effect to execute the pending callback when authReady becomes true
+    useEffect(() => {
+        if (authReady && pendingCallback) {
+            pendingCallback();
+            setPendingCallback(null);
+        }
+    }, [authReady, pendingCallback]);
+
+    // Fetch session and user profile on mount and app state change
+    useEffect(() => {
+        let authListener: any;
+
+        const initializeAuth = async () => {
+            // another operation is working on it
+            if (authReady === false) {
+                return;
+            }
+
+            try {
+                setAuthReady(false);
+                const {
+                    data: { session },
+                } = await supabase.auth.getSession();
+
+                const authUserId = session?.user?.id;
+
+                if (authUserId) {
+                    // Fetch and set user profile
+                    const userProfile = await fetchAndSetUserProfile(session);
+
+                    // Set Axios interceptor
+                    setupAxiosAccessTokenInterceptor(session.access_token);
+
+                    // Identify user in Amplitude
+                    setAmplitudeIdentify(authUserId, userProfile);
+
+                    // Set authReady to true
+                    setAuthReady(true);
+                } else {
+                    setAuthReady(true); // No session, but auth is ready
+                }
+
+                // This listens for the auto state including token refreshes to change
+                //  Updates axios etc
+                authListener = supabase.auth.onAuthStateChange(async (event, session) => {
+                    // could be in the middle of signing up
+                    if (!authReady) return
+
+                    if (authUserId && session) {
+                        // Fetch and set user profile
+                        const userProfile = await fetchAndSetUserProfile(session);
+
+                        // Set Axios interceptor
+                        setupAxiosAccessTokenInterceptor(session.access_token);
+
+                        // Identify user in Amplitude
+                        setAmplitudeIdentify(authUserId, userProfile);
+
+                        // Set authReady to true
+                        setAuthReady(true);
+                    } else {
+                        // User signed out
+                        setUserProfile(null);
+                        setupAxiosAccessTokenInterceptor('');
+                        setAuthReady(true); // Auth is ready, but no user is signed in
+                    }
+                });
+            } catch (error) {
+                throw new Error(`Error initializing auth: ${error.message}`);
+            }
+
         };
 
-        getSession();
-    }, []);
+        initializeAuth();
 
-    // Handle AppState to start/stop token refresh
-    useEffect(() => {
+        // this listens for the app state to change (foreground, background, etc.)
+        // it will stop the auto refresh when the app is in the background
+        // and when it's back it will get the latest profile
         const appStateListener = AppState.addEventListener('change', (state) => {
             if (state === 'active') {
+                initializeAuth();
                 supabase.auth.startAutoRefresh();
             } else {
                 supabase.auth.stopAutoRefresh();
@@ -225,42 +318,24 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         return () => {
             appStateListener.remove();
+            if (authListener && authListener.data && authListener.data.subscription) {
+                authListener.data.subscription.unsubscribe();
+            }
         };
-    }, []);
+    }, [fetchAndSetUserProfile, setupAxiosAccessTokenInterceptor, setAmplitudeIdentify]);
 
-    // Set up Axios interceptor for the token
-    useEffect(() => {
-        if (session?.access_token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;
-            setAuthReady(true);
-        } else {
-            delete axios.defaults.headers.common['Authorization'];
-            setAuthReady(false);
-        }
-    }, [session?.access_token]);
-
-    useEffect(() => {
-        amplitude.setUserId(authUserId);
-        const identifyEvent = new amplitude.Identify();
-        if (userProfile?.email) {
-            identifyEvent.set('email', userProfile?.email);
-        }
-
-        amplitude.identify(identifyEvent);
-    }, [authUserId, userProfile])
-
-    const value = useMemo(() => ({
-        userId: authUserId,
-        userProfile,
-        authReady,
-        signInWithEmail,
-        signUpWithEmail,
-        signOut,
-    }), [authUserId, userProfile, authReady, signInWithEmail, signUpWithEmail, signOut]);
-
-    return (
-        <UserContext.Provider value={value}>
-            {children}
-        </UserContext.Provider>
+    // Memoize the context value to optimize performance
+    const value = useMemo(
+        () => ({
+            userId: userProfile?.user_id || null,
+            userProfile,
+            authReady,
+            signInWithEmail,
+            signUpWithEmail,
+            signOut,
+        }),
+        [userProfile, authReady, signInWithEmail, signUpWithEmail, signOut]
     );
+
+    return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 };
