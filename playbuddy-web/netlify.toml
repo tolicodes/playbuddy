@@ -10,6 +10,17 @@
   status = 301
   force = true
   
+[[redirects]]
+  from = "https://kinks.toli.love"
+  to = "https://playbuddy.me/kinks"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://kinkbuddy.org"
+  to = "https://playbuddy.me"
+  status = 301
+  force = true
 
 [[redirects]]
   from = "/*"
