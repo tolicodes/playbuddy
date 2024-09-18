@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { APP_STORE_URL, GOOGLE_PLAY_URL } from './config';
+import { APP_STORE_URL } from './config';
 import * as amplitude from '@amplitude/analytics-browser';
 const KinkEventsMessage = () => <p><h4>KINKY EVENTS</h4> Some extra kinky events aren’t available in the app store. You can view them on the website while we work to resolve this.</p>;
 
@@ -33,11 +33,6 @@ const Title = styled.h2`
   margin: 0;
   padding-bottom: 10px;
   font-size: 24px;
-`;
-
-const Description = styled.p`
-  font-size: 16px;
-  margin-bottom: 20px;
 `;
 
 const ButtonsContainer = styled.div`
