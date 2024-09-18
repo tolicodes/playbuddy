@@ -2,7 +2,7 @@ import { Kink } from '../types';
 import { useQuery } from '@tanstack/react-query';
 
 const getKinks = async (): Promise<Kink[]> => {
-  const response = await fetch('https://api.kinkbuddy.org/kinks');
+  const response = await fetch('https://api.playbuddy.me/kinks');
   return response.json();
 };
 
