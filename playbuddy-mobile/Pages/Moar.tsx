@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { Text, FlatList, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
@@ -77,7 +77,7 @@ const tools: LinkItem[] = [
 const Moar: React.FC = () => {
     const handlePress = (url: string) => {
         amplitude.logEvent('moar_link_clicked', { url });
-        Linking.openURL(url).catch((err) => console.error('An error occurred', err));
+        Linking.openURL(url);
     };
 
     const renderItem = ({ item }: { item: LinkItem }) => (

@@ -35,10 +35,9 @@ export const useFetchEvents = (appState?: string) => {
         axios.get<Event[]>(API_URL.events)
             .then(response => {
                 setEvents(response.data);
+            }).catch((e) => {
+                throw new Error(`Error fetching events: ${e.message}`);
             })
-            .catch(error => {
-                console.error('Error fetching events:', error);
-            });
     }, [appState]);
 
     return { events };

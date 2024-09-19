@@ -22,16 +22,14 @@
       "associatedDomains": [
         "applinks:playbuddy.me"
       ],
-      "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
-      "buildNumber": "3"
+      "bundleIdentifier": "com.tolicodes1.kinkbuddyios"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.jpeg",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tolicodes1.kinkbuddyios",
-      "versionCode": 3
+      "package": "com.tolicodes1.kinkbuddyios"
     },
     "web": {
       "favicon": "./assets/images/favicon.jpeg"
@@ -56,7 +54,8 @@
           "project": "react-native",
           "organization": "toli-z2"
         }
-      ]
+      ],
+      "expo-build-properties"
     ],
     "owner": "tolicodes1"
   }

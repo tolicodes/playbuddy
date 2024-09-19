@@ -12,7 +12,7 @@ const saveFiltersToLocalStorage = async (filters: FilterState) => {
         const jsonValue = JSON.stringify(filters);
         await AsyncStorage.setItem('@filters', jsonValue);
     } catch (e) {
-        console.error('Failed to save filters', e);
+        throw new Error('Failed to save filters', e?.message);
     }
 };
 
@@ -22,7 +22,7 @@ const loadFiltersFromLocalStorage = async (): Promise<FilterState | null> => {
         const jsonValue = await AsyncStorage.getItem('@filters');
         return jsonValue != null ? JSON.parse(jsonValue) : null;
     } catch (e) {
-        console.error('Failed to load filters', e);
+        throw new Error('Failed to load filters', e?.message);
         return null;
     }
 };

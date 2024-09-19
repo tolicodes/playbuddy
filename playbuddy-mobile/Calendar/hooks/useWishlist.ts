@@ -77,11 +77,13 @@ const useToggleWishlistEvent = () => {
         },
         onError: (err, _, context) => {
             if (!userId) return;
-            console.error('Error toggling wishlist event:', err);
+
             // Rollback to the previous wishlist state on error
             if (context?.previousWishlist) {
                 queryClient.setQueryData(['wishlistEvents', userId], context.previousWishlist);
             }
+
+            throw new Error('Error toggling wishlist event:', err?.message)
         },
         onSettled: () => {
             if (!userId) return;
