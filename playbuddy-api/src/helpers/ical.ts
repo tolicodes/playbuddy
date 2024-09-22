@@ -1,10 +1,17 @@
 import { ICalCalendar, ICalEventData } from "ical-generator";
 import { Event } from "../commonTypes.js";
 
-export const createIcal = (events: Event[]) => {
+type CalendarType = "calendar" | "wishlist";
+
+const CALENDAR_TITLES = {
+  calendar: "PlayBuddy Event (All)s",
+  wishlist: "PlayBuddy Wishlist",
+};
+
+export const createIcal = (events: Event[], type: CalendarType = 'calendar') => {
   // Create a new iCalendar
   const calendar: ICalCalendar = new ICalCalendar({
-    name: "PlayBuddy Events Calendar",
+    name: CALENDAR_TITLES[type]
   });
 
   // Convert JSON data to iCalendar events

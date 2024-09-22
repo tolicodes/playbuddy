@@ -12,6 +12,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
     const cacheKey = "events";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
     const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
+    const calendarType = req.query.wishlist ? "wishlist" : "calendar";
 
     try {
         const redisClient = await connectRedisClient();
@@ -28,7 +29,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         let response = JSON.parse(responseData)
 
         // if we request the wishlist, we need to filter the events
-        if (req.query.wishlist) {
+        if (calendarType === 'wishlist') {
             if (!req.query.authUserId) {
                 throw Error('User not specified');
             }
@@ -55,7 +56,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             res
                 .status(200)
                 .set("Content-Type", "text/calendar")
-                .send(createIcal(response));
+                .send(createIcal(response, calendarType));
         } else {
             res.status(200).send(response);
         }
