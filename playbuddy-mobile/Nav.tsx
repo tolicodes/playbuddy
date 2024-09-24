@@ -27,7 +27,7 @@ function CalendarStackNavigator() {
     return (
         <CalendarStack.Navigator>
             <CalendarStack.Screen
-                name="Calendar"
+                name="Main Calendar"
                 component={EventCalendarView}
                 options={{ headerShown: false }}
             />
@@ -67,7 +67,6 @@ const TabNavigator = () => {
 
             <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
             <Tab.Screen name="Wishlist" component={Wishlist} />
-            <Tab.Screen name="Communities" component={Communities} />
             <Tab.Screen name="Moar" component={Moar} />
 
         </Tab.Navigator >
@@ -81,9 +80,9 @@ const ComingSoon = () => <>
 // Create the Drawer Navigator
 const DrawerNav = () => {
     return (
-        <Drawer.Navigator initialRouteName="Calendar" >
+        <Drawer.Navigator initialRouteName="Home" >
             <Drawer.Screen
-                name="Calendar"
+                name="Home"
                 component={TabNavigator}
                 options={({ route }) => ({
                     headerRight: (props) => {
@@ -128,7 +127,7 @@ const DrawerNav = () => {
             />
             <Drawer.Screen
                 name="Communities"
-                component={ComingSoon}
+                component={Communities}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} style={{ width: 30 }} /> }}
             />
             <Drawer.Screen
