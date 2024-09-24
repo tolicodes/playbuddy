@@ -7,7 +7,8 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 
 export const EventDetail = ({ route }: any) => {
-    const { selectedEvent } = route.params;
+    const selectedEvent = route?.params?.selectedEvent;
+    if (!selectedEvent) return
 
     return (
         <ScrollView style={{ padding: 20 }}>
