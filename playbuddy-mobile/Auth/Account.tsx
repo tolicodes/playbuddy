@@ -12,7 +12,10 @@ export default function Account() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.emailText}>Logged in As: {userProfile?.email}</Text>
+            <Text style={styles.emailText}>Logged in As: </Text>
+            <Text>{userProfile?.email}</Text>
+            <Text>{userProfile?.name}</Text>
+
             <Text>Wishlist Share Code: {userProfile?.share_code}</Text>
             <Button title="Sign Out" onPress={onPressSignOut} />
         </View>

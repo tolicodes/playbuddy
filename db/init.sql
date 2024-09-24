@@ -116,3 +116,5 @@ ADD COLUMN vetted BOOLEAN DEFAULT FALSE,
 ADD COLUMN classification_status TEXT CHECK (classification_status IN ('queued', 'auto_classified', 'admin_classified'));
 
 
+ALTER TABLE users
+ADD COLUMN name TEXT;

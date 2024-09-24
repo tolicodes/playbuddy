@@ -18,11 +18,11 @@ export const fetchUserProfile = async (authUserId: string) => {
 }
 
 // Function to insert a user with a referral code
-export const insertUserWithReferralCode = async (userId: string) => {
+export const insertUserProfile = async ({ userId, name }: { userId: string, name: string }) => {
     const shareCode = Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
     const { data, error } = await supabase
         .from('users')
-        .insert([{ user_id: userId, share_code: shareCode }]);
+        .insert([{ user_id: userId, share_code: shareCode, name }]);
 
     if (error) {
         throw new Error(`insertUserWithReferralCode: ${error.message}`);

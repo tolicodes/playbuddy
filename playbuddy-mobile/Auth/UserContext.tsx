@@ -13,7 +13,7 @@ import axios from 'axios';
 import * as amplitude from '@amplitude/analytics-react-native';
 import {
     fetchUserProfile as fetchUserProfileUtil,
-    insertUserWithReferralCode as insertUserWithReferralCodeUtil,
+    insertUserProfile,
 } from './auth_utils';
 
 // Define the shape of the UserContext state
@@ -21,6 +21,14 @@ interface UserProfile {
     user_id: string;
     share_code: string;
     email?: string;
+    name?: string
+}
+
+type SignUpParams = {
+    email: string,
+    password: string,
+    name: string,
+    callback: () => void
 }
 
 interface UserContextType {
@@ -31,11 +39,7 @@ interface UserContextType {
         password: string,
         callback: () => void
     ) => Promise<void>;
-    signUpWithEmail: (
-        email: string,
-        password: string,
-        callback: () => void
-    ) => Promise<void>;
+    signUpWithEmail: (params: SignUpParams) => Promise<void>;
     signOut: (callback: () => void) => Promise<void>;
     authReady: boolean;
 }
@@ -93,6 +97,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 // copy from session
                 user_id: session.user.id,
                 email: session.user.email,
+                name: profile.name,
                 // copy from user table
                 share_code: profile.share_code,
             };
@@ -107,11 +112,13 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         async ({
             email,
             password,
+            name,
             callback,
             flowType,
         }: {
             email: string;
             password: string;
+            name?: string,
             callback: () => void;
             flowType: 'signUp' | 'signIn';
         }) => {
@@ -127,7 +134,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                         throw new Error(error?.message || 'Sign up failed');
                     }
                     session = data.session;
-                    await insertUserWithReferralCodeUtil(session.user.id);
+                    await insertUserProfile({ userId: session.user.id, name });
                 } else {
                     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                     if (error || !data.session) {
@@ -169,10 +176,11 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Sign up function
     const signUpWithEmail = useCallback(
-        async (email: string, password: string, callback: () => void) => {
+        async ({ email, password, name, callback }: { email: string, password: string, name: string, callback: () => void }) => {
             await runAuthFlow({
                 email,
                 password,
+                name,
                 callback,
                 flowType: 'signUp',
             });
