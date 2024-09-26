@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useUserContext } from './UserContext';
 import { useNavigation } from '@react-navigation/native';
-// import { Avatar } from './Avatar';
+import { Avatar } from './Avatar';
 
 export default function AccountDetails() {
     const { userProfile, signOut, } = useUserContext();
@@ -19,7 +19,7 @@ export default function AccountDetails() {
 
             <Text>Wishlist Share Code: {userProfile?.share_code}</Text>
 
-            {/* <Avatar /> */}
+            <Avatar />
 
             <Button title="Sign Out" onPress={onPressSignOut} />
         </View>
