@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Button, Input, Tab, Text } from '@rneui/themed';
 import { TabView, SceneMap } from 'react-native-tab-view';
@@ -15,10 +15,14 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
     const { signInWithEmail, signUpWithEmail } = useUserContext();
     const { goBack } = useNavigation();
 
-    const afterAuth = () => {
+    const afterSignIn = useCallback(() => {
         setIsLoading(false);
         goBack();
-    };
+    }, []);
+
+    const afterSignUp = useCallback(() => {
+        setIsLoading(false);
+    }, []);
 
     const handleAuth = () => {
         if (isSignUp && !name) {
@@ -28,9 +32,9 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
 
         setIsLoading(true);
         if (isSignUp) {
-            signUpWithEmail({ email, password, name, callback: afterAuth });
+            signUpWithEmail({ email, password, name, callback: afterSignUp });
         } else {
-            signInWithEmail({ email, password, callback: afterAuth });
+            signInWithEmail({ email, password, callback: afterSignIn });
         }
     };
 

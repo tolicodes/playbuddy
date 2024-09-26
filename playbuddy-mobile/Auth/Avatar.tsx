@@ -5,15 +5,13 @@ import { supabase } from '../supabaseClient'; // Supabase client
 import { useUserContext } from './UserContext';
 import { useQueryClient } from '@tanstack/react-query';
 
-
 export const Avatar = () => {
     const [uploadImageUri, setUploadImageUri] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const { userId, userProfile } = useUserContext();
+    const queryClient = useQueryClient();
 
-    const queryClient = useQueryClient()
-
-    // Ask for permission to access the gallery
+    // Request permission to access the gallery
     useEffect(() => {
         (async () => {
             const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -23,22 +21,19 @@ export const Avatar = () => {
         })();
     }, []);
 
-    // Automatically upload image after selection
+    // Automatically upload the image after selection
     useEffect(() => {
         if (uploadImageUri) {
             uploadImage(userId);
         }
     }, [uploadImageUri, userId]);
 
-    // Function to pick an image
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
             aspect: [1, 1],
             quality: 1,
-            base64: true,
-
         });
 
         if (!result.canceled) {
@@ -63,14 +58,11 @@ export const Avatar = () => {
         }
     };
 
-
-    // Function to upload the selected image to Supabase
-    const uploadImage = async (userId) => {
+    const uploadImage = async (userId: string) => {
         if (!uploadImageUri || !userId) return;
 
         try {
             setUploading(true);
-
             const response = await fetch(uploadImageUri);
             const blob = await response.blob();
             const arrayBuffer = await new Response(blob).arrayBuffer();
@@ -106,21 +98,44 @@ export const Avatar = () => {
     const avatarUrl = userProfile?.avatar_url;
 
     return (
-        <TouchableOpacity onPress={pickImage}>
-            <View style={styles.circle}>
-                {uploading ? (
-                    <ActivityIndicator size="large" color="#fff" />
-                ) : avatarUrl ? (
-                    <Image source={{ uri: avatarUrl }} style={styles.image} />
-                ) : (
-                    <Text style={styles.text}>Upload</Text>
-                )}
-            </View>
-        </TouchableOpacity>
+        <View style={styles.container}>
+            <Text style={styles.title}>Upload Your Avatar</Text>
+            <Text style={styles.subtitle}>This is how your buddies will identify you in the app!</Text>
+            <TouchableOpacity onPress={pickImage} style={styles.circleContainer}>
+                <View style={styles.circle}>
+                    {uploading ? (
+                        <ActivityIndicator size="large" color="#fff" />
+                    ) : avatarUrl ? (
+                        <Image source={{ uri: avatarUrl }} style={styles.image} />
+                    ) : (
+                        <Text style={styles.text}>Upload</Text>
+                    )}
+                </View>
+            </TouchableOpacity>
+        </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
+    container: {
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginBottom: 5,
+    },
+    subtitle: {
+        fontSize: 14,
+        color: '#888',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    circleContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     circle: {
         width: 150,
         height: 150,
@@ -128,7 +143,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden', // ensures image fits within the circle
+        overflow: 'hidden',
     },
     image: {
         width: '100%',
