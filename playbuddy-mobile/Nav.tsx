@@ -9,7 +9,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import EventCalendarView from './Calendar/EventCalendarView';
 import { EventDetail } from './Calendar/EventDetail';
 import { Filters } from './Calendar/Filters/Filters';
-import Login from './Auth/Login';
+import AuthMain from './Auth/AuthMain';
 import Wishlist from './Pages/Wishlist';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities';
@@ -98,7 +98,7 @@ const DrawerNav = () => {
 
             <Drawer.Screen
                 name="Login"
-                component={Login}
+                component={AuthMain}
                 options={() => ({
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />
                 })}

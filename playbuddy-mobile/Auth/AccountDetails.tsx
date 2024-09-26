@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 import { useUserContext } from './UserContext';
 import { useNavigation } from '@react-navigation/native';
+// import { Avatar } from './Avatar';
 
-export default function Account() {
+export default function AccountDetails() {
     const { userProfile, signOut, } = useUserContext();
     const { goBack } = useNavigation();
     const onPressSignOut = async () => {
@@ -17,6 +18,9 @@ export default function Account() {
             <Text>{userProfile?.name}</Text>
 
             <Text>Wishlist Share Code: {userProfile?.share_code}</Text>
+
+            {/* <Avatar /> */}
+
             <Button title="Sign Out" onPress={onPressSignOut} />
         </View>
     );

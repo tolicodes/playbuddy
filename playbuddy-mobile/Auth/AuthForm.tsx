@@ -6,7 +6,7 @@ import { useUserContext } from './UserContext';
 import { useNavigation } from '@react-navigation/native';
 
 // Reusable Authentication Form
-const AuthForm = ({ isSignUp }) => {
+const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
@@ -30,7 +30,7 @@ const AuthForm = ({ isSignUp }) => {
         if (isSignUp) {
             signUpWithEmail({ email, password, name, callback: afterAuth });
         } else {
-            signInWithEmail(email, password, afterAuth);
+            signInWithEmail({ email, password, callback: afterAuth });
         }
     };
 

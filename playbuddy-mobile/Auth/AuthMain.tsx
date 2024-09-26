@@ -1,16 +1,16 @@
 import React from 'react';
-import Account from "./Account"
-import Auth from "./Auth"
+import AccountDetails from "./AccountDetails"
+import AuthForm from "./AuthForm"
 import { useUserContext } from "./UserContext"
 
-const Login = () => {
+const AuthMain = () => {
     const { userId } = useUserContext();
 
     return userId
         // just says they're logged in
-        ? <Account key={userId} />
+        ? <AccountDetails key={userId} />
         // Login
-        : <Auth />
+        : <AuthForm />
 }
 
-export default Login;
+export default AuthMain;
