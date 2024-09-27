@@ -20,7 +20,7 @@ export const scrapePluraEvents = async ({
   // Convert HTML to Markdown
 
   const events: Event[] = data.hangouts
-    .filter((event: any) => event.location?.city === "New York")
+    .filter((event: any) => event.location?.city === "New York" || event.location?.metroId === "109c15cd-ce60-4f7c-b394-8a6d3d3e5526")
     .map((event: any) => {
       const descriptionsMarkdown = turndownService.turndown(event.details);
 
