@@ -22,6 +22,8 @@ export interface Event extends SourceMetadata {
     price: string;
     description: string;
     tags: string[];
+    type: 'event' | 'retreat'
+    recurring: 'none' | 'weekly' | 'monthly'
 }
 
 export interface SourceMetadata {

@@ -21,9 +21,10 @@ const CALENDAR_HEIGHT = 250;
 type EventCalendarViewProps = {
     isOnWishlist?: boolean
     isFriendWishlist?: boolean
+    isRetreats?: boolean
 }
 
-const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: EventCalendarViewProps = {}) => {
+const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isRetreats = false }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents } = useCalendarContext();
     const { userId } = useUserContext()
@@ -35,6 +36,8 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false }: E
     }
     else if (isOnWishlist) {
         eventsUsed = wishlistEvents
+    } else if (isRetreats) {
+        eventsUsed = filteredEvents.filter(event => event.type === 'retreat')
     } else {
         eventsUsed = filteredEvents
     }

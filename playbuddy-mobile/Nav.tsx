@@ -18,6 +18,8 @@ import DeepLinkHandler from './DeepLinkHandler';
 
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import AddEventForm from './Pages/AddEventForm/AddEventForm';
+import { Retreats } from './Pages/Retreats';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -132,8 +134,13 @@ const DrawerNav = () => {
             />
             <Drawer.Screen
                 name="Retreats"
-                component={ComingSoon}
+                component={Retreats}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
+            />
+            <Drawer.Screen
+                name="Add Event"
+                component={AddEventForm}
+                options={{ drawerIcon: ({ color, size }) => <FAIcon name="plus" size={size} color={color} style={{ width: 30 }} /> }}
             />
         </Drawer.Navigator>
     );
