@@ -50,6 +50,7 @@ async function scrapePartifulEvent({
             id: `plura-${eventId}`,
             original_id: `plura-${eventId}`,
             organizer: {
+                id: '', // actually filled in by the DB, need to fill it in for ts, fix later
                 name: organizer,
                 url: organizerUrl,
             },
