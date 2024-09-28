@@ -26,6 +26,8 @@ export const scrapeOrganizerTantraNY = async ({
       return {
         id: `organizer-tantra_ny-${event.EventId}`,
         organizer: {
+          // actually filled in by the DB, need to fill it in for ts, fix later
+          id: '',
           name: "The Tantra Institute",
           url: ORGANIZER_PAGE,
         },

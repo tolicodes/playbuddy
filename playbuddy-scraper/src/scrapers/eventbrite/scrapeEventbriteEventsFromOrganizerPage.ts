@@ -32,10 +32,12 @@ const scrapeEventDetails = async ({
       const summaryMarkdown = turndownService.turndown(event.summary);
 
       return {
-        // actually assigned by the DB, need to fill it in
+        // actually assigned by the DB, need to fill it in for ts
         id: `eventbrite-${event.id}`,
         original_id: `eventbrite-${event.id}`,
         organizer: {
+          // actually assigned by the DB, need to fill it in for ts
+          id: event.primary_organizer.id,
           name: event.primary_organizer.name,
           url: event.primary_organizer.url,
           original_id: `eventbrite-${event.primary_organizer.id}`,

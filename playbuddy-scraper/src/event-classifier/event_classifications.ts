@@ -3,6 +3,7 @@ import tags from "./tags.js"
 
 // Define the structure for Event Classifications
 export interface EventClassifications {
+    event_id: string;
     event_themes: string[];
 
     tags: string[];
