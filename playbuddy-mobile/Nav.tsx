@@ -118,6 +118,13 @@ const DrawerNav = () => {
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="heart" size={size} color={color} style={{ width: 30 }} /> }}
             />
             <Drawer.Screen
+                name="Retreats"
+                component={Retreats}
+                options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
+            />
+
+
+            <Drawer.Screen
                 name="Friends"
                 component={ComingSoon}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} /> }}
@@ -132,14 +139,10 @@ const DrawerNav = () => {
                 component={Communities}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} style={{ width: 30 }} /> }}
             />
-            <Drawer.Screen
-                name="Retreats"
-                component={Retreats}
-                options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
-            />
+
             <Drawer.Screen
                 name="Add Event"
-                component={AddEventForm}
+                component={ComingSoon}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="plus" size={size} color={color} style={{ width: 30 }} /> }}
             />
         </Drawer.Navigator>

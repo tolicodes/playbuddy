@@ -17,6 +17,7 @@ export interface Event extends SourceMetadata {
     end_date: string;
     ticket_url: string;
     image_url: string;
+    video_url?: string;
     event_url: string;
     location: string;
     price: string;

@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "3.4.0",
+    "version": "3.5.3",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -33,8 +33,11 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.tolicodes1.kinkbuddyios",
-      "permissions": ["CAMERA", "READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"]
-
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.jpeg"
@@ -65,7 +68,9 @@
         {
           "photosPermission": "The app accesses your photos to let you share them with your friends."
         }
-      ]
+      ],
+      "react-native-video",
+      "expo-video"
     ],
     "owner": "tolicodes1"
   }
