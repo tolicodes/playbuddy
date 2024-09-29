@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import moment from 'moment';
 import { View, Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView, Button } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -20,11 +20,20 @@ const formatPrice = (price: string) => {
     // blank
     if (!price) return '';
 
+    // Free event
     if (price === '0') return 'Free';
 
-    // Convert price to USD format
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(price));
-}
+    // Attempt to convert to number
+    const numericPrice = parseFloat(price);
+
+    // If conversion fails, return the original string
+    if (isNaN(numericPrice)) {
+        return price;
+    }
+
+    // Format as USD currency
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericPrice);
+};
 
 
 export const EventDetail = ({ route }: any) => {

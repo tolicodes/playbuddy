@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { TouchableOpacity, Text } from 'react-native';
+import { TouchableOpacity, Text, View } from 'react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import EventCalendarView from './Calendar/EventCalendarView';
@@ -19,6 +19,8 @@ import DeepLinkHandler from './DeepLinkHandler';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import AddEventForm from './Pages/AddEventForm/AddEventForm';
+import Markdown from 'react-native-markdown-display';
+
 import { Retreats } from './Pages/Retreats';
 
 const Tab = createBottomTabNavigator();
@@ -75,9 +77,17 @@ const TabNavigator = () => {
     );
 };
 
-const ComingSoon = () => <>
-    <Text style={{ fontSize: 16, padding: 20 }}>Coming Soon: you will be able to see your friends, communities, organizers, and even retreats worldwide</Text>
-</>
+const COMING_SOON = `
+- **Tinder Mode**: Swipe on events to plan your week.
+- **Plan with Buddies**: Building on Tinder Mode, drag events into Buddy Lists and share with your various circles  (e.g., Toli’s Kinky Polycule, Rope Bunnies, or (Actual) Platonic Daddies Who Don’t Know I’m Kinky).
+- **AI Filtering**: Machine Learning will auto-classify events by type (e.g., workshop, talk, hands-on, play party) and comfort level (e.g., platonic,  sensual, erotic, sexual, 😳) 
+- **Communities**: Support for public and private communities, mirroring WhatsApp/Discord groups like this one, with automatic event aggregation.
+- **Organizers**: View all your favorite organizers in one place, and see their upcoming events.`
+
+const ComingSoon = () => (<View style={{ padding: 20 }}>
+    <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>Coming Soon</Text>
+    <Markdown>{COMING_SOON}</Markdown>
+</View>)
 
 // Create the Drawer Navigator
 const DrawerNav = () => {
@@ -123,8 +133,7 @@ const DrawerNav = () => {
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
             />
 
-
-            <Drawer.Screen
+            {/* <Drawer.Screen
                 name="Friends"
                 component={ComingSoon}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} /> }}
@@ -144,7 +153,7 @@ const DrawerNav = () => {
                 name="Add Event"
                 component={ComingSoon}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="plus" size={size} color={color} style={{ width: 30 }} /> }}
-            />
+            /> */}
         </Drawer.Navigator>
     );
 };
