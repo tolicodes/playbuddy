@@ -7,6 +7,7 @@ import { EventWithMetadata } from '../types';
 import { useCalendarContext } from './CalendarContext';
 import { useUserContext } from '../Auth/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
+import { formatDate } from './calendarUtils';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -18,10 +19,7 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
 
     const { userId } = useUserContext(); // use the hook to get the user ID
 
-    const formatDateEvent = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
-    const formatDateMultiDay = `${moment(item.start_date).format('MMM D')} - ${moment(item.end_date).format('MMM D')}`;
-
-    const formattedDate = item.type === 'retreat' ? formatDateMultiDay : formatDateEvent;
+    const formattedDate = formatDate(item)
 
     const itemIsOnWishlist = isOnWishlist(item.id);
 

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 import { Event } from '../../Common/commonTypes';
+import moment from 'moment';
 
 export type OrganizerFilterOption = {
     id: string
@@ -143,3 +144,19 @@ export const EXPLICIT_WORDS = [
     "K!nk",
     "K!NK"
 ]
+
+
+export const formatDate = (item: Event, listDate = false) => {
+    const timeRange = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
+
+    // Lists date if we are using it in details view
+    const formattedDateEvent = listDate ?
+        `${moment(item.start_date).format('MMM D YYYY')} ${timeRange}`
+        : timeRange;
+
+    const formattedDateMultiDay = `${moment(item.start_date).format('MMM D')} - ${moment(item.end_date).format('MMM D YYYY')}`;
+
+    const formattedDate = item.type === 'retreat' ? formattedDateMultiDay : formattedDateEvent;
+
+    return formattedDate
+}

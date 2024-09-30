@@ -5,6 +5,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { WebView } from 'react-native-webview';
+import { formatDate } from './calendarUtils';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (<WebView
@@ -66,7 +67,7 @@ export const EventDetail = ({ route }: any) => {
                 <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
 
                 <Text style={styles.eventTime}>
-                    {`${moment(selectedEvent.start_date).format('MMM D, YYYY')} ${moment(selectedEvent.start_date).format('hA')} - ${moment(selectedEvent.end_date).format('hA')}`}
+                    {formatDate(selectedEvent, true)}
                 </Text>
 
                 {formattedPrice && <Text style={styles.fullViewPrice}>
