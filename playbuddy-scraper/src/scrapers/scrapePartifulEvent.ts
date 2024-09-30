@@ -46,8 +46,9 @@ async function scrapePartifulEvent({
         const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
 
         const eventDetails: Event = {
-            // satisying typescript
             id: `plura-${eventId}`,
+            type: "event",
+            recurring: "none",
             original_id: `plura-${eventId}`,
             organizer: {
                 id: '', // actually filled in by the DB, need to fill it in for ts, fix later

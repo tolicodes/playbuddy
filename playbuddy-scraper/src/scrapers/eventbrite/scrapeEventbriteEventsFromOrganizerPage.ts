@@ -34,6 +34,8 @@ const scrapeEventDetails = async ({
       return {
         // actually assigned by the DB, need to fill it in for ts
         id: `eventbrite-${event.id}`,
+        type: 'event',
+        recurring: 'none',
         original_id: `eventbrite-${event.id}`,
         organizer: {
           // actually assigned by the DB, need to fill it in for ts

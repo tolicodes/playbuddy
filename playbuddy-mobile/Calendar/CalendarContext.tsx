@@ -20,6 +20,7 @@ type CalendarContextType = {
     friendWishlistShareCode: string | null;
     isOnWishlist: (eventId: string) => boolean;
     toggleWishlistEvent: any; // TODO: Add type
+    reloadEvents: () => void;
 };
 
 
@@ -56,7 +57,7 @@ const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
 
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
-    const { eventsWithMetadata, organizers } = useEvents();
+    const { eventsWithMetadata, organizers, reloadEvents } = useEvents();
     const {
         wishlistEvents,
         friendWishlistEvents,
@@ -87,6 +88,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         friendWishlistShareCode,
         isOnWishlist,
         toggleWishlistEvent,
+        reloadEvents,
     }), [
         filters,
         setFilters,
@@ -98,6 +100,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         friendWishlistShareCode,
         isOnWishlist,
         toggleWishlistEvent,
+        reloadEvents,
     ]);
 
     return (

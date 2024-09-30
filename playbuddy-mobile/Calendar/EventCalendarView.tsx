@@ -26,7 +26,7 @@ type EventCalendarViewProps = {
 
 const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isRetreats = false }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
-    const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents } = useCalendarContext();
+    const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents, reloadEvents } = useCalendarContext();
     const { userId } = useUserContext()
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -150,6 +150,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
                 sections={sections}
                 screen={'Calendar'}
                 sectionListRef={sectionListRef}
+                reloadEvents={reloadEvents}
             />
 
         </SafeAreaView >

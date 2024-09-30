@@ -118,6 +118,7 @@ const CommunitiesScreen: React.FC = () => {
             <EventList
                 sections={sections}
                 screen='Wishlist'
+                reloadEvents={() => { }}
             />
         </View>
     );

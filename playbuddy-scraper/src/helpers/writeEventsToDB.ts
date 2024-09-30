@@ -64,7 +64,7 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     }
 
     // Check for existing event by original_id or by start_date and organizer_id
-    const { data: existingEvent, error: fetchError } = await supabaseClient
+    const { data: existingEvents, error: fetchError } = await supabaseClient
       .from("events")
       .select("id")
       // original_id matches
@@ -85,14 +85,12 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
 
       .or(`original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`)
 
-      .single();
-
     if (fetchError && fetchError.code !== "PGRST116") {
       console.error("Error fetching existing event:", fetchError);
       return;
     }
 
-    if (existingEvent) {
+    if (existingEvents?.length && existingEvents.length > 0) {
       console.log(`Event ${event.name} already exists.`);
       return 0;
     }
@@ -101,6 +99,8 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     const { error: insertError } = await supabaseClient.from("events").insert({
       original_id: event.original_id,
       organizer_id: organizerId,
+      type: event.type,
+      recurring: event.recurring,
 
       name: event.name,
       start_date: event.start_date,

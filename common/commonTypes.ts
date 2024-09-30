@@ -25,6 +25,10 @@ export interface Event extends SourceMetadata {
     tags: string[];
     type: 'event' | 'retreat'
     recurring: 'none' | 'weekly' | 'monthly'
+
+    // for the map
+    lat?: number;
+    lon?: number;
 }
 
 export interface SourceMetadata {
@@ -36,10 +40,10 @@ export interface SourceMetadata {
     // group name
     source_origination_group_name?: string;
     // where it originated from
-    source_origination_platform?: "WhatsApp" | "organizer_api";
+    source_origination_platform?: "WhatsApp" | "organizer_api" | 'acrofestivals';
     // the ticketing platform it's sold on
     source_ticketing_platform?: "Eventbrite" | "Plura" | "Partiful";
-    dataset?: "Kink" | "Whatsapp POC";
+    dataset?: "Kink" | "Whatsapp POC" | 'Acro';
 }
 
 // Organizer is another table

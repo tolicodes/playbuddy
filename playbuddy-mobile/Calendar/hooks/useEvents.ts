@@ -31,22 +31,26 @@ function addEventMetadata({ events, organizerColorMap }: { events: Event[]; orga
 export const useFetchEvents = (appState?: string) => {
     const [events, setEvents] = useState<Event[]>([]);
 
-    useEffect(() => {
+    const reloadEvents = async () => {
         axios.get<Event[]>(API_URL.events)
             .then(response => {
                 setEvents(response.data);
             }).catch((e) => {
                 throw new Error(`Error fetching events: ${e.message}`);
             })
+    }
+
+    useEffect(() => {
+        reloadEvents();
     }, [appState]);
 
-    return { events };
+    return { events, reloadEvents };
 };
 
 
 export const useEvents = (appState?: string) => {
     // Fetch events based on app state
-    const { events } = useFetchEvents(appState);
+    const { events, reloadEvents } = useFetchEvents(appState);
 
     const organizers = useMemo(() =>
         getAvailableOrganizers(events),
@@ -63,5 +67,5 @@ export const useEvents = (appState?: string) => {
         [events, organizerColorMap]
     );
 
-    return { eventsWithMetadata, organizers };
+    return { eventsWithMetadata, organizers, reloadEvents };
 };

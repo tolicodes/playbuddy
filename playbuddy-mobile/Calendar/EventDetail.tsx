@@ -21,8 +21,8 @@ const formatPrice = (price: string) => {
     // blank
     if (!price) return '';
 
-    // Free event
-    if (price === '0') return 'Free';
+    // Free event (BUG NOW) so ''
+    if (price === '0') return '';
 
     // Attempt to convert to number
     const numericPrice = parseFloat(price);

@@ -25,6 +25,7 @@ export const useGroupedEvents = (events: EventWithMetadata[]) => {
     const sections = useMemo(() => {
         return Object.keys(groupedEvents)
             .map(date => ({
+                key: date,
                 date,
                 title: moment(date).format(SECTION_DATE_FORMAT), // Format the date for display
                 data: groupedEvents[date], // Events for that date

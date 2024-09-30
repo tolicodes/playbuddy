@@ -7,6 +7,7 @@ import { scrapePluraEvents } from "./scrapers/scrapePluraEvents.js";
 import { scrapeEventbriteEventsFromOrganizersURLs } from "./scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage.js";
 import { scrapeOrganizerTantraNY } from "./scrapers/organizers/tantra_ny.js";
 import { writeEventsToDB } from "./helpers/writeEventsToDB.js";
+import { scrapeAcroFestivals, API_URL as ACROFESTIVALS_API_URL } from "./scrapers/acrofestivals.js";
 
 export const filterEvents = (events: Event[]) => {
     // these are default Plura events that we want to exclude from the calendar
@@ -80,6 +81,9 @@ const DATA_FILES: Record<string, FilePath> = {
     tantra_ny: {
         path: "./data/organizers/tantra_ny_events.json",
     },
+    acro_festivals: {
+        path: "./data/all_acro_festivals_events.json",
+    }
 };
 
 const getFromFile = (source: string) => {
@@ -132,6 +136,17 @@ const scrapeOrganizerTantraNYEvents = async (urlCache: URLCache) => {
     writeFile("tantra_ny", organizerTantraNYEventsOut);
 };
 
+const scrapeAcroFestivalsEvents = async (urlCache: URLCache) => {
+    const acroFestivalsEventsOut = await scrapeAcroFestivals({
+        sourceMetadata: {
+            dataset: "Acro",
+        },
+        url: ACROFESTIVALS_API_URL,
+    });
+
+    writeFile("acro_festivals", acroFestivalsEventsOut);
+}
+
 // const scrapeWhatsapp = async (urlCache: URLCache) => {
 //     // SCRAPE WHATSAPP EVENTS
 //     const whatsappLinksOut = await scrapeWhatsappLinks();
@@ -151,6 +166,7 @@ export const scrapeEvents = async () => {
         scrapeKinkEventbrite(urlCache),
         scrapePlura(urlCache),
         scrapeOrganizerTantraNYEvents(urlCache),
+        scrapeAcroFestivalsEvents(urlCache),
         //     // scrapeWhatsapp(urlCache)
     ]);
 
@@ -158,12 +174,14 @@ export const scrapeEvents = async () => {
     const pluraEvents = getFromFile("plura");
     const kinkEventbriteEvents = getFromFile("kink_eventbrite_events");
     const tantraNYEvents = getFromFile("tantra_ny");
+    const acroFestivalsEvents = getFromFile("acro_festivals");
 
     // Filter them to exclude certain events and dedupe
     const filteredEvents = filterEvents([
         ...pluraEvents,
         ...kinkEventbriteEvents,
         ...tantraNYEvents,
+        ...acroFestivalsEvents
     ]);
 
     await writeEventsToDB(filteredEvents);
