@@ -14,6 +14,7 @@ import { Header } from './Common/Header';
 import AppDownloadModal from './Common/AppDownloadModal';
 
 import * as amplitude from '@amplitude/analytics-browser';
+import { Support } from './Common/Support';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
@@ -37,6 +38,10 @@ function App() {
               <AppDownloadModal />
 
               <Routes>
+                <Route
+                  path="support"
+                  element={<Support />}
+                />
                 <Route
                   path="game"
                   element={<GameSetup />}
