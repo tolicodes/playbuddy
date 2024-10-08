@@ -27,7 +27,7 @@ type EventCalendarViewProps = {
 const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isRetreats = false }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents, reloadEvents } = useCalendarContext();
-    const { userId } = useUserContext()
+    const { authUserId } = useUserContext()
     const [searchQuery, setSearchQuery] = useState('');
 
     let eventsUsed;
@@ -86,10 +86,10 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
     const onPressGoogleCalendar = () => {
         amplitude.logEvent('google_calendar_clicked', {
             isOnWishlist,
-            authUserId: userId,
+            authUserId,
         });
 
-        const params = isOnWishlist ? { wishlist: true, authUserId: userId || '' } : {};
+        const params = isOnWishlist ? { wishlist: true, authUserId: authUserId || '' } : {};
 
         const url = MISC_URLS.addGoogleCalendar(params);
 
@@ -100,7 +100,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
 
     return (
         <SafeAreaView style={styles.container}>
-            {!userId && <WebsiteBanner />}
+            {!authUserId && <WebsiteBanner />}
             <View style={styles.searchContainer}>
 
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>

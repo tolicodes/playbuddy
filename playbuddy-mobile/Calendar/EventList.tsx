@@ -1,5 +1,5 @@
 import React from "react";
-import { SectionList, View, Text, StyleSheet } from "react-native";
+import { SectionList, View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { EventWithMetadata } from "./../types";
 import { ListItem } from "./ListItem";
 import { useNavigation } from "@react-navigation/native";
@@ -43,10 +43,14 @@ const EventList = ({ sections, sectionListRef, reloadEvents }: { sections: any, 
             <Text style={styles.sectionHeader}>{section.title}</Text>
         )}
         keyExtractor={(item, i) => `${i}_${item.id}`}
-        ListEmptyComponent={<Text style={styles.emptyList}>LOADING or No Results</Text>}
+        ListEmptyComponent={<View style={styles.emptyList}>
+            <ActivityIndicator size="large" color="#007AFF" />
+
+        </View>}
         onScrollToIndexFailed={(e) => {
             amplitude.logEvent('scroll_to_index_failed');
         }}
+
         initialNumToRender={1000}
     // TODO: Implement pull to refresh
     // onRefresh={() => reloadEvents()}
@@ -63,6 +67,11 @@ const styles = StyleSheet.create({
     emptyList: {
         padding: 20,
         textAlign: 'center',
+        flex: 1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignContent: 'center',
     },
 });
 
