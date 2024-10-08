@@ -21,12 +21,17 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             // @ts-ignore
             supabaseClient
                 .from("events")
-                .select("*, organizer:organizers(id, name, url)")
+                .select("*, organizer:organizers(id, name, url, hidden)")
                 .gte("start_date", nycMidnightUTC),
+            // .eq("organizer.hidden", true),
             flushCache // Pass the flushCache flag
         );
 
         let response = JSON.parse(responseData)
+
+        // filter out hidden organizers
+        // TODO: Fix in query abobe
+        response = response.filter((event: { organizer: { hidden: boolean } }) => !event.organizer.hidden);
 
         // if we request the wishlist, we need to filter the events
         if (calendarType === 'wishlist') {
