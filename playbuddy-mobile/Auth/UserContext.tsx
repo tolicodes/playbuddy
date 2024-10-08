@@ -9,10 +9,12 @@ import React, {
 import { useFetchUserProfile, useInsertUserProfile } from './useUserProfile';
 import { onFetchUserProfile, onInitializeAuth, onPendingCallback, runAuthFlow, signOut as signOutUtil } from './useUserUtils';
 import { Session } from '@supabase/auth-js/src/lib/types'
+import { supabase } from '../supabaseClient';
 
 // Define the shape of the UserContext state
 export interface UserProfile {
-    user_id: string;
+    // actually auth_user_id
+    auth_user_id: string;
     share_code: string;
     email?: string;
     name?: string
@@ -33,7 +35,11 @@ export type SignInParams = {
 }
 
 export interface UserContextType {
-    userId: string | null;
+    // user table
+    // We don't use it
+    // userId: string | null;
+    // auth table
+    authUserId: string | null;
     userProfile: UserProfile | null;
     signInWithEmail: (params: SignInParams) => void;
     signUpWithEmail: (params: SignUpParams) => void;
@@ -98,7 +104,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const value = useMemo(
         () => ({
-            userId: userProfile?.user_id || null,
+            authUserId: userProfile?.auth_user_id || null,
+            // We don't use it
+            // userId: userProfile?.id || null,
             userProfile,
             authReady,
             signInWithEmail,

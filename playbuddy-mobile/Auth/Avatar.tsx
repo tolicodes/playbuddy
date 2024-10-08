@@ -8,7 +8,7 @@ import { useQueryClient } from '@tanstack/react-query';
 export const Avatar = () => {
     const [uploadImageUri, setUploadImageUri] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
-    const { userId, userProfile } = useUserContext();
+    const { authUserId, userProfile } = useUserContext();
     const queryClient = useQueryClient();
 
     // Request permission to access the gallery
@@ -23,10 +23,10 @@ export const Avatar = () => {
 
     // Automatically upload the image after selection
     useEffect(() => {
-        if (uploadImageUri) {
-            uploadImage(userId);
+        if (uploadImageUri && authUserId) {
+            uploadImage(authUserId);
         }
-    }, [uploadImageUri, userId]);
+    }, [uploadImageUri, authUserId]);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -41,25 +41,25 @@ export const Avatar = () => {
         }
     };
 
-    const updateUserAvatar = async (userId: string, avatarUrl: string) => {
+    const updateUserAvatar = async (authUserId: string, avatarUrl: string) => {
         try {
             const { error } = await supabase
                 .from('users')
                 .update({ avatar_url: avatarUrl })
-                .eq('user_id', userId);
+                .eq('user_id', authUserId);
 
             if (error) {
                 throw new Error(`Error updating user avatar: ${error.message}`);
             }
 
-            queryClient.invalidateQueries(['userProfile', userId]);
+            queryClient.invalidateQueries(['userProfile', authUserId]);
         } catch (error) {
             console.error('Error updating user avatar:', error.message);
         }
     };
 
-    const uploadImage = async (userId: string) => {
-        if (!uploadImageUri || !userId) return;
+    const uploadImage = async (authUserId: string) => {
+        if (!uploadImageUri || !authUserId) return;
 
         try {
             setUploading(true);
@@ -73,22 +73,19 @@ export const Avatar = () => {
                 .from('avatars')
                 .upload(fileName, arrayBuffer, { contentType: blob.type });
 
+            console.log('here')
             if (error) {
                 throw error;
             }
 
-            const { data, error: getPublicUrlError } = await supabase.storage
+            const { data } = await supabase.storage
                 .from('avatars')
                 .getPublicUrl(fileName);
 
-            if (getPublicUrlError) {
-                throw new Error(`Error getting public URL for avatar: ${getPublicUrlError.message}`);
-            }
-
-            await updateUserAvatar(userId, data.publicUrl);
+            await updateUserAvatar(authUserId, data.publicUrl);
             alert('Image uploaded successfully!');
         } catch (error) {
-            console.error('Error uploading image:', error.message);
+            console.error('Error uploading image:', error.message, error);
             alert('Failed to upload image');
         } finally {
             setUploading(false);

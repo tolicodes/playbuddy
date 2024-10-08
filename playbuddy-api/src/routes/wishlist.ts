@@ -45,13 +45,13 @@ router.get('/friend/:shareCode', async (req: Request, res: Response) => {
         throw new Error(userError?.message || 'User not found');
     }
 
-    const userId = userData.user_id;
+    const authUserId = userData.user_id;
 
     // Step 2: Fetch the wishlist for the given user ID
     const { data: wishlistData, error: wishlistError } = await supabaseClient
         .from('event_wishlist')
         .select('event_id')
-        .eq('user_id', userId);
+        .eq('user_id', authUserId);
 
     if (wishlistError) {
         throw new Error(wishlistError.message);

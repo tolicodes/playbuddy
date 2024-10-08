@@ -20,6 +20,7 @@ type CalendarContextType = {
     friendWishlistShareCode: string | null;
     isOnWishlist: (eventId: string) => boolean;
     toggleWishlistEvent: any; // TODO: Add type
+    availableCardsToSwipe: EventWithMetadata[];
     reloadEvents: () => void;
 };
 
@@ -65,16 +66,26 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         friendWishlistShareCode,
         isOnWishlist,
         toggleWishlistEvent,
+        swipeChoices,
     } = useWishlist(eventsWithMetadata);
-    const { userId } = useUserContext();
+    const { authUserId } = useUserContext();
 
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters);
         const withoutExplicit = removeExplicitEvents(filtered);
 
         // apple shouldn't see explicit events
-        return userId && userId !== APPLE_USER_ID ? filtered : withoutExplicit;
-    }, [eventsWithMetadata, filters, userId]);
+        return authUserId && authUserId !== APPLE_USER_ID ? filtered : withoutExplicit;
+    }, [eventsWithMetadata, filters, authUserId]);
+
+    const availableCardsToSwipe = useMemo(() => {
+        return filteredEvents.filter(event =>
+            !swipeChoices?.swipeModeChosenWishlist.some(choice => choice + '' === event.id + '') &&
+            !swipeChoices?.swipeModeChosenSkip.some(choice => choice + '' === event.id + '')
+        ).sort((a, b) => {
+            return new Date(a.start_date) < new Date(b.start_date) ? -1 : 1;
+        });
+    }, [swipeChoices, filteredEvents]);
 
     // Memoize the context value to prevent unnecessary re-renders
     const contextValue = useMemo(() => ({
@@ -88,6 +99,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         friendWishlistShareCode,
         isOnWishlist,
         toggleWishlistEvent,
+        availableCardsToSwipe,
         reloadEvents,
     }), [
         filters,
@@ -100,6 +112,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         friendWishlistShareCode,
         isOnWishlist,
         toggleWishlistEvent,
+        availableCardsToSwipe,
         reloadEvents,
     ]);
 

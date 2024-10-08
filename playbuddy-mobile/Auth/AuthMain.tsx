@@ -4,11 +4,11 @@ import AuthForm from "./AuthForm"
 import { useUserContext } from "./UserContext"
 
 const AuthMain = () => {
-    const { userId } = useUserContext();
+    const { authUserId } = useUserContext();
 
-    return userId
+    return authUserId
         // just says they're logged in
-        ? <AccountDetails key={userId} />
+        ? <AccountDetails key={authUserId} />
         // Login
         : <AuthForm />
 }

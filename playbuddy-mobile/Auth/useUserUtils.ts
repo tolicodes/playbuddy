@@ -19,6 +19,7 @@ const setupSessionContext = (session: Session | null, userProfile: UserProfile |
 
     // Amplitude setup
     if (session?.user?.id && userProfile) {
+        // authuserId
         amplitude.setUserId(session.user.id);
         const identifyEvent = new amplitude.Identify();
         if (userProfile?.email) {
@@ -140,7 +141,7 @@ export const runAuthFlow = async ({
         const session = data.session;
 
         if (isSignUp && data?.user?.id && name) {
-            await insertUserProfile({ userId: data.user.id, name });
+            await insertUserProfile({ authUserId: data.user.id, name });
         }
 
         setSession(session);

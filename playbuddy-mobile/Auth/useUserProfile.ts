@@ -18,7 +18,10 @@ const fetchUserProfile = async (authUserId: string) => {
             throw new Error(`Fetching User Profile: ${error.message}`);
         }
 
-        return data;
+        return {
+            ...data,
+            auth_user_id: data.user_id,
+        };
     } catch (e) {
         throw new Error(`Error fetching user profile: ${e.message}`);
     }
@@ -46,7 +49,10 @@ export const useFetchUserProfile = (session: Session | null) => {
 
     const userProfile = {
         // copy from session
-        user_id: session.user.id,
+        auth_user_id: session.user.id,
+
+        // we don't use this one
+        // user_id: profile.id,
         email: session.user.email,
 
         // copy from user table
@@ -59,13 +65,13 @@ export const useFetchUserProfile = (session: Session | null) => {
 };
 
 // Function to insert a user with a referral code
-export const insertUserProfile = async ({ userId, name }: { userId: string, name: string }) => {
+export const insertUserProfile = async ({ authUserId, name }: { authUserId: string, name: string }) => {
     const shareCode = Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
 
     try {
         const data = await supabase
             .from('users')
-            .insert([{ user_id: userId, share_code: shareCode, name }]);
+            .insert([{ user_id: authUserId, share_code: shareCode, name }]);
 
         return data;;
     } catch (error) {
@@ -76,7 +82,7 @@ export const insertUserProfile = async ({ userId, name }: { userId: string, name
 // Hook for the mutation
 export const useInsertUserProfile = () => {
     return useMutation({
-        mutationFn: ((userData: { userId: string; name: string }) =>
+        mutationFn: ((userData: { authUserId: string; name: string }) =>
             insertUserProfile(userData)
         )
     });
