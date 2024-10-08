@@ -146,12 +146,16 @@ export const EXPLICIT_WORDS = [
 ]
 
 
-export const formatDate = (item: Event, listDate = false) => {
+export const formatDate = (item: Event, listDate = false, listDoW = false) => {
     const timeRange = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
+
+    const withDow = `${moment(item.start_date).format('dddd, MMM D, YYYY')} ${timeRange}`;
 
     // Lists date if we are using it in details view
     const formattedDateEvent = listDate ?
-        `${moment(item.start_date).format('MMM D YYYY')} ${timeRange}`
+        (listDoW
+            ? withDow
+            : `${moment(item.start_date).format('MMM D YYYY')} ${timeRange}`)
         : timeRange;
 
     const formattedDateMultiDay = `${moment(item.start_date).format('MMM D')} - ${moment(item.end_date).format('MMM D YYYY')}`;
