@@ -22,6 +22,7 @@ import AddEventForm from './Pages/AddEventForm/AddEventForm';
 import Markdown from 'react-native-markdown-display';
 
 import { Retreats } from './Pages/Retreats';
+import { Planner } from './Pages/Planner';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -117,6 +118,14 @@ const DrawerNav = () => {
             />
 
             <Drawer.Screen
+                name="Swipe Mode"
+                component={Planner}
+                options={() => ({
+                    drawerIcon: ({ color, size }) => <FAIcon name="book" size={size} color={color} style={{ width: 30 }} />
+                })}
+            />
+
+            <Drawer.Screen
                 name="Filters"
                 component={Filters}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="filter" size={size} color={color} style={{ width: 30 }} /> }}
@@ -133,6 +142,12 @@ const DrawerNav = () => {
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
             />
 
+            <Drawer.Screen
+                name="Communities"
+                component={Communities}
+                options={{ drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} style={{ width: 30 }} /> }}
+            />
+
             {/* <Drawer.Screen
                 name="Friends"
                 component={ComingSoon}
@@ -143,11 +158,7 @@ const DrawerNav = () => {
                 component={ComingSoon}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="users-cog" size={size} color={color} style={{ width: 30 }} /> }}
             />
-            <Drawer.Screen
-                name="Communities"
-                component={Communities}
-                options={{ drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} style={{ width: 30 }} /> }}
-            />
+           
 
             <Drawer.Screen
                 name="Add Event"
