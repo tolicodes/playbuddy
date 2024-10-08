@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useUserContext } from './UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { Avatar } from './Avatar';
@@ -15,6 +15,37 @@ export default function AccountDetails() {
     const onPressHome = () => {
         goBack();
     }
+
+    const onPressDeleteAccount = async () => {
+        Alert.alert(
+            'Are you suuure?',
+            'Are you SURE you want to delete your account? This will also delete all your wishlists 😢',
+            [
+                {
+                    text: 'DELETE',
+                    onPress: () => { signOut(goBack); },
+                    style: 'destructive',
+                },
+                {
+                    text: 'Cancel',
+                    onPress: () => { },
+                    style: 'cancel',
+                },
+            ],
+            {
+                cancelable: true,
+                onDismiss: () =>
+                    Alert.alert(
+                        'This alert was dismissed by tapping outside of the alert dialog.',
+                    ),
+            },
+        );
+    };
+
+    const onPressSupport = () => {
+        Linking.openURL('mailto://toli@toli.me');
+    }
+
 
     return (
         <View style={styles.container}>
@@ -39,6 +70,14 @@ export default function AccountDetails() {
 
             <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={onPressSignOut}>
                 <Text style={styles.buttonText}>Sign Out</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.button, styles.deleteAccountButton]} onPress={onPressDeleteAccount}>
+                <Text style={styles.buttonText}>DANGER: Delete Account</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={onPressSupport}>
+                <Text style={styles.getSupport}>Get support or suggest stuff by emailing me directly: toli@toli.me.</Text>
             </TouchableOpacity>
         </View>
     );
@@ -86,4 +125,11 @@ const styles = StyleSheet.create({
     signOutButton: {
         backgroundColor: '#FF3B30',
     },
+    deleteAccountButton: {
+        backgroundColor: 'red'
+    },
+    getSupport: {
+        color: 'blue',
+        textAlign: 'center'
+    }
 });

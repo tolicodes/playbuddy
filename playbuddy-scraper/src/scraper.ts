@@ -2,7 +2,7 @@ import fs from "fs";
 import { Event } from "./commonTypes.js";
 
 import scrapeURLs from "./helpers/scrapeURLs.js";
-// import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp";
+import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp.js";
 import { scrapePluraEvents } from "./scrapers/scrapePluraEvents.js";
 import { scrapeEventbriteEventsFromOrganizersURLs } from "./scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage.js";
 import { scrapeOrganizerTantraNY } from "./scrapers/organizers/tantra_ny.js";
@@ -147,15 +147,15 @@ const scrapeAcroFestivalsEvents = async (urlCache: URLCache) => {
     writeFile("acro_festivals", acroFestivalsEventsOut);
 }
 
-// const scrapeWhatsapp = async (urlCache: URLCache) => {
-//     // SCRAPE WHATSAPP EVENTS
-//     const whatsappLinksOut = await scrapeWhatsappLinks();
+const scrapeWhatsapp = async (urlCache: URLCache) => {
+    // SCRAPE WHATSAPP EVENTS
+    const whatsappLinksOut = await scrapeWhatsappLinks();
 
-//     writeFile("whatsapp_links", whatsappLinksOut);
+    writeFile("whatsapp_links", whatsappLinksOut);
 
-//     const whatsappEventsOut = await scrapeURLs(whatsappLinksOut, urlCache);
-//     writeFile("whatsapp_events", whatsappEventsOut);
-// };
+    const whatsappEventsOut = await scrapeURLs(whatsappLinksOut, urlCache);
+    writeFile("whatsapp_events", whatsappEventsOut);
+};
 
 export const scrapeEvents = async () => {
     // GENERAL SETUP
@@ -163,33 +163,33 @@ export const scrapeEvents = async () => {
     const urlCache = getURLCache(allEventsOld);
 
     const allScrapers = await Promise.all([
-        scrapeKinkEventbrite(urlCache),
-        scrapePlura(urlCache),
-        scrapeOrganizerTantraNYEvents(urlCache),
-        scrapeAcroFestivalsEvents(urlCache),
-        //     // scrapeWhatsapp(urlCache)
+        // scrapeKinkEventbrite(urlCache),
+        // scrapePlura(urlCache),
+        // scrapeOrganizerTantraNYEvents(urlCache),
+        // scrapeAcroFestivalsEvents(urlCache),
+        scrapeWhatsapp(urlCache)
     ]);
 
-    // Combine All Events
-    const pluraEvents = getFromFile("plura");
-    const kinkEventbriteEvents = getFromFile("kink_eventbrite_events");
-    const tantraNYEvents = getFromFile("tantra_ny");
-    const acroFestivalsEvents = getFromFile("acro_festivals");
+    // // Combine All Events
+    // const pluraEvents = getFromFile("plura");
+    // const kinkEventbriteEvents = getFromFile("kink_eventbrite_events");
+    // const tantraNYEvents = getFromFile("tantra_ny");
+    // const acroFestivalsEvents = getFromFile("acro_festivals");
 
-    // Filter them to exclude certain events and dedupe
-    const filteredEvents = filterEvents([
-        ...pluraEvents,
-        ...kinkEventbriteEvents,
-        ...tantraNYEvents,
-        ...acroFestivalsEvents
-    ]);
+    // // Filter them to exclude certain events and dedupe
+    // const filteredEvents = filterEvents([
+    //     ...pluraEvents,
+    //     ...kinkEventbriteEvents,
+    //     ...tantraNYEvents,
+    //     ...acroFestivalsEvents
+    // ]);
 
-    await writeEventsToDB(filteredEvents);
+    // await writeEventsToDB(filteredEvents);
 
-    return filteredEvents
+    // return filteredEvents
 
-    // // Separate calendar for whatsapp events
-    // const whatsappEvents = getFromFile('whatsapp');
+    // Separate calendar for whatsapp events
+    const whatsappEvents = getFromFile('whatsapp');
     // const filteredWhatsappEvents = filterEvents(whatsappEvents);
     // writeAllWhatsappEventsToFrontend(filteredWhatsappEvents)
 };

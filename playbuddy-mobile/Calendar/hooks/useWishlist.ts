@@ -4,10 +4,11 @@ import axios from 'axios';
 import { EventWithMetadata } from '../../types';
 import { useUserContext } from '../../Auth/UserContext';
 import { API_BASE_URL } from '../../config';
+import { supabase } from '../../supabaseClient';
 
-const useGetUserId = () => {
-    const { userId } = useUserContext();
-    return userId;
+const useGetAuthUserId = () => {
+    const { authUserId } = useUserContext();
+    return authUserId;
 };
 
 const useAuthReady = () => {
@@ -27,9 +28,9 @@ const fetchWishlistEvents = async () => {
 // Hook to fetch wishlist events for the current user
 const useFetchWishlistEvents = () => {
     const authReady = useAuthReady();
-    const userId = useGetUserId();
+    const authUserId = useGetAuthUserId();
     return useQuery({
-        queryKey: ['wishlistEvents', userId],
+        queryKey: ['wishlistEvents', authUserId],
         queryFn: () => fetchWishlistEvents(),
         enabled: !!authReady,
     });
@@ -37,12 +38,12 @@ const useFetchWishlistEvents = () => {
 
 const useToggleWishlistEvent = () => {
     const queryClient = useQueryClient();
-    const userId = useGetUserId(); // Fetch userId from context or hook
+    const authUserId = useGetAuthUserId(); // Fetch userId from context or hook
 
     return useMutation({
         mutationFn: async ({ eventId, isOnWishlist }: { eventId: string; isOnWishlist: boolean }) => {
             try {
-                if (!userId) {
+                if (!authUserId) {
                     throw new Error('User ID is required');
                 }
 
@@ -58,16 +59,16 @@ const useToggleWishlistEvent = () => {
             }
         },
         onMutate: async ({ eventId, isOnWishlist }) => {
-            if (!userId) return;
+            if (!authUserId) return;
 
             // Cancel any outgoing refetches (so they don't overwrite optimistic updates)
-            await queryClient.cancelQueries({ queryKey: ['wishlistEvents', userId] });
+            await queryClient.cancelQueries({ queryKey: ['wishlistEvents', authUserId] });
 
             // Snapshot the previous value
-            const previousWishlist = queryClient.getQueryData<string[]>(['wishlistEvents', userId]);
+            const previousWishlist = queryClient.getQueryData<string[]>(['wishlistEvents', authUserId]);
 
             // Optimistically update the cache
-            queryClient.setQueryData<string[]>(['wishlistEvents', userId], (oldWishlist = []) => {
+            queryClient.setQueryData<string[]>(['wishlistEvents', authUserId], (oldWishlist = []) => {
                 return isOnWishlist
                     ? [...oldWishlist, eventId]
                     : oldWishlist.filter(id => id !== eventId);
@@ -76,19 +77,19 @@ const useToggleWishlistEvent = () => {
             return { previousWishlist };
         },
         onError: (err, _, context) => {
-            if (!userId) return;
+            if (!authUserId) return;
 
             // Rollback to the previous wishlist state on error
             if (context?.previousWishlist) {
-                queryClient.setQueryData(['wishlistEvents', userId], context.previousWishlist);
+                queryClient.setQueryData(['wishlistEvents', authUserId], context.previousWishlist);
             }
 
             throw new Error('Error toggling wishlist event:', err?.message)
         },
         onSettled: () => {
-            if (!userId) return;
+            if (!authUserId) return;
             // Refetch wishlist events after mutation completes
-            queryClient.invalidateQueries({ queryKey: ['wishlistEvents', userId] });
+            queryClient.invalidateQueries({ queryKey: ['wishlistEvents', authUserId] });
         },
     });
 };
@@ -132,6 +133,8 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 
     const toggleWishlistEvent = useToggleWishlistEvent();
 
+    const swipeChoices = useSwipeChoices();
+
     return {
         wishlistEvents,
         friendWishlistEvents,
@@ -139,5 +142,136 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
         friendWishlistShareCode,
         toggleWishlistEvent,
         isOnWishlist,
+        swipeChoices,
     };
+};
+
+
+
+// SWIPE CHOICES
+
+const recordSwipeChoice = async ({
+    event_id,
+    user_id,
+    choice,
+    list = 'main',
+}: {
+    event_id: number;
+    user_id?: string | null;
+    choice: 'wishlist' | 'skip';
+    list?: string;
+}) => {
+    console.log('Attempting to record choice', { event_id, user_id, choice, list });
+
+    if (!user_id) {
+        console.error('User ID is required, skipping recording');
+        return;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('swipe_mode_choices')
+            .insert([{ event_id, user_id, choice, list }]);
+
+        console.log('here')
+        if (error) {
+            console.error('Supabase insert error:', error);
+            throw new Error(error.message);
+        }
+
+        console.log('Swipe choice inserted successfully:', data);
+        return data;
+    } catch (e) {
+        console.error(e)
+    }
+};
+
+
+export const useRecordSwipeChoice = () => {
+    const queryClient = useQueryClient();
+    const authUserId = useGetAuthUserId();
+
+    return useMutation({
+        mutationFn: (props: any) => {
+            return recordSwipeChoice({
+                ...props,
+                user_id: authUserId,
+            })
+        },
+        // onMutate: async ({ event_id, choice, list }) => {
+        //     // Cancel any outgoing refetches (so they don't overwrite optimistic updates)
+        //     // await queryClient.cancelQueries(['swipe_mode_choices']);
+
+        //     // Snapshot the previous value
+        //     const previousChoices = queryClient.getQueryData(['swipe_mode_choices']);
+
+        //     // Optimistically update with the new choice
+        //     queryClient.setQueryData(['swipe_mode_choices'], (oldChoices: any) => [
+        //         ...oldChoices,
+        //         { event_id, choice, list },
+        //     ]);
+
+        //     // Return the context to be used in case of rollback
+        //     return { previousChoices };
+        // },
+        // If the mutation fails, roll back to the previous value
+        onError: (err, newChoice, context: any) => {
+            queryClient.setQueryData(['swipe_mode_choices'], context?.previousChoices);
+
+            throw new Error(`Error recording swipe choice: ${err.message} [${newChoice}]`);
+        },
+        // Always refetch after error or success
+        onSettled: () => {
+            // queryClient.invalidateQueries(['swipe_mode_choices']);
+        },
+    });
+};
+
+
+
+interface SwipeModeChoices {
+    event_id: number;
+    choice: 'wishlist' | 'skip';
+    list?: string;
+}
+
+interface SwipeModeChosen {
+    swipeModeChosenWishlist: number[];
+    swipeModeChosenSkip: number[];
+}
+
+const fetchSwipeChoices = async (user_id: string): Promise<SwipeModeChosen> => {
+    const { data, error } = await supabase
+        .from('swipe_mode_choices')
+        .select('event_id, choice')
+        .eq('user_id', user_id);
+
+    if (error) {
+        throw new Error(error.message);
+    }
+
+    const swipeModeChosenWishlist = data
+        ?.filter((choice: SwipeModeChoices) => choice.choice === 'wishlist')
+        .map((choice: SwipeModeChoices) => choice.event_id) || [];
+
+    const swipeModeChosenSkip = data
+        ?.filter((choice: SwipeModeChoices) => choice.choice === 'skip')
+        .map((choice: SwipeModeChoices) => choice.event_id) || [];
+
+    return {
+        swipeModeChosenWishlist,
+        swipeModeChosenSkip,
+    };
+};
+
+export const useSwipeChoices = () => {
+    const authUserId = useGetAuthUserId();
+
+    const { data } = useQuery<SwipeModeChosen>({
+        queryKey: ['swipe_mode_choices', authUserId],
+        queryFn: () => fetchSwipeChoices(authUserId!),
+        enabled: !!authUserId, // Only fetch if the user_id exists
+    });
+
+    return data;
 };

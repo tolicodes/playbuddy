@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import moment from 'moment';
 import { Event } from '../commonTypes';
 import { EventWithMetadata } from '../types';
 import { useCalendarContext } from './CalendarContext';
@@ -17,7 +16,7 @@ interface ListItemProps {
 export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) => {
     const { toggleWishlistEvent, isOnWishlist, } = useCalendarContext(); // use the hook to handle wishlist
 
-    const { userId } = useUserContext(); // use the hook to get the user ID
+    const { authUserId } = useUserContext(); // use the hook to get the user ID
 
     const formattedDate = formatDate(item)
 
@@ -53,7 +52,7 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent }) =>
                     <Text style={styles.eventTime}>{formattedDate}</Text>
                 </View>
 
-                {userId && <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
+                {authUserId && <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
                     <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
                 </TouchableOpacity>}
             </View>

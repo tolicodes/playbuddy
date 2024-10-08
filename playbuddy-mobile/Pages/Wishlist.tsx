@@ -10,6 +10,7 @@ import { Button } from '@rneui/themed';
 import { RouteProp } from '@react-navigation/native';
 import { NavStackProps } from '../types';
 import * as amplitude from '@amplitude/analytics-react-native';
+import { LoginToAccess } from '../Common/LoginToAccess';
 
 const getInstructions = (shareUrl: string) => `I made a list of kinky events I'd like to go to!
 
@@ -60,7 +61,7 @@ const ShareWishlistButton = () => {
 
 const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) => {
     const { setFilters, setFriendWishlistShareCode, friendWishlistShareCode } = useCalendarContext();
-    const { userId } = useUserContext();
+    const { authUserId } = useUserContext();
 
     const shareCodeFromRoute = route.params?.share_code;
 
@@ -96,27 +97,13 @@ const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) =>
     }
 
     return (
-        (friendWishlistShareCode || userId)
+        (friendWishlistShareCode || authUserId)
             ? <>
                 <EventCalendarView isOnWishlist={true} isFriendWishlist={!!friendWishlistShareCode} />
                 <ShareWishlistButton />
             </>
             : (
-                <View style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',  // Centers vertically
-                    alignItems: 'center',      // Centers horizontally
-                    height: '100%',            // Ensure the height takes full screen
-                }}>
-                    <Text style={{ textAlign: 'center', marginTop: 10, fontSize: 20 }}>
-                        Login to access wishlist
-                    </Text>
-                    <View style={{ marginTop: 10, }}>
-                        <HeaderLoginButton showLoginText={true} />
-                    </View>
-                </View>
-
+                <LoginToAccess entityToAccess='wishlist' />
             )
     )
 }
