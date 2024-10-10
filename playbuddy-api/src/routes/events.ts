@@ -21,9 +21,13 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             // @ts-ignore
             supabaseClient
                 .from("events")
-                .select("*, organizer:organizers(id, name, url, hidden)")
+                .select(`
+          *,
+          organizer:organizers(id, name, url, hidden),
+          communities!inner(id, name),
+          location_area:location_areas(id, name)
+        `)
                 .gte("start_date", nycMidnightUTC),
-            // .eq("organizer.hidden", true),
             flushCache // Pass the flushCache flag
         );
 

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { TouchableOpacity, Text, View } from 'react-native';
+import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
 
 import EventCalendarView from './Calendar/EventCalendarView';
@@ -23,6 +23,9 @@ import Markdown from 'react-native-markdown-display';
 
 import { Retreats } from './Pages/Retreats';
 import { Planner } from './Pages/Planner';
+import LocationDropdown, { LocationArea } from './Header/LocationDropdown';
+import CommunityDropdown, { Community } from './Header/CommunitiesDropdown';
+import { useCommon } from './Common/CommonContext';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -78,18 +81,6 @@ const TabNavigator = () => {
     );
 };
 
-const COMING_SOON = `
-- **Tinder Mode**: Swipe on events to plan your week.
-- **Plan with Buddies**: Building on Tinder Mode, drag events into Buddy Lists and share with your various circles  (e.g., Toli’s Kinky Polycule, Rope Bunnies, or (Actual) Platonic Daddies Who Don’t Know I’m Kinky).
-- **AI Filtering**: Machine Learning will auto-classify events by type (e.g., workshop, talk, hands-on, play party) and comfort level (e.g., platonic,  sensual, erotic, sexual, 😳) 
-- **Communities**: Support for public and private communities, mirroring WhatsApp/Discord groups like this one, with automatic event aggregation.
-- **Organizers**: View all your favorite organizers in one place, and see their upcoming events.`
-
-const ComingSoon = () => (<View style={{ padding: 20 }}>
-    <Text style={{ fontSize: 16, fontWeight: 'bold', marginBottom: 10 }}>Coming Soon</Text>
-    <Markdown>{COMING_SOON}</Markdown>
-</View>)
-
 // Create the Drawer Navigator
 const DrawerNav = () => {
     return (
@@ -99,7 +90,57 @@ const DrawerNav = () => {
                 component={TabNavigator}
                 options={({ route }) => ({
                     headerRight: (props) => {
-                        return <HeaderLoginButton />
+
+                        // const locations = [
+                        //     { id: '1', name: 'New York', code: 'NYC' },
+                        //     { id: '2', name: 'San Francisco', code: 'SF' },
+                        //     { id: '3', name: 'London', code: 'LDN' },
+                        // ];
+                        // const communities: Community[] = [
+                        //     { id: '1', name: 'Basketball', code: 'BB' },
+                        //     { id: '2', name: 'Soccer', code: 'SC' },
+                        //     { id: '3', name: 'Tennis', code: 'TN' },
+                        //     // Add more communities as needed
+                        // ];
+
+
+                        const handleSelectLocationArea = (locationArea: LocationArea) => {
+                            setSelectedLocationArea(locationArea);
+                        };
+
+                        const handleSelectCommunity = (community: Community) => {
+                            setSelectedCommunity(community);
+                            // Additional actions for community selection
+                        };
+
+
+                        const {
+                            locationAreas,
+                            communities,
+                            selectedLocationArea,
+                            setSelectedLocationArea,
+                            selectedCommunity,
+                            setSelectedCommunity,
+                            isLoadingLocationArea,
+                            isLoadingCommunities,
+                        } = useCommon();
+
+                        return (
+                            <View style={styles.rightNavContainer}>
+                                <CommunityDropdown
+                                    communities={communities}
+                                    selectedCommunity={selectedCommunity}
+                                    onSelectCommunity={handleSelectCommunity}
+                                />
+                                <LocationDropdown
+                                    locationAreas={locationAreas}
+                                    selectedLocationArea={selectedLocationArea}
+                                    onSelectLocationArea={handleSelectLocationArea}
+
+                                />
+                                <HeaderLoginButton />
+                            </View>
+                        )
                     },
                     headerTitle: () => {
                         const routeName = getFocusedRouteNameFromRoute(route) ?? 'Home'
@@ -180,3 +221,14 @@ export default function AppNavigator() {
         </NavigationContainer>
     );
 }
+
+const styles = StyleSheet.create({
+    rightNavContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        // Add padding or margin as needed
+        paddingHorizontal: 10,
+    },
+});
+

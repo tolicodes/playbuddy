@@ -29,6 +29,18 @@ export interface Event extends SourceMetadata {
     // for the map
     lat?: number;
     lon?: number;
+
+    location_area?: {
+        id: string;
+        name: string;
+        code: string;
+    },
+
+    communities?: [{
+        id: string;
+        name: string;
+        code: string;
+    }]
 }
 
 export interface SourceMetadata {

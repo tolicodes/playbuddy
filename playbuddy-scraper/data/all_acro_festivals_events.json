@@ -75,6 +75,56 @@
     "dataset": "Acro"
   },
   {
+    "id": "acrofestivals-31",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "New Year’s Acro Party",
+      "url": "https://www.facebook.com/events/544485121420677"
+    },
+    "name": "New Year’s Acro Party",
+    "start_date": "2024-12-29T00:00:00.000Z",
+    "end_date": "2025-01-01T00:00:00.000Z",
+    "ticket_url": "https://www.facebook.com/events/544485121420677",
+    "event_url": "https://www.facebook.com/events/544485121420677",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/5d8d0e60e92e8b8a8a1692a01",
+    "location": "Las Vegas, NV, USA, undefined, United States, North America",
+    "price": "",
+    "description": "3 festival days of acro workshops and a new years ever party till the early hours of the new year!\n\nOur festival focuses heavily on jam time open training and community support to try those skills you’ve been dreaming of. We will have a full set of classes each day from some of the best teachers in the USA to fill your acro cup. \n\nOur NY eve party will have a dance for games and acro all night until 2am on New Years Day!!\n\nWe are giving a sliding scale option from $250-$450 so if money is a huge concern this a great event to attend. Las Vegas is very cheap to travel to!\n\n\n\n\n                    Email: kenanoel8@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-29",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Calgary AcroYoga Festival",
+      "url": "https://www.acroyogacalgary.com/festival"
+    },
+    "name": "Calgary AcroYoga Festival",
+    "start_date": "2025-04-18T00:00:00.000Z",
+    "end_date": "2025-04-20T00:00:00.000Z",
+    "ticket_url": "https://www.acroyogacalgary.com/festival",
+    "event_url": "https://www.acroyogacalgary.com/festival",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/05d82cce8fce27d8f66184d00",
+    "location": "Calgary, AB, Canada, undefined, Canada, North America",
+    "price": "",
+    "description": "3 days of AcroYoga Workshops (Friday evening, Saturday, and Sunday morning + afternoon) Including a Pre-fest on Friday morning + afternoon. The workshops taught are in various styles of acro including standing, L-basing, trio work and more! Held in a gymnastics facility, this festival boasts sprung floors and proximity to the the beautiful Rocky Mountains for you to adventure to if you stick around  as a tourist after the festival!\n\n\n                    Email: morganchantellepack@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
     "id": "acrofestivals-13",
     "type": "retreat",
     "recurring": "none",
@@ -175,48 +225,23 @@
     "dataset": "Acro"
   },
   {
-    "id": "acrofestivals-17",
+    "id": "acrofestivals-23",
     "type": "retreat",
     "recurring": "none",
     "organizer": {
       "id": "",
-      "name": "Acro Wonderland",
-      "url": "https://Acrotown.com"
+      "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Nov 2024",
+      "url": "https://www.acrospiritcommunity.com/acroyoga-training-bali"
     },
-    "name": "Acro Wonderland",
-    "start_date": "2024-12-06T00:00:00.000Z",
-    "end_date": "2024-12-08T00:00:00.000Z",
-    "ticket_url": "https://Acrotown.com",
-    "event_url": "https://Acrotown.com",
-    "image_url": "https://storage.googleapis.com/acrofestival-photos/7181742b17a76bef1fb820a00",
-    "location": "4304 Metric Drive, Winter Park, FL, USA, undefined, United States, North America",
+    "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Nov 2024",
+    "start_date": "2024-11-03T00:00:00.000Z",
+    "end_date": "2024-11-09T00:00:00.000Z",
+    "ticket_url": "https://www.acrospiritcommunity.com/acroyoga-training-bali",
+    "event_url": "https://www.acrospiritcommunity.com/acroyoga-training-bali",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b00",
+    "location": "Om Ham Retreat & Resort, Banjar Junjungan, Ubud, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
     "price": "",
-    "description": "**Acro Wonderland 2024**\n\nJoin us in Orlando, Florida, for Acro Wonderland! \n\nA thrilling three-day acrobatic event featuring world-class instructors from all around. This festival offers a blend of intensive workshops, exciting jams, and lively parties that continue until midnight on Friday and Saturday.\n\nAcro Wonderland features a carefully curated schedule designed to offer something special for everyone. Whether you're a seasoned acrobat or just starting out, you'll find what you need here. With over 35 classes to choose from, this festival is the perfect place to enhance your skills and make magic happen.\n\nBeginning with 6 hours of intensive workshops on Friday, followed by a magical tree lighting ceremony. Capture special moments with professional photos with The Acro Santa, and enjoy the Very Merry Holiday Extravaganza Showcase on Saturday!\n\n Acro Wonderland is not just another acro fest, we support Give Kids The World Village. This is a place where critically ill children and their families can go on cost free vacations in Orlando Florida. We believe the holiday season is about giving back. \n\nDon't miss your chance to participate in raffles to win incredible prizes that will elevate your acro practice. With a live DJ, festive atmosphere, and so much more, Acro Wonderland is the perfect way to make acro your holiday tradition.\n\n We can't wait to welcome you home!\nCheck us out at acrotown.com\n\n\n                    Email: info@acrotown.com\n\n\n                    FB: null\n\n\n                    IG: null",
-    "tags": [
-      "acro"
-    ],
-    "source_origination_platform": "acrofestivals",
-    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
-    "dataset": "Acro"
-  },
-  {
-    "id": "acrofestivals-19",
-    "type": "retreat",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "Pitch Catch Circus -- Fall Program",
-      "url": "https://www.pitchcatchcircus.com"
-    },
-    "name": "Pitch Catch Circus -- Fall Program",
-    "start_date": "2024-11-04T00:00:00.000Z",
-    "end_date": "2024-11-22T00:00:00.000Z",
-    "ticket_url": "https://www.pitchcatchcircus.com",
-    "event_url": "https://www.pitchcatchcircus.com",
-    "image_url": "https://storage.googleapis.com/acrofestival-photos/1e7601745a4c264542f46d100",
-    "location": "OSEGA Dream Academy, Rutledge Road, Fletcher, NC, USA, undefined, United States, North America",
-    "price": "",
-    "description": "Our 5th annual fall program focuses on standing acrobatics including hand to hand, foot to hand, dynamic skills, group acro and optional Icarian modules. Partner acrobatics training is rounded out by instruction in tumbling, handstands, flexibility, pre-hab/conditioning. Students also receive a minimum of 30 minutes per week in private instruction. Classes will run from 8:15am - 4pm, Monday - Friday. Open gym will occur on Saturday evenings 4:30 - 8:30pm. \n\n​This year's program will be led by world-renowned coaches Micah Ellinger, Christine Moonbeam, Blox Acrobatics, Ryan Hamity, Z Farrell and Ilana Blankman, with additional coaching from Chelsea Felein, Devin Deangelis, and Courtney Coston.\n\nWe’ll be offering concurrent tracks for intermediate, advanced, and advanced plus students. We will also offer an independent training option for pro-level acrobats. Students are encouraged to attend the full 5 weeks, but may attend as little as 2 weeks. Intermediate students must attend the first 2 weeks to continue on the program. One week minimum for returning students. Arrangements can be made for half days or partial weeks to accommodate locals or remote work schedules.\n\n\n\n​Please note, because social justice is an essential value of Pitch Catch, we do require all students who benefit from white privilege to attend a training on power dynamics, and we also offer additional trainings and conversations on inclusion throughout the program.\n\n\n                    Email: pitchcatchcircus@gmail.com\n\n\n                    FB: null\n\n\n                    IG: https://@pitchcatchcircus",
+    "description": "Join us for a journey that will unlock your full acroyoga potential, have you flying high, and lifting your friends to new heights. You will learn key acroyoga techniques, partnership/teamwork, communication skills, safety essentials, and build your trust and confidence in a community of new friends.\n\nTHIS IS FOR YOU...\nThis course is perfect for you if you find yourself answering 'YES' to any of the following questions:\n\nDo you want to truly master every detail of the foundational poses, moves and techniques of acroyoga?\nDo you want to improve your teamwork and communication, and become a great acroyoga training partner?\nDo you wish to bring more joy, fun, presence and connection into your Yoga practice?\nDo you often want to join and enjoy an acroyoga event, but you feel not quite skilled or knowledgeable enough?\nDo you want to finally unlock your handstand and learn effective inversion drills, that you can apply to your acroyoga practice?\nDo you dream of doing Acroyoga, but you have no experience yet?\nThis training will give you the tools, techniques, and experience to achieve all of this and more!\n\nAt the end of this 1 week you can expect to become a solid and skilled AcroYogi You will be experienced enough to become a valued acroyoga training partner. Plus you will be confident and comfortable collaborating with Acroyogis.\n\nThen you can grow your acroyoga skills with the foundations you learn during this training. \n\nOUR TEACHING PHILOSOPHY\nAcroSpirit’s approach to the practice and teachings of Acroyoga goes far beyond the physical skills!\n\nWe see Acroyoga as a beautiful pathway to greater connection, communication, teamwork, trust, empathy, support, friendship and play. Together we grow, learn and share this incredible practice with each other to reach new heights both figuratively and literally!\n\nWe strongly stand for unity, inclusiveness and empowering each other to rise together beyond our individual limits. Through Acroyoga we become more than a community, we become a family.\n\nYOUR LEAD TEACHERS\nLAURA ILONA & CASPIAN BURRELL\nCaspian Burrell and Laura Ilona are the Lead Teachers guiding this training. They are both professional yoga teachers, with backgrounds in martial arts, and are incredibly skilled and passionate when it comes to Acroyoga.\n\nCaspian is the founder of AcroSpirit and his aim in teaching is to introduce this practice to more people, and pass on the many benefits and joys it has brought into his life, to others. Laura also loves sharing the joy and connection that acro brings, and she utilises her professional teaching knowledge and excellent communication skills to great effect.\n\nTogether they will lead you through this 1 week journey to truly level up your acro practice!\n\nWHAT'S INCLUDED\nAcroSpirit Level 1 Manual - (100+ color pages with detailed information and pictures to help your practice).\nAcroSpirit goodie bag\nAcroSpirit t-shirt\nThe full teaching course content\n2 meals per day provided at the venue\nProfessional photoshoot during the course\nPersonalized coaching, tips and advice from our Lead teachers\nCertificate upon successful completion (accredited with Yoga Alliance as 50hrs continued education)\nAccommodation at the venue during the training (options available if needed)\nTHE COURSE\nWe have carefully crafted and developed this training to guarantee that you’ll walk away with a solid foundation in your Acroyoga practice. The content we have selected is designed to teach you the foundational techniques of all the different aspects of Acroyoga. As well as sharing the non-physical skills this practice will unlock for you.\n\nWE FOCUS ON:\nTeaching and practicing supportive and positive communication.\nTeaching correct alignment and technique. \nPracticing all roles (base, flyer, spotter) in Acroyoga.\nSafety and the art of good spotting.\nL-base Acroyoga Poses, Therapeutic Acroyoga Poses, Acroyoga Theory, Handstands, Thai Yoga Massage.\nWHAT TO EXPECT\nEvery day will start with warm ups and prehab to train fundamental movements in our bodies and prepare you for the rest of the day’s activities. The handstand classes will give you the most valuable exercises, tips and techniques to improve your handstands and inversions. During the L-Base Acroyoga classes you will learn and practice in detail several Acroyoga poses and transitions. Several theory classes are scheduled throughout, providing valuable knowledge about communication, consent, training partnerships, injuries and much more. Late afternoon and evenings are mostly dedicated to the therapeutic side of Acroyoga. Designed to teach you to give and receive both Acroyoga therapeutics and Thai Yoga massage. \n\nAll the content is created to deliver the most all round and valuable acroyoga experience.\n\nDay Schedule Example:\n07.30 - 08.30     -     Warm ups, prehab and handstands\n08.30 - 09.30     -     Breakfast\n09.30 - 10.30     -     Acro Theory: Safety\n10.30 - 12.30     -     Acro Class\n12.30 - 14.00     -     Lunch\n14.00 - 15.00     -     Acro Theory: Communication\n15.00 - 17.00     -     Acro Class: Entries and Exits\n17.00 - 18.30     -     Thai Yoga Massage\n18.30                  -      Dinner\n\nCERTIFICATION\nAs part of your training, you will be required to demonstrate an Acroyoga sequence or series of poses and movements with your fellow students. You will have a short written examination focussed on techniques, alignment, and Acro theory topics such as safety, communication, and anatomy. Successful graduates of the course will receive a certification of completion which is accredited as 50hrs continued education credits with Yoga Alliance.\n\nWe believe that whether your intention is to eventually teach Acro, to become more advanced in Acroyoga, or just to deepen your connection, communication and friendships. This training and experience will allow you to unlock all of that and more!\n\nEXPERIENCE LEVEL\nThis training is open to, and suitable for students of all levels, even those with NO previous experience in Acroyoga. Beginners and low level Intermediate Acroyogis will be able to learn a lot from this training, as we dive deep into alignment, techniques, refining the basics, and also giving focus to communication, training partnerships and communication skills. \n\nIf you have never done Acroyoga before, this course is perfect for you as we teach from the basics up. We do recommend at least having some kind of movement practice. Such as Yoga, or any sports practice to help you get the most out of this training.\n\nLANGUAGE\nWe welcome all nationalities and languages, and Acroyoga is a practice that uses non-verbal communication too! But please be aware that all our course materials and lessons are delivered in clear and easy to understand spoken and written English.\n\nFOOD\nAll dietary requirements will be catered for from gluten free, vegan, vegetarian and more. You can choose each day from an incredible tasty selection of local indonesian cuisine, but with western infusions and options too.\n\nACCOMODATION\nIf you wish to stay at the resort location where we will hold the training, beautiful luxury rooms are available to book. All rooms come with ensuite showers, air conditioning and a modern clean style, with double bed or twin bed options if you wish to share.\n\nPRICES\nThe pricing options are all-inclusive of training course, training manual, certification, 2 meals per day, goodie bag and t-shirt.\nEARLY BIRD prices apply for the first 6 sign ups.\n\nBOOK YOUR SPOT\nAcroyoga is a practice that will give you so much, even beyond the amazing physical skills. In this training you will form deep friendships, find meaningful connections, and learn to communicate, play and have fun in a genuine way. This experience and the skills you gain will transform your understanding and approach to the most important form of contact in your everyday life - human connection!\n\nBook your spot to reserve your place on this incredible training.\n\nWe can’t wait for you to become part of our AcroSpirit family!\n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
     "tags": [
       "acro"
     ],
@@ -231,92 +256,17 @@
     "organizer": {
       "id": "",
       "name": "Acroatia 2025 - 10th anniversary ",
-      "url": "https://acrofestivals.org"
+      "url": "https://acroatia.org/"
     },
     "name": "Acroatia 2025 - 10th anniversary ",
     "start_date": "2025-07-18T00:00:00.000Z",
     "end_date": "2025-08-08T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
+    "ticket_url": "https://acroatia.org/",
+    "event_url": "https://acroatia.org/",
     "image_url": "https://storage.googleapis.com/acrofestival-photos/4e336d744b1a0094a58954c01",
     "location": "Fratrovci, Hrvatska, undefined, Hrvatska, null",
     "price": "",
     "description": "Our 10th edition! We are so proud and excited to have made it to the 10th time that we will be hosting you in our wild wild Croatian acrobatic festival.\n\nIn our humble beginnings in 2016 we envisioned a festival that is a unique blend of nature and acrobatics. (Re)connecting to the ground, the trees, life itself and yourself as well, has been something we love to combine with movement and the acro community.\n\nThe highlight of that is what will happen in 2025 for our anniversary edition.\n\nHot TiP\nSign up to our newsletter to get early access to the festival tickets. You can choose 1, 2 or 3 weeks. We have 20 tickets that will go for an insanely low price. Registration opens, early access via newsletter: November11th 2024.\n\nVisit our webpage for much more info...\n\n\n                    Email: info@acroatia.org\n\n\n                    FB: null\n\n\n                    IG: null",
-    "tags": [
-      "acro"
-    ],
-    "source_origination_platform": "acrofestivals",
-    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
-    "dataset": "Acro"
-  },
-  {
-    "id": "acrofestivals-22",
-    "type": "retreat",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "Elevate Acro Festival",
-      "url": "https://Elevateacrofest.ca"
-    },
-    "name": "Elevate Acro Festival",
-    "start_date": "2024-10-18T00:00:00.000Z",
-    "end_date": "2024-10-20T00:00:00.000Z",
-    "ticket_url": "https://Elevateacrofest.ca",
-    "event_url": "https://Elevateacrofest.ca",
-    "image_url": "https://storage.googleapis.com/acrofestival-photos/03e2dc04f7765da0d6d310a00",
-    "location": "Alberta Avenue Community Centre, 118 Avenue Northwest, Edmonton, AB, Canada, undefined, Canada, North America",
-    "price": "",
-    "description": "ELEVATE your acro practice, each other, and the community with this 3 day acro yoga festival October 18-20th in Edmonton, Alberta.\n\nCome join us for Edmonton's small (under 200 people) Acro Festival \n\nElevate Acro Festival will host teachers from across North America. We will have various workshops including beginner, intermediate, advanced , and all levels classes. There will be 3 classes running simultaneously in each time slot and there will be 2 separate spaces at the venue for acro classes to minimize noise from simultaneous classes. This is a beginner friendly festival AND we recommend having done at least a few acro classes before attending to get the most out of the festival.\n\nDiversity is a core value at elevate and we partner with BACCES (BIPOC Collective Care Ecosystem), have social justice chats, have gender non specific washrooms, a chill blanket fort if you are overstimulated or need a break, a land acknowledgement activity, and do our best to continue learning and unlearning how to create a safer space for marginalized folxs in the community. Aiden Flyguy (one of the festival organizers) is queer and transgender.\n\nSCHEDULE\nF﻿riday Prefest with Adi Firefly & Devon French\nFriday: 2 acro classes + Jam Time on October 18 starting at 4pm\nSaturday: 3 acro classes + 1 Restorative Practice Workshop + Community Chat + Community Games + and Jam Time October 19\nSunday: 2 acro classes + Community Chat+ 1 massage class on October 20\n\n\n                    Email: elevateacrofest@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
-    "tags": [
-      "acro"
-    ],
-    "source_origination_platform": "acrofestivals",
-    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
-    "dataset": "Acro"
-  },
-  {
-    "id": "acrofestivals-23",
-    "type": "retreat",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Nov 2024",
-      "url": "https://acrofestivals.org"
-    },
-    "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Nov 2024",
-    "start_date": "2024-11-03T00:00:00.000Z",
-    "end_date": "2024-11-09T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
-    "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b00",
-    "location": "Om Ham Retreat & Resort, Banjar Junjungan, Ubud, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
-    "price": "",
-    "description": "Join us for a journey that will unlock your full acroyoga potential, have you flying high, and lifting your friends to new heights. You will learn key acroyoga techniques, partnership/teamwork, communication skills, safety essentials, and build your trust and confidence in a community of new friends.\n\nTHIS IS FOR YOU...\nThis course is perfect for you if you find yourself answering 'YES' to any of the following questions:\n\nDo you want to truly master every detail of the foundational poses, moves and techniques of acroyoga?\nDo you want to improve your teamwork and communication, and become a great acroyoga training partner?\nDo you wish to bring more joy, fun, presence and connection into your Yoga practice?\nDo you often want to join and enjoy an acroyoga event, but you feel not quite skilled or knowledgeable enough?\nDo you want to finally unlock your handstand and learn effective inversion drills, that you can apply to your acroyoga practice?\nDo you dream of doing Acroyoga, but you have no experience yet?\nThis training will give you the tools, techniques, and experience to achieve all of this and more!\n\nAt the end of this 1 week you can expect to become a solid and skilled AcroYogi You will be experienced enough to become a valued acroyoga training partner. Plus you will be confident and comfortable collaborating with Acroyogis.\n\nThen you can grow your acroyoga skills with the foundations you learn during this training. \n\nOUR TEACHING PHILOSOPHY\nAcroSpirit’s approach to the practice and teachings of Acroyoga goes far beyond the physical skills!\n\nWe see Acroyoga as a beautiful pathway to greater connection, communication, teamwork, trust, empathy, support, friendship and play. Together we grow, learn and share this incredible practice with each other to reach new heights both figuratively and literally!\n\nWe strongly stand for unity, inclusiveness and empowering each other to rise together beyond our individual limits. Through Acroyoga we become more than a community, we become a family.\n\nYOUR LEAD TEACHERS\nLAURA ILONA & CASPIAN BURRELL\nCaspian Burrell and Laura Ilona are the Lead Teachers guiding this training. They are both professional yoga teachers, with backgrounds in martial arts, and are incredibly skilled and passionate when it comes to Acroyoga.\n\nCaspian is the founder of AcroSpirit and his aim in teaching is to introduce this practice to more people, and pass on the many benefits and joys it has brought into his life, to others. Laura also loves sharing the joy and connection that acro brings, and she utilises her professional teaching knowledge and excellent communication skills to great effect.\n\nTogether they will lead you through this 1 week journey to truly level up your acro practice!\n\nWHAT'S INCLUDED\nAcroSpirit Level 1 Manual - (100+ color pages with detailed information and pictures to help your practice).\nAcroSpirit goodie bag\nAcroSpirit t-shirt\nThe full teaching course content\n2 meals per day provided at the venue\nProfessional photoshoot during the course\nPersonalized coaching, tips and advice from our Lead teachers\nCertificate upon successful completion (accredited with Yoga Alliance as 50hrs continued education)\nAccommodation at the venue during the training (options available if needed)\nTHE COURSE\nWe have carefully crafted and developed this training to guarantee that you’ll walk away with a solid foundation in your Acroyoga practice. The content we have selected is designed to teach you the foundational techniques of all the different aspects of Acroyoga. As well as sharing the non-physical skills this practice will unlock for you.\n\nWE FOCUS ON:\nTeaching and practicing supportive and positive communication.\nTeaching correct alignment and technique. \nPracticing all roles (base, flyer, spotter) in Acroyoga.\nSafety and the art of good spotting.\nL-base Acroyoga Poses, Therapeutic Acroyoga Poses, Acroyoga Theory, Handstands, Thai Yoga Massage.\nWHAT TO EXPECT\nEvery day will start with warm ups and prehab to train fundamental movements in our bodies and prepare you for the rest of the day’s activities. The handstand classes will give you the most valuable exercises, tips and techniques to improve your handstands and inversions. During the L-Base Acroyoga classes you will learn and practice in detail several Acroyoga poses and transitions. Several theory classes are scheduled throughout, providing valuable knowledge about communication, consent, training partnerships, injuries and much more. Late afternoon and evenings are mostly dedicated to the therapeutic side of Acroyoga. Designed to teach you to give and receive both Acroyoga therapeutics and Thai Yoga massage. \n\nAll the content is created to deliver the most all round and valuable acroyoga experience.\n\nDay Schedule Example:\n07.30 - 08.30     -     Warm ups, prehab and handstands\n08.30 - 09.30     -     Breakfast\n09.30 - 10.30     -     Acro Theory: Safety\n10.30 - 12.30     -     Acro Class\n12.30 - 14.00     -     Lunch\n14.00 - 15.00     -     Acro Theory: Communication\n15.00 - 17.00     -     Acro Class: Entries and Exits\n17.00 - 18.30     -     Thai Yoga Massage\n18.30                  -      Dinner\n\nCERTIFICATION\nAs part of your training, you will be required to demonstrate an Acroyoga sequence or series of poses and movements with your fellow students. You will have a short written examination focussed on techniques, alignment, and Acro theory topics such as safety, communication, and anatomy. Successful graduates of the course will receive a certification of completion which is accredited as 50hrs continued education credits with Yoga Alliance.\n\nWe believe that whether your intention is to eventually teach Acro, to become more advanced in Acroyoga, or just to deepen your connection, communication and friendships. This training and experience will allow you to unlock all of that and more!\n\nEXPERIENCE LEVEL\nThis training is open to, and suitable for students of all levels, even those with NO previous experience in Acroyoga. Beginners and low level Intermediate Acroyogis will be able to learn a lot from this training, as we dive deep into alignment, techniques, refining the basics, and also giving focus to communication, training partnerships and communication skills. \n\nIf you have never done Acroyoga before, this course is perfect for you as we teach from the basics up. We do recommend at least having some kind of movement practice. Such as Yoga, or any sports practice to help you get the most out of this training.\n\nLANGUAGE\nWe welcome all nationalities and languages, and Acroyoga is a practice that uses non-verbal communication too! But please be aware that all our course materials and lessons are delivered in clear and easy to understand spoken and written English.\n\nFOOD\nAll dietary requirements will be catered for from gluten free, vegan, vegetarian and more. You can choose each day from an incredible tasty selection of local indonesian cuisine, but with western infusions and options too.\n\nACCOMODATION\nIf you wish to stay at the resort location where we will hold the training, beautiful luxury rooms are available to book. All rooms come with ensuite showers, air conditioning and a modern clean style, with double bed or twin bed options if you wish to share.\n\nPRICES\nThe pricing options are all-inclusive of training course, training manual, certification, 2 meals per day, goodie bag and t-shirt.\nEARLY BIRD prices apply for the first 6 sign ups.\n\nBOOK YOUR SPOT\nAcroyoga is a practice that will give you so much, even beyond the amazing physical skills. In this training you will form deep friendships, find meaningful connections, and learn to communicate, play and have fun in a genuine way. This experience and the skills you gain will transform your understanding and approach to the most important form of contact in your everyday life - human connection!\n\nBook your spot to reserve your place on this incredible training.\n\nWe can’t wait for you to become part of our AcroSpirit family!\n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
-    "tags": [
-      "acro"
-    ],
-    "source_origination_platform": "acrofestivals",
-    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
-    "dataset": "Acro"
-  },
-  {
-    "id": "acrofestivals-24",
-    "type": "retreat",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Jan 2025",
-      "url": "https://acrofestivals.org"
-    },
-    "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Jan 2025",
-    "start_date": "2025-01-19T00:00:00.000Z",
-    "end_date": "2025-01-25T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
-    "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b01",
-    "location": "Om Ham Retreat & Resort, Banjar Junjungan, Ubud, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
-    "price": "",
-    "description": "Join us for a journey that will unlock your full acroyoga potential, have you flying high, and lifting your friends to new heights. You will learn key acroyoga techniques, partnership/teamwork, communication skills, safety essentials, and build your trust and confidence in a community of new friends.\n\nTHIS IS FOR YOU...\nThis course is perfect for you if you find yourself answering 'YES' to any of the following questions:\n\nDo you want to truly master every detail of the foundational poses, moves and techniques of acroyoga?\nDo you want to improve your teamwork and communication, and become a great acroyoga training partner?\nDo you wish to bring more joy, fun, presence and connection into your Yoga practice?\nDo you often want to join and enjoy an acroyoga event, but you feel not quite skilled or knowledgeable enough?\nDo you want to finally unlock your handstand and learn effective inversion drills, that you can apply to your acroyoga practice?\nDo you dream of doing Acroyoga, but you have no experience yet?\nThis training will give you the tools, techniques, and experience to achieve all of this and more!\n\nAt the end of this 1 week you can expect to become a solid and skilled AcroYogi You will be experienced enough to become a valued acroyoga training partner. Plus you will be confident and comfortable collaborating with Acroyogis.\n\nThen you can grow your acroyoga skills with the foundations you learn during this training. \n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
     "tags": [
       "acro"
     ],
@@ -331,13 +281,13 @@
     "organizer": {
       "id": "",
       "name": "ACROSPIRIT PRE-FESTIVAL Intensive 2025",
-      "url": "https://acrofestivals.org"
+      "url": "https://www.acrospiritcommunity.com/pre-acroyoga-festival-bali-2025"
     },
     "name": "ACROSPIRIT PRE-FESTIVAL Intensive 2025",
     "start_date": "2025-02-09T00:00:00.000Z",
     "end_date": "2025-02-11T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
+    "ticket_url": "https://www.acrospiritcommunity.com/pre-acroyoga-festival-bali-2025",
+    "event_url": "https://www.acrospiritcommunity.com/pre-acroyoga-festival-bali-2025",
     "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b02",
     "location": "The Yoga Barn, Jalan Sukma Kesuma, Peliatan, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
     "price": "",
@@ -356,42 +306,17 @@
     "organizer": {
       "id": "",
       "name": "ACROSPIRIT FESTIVAL 2025",
-      "url": "https://acrofestivals.org"
+      "url": "https://www.acrospiritcommunity.com/acroyoga-festival-bali-2025"
     },
     "name": "ACROSPIRIT FESTIVAL 2025",
     "start_date": "2025-02-13T00:00:00.000Z",
     "end_date": "2025-02-16T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
+    "ticket_url": "https://www.acrospiritcommunity.com/acroyoga-festival-bali-2025",
+    "event_url": "https://www.acrospiritcommunity.com/acroyoga-festival-bali-2025",
     "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b03",
     "location": "The Yoga Barn, Jalan Sukma Kesuma, Peliatan, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
     "price": "",
     "description": "We are excited for our 3rd edition in Ubud, Bali\n\nThis year we are growing the festival by moving to a new and bigger venue… The Yoga Barn!\n\nAnd we are adding more time for jamming, a greater variety of classes, and expanding to 5 concurrent workshops each round over the 4 full festival days, so there will be tonnes of workshops for you to choose from!\n\nThis year we are creating the most skilled acro teacher lineup we've ever had to inspire, share and help you learn amazing new acro skills!\n\nDont miss out on Bali's biggest acro event.\n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
-    "tags": [
-      "acro"
-    ],
-    "source_origination_platform": "acrofestivals",
-    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
-    "dataset": "Acro"
-  },
-  {
-    "id": "acrofestivals-27",
-    "type": "retreat",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "Acroyoga Training Program (Level 2 - Intermediate Advanced) Jan 2025",
-      "url": "https://acrofestivals.org"
-    },
-    "name": "Acroyoga Training Program (Level 2 - Intermediate Advanced) Jan 2025",
-    "start_date": "2025-01-04T00:00:00.000Z",
-    "end_date": "2025-01-11T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
-    "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b04",
-    "location": "Om Ham Retreat & Resort, Banjar Junjungan, Ubud, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
-    "price": "",
-    "description": "Are YOU READY to take the next BIG STEP in your acroyoga journey?\n​This training program will help you break through the intermediate barrier and UNLOCK ADVANCED ACRO SKILLS. Plus you will learn how TEACH and COACH acro in the most effective and impactful way!\n\nAt the end of this 1 week Acroyoga Training Program you will develop the techniques, skills and knowledge to grow your practice to an advanced level. You will learn and be able to implement many valuable teaching and coaching tools to make your acro teaching highly effective. \n\nYou will gain new inputs to your training approach and methodology, and experience a shift and significant level up in your physical practice.\n\nThis course has been designed to provide you with all of the technical and theoretical knowledge and skills needed to take your acroyoga practice beyond the intermediate level.\n\nThe content we will cover is the most essential and technically valuable in growing you towards an advanced acroyoga practice. We will focus on progressions, drills and understanding skills, so you will be able to continue to practice and develop after the training.\n\nIn the theoretical classes we will bring more focus to teaching and coaching techniques and practices, whilst looking deeper into professional development, advanced training tips, community leading and injury prevention/management.\n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
     "tags": [
       "acro"
     ],
@@ -406,17 +331,192 @@
     "organizer": {
       "id": "",
       "name": "ACROSPIRIT NYEPI ACROYOGA RETREAT 2025",
-      "url": "https://acrofestivals.org"
+      "url": "https://www.acrospiritcommunity.com/acroyoga-retreat-nyepi-bali"
     },
     "name": "ACROSPIRIT NYEPI ACROYOGA RETREAT 2025",
     "start_date": "2025-03-28T00:00:00.000Z",
     "end_date": "2025-03-31T00:00:00.000Z",
-    "ticket_url": "https://acrofestivals.org",
-    "event_url": "https://acrofestivals.org",
+    "ticket_url": "https://www.acrospiritcommunity.com/acroyoga-retreat-nyepi-bali",
+    "event_url": "https://www.acrospiritcommunity.com/acroyoga-retreat-nyepi-bali",
     "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b05",
     "location": "Nirarta Centre for Living Awareness, Jalan Raya Tebola, Telaga Tawang, Karangasem Regency, Bali, Indonesia, undefined, Indonesia, Asia",
     "price": "",
     "description": "Retreat yourself to 4 days and 3 nights of acro, fun, relaxation and connection in the most amazing nature resort centre with our amazing acro community!\n \n\nNYEPI ACROYOGA RETREAT\n\nBe part of a special acroyoga retreat experience during the unique Balinese holiday of Nyepi, the Day Of Silence.\n\nAfter success of collaborating with Acro Nerds for Nyepi retreat 2024 we're excited to bring them back for our next year edition.\n\nYou will spend 4 days and 3 nights in a beautiful retreat center in Sidemen, Bali, together with our AcroYoga community, all under the guidance of our highly skilled acro teachers and retreat hosts.\n\nDuring the retreat you will get 5 acro classes, acro jams,Intelligent movement sessions,handstand workshop, consent & communication session, connection games and a fantasticcommunity atmosphere!\n\n​It’s going to be epic, memorable and deeply connective, so don’t miss out!\n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-22",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Elevate Acro Festival",
+      "url": "https://www.elevateacrofest.ca"
+    },
+    "name": "Elevate Acro Festival",
+    "start_date": "2024-10-18T00:00:00.000Z",
+    "end_date": "2024-10-20T00:00:00.000Z",
+    "ticket_url": "https://www.elevateacrofest.ca",
+    "event_url": "https://www.elevateacrofest.ca",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/03e2dc04f7765da0d6d310a00",
+    "location": "Alberta Avenue Community Centre, 118 Avenue Northwest, Edmonton, AB, Canada, undefined, Canada, North America",
+    "price": "",
+    "description": "ELEVATE your acro practice, each other, and the community with this 3 day acro yoga festival October 18-20th in Edmonton, Alberta.\n\nCome join us for Edmonton's small (under 200 people) Acro Festival \n\nElevate Acro Festival will host teachers from across North America. We will have various workshops including beginner, intermediate, advanced , and all levels classes. There will be 3 classes running simultaneously in each time slot and there will be 2 separate spaces at the venue for acro classes to minimize noise from simultaneous classes. This is a beginner friendly festival AND we recommend having done at least a few acro classes before attending to get the most out of the festival.\n\nDiversity is a core value at elevate and we partner with BACCES (BIPOC Collective Care Ecosystem), have social justice chats, have gender non specific washrooms, a chill blanket fort if you are overstimulated or need a break, a land acknowledgement activity, and do our best to continue learning and unlearning how to create a safer space for marginalized folxs in the community. Aiden Flyguy (one of the festival organizers) is queer and transgender.\n\nSCHEDULE\nF﻿riday Prefest with Adi Firefly & Devon French\nFriday: 2 acro classes + Jam Time on October 18 starting at 4pm\nSaturday: 3 acro classes + 1 Restorative Practice Workshop + Community Chat + Community Games + and Jam Time October 19\nSunday: 2 acro classes + Community Chat+ 1 massage class on October 20\n\n\n                    Email: elevateacrofest@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-24",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Jan 2025",
+      "url": "https://www.acrospiritcommunity.com/acroyoga-training-bali"
+    },
+    "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Jan 2025",
+    "start_date": "2025-01-19T00:00:00.000Z",
+    "end_date": "2025-01-25T00:00:00.000Z",
+    "ticket_url": "https://www.acrospiritcommunity.com/acroyoga-training-bali",
+    "event_url": "https://www.acrospiritcommunity.com/acroyoga-training-bali",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b01",
+    "location": "Om Ham Retreat & Resort, Banjar Junjungan, Ubud, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
+    "price": "",
+    "description": "Join us for a journey that will unlock your full acroyoga potential, have you flying high, and lifting your friends to new heights. You will learn key acroyoga techniques, partnership/teamwork, communication skills, safety essentials, and build your trust and confidence in a community of new friends.\n\nTHIS IS FOR YOU...\nThis course is perfect for you if you find yourself answering 'YES' to any of the following questions:\n\nDo you want to truly master every detail of the foundational poses, moves and techniques of acroyoga?\nDo you want to improve your teamwork and communication, and become a great acroyoga training partner?\nDo you wish to bring more joy, fun, presence and connection into your Yoga practice?\nDo you often want to join and enjoy an acroyoga event, but you feel not quite skilled or knowledgeable enough?\nDo you want to finally unlock your handstand and learn effective inversion drills, that you can apply to your acroyoga practice?\nDo you dream of doing Acroyoga, but you have no experience yet?\nThis training will give you the tools, techniques, and experience to achieve all of this and more!\n\nAt the end of this 1 week you can expect to become a solid and skilled AcroYogi You will be experienced enough to become a valued acroyoga training partner. Plus you will be confident and comfortable collaborating with Acroyogis.\n\nThen you can grow your acroyoga skills with the foundations you learn during this training. \n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-27",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Acroyoga Training Program (Level 2 - Intermediate Advanced) Jan 2025",
+      "url": "https://www.acrospiritcommunity.com/advanced-acroyoga-training-program"
+    },
+    "name": "Acroyoga Training Program (Level 2 - Intermediate Advanced) Jan 2025",
+    "start_date": "2025-01-04T00:00:00.000Z",
+    "end_date": "2025-01-11T00:00:00.000Z",
+    "ticket_url": "https://www.acrospiritcommunity.com/advanced-acroyoga-training-program",
+    "event_url": "https://www.acrospiritcommunity.com/advanced-acroyoga-training-program",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/f0c779ab948b523b6b5978b04",
+    "location": "Om Ham Retreat & Resort, Banjar Junjungan, Ubud, Gianyar Regency, Bali, Indonesia, undefined, Indonesia, Asia",
+    "price": "",
+    "description": "Are YOU READY to take the next BIG STEP in your acroyoga journey?\n​This training program will help you break through the intermediate barrier and UNLOCK ADVANCED ACRO SKILLS. Plus you will learn how TEACH and COACH acro in the most effective and impactful way!\n\nAt the end of this 1 week Acroyoga Training Program you will develop the techniques, skills and knowledge to grow your practice to an advanced level. You will learn and be able to implement many valuable teaching and coaching tools to make your acro teaching highly effective. \n\nYou will gain new inputs to your training approach and methodology, and experience a shift and significant level up in your physical practice.\n\nThis course has been designed to provide you with all of the technical and theoretical knowledge and skills needed to take your acroyoga practice beyond the intermediate level.\n\nThe content we will cover is the most essential and technically valuable in growing you towards an advanced acroyoga practice. We will focus on progressions, drills and understanding skills, so you will be able to continue to practice and develop after the training.\n\nIn the theoretical classes we will bring more focus to teaching and coaching techniques and practices, whilst looking deeper into professional development, advanced training tips, community leading and injury prevention/management.\n\n\n                    Email: acrospiritcontact@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-36",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Acro Teacher Training and Leadership Retreat",
+      "url": "https://www.seattleacro.com/teacher-training"
+    },
+    "name": "Acro Teacher Training and Leadership Retreat",
+    "start_date": "2024-11-07T00:00:00.000Z",
+    "end_date": "2024-11-27T00:00:00.000Z",
+    "ticket_url": "https://www.seattleacro.com/teacher-training",
+    "event_url": "https://www.seattleacro.com/teacher-training",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/4934b49692c043d3022d2dc00",
+    "location": "Lake Arrowhead, California, USA, undefined, United States, North America",
+    "price": "",
+    "description": "Lux believes that ongoing education is crucial to all practitioners, even more so for teachers. Since 2012, he has been offering a training to teachers whose passion is gaining knowledge and increasing aptitude.\n\n\nIn addition to the physical practice, participants will study:\n• Methods of communication & partnering\n• How to evaluate, diagnose, and offer students the greatest change in their practice without overwhelming them\n• Acro mechanics and the methods of communicating them\n• Softer skills including conflict resolution, leadership, and community support\n\nThis training focuses on techniques that will serve your students long-term. This is the essence of teaching: serve your students. Come learn how to teach with greater efficacy.\n\nAs in the past, there will be required reading and discussion of ethics of teaching and personal conduct as a teacher and community leader. Participants will be required to adhere to a code of conduct and a commitment to foster a culture of safe and progressive learning.\n\n\n                    Email: eruleman+42@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-35",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Arthur Davis returns to Philly ",
+      "url": "https://www.facebook.com/events/819577977013137"
+    },
+    "name": "Arthur Davis returns to Philly ",
+    "start_date": "2024-10-18T00:00:00.000Z",
+    "end_date": "2024-10-20T00:00:00.000Z",
+    "ticket_url": "https://www.facebook.com/events/819577977013137",
+    "event_url": "https://www.facebook.com/events/819577977013137",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/71ada8a5d91761a1fa8209800",
+    "location": "Philadelphia, PA, USA, undefined, United States, North America",
+    "price": "",
+    "description": "\n\nA weekend of training opportunities with two-time world champion acrobatic gymnast, an internationally renowned choreographer, a Cirque du Soleil alumni, and energy/bodyworker Arthur Davis III.\n\nFriday 10/18 privates will be at Majesty Elite Gymnastics\n\nFriday 10/18 workshop and jam will be at Reach Climbing Gym\n\nSaturday 10/19 workshops and jam will be at Majesty Elite Gymanstics\n\nSunday 10/20 workshop and jam will be at Salvatore Pachella Memorial Field\n\n\nCheck out the program for details!\n\nA little about Arthur:\n\nArthur Davis III is a two-time world champion acrobatic gymnast, an internationally renowned choreographer, a Cirque du Soleil alumni, and energy/bodyworker. Arthur’s approach to expression through movement is enlivening. He encourages everyone to be big, to inhabit one’s fullness. He celebrates and embodies exaggerating one’s unique expression. His intuitive and joyful expression is magnetic and light. His guidance in this process is healing, transformative, and fun.\n\nWe are fortunate to have Arthur come back and share his talents and skills with our community in Philly. Acrobats from all around are welcome with open arms. I hope we can show Arthur our support and enthusiasm for this weekend.\n\nFor inspiration on Arthur's work\n\nAcroArmy Semifinals:\n\nhttps://youtu.be/7jVuU85s82o?si=mszyn9fJtZhV0c4H\n\nhttps://youtu.be/fbBij6gszfY\n\nhttps://youtu.be/qB1PGquYqV0\n\nHope to see you there 🙂\n\n\n\n                    Email: rachelmscott3@gmail.com\n\n\n                    FB: null\n\n\n                    IG: https://@retsiru",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-17",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Acro Wonderland",
+      "url": "https://www.acrotown.com"
+    },
+    "name": "Acro Wonderland",
+    "start_date": "2024-12-06T00:00:00.000Z",
+    "end_date": "2024-12-08T00:00:00.000Z",
+    "ticket_url": "https://www.acrotown.com",
+    "event_url": "https://www.acrotown.com",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/7181742b17a76bef1fb820a00",
+    "location": "4304 Metric Drive, Winter Park, FL, USA, undefined, United States, North America",
+    "price": "",
+    "description": "**Acro Wonderland 2024**\n\nJoin us in Orlando, Florida, for Acro Wonderland! \n\nA thrilling three-day acrobatic event featuring world-class instructors from all around. This festival offers a blend of intensive workshops, exciting jams, and lively parties that continue until midnight on Friday and Saturday.\n\nAcro Wonderland features a carefully curated schedule designed to offer something special for everyone. Whether you're a seasoned acrobat or just starting out, you'll find what you need here. With over 35 classes to choose from, this festival is the perfect place to enhance your skills and make magic happen.\n\nBeginning with 6 hours of intensive workshops on Friday, followed by a magical tree lighting ceremony. Capture special moments with professional photos with The Acro Santa, and enjoy the Very Merry Holiday Extravaganza Showcase on Saturday!\n\n Acro Wonderland is not just another acro fest, we support Give Kids The World Village. This is a place where critically ill children and their families can go on cost free vacations in Orlando Florida. We believe the holiday season is about giving back. \n\nDon't miss your chance to participate in raffles to win incredible prizes that will elevate your acro practice. With a live DJ, festive atmosphere, and so much more, Acro Wonderland is the perfect way to make acro your holiday tradition.\n\n We can't wait to welcome you home!\nCheck us out at acrotown.com\n\n\n                    Email: info@acrotown.com\n\n\n                    FB: null\n\n\n                    IG: null",
+    "tags": [
+      "acro"
+    ],
+    "source_origination_platform": "acrofestivals",
+    "source_url": "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*",
+    "dataset": "Acro"
+  },
+  {
+    "id": "acrofestivals-38",
+    "type": "retreat",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "Acro Panchito Fest",
+      "url": "https://acrofestivals.org"
+    },
+    "name": "Acro Panchito Fest",
+    "start_date": "2025-01-31T00:00:00.000Z",
+    "end_date": "2025-02-03T00:00:00.000Z",
+    "ticket_url": "https://acrofestivals.org",
+    "event_url": "https://acrofestivals.org",
+    "image_url": "https://storage.googleapis.com/acrofestival-photos/383a20c3147a3f14a4b43f700",
+    "location": "La Bodega Teatro • Fábrica de las Artes AC, Avenida Tercer Mundo, San Francisco, Nay., México, undefined, México, null",
+    "price": "",
+    "description": "Acroyoga and movement festival in San Pancho, Nayarit, Mexico. 3 days of classes, jams, live music shows, professional circus performances and so much more! We are adding in one more bonus day of jams and activities on the Monday post fest this year so get ready for that!\nCome enjoy our coastal jungle town with our beautiful facilities and amazing food! we will have over 20 teachers from Mexico and all over the world. Come be part of the magic 🙂\n\n\n                    Email: acropanchitofest@gmail.com\n\n\n                    FB: null\n\n\n                    IG: null",
     "tags": [
       "acro"
     ],

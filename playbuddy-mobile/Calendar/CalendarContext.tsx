@@ -1,10 +1,12 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import { UseMutationResult } from '@tanstack/react-query';
 import { useFilters, FilterState } from './hooks/useFilters';
 import { useEvents } from './hooks/useEvents';
 import { useWishlist } from './hooks/useWishlist';
+import { useUserContext } from '../Auth/UserContext';
+import { useCommon } from '../Common/CommonContext';
 import { EventWithMetadata } from '../types';
 import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
-import { useUserContext } from '../Auth/UserContext';
 
 // Filter explicit events for apple test user
 const APPLE_USER_ID = '5d494e48-5457-4517-b183-dd1d8f2592a2';
@@ -19,11 +21,10 @@ type CalendarContextType = {
     setFriendWishlistShareCode: (shareCode: string | null) => void;
     friendWishlistShareCode: string | null;
     isOnWishlist: (eventId: string) => boolean;
-    toggleWishlistEvent: any; // TODO: Add type
+    toggleWishlistEvent: UseMutationResult<void, Error, { eventId: string; isOnWishlist: boolean }, unknown>;
     availableCardsToSwipe: EventWithMetadata[];
     reloadEvents: () => void;
 };
-
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
 
@@ -59,6 +60,8 @@ const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
     const { eventsWithMetadata, organizers, reloadEvents } = useEvents();
+    const { selectedLocationArea, selectedCommunity } = useCommon();
+    const { authUserId } = useUserContext();
     const {
         wishlistEvents,
         friendWishlistEvents,
@@ -68,23 +71,39 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         toggleWishlistEvent,
         swipeChoices,
     } = useWishlist(eventsWithMetadata);
-    const { authUserId } = useUserContext();
 
     const filteredEvents = useMemo(() => {
-        const filtered = filterEvents(eventsWithMetadata, filters);
+        const filtered = filterEvents(eventsWithMetadata, filters)
+            // by location and community
+            // If we have a location and community, filter by that
+            // otherwise show all events
+
+
+            .filter(event => {
+                if (selectedLocationArea && selectedLocationArea.id !== 'all' && selectedCommunity && selectedCommunity.id !== 'all') {
+                    return event.location_area?.id === selectedLocationArea.id &&
+                        event.communities?.some(community => community.id === selectedCommunity.id);
+                } else if (selectedLocationArea && selectedLocationArea.id !== 'all') {
+                    return event.location_area?.id === selectedLocationArea.id;
+                } else if (selectedCommunity && selectedCommunity.id !== 'all') {
+                    return event.communities?.some(community => community.id === selectedCommunity.id);
+                }
+                return true;
+            });
         const withoutExplicit = removeExplicitEvents(filtered);
 
-        // apple shouldn't see explicit events
-        return authUserId && authUserId !== APPLE_USER_ID ? filtered : withoutExplicit;
-    }, [eventsWithMetadata, filters, authUserId]);
+        return authUserId && authUserId !== APPLE_USER_ID
+            ? filtered
+            : withoutExplicit;
+    }, [eventsWithMetadata, filters, authUserId, selectedLocationArea, selectedCommunity]);
 
     const availableCardsToSwipe = useMemo(() => {
-        return filteredEvents.filter(event =>
-            !swipeChoices?.swipeModeChosenWishlist.some(choice => choice + '' === event.id + '') &&
-            !swipeChoices?.swipeModeChosenSkip.some(choice => choice + '' === event.id + '')
-        ).sort((a, b) => {
-            return new Date(a.start_date) < new Date(b.start_date) ? -1 : 1;
-        });
+        return filteredEvents
+            .filter(event =>
+                !swipeChoices?.swipeModeChosenWishlist.some(choice => choice + '' === event.id + '') &&
+                !swipeChoices?.swipeModeChosenSkip.some(choice => choice + '' === event.id + '')
+            )
+            .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
     }, [swipeChoices, filteredEvents]);
 
     // Memoize the context value to prevent unnecessary re-renders
