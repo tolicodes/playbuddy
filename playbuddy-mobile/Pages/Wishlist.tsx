@@ -5,31 +5,21 @@ import { useCalendarContext } from "../Calendar/CalendarContext";
 import EventCalendarView from "../Calendar/EventCalendarView";
 import { useEffect } from "react";
 import { useUserContext } from "../Auth/UserContext";
-import HeaderLoginButton from '../Auth/HeaderLoginButton';
 import { Button } from '@rneui/themed';
 import { RouteProp } from '@react-navigation/native';
 import { NavStackProps } from '../types';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LoginToAccess } from '../Common/LoginToAccess';
 
-const getInstructions = (shareUrl: string) => `I made a list of kinky events I'd like to go to!
+const getInstructions = (shareUrl: string) => `I'd like to share my calendar of playful events 🤗 via PlayBuddy
 
-You'll need to install PlayBuddy. It's still in beta, so you need follow these steps. But once
-you have it, you'll see all sorts of fun events we can go to events together!
+**Links:**
+- Apple download: https://playbuddy.me/ios
+- Android download: https://playbuddy.me/android
 
-WISHLIST URL: ${shareUrl}
+And once downloaded, copy and paste this URL into your browser (it's a little awkward but worth it) 😉
 
-Apple:
-1. Install via TestFlight. https://playbuddy.me/ios
-2. Click the wishlist link above.
-
-Android:
-1. Email toli@toli.me to join the beta.
-2. Download from Google Play. https://playbuddy.me/android
-2. Click the wishlist link above.
-
-Web:
-Wishlist isn’t available yet, but you can still browse events at http://playbuddy.me.
+${shareUrl}
 `;
 
 const WISHLIST_URL_BASE = 'playbuddy://wishlist';
