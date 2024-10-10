@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Linking, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Button, Input, Tab, Text } from '@rneui/themed';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { useUserContext } from './UserContext';
@@ -37,6 +37,10 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
             signInWithEmail({ email, password, callback: afterSignIn });
         }
     };
+
+    const onPressSupport = () => {
+        Linking.openURL('mailto:toli@toli.me');
+    }
 
     return (
         <View style={styles.formContainer}>
@@ -79,6 +83,12 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
                 onPress={handleAuth}
                 loading={isLoading}
             />
+
+            <Text style={styles.forgotPassword}>
+                Forgot your password? Email support (sorry, I will fix this soon):
+                {' '}<Text style={styles.link} onPress={onPressSupport}>toli@toli.me</Text>
+            </Text>
+
         </View>
     );
 };
@@ -165,4 +175,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#007AFF',
         height: 3,
     },
+    link: {
+        color: '#007AFF',
+        textDecorationLine: 'underline',
+    },
+    forgotPassword: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#333',
+        textAlign: 'center',
+    }
 });
