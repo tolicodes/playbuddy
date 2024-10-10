@@ -43,7 +43,7 @@ export default function AccountDetails() {
     };
 
     const onPressSupport = () => {
-        Linking.openURL('mailto://toli@toli.me');
+        Linking.openURL('mailto:toli@toli.me');
     }
 
 
