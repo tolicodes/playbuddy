@@ -2,6 +2,8 @@ import { Event } from "../commonTypes.js";
 
 import { supabaseClient } from "../connections/supabaseClient.js";
 
+const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
+
 // Function to upsert an organizer and return its ID
 // we will check aliases as well
 async function upsertOrganizer({
@@ -122,6 +124,9 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
       source_origination_platform: event.source_origination_platform,
       source_ticketing_platform: event.source_ticketing_platform,
       dataset: event.dataset,
+
+      // hardcode for now
+      location_id: NYC_LOCATION_ID
     });
 
     if (insertError) {
