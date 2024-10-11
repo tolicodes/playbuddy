@@ -1,129 +1,85 @@
-import puppeteer from "puppeteer";
 import axios from "axios";
 import TurndownService from 'turndown';
 
 import { ScraperParams } from "../types.js";
 import { Event, SourceMetadata } from "../../commonTypes.js";
-import { puppeteerConfig } from "../../config.js";
 
-import { localDateTimeToISOString } from "../../helpers/partifulDateUtils.js";
-import { EVENTBRITE_EVENTS_API } from "../../env.js";
+import { EventbriteEvent } from "./types.js";
 
-// Function to scrape event details
-const scrapeEventDetails = async ({
-  url: apiUrl,
-  sourceMetadata,
-  urlCache,
-}: ScraperParams): Promise<Event[]> => {
-  try {
-    // Make a request to the Eventbrite API endpoint
-    const response = await axios.get(apiUrl);
-    const data = response.data;
 
-    // Extract relevant event details
-    const events = data.events.map((event: any): Event => {
-      const start_date = localDateTimeToISOString(
-        event.start_date,
-        event.start_time,
-      );
-      const end_date = localDateTimeToISOString(event.end_date, event.end_time);
+const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], sourceMetadata: SourceMetadata): Event[] => {
+  const turndownService = new TurndownService();
 
-      const turndownService = new TurndownService();
-      const summaryMarkdown = turndownService.turndown(event.summary);
+  return eventbriteEvents.map((event): Event => {
+    const start_date = event.start.utc;
+    const end_date = event.end.utc;
 
-      return {
-        // actually assigned by the DB, need to fill it in for ts
-        id: `eventbrite-${event.id}`,
-        type: 'event',
-        recurring: 'none',
-        original_id: `eventbrite-${event.id}`,
-        organizer: {
-          // actually assigned by the DB, need to fill it in for ts
-          id: event.primary_organizer.id,
-          name: event.primary_organizer.name,
-          url: event.primary_organizer.url,
-          original_id: `eventbrite-${event.primary_organizer.id}`,
-        },
-        name: event.name,
-        start_date,
-        end_date,
-        ticket_url: event.url,
-        image_url: event.image.url,
-        event_url: event.url,
+    const summaryMarkdown = turndownService.turndown(event.description.html);
 
-        location: event.primary_venue?.address?.localized_address_display,
-        price: event.ticket_availability?.minimum_ticket_price?.display,
+    return {
+      id: `eventbrite-${event.id}`,
+      type: 'event',
+      recurring: 'none',
+      original_id: `eventbrite-${event.id}`,
+      organizer: {
+        id: event.organizer.id,
+        name: event.organizer.name,
+        url: event.organizer.url,
+        original_id: `eventbrite-${event.organizer.id}`,
+      },
+      name: event.name.text,
+      start_date,
+      end_date,
+      ticket_url: event.url,
+      image_url: event.logo?.url,
+      event_url: event.url,
 
-        description: summaryMarkdown,
-        tags: event.tags.map((tag: any) => tag.display_name),
+      location: event.venue?.address?.localized_address_display,
+      price: event.ticket_availability?.minimum_ticket_price?.display,
 
-        source_ticketing_platform: "Eventbrite",
-        ...sourceMetadata,
-      };
-    });
+      description: summaryMarkdown,
+      tags: event.category ? [event.category.name] : [], // Using category as a tag since tags are not present in the new structure
 
-    return events;
-  } catch (error) {
-    console.log(`Error scraping Eventbrite events`, error);
-    // Fail silently by returning an empty array
-    return [];
-  }
-};
+      source_ticketing_platform: "Eventbrite",
+      ...sourceMetadata,
+    };
+  });
+}
 
-// Function to scrape organizer page
-// We don't use URL cache here because it doesn't cost us anything to overwrite
+// Gets the events from the /showmore/ endpoint
 const scrapeEventbriteEventsFromOrganizerPage = async ({
   url,
   sourceMetadata,
 }: ScraperParams): Promise<Event[]> => {
-  const browser = await puppeteer.launch(puppeteerConfig);
-  const page = await browser.newPage();
-
   try {
-    // keeps track of the timeout for request (below)
-    let timeout: NodeJS.Timeout;
+    // Extract organizer ID from the URL
+    const organizerId = url.split('/').pop()?.split('-').pop();
 
-    // Listen for the API request
-    const apiPromise = new Promise<string>((resolve, reject) => {
-      page.on("request", (request) => {
-        const url = request.url();
-        if (
-          url.includes(EVENTBRITE_EVENTS_API)
-        ) {
-          timeout && clearTimeout(timeout);
-          resolve(url);
-        }
-      });
-    });
-
-    const timeoutPromise = new Promise<string>((resolve, reject) => {
-      timeout = setTimeout(() => {
-        console.log(`Organizer URL ${url} contains no events`);
-        resolve("");
-      }, 10000);
-    });
-
-    await page.goto(url, { waitUntil: "networkidle2" });
-
-    // Wait for the API request URL or timeout
-    const apiUrl = await Promise.race([apiPromise, timeoutPromise]);
-    if (!apiUrl) {
+    if (!organizerId) {
+      console.error(`Failed to extract organizer ID from URL: ${url}`);
       return [];
     }
-    console.log("Captured API URL:", apiUrl, `for organizer URL: ${url}`);
 
-    // Scrape event details using the captured API URL
-    const events = await scrapeEventDetails({ url: apiUrl, sourceMetadata });
-    return events;
+    // Construct the endpoint URL
+    const endpointUrl = `https://www.eventbrite.com/org/${organizerId}/showmore/?page_size=1000&type=future&page=1`;
+
+    // Fetch data from the endpoint
+    const response = await axios.get(endpointUrl);
+
+    if (response.status !== 200) {
+      console.error(`Failed to fetch data from endpoint: ${endpointUrl}`);
+      return [];
+    }
+
+    return mapEventbriteEventToEvent(response.data.data.events, sourceMetadata);
   } catch (error) {
     console.error(`Error scraping Eventbrite events from organizer page`, error);
-    // Fail silently by returning an empty array
     return [];
-  } finally {
-    await browser.close();
   }
 };
 
+
+// MAIN FUNCTION
 export const scrapeEventbriteEventsFromOrganizersURLs = async ({
   organizerURLs,
   sourceMetadata,
@@ -143,8 +99,6 @@ export const scrapeEventbriteEventsFromOrganizersURLs = async ({
     });
     events.push(...organizerEvents);
   }
-
-  console.log('events', events);
 
   return events;
 };

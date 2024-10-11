@@ -3,3 +3,5 @@ scripts/supabaseClient.js
 node_modules
 # Local Netlify folder
 .netlify
+playbuddy-scraper/data
+/playbuddy-scraper/data

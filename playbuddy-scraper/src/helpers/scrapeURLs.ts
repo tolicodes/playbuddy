@@ -1,7 +1,7 @@
 import { Event, SourceMetadata } from "../commonTypes.js";
 import { ScraperParams } from '../scrapers/types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
-import scrapeEventbriteAllOrganizerEventsFromEventPage from "../scrapers/eventbrite/scrapeEventbriteAllOrganizerEventsFromEventPage.js";
+import scrapeEventbriteAllEventsFromOrganizerPage from "../scrapers/eventbrite/scrapeEventbriteAllEventsFromOrganizerPage.js";
 
 type ScrapersConfig = {
   [domain: string]: {
@@ -18,7 +18,7 @@ const SCRAPERS: ScrapersConfig = {
     eventRegexIndex: 1,
   },
   "eventbrite.com": {
-    scraper: scrapeEventbriteAllOrganizerEventsFromEventPage,
+    scraper: scrapeEventbriteAllEventsFromOrganizerPage,
     eventRegex: /.*/,
     eventRegexIndex: 0,
   },

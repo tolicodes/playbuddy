@@ -3,6 +3,7 @@ import { Event } from "../commonTypes.js";
 import { supabaseClient } from "../connections/supabaseClient.js";
 
 const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
+const CONSCIOUS_TOUCH_COMMUNITY_ID = "72f599a9-6711-4d4f-a82d-1cb66eac0b7b";
 
 // Function to upsert an organizer and return its ID
 // we will check aliases as well
@@ -71,7 +72,7 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
       .select("id")
       // original_id matches
       // OR start_date and organizer_id matches
-      // OR start_date and title matches
+      // OR start_date and event name matches
 
       // original_id.eq.${event.original_id},
       // and(
@@ -98,43 +99,63 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     }
 
     // Insert new event if it doesn't exist
-    const { error: insertError } = await supabaseClient.from("events").insert({
-      original_id: event.original_id,
-      organizer_id: organizerId,
-      type: event.type,
-      recurring: event.recurring,
+    const { data: createdEvent, error: insertError } = await supabaseClient
+      .from("events")
+      .insert({
+        original_id: event.original_id,
+        organizer_id: organizerId,
+        type: event.type,
+        recurring: event.recurring,
 
-      name: event.name,
-      start_date: event.start_date,
-      end_date: event.end_date,
+        name: event.name,
+        start_date: event.start_date,
+        end_date: event.end_date,
 
-      ticket_url: event.ticket_url,
-      event_url: event.event_url,
-      image_url: event.image_url,
+        ticket_url: event.ticket_url,
+        event_url: event.event_url,
+        image_url: event.image_url,
 
-      location: event.location,
-      price: event.price,
+        location: event.location,
+        price: event.price,
 
-      description: event.description,
-      tags: event.tags,
+        description: event.description,
+        tags: event.tags,
 
-      timestamp_scraped: event.timestamp_scraped || new Date(),
-      source_origination_group_id: event.source_origination_group_id,
-      source_origination_group_name: event.source_origination_group_name,
-      source_origination_platform: event.source_origination_platform,
-      source_ticketing_platform: event.source_ticketing_platform,
-      dataset: event.dataset,
+        timestamp_scraped: event.timestamp_scraped || new Date(),
+        source_origination_group_id: event.source_origination_group_id,
+        source_origination_group_name: event.source_origination_group_name,
+        source_origination_platform: event.source_origination_platform,
+        source_ticketing_platform: event.source_ticketing_platform,
+        dataset: event.dataset,
 
-      // hardcode for now
-      location_id: NYC_LOCATION_ID
-    });
+        location_area_id: NYC_LOCATION_ID,
+      })
+      .select()
+      .single();
 
-    if (insertError) {
+    console.log("createdEvent", createdEvent)
+
+    if (insertError || !createdEvent) {
       console.error("Error inserting event:", insertError);
-    } else {
-      console.log(`Event ${event.name} inserted successfully.`);
-      return 1;
+      return 0;
     }
+
+    // Insert communities (hardcode to conscious touch for now)
+    const { error: communityError } = await supabaseClient
+      .from("event_communities")
+      .insert({
+        event_id: createdEvent.id, // Assuming the event id is available after insertion
+        community_id: CONSCIOUS_TOUCH_COMMUNITY_ID // Hardcoded community ID for Conscious Touch
+      });
+
+    if (communityError) {
+      console.error("Error inserting event community:", communityError);
+    } else {
+      console.log(`Community added for event ${event.name}`);
+    }
+
+    console.log(`Event ${event.name} inserted successfully.`);
+    return 1;
 
   } catch (error) {
     console.error("Error upserting event:", error);

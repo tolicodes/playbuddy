@@ -5,7 +5,7 @@ import scrapeEventbriteEventsFromOrganizerPage from "./scrapeEventbriteEventsFro
 import { Event } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
 
-const scrapeEventbriteAllOrganizerEventsFromEventPage = async ({
+const scrapeEventbriteAllEventsFromOrganizerPage = async ({
   url,
   sourceMetadata,
   urlCache,
@@ -42,4 +42,4 @@ const scrapeEventbriteAllOrganizerEventsFromEventPage = async ({
   }
 };
 
-export default scrapeEventbriteAllOrganizerEventsFromEventPage;
+export default scrapeEventbriteAllEventsFromOrganizerPage;
