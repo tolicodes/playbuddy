@@ -26,6 +26,8 @@
     "aes-js": "^3.1.2",
     "axios": "^1.7.4",
     "base64-arraybuffer": "^1.0.2",
+    "country-code-emoji": "^2.3.0",
+    "emoji-js": "^3.8.0",
     "expo": "^51.0.34",
     "expo-apple-authentication": "~6.4.2",
     "expo-image-picker": "~15.0.7",
