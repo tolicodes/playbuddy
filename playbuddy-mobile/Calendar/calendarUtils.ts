@@ -67,7 +67,6 @@ export function useRefreshEventsOnAppStateChange() {
 
     const handleAppStateChange = (nextAppState: AppStateStatus) => {
         if (appState.match(/inactive|background/) && nextAppState === "active") {
-            console.log("App has come to the foreground!");
             // Do something when app comes to the foreground
         }
 

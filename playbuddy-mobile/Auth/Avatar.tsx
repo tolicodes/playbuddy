@@ -73,7 +73,6 @@ export const Avatar = () => {
                 .from('avatars')
                 .upload(fileName, arrayBuffer, { contentType: blob.type });
 
-            console.log('here')
             if (error) {
                 throw error;
             }
