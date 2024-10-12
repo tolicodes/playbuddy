@@ -89,8 +89,8 @@ const DrawerNav = () => {
             <Drawer.Screen
                 name="Home"
                 component={TabNavigator}
-                options={({ route }) => ({
-                    headerRight: (props) => {
+                options={({ route, navigation }) => ({
+                    headerRight: () => {
                         const {
                             locationAreas,
                             communities,
@@ -98,8 +98,6 @@ const DrawerNav = () => {
                             setSelectedLocationArea,
                             selectedCommunity,
                             setSelectedCommunity,
-                            isLoadingLocationArea,
-                            isLoadingCommunities,
                         } = useCommon();
 
                         const handleSelectLocationArea = (locationArea: LocationArea) => {
@@ -121,7 +119,6 @@ const DrawerNav = () => {
                                     locationAreas={locationAreas}
                                     selectedLocationArea={selectedLocationArea}
                                     onSelectLocationArea={handleSelectLocationArea}
-
                                 />
                                 <HeaderLoginButton />
                             </View>
@@ -132,6 +129,12 @@ const DrawerNav = () => {
                         return <Text style={{ fontSize: 17, fontWeight: 'bold' }}>{routeName}</Text>
                     },
                     drawerIcon: ({ color, size }) => <FAIcon name="calendar" size={size} color={color} style={{ width: 30 }} />
+                })}
+                listeners={({ navigation }) => ({
+                    drawerItemPress: (e) => {
+                        e.preventDefault();
+                        navigation.navigate('Home', { screen: 'Calendar' });
+                    },
                 })}
             />
 
