@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -18,16 +18,14 @@ import DeepLinkHandler from './DeepLinkHandler';
 
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-navigation/native';
-import AddEventForm from './Pages/AddEventForm/AddEventForm';
-import Markdown from 'react-native-markdown-display';
 
 import { Retreats } from './Pages/Retreats';
 import { Planner } from './Pages/Planner';
 import LocationDropdown, { LocationArea } from './Header/LocationDropdown';
 import CommunityDropdown, { Community } from './Header/CommunitiesDropdown';
 import { useCommon } from './Common/CommonContext';
-import Buddies from './Buddies/BuddiesMain';
 import BuddiesMain from './Buddies/BuddiesMain';
+import { useUserContext } from './Auth/UserContext';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -85,6 +83,7 @@ const TabNavigator = () => {
 
 // Create the Drawer Navigator
 const DrawerNav = () => {
+    const { authUserId } = useUserContext();
     return (
         <Drawer.Navigator initialRouteName="Home" >
             <Drawer.Screen
@@ -109,7 +108,6 @@ const DrawerNav = () => {
 
                         const handleSelectCommunity = (community: Community | null) => {
                             setSelectedCommunity(community);
-                            // Additional actions for community selection
                         };
 
                         return (
@@ -138,7 +136,7 @@ const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name="Login"
+                name={authUserId ? "Profile" : "Login"}
                 component={AuthMain}
                 options={() => ({
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />
