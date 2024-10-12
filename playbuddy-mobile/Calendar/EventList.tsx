@@ -8,7 +8,7 @@ import { NavStack } from "../types";
 import { Event } from "../commonTypes";
 import * as amplitude from '@amplitude/analytics-react-native';
 
-const EventList = ({ sections, sectionListRef, reloadEvents }: { sections: any, screen: string, sectionListRef?: any, reloadEvents: any }) => {
+const EventList = ({ sections, sectionListRef, isLoadingEvents }: { sections: any, screen: string, sectionListRef?: any, reloadEvents: any, isLoadingEvents: boolean }) => {
     const navigation = useNavigation<NavStack>();
 
     // Handle event click
@@ -44,10 +44,13 @@ const EventList = ({ sections, sectionListRef, reloadEvents }: { sections: any, 
         )}
         keyExtractor={(item, i) => `${i}_${item.id}`}
         ListEmptyComponent={<View style={styles.emptyList}>
-            <ActivityIndicator size="large" color="#007AFF" />
+            {isLoadingEvents
+                ? <ActivityIndicator size="large" color="#007AFF" />
+                : <Text>No events found</Text>
+            }
 
         </View>}
-        onScrollToIndexFailed={(e) => {
+        onScrollToIndexFailed={() => {
             amplitude.logEvent('scroll_to_index_failed');
         }}
 

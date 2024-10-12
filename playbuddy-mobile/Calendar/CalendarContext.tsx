@@ -12,18 +12,28 @@ import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
 const APPLE_USER_ID = '5d494e48-5457-4517-b183-dd1d8f2592a2';
 
 type CalendarContextType = {
+    // Filters
     filters: FilterState;
     setFilters: (filters: FilterState) => void;
     organizers: OrganizerFilterOption[];
+
+    // Events
     filteredEvents: EventWithMetadata[];
+    reloadEvents: () => void;
+    isLoadingEvents: boolean;
+
+    // Wishlist
     wishlistEvents: EventWithMetadata[];
+    isOnWishlist: (eventId: string) => boolean;
+    toggleWishlistEvent: UseMutationResult<void, Error, { eventId: string; isOnWishlist: boolean }, unknown>;
+
+    // Friend's Wishlist
     friendWishlistEvents: EventWithMetadata[];
     setFriendWishlistShareCode: (shareCode: string | null) => void;
     friendWishlistShareCode: string | null;
-    isOnWishlist: (eventId: string) => boolean;
-    toggleWishlistEvent: UseMutationResult<void, Error, { eventId: string; isOnWishlist: boolean }, unknown>;
+
+    // Swipe Mode
     availableCardsToSwipe: EventWithMetadata[];
-    reloadEvents: () => void;
 };
 
 const CalendarContext = createContext<CalendarContextType | undefined>(undefined);
@@ -59,7 +69,7 @@ const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
 
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
-    const { eventsWithMetadata, organizers, reloadEvents } = useEvents();
+    const { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents } = useEvents();
     const { selectedLocationArea, selectedCommunity } = useCommon();
     const { authUserId } = useUserContext();
     const {
@@ -108,31 +118,51 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     // Memoize the context value to prevent unnecessary re-renders
     const contextValue = useMemo(() => ({
+        // Filters
         filters,
         setFilters,
         organizers,
+
+        // Events
         filteredEvents,
+        reloadEvents,
+        isLoadingEvents,
+
+        // Wishlist
         wishlistEvents,
+        isOnWishlist,
+        toggleWishlistEvent,
+
+        // Friend's Wishlist
         friendWishlistEvents,
         setFriendWishlistShareCode,
         friendWishlistShareCode,
-        isOnWishlist,
-        toggleWishlistEvent,
+
+        // Swipe Mode
         availableCardsToSwipe,
-        reloadEvents,
     }), [
+        // Filters
         filters,
         setFilters,
         organizers,
+
+        // Events
         filteredEvents,
+        reloadEvents,
+        isLoadingEvents,
+
+        // Wishlist
         wishlistEvents,
+        isOnWishlist,
+        toggleWishlistEvent,
+
+        // Friend's Wishlist
         friendWishlistEvents,
         setFriendWishlistShareCode,
         friendWishlistShareCode,
-        isOnWishlist,
-        toggleWishlistEvent,
+
+        // Swipe Mode
         availableCardsToSwipe,
-        reloadEvents,
     ]);
 
     return (

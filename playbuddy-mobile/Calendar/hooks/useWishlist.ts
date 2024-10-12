@@ -112,8 +112,8 @@ const useFetchFriendWishlist = (shareCode: string | null) => {
 export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
     const [friendWishlistShareCode, setFriendWishlistShareCode] = useState<string | null>(null);
 
-    const { data: wishlistEventIds } = useFetchWishlistEvents();
-    const { data: friendWishlistEventIds = [] } = useFetchFriendWishlist(friendWishlistShareCode);
+    const { data: wishlistEventIds, isLoading: isLoadingWishlistEvents } = useFetchWishlistEvents();
+    const { data: friendWishlistEventIds = [], isLoading: isLoadingFriendWishlistEvents } = useFetchFriendWishlist(friendWishlistShareCode);
 
     // Memoized function to calculate friend wishlist events
     const friendWishlistEvents = useMemo(() => {
@@ -137,11 +137,16 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 
     return {
         wishlistEvents,
-        friendWishlistEvents,
-        setFriendWishlistShareCode,
-        friendWishlistShareCode,
-        toggleWishlistEvent,
+        isLoadingWishlistEvents,
         isOnWishlist,
+        toggleWishlistEvent,
+
+        friendWishlistEvents,
+        isLoadingFriendWishlistEvents,
+
+        friendWishlistShareCode,
+        setFriendWishlistShareCode,
+
         swipeChoices,
     };
 };
@@ -161,8 +166,6 @@ const recordSwipeChoice = async ({
     choice: 'wishlist' | 'skip';
     list?: string;
 }) => {
-    console.log('Attempting to record choice', { event_id, user_id, choice, list });
-
     if (!user_id) {
         console.error('User ID is required, skipping recording');
         return;
@@ -173,13 +176,11 @@ const recordSwipeChoice = async ({
             .from('swipe_mode_choices')
             .insert([{ event_id, user_id, choice, list }]);
 
-        console.log('here')
         if (error) {
             console.error('Supabase insert error:', error);
             throw new Error(error.message);
         }
 
-        console.log('Swipe choice inserted successfully:', data);
         return data;
     } catch (e) {
         console.error(e)

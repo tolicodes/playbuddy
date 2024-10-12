@@ -4,6 +4,7 @@ import axios from 'axios';
 import { Event } from '../../commonTypes';
 import { API_URL } from '../../config';
 import { getAvailableOrganizers } from '../calendarUtils';
+import { useQuery } from '@tanstack/react-query';
 
 type OrganizerColorMap = { [key: string]: { color: string; priority: number } }
 type Organizer = {
@@ -28,32 +29,31 @@ function addEventMetadata({ events, organizerColorMap }: { events: Event[]; orga
     })).sort((a, b) => a.organizerPriority - b.organizerPriority);
 }
 
+const fetchEvents = async () => {
+    return axios.get<Event[]>(API_URL.events).then(response => response.data);
+}
+
 export const useFetchEvents = (appState?: string) => {
-    const [events, setEvents] = useState<Event[]>([]);
+    const { data: events = [], isLoading: isLoadingEvents, refetch: reloadEvents } = useQuery({
+        queryKey: ['events'],
+        queryFn: fetchEvents,
+    });
 
-    const reloadEvents = async () => {
-        axios.get<Event[]>(API_URL.events)
-            .then(response => {
-                setEvents(response.data);
-            }).catch((e) => {
-                throw new Error(`Error fetching events: ${e.message}`);
-            })
-    }
-
+    // Reload events when the app state changes
     useEffect(() => {
         reloadEvents();
     }, [appState]);
 
-    return { events, reloadEvents };
+    return { events, reloadEvents, isLoadingEvents };
 };
 
 
 export const useEvents = (appState?: string) => {
     // Fetch events based on app state
-    const { events, reloadEvents } = useFetchEvents(appState);
+    const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState);
 
     const organizers = useMemo(() =>
-        getAvailableOrganizers(events),
+        getAvailableOrganizers(events || []),
         [events]
     );
     const organizerColorMap = useMemo(() =>
@@ -67,5 +67,5 @@ export const useEvents = (appState?: string) => {
         [events, organizerColorMap]
     );
 
-    return { eventsWithMetadata, organizers, reloadEvents };
+    return { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents };
 };
