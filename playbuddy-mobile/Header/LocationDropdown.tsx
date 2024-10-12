@@ -48,6 +48,15 @@ const LocationDropdown: React.FC<LocationDropdownProps> = ({
         </TouchableOpacity>
     );
 
+    const locationAreasWithAll = [
+        {
+            id: 'all',
+            name: 'All',
+            code: 'ALL',
+        },
+        ...locationAreas,
+    ];
+
     return (
         <View>
             <TouchableOpacity onPress={toggleDropdown}>
@@ -68,7 +77,7 @@ const LocationDropdown: React.FC<LocationDropdownProps> = ({
                     <View style={styles.modalContent}>
                         <Text style={styles.modalHeader}>Locations</Text>
                         <FlatList
-                            data={locationAreas}
+                            data={locationAreasWithAll}
                             renderItem={renderLocation}
                             keyExtractor={(item) => item.id}
                         />
