@@ -1,0 +1,437 @@
+[
+  {
+    "organizer_id": 1,
+    "name": "Bloom",
+    "count": 2
+  },
+  {
+    "organizer_id": 3,
+    "name": "Pagans Paradise",
+    "count": 50
+  },
+  {
+    "organizer_id": 4,
+    "name": "Hit Me Up",
+    "count": 29
+  },
+  {
+    "organizer_id": 5,
+    "name": "Bear & Fifi",
+    "count": 1
+  },
+  {
+    "organizer_id": 6,
+    "name": "The Domme Kat",
+    "count": 1
+  },
+  {
+    "organizer_id": 9,
+    "name": "Elysium",
+    "count": 4
+  },
+  {
+    "organizer_id": 10,
+    "name": "Everyday Tantra",
+    "count": 26
+  },
+  {
+    "organizer_id": 11,
+    "name": "The Tantra Institute",
+    "count": 212
+  },
+  {
+    "organizer_id": 20,
+    "name": "The Stonewall Inn",
+    "count": 25
+  },
+  {
+    "organizer_id": 23,
+    "name": "Daddy Retreat",
+    "count": 7
+  },
+  {
+    "organizer_id": 29,
+    "name": "HUMP!",
+    "count": 8
+  },
+  {
+    "organizer_id": 31,
+    "name": "Geekaholic NYC",
+    "count": 2
+  },
+  {
+    "organizer_id": 40,
+    "name": "Miss Bloom Sex Educator",
+    "count": 1
+  },
+  {
+    "organizer_id": 58,
+    "name": "Sex Positive World",
+    "count": 3
+  },
+  {
+    "organizer_id": 62,
+    "name": "The Group",
+    "count": 1
+  },
+  {
+    "organizer_id": 193,
+    "name": "Life Itself Events",
+    "count": 1
+  },
+  {
+    "organizer_id": 228,
+    "name": "Hacienda",
+    "count": 3
+  },
+  {
+    "organizer_id": 230,
+    "name": "Youtopia DreamSpace",
+    "count": 8
+  },
+  {
+    "organizer_id": 233,
+    "name": "Darkstar Temple",
+    "count": 1
+  },
+  {
+    "organizer_id": 415,
+    "name": "The Downtown Brooklyn Polyamory Social",
+    "count": 3
+  },
+  {
+    "organizer_id": 3490,
+    "name": "Gotham Rigging",
+    "count": 3
+  },
+  {
+    "organizer_id": 5895,
+    "name": "Something Positive for Positive People",
+    "count": 1
+  },
+  {
+    "organizer_id": 6610,
+    "name": "Lola Jean",
+    "count": 1
+  },
+  {
+    "organizer_id": 21412,
+    "name": "Le Organizer",
+    "count": 3
+  },
+  {
+    "organizer_id": 35871,
+    "name": "the feels",
+    "count": 8
+  },
+  {
+    "organizer_id": 54796,
+    "name": "Velvet Ties.",
+    "count": 1
+  },
+  {
+    "organizer_id": 55159,
+    "name": "Elena De Luca and Mistress Shayla",
+    "count": 1
+  },
+  {
+    "organizer_id": 55267,
+    "name": "Decent Exposure",
+    "count": 1
+  },
+  {
+    "organizer_id": 60725,
+    "name": "DaBasementGames.com",
+    "count": 1
+  },
+  {
+    "organizer_id": 62711,
+    "name": "The Red Pavilion",
+    "count": 38
+  },
+  {
+    "organizer_id": 62712,
+    "name": "House of Yes",
+    "count": 22
+  },
+  {
+    "organizer_id": 62714,
+    "name": "3 Dollar Bill",
+    "count": 30
+  },
+  {
+    "organizer_id": 62715,
+    "name": "Taillors",
+    "count": 1
+  },
+  {
+    "organizer_id": 62716,
+    "name": "Cmon Everybody",
+    "count": 48
+  },
+  {
+    "organizer_id": 62718,
+    "name": "The Bush",
+    "count": 12
+  },
+  {
+    "organizer_id": 62720,
+    "name": "House of Scorpio",
+    "count": 9
+  },
+  {
+    "organizer_id": 62722,
+    "name": "the rosemont",
+    "count": 9
+  },
+  {
+    "organizer_id": 62729,
+    "name": "Sucia NYC",
+    "count": 6
+  },
+  {
+    "organizer_id": 62730,
+    "name": "Venus Cuffs",
+    "count": 2
+  },
+  {
+    "organizer_id": 62736,
+    "name": "SheMagick Events",
+    "count": 2
+  },
+  {
+    "organizer_id": 62740,
+    "name": "Night Owls",
+    "count": 3
+  },
+  {
+    "organizer_id": 62749,
+    "name": "Dirty Lola",
+    "count": 1
+  },
+  {
+    "organizer_id": 62756,
+    "name": "Temple",
+    "count": 14
+  },
+  {
+    "organizer_id": 62758,
+    "name": "Fetish Figure Drawing",
+    "count": 5
+  },
+  {
+    "organizer_id": 62836,
+    "name": "PleaseNYC",
+    "count": 2
+  },
+  {
+    "organizer_id": 62856,
+    "name": "Rachel Lark",
+    "count": 1
+  },
+  {
+    "organizer_id": 62863,
+    "name": "Open Social",
+    "count": 1
+  },
+  {
+    "organizer_id": 62864,
+    "name": "Sapphic Sips",
+    "count": 1
+  },
+  {
+    "organizer_id": 62870,
+    "name": "Siren Pack Productions",
+    "count": 1
+  },
+  {
+    "organizer_id": 64279,
+    "name": "Move Into Contact",
+    "count": 1
+  },
+  {
+    "organizer_id": 66811,
+    "name": "Get Real With Dakota",
+    "count": 1
+  },
+  {
+    "organizer_id": 67543,
+    "name": "CirqueHaus Festival ",
+    "count": 1
+  },
+  {
+    "organizer_id": 67544,
+    "name": "Morocco Acro Retreat 2024",
+    "count": 1
+  },
+  {
+    "organizer_id": 67546,
+    "name": "Acrotantra Gathering ~ Halloween Edition",
+    "count": 1
+  },
+  {
+    "organizer_id": 67548,
+    "name": "Acrotantra Fest Spain",
+    "count": 1
+  },
+  {
+    "organizer_id": 67551,
+    "name": "Acrotantra Fest",
+    "count": 1
+  },
+  {
+    "organizer_id": 67553,
+    "name": "Polish Acro Convention",
+    "count": 1
+  },
+  {
+    "organizer_id": 67554,
+    "name": "The Acro Way TT 2025 Sweden",
+    "count": 1
+  },
+  {
+    "organizer_id": 67556,
+    "name": "Acro Wonderland",
+    "count": 1
+  },
+  {
+    "organizer_id": 67558,
+    "name": "Pitch Catch Circus -- Fall Program",
+    "count": 1
+  },
+  {
+    "organizer_id": 67559,
+    "name": "Acroatia 2025 - 10th anniversary ",
+    "count": 1
+  },
+  {
+    "organizer_id": 67561,
+    "name": "Elevate Acro Festival",
+    "count": 1
+  },
+  {
+    "organizer_id": 67563,
+    "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Nov 2024",
+    "count": 1
+  },
+  {
+    "organizer_id": 67565,
+    "name": "Certified 50HR Acroyoga Training (Level 1 - Foundations) Jan 2025",
+    "count": 1
+  },
+  {
+    "organizer_id": 67568,
+    "name": "ACROSPIRIT PRE-FESTIVAL Intensive 2025",
+    "count": 1
+  },
+  {
+    "organizer_id": 67569,
+    "name": "ACROSPIRIT FESTIVAL 2025",
+    "count": 1
+  },
+  {
+    "organizer_id": 67571,
+    "name": "Acroyoga Training Program (Level 2 - Intermediate Advanced) Jan 2025",
+    "count": 1
+  },
+  {
+    "organizer_id": 67573,
+    "name": "ACROSPIRIT NYEPI ACROYOGA RETREAT 2025",
+    "count": 1
+  },
+  {
+    "organizer_id": 75906,
+    "name": "VAMPIRE DYKES",
+    "count": 1
+  },
+  {
+    "organizer_id": 77915,
+    "name": "New Year’s Acro Party",
+    "count": 1
+  },
+  {
+    "organizer_id": 77916,
+    "name": "Calgary AcroYoga Festival",
+    "count": 1
+  },
+  {
+    "organizer_id": 79026,
+    "name": "SafeSlut",
+    "count": 2
+  },
+  {
+    "organizer_id": 79927,
+    "name": "Gemini & Scorpio",
+    "count": 1
+  },
+  {
+    "organizer_id": 79929,
+    "name": "Black and Beautiful Events",
+    "count": 1
+  },
+  {
+    "organizer_id": 80204,
+    "name": "SHAG a sexy shop",
+    "count": 2
+  },
+  {
+    "organizer_id": 82850,
+    "name": "Arthur Davis returns to Philly ",
+    "count": 1
+  },
+  {
+    "organizer_id": 89363,
+    "name": "poly poly oxen free",
+    "count": 1
+  },
+  {
+    "organizer_id": 94251,
+    "name": "Acro Teacher Training and Leadership Retreat",
+    "count": 1
+  },
+  {
+    "organizer_id": 103798,
+    "name": "The Space Invader Social Club",
+    "count": 1
+  },
+  {
+    "organizer_id": 104446,
+    "name": "Taillor group",
+    "count": 1
+  },
+  {
+    "organizer_id": 107297,
+    "name": "Puzzling Queers",
+    "count": 1
+  },
+  {
+    "organizer_id": 112285,
+    "name": "Alaya Rose Healing & Pleasure",
+    "count": 1
+  },
+  {
+    "organizer_id": 112295,
+    "name": "TantraSD",
+    "count": 1
+  },
+  {
+    "organizer_id": 112726,
+    "name": "Queer Bk",
+    "count": 2
+  },
+  {
+    "organizer_id": 115861,
+    "name": "Muse Mondays",
+    "count": 1
+  },
+  {
+    "organizer_id": 116268,
+    "name": "Hedonez llc",
+    "count": 1
+  },
+  {
+    "organizer_id": 116542,
+    "name": "Acro Panchito Fest",
+    "count": 1
+  }
+]
