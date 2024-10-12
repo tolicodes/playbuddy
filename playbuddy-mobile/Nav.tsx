@@ -26,6 +26,8 @@ import { Planner } from './Pages/Planner';
 import LocationDropdown, { LocationArea } from './Header/LocationDropdown';
 import CommunityDropdown, { Community } from './Header/CommunitiesDropdown';
 import { useCommon } from './Common/CommonContext';
+import Buddies from './Buddies/BuddiesMain';
+import BuddiesMain from './Buddies/BuddiesMain';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -90,30 +92,6 @@ const DrawerNav = () => {
                 component={TabNavigator}
                 options={({ route }) => ({
                     headerRight: (props) => {
-
-                        // const locations = [
-                        //     { id: '1', name: 'New York', code: 'NYC' },
-                        //     { id: '2', name: 'San Francisco', code: 'SF' },
-                        //     { id: '3', name: 'London', code: 'LDN' },
-                        // ];
-                        // const communities: Community[] = [
-                        //     { id: '1', name: 'Basketball', code: 'BB' },
-                        //     { id: '2', name: 'Soccer', code: 'SC' },
-                        //     { id: '3', name: 'Tennis', code: 'TN' },
-                        //     // Add more communities as needed
-                        // ];
-
-
-                        const handleSelectLocationArea = (locationArea: LocationArea) => {
-                            setSelectedLocationArea(locationArea);
-                        };
-
-                        const handleSelectCommunity = (community: Community) => {
-                            setSelectedCommunity(community);
-                            // Additional actions for community selection
-                        };
-
-
                         const {
                             locationAreas,
                             communities,
@@ -124,6 +102,15 @@ const DrawerNav = () => {
                             isLoadingLocationArea,
                             isLoadingCommunities,
                         } = useCommon();
+
+                        const handleSelectLocationArea = (locationArea: LocationArea) => {
+                            setSelectedLocationArea(locationArea);
+                        };
+
+                        const handleSelectCommunity = (community: Community | null) => {
+                            setSelectedCommunity(community);
+                            // Additional actions for community selection
+                        };
 
                         return (
                             <View style={styles.rightNavContainer}>
@@ -189,11 +176,12 @@ const DrawerNav = () => {
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} style={{ width: 30 }} /> }}
             />
 
-            {/* <Drawer.Screen
-                name="Friends"
-                component={ComingSoon}
+            <Drawer.Screen
+                name="Buddies"
+                component={BuddiesMain}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} /> }}
             />
+            {/*
             <Drawer.Screen
                 name="Organizers"
                 component={ComingSoon}
