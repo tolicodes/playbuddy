@@ -21,11 +21,12 @@ import { NavigationContainer, getFocusedRouteNameFromRoute } from '@react-naviga
 
 import { Retreats } from './Pages/Retreats';
 import { Planner } from './Pages/Planner';
-import LocationDropdown, { LocationArea } from './Header/LocationDropdown';
+import LocationDropdown from './Header/LocationDropdown';
 import CommunityDropdown, { Community } from './Header/CommunitiesDropdown';
 import { useCommon } from './Common/CommonContext';
 import BuddiesMain from './Buddies/BuddiesMain';
 import { useUserContext } from './Auth/UserContext';
+import { Organizers } from './Calendar/Organizers';
 
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
@@ -100,7 +101,7 @@ const DrawerNav = () => {
                             setSelectedCommunity,
                         } = useCommon();
 
-                        const handleSelectLocationArea = (locationArea: LocationArea) => {
+                        const handleSelectLocationArea = (locationArea) => {
                             setSelectedLocationArea(locationArea);
                         };
 
@@ -111,7 +112,7 @@ const DrawerNav = () => {
                         return (
                             <View style={styles.rightNavContainer}>
                                 <CommunityDropdown
-                                    communities={communities}
+                                    communities={communities.interest_groups}
                                     selectedCommunity={selectedCommunity}
                                     onSelectCommunity={handleSelectCommunity}
                                 />
@@ -139,14 +140,6 @@ const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name={authUserId ? "Profile" : "Login"}
-                component={AuthMain}
-                options={() => ({
-                    drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />
-                })}
-            />
-
-            <Drawer.Screen
                 name="Swipe Mode"
                 component={Planner}
                 options={() => ({
@@ -155,20 +148,17 @@ const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name="Filters"
-                component={Filters}
-                options={{ drawerIcon: ({ color, size }) => <FAIcon name="filter" size={size} color={color} style={{ width: 30 }} /> }}
-            />
-
-            <Drawer.Screen
                 name="Wishlist"
                 component={Wishlist}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="heart" size={size} color={color} style={{ width: 30 }} /> }}
             />
+
             <Drawer.Screen
-                name="Retreats"
-                component={Retreats}
-                options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
+                name={authUserId ? "Profile" : "Login"}
+                component={AuthMain}
+                options={() => ({
+                    drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />
+                })}
             />
 
             <Drawer.Screen
@@ -182,14 +172,28 @@ const DrawerNav = () => {
                 component={BuddiesMain}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} /> }}
             />
-            {/*
+
             <Drawer.Screen
                 name="Organizers"
-                component={ComingSoon}
+                component={Organizers}
                 options={{ drawerIcon: ({ color, size }) => <FAIcon name="users-cog" size={size} color={color} style={{ width: 30 }} /> }}
             />
-           
 
+
+            <Drawer.Screen
+                name="Filters"
+                component={Filters}
+                options={{ drawerIcon: ({ color, size }) => <FAIcon name="filter" size={size} color={color} style={{ width: 30 }} /> }}
+            />
+
+
+            <Drawer.Screen
+                name="Retreats"
+                component={Retreats}
+                options={{ drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} style={{ width: 30 }} /> }}
+            />
+
+            {/**
             <Drawer.Screen
                 name="Add Event"
                 component={ComingSoon}
