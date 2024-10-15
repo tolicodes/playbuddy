@@ -1,57 +1,315 @@
-## Wishlist
+Based
 
-### Sharing Wishlist
+# App Documentation
 
-#### Flow Summary:
+This document provides an overview of the React Native application, explaining its structure, components, and functionalities.
 
-1. **Generate shareable wishlist link**.
-2. **User clicks the link**.
-3. **App handles the deep link** and extracts the `share_code`.
-4. **App fetches the wishlist** associated with the `share_code` from the backend.
-5. **App displays the shared wishlist** in a read-only view.
+## Table of Contents
 
-#### 1. Share Code Generation (By the Wishlist Owner)
+1. [Introduction](#introduction)
+2. [App Structure](#app-structure)
+3. [Navigation](#navigation)
+4. [Authentication](#authentication)
+5. [Calendar and Events](#calendar-and-events)
+6. [Wishlist and Swipe Mode](#wishlist-and-swipe-mode)
+7. [Communities](#communities)
+8. [Buddies](#buddies)
+9. [Filters](#filters)
+10. [Common Components](#common-components)
+11. [Third-Party Integrations](#third-party-integrations)
+12. [Conclusion](#conclusion)
 
-- **Creating the shareable link**: The wishlist owner generates a shareable link containing a unique `share_code`. This link could be in the format:
-  ```
-  playbuddy://wishlist?share_code=ABC123
-  ```
-  The `share_code` is tied to the user’s wishlist in the backend.
+## Introduction
 
-#### 2. User Receives the Share Link
+The application is a React Native app designed to help users discover and manage events, connect with communities, and interact with buddies. It features calendar views, authentication, event details, wishlists, swipe mode planning, and community management.
 
-- **Link Distribution**: The owner shares the link through text, email, or other messaging platforms. The recipient clicks the link to access the shared wishlist.
+## App Structure
 
-#### 3. Deep Linking to the App (Mobile App)
+The app follows a modular structure, separating concerns into different directories:
 
-- **Deep Link Handling**: When the user clicks the shared link, the app handles the deep link and extracts the `share_code` from the URL.
-  - Example of extracting the `share_code` using React Native's `Linking` module:
-    ```javascript
-    const handleDeepLink = (event) => {
-      const { path, queryParams } = Linking.parse(event.url);
-      const shareCode = queryParams?.share_code;
-    };
-    ```
+- **Auth**: Authentication components and context.
+- **Calendar**: Calendar views, event listings, and related hooks.
+- **Common**: Common components, contexts, and utilities.
+- **Buddies**: Components and context related to buddy management.
+- **Pages**: High-level screens like Wishlist, Communities, Organizers, etc.
+- **Navigation**: Navigation setup using React Navigation.
 
-#### 4. Fetching the Shared Wishlist
+## Navigation
 
-- **API Call**: Once the app extracts the `share_code`, it makes an API call to fetch the wishlist associated with that code.
+The app uses React Navigation to handle navigation between screens. It includes:
 
-  - Example API request:
-    ```typescript
-    axios.get(`${API_BASE_URL}/wishlist/friend/${shareCode}`);
-    ```
+- **Stack Navigator**: For screen transitions within a stack.
+- **Tab Navigator**: For bottom tab navigation between major sections like Calendar, Wishlist, and Moar.
+- **Drawer Navigator**: For side drawer navigation to access different sections and settings.
 
-- **Backend Lookup**: The server verifies the `share_code`, retrieves the corresponding wishlist, and sends the data back to the app.
+**Key Files:**
 
-#### 5. Displaying the Shared Wishlist
+- `Nav.tsx`: Sets up the navigation structure.
+- `DeepLinkHandler.tsx`: Handles deep linking into the app.
 
-- **UI Rendering**: Once the app fetches the wishlist, it renders the events on a dedicated UI.
-  - **Handling Edge Cases**:
-    - **Invalid or Expired `share_code`**: Show an error message if the code is invalid or expired.
-    - **Empty Wishlist**: Display a message like "No events in this wishlist" if the wishlist is empty.
+## Authentication
 
-#### 6. Interaction with the Shared Wishlist
+Authentication is managed using Supabase, with contexts and hooks to manage user state.
 
-- **Read-Only Mode**: The user viewing the shared wishlist is in a read-only mode. They can view events but cannot modify them.
-- **Call to Action**: Prompt the user to create their own wishlist or sign up to save the shared wishlist to their account.
+**Key Components:**
+
+- `UserContext`: Provides authentication state throughout the app.
+- `AuthMain.tsx`: Main authentication screen handling sign-in and sign-up.
+- `AccountDetails.tsx`: Displays user account details and allows sign-out.
+
+**Features:**
+
+- Email and password authentication.
+- User profile management.
+- Avatar upload using Supabase Storage.
+
+## Calendar and Events
+
+The Calendar section allows users to view events in a calendar format.
+
+**Key Components:**
+
+- `EventCalendarView.tsx`: Main calendar view displaying events.
+- `CustomCalendarDay.tsx`: Custom day component for the calendar.
+- `EventList.tsx`: Lists events for a selected day.
+- `EventDetail.tsx`: Displays detailed information about a selected event.
+
+**Features:**
+
+- Interactive calendar with event dots.
+- Event searching and filtering.
+- Event details with images and descriptions.
+
+## Wishlist and Swipe Mode
+
+Users can manage their event wishlist and plan events using a swipe interface.
+
+**Key Components:**
+
+- `Wishlist.tsx`: Displays events added to the user's wishlist.
+- `Planner.tsx`: Swipe mode interface for event planning.
+
+**Features:**
+
+- Add or remove events from the wishlist.
+- Swipe left or right to plan events.
+- Synchronization of wishlist with the backend.
+
+## Communities
+
+The app allows users to join and manage communities.
+
+**Key Components:**
+
+- `CommunitiesScreen.tsx`: Main screen for community interactions.
+- `CommunityDropdown.tsx`: Dropdown to select or switch communities.
+
+**Features:**
+
+- Join communities using a code.
+- View and manage joined communities.
+- Handle pending requests for community membership.
+
+## Buddies
+
+Users can connect with buddies to share events and interact.
+
+**Key Components:**
+
+- `BuddiesMain.tsx`: Main screen for buddy interactions.
+- `AddBuddy.tsx`: Allows users to add buddies via QR code.
+- `SharedEvents.tsx`: Displays events shared with buddies.
+
+**Features:**
+
+- Add buddies by scanning QR codes.
+- View and manage buddy lists.
+- Share events with buddies.
+
+## Filters
+
+The app provides filtering options to customize event views.
+
+**Key Components:**
+
+- `Filters.tsx`: Main filters screen.
+- `OrganizerMultiSelect.tsx`: Multi-select dropdown for organizers.
+- `SubmitButtons.tsx`: Reset and apply filter buttons.
+
+**Features:**
+
+- Filter events by organizers.
+- Search functionality within filters.
+- Reset filters to default state.
+
+## Common Components
+
+Several common components are used across the app for consistency.
+
+**Key Components:**
+
+- `HeaderLoginButton.tsx`: Login button in the header.
+- `WebsiteBanner.tsx`: Banner prompting users to log in.
+- `Avatar.tsx`: User avatar component.
+
+**Features:**
+
+- Reusable UI components.
+- Consistent styling and behavior.
+- Shared contexts for data management.
+
+## Third-Party Integrations
+
+The app integrates with several third-party services:
+
+- **Supabase**: For authentication, database, and storage.
+- **Amplitude**: For analytics and event tracking.
+- **Sentry**: For error tracking and monitoring.
+- **React Native Elements and Paper**: For UI components.
+
+## Conclusion
+
+This app provides a comprehensive platform for users to discover events, manage their schedules, connect with communities, and interact with buddies. The modular structure and use of contexts and hooks make the app scalable and maintainable.
+
+---
+
+**Note:** For detailed information on each component and function, please refer to the corresponding files in the codebase.
+
+Here’s a structured mapping of your API and Supabase setup based on the existing code and inferred schema:
+
+## **Supabase Database Tables**
+
+1. **Users Table**
+
+   - `id` (UUID): Unique identifier for each user.
+   - `email`: User email used for authentication.
+   - `display_name`: User’s chosen display name.
+   - `avatar_url`: URL for the user's profile picture (stored in Supabase Storage).
+
+2. **Events Table**
+
+   - `id` (UUID): Unique identifier for each event.
+   - `name`: Name of the event.
+   - `description`: Detailed description of the event.
+   - `start_date`: Event start date and time.
+   - `end_date`: Event end date and time.
+   - `location`: Location of the event.
+   - `lat`: Latitude for event location (for map functionality).
+   - `lon`: Longitude for event location.
+   - `price`: Price of the event (could be free or paid).
+   - `event_url`: External URL for more event details or tickets.
+   - `recurring`: Recurrence information (`none`, `weekly`, `monthly`).
+   - `tags`: Array of event tags or categories.
+   - `image_url`: URL for the event image (stored in Supabase Storage).
+   - `type`: Defines if it’s an `event` or `retreat`.
+   - `organizer_id`: Foreign key linking to the `Organizers` table.
+   - `source_ticketing_platform`: Platform where tickets are sold (e.g., Eventbrite, Plura).
+   - `source_origination_platform`: Platform where the event originated (e.g., WhatsApp, Organizer API).
+   - `communities[]`: Array of associated communities (linked to `Communities` table).
+
+3. **Organizers Table**
+
+   - `id` (UUID): Unique identifier for each organizer.
+   - `name`: Organizer name.
+   - `description`: Description of the organizer.
+   - `visibility`: Visibility status (`public`, `private`).
+   - `type`: Type of the community managed by the organizer (`organizer_public_community`, `organizer_private_community`).
+
+4. **Communities Table**
+
+   - `id` (UUID): Unique identifier for the community.
+   - `name`: Community name.
+   - `code`: Unique join code for the community.
+   - `type`: Defines community type (`interest_group`, `organizer_public_community`, `organizer_private_community`, `private_community`).
+   - `organizer_id`: Foreign key linking to `Organizers`.
+   - `description`: Description of the community.
+
+5. **Location Areas Table**
+
+   - `id` (UUID): Unique identifier for the location area.
+   - `name`: Name of the area (e.g., city, region).
+   - `code`: Unique code for the location area.
+
+6. **Wishlist Events Table**
+
+   - `id` (UUID): Unique identifier for each wishlist entry.
+   - `user_id`: Foreign key linking to `Users`.
+   - `event_id`: Foreign key linking to `Events`.
+   - `is_friend_wishlist`: Boolean indicating if it’s a friend’s wishlist.
+
+7. **Buddies Table**
+
+   - `id` (UUID): Unique identifier for each buddy relationship.
+   - `user_id`: The ID of the user who adds the buddy.
+   - `buddy_user_id`: The ID of the buddy being added (foreign key linking to `Users`).
+
+8. **Buddy Lists Table**
+
+   - `id` (UUID): Unique identifier for each buddy list.
+   - `user_id`: The ID of the user who owns the buddy list.
+   - `name`: Name of the buddy list.
+   - `buddy_list_buddies`: Array of buddies within the list.
+
+9. **Pending Requests Table**
+
+   - `id` (UUID): Unique identifier for each pending request.
+   - `community_id`: Foreign key linking to the `Communities` table.
+   - `email`: Email of the user requesting to join.
+   - `status`: Current status of the request (`pending`, `approved`, `rejected`).
+
+10. **Buddies to Buddy Lists Table**
+
+- `id` (UUID): Unique identifier for each buddy in a buddy list.
+- `buddy_list_id`: Foreign key linking to `Buddy Lists`.
+- `buddy_id`: Foreign key linking to `Buddies`.
+
+---
+
+## **API Endpoints**
+
+### **Events API**
+
+- `GET /events`: Fetches all events.
+- `GET /events/:id`: Fetches details of a specific event.
+- `POST /events`: Creates a new event (requires authentication).
+- `PUT /events/:id`: Updates an event (organizer permissions required).
+- `DELETE /events/:id`: Deletes an event.
+
+### **Wishlist API**
+
+- `GET /wishlist`: Fetches events on the user’s wishlist.
+- `POST /wishlist`: Adds an event to the wishlist.
+- `DELETE /wishlist/:id`: Removes an event from the wishlist.
+
+### **Communities API**
+
+- `GET /communities/public`: Fetches public communities.
+- `GET /communities/my`: Fetches communities the user has joined.
+- `POST /communities/join`: Joins a community (via join code).
+- `POST /communities/leave`: Leaves a community.
+
+### **Buddies API**
+
+- `GET /buddies`: Fetches the user’s buddies.
+- `POST /buddies`: Adds a buddy (by user ID or QR code).
+- `GET /buddy-lists`: Fetches the user’s buddy lists.
+- `POST /buddy-lists`: Creates a new buddy list.
+- `POST /buddy-lists/add`: Adds a buddy to a buddy list.
+
+---
+
+## **Supabase Storage**
+
+- **Event Images**: Events upload images to the `event-images` storage bucket.
+- **User Avatars**: Users upload avatars to the `avatars` storage bucket.
+
+---
+
+## **Analytics and Tracking**
+
+- **Amplitude**: Used for event and user activity tracking.
+- **Sentry**: Error monitoring for app crashes and issues.
+
+---
+
+This structure covers the core data entities and API interactions for managing users, events, communities, buddies, and related functionalities.
