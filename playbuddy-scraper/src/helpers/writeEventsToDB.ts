@@ -36,7 +36,6 @@ async function upsertOrganizer({
   // Upsert the organizer
   const { data, error: upsertError } = await supabaseClient
     .from("organizers")
-    // @ts-ignore
     .upsert(
       { name: organizerName, url, original_id },
       { onConflict: "name" }
@@ -48,6 +47,24 @@ async function upsertOrganizer({
     console.error("Error upserting organizer:", upsertError);
     throw upsertError;
   }
+
+  // Insert community
+  const { error: communityInsertError } = await supabaseClient
+    .from('communities')
+    .insert({
+      name: organizerName,
+      description: `Public community for ${organizerName}`,
+      organizer_id: data.id,
+      visibility: 'public',
+      type: 'organizer_public_community'
+    })
+    .select()
+    .single();
+
+  if (communityInsertError) {
+    console.error("Error inserting community:", communityInsertError);
+  }
+
 
   return data?.id ?? "";
 }

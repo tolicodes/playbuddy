@@ -4,7 +4,7 @@ import { useFilters, FilterState } from './hooks/useFilters';
 import { useEvents } from './hooks/useEvents';
 import { useWishlist } from './hooks/useWishlist';
 import { useUserContext } from '../Auth/UserContext';
-import { useCommon } from '../Common/CommonContext';
+import { useCommonContext } from '../Common/CommonContext';
 import { EventWithMetadata } from '../types';
 import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
 
@@ -70,7 +70,7 @@ const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
     const { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents } = useEvents();
-    const { selectedLocationArea, selectedCommunity } = useCommon();
+    const { selectedLocationArea, selectedCommunity } = useCommonContext();
     const { authUserId } = useUserContext();
     const {
         wishlistEvents,

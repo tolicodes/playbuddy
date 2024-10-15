@@ -105,9 +105,50 @@ function compareWithPreviousRun(currentData) {
     });
 }
 
+const testMatchingCommunities = async () => {
+    console.log("Testing for matching communities...");
+
+    // Fetch all organizers
+    const { data: organizers, error: organizersError } = await supabaseClient
+        .from('organizers')
+        .select('id, name');
+
+    if (organizersError) {
+        console.error("Error fetching organizers:", organizersError);
+        return;
+    }
+
+    // Fetch all communities with organizer_id
+    const { data: communities, error: communitiesError } = await supabaseClient
+        .from('communities')
+        .select('organizer_id');
+
+    if (communitiesError) {
+        console.error("Error fetching communities:", communitiesError);
+        return;
+    }
+
+    // Create a set of organizer IDs that have communities
+    const organizerIdsWithCommunities = new Set(communities.map(c => c.organizer_id));
+
+    // Find organizers without communities
+    const organizersWithoutCommunities = organizers.filter(org => !organizerIdsWithCommunities.has(org.id));
+
+    if (organizersWithoutCommunities.length === 0) {
+        console.log("All organizers have matching communities.");
+    } else {
+        console.log("Organizers without matching communities:");
+        organizersWithoutCommunities.forEach(org => {
+            console.log(`- ${org.name}`);
+        });
+    }
+
+}
+
 // Main function to run the process
 export const listOrganizers = async () => {
     const organizersEventCount = await fetchOrganizersAndEventCount();
     saveOrganizersEventCount(organizersEventCount);
     compareWithPreviousRun(organizersEventCount);
+    testMatchingCommunities();
 }

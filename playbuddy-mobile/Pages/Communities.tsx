@@ -3,6 +3,7 @@ import { View, Text, TextInput, FlatList, TouchableOpacity, StyleSheet, SafeArea
 import EventList from '../Calendar/EventList';
 import { useCalendarContext } from '../Calendar/CalendarContext';
 import { useGroupedEvents } from '../Calendar/hooks/useGroupedEvents';
+import DemoBanner from '../Common/DemoBanner';
 
 // Types for communities and requests
 interface Community {
@@ -181,9 +182,7 @@ const CommunitiesScreen: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text
-                style={{ fontSize: 20, textAlign: 'center', fontWeight: 'bold', color: 'red', marginBottom: 20, marginTop: 10 }}
-            >THIS IS A DEMO (Fake Data Used)</Text>
+            <DemoBanner />
             <SegmentedControl selectedIndex={selectedSection} onChange={setSelectedSection} />
             {renderSection()}
         </SafeAreaView>
@@ -191,25 +190,107 @@ const CommunitiesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
-    segmentedControl: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
-    segmentedButton: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 8, backgroundColor: '#f4f4f4', borderColor: '#007AFF', borderWidth: 1, width: 100, alignItems: 'center' },
-    selectedButton: { backgroundColor: '#007AFF' },
-    segmentedText: { color: '#333', fontWeight: 'bold' },
-    segmentedTextSelected: { color: 'white', fontWeight: 'bold' },
-    section: { padding: 16, paddingVertical: 0 },
-    sectionTitle: { fontSize: 20, fontWeight: 'bold', marginVertical: 10 },
-    input: { borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, marginBottom: 10, height: 40 },
-    joinButton: { backgroundColor: '#007AFF', borderRadius: 8, paddingVertical: 12, alignItems: 'center' },
-    buttonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-    communityItem: { padding: 15, backgroundColor: '#fff', borderRadius: 8, marginBottom: 10, elevation: 2 },
-    communityName: { fontSize: 18, fontWeight: 'bold' },
-    emptyText: { textAlign: 'center', color: '#999', marginTop: 20 },
-    communityRequestSection: { marginBottom: 20 },
-    requestItem: { padding: 10, backgroundColor: '#fff', borderRadius: 8, marginVertical: 5, flexDirection: 'row', justifyContent: 'space-between' },
-    buttonGroup: { flexDirection: 'row' },
-    approveButton: { backgroundColor: '#28a745', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10, marginRight: 5 },
-    rejectButton: { backgroundColor: '#dc3545', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 10 }
+    container: {
+        flex: 1,
+        padding: 16
+    },
+    segmentedControl: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        marginBottom: 10
+    },
+    segmentedButton: {
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        borderRadius: 8,
+        backgroundColor: '#f4f4f4',
+        borderColor: '#007AFF',
+        borderWidth: 1,
+        width: 100,
+        alignItems: 'center'
+    },
+    selectedButton: {
+        backgroundColor: '#007AFF'
+    },
+    segmentedText: {
+        color: '#333',
+        fontWeight: 'bold'
+    },
+    segmentedTextSelected: {
+        color: 'white',
+        fontWeight: 'bold'
+    },
+    section: {
+        padding: 16,
+        paddingVertical: 0
+    },
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        marginVertical: 10
+    },
+    input: {
+        borderColor: '#ccc',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        marginBottom: 10,
+        height: 40
+    },
+    joinButton: {
+        backgroundColor: '#007AFF',
+        borderRadius: 8,
+        paddingVertical: 12,
+        alignItems: 'center'
+    },
+    buttonText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 16
+    },
+    communityItem: {
+        padding: 15,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        marginBottom: 10,
+        elevation: 2
+    },
+    communityName: {
+        fontSize: 18,
+        fontWeight: 'bold'
+    },
+    emptyText: {
+        textAlign: 'center',
+        color: '#999',
+        marginTop: 20
+    },
+    communityRequestSection: {
+        marginBottom: 20
+    },
+    requestItem: {
+        padding: 10,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        marginVertical: 5,
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
+    buttonGroup: {
+        flexDirection: 'row'
+    },
+    approveButton: {
+        backgroundColor: '#28a745',
+        borderRadius: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        marginRight: 5
+    },
+    rejectButton: {
+        backgroundColor: '#dc3545',
+        borderRadius: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 10
+    }
 });
 
 export default CommunitiesScreen;

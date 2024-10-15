@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
-
-export interface Community {
-    id: string | null;
-    name: string;
-    code: string;
-}
+import { Community } from '../Common/CommonContext';
 
 interface CommunityDropdownProps {
     communities: Community[];
@@ -71,7 +66,7 @@ const CommunityDropdown: React.FC<CommunityDropdownProps> = ({
                         <FlatList
                             data={communitiesWithAll}
                             renderItem={renderCommunity}
-                            keyExtractor={(item) => item.id}
+                            keyExtractor={(item) => item.id || ''}
                         />
                         <TouchableOpacity style={styles.closeButton} onPress={() => setIsOpen(false)}>
                             <Text style={styles.closeButtonText}>Close</Text>

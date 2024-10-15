@@ -1,22 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
 import { LocationArea } from '../Common/CommonContext';
-import { countryCodeEmoji } from 'country-code-emoji';
 
 interface LocationDropdownProps {
     locationAreas: LocationArea[];
     selectedLocationArea: LocationArea | null;
     onSelectLocationArea: (locationArea: LocationArea) => void;
-}
-
-const getCountryFlagEmoji = (countryCode: string) => {
-    try {
-        const emoji = countryCodeEmoji(countryCode);
-        return emoji;
-
-    } catch (error) {
-        return '🏳️';
-    }
 }
 
 const LocationDropdown: React.FC<LocationDropdownProps> = ({
@@ -42,7 +31,6 @@ const LocationDropdown: React.FC<LocationDropdownProps> = ({
                 <Text style={styles.codeText}>{item.code}</Text>
             </View>
             <Text style={styles.locationName}>
-                {getCountryFlagEmoji(item.code) + ' ' || ''}
                 {item.name}
             </Text>
         </TouchableOpacity>

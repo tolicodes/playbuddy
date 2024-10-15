@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { UseMutationResult, useQuery } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
+import { useFetchMyCommunities, useFetchPublicCommunities, useJoinCommunity, useLeaveCommunity } from './hooks/useCommunities';
 
 export interface LocationArea {
     id: string;
@@ -25,11 +26,22 @@ interface CommonContextType {
     isLoadingLocationAreas: boolean;
 
     communities: {
-        interest_groups: Community[];
-        organizer_public_communities: Community[];
-        organizer_private_communities: Community[];
-        private_communities: Community[];
+        interestGroups: Community[];
+        organizerPublicCommunities: Community[];
     };
+    myCommunities: {
+        myOrganizerPrivateCommunities: Community[];
+        myPrivateCommunities: Community[];
+        myOrganizerPublicCommunities: Community[];
+    };
+
+    joinCommunity: UseMutationResult<Community, Error, {
+        community_id: string;
+        join_code?: string;
+    }, unknown>
+
+    leaveCommunity: U
+
     selectedCommunity: Community | null;
     setSelectedCommunity: (community: Community | null) => void;
     isLoadingCommunities: boolean;
@@ -50,19 +62,6 @@ const fetchLocationAreas = async (): Promise<LocationArea[]> => {
     return data || [];
 };
 
-const fetchCommunities = async (): Promise<Community[]> => {
-    const { data, error } = await supabase
-        .from('communities')
-        .select('id, name, code, organizer_id, description, visibility, type')
-        .order('name');
-
-    if (error) {
-        throw new Error(`Error fetching communities: ${error.message}`);
-    }
-
-    return data || [];
-};
-
 const DEFAULT_LOCATION_ID = '73352aef-334c-49a6-9256-0baf91d56b49';
 const DEFAULT_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b';
 
@@ -75,23 +74,39 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         queryFn: fetchLocationAreas,
     });
 
-    const { data: allCommunities = [], isLoading: isLoadingCommunities } = useQuery({
-        queryKey: ['communities'],
-        queryFn: fetchCommunities,
-    });
+    const { data: myCommunities = [], isLoading: isLoadingMyCommunities } = useFetchMyCommunities();
+    const { data: publicCommunities = [], isLoading: isLoadingPublicCommunities } = useFetchPublicCommunities();
 
-    //     type VARCHAR(50) CHECK (type IN ('interest_group', 'organizer_public_community', 'organizer_private_community', 'private_community')),
+    const joinCommunity = useJoinCommunity();
+    const leaveCommunity = useLeaveCommunity();
 
-    const interestGroups = allCommunities.filter((c) => c.type === 'interest_group');
-    const organizerPublicCommunities = allCommunities.filter((c) => c.type === 'organizer_public_community');
-    const organizerPrivateCommunities = allCommunities.filter((c) => c.type === 'organizer_private_community');
-    const privateCommunities = allCommunities.filter((c) => c.type === 'private_community');
 
+    //  'interest_group', 'organizer_public_community', 'organizer_private_community', 'private_community'
+
+    // INTEREST GROUPS
+    // For the top menu, everyone sees them
+    const interestGroups = publicCommunities.filter((c) => c.type === 'interest_group');
+
+
+    // ALL COMMUNITIES LIST
+    const organizerPublicCommunities = publicCommunities.filter((c) => c.type === 'organizer_public_community');
+
+    // MY COMMUNITIES LIST
+    const myOrganizerPrivateCommunities = myCommunities.filter((c) => c.type === 'organizer_private_community');
+    const myPrivateCommunities = myCommunities.filter((c) => c.type === 'private_community');
+    const myOrganizerPublicCommunities = myCommunities.filter((c) => c.type === 'organizer_public_community');
+
+    // ALL COMMUNITIES LIST
     const communities = {
-        interest_groups: interestGroups,
-        organizer_public_communities: organizerPublicCommunities,
-        organizer_private_communities: organizerPrivateCommunities,
-        private_communities: privateCommunities,
+        interestGroups,
+        organizerPublicCommunities,
+    }
+
+    // MY COMMUNITIES LIST
+    const myCommunitiesLists = {
+        myOrganizerPrivateCommunities,
+        myPrivateCommunities,
+        myOrganizerPublicCommunities
     }
 
     // Set the first location and community as the selected ones
@@ -99,9 +114,9 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         const location = locationAreas.find((l) => l.id === DEFAULT_LOCATION_ID);
         setSelectedLocationArea(location || null);
 
-        const community = allCommunities.find((c) => c.id === DEFAULT_COMMUNITY_ID);
+        const community = publicCommunities.find((c) => c.id === DEFAULT_COMMUNITY_ID);
         setSelectedCommunity(community || null);
-    }, [locationAreas, allCommunities]);
+    }, [locationAreas, publicCommunities]);
 
     return (
         <CommonContext.Provider
@@ -112,9 +127,13 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 isLoadingLocationAreas,
 
                 communities,
+                myCommunities: myCommunitiesLists,
+                joinCommunity,
+                leaveCommunity,
+
                 selectedCommunity,
                 setSelectedCommunity,
-                isLoadingCommunities,
+                isLoadingCommunities: isLoadingMyCommunities || isLoadingPublicCommunities,
             }}
         >
             {children}
@@ -122,7 +141,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     );
 };
 
-export const useCommon = () => {
+export const useCommonContext = (): CommonContextType => {
     const context = useContext(CommonContext);
     if (context === undefined) {
         throw new Error('useCommon must be used within a CommonProvider');

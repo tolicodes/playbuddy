@@ -1,10 +1,30 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 
-export default function DemoBanner() {
+const Banner = () => {
     return (
-        <Text
-            style={{ fontSize: 20, textAlign: 'center', fontWeight: 'bold', color: 'red', marginBottom: 20, marginTop: 10 }}
-        >THIS IS A DEMO (Fake Data Used)</Text>
-    )
-}
+
+        <View style={styles.banner}>
+
+            <Text style={styles.text}>
+                This is a demo functionality (Coming Soon)
+            </Text>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    banner: {
+        backgroundColor: '#FF4D4D', // Red color
+        padding: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    text: {
+        color: '#fff',
+        fontSize: 16,
+        textAlign: 'center',
+    },
+});
+
+export default Banner;

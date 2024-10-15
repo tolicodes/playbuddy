@@ -1,6 +1,5 @@
 import React from 'react';
-import moment from 'moment';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView, Button } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
 import * as amplitude from '@amplitude/analytics-react-native';
