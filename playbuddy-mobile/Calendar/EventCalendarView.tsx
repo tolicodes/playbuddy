@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Event } from '../../Common/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { NavStack } from '../types';
+import { EventWithMetadata, NavStack } from '../types';
 import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
@@ -15,6 +15,7 @@ import WebsiteBanner from './WebsiteBanner';
 import { useUserContext } from '../Auth/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { MISC_URLS } from '../config';
+import { screen } from '@testing-library/react';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -22,9 +23,10 @@ type EventCalendarViewProps = {
     isOnWishlist?: boolean
     isFriendWishlist?: boolean
     isRetreats?: boolean
+    events?: EventWithMetadata[]
 }
 
-const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isRetreats = false }: EventCalendarViewProps = {}) => {
+const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isRetreats = false, events }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
 
@@ -32,7 +34,11 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
     const [searchQuery, setSearchQuery] = useState('');
 
     let eventsUsed;
-    if (isFriendWishlist) {
+
+    if (events) {
+        eventsUsed = events
+    }
+    else if (isFriendWishlist) {
         eventsUsed = friendWishlistEvents
     }
     else if (isOnWishlist) {
@@ -46,7 +52,6 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
     const { sections, markedDates } = useGroupedEvents(eventsUsed);
     const sectionListRef = useRef<SectionList<Event>>(null);
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
-    const navigation = useNavigation<NavStack>();
 
 
     useEffect(() => {
@@ -79,11 +84,6 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
         }
     };
 
-    const onPressOpenFilters = () => {
-        amplitude.logEvent('calendar_filters_clicked');
-        navigation.navigate('Filters');
-    };
-
     const onPressGoogleCalendar = () => {
         amplitude.logEvent('google_calendar_clicked', {
             isOnWishlist,
@@ -97,26 +97,21 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
         Linking.openURL(url);
     }
 
-    const hasFilters = !!filters.organizers.length;
-
     return (
         <SafeAreaView style={styles.container}>
             {!authUserId && <WebsiteBanner />}
             <View style={styles.searchContainer}>
-
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
                     <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
-                    <FAIcon name="filter" size={30} color={hasFilters ? "#007AFF" : "#8E8E93"} />
-                </TouchableOpacity>
 
-                <TouchableOpacity style={styles.googleCalendarIcon} onPress={onPressGoogleCalendar}>
+
+                {isOnWishlist && <TouchableOpacity style={styles.googleCalendarIcon} onPress={onPressGoogleCalendar}>
                     <Image
                         source={require('./images/google-calendar.png')}
                         style={styles.googleCalendarImage}
                     />
-                </TouchableOpacity>
+                </TouchableOpacity>}
 
                 <TextInput
                     style={[styles.searchBox, searchQuery
@@ -161,13 +156,10 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#ffffff',
     },
     calendar: {
         width: '100%',
         overflow: 'hidden',
-        marginBottom: 10,
     },
     emptyList: {
         padding: 20,
@@ -192,7 +184,6 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingBottom: 0,
         paddingTop: 0,
-        marginTop: 10,
         backgroundColor: 'white',
         marginBottom: -20
     },

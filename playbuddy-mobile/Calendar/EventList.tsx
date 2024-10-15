@@ -39,9 +39,11 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents }: { sections: an
                 </View>
             )
         }}
-        renderSectionHeader={({ section }: any) => (
-            <Text style={styles.sectionHeader}>{section.title}</Text>
-        )}
+        renderSectionHeader={({ section }: any) => {
+            return (
+                <Text style={styles.sectionHeader}>{section.title}</Text>
+            )
+        }}
         keyExtractor={(item, i) => `${i}_${item.id}`}
         ListEmptyComponent={<View style={styles.emptyList}>
             {isLoadingEvents
