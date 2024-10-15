@@ -1,25 +1,31 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import QRCode from 'react-native-qrcode-svg';
+import QRCodeStyled from 'react-native-qrcode-styled';
 
 import { useUserContext } from '../Auth/UserContext';
 import CameraScanner from './CameraScanner';
-import { useBuddies } from './useBuddies';
+import BuddyAddedConfirmation from './AddBuddyConfirmation';
+import { LoginToAccess } from '../Common/LoginToAccess';
+import { useBuddiesContext } from './BuddiesContext';
 
 const AddBuddy: React.FC = () => {
     const { authUserId } = useUserContext();
     const [barcode, setBarcode] = useState('');
     const [addedBuddy, setAddedBuddy] = useState(false);
-    // const { addBuddy } = useBuddies();
+    const { addBuddy } = useBuddiesContext();
 
     useEffect(() => {
         console.log(barcode);
         if (barcode) {
-            // addBuddy({ buddyUserId: barcode });
+            addBuddy({ buddyUserId: barcode });
             setAddedBuddy(true);
             setBarcode('');
         }
     }, [barcode]);
+
+    if (!authUserId) {
+        return <LoginToAccess entityToAccess="buddies" />
+    }
 
     return (
         <View style={styles.container}>
@@ -28,7 +34,10 @@ const AddBuddy: React.FC = () => {
                     Have your buddy scan this code to add you as a buddy:
                 </Text>
                 <View style={styles.qrCodeWrapper}>
-                    {authUserId && <QRCode value={authUserId} size={200} />}
+                    {<QRCodeStyled data={authUserId} width={200} height={200} style={{
+                        width: 200,
+                        height: 200
+                    }} />}
                 </View>
             </View>
 
@@ -38,13 +47,15 @@ const AddBuddy: React.FC = () => {
                 </Text>
 
 
-                {addedBuddy && (
-                    <Text style={styles.title}>Added Buddy. Wanna add another?</Text>
-                )}
-
-                <CameraScanner
-                    onBarcodeScanned={setBarcode}
-                />
+                {!addedBuddy
+                    ? <CameraScanner onBarcodeScanned={(barcode: string) => {
+                        setBarcode(barcode);
+                        setAddedBuddy(true);
+                    }} />
+                    : <BuddyAddedConfirmation buddy={barcode} onAddAnotherBuddy={() => {
+                        setAddedBuddy(false);
+                    }} />
+                }
             </View>
         </View>
     );
@@ -76,13 +87,15 @@ const styles = StyleSheet.create({
     },
     qrCodeWrapper: {
         backgroundColor: '#FFFFFF',
-        padding: 20,
+        padding: 30,
         borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.2,
         shadowRadius: 20, // Subtle shadow for QR code
         elevation: 10,
+        width: 200,
+        height: 200
     },
     scanButton: {
         backgroundColor: '#007AFF', // iOS blue

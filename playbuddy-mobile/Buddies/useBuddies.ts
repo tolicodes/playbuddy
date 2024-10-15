@@ -1,5 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { supabase } from '../supabaseClient'; // adjust the path to your Supabase client
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../supabaseClient';
 import { useUserContext } from '../Auth/UserContext';
 
 // Fetch all buddies
@@ -65,44 +65,42 @@ export const useBuddies = () => {
     const { authUserId } = useUserContext();
 
     // Fetch buddies
-    const buddiesQuery = useQuery(['buddies', authUserId], () => fetchBuddies(authUserId), {
+    const buddiesQuery = useQuery({
+        queryKey: ['buddies', authUserId],
+        queryFn: () => fetchBuddies(authUserId),
         enabled: !!authUserId,
     });
 
     // Add buddy mutation
-    const addBuddyMutation = useMutation(
-        ({ buddyUserId }: { buddyUserId: string }) => addBuddy(authUserId!, buddyUserId),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(['buddies', authUserId]);
-            },
-        }
-    );
+    const addBuddyMutation = useMutation({
+        mutationFn: ({ buddyUserId }: { buddyUserId: string }) => addBuddy(authUserId!, buddyUserId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['buddies', authUserId] });
+        },
+    });
 
     // Fetch buddy lists with buddies
-    const buddyListsQuery = useQuery(['buddyLists', authUserId], () => fetchBuddyListsWithBuddies(userId), {
+    const buddyListsQuery = useQuery({
+        queryKey: ['buddyLists', authUserId],
+        queryFn: () => fetchBuddyListsWithBuddies(authUserId),
         enabled: !!authUserId,
     });
 
     // Create new buddy list mutation
-    const createBuddyListMutation = useMutation(
-        ({ listName }: { listName: string }) => createBuddyList(authUserId!, listName),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(['buddyLists', authUserId]);
-            },
-        }
-    );
+    const createBuddyListMutation = useMutation({
+        mutationFn: ({ listName }: { listName: string }) => createBuddyList(authUserId!, listName),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['buddyLists', authUserId] });
+        },
+    });
 
     // Add buddy to list mutation
-    const addBuddyToListMutation = useMutation(
-        ({ buddyListId, buddyId }: { buddyListId: number, buddyId: number }) => addBuddyToList(buddyListId, buddyId),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(['buddyLists', authUserId]);
-            },
-        }
-    );
+    const addBuddyToListMutation = useMutation({
+        mutationFn: ({ buddyListId, buddyId }: { buddyListId: number, buddyId: number }) => addBuddyToList(buddyListId, buddyId),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['buddyLists', authUserId] });
+        },
+    });
 
     return {
         buddies: buddiesQuery.data,
