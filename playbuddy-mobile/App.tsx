@@ -10,6 +10,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { CommonProvider } from './Common/CommonContext';
 import { onFetchUpdateAsync } from './Common/ExpoUpdate';
 import { BuddiesProvider } from './Buddies/BuddiesContext';
+import { queryClient } from './Common/queryClient';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
@@ -20,7 +21,6 @@ Sentry.init({
   // enableSpotlight: __DEV__,
 });
 
-const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {

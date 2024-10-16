@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useUserContext } from '../../Auth/UserContext';
 import { Community } from '../CommonContext';
 import { API_BASE_URL } from '../../config';
+import { queryClient as qc } from '../queryClient';
 
 // Fetch My Communities
 export const useFetchMyCommunities = () => {
@@ -18,7 +19,10 @@ export const useFetchMyCommunities = () => {
                 });
                 return data;
             } catch (error) {
-                throw new Error(`Failed to fetch my communities: ${error.message}`);
+                if (error instanceof Error) {
+                    throw new Error(`Failed to fetch my communities: ${error.message}`);
+                }
+                throw new Error('Failed to fetch my communities');
             }
         }
     });
@@ -33,7 +37,10 @@ export const useFetchPublicCommunities = () => {
                 const { data } = await axios.get(`${API_BASE_URL}/communities/public`);
                 return data;
             } catch (error) {
-                throw new Error(`Failed to fetch public communities: ${error.message}`);
+                if (error instanceof Error) {
+                    throw new Error(`Failed to fetch public communities: ${error.message}`);
+                }
+                throw new Error('Failed to fetch public communities');
             }
         }
     });
@@ -42,48 +49,70 @@ export const useFetchPublicCommunities = () => {
 // Join a Community
 export const useJoinCommunity = () => {
     const { authUserId } = useUserContext();
-    // Use the queryClient from the hook
-    const queryClient = useQueryClient();
+    const queryClient = useQueryClient(qc);
 
     return useMutation<Community, Error, { community_id: string; join_code?: string }>({
         mutationFn: async (joinData) => {
-            try {
-                const { data } = await axios.post(`${API_BASE_URL}/communities/join`, {
-                    ...joinData,
-                    authUserId
-                });
+            const { data } = await axios.post(`${API_BASE_URL}/communities/join`, {
+                ...joinData,
+                authUserId
+            });
+            return data;
+        },
+        onMutate: async (joinData) => {
+            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
+            await queryClient.cancelQueries({ queryKey: ['myCommunities'] });
 
-                queryClient.invalidateQueries({ queryKey: ['myCommunities'] });
+            // Snapshot the previous value
+            const previousCommunities = queryClient.getQueryData<Community[]>(['myCommunities']);
 
-                return data;
-            } catch (error: unknown) {
-                if (error instanceof Error) {
-                    throw new Error(`Failed to join community: ${error.message}`);
-                }
-                throw new Error('Failed to join community: Unknown error');
-            }
-        }
+            // Optimistically update to the new value
+            queryClient.setQueryData<Community[]>(['myCommunities'], old => {
+                const newCommunity: Partial<Community> = { id: joinData.community_id, name: 'Joining...' };
+                return old ? [...old, newCommunity as Community] : [newCommunity as Community];
+            });
+
+            // Return a context object with the snapshotted value
+            return { previousCommunities };
+        },
+        onError: (err, joinData, context) => {
+            // If the mutation fails, use the context returned from onMutate to roll back
+            queryClient.setQueryData(['myCommunities'], context?.previousCommunities);
+        },
+        onSettled: () => {
+            // Always refetch after error or success:
+            queryClient.invalidateQueries({ queryKey: ['myCommunities'] });
+        },
     });
 };
 
 export const useLeaveCommunity = () => {
     const { authUserId } = useUserContext();
-    const queryClient = useQueryClient();
+    const queryClient = useQueryClient(qc);
 
     return useMutation<Community, Error, { community_id: string }>({
         mutationFn: async (leaveData) => {
-            try {
-                const { data } = await axios.post(`${API_BASE_URL}/communities/leave`, {
-                    ...leaveData,
-                    authUserId
-                });
+            const { data } = await axios.post(`${API_BASE_URL}/communities/leave`, {
+                ...leaveData,
+                authUserId
+            });
+            return data;
+        },
+        onMutate: async (leaveData) => {
+            await queryClient.cancelQueries({ queryKey: ['myCommunities'] });
+            const previousCommunities = queryClient.getQueryData<Community[]>(['myCommunities']);
 
-                queryClient.invalidateQueries({ queryKey: ['myCommunities'] });
+            queryClient.setQueryData<Community[]>(['myCommunities'], old => {
+                return old ? old.filter(community => community.id !== leaveData.community_id) : [];
+            });
 
-                return data;
-            } catch (error) {
-                throw new Error(`Failed to leave community: ${error.message}`);
-            }
-        }
+            return { previousCommunities };
+        },
+        onError: (err, leaveData, context: { previousCommunities?: Community[] }) => {
+            queryClient.setQueryData(['myCommunities'], context?.previousCommunities);
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries({ queryKey: ['myCommunities'] });
+        },
     });
 };

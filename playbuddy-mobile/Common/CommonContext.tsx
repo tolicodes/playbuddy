@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useEffect, useMemo } from 'react';
 import { UseMutationResult, useQuery } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
 import { useFetchMyCommunities, useFetchPublicCommunities, useJoinCommunity, useLeaveCommunity } from './hooks/useCommunities';
@@ -40,7 +40,7 @@ interface CommonContextType {
         join_code?: string;
     }, unknown>
 
-    leaveCommunity: U
+    leaveCommunity: UseMutationResult<any, Error, { community_id: string }, unknown>
 
     selectedCommunity: Community | null;
     setSelectedCommunity: (community: Community | null) => void;
@@ -80,36 +80,17 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
 
+    const communities = useMemo(() => ({
+        interestGroups: publicCommunities.filter((c) => c.type === 'interest_group'),
+        organizerPublicCommunities: publicCommunities.filter((c) => c.type === 'organizer_public_community'),
+    }), [publicCommunities]);
 
-    //  'interest_group', 'organizer_public_community', 'organizer_private_community', 'private_community'
+    const myCommunitiesLists = useMemo(() => ({
+        myOrganizerPrivateCommunities: myCommunities.filter((c) => c.type === 'organizer_private_community'),
+        myPrivateCommunities: myCommunities.filter((c) => c.type === 'private_community'),
+        myOrganizerPublicCommunities: myCommunities.filter((c) => c.type === 'organizer_public_community'),
+    }), [myCommunities]);
 
-    // INTEREST GROUPS
-    // For the top menu, everyone sees them
-    const interestGroups = publicCommunities.filter((c) => c.type === 'interest_group');
-
-
-    // ALL COMMUNITIES LIST
-    const organizerPublicCommunities = publicCommunities.filter((c) => c.type === 'organizer_public_community');
-
-    // MY COMMUNITIES LIST
-    const myOrganizerPrivateCommunities = myCommunities.filter((c) => c.type === 'organizer_private_community');
-    const myPrivateCommunities = myCommunities.filter((c) => c.type === 'private_community');
-    const myOrganizerPublicCommunities = myCommunities.filter((c) => c.type === 'organizer_public_community');
-
-    // ALL COMMUNITIES LIST
-    const communities = {
-        interestGroups,
-        organizerPublicCommunities,
-    }
-
-    // MY COMMUNITIES LIST
-    const myCommunitiesLists = {
-        myOrganizerPrivateCommunities,
-        myPrivateCommunities,
-        myOrganizerPublicCommunities
-    }
-
-    // Set the first location and community as the selected ones
     useEffect(() => {
         const location = locationAreas.find((l) => l.id === DEFAULT_LOCATION_ID);
         setSelectedLocationArea(location || null);
@@ -118,24 +99,35 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         setSelectedCommunity(community || null);
     }, [locationAreas, publicCommunities]);
 
+    const contextValue = useMemo(() => ({
+        locationAreas,
+        selectedLocationArea,
+        setSelectedLocationArea,
+        isLoadingLocationAreas,
+
+        communities,
+        myCommunities: myCommunitiesLists,
+        joinCommunity,
+        leaveCommunity,
+
+        selectedCommunity,
+        setSelectedCommunity,
+        isLoadingCommunities: isLoadingMyCommunities || isLoadingPublicCommunities,
+    }), [
+        locationAreas,
+        selectedLocationArea,
+        isLoadingLocationAreas,
+        communities,
+        myCommunitiesLists,
+        joinCommunity,
+        leaveCommunity,
+        selectedCommunity,
+        isLoadingMyCommunities,
+        isLoadingPublicCommunities
+    ]);
+
     return (
-        <CommonContext.Provider
-            value={{
-                locationAreas,
-                selectedLocationArea,
-                setSelectedLocationArea,
-                isLoadingLocationAreas,
-
-                communities,
-                myCommunities: myCommunitiesLists,
-                joinCommunity,
-                leaveCommunity,
-
-                selectedCommunity,
-                setSelectedCommunity,
-                isLoadingCommunities: isLoadingMyCommunities || isLoadingPublicCommunities,
-            }}
-        >
+        <CommonContext.Provider value={contextValue}>
             {children}
         </CommonContext.Provider>
     );

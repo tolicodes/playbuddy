@@ -143,7 +143,6 @@ const TabNavigator = () => (
     >
         <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
         <Tab.Screen name="Wishlist" component={Wishlist} />
-        <Tab.Screen name="Moar" component={Moar} />
     </Tab.Navigator>
 );
 
@@ -188,6 +187,7 @@ const DrawerNav = () => {
                 }}
             />
 
+
             <Drawer.Screen
                 name="Communities"
                 component={Communities}
@@ -217,6 +217,16 @@ const DrawerNav = () => {
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,
                 }}
             />
+
+            <Drawer.Screen name="Moar" component={Moar}
+                options={{
+                    drawerIcon: ({ color, size }) => (
+                        <IonIcon name="ellipsis-horizontal" size={size} color={color} />
+                    )
+                }}
+
+            />
+
         </Drawer.Navigator>
     );
 };

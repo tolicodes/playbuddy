@@ -183,9 +183,9 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-start',
         padding: 20,
         paddingBottom: 0,
-        paddingTop: 0,
+        paddingTop: 10,
         backgroundColor: 'white',
-        marginBottom: -20
+        marginBottom: -20,
     },
     searchBox: {
         height: 40,
