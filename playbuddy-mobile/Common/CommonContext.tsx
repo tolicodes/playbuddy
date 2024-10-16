@@ -40,7 +40,7 @@ interface CommonContextType {
         join_code?: string;
     }, unknown>
 
-    leaveCommunity: UseMutationResult<any, Error, { community_id: string }, unknown>
+    leaveCommunity: UseMutationResult<any, Error, { community_id: string, type: string }, unknown>
 
     selectedCommunity: Community | null;
     setSelectedCommunity: (community: Community | null) => void;

@@ -83,11 +83,11 @@ const AllOrganizers: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleJoin = useCallback((communityId: string) => {
-        joinCommunity.mutate({ community_id: communityId });
+        joinCommunity.mutate({ community_id: communityId, type: 'organizer_public_community' });
     }, [joinCommunity]);
 
     const handleLeave = useCallback((communityId: string) => {
-        leaveCommunity.mutate({ community_id: communityId });
+        leaveCommunity.mutate({ community_id: communityId, type: 'organizer_public_community' });
     }, [leaveCommunity]);
 
     const filteredOrganizers = organizerPublicCommunities

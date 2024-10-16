@@ -68,7 +68,7 @@ export const useJoinCommunity = () => {
 
             // Optimistically update to the new value
             queryClient.setQueryData<Community[]>(['myCommunities'], old => {
-                const newCommunity: Partial<Community> = { id: joinData.community_id, name: 'Joining...' };
+                const newCommunity: Partial<Community> = { id: joinData.community_id, name: 'Joining...', type: joinData.type };
                 return old ? [...old, newCommunity as Community] : [newCommunity as Community];
             });
 
