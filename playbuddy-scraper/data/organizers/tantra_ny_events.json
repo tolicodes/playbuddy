@@ -1,55 +1,5 @@
 [
   {
-    "id": "organizer-tantra_ny-6035",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Singles Happy Hour",
-    "start_date": "2024-10-15T00:30:00.000Z",
-    "end_date": "2024-10-15T01:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198158347?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198158347?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/com.jpg",
-    "location": "The Loft (Tribeca) -  New York, NY 10007",
-    "price": "0",
-    "description": "",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5175",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "The Intimacy Hour",
-    "start_date": "2024-10-16T00:30:00.000Z",
-    "end_date": "2024-10-16T01:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/the-intimacy-hour-conversations-on-love-sex-and-relationships-tickets-869660547107?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/the-intimacy-hour-conversations-on-love-sex-and-relationships-tickets-869660547107?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/ihr.jpg",
-    "location": "The Loft (Tribeca) -  New York, NY 10007",
-    "price": "0",
-    "description": "",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-6149",
     "type": "event",
     "recurring": "none",
@@ -58,7 +8,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "SACRED - Sex Magic Ritual",
+    "name": "SACRED",
     "start_date": "2024-10-17T22:30:00.000Z",
     "end_date": "2024-10-18T04:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-tickets-1021450143877?aff=4jsontoli",
@@ -75,31 +25,6 @@
     "source_origination_platform": "organizer_api"
   },
   {
-    "id": "organizer-tantra_ny-5697",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-10-17T22:30:00.000Z",
-    "end_date": "2024-10-18T01:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-tickets-957297902797?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-tickets-957297902797?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Watertown Center for Healing Arts (Exhale Studio) - 22 Mount Auburn St. Watertown, MA 02472",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-5824",
     "type": "event",
     "recurring": "none",
@@ -108,7 +33,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Cuddle Party",
+    "name": "Cuddle Party! - New York",
     "start_date": "2024-10-18T22:30:00.000Z",
     "end_date": "2024-10-19T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-936513766887?aff=4jsontoli",
@@ -125,31 +50,6 @@
     "source_origination_platform": "organizer_api"
   },
   {
-    "id": "organizer-tantra_ny-5281",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-10-18T23:00:00.000Z",
-    "end_date": "2024-10-19T02:00:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-philadelphia-tickets-944966579477?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-philadelphia-tickets-944966579477?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Urban Movement Arts - 2100 Chestnut St. Philadelphia, PA 19103",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-5276",
     "type": "event",
     "recurring": "none",
@@ -158,7 +58,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date® - Jersey City",
     "start_date": "2024-10-19T21:30:00.000Z",
     "end_date": "2024-10-20T00:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-988743497417?aff=4jsontoli",
@@ -183,7 +83,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Snuggle Party",
+    "name": "Snuggle Party! - New York",
     "start_date": "2024-10-19T21:30:00.000Z",
     "end_date": "2024-10-20T00:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1001232803267?aff=4jsontoli",
@@ -208,7 +108,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-10-22T00:30:00.000Z",
     "end_date": "2024-10-22T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198348917?aff=4jsontoli",
@@ -233,7 +133,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2024-10-26T21:30:00.000Z",
     "end_date": "2024-10-27T00:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941778463737?aff=4jsontoli",
@@ -258,7 +158,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-10-29T00:30:00.000Z",
     "end_date": "2024-10-29T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198519427?aff=4jsontoli",
@@ -283,11 +183,11 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Movie Night",
+    "name": "Movie Night!",
     "start_date": "2024-10-29T22:30:00.000Z",
-    "end_date": "2024-10-30T01:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
+    "end_date": "2024-10-30T02:30:00.000Z",
+    "ticket_url": "https://www.eventbrite.com/e/community-movie-night-tickets-1047416540067?aff=4jsontoli",
+    "event_url": "https://www.eventbrite.com/e/community-movie-night-tickets-1047416540067?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/mov.jpg",
     "location": "The Loft (Tribeca) -  New York, NY 10007",
     "price": "0",
@@ -333,7 +233,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2024-11-02T18:00:00.000Z",
     "end_date": "2024-11-02T21:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941780650277?aff=4jsontoli",
@@ -361,9 +261,9 @@
     "name": "Desire Community Call",
     "start_date": "2024-11-05T00:30:00.000Z",
     "end_date": "2024-11-05T01:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/misc.jpg",
+    "ticket_url": "https://www.eventbrite.com/e/desire-community-call-connect-learn-and-share-tickets-1044997484607?aff=4jsontoli",
+    "event_url": "https://www.eventbrite.com/e/desire-community-call-connect-learn-and-share-tickets-1044997484607?aff=4jsontoli",
+    "image_url": "https://tantrany.com/images/events/com.jpg",
     "location": "The Loft (Tribeca) -  New York, NY 10007",
     "price": "0",
     "description": "",
@@ -383,12 +283,37 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-11-05T01:30:00.000Z",
     "end_date": "2024-11-05T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198720027?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198720027?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/com.jpg",
+    "location": "The Loft (Tribeca) -  New York, NY 10007",
+    "price": "0",
+    "description": "",
+    "tags": [
+      "tantra"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "source_origination_platform": "organizer_api"
+  },
+  {
+    "id": "organizer-tantra_ny-6293",
+    "type": "event",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "The Tantra Institute",
+      "url": "https://tantrany.com"
+    },
+    "name": "CTE Practice Night",
+    "start_date": "2024-11-11T23:30:00.000Z",
+    "end_date": "2024-11-12T02:30:00.000Z",
+    "ticket_url": "https://www.eventbrite.com/e/cte-practice-night-sacred-spot-and-healing-session-tickets-1048044006837?aff=4jsontoli",
+    "event_url": "https://www.eventbrite.com/e/cte-practice-night-sacred-spot-and-healing-session-tickets-1048044006837?aff=4jsontoli",
+    "image_url": "https://tantrany.com/images/events/des.jpg",
     "location": "The Loft (Tribeca) -  New York, NY 10007",
     "price": "0",
     "description": "",
@@ -408,13 +333,38 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-11-12T01:30:00.000Z",
     "end_date": "2024-11-12T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990218739907?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990218739907?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/com.jpg",
     "location": "The Loft (Tribeca) -  New York, NY 10007",
+    "price": "0",
+    "description": "",
+    "tags": [
+      "tantra"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "source_origination_platform": "organizer_api"
+  },
+  {
+    "id": "organizer-tantra_ny-6302",
+    "type": "event",
+    "recurring": "none",
+    "organizer": {
+      "id": "",
+      "name": "The Tantra Institute",
+      "url": "https://tantrany.com"
+    },
+    "name": "Desire Sacred Spa Affair! (New York)",
+    "start_date": "2024-11-13T00:00:00.000Z",
+    "end_date": "2024-11-13T03:00:00.000Z",
+    "ticket_url": "https://www.eventbrite.com/e/desire-members-sacred-spa-affair-new-york-tickets-1049139493467?aff=4jsontoli",
+    "event_url": "https://www.eventbrite.com/e/desire-members-sacred-spa-affair-new-york-tickets-1049139493467?aff=4jsontoli",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F641840159%2F1493533057%2F1%2Foriginal.20231114-215231?w=940&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C67%2C540%2C270&s=9e2f19f774124da40c2a53cf72e997f1",
+    "location": "Calx Vida (Ease) - 1109 Dekalb Avenue Brooklyn, NY 11221",
     "price": "0",
     "description": "",
     "tags": [
@@ -450,31 +400,6 @@
     "source_origination_platform": "organizer_api"
   },
   {
-    "id": "organizer-tantra_ny-5698",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-11-14T23:30:00.000Z",
-    "end_date": "2024-11-15T02:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-tickets-957298013127?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-tickets-957298013127?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Watertown Center for Healing Arts (Exhale Studio) - 22 Mount Auburn St. Watertown, MA 02472",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-6167",
     "type": "event",
     "recurring": "none",
@@ -483,7 +408,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Cuddle Party",
+    "name": "Cuddle Party! - New York",
     "start_date": "2024-11-15T23:30:00.000Z",
     "end_date": "2024-11-16T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-1023892819987?aff=4jsontoli",
@@ -508,7 +433,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2024-11-16T19:00:00.000Z",
     "end_date": "2024-11-16T22:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941780700427?aff=4jsontoli",
@@ -533,7 +458,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Snuggle Party",
+    "name": "Snuggle Party! - New York",
     "start_date": "2024-11-16T23:30:00.000Z",
     "end_date": "2024-11-17T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1023883883257?aff=4jsontoli",
@@ -558,7 +483,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-11-19T01:30:00.000Z",
     "end_date": "2024-11-19T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990236663517?aff=4jsontoli",
@@ -583,7 +508,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "DESIRE - Sacred Play",
+    "name": "DesireGiving!",
     "start_date": "2024-11-22T23:30:00.000Z",
     "end_date": "2024-11-25T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/desiregiving-pre-thanksgiving-weekend-sleepover-tickets-1025941126527?aff=4jsontoli",
@@ -608,7 +533,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-11-26T01:30:00.000Z",
     "end_date": "2024-11-26T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990236773847?aff=4jsontoli",
@@ -658,38 +583,13 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date® - Jersey City",
     "start_date": "2024-11-29T23:30:00.000Z",
     "end_date": "2024-11-30T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-992813741627?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-992813741627?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/tsd.jpg",
     "location": "Asana Soul Practice (Jersey City) - 124 1st Street Jersey City, NJ 07302",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5283",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-11-30T22:30:00.000Z",
-    "end_date": "2024-12-01T01:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-philadelphia-tickets-988965310867?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-philadelphia-tickets-988965310867?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Center City Breathe - 1425 Federal St Philadelphia, PA 19146",
     "price": "0",
     "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
     "tags": [
@@ -708,38 +608,13 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2024-12-01T19:00:00.000Z",
     "end_date": "2024-12-01T22:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941781232017?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941781232017?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/tsd.jpg",
     "location": "Kula Yoga Soho - 481 Broadway, 3rd Fl New York, NY 10013",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5693",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-12-01T19:00:00.000Z",
-    "end_date": "2024-12-01T22:00:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-natick-tickets-992803290367?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-natick-tickets-992803290367?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Common Street Spiritual Center - 13 Common Street Natick, MA 01760",
     "price": "0",
     "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
     "tags": [
@@ -758,7 +633,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-12-03T01:30:00.000Z",
     "end_date": "2024-12-03T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990236844057?aff=4jsontoli",
@@ -783,7 +658,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-12-10T01:30:00.000Z",
     "end_date": "2024-12-10T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990236864117?aff=4jsontoli",
@@ -825,31 +700,6 @@
     "source_origination_platform": "organizer_api"
   },
   {
-    "id": "organizer-tantra_ny-5699",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-12-12T23:30:00.000Z",
-    "end_date": "2024-12-13T02:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-tickets-957298083337?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-tickets-957298083337?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Watertown Center for Healing Arts (Exhale Studio) - 22 Mount Auburn St. Watertown, MA 02472",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-5587",
     "type": "event",
     "recurring": "none",
@@ -858,7 +708,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2024-12-14T22:30:00.000Z",
     "end_date": "2024-12-15T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941781131717?aff=4jsontoli",
@@ -883,7 +733,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-12-17T01:30:00.000Z",
     "end_date": "2024-12-17T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990236894207?aff=4jsontoli",
@@ -908,7 +758,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Cuddle Party",
+    "name": "Cuddle Party! - New York",
     "start_date": "2024-12-20T23:30:00.000Z",
     "end_date": "2024-12-21T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-1023892930317?aff=4jsontoli",
@@ -933,7 +783,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Snuggle Party",
+    "name": "Snuggle Party! - New York",
     "start_date": "2024-12-21T22:30:00.000Z",
     "end_date": "2024-12-22T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1023884555267?aff=4jsontoli",
@@ -958,7 +808,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-12-24T01:30:00.000Z",
     "end_date": "2024-12-24T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990236904237?aff=4jsontoli",
@@ -983,38 +833,13 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date® - Jersey City",
     "start_date": "2024-12-27T23:30:00.000Z",
     "end_date": "2024-12-28T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-992813902107?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-992813902107?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/tsd.jpg",
     "location": "Asana Soul Practice (Jersey City) - 124 1st Street Jersey City, NJ 07302",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5284",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-12-27T23:30:00.000Z",
-    "end_date": "2024-12-28T02:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Sunset Moon Wellness Center - 1007 Lancaster Ave Bryn Mawr, PA 19010",
     "price": "0",
     "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
     "tags": [
@@ -1033,38 +858,13 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2024-12-28T22:30:00.000Z",
     "end_date": "2024-12-29T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941781151777?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941781151777?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/tsd.jpg",
     "location": "Kula Yoga Soho - 481 Broadway, 3rd Fl New York, NY 10013",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5694",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2024-12-29T18:00:00.000Z",
-    "end_date": "2024-12-29T21:00:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-natick-tickets-1003476464117?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-natick-tickets-1003476464117?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Common Street Spiritual Center - 13 Common Street Natick, MA 01760",
     "price": "0",
     "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
     "tags": [
@@ -1083,7 +883,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "DESIRE - Sacred Play",
+    "name": "Desire - New Years!",
     "start_date": "2024-12-31T00:00:00.000Z",
     "end_date": "2024-12-31T06:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/desire-tickets-1023874575417?aff=4jsontoli",
@@ -1108,7 +908,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Singles Happy Hour",
+    "name": "Tantra Singles Happy Hour!",
     "start_date": "2024-12-31T01:30:00.000Z",
     "end_date": "2024-12-31T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-1030540473297?aff=4jsontoli",
@@ -1133,7 +933,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "SACRED - Sex Magic Ritual",
+    "name": "SACRED - New Years Eve!",
     "start_date": "2025-01-01T00:00:00.000Z",
     "end_date": "2025-01-01T06:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-tickets-1023874755957?aff=4jsontoli",
@@ -1158,7 +958,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "The 90-Day Relationship Experiment",
+    "name": "The 90-Day Relationship Experiment™ - Free Info Call",
     "start_date": "2025-01-05T19:00:00.000Z",
     "end_date": "2025-01-05T20:00:00.000Z",
     "ticket_url": "?aff=4jsontoli",
@@ -1175,31 +975,6 @@
     "source_origination_platform": "organizer_api"
   },
   {
-    "id": "organizer-tantra_ny-5700",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2025-01-09T23:30:00.000Z",
-    "end_date": "2025-01-10T02:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Watertown Center for Healing Arts (Exhale Studio) - 22 Mount Auburn St. Watertown, MA 02472",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-6171",
     "type": "event",
     "recurring": "none",
@@ -1208,7 +983,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Cuddle Party",
+    "name": "Cuddle Party! - New York",
     "start_date": "2025-01-10T23:30:00.000Z",
     "end_date": "2025-01-11T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-1023893080767?aff=4jsontoli",
@@ -1233,7 +1008,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "The 90-Day Relationship Experiment",
+    "name": "The 90-Day Relationship Experiment S8",
     "start_date": "2025-01-12T19:00:00.000Z",
     "end_date": "2025-01-12T20:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/the-90-day-relationship-experimenttm-landmark-dating-experiment-s8-tickets-865556381437?aff=4jsontoli",
@@ -1258,7 +1033,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2025-01-18T19:00:00.000Z",
     "end_date": "2025-01-18T22:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941782064507?aff=4jsontoli",
@@ -1283,7 +1058,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2025-01-18T22:30:00.000Z",
     "end_date": "2025-01-19T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-941781934117?aff=4jsontoli",
@@ -1308,7 +1083,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Snuggle Party",
+    "name": "Snuggle Party! - New York",
     "start_date": "2025-01-24T23:30:00.000Z",
     "end_date": "2025-01-25T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1023887293457?aff=4jsontoli",
@@ -1333,38 +1108,13 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date® - Jersey City",
     "start_date": "2025-01-25T22:30:00.000Z",
     "end_date": "2025-01-26T01:30:00.000Z",
     "ticket_url": "?aff=4jsontoli",
     "event_url": "?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/tsd.jpg",
     "location": "Asana Soul Practice (Jersey City) - 124 1st Street Jersey City, NJ 07302",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5637",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2025-01-25T22:30:00.000Z",
-    "end_date": "2025-01-26T01:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Sunset Moon Wellness Center - 1007 Lancaster Ave Bryn Mawr, PA 19010",
     "price": "0",
     "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
     "tags": [
@@ -1383,7 +1133,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Cuddle Party",
+    "name": "Cuddle Party! - New York",
     "start_date": "2025-02-06T23:30:00.000Z",
     "end_date": "2025-02-07T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-1024089267567?aff=4jsontoli",
@@ -1408,7 +1158,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Snuggle Party",
+    "name": "Valentine's Snuggle Party! - New York",
     "start_date": "2025-02-07T23:30:00.000Z",
     "end_date": "2025-02-08T02:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1023888025647?aff=4jsontoli",
@@ -1425,31 +1175,6 @@
     "source_origination_platform": "organizer_api"
   },
   {
-    "id": "organizer-tantra_ny-5695",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2025-02-08T19:30:00.000Z",
-    "end_date": "2025-02-08T22:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Common Street Spiritual Center - 13 Common Street Natick, MA 01760",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
     "id": "organizer-tantra_ny-5597",
     "type": "event",
     "recurring": "none",
@@ -1458,63 +1183,13 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date - New York (Soho)",
     "start_date": "2025-02-08T22:30:00.000Z",
     "end_date": "2025-02-09T01:30:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-944187348777?aff=4jsontoli",
     "event_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-944187348777?aff=4jsontoli",
     "image_url": "https://tantrany.com/images/events/tsd.jpg",
     "location": "Kula Yoga Williamsburg - 101 North 3rd St. #113 Brooklyn, NY 11249",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5638",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2025-02-12T23:30:00.000Z",
-    "end_date": "2025-02-13T02:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Sunset Moon Wellness Center - 1007 Lancaster Ave Bryn Mawr, PA 19010",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5701",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date®",
-    "start_date": "2025-02-13T23:30:00.000Z",
-    "end_date": "2025-02-14T02:30:00.000Z",
-    "ticket_url": "?aff=4jsontoli",
-    "event_url": "?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Watertown Center for Healing Arts (Exhale Studio) - 22 Mount Auburn St. Watertown, MA 02472",
     "price": "0",
     "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
     "tags": [
@@ -1533,7 +1208,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Tantra Speed Date® - Jersey City",
     "start_date": "2025-02-14T00:00:00.000Z",
     "end_date": "2025-02-14T03:00:00.000Z",
     "ticket_url": "?aff=4jsontoli",
@@ -1558,7 +1233,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra Speed Date®",
+    "name": "Valentine's Tantra Speed Date - New York (Soho)",
     "start_date": "2025-02-15T01:00:00.000Z",
     "end_date": "2025-02-15T04:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-new-york-soho-tickets-944187569437?aff=4jsontoli",
@@ -1583,7 +1258,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantric Massage Masterclass Lvl 1",
+    "name": "Tantric Massage Masterclass",
     "start_date": "2025-03-29T14:00:00.000Z",
     "end_date": "2025-03-31T14:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantric-massage-master-class-level-1-tickets-1043034342797?aff=4jsontoli",
@@ -1608,7 +1283,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "The 90-Day Relationship Experiment",
+    "name": "The 90-Day Relationship Experiment S9",
     "start_date": "2025-04-09T00:00:00.000Z",
     "end_date": "2025-04-09T01:00:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/the-90-day-relationship-experimenttm-landmark-dating-experiment-s9-tickets-865561155717?aff=4jsontoli",
@@ -1633,7 +1308,7 @@
       "name": "The Tantra Institute",
       "url": "https://tantrany.com"
     },
-    "name": "Tantra - Art of Conscious Loving",
+    "name": "Tantra: The Art of Conscious Loving (Final Seminar!)",
     "start_date": "2025-05-02T22:45:00.000Z",
     "end_date": "2025-05-02T23:45:00.000Z",
     "ticket_url": "https://www.eventbrite.com/e/tantra-the-art-of-conscious-loving-nyc-beginners-weekend-workshop-tickets-1006723686647?aff=4jsontoli",

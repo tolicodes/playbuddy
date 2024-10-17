@@ -11,13 +11,14 @@ async function upsertOrganizer({
   name,
   url,
   original_id,
-  event_id,  // Add event_id to the parameters
 }: {
   name: string;
   url: string;
   original_id?: string;
-  event_id: string;  // The event to link with the community
-}): Promise<string> {
+}): Promise<{
+  organizerId: string;
+  communityId: string;
+}> {
   console.log("Upserting", name, url, original_id);
 
   // Check if the organizer exists by name or alias
@@ -85,20 +86,10 @@ async function upsertOrganizer({
     communityId = newCommunity?.id;
   }
 
-  // Now insert a record into event_communities linking the event and the community
-  const { error: eventCommunityInsertError } = await supabaseClient
-    .from('event_communities')
-    .insert({
-      event_id,          // Link to the provided event
-      community_id: communityId  // Link to the newly created or existing community
-    });
-
-  if (eventCommunityInsertError) {
-    console.error("Error inserting event_community:", eventCommunityInsertError);
-    throw eventCommunityInsertError;
+  return {
+    organizerId: finalOrganizerId ?? "",
+    communityId: communityId ?? ""
   }
-
-  return finalOrganizerId ?? "";
 }
 
 // Function to upsert an event
@@ -110,8 +101,18 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
     }
 
     // Upsert Organizer and get its ID
-    const organizerId: string = await upsertOrganizer(event.organizer);
-    if (!organizerId) {
+    const {
+      organizerId,
+      communityId
+    }: {
+      organizerId: string;
+      communityId: string;
+    } = await upsertOrganizer(event.organizer);
+    if (!organizerId || !communityId) {
+      console.error("Error upserting organizer or community:", {
+        organizerId,
+        communityId
+      });
       return;
     }
 
@@ -182,6 +183,8 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
       .select()
       .single();
 
+
+
     console.log("createdEvent", createdEvent)
 
     if (insertError || !createdEvent) {
@@ -201,6 +204,19 @@ async function upsertEvent(event: Event): Promise<number | undefined> {
       console.error("Error inserting event community:", communityError);
     } else {
       console.log(`Community added for event ${event.name}`);
+    }
+
+    // Now insert a record into event_communities linking the event and the community
+    const { error: eventCommunityInsertError } = await supabaseClient
+      .from('event_communities')
+      .insert({
+        event_id: createdEvent.id,          // Link to the provided event
+        community_id: communityId  // Link to the newly created or existing community
+      });
+
+    if (eventCommunityInsertError) {
+      console.error("Error inserting event_community:", eventCommunityInsertError);
+      throw eventCommunityInsertError;
     }
 
     console.log(`Event ${event.name} inserted successfully.`);

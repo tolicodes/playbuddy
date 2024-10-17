@@ -1,24 +1,206 @@
 [
   {
-    "id": "eventbrite-920600971287",
+    "id": "eventbrite-1025040603037",
     "type": "event",
     "recurring": "none",
-    "original_id": "eventbrite-920600971287",
+    "original_id": "eventbrite-1025040603037",
     "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
     },
-    "name": "The Heart and Soul of Rope led by Rina and Monique",
-    "start_date": "2024-10-11T00:00:00Z",
-    "end_date": "2024-10-11T04:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/the-heart-and-soul-of-rope-led-by-rina-and-monique-tickets-920600971287",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F704042779%2F148046143168%2F1%2Foriginal.20240223-200431?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C60%2C1920%2C960&s=325ca4c6d21de52cda6c81468092dcda",
-    "event_url": "https://www.eventbrite.com/e/the-heart-and-soul-of-rope-led-by-rina-and-monique-tickets-920600971287",
-    "location": "Pflugerville, Pflugerville, TX",
-    "price": "99.00 USD",
-    "description": "Rope play is a form of sensual bondage. It is an art of connection and seduction, surrender and control, with ancient wisdom tied to it!",
+    "name": "Hit Me Up: Tie Me Down - Intermediate Precarious Predicaments",
+    "start_date": "2024-10-17T23:00:00Z",
+    "end_date": "2024-10-18T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hit-me-up-tie-me-down-intermediate-precarious-predicaments-tickets-1025040603037",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F789271719%2F1679138945753%2F1%2Foriginal.20240613-193505?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C507%2C768%2C384&s=0c530a248e4801c857326937e0d4b0fa",
+    "event_url": "https://www.eventbrite.com/e/hit-me-up-tie-me-down-intermediate-precarious-predicaments-tickets-1025040603037",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "107.40 USD",
+    "description": "Come learn some ways to make your bottoms wiggle and squirm with predicaments!",
+    "tags": [
+      "Performing & Visual Arts"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1026607148617",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1026607148617",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: New Approaches To Decoupling & De-escalation",
+    "start_date": "2024-10-21T23:00:00Z",
+    "end_date": "2024-10-22T01:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-new-approaches-to-decoupling-de-escalation-tickets-1026607148617",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F868789219%2F1679138945753%2F1%2Foriginal.20241007-195413?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=0f1f5e06bc23f99cd738f30b2d72b2d8",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-new-approaches-to-decoupling-de-escalation-tickets-1026607148617",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "33.37 USD",
+    "description": "Changing or ending partnerships does not have to be excruciating. Learn how to re-frame “breakups” to be constructive and even healing.",
+    "tags": [
+      "Business & Professional"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1027112189207",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1027112189207",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: Making Scenes More Verbal",
+    "start_date": "2024-10-22T23:00:00Z",
+    "end_date": "2024-10-23T00:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-making-scenes-more-verbal-tickets-1027112189207",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F857546839%2F1679138945753%2F1%2Foriginal.20240923-234509?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=e6b72f43df94b18a9352ad219dd3d7ed",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-making-scenes-more-verbal-tickets-1027112189207",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "39.02 USD",
+    "description": "Whether words are your only tool or just a sprinkle to your scene, you don't need to be a tongue twisting wordsmith to master mental domming",
+    "tags": [
+      "Performing & Visual Arts"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1036937888137",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1036937888137",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: Strength & ConditiK!NK",
+    "start_date": "2024-10-28T22:30:00Z",
+    "end_date": "2024-10-29T00:45:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-strength-conditiknk-tickets-1036937888137",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F865229999%2F1679138945753%2F1%2Foriginal.20241002-213726?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.00816287878788&fp-y=0.00533457249071&s=3e01f08f3f3dd34f5b222cc22657b104",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-strength-conditiknk-tickets-1036937888137",
+    "location": "120 Walker Street #floor 6, New York, NY 10013",
+    "price": "28.23 USD",
+    "description": "Join fitness coaches Alex & Lucca for an open-level strength & conditioning class with a k!nky twist. Ticket bundles available!",
+    "tags": [
+      "Sports & Fitness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1028791622437",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1028791622437",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: K*nk and BDSM 101 - A Hands On Sampler",
+    "start_date": "2024-10-29T23:00:00Z",
+    "end_date": "2024-10-30T01:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-knk-and-bdsm-101-a-hands-on-sampler-tickets-1028791622437",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F858954489%2F1679138945753%2F1%2Foriginal.20240925-114350?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=8070015e7948f02dc4893ef36447a8cd",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-knk-and-bdsm-101-a-hands-on-sampler-tickets-1028791622437",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "33.37 USD",
+    "description": "Explore the exciting world of K\\*nk & BDSM through live demos and hands-on practice in the realms of Impact Play, Bondage, & Sensation Play!",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1031277116617",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1031277116617",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "Aleah Black Book Release Dance Party @ Hit Me Up",
+    "start_date": "2024-10-31T23:00:00Z",
+    "end_date": "2024-11-01T05:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/aleah-black-book-release-dance-party-hit-me-up-tickets-1031277116617",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F862760509%2F1679138945753%2F1%2Foriginal.20240930-172205?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=630c1d0aac1363d42153a8b72c444424",
+    "event_url": "https://www.eventbrite.com/e/aleah-black-book-release-dance-party-hit-me-up-tickets-1031277116617",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "12.19 USD",
+    "description": "Aleah Black Book Release Dance Party @ Hit Me Up",
+    "tags": [
+      "Performing & Visual Arts"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1042177249207",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1042177249207",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: Boot Worship",
+    "start_date": "2024-11-05T00:00:00Z",
+    "end_date": "2024-11-05T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-boot-worship-tickets-1042177249207",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F869713059%2F1679138945753%2F1%2Foriginal.20241008-175232?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=d2dc839179a87636c6468a0ebf419a3d",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-boot-worship-tickets-1042177249207",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "28.23 USD",
+    "description": "This is the class for all the shoe and leather f\\*tish!sts and all of us who love to be worshipped",
+    "tags": [
+      "Fashion & Beauty"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1042183086667",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1042183086667",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "Hit Me Up: Tie Me Down Rope Jam",
+    "start_date": "2024-11-06T00:00:00Z",
+    "end_date": "2024-11-06T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hit-me-up-tie-me-down-rope-jam-tickets-1042183086667",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F869717419%2F1679138945753%2F1%2Foriginal.20241008-175659?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=09e7d2ce2bffb4b958cd32e83d282773",
+    "event_url": "https://www.eventbrite.com/e/hit-me-up-tie-me-down-rope-jam-tickets-1042183086667",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "39.02 USD",
+    "description": "Whether you're a skilled rope artist, an experienced rope bunny, or brand new and just curious, we welcome you!",
     "tags": [
       "Hobbies & Special Interest"
     ],
@@ -26,77 +208,25 @@
     "dataset": "Kink"
   },
   {
-    "id": "eventbrite-921165349357",
+    "id": "eventbrite-1042169415777",
     "type": "event",
     "recurring": "none",
-    "original_id": "eventbrite-921165349357",
+    "original_id": "eventbrite-1042169415777",
     "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
     },
-    "name": "Temple Party w/ Rina, Monique and Peter",
-    "start_date": "2024-10-12T00:00:00Z",
-    "end_date": "2024-10-12T04:45:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/temple-party-w-rina-monique-and-peter-tickets-921165349357",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F784844399%2F148046143168%2F1%2Foriginal.20231226-194152?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C940%2C470&s=ce7641b65155b523c5c1895cc7c02b1e",
-    "event_url": "https://www.eventbrite.com/e/temple-party-w-rina-monique-and-peter-tickets-921165349357",
-    "location": "Address in Confirmation, Cedar Park, TX 78613",
-    "price": "69.00 USD",
-    "description": "Share loving touch in a safe space.",
-    "tags": [
-      "Home & Lifestyle"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-953247969337",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-953247969337",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Awaken as Love Taster Dance, Energy, Integral Theory, Conscious Evolution",
-    "start_date": "2024-10-12T16:30:00Z",
-    "end_date": "2024-10-12T22:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/awaken-as-love-taster-dance-energy-integral-theory-conscious-evolution-tickets-953247969337",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F812721919%2F148046143168%2F1%2Foriginal.20240723-094723?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=20%2C0%2C1250%2C625&s=6a8ddc1a9e99f4e80d49e95feddee460",
-    "event_url": "https://www.eventbrite.com/e/awaken-as-love-taster-dance-energy-integral-theory-conscious-evolution-tickets-953247969337",
-    "location": "thrasher lane, Pflugerville, TX 78660",
-    "price": "99.00 USD",
-    "description": "Did you know you can consciously evolve?",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-834142551827",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-834142551827",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Elevate: The Art of Erotic Facilitation a 5 day Intensive w Major & Monique",
-    "start_date": "2024-11-10T19:00:00Z",
-    "end_date": "2024-11-15T17:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/elevate-the-art-of-erotic-facilitation-a-5-day-intensive-w-major-monique-tickets-834142551827",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F694620629%2F148046143168%2F1%2Foriginal.20240211-045953?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=43f9a75d6f762f9179a6132dad55cb5d",
-    "event_url": "https://www.eventbrite.com/e/elevate-the-art-of-erotic-facilitation-a-5-day-intensive-w-major-monique-tickets-834142551827",
-    "location": "Cabo, Cabo San Lucas, BCS 23455",
-    "price": "520.29 USD",
-    "description": "Join us for this intensive, where your journey as a facilitator takes flight, and your unique voice becomes the catalyst for transformation.",
+    "name": "HMU Academy: B*ndage Without Rope",
+    "start_date": "2024-11-07T00:00:00Z",
+    "end_date": "2024-11-07T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-bndage-without-rope-tickets-1042169415777",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F869692259%2F1679138945753%2F1%2Foriginal.20241008-173430?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=7097b88160ed47e4226c90ea1225a648",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-bndage-without-rope-tickets-1042169415777",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "40.00 USD",
+    "description": "There are so many options for b\\*ndage besides rope! Learn other forms of b\\*ndage that are fast, easy, and fun!",
     "tags": [
       "Hobbies & Special Interest"
     ],
@@ -104,389 +234,51 @@
     "dataset": "Kink"
   },
   {
-    "id": "eventbrite-917085396107",
+    "id": "eventbrite-1042192725497",
     "type": "event",
     "recurring": "none",
-    "original_id": "eventbrite-917085396107",
+    "original_id": "eventbrite-1042192725497",
     "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
     },
-    "name": "Temple Party w/ Monique Darling & Peter Petersen",
-    "start_date": "2024-11-23T00:00:00Z",
-    "end_date": "2024-11-23T04:59:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/temple-party-w-monique-darling-peter-petersen-tickets-917085396107",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F780106719%2F148046143168%2F1%2Foriginal.20240531-053116?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C940%2C470&s=0d4b5f1545d5aab10a1547ca4fd0d4ed",
-    "event_url": "https://www.eventbrite.com/e/temple-party-w-monique-darling-peter-petersen-tickets-917085396107",
-    "location": "Address in Conf Message, Alexandria, VA 22315",
-    "price": "89.00 USD",
-    "description": "Share loving touch in a safe space",
+    "name": "HMU Tie Me Down Advanced: fLoOr TiEs aRe EaSy",
+    "start_date": "2024-11-08T00:00:00Z",
+    "end_date": "2024-11-08T02:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-tie-me-down-advanced-floor-ties-are-easy-tickets-1042192725497",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F869720959%2F1679138945753%2F1%2Foriginal.20241008-180021?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=7225293578a5a8b6cbe06771045eb7a5",
+    "event_url": "https://www.eventbrite.com/e/hmu-tie-me-down-advanced-floor-ties-are-easy-tickets-1042192725497",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "70.39 USD",
+    "description": "“FLoOr tIeS ArE eAsY” A Class of Definitely Not easy Floor Ties . An exploration of choosing the hard route.",
     "tags": [
-      "Religion & Spirituality"
+      "Performing & Visual Arts"
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink"
   },
   {
-    "id": "eventbrite-917053370317",
+    "id": "eventbrite-1048416621337",
     "type": "event",
     "recurring": "none",
-    "original_id": "eventbrite-917053370317",
+    "original_id": "eventbrite-1048416621337",
     "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
     },
-    "name": "DC A Kink Tantra Immersion Event with Major & Monique",
-    "start_date": "2024-11-23T18:00:00Z",
-    "end_date": "2024-11-23T22:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/dc-a-kink-tantra-immersion-event-with-major-monique-tickets-917053370317",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F780082009%2F148046143168%2F1%2Foriginal.20240531-040811?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C30%2C960%2C480&s=c36db9e753de0d4a6f0e0b69a7006235",
-    "event_url": "https://www.eventbrite.com/e/dc-a-kink-tantra-immersion-event-with-major-monique-tickets-917053370317",
-    "location": "Address in Conf Message, Alexandria, VA 22315",
-    "price": "79.00 USD",
-    "description": "Here's your chance to weave Tantra and Kink together in a safe and structured environment.",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-917130852067",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-917130852067",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Temple Party w/ Major Tom, Monique Darling & Peter Petersen",
-    "start_date": "2024-11-24T00:30:00Z",
-    "end_date": "2024-11-24T04:59:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/temple-party-w-major-tom-monique-darling-peter-petersen-tickets-917130852067",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F780106719%2F148046143168%2F1%2Foriginal.20240531-053116?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C940%2C470&s=0d4b5f1545d5aab10a1547ca4fd0d4ed",
-    "event_url": "https://www.eventbrite.com/e/temple-party-w-major-tom-monique-darling-peter-petersen-tickets-917130852067",
-    "location": "Address in Conf Message, Alexandria, VA 22315",
-    "price": "89.00 USD",
-    "description": "Share loving touch in a safe space",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-917040371437",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-917040371437",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "DC Naked Ecstatic and Qigong Flow Dance with Major & Peter",
-    "start_date": "2024-11-24T16:00:00Z",
-    "end_date": "2024-11-24T18:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/dc-naked-ecstatic-and-qigong-flow-dance-with-major-peter-tickets-917040371437",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F780073639%2F148046143168%2F1%2Foriginal.20240531-034146?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=100%2C0%2C400%2C200&s=d4f419da8400190dd539997949b12ec6",
-    "event_url": "https://www.eventbrite.com/e/dc-naked-ecstatic-and-qigong-flow-dance-with-major-peter-tickets-917040371437",
-    "location": "Darnestown, Darnestown, MD",
-    "price": "32.90 USD",
-    "description": "This is clothing optional, body-positive, full of love, and ecstatic expression!",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-917153981247",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-917153981247",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Massage Secrets For Everyone w/ Monique & Peter",
-    "start_date": "2024-11-24T21:30:00Z",
-    "end_date": "2024-11-25T02:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/massage-secrets-for-everyone-w-monique-peter-tickets-917153981247",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F780132889%2F148046143168%2F1%2Foriginal.20240531-071735?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C60%2C1920%2C960&s=c33c1dd8a7fbdef94bf6d045242dd66a",
-    "event_url": "https://www.eventbrite.com/e/massage-secrets-for-everyone-w-monique-peter-tickets-917153981247",
-    "location": "Address in Conf Message, Alexandria, VA 22315",
-    "price": "199.00 USD",
-    "description": "Sacred Intimacy Massage. \\*\\*\\* This is an event for all genders – Queer friendly \\*\\*\\*",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-972032504387",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-972032504387",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Intro night of Art of Ritual and Devotion w/ Eugene, Monique, and Peter",
-    "start_date": "2024-12-14T01:00:00Z",
-    "end_date": "2024-12-14T04:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/intro-night-of-art-of-ritual-and-devotion-w-eugene-monique-and-peter-tickets-972032504387",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F870203189%2F148046143168%2F1%2Foriginal.20241009-040332?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=c30bb3fad2e0b1c4a52d12ecec70089a",
-    "event_url": "https://www.eventbrite.com/e/intro-night-of-art-of-ritual-and-devotion-w-eugene-monique-and-peter-tickets-972032504387",
-    "location": "Address in Confirmation, Pflugerville, TX 78660",
-    "price": "69.00 USD",
-    "description": "So you are interested in ritual, and learning the art of devotion, but not ready to invest in a whole weekend, well we have an event for you",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-967789252707",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-967789252707",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "The Art of Ritual and Devotion w/ Eugene, Monique Darling, & Peter Petersen",
-    "start_date": "2024-12-14T01:00:00Z",
-    "end_date": "2024-12-15T23:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/the-art-of-ritual-and-devotion-w-eugene-monique-darling-peter-petersen-tickets-967789252707",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F817823149%2F148046143168%2F1%2Foriginal.20240731-121950?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=771eee493e21cf8dc6a8f3927411c6d0",
-    "event_url": "https://www.eventbrite.com/e/the-art-of-ritual-and-devotion-w-eugene-monique-darling-peter-petersen-tickets-967789252707",
-    "location": "Address in Confirmation, Pflugerville, TX 78660",
-    "price": "299.00 USD",
-    "description": "In this weekend immersion, discover the power of rituals and devotion with our experienced guides, Monique, Eugene, and Peter.",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-973783762447",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-973783762447",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Tantric Healing Arts Practitioner immersion w/ Cathleene, Monique, Peter",
-    "start_date": "2025-01-02T22:00:00Z",
-    "end_date": "2025-01-06T01:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantric-healing-arts-practitioner-immersion-w-cathleene-monique-peter-tickets-973783762447",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F819857379%2F148046143168%2F1%2Foriginal.20240803-113636?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C60%2C1920%2C960&s=de48bc3b6dd7bcfee053ed732b180a84",
-    "event_url": "https://www.eventbrite.com/e/tantric-healing-arts-practitioner-immersion-w-cathleene-monique-peter-tickets-973783762447",
-    "location": "Vista, Vista, CA",
-    "price": "208.15 USD",
-    "description": "Are you curious about the Tantric Healing Arts? Are you feeling the call to take your Sacred Healing Arts Business to another level?",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-974265703947",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-974265703947",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Latihan & Temple Night w/Monique, Peter, & Cathleene",
-    "start_date": "2025-01-06T03:00:00Z",
-    "end_date": "2025-01-06T07:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/latihan-temple-night-wmonique-peter-cathleene-tickets-974265703947",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F685165699%2F148046143168%2F1%2Foriginal.20240129-194134?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C64%2C2048%2C1024&s=4f1d1b822979292e5e8d45330afbb486",
-    "event_url": "https://www.eventbrite.com/e/latihan-temple-night-wmonique-peter-cathleene-tickets-974265703947",
-    "location": "Vista, Vista, CA",
-    "price": "94.08 USD",
-    "description": "This is the party you want to come to if you want to experience how to play in a safe space and find your yes and no around touch.",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-973830131137",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-973830131137",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "SD Awaken as Love Taster Energy, Dance, & Integral Theory",
-    "start_date": "2025-01-07T03:00:00Z",
-    "end_date": "2025-01-07T06:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/sd-awaken-as-love-taster-energy-dance-integral-theory-tickets-973830131137",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F819891889%2F148046143168%2F1%2Foriginal.20240803-142821?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C70%2C1920%2C960&s=eaa360861df102fbe77a6941902c6a95",
-    "event_url": "https://www.eventbrite.com/e/sd-awaken-as-love-taster-energy-dance-integral-theory-tickets-973830131137",
-    "location": "Vista, Vista, CA",
-    "price": "73.34 USD",
-    "description": "Who is ready to become more awake and aware in their body! More empowered and have fun doing it!?",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-922400523797",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-922400523797",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Awaken as Love Stage 1 in Austin w/ Monique, Lawrence, & Peter",
-    "start_date": "2025-01-16T20:00:00Z",
-    "end_date": "2025-01-24T18:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/awaken-as-love-stage-1-in-austin-w-monique-lawrence-peter-tickets-922400523797",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F786000669%2F148046143168%2F1%2Foriginal.20240609-152108?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C60%2C1920%2C960&s=9956833eeb604e1772afd1cbc66ceb24",
-    "event_url": "https://www.eventbrite.com/e/awaken-as-love-stage-1-in-austin-w-monique-lawrence-peter-tickets-922400523797",
-    "location": "Address in Confirmation, Pflugerville, TX 78660",
-    "price": "500.00 USD",
-    "description": "The Awaken as Love Initiation is a journey open to everyone – it begins with a choice to go on an adventure ...",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-973998314177",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-973998314177",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Vegas Awaken as Love Taster  Conscious Evolution with Nikki and Monique",
-    "start_date": "2025-01-31T03:00:00Z",
-    "end_date": "2025-01-31T06:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/vegas-awaken-as-love-taster-conscious-evolution-with-nikki-and-monique-tickets-973998314177",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F819962829%2F148046143168%2F1%2Foriginal.20240803-182938?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=108%2C0%2C1704%2C852&s=5614da77876b3ec10e1873bab9960295",
-    "event_url": "https://www.eventbrite.com/e/vegas-awaken-as-love-taster-conscious-evolution-with-nikki-and-monique-tickets-973998314177",
-    "location": "Las Vegas, Las Vegas, NV",
-    "price": "49.00 USD",
-    "description": "Come learn how to consciously evolve and integrate",
-    "tags": [
-      "Religion & Spirituality"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-974024041127",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-974024041127",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Vegas Intro to Awaken as Eros taster w/Reid Mihalko and Monique Darling",
-    "start_date": "2025-02-01T02:59:00Z",
-    "end_date": "2025-02-01T07:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/vegas-intro-to-awaken-as-eros-taster-wreid-mihalko-and-monique-darling-tickets-974024041127",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F819990349%2F148046143168%2F1%2Foriginal.20240803-200317?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C60%2C1920%2C960&s=20d1ce333c2ee5fd0ac6dcf29a8f7563",
-    "event_url": "https://www.eventbrite.com/e/vegas-intro-to-awaken-as-eros-taster-wreid-mihalko-and-monique-darling-tickets-974024041127",
-    "location": "Address in Confirmation, Las Vegas, NV 89148",
-    "price": "69.00 USD",
-    "description": "Join Reid Mihalko and Monique Darling for a transformative intro to help you explore your desires.",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-974024021067",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-974024021067",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Vegas Awaken as Eros Taster Weekend Immersion with Reid Mihalko & Monique D",
-    "start_date": "2025-02-01T03:00:00Z",
-    "end_date": "2025-02-03T01:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/vegas-awaken-as-eros-taster-weekend-immersion-with-reid-mihalko-monique-d-tickets-974024021067",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F819988249%2F148046143168%2F1%2Foriginal.20240803-195626?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C60%2C1920%2C960&s=60000f5912c6deb1cae4b490b5879ec3",
-    "event_url": "https://www.eventbrite.com/e/vegas-awaken-as-eros-taster-weekend-immersion-with-reid-mihalko-monique-d-tickets-974024021067",
-    "location": "Las Vegas, Las Vegas, NV",
-    "price": "199.00 USD",
-    "description": "Join Reid Mihalko and Monique Darling for a transformative weekend immersion to explore your deepest desires.",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink"
-  },
-  {
-    "id": "eventbrite-974129817507",
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-974129817507",
-    "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
-    },
-    "name": "Speed Flirting & Temple Party w/ Reid, Monique & Peter",
-    "start_date": "2025-02-02T03:30:00Z",
-    "end_date": "2025-02-02T07:30:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/speed-flirting-temple-party-w-reid-monique-peter-tickets-974129817507",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F775667419%2F148046143168%2F1%2Foriginal.20240524-163153?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C940%2C470&s=ca9d51d0a7a28c063489712d73cd0283",
-    "event_url": "https://www.eventbrite.com/e/speed-flirting-temple-party-w-reid-monique-peter-tickets-974129817507",
-    "location": "Las Vegas, Las Vegas, NV",
-    "price": "49.00 USD",
-    "description": "Share loving touch in a safe space",
+    "name": "Pleasure and Soul: A Sensual Salon @ Hit Me Up",
+    "start_date": "2024-11-09T16:00:00Z",
+    "end_date": "2024-11-09T21:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/pleasure-and-soul-a-sensual-salon-hit-me-up-tickets-1048416621337",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875533929%2F1679138945753%2F1%2Foriginal.20241016-003256?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=00faabe2c6742991d0a900bdfdbc8334",
+    "event_url": "https://www.eventbrite.com/e/pleasure-and-soul-a-sensual-salon-hit-me-up-tickets-1048416621337",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "39.02 USD",
+    "description": "Pleasure and Soul is a day-long event designed to explore sensuality in a relaxed, vibey, and communal setting!",
     "tags": [
       "Community & Culture"
     ],
@@ -494,25 +286,25 @@
     "dataset": "Kink"
   },
   {
-    "id": "eventbrite-974387889407",
+    "id": "eventbrite-1048363241677",
     "type": "event",
     "recurring": "none",
-    "original_id": "eventbrite-974387889407",
+    "original_id": "eventbrite-1048363241677",
     "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
     },
-    "name": "Awaken As Eros An Erotic Laboratory w/ Monique Darling and Reid Mihalko",
-    "start_date": "2025-05-07T21:00:00Z",
-    "end_date": "2025-05-14T19:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/awaken-as-eros-an-erotic-laboratory-w-monique-darling-and-reid-mihalko-tickets-974387889407",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F820254409%2F148046143168%2F1%2Foriginal.20240804-182729?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C70%2C1920%2C960&s=0eb552acc353cc1c0d32b5b597c365ec",
-    "event_url": "https://www.eventbrite.com/e/awaken-as-eros-an-erotic-laboratory-w-monique-darling-and-reid-mihalko-tickets-974387889407",
-    "location": "Cabo San Lucas, Cabo San Lucas, BCS",
-    "price": "779.54 USD",
-    "description": "“It’s not selfish to put yourself first—it’s self-full.” ~Iyanla Vanzant",
+    "name": "HMU Academy: The Ins and Outs of A*n! & Str@p-On Sxx",
+    "start_date": "2024-11-12T00:00:00Z",
+    "end_date": "2024-11-12T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-the-ins-and-outs-of-an-strp-on-sxx-tickets-1048363241677",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875477209%2F1679138945753%2F1%2Foriginal.20241015-230047?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=787c9b65372a934b4175800e1ba74e9f",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-the-ins-and-outs-of-an-strp-on-sxx-tickets-1048363241677",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "28.23 USD",
+    "description": "Join us for a fun workshop on an@l pleasure & strap-on sxx! Grab a harness & come find out why the butt is the universal wonder of the world",
     "tags": [
       "Health & Wellness"
     ],
@@ -520,27 +312,1335 @@
     "dataset": "Kink"
   },
   {
-    "id": "eventbrite-1042298221037",
+    "id": "eventbrite-1048369440217",
     "type": "event",
     "recurring": "none",
-    "original_id": "eventbrite-1042298221037",
+    "original_id": "eventbrite-1048369440217",
     "organizer": {
-      "id": "31924362115",
-      "name": "Everyday Tantra",
-      "url": "https://www.eventbrite.com/o/everyday-tantra-31924362115",
-      "original_id": "eventbrite-31924362115"
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
     },
-    "name": "Soulful Seas Croatia 7 day Luxury Yacht Retreat w/Monique and Peter",
-    "start_date": "2025-08-02T11:00:00Z",
-    "end_date": "2025-08-09T09:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/soulful-seas-croatia-7-day-luxury-yacht-retreat-wmonique-and-peter-tickets-1042298221037",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F870840519%2F148046143168%2F1%2Foriginal.20241009-185847?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=5e4b0ff7ce0d225977398b724ef0b7ce",
-    "event_url": "https://www.eventbrite.com/e/soulful-seas-croatia-7-day-luxury-yacht-retreat-wmonique-and-peter-tickets-1042298221037",
-    "location": "Gat Sv. Petra, 21000 Split",
-    "price": "1557.29 USD",
-    "description": "On our Soulful Seas Croatia Yacht Retreat, you’ll practice Tantra & Qigong in multiple stunning locations, each offering its own magic.",
+    "name": "HMU Academy: Squ!rting 101",
+    "start_date": "2024-11-14T00:00:00Z",
+    "end_date": "2024-11-14T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-squrting-101-tickets-1048369440217",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F687181739%2F1679138945753%2F1%2Foriginal.20240131-225225?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2444%2C1222&s=9c1480b36ad7af016d371f78830f45e2",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-squrting-101-tickets-1048369440217",
+    "location": "Address Given to Ticket Holders, New York, NY 10013",
+    "price": "33.37 USD",
+    "description": "Enter your Squirting Superhero… Lola Jean holds the world record for Volume Squirted within 1 min by ejecting 1350 mL in under 25 seconds!",
     "tags": [
-      "Travel & Outdoor"
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048372068077",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048372068077",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: Role-Play That Works For You",
+    "start_date": "2024-11-15T00:00:00Z",
+    "end_date": "2024-11-15T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-role-play-that-works-for-you-tickets-1048372068077",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875503449%2F1679138945753%2F1%2Foriginal.20241015-234046?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=cdc0a008b209d989ab5a8abb3cb7c7d4",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-role-play-that-works-for-you-tickets-1048372068077",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "28.23 USD",
+    "description": "Beyond Secretaries, Doctors & Teachers: Role-play that works for you. You don’t need to be a thespian or a former theater kid to explore!",
+    "tags": [
+      "Business & Professional"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048412809937",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048412809937",
+    "organizer": {
+      "id": "69189357793",
+      "name": "Hit Me Up",
+      "url": "https://www.eventbrite.com/o/hit-me-up-69189357793",
+      "original_id": "eventbrite-69189357793"
+    },
+    "name": "HMU Academy: Primal Play",
+    "start_date": "2024-11-19T00:00:00Z",
+    "end_date": "2024-11-19T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/hmu-academy-primal-play-tickets-1048412809937",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875522159%2F1679138945753%2F1%2Foriginal.20241016-001320?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=b412d0ec2b6a87bdadb22e73c0e79483",
+    "event_url": "https://www.eventbrite.com/e/hmu-academy-primal-play-tickets-1048412809937",
+    "location": "120 Walker Street #floor 5, New York, NY 10013",
+    "price": "33.37 USD",
+    "description": "Unleash your inner 'Grr' through primal play wrestling, mastering non-verbal communication, and exploring the art of embodied negotiation.",
+    "tags": [
+      "Fashion & Beauty"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048496359837",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048496359837",
+    "organizer": {
+      "id": "54457129053",
+      "name": "Fairy Hawk",
+      "url": "https://www.eventbrite.com/o/fairy-hawk-54457129053",
+      "original_id": "eventbrite-54457129053"
+    },
+    "name": "Cacao & Cuddles",
+    "start_date": "2024-10-24T23:00:00Z",
+    "end_date": "2024-10-25T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/cacao-cuddles-tickets-1048496359837",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F876831049%2F168227643652%2F1%2Foriginal.20241017-104936?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.490590575739&fp-y=0.415748863463&s=e40fbb095045da33f38f84fbf05d6493",
+    "event_url": "https://www.eventbrite.com/e/cacao-cuddles-tickets-1048496359837",
+    "location": "128 Jefferson Avenue, Brooklyn, NY 11216",
+    "price": "48.80 USD",
+    "description": "Join us for a magical evening of cacao and cuddles!",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1030599329337",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1030599329337",
+    "organizer": {
+      "id": "62687944253",
+      "name": "DaBasementGames.com",
+      "url": "https://www.eventbrite.com/o/dabasementgamescom-62687944253",
+      "original_id": "eventbrite-62687944253"
+    },
+    "name": "Trick Or Treat (EDH) Tourney",
+    "start_date": "2024-10-26T17:00:00Z",
+    "end_date": "2024-10-27T00:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/trick-or-treat-edh-tourney-tickets-1030599329337",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F860676169%2F1395213241473%2F1%2Foriginal.20240927-031119?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.00429924242424&fp-y=0.00155860349127&s=dd26715f1c071222f130750d61c49f28",
+    "event_url": "https://www.eventbrite.com/e/trick-or-treat-edh-tourney-tickets-1030599329337",
+    "location": "2705 Hempstead Turnpike, Levittown, NY 11756",
+    "price": "39.19 USD",
+    "description": "Hey folks we're back with another fun Commander Tourney for fabulous prizes including a Mox Diamond, Mana Vault, One Ring, and Mox Opal!",
+    "tags": [
+      "Seasonal & Holiday"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-957297902797",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-957297902797",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Boston! (Watertown) Meet Singles Speed Dating",
+    "start_date": "2024-10-17T22:30:00Z",
+    "end_date": "2024-10-18T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-watertown-meet-singles-speed-dating-tickets-957297902797",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boston-watertown-meet-singles-speed-dating-tickets-957297902797",
+    "location": "22 Mount Auburn St. 2nd Floor, Watertown, MA 02472",
+    "price": "45.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1043422283137",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1043422283137",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Sensuality in Motion - A Moving Meditation through the 5Rhythms",
+    "start_date": "2024-10-18T01:00:00Z",
+    "end_date": "2024-10-18T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/sensuality-in-motion-a-moving-meditation-through-the-5rhythms-tickets-1043422283137",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F871271209%2F1493533057%2F1%2Foriginal.20220113-232258?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C5%2C2028%2C1014&s=a2b55d9b8ec6b7daec50acca8c918a94",
+    "event_url": "https://www.eventbrite.com/e/sensuality-in-motion-a-moving-meditation-through-the-5rhythms-tickets-1043422283137",
+    "price": "35.00 USD",
+    "description": "Explore movement as a map to your deepest parts, your hidden gifts, and unlock your truest expression.",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1043423266077",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1043423266077",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "BDSM for Beginners - LEVEL 2 (Scene Play)",
+    "start_date": "2024-10-18T01:30:00Z",
+    "end_date": "2024-10-18T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/bdsm-for-beginners-level-2-scene-play-tickets-1043423266077",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F871271929%2F1493533057%2F1%2Foriginal.20220526-041029?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C3%2C808%2C404&s=ea36d5e3311c77af040d70e6242826f5",
+    "event_url": "https://www.eventbrite.com/e/bdsm-for-beginners-level-2-scene-play-tickets-1043423266077",
+    "price": "127.00 USD",
+    "description": "Be expertly guided in BDSM scene play from the comfort of your home. Bring a partner or pick up skills for later play!",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-944738457157",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-944738457157",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Greenville! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-18T22:30:00Z",
+    "end_date": "2024-10-19T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-greenville-meet-singles-speed-dating-tickets-944738457157",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-greenville-meet-singles-speed-dating-tickets-944738457157",
+    "location": "1135 State Park Road, Greenville, SC 29609",
+    "price": "45.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-936513766887",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-936513766887",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Cuddle Party! - A Warm Evening of Connection, Cuddles, and Consent!",
+    "start_date": "2024-10-18T22:30:00Z",
+    "end_date": "2024-10-19T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-936513766887",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F677479909%2F1493533057%2F1%2Foriginal.20240118-153444?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C940%2C470&s=7ca6b29be61e399aa4ff3432e29a1289",
+    "event_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-936513766887",
+    "location": "ADDRESS PROVIDED IN CONFIRMATION EMAIL Check your spam for your ticket email and scroll down for address and details, thanks!, New York, NY 10007",
+    "price": "35.62 USD",
+    "description": "A workshop on Consent and Communication, cleverly disguised as a Pajama Party",
+    "tags": [
+      "Community & Culture"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044661359247",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044661359247",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "The Orgasmic Arc - Workshop with Genevieve and Sabs",
+    "start_date": "2024-10-19T01:00:00Z",
+    "end_date": "2024-10-19T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/the-orgasmic-arc-workshop-with-genevieve-and-sabs-tickets-1044661359247",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F872183319%2F1493533057%2F1%2Foriginal.20211123-030151?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C25%2C1280%2C640&s=03755f85c4552c0904f313200c4af6f4",
+    "event_url": "https://www.eventbrite.com/e/the-orgasmic-arc-workshop-with-genevieve-and-sabs-tickets-1044661359247",
+    "price": "87.00 USD",
+    "description": "Join Genevieve as she guides you through her signature framework, The Orgasmic Arc, to turn stagnation and numbness into authentic pleasure.",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044661870777",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044661870777",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Intro to Sexual Ecstasy: Online Tantra Workshop for Singles & Couples",
+    "start_date": "2024-10-19T01:00:00Z",
+    "end_date": "2024-10-19T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/intro-to-sexual-ecstasy-online-tantra-workshop-for-singles-couples-tickets-1044661870777",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F872184389%2F1493533057%2F1%2Foriginal.20210423-033510?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C800%2C400&s=31820ea36143635ae5e72b3d4825895b",
+    "event_url": "https://www.eventbrite.com/e/intro-to-sexual-ecstasy-online-tantra-workshop-for-singles-couples-tickets-1044661870777",
+    "price": "97.00 USD",
+    "description": "In this clothes-on workshop with Guy & Lauren, discover the secrets you never learned in school and take your lovemaking to the next level!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044662271977",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044662271977",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Date Night™ (Virtual Guided Tantric Experience for Couples)",
+    "start_date": "2024-10-19T01:30:00Z",
+    "end_date": "2024-10-19T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-date-nighttm-virtual-guided-tantric-experience-for-couples-tickets-1044662271977",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F872184949%2F1493533057%2F1%2Foriginal.20220627-012646?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C4104%2C2052&s=bbec338383c9a2dab224d68ea5ab8bca",
+    "event_url": "https://www.eventbrite.com/e/tantra-date-nighttm-virtual-guided-tantric-experience-for-couples-tickets-1044662271977",
+    "price": "97.00 USD",
+    "description": "Treat yourselves to a tantric evening of guided intimacy! For all couples--established or in the first stages, or paired singles!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1001030849217",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1001030849217",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Portland! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-19T02:15:00Z",
+    "end_date": "2024-10-19T05:15:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-portland-meet-singles-speed-dating-tickets-1001030849217",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-portland-meet-singles-speed-dating-tickets-1001030849217",
+    "location": "4029 SE Hawthorne Blvd, Portland, OR 97214",
+    "price": "45.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1001232803267",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1001232803267",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Sacred Snuggle Party - New York!  (A Warm Evening of Sensual Exploration)",
+    "start_date": "2024-10-19T21:30:00Z",
+    "end_date": "2024-10-20T00:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1001232803267",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F857222929%2F1493533057%2F1%2Foriginal.20240923-180451?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=4fd8cd2d674a855aab57349303551cab",
+    "event_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1001232803267",
+    "location": "ADDRESS PROVIDED IN CONFIRMATION EMAIL Check your spam for your ticket email and scroll down for address and details, thanks!, New York, NY 10007",
+    "price": "40.88 USD",
+    "description": "A warm evening of sensual exploration and erotic connection, featuring guided practices, consensual touch, and intimate interactions",
+    "tags": [
+      "Community & Culture"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-988743497417",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-988743497417",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Jersey City! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-19T21:30:00Z",
+    "end_date": "2024-10-20T00:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-tickets-988743497417",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F825163489%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=6f2e0534aa78450dde10053208039aa8",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-tickets-988743497417",
+    "location": "124 1st Street, Jersey City, NJ 07302",
+    "price": "43.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-999458205397",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-999458205397",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Edmonton! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-19T23:30:00Z",
+    "end_date": "2024-10-20T02:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-edmonton-meet-singles-speed-dating-tickets-999458205397",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-edmonton-meet-singles-speed-dating-tickets-999458205397",
+    "location": "8135 - 102 Street, Edmonton, AB T6E 4A4",
+    "price": "45.00 CAD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-998504472757",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-998504472757",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Boulder! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-19T23:30:00Z",
+    "end_date": "2024-10-20T02:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-boulder-meet-singles-speed-dating-tickets-998504472757",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-boulder-meet-singles-speed-dating-tickets-998504472757",
+    "location": "2855 Folsom Street, Boulder, CO 80304",
+    "price": "48.76 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044662653117",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044662653117",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "The Art of Partnership: Evolving Intimacy with Tantric Astrology",
+    "start_date": "2024-10-20T00:30:00Z",
+    "end_date": "2024-10-20T02:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/the-art-of-partnership-evolving-intimacy-with-tantric-astrology-tickets-1044662653117",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F872185779%2F1493533057%2F1%2Foriginal.20220514-201709?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C5%2C2028%2C1014&s=7ff87f6342763614eb1a5dabc17d1260",
+    "event_url": "https://www.eventbrite.com/e/the-art-of-partnership-evolving-intimacy-with-tantric-astrology-tickets-1044662653117",
+    "price": "47.00 USD",
+    "description": "How do the astrological archetypes dance with each other in the magical art of partnership, and in masculine/feminine polarity?",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-937084383617",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-937084383617",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Silicon Valley! (San Jose) Meet Singles Speed Dating",
+    "start_date": "2024-10-20T00:30:00Z",
+    "end_date": "2024-10-20T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-silicon-valley-san-jose-meet-singles-speed-dating-tickets-937084383617",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-silicon-valley-san-jose-meet-singles-speed-dating-tickets-937084383617",
+    "location": "5353 Almaden Expressway, #E31, San Jose, CA 95118",
+    "price": "48.76 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044663014197",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044663014197",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Introduction to Sexual Healing (Workshop for Couples or Singles)",
+    "start_date": "2024-10-20T01:00:00Z",
+    "end_date": "2024-10-20T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/introduction-to-sexual-healing-workshop-for-couples-or-singles-tickets-1044663014197",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F872186579%2F1493533057%2F1%2Foriginal.20211015-025932?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=46%2C0%2C2334%2C1167&s=875618c6c4e0adb35dc8f3f516f69ecd",
+    "event_url": "https://www.eventbrite.com/e/introduction-to-sexual-healing-workshop-for-couples-or-singles-tickets-1044663014197",
+    "price": "77.00 USD",
+    "description": "Learn the underlying causes of what blocks our energy, and healing practices that will help move these blocks anywhere in your body.",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044664378277",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044664378277",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Core Masculine Skills - Warrior Training for Men",
+    "start_date": "2024-10-20T02:00:00Z",
+    "end_date": "2024-10-20T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/core-masculine-skills-warrior-training-for-men-tickets-1044664378277",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F872187169%2F1493533057%2F1%2Foriginal.20220518-031323?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C214%2C2560%2C1280&s=1a03fbe796463959e77bcb5f0128b9b5",
+    "event_url": "https://www.eventbrite.com/e/core-masculine-skills-warrior-training-for-men-tickets-1044664378277",
+    "price": "75.00 USD",
+    "description": "What does it take to win as a man today? Learn the 3 key skills you must embody to bring potency and presence your masculine!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-983075624657",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-983075624657",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Tampa! (St. Petersburg) Meet Singles Speed Dating",
+    "start_date": "2024-10-20T18:00:00Z",
+    "end_date": "2024-10-20T21:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-tampa-st-petersburg-meet-singles-speed-dating-tickets-983075624657",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-tampa-st-petersburg-meet-singles-speed-dating-tickets-983075624657",
+    "location": "1741 1st Ave N, St. Petersburg, FL 33713",
+    "price": "43.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-978233511767",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-978233511767",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Vancouver! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-20T21:00:00Z",
+    "end_date": "2024-10-21T00:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-vancouver-meet-singles-speed-dating-tickets-978233511767",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-vancouver-meet-singles-speed-dating-tickets-978233511767",
+    "location": "1050 Homer Street #280, Vancouver, BC V6B 2W9",
+    "price": "45.00 CAD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1046631421757",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1046631421757",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Online Yoni Egg Workshop with Lauren Harkness",
+    "start_date": "2024-10-21T00:00:00Z",
+    "end_date": "2024-10-21T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/online-yoni-egg-workshop-with-lauren-harkness-tickets-1046631421757",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873708659%2F1493533057%2F1%2Foriginal.20201101-103300?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C800%2C400&s=6b80c4ea61cfda6324b1bee04daabe64",
+    "event_url": "https://www.eventbrite.com/e/online-yoni-egg-workshop-with-lauren-harkness-tickets-1046631421757",
+    "price": "59.00 USD",
+    "description": "Regular Yoni Egg Practice benefits not only your s\\*xual life but your entire life. Learn how to incorporate this practice into your life.",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1046631983437",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1046631983437",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Core Erotic Blueprint™ Workshop with Genevieve!",
+    "start_date": "2024-10-21T01:00:00Z",
+    "end_date": "2024-10-21T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/core-erotic-blueprinttm-workshop-with-genevieve-tickets-1046631983437",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873709559%2F1493533057%2F1%2Foriginal.20211018-173545?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=826%2C0%2C1596%2C798&s=1c42bfbb55fa41c798ade0314781876f",
+    "event_url": "https://www.eventbrite.com/e/core-erotic-blueprinttm-workshop-with-genevieve-tickets-1046631983437",
+    "price": "75.00 USD",
+    "description": "Discover and Play in Your Core Erotic Blueprint™ Workshop, to turn yourself and your lovers on like wildfire!",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1046632504997",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1046632504997",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Transcending Victim Consciousness - Level I: The Victim Triangle",
+    "start_date": "2024-10-21T01:00:00Z",
+    "end_date": "2024-10-21T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/transcending-victim-consciousness-level-i-the-victim-triangle-tickets-1046632504997",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873710329%2F1493533057%2F1%2Foriginal.20220113-232311?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C5%2C2028%2C1014&s=3c629a95452048f8c199136caee19fc7",
+    "event_url": "https://www.eventbrite.com/e/transcending-victim-consciousness-level-i-the-victim-triangle-tickets-1046632504997",
+    "price": "47.00 USD",
+    "description": "Gain tools to recognize when you (and others) are in victim consciousness, and how to transition intoco-creative awareness.",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1047654531907",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1047654531907",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Sensual Alchemy-Sex Magic Ritual for Women (Online)",
+    "start_date": "2024-10-22T00:00:00Z",
+    "end_date": "2024-10-22T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/sensual-alchemy-sex-magic-ritual-for-women-online-tickets-1047654531907",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F874645019%2F1493533057%2F1%2Foriginal.20210927-052628?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C151%2C1200%2C600&s=c860d878bba9bdec8f6fd80441e7366c",
+    "event_url": "https://www.eventbrite.com/e/sensual-alchemy-sex-magic-ritual-for-women-online-tickets-1047654531907",
+    "price": "77.00 USD",
+    "description": "Harness your s\\*xual energy to create and heal through tantric breathing, meditation, sensual movement, inner inquiry, and ritual magic.",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-990198348917",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-990198348917",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "start_date": "2024-10-22T00:30:00Z",
+    "end_date": "2024-10-22T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198348917",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F860588439%2F1493533057%2F1%2Foriginal.20240927-000018?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=031cb1029ec9bd624a8de418aff5f010",
+    "event_url": "https://www.eventbrite.com/e/tantra-singles-happy-hour-meeting-singles-in-a-unique-new-way-tickets-990198348917",
+    "price": "0.00 USD",
+    "description": "Looking for a fresh and unique way to meet someone special? Then this is exactly what you’ve been waiting for…",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1047667711327",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1047667711327",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "What is Tantra? - A Practical Introductory Workshop for Beginners",
+    "start_date": "2024-10-22T00:30:00Z",
+    "end_date": "2024-10-22T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/what-is-tantra-a-practical-introductory-workshop-for-beginners-tickets-1047667711327",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F874648309%2F287337217873%2F1%2Foriginal.20240118-072135?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C57%2C600%2C300&s=c3202d3f87bbbd9bdffba1ac460e42f9",
+    "event_url": "https://www.eventbrite.com/e/what-is-tantra-a-practical-introductory-workshop-for-beginners-tickets-1047667711327",
+    "price": "35.00 USD",
+    "description": "A fun, practical, and modern approach to an ancient philosophy. Easy to follow exercises with applications to use in everyday life!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1047669998167",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1047669998167",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "BDSM for Beginners (Level 1)",
+    "start_date": "2024-10-22T01:00:00Z",
+    "end_date": "2024-10-22T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/bdsm-for-beginners-level-1-tickets-1047669998167",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F874650359%2F1493533057%2F1%2Foriginal.20220512-044004?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C800%2C400&s=f10f38afeb896ee1c700807dd391572a",
+    "event_url": "https://www.eventbrite.com/e/bdsm-for-beginners-level-1-tickets-1047669998167",
+    "price": "97.00 USD",
+    "description": "An introduction to the magical world of BDSM from the comfort of your own home.",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-948035157677",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-948035157677",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Waterloo! (Waterloo, ON) Meet Singles Speed Dating",
+    "start_date": "2024-10-22T22:30:00Z",
+    "end_date": "2024-10-23T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-waterloo-waterloo-on-meet-singles-speed-dating-tickets-948035157677",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-waterloo-waterloo-on-meet-singles-speed-dating-tickets-948035157677",
+    "location": "450 King Street North, Waterloo, ON, CA N2J 2Z6",
+    "price": "43.99 CAD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048543470747",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048543470747",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Genesis Qigong: Increase Vitality and Release Anxiety - Intro Class",
+    "start_date": "2024-10-23T00:00:00Z",
+    "end_date": "2024-10-23T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/genesis-qigong-increase-vitality-and-release-anxiety-intro-class-tickets-1048543470747",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875678119%2F1493533057%2F1%2Foriginal.20231108-153102?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C181%2C1024%2C512&s=53ad4b5ff76158388de1594052da26d2",
+    "event_url": "https://www.eventbrite.com/e/genesis-qigong-increase-vitality-and-release-anxiety-intro-class-tickets-1048543470747",
+    "price": "65.00 USD",
+    "description": "In this Introductory workshop we will activate energy, harmonize the heart, kidneys & adrenal glands, reduce anxiety and increase vitality",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048543791707",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048543791707",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Becoming a Snake Whisperer-Women's Goddess Training (Online)",
+    "start_date": "2024-10-23T00:00:00Z",
+    "end_date": "2024-10-23T02:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/becoming-a-snake-whisperer-womens-goddess-training-online-tickets-1048543791707",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875678839%2F1493533057%2F1%2Foriginal.20201101-111426?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C800%2C400&s=bb4b455c574138fc4d6a151eed856673",
+    "event_url": "https://www.eventbrite.com/e/becoming-a-snake-whisperer-womens-goddess-training-online-tickets-1048543791707",
+    "price": "97.00 USD",
+    "description": "Learn sensuality exercises and practices that will enhance your connection and skillset with your partner.",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1030648937717",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1030648937717",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "FULFILLED : Feeding The Feminine | 4-week mini-course (for women only)",
+    "start_date": "2024-10-23T00:00:00Z",
+    "end_date": "2024-10-23T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/fulfilled-feeding-the-feminine-4-week-mini-course-for-women-only-tickets-1030648937717",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F860703069%2F269229159592%2F1%2Foriginal.20240927-042125?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=401bcb25101d93d52684ffd783d99c66",
+    "event_url": "https://www.eventbrite.com/e/fulfilled-feeding-the-feminine-4-week-mini-course-for-women-only-tickets-1030648937717",
+    "price": "188.00 USD",
+    "description": "A 4-week course to embody & cultivate pleasure, gratitude & savoring, so you're open to receiving more love & abundance into your life!",
+    "tags": [
+      "Health & Wellness"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1010951903357",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1010951903357",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "POWER PLAY - Influence & Control",
+    "start_date": "2024-10-17T23:30:00Z",
+    "end_date": "2024-10-18T03:45:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/power-play-influence-control-tickets-1010951903357",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F844037019%2F1908796966883%2F1%2Foriginal.20240906-215133?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=6137a8b6a678ca085ef8e47d9c9169a5",
+    "event_url": "https://www.eventbrite.com/e/power-play-influence-control-tickets-1010951903357",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "Designed for Dom(mes), subs, and switches - this series grants a deeper understanding of influence & surrender.",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-995954716367",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-995954716367",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Pagans Paradise Monsters Ball - A Halloween Kink Party!",
+    "start_date": "2024-10-20T01:00:00Z",
+    "end_date": "2024-10-20T07:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/pagans-paradise-monsters-ball-a-halloween-kink-party-tickets-995954716367",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F863948969%2F246723195973%2F1%2Foriginal.20241001-183256?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=6b7a7816e8b539aaf1bcef838ebe606a",
+    "event_url": "https://www.eventbrite.com/e/pagans-paradise-monsters-ball-a-halloween-kink-party-tickets-995954716367",
+    "location": "union square, New York, NY 10003",
+    "price": "33.85 USD",
+    "description": "Join the Monsters Ball Kink Party this Halloween! High drag, haunted hospital thrills, and dark desires await in a night of wicked fun!",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1035202908767",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1035202908767",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Queer Kiss & Cuddles - A Bi/Pansexual+ Experience",
+    "start_date": "2024-10-21T23:00:00Z",
+    "end_date": "2024-10-22T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/queer-kiss-cuddles-a-bipansexual-experience-tickets-1035202908767",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F740550909%2F246723195973%2F1%2Foriginal.20240410-175457?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C40%2C1280%2C640&s=8ecdb0e52edd6a0c118c986c228224ba",
+    "event_url": "https://www.eventbrite.com/e/queer-kiss-cuddles-a-bipansexual-experience-tickets-1035202908767",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "A celebration of love, unity, & LGBTQIA+ joy through affectionate embraces and empowering connections.",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1010953919387",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1010953919387",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "POWER PLAY - Resistance & Brat Taming",
+    "start_date": "2024-10-24T23:30:00Z",
+    "end_date": "2024-10-25T03:45:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/power-play-resistance-brat-taming-tickets-1010953919387",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F844039489%2F1908796966883%2F1%2Foriginal.20240906-215437?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.407196969697&fp-y=0.775747508306&s=24379a761405e567f4d0bc4f4d3c8ad9",
+    "event_url": "https://www.eventbrite.com/e/power-play-resistance-brat-taming-tickets-1010953919387",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "Designed for Dom(mes), subs, and switches - this series grants a deeper understanding of influence & surrender.",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1020593912867",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1020593912867",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Temple Night NYC: Into the Underworld(Ceremonial Tantra Party)",
+    "start_date": "2024-10-27T00:00:00Z",
+    "end_date": "2024-10-27T08:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/temple-night-nyc-into-the-underworldceremonial-tantra-party-tickets-1020593912867",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F851330589%2F246723195973%2F1%2Foriginal.20240916-151935?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=d026321fb33c013bf88b666276f4b282",
+    "event_url": "https://www.eventbrite.com/e/temple-night-nyc-into-the-underworldceremonial-tantra-party-tickets-1020593912867",
+    "location": "union square, New York, NY 10003",
+    "price": "107.48 USD",
+    "description": "Once in a lifetime event, a first and rare gathering in NYC, Experience Eros • Magic • Tantra • Workshop • Ceremony! Performances & Party!",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1035045528037",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1035045528037",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Cuddle Party",
+    "start_date": "2024-10-27T17:00:00Z",
+    "end_date": "2024-10-27T20:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/cuddle-party-tickets-1035045528037",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F807692759%2F246723195973%2F1%2Foriginal.20240715-061633?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C6%2C320%2C160&s=16ee3ef0a9fe76d82f8db91765920bb9",
+    "event_url": "https://www.eventbrite.com/e/cuddle-party-tickets-1035045528037",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "Official Cuddle Party being hosted by Amanda Ananda for Pagans Paradise. Join our growing community of Cuddle Monsters!",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1041217267877",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1041217267877",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Shamanic Bondage - Kundalini Rising & Rope Jam",
+    "start_date": "2024-10-28T23:30:00Z",
+    "end_date": "2024-10-29T04:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/shamanic-bondage-kundalini-rising-rope-jam-tickets-1041217267877",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F868540269%2F246723195973%2F1%2Foriginal.20241007-161114?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=5cc1cae2bb5c38acbe7b2e9da0f63178",
+    "event_url": "https://www.eventbrite.com/e/shamanic-bondage-kundalini-rising-rope-jam-tickets-1041217267877",
+    "location": "union square, New York, NY 10003",
+    "price": "33.85 USD",
+    "description": "Excellent workshop for those both new and well versed in Rope Bondage and spirituality. Workshop and Jam",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048107556917",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048107556917",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Tantric Trance Dance",
+    "start_date": "2024-10-29T23:30:00Z",
+    "end_date": "2024-10-30T01:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantric-trance-dance-tickets-1048107556917",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F781960599%2F246723195973%2F1%2Foriginal.20240603-174955?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C28%2C900%2C450&s=ad749124874954b6d6805d309ca30e01",
+    "event_url": "https://www.eventbrite.com/e/tantric-trance-dance-tickets-1048107556917",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "Embracing the Yoga of Sound and the essence of Hatha in unique blend of trance, sensual body movement, and vocal Shakti invocation!",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1048142902637",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1048142902637",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Queer Kiss & Cuddles - A Bi/Pansexual+ Experience",
+    "start_date": "2024-11-06T00:00:00Z",
+    "end_date": "2024-11-06T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/queer-kiss-cuddles-a-bipansexual-experience-tickets-1048142902637",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F740550909%2F246723195973%2F1%2Foriginal.20240410-175457?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C40%2C1280%2C640&s=8ecdb0e52edd6a0c118c986c228224ba",
+    "event_url": "https://www.eventbrite.com/e/queer-kiss-cuddles-a-bipansexual-experience-tickets-1048142902637",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "A celebration of love, unity, & LGBTQIA+ joy through affectionate embraces and empowering connections.",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1049250455357",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1049250455357",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Sapphic Sirens - Nocturnal Nymphs A Klnky Party",
+    "start_date": "2024-11-10T00:30:00Z",
+    "end_date": "2024-11-10T06:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/sapphic-sirens-nocturnal-nymphs-a-klnky-party-tickets-1049250455357",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F876563599%2F1908796966883%2F1%2Foriginal.20241017-011035?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=5e-05&fp-y=5e-05&s=af6e084e59721494ca7dba76a472e994",
+    "event_url": "https://www.eventbrite.com/e/sapphic-sirens-nocturnal-nymphs-a-klnky-party-tickets-1049250455357",
+    "location": "union square, New York, NY 10003",
+    "price": "33.85 USD",
+    "description": "Join us for an extraordinary night of enchantment and allure at Sapphic Sirens, hosted by Sirenatrix Nix.",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1035273289277",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1035273289277",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Pagans Paradise Autumn Allure: A Kink-tastic Affair!",
+    "start_date": "2024-11-17T02:00:00Z",
+    "end_date": "2024-11-17T08:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/pagans-paradise-autumn-allure-a-kink-tastic-affair-tickets-1035273289277",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F864028579%2F246723195973%2F1%2Foriginal.20241001-193934?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=ed68c7f1232e906ce9d52b2f4aea5d28",
+    "event_url": "https://www.eventbrite.com/e/pagans-paradise-autumn-allure-a-kink-tastic-affair-tickets-1035273289277",
+    "location": "union square, New York, NY 10003",
+    "price": "33.85 USD",
+    "description": "Join us for \"Autumn Allure: A Kink-tastic Affair\"—a night of myth, magic, and sensuality, celebrating Persephone's return to Hades!",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1035050452767",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1035050452767",
+    "organizer": {
+      "id": "16960673418",
+      "name": "Pagans Paradise",
+      "url": "https://www.eventbrite.com/o/pagans-paradise-16960673418",
+      "original_id": "eventbrite-16960673418"
+    },
+    "name": "Cuddle Party",
+    "start_date": "2024-11-24T18:00:00Z",
+    "end_date": "2024-11-24T21:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/cuddle-party-tickets-1035050452767",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F807692759%2F246723195973%2F1%2Foriginal.20240715-061633?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C6%2C320%2C160&s=16ee3ef0a9fe76d82f8db91765920bb9",
+    "event_url": "https://www.eventbrite.com/e/cuddle-party-tickets-1035050452767",
+    "location": "Herald Square, New York, NY",
+    "price": "33.85 USD",
+    "description": "Official Cuddle Party being hosted by Amanda Ananda for Pagans Paradise. Join our growing community of Cuddle Monsters!",
+    "tags": [
+      "Hobbies & Special Interest"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1012412331537",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1012412331537",
+    "organizer": {
+      "id": "17500282424",
+      "name": "Youtopia DreamSpace",
+      "url": "https://www.eventbrite.com/o/youtopia-dreamspace-17500282424",
+      "original_id": "eventbrite-17500282424"
+    },
+    "name": "Date Night:  A Journey of the 5 Senses (YDS Offering)",
+    "start_date": "2024-10-18T23:00:00Z",
+    "end_date": "2024-10-19T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/date-night-a-journey-of-the-5-senses-yds-offering-tickets-1012412331537",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F845765859%2F188256597734%2F1%2Foriginal.20240909-192422?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.471590909091&fp-y=0.704460966543&s=90415d10cb30061a8721d7e1745f6225",
+    "event_url": "https://www.eventbrite.com/e/date-night-a-journey-of-the-5-senses-yds-offering-tickets-1012412331537",
+    "location": "128 Jefferson Avenue, Brooklyn, NY 11216",
+    "price": "108.55 USD",
+    "description": "Date Night! A new series of new offerings from YDS. Starting with A deep dive into, A Journey of the 5 Senses.",
+    "tags": [
+      "Community & Culture"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1004915197407",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1004915197407",
+    "organizer": {
+      "id": "17500282424",
+      "name": "Youtopia DreamSpace",
+      "url": "https://www.eventbrite.com/o/youtopia-dreamspace-17500282424",
+      "original_id": "eventbrite-17500282424"
+    },
+    "name": "Liquid Love - NYC",
+    "start_date": "2024-10-19T19:00:00Z",
+    "end_date": "2024-10-19T23:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/liquid-love-nyc-tickets-1004915197407",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F844143789%2F188256597734%2F1%2Foriginal.20240907-014336?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=7dcf5d8072f5b067e50516846bd87f27",
+    "event_url": "https://www.eventbrite.com/e/liquid-love-nyc-tickets-1004915197407",
+    "location": "128 Jefferson Avenue (Please Check Your Confirmation Email for Details), Brooklyn, NY 11216",
+    "price": "55.20 USD",
+    "description": "Liquid Love is a Collective Journey of the Senses.",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044028546487",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044028546487",
+    "organizer": {
+      "id": "17500282424",
+      "name": "Youtopia DreamSpace",
+      "url": "https://www.eventbrite.com/o/youtopia-dreamspace-17500282424",
+      "original_id": "eventbrite-17500282424"
+    },
+    "name": "Tantric Latihan: Open Practice",
+    "start_date": "2024-11-14T00:00:00Z",
+    "end_date": "2024-11-14T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantric-latihan-open-practice-tickets-1044028546487",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873530619%2F188256597734%2F1%2Foriginal.20241013-211319?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=f1bb59b908801c042395796939dd06f9",
+    "event_url": "https://www.eventbrite.com/e/tantric-latihan-open-practice-tickets-1044028546487",
+    "location": "128 Jefferson Avenue, Brooklyn, NY 11216",
+    "price": "33.85 USD",
+    "description": "The essence of the Latihan is to allow and follow the spontaneous inner movements from within. It is different and unique for each person",
+    "tags": [
+      "Community & Culture"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1044067623367",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1044067623367",
+    "organizer": {
+      "id": "17500282424",
+      "name": "Youtopia DreamSpace",
+      "url": "https://www.eventbrite.com/o/youtopia-dreamspace-17500282424",
+      "original_id": "eventbrite-17500282424"
+    },
+    "name": "Tantric Latihan: Workshop",
+    "start_date": "2024-11-23T16:15:00Z",
+    "end_date": "2024-11-23T19:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantric-latihan-workshop-tickets-1044067623367",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873529289%2F188256597734%2F1%2Foriginal.20241013-210952?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=b53fba8cbd62e4c2e0a1a834873bba7f",
+    "event_url": "https://www.eventbrite.com/e/tantric-latihan-workshop-tickets-1044067623367",
+    "location": "128 Jefferson Avenue, Brooklyn, NY 11216",
+    "price": "33.85 USD",
+    "description": "The essence of the Latihan is to allow and follow the spontaneous inner movements from within. It is different and unique for each person",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink"
+  },
+  {
+    "id": "eventbrite-1022747424077",
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1022747424077",
+    "organizer": {
+      "id": "11067403290",
+      "name": "Le Organizer",
+      "url": "https://www.eventbrite.com/o/le-organizer-11067403290",
+      "original_id": "eventbrite-11067403290"
+    },
+    "name": "Liaison  x Fantasy Unleashed - Halloween",
+    "start_date": "2024-10-31T23:30:00Z",
+    "end_date": "2024-11-01T05:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/liaison-x-fantasy-unleashed-halloween-tickets-1022747424077",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F874108919%2F182084080464%2F1%2Foriginal.20241014-163644?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.503787878788&fp-y=0.485245901639&s=91d861b3e4b287f2685d6c95cde1769b",
+    "event_url": "https://www.eventbrite.com/e/liaison-x-fantasy-unleashed-halloween-tickets-1022747424077",
+    "location": "29 Locust Street, Brooklyn, NY 11206",
+    "price": "23.18 USD",
+    "description": "A mixer for poly & non-monogamous folks",
+    "tags": [
+      "Other"
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink"
