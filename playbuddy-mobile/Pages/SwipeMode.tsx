@@ -11,7 +11,7 @@ import { useUserContext } from '../Auth/UserContext';
 import { LoginToAccess } from '../Common/LoginToAccess';
 import { Button } from '@rneui/themed';
 
-export const Planner: React.FC = () => {
+export const SwipeMode: React.FC = () => {
     const { availableCardsToSwipe } = useCalendarContext();
     const { authUserId } = useUserContext();
 
@@ -21,18 +21,6 @@ export const Planner: React.FC = () => {
     const { toggleWishlistEvent, } = useCalendarContext(); // use the hook to handle wishlist
 
     const recordSwipe = useRecordSwipeChoice();
-
-
-    // // Check local storage to see if we need to show the tooltip
-    // useEffect(() => {
-    //     const checkTooltipShown = async () => {
-    //         const tooltipShown = await AsyncStorage.getItem('tooltipShown');
-    //         if (!tooltipShown) {
-    //             setShowTooltip(true);
-    //         }
-    //     };
-    //     checkTooltipShown();
-    // }, []);
 
     const onSwipeRight = (cardIndex: number) => {
         const eventId = availableCardsToSwipe[cardIndex].id;
@@ -84,97 +72,62 @@ export const Planner: React.FC = () => {
         </View>
     );
 
+    if (!authUserId) {
+        return <LoginToAccess entityToAccess='Swipe Mode' />
+    }
+
+    const NoEventsToSwipe = () => {
+        return <View style={styles.container}>
+            <Text>You're done swiping for today! Go have fun!</Text>
+        </View>
+    }
+
+    if (!availableCardsToSwipe.length) {
+        return <NoEventsToSwipe />
+    }
+
     return (
-        authUserId ? (
-            <View style={styles.container}>
-                <Swiper
-                    cards={availableCardsToSwipe}
-                    renderCard={renderCard}
-                    onSwipedRight={onSwipeRight}
-                    onSwipedLeft={onSwipeLeft}
-                    cardIndex={0}
-                    backgroundColor={'#f8f9fa'}
-                    stackSize={3}
-                    verticalSwipe={false}
-                    overlayLabels={{
-                        left: {
-                            title: 'SKIP',
-                            style: {
-                                label: {
-                                    backgroundColor: '#FF3B30',
-                                    color: '#fff',
-                                    fontSize: 24,
-                                    borderRadius: 5,
-                                    padding: 10,
-                                    textAlign: 'right',
-                                },
+        <View style={styles.container}>
+            <Swiper
+                cards={availableCardsToSwipe}
+                renderCard={renderCard}
+                onSwipedRight={onSwipeRight}
+                onSwipedLeft={onSwipeLeft}
+                cardIndex={0}
+                backgroundColor={'#f8f9fa'}
+                stackSize={3}
+                verticalSwipe={false}
+                overlayLabels={{
+                    left: {
+                        title: 'SKIP',
+                        style: {
+                            label: {
+                                backgroundColor: '#FF3B30',
+                                color: '#fff',
+                                fontSize: 24,
+                                borderRadius: 5,
+                                padding: 10,
+                                textAlign: 'right',
                             },
                         },
-                        right: {
-                            title: 'WISHLIST',
-                            style: {
-                                label: {
-                                    backgroundColor: '#34C759',
-                                    color: '#fff',
-                                    fontSize: 24,
-                                    borderRadius: 5,
-                                    padding: 10,
-                                },
+                    },
+                    right: {
+                        title: 'WISHLIST',
+                        style: {
+                            label: {
+                                backgroundColor: '#34C759',
+                                color: '#fff',
+                                fontSize: 24,
+                                borderRadius: 5,
+                                padding: 10,
                             },
                         },
-                    }}
-                />
+                    },
+                }}
+            />
 
-                {/* {showTooltip && (
-                <View style={styles.tooltip}>
-                    <Text style={styles.tooltipText}>
-                        You can create lists for different friend groups or your polycule to share events.
-                        Click this button to add this event to the lists.
-                    </Text>
-                    <Button title="Got it!" onPress={handleTooltipDismiss} />
-                </View>
-            )}
-
-            <TouchableOpacity style={styles.wishlistButton} onPress={() => setModalVisible(true)}>
-                <Ionicons name="add" size={32} color="#007AFF" />
-                <Text style={styles.wishlistButtonText}>Add to Buddy Lists</Text>
-            </TouchableOpacity>
-
-            <Modal
-                visible={isModalVisible}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setModalVisible(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>Select a Buddy List</Text>
-                        {['Toli\'s Kinky Polycule', 'Rope Bunnies', 'Platonic Daddies'].map((listName) => (
-                            <TouchableOpacity
-                                key={listName}
-                                style={styles.buddyListItem}
-                                onPress={() => handleAddToBuddyList(listName, filteredEvents[0]?.id)}
-                            >
-                                <Ionicons name="ios-checkmark-circle-outline" size={24} color="#007AFF" />
-                                <Text style={styles.buddyListText}>{listName}</Text>
-                            </TouchableOpacity>
-                        ))}
-                        <TouchableOpacity
-                            style={styles.newBuddyListButton}
-                            onPress={() => console.log('Create new buddy list')}
-                        >
-                            <Ionicons name="ios-add-circle-outline" size={24} color="#007AFF" />
-                            <Text style={styles.buddyListText}>New Buddy List</Text>
-                        </TouchableOpacity>
-                        <Button title="Close" onPress={() => setModalVisible(false)} />
-                    </View>
-                </View>
-            </Modal> */}
-            </View>
-        ) : (
-            <LoginToAccess entityToAccess='Swipe Mode' />
-        )
-    );
+        </View>
+    )
 };
 
 const styles = StyleSheet.create({

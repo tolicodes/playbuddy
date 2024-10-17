@@ -18,7 +18,7 @@ import Communities from './Pages/Communities';
 import HeaderLoginButton from './Auth/HeaderLoginButton';
 import DeepLinkHandler from './DeepLinkHandler';
 import { Retreats } from './Pages/Retreats';
-import { Planner } from './Pages/Planner';
+import { SwipeMode } from './Pages/SwipeMode';
 import LocationDropdown from './Header/LocationDropdown';
 import CommunityDropdown from './Header/CommunitiesDropdown';
 import BuddiesMain from './Buddies/BuddiesMain';
@@ -124,7 +124,8 @@ const TabNavigator = () => (
                     Calendar: "calendar",
                     Wishlist: "heart",
                     Communities: "users",
-                    Moar: "ellipsis-horizontal"
+                    Moar: "ellipsis-horizontal",
+                    'Swipe Mode': "layer-group"
                 }[route.name];
                 return route.name === 'Moar'
                     ? <IonIcon name={iconName} size={size} color={color} />
@@ -144,6 +145,7 @@ const TabNavigator = () => (
     >
         <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
         <Tab.Screen name="Wishlist" component={Wishlist} />
+        <Tab.Screen name="Swipe Mode" component={SwipeMode} />
     </Tab.Navigator>
 );
 
@@ -167,7 +169,7 @@ const DrawerNav = () => {
             />
             <Drawer.Screen
                 name="Swipe Mode"
-                component={Planner}
+                component={SwipeMode}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="layer-group" size={size} color={color} style={{ width: 30 }} />,
                 }}
