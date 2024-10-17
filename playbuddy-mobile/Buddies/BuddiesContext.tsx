@@ -1,11 +1,12 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../supabaseClient';
+import { useQuery, useMutation, useQueryClient, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { useUserContext } from '../Auth/UserContext';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
 interface Buddy {
-    id: string;
-    display_name: string;
+    user_id: string;
+    name: string;
     avatar_url: string;
 }
 
@@ -15,14 +16,33 @@ interface BuddyList {
     buddy_list_buddies: { buddy_id: Buddy }[];
 }
 
+export type SharedEvent = {
+    eventId: string;
+    sharedBuddies: {
+        user_id: string;
+        name: string;
+        avatar_url: string | null;
+    }[];
+};
+
+export interface BuddyWishlist {
+    user_id: string;
+    avatar_url: string;
+    name: string;
+    events: string[];
+}
+
 interface BuddiesContextType {
-    buddies?: Buddy[];
-    isLoadingBuddies: boolean;
-    addBuddy: (params: { buddyUserId: string }) => void;
-    buddyLists?: BuddyList[];
-    isLoadingBuddyLists: boolean;
-    createBuddyList: (params: { listName: string }) => void;
-    addBuddyToList: (params: { buddyListId: number; buddyId: number }) => void;
+    buddies: UseQueryResult<Buddy[], Error>;
+    addBuddy: UseMutationResult<null, Error, { buddyUserId: string }, unknown>;
+
+    sharedEvents: UseQueryResult<SharedEvent[], Error>;
+    buddiesWishlists: UseQueryResult<BuddyWishlist[], Error>;
+
+    buddyLists: UseQueryResult<BuddyList[], Error>;
+
+    createBuddyList: UseMutationResult<null, Error, { listName: string }, unknown>;
+    addBuddyToList: UseMutationResult<null, Error, { buddyListId: number; buddyId: string }, unknown>;
 }
 
 const BuddiesContext = createContext<BuddiesContextType | undefined>(undefined);
@@ -30,50 +50,89 @@ const BuddiesContext = createContext<BuddiesContextType | undefined>(undefined);
 export const BuddiesProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const queryClient = useQueryClient();
     const { authUserId } = useUserContext();
-
-    const buddiesQuery = useQuery({
-        queryKey: ['buddies', authUserId],
-        queryFn: () => fetchBuddies(authUserId),
+    const buddiesQuery = useQuery<Buddy[]>({
+        queryKey: ['buddies'],
+        queryFn: async () => {
+            const response = await axios.get(`${API_BASE_URL}/buddies`);
+            return response.data;
+        },
         enabled: !!authUserId,
+
     });
 
     const addBuddyMutation = useMutation({
-        mutationFn: ({ buddyUserId }: { buddyUserId: string }) => addBuddy(authUserId!, buddyUserId),
+        mutationFn: async ({ buddyUserId }: { buddyUserId: string }) => {
+            await axios.post(`${API_BASE_URL}/buddies/add`, { buddyUserId });
+            return null;
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['buddies', authUserId] });
+            queryClient.invalidateQueries({ queryKey: ['buddies'] });
         },
     });
 
+    const sharedEventsQuery = useQuery<SharedEvent[]>({
+        queryKey: ['sharedEvents'],
+        queryFn: async () => {
+            const response = await axios.get(`${API_BASE_URL}/wishlist/sharedEvents`);
+            return response.data;
+        },
+        enabled: !!authUserId,
+    });
+
+    const buddiesWishlistsQuery = useQuery<BuddyWishlist[]>({
+        queryKey: ['buddiesWishlists'],
+        queryFn: async () => {
+            const response = await axios.get(`${API_BASE_URL}/wishlist/buddies`);
+            return response.data;
+        },
+        enabled: !!authUserId,
+
+    });
+
     const buddyListsQuery = useQuery({
-        queryKey: ['buddyLists', authUserId],
-        queryFn: () => fetchBuddyListsWithBuddies(authUserId),
+        queryKey: ['buddyLists'],
+        queryFn: async () => {
+            const response = await axios.get(`${API_BASE_URL}/buddies/lists`);
+            return response.data;
+        },
         enabled: !!authUserId,
     });
 
     const createBuddyListMutation = useMutation({
-        mutationFn: ({ listName }: { listName: string }) => createBuddyList(authUserId!, listName),
+        mutationFn: async ({ listName }: { listName: string }) => {
+            await axios.post(`${API_BASE_URL}/buddies/lists`, { listName });
+            return null;
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['buddyLists', authUserId] });
+            queryClient.invalidateQueries({ queryKey: ['buddyLists'] });
         },
     });
 
     const addBuddyToListMutation = useMutation({
-        mutationFn: ({ buddyListId, buddyId }: { buddyListId: number, buddyId: number }) => addBuddyToList(buddyListId, buddyId),
+        mutationFn: async ({ buddyListId, buddyId }: { buddyListId: number, buddyId: string }) => {
+            await axios.post(`${API_BASE_URL}/buddies/lists/${buddyListId}/buddies`, { buddyId });
+            return null;
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['buddyLists', authUserId] });
+            queryClient.invalidateQueries({ queryKey: ['buddyLists'] });
         },
     });
 
     return (
         <BuddiesContext.Provider
             value={{
-                buddies: buddiesQuery.data,
-                isLoadingBuddies: buddiesQuery.isLoading,
-                addBuddy: addBuddyMutation.mutate,
-                buddyLists: buddyListsQuery.data,
-                isLoadingBuddyLists: buddyListsQuery.isLoading,
-                createBuddyList: createBuddyListMutation.mutate,
-                addBuddyToList: addBuddyToListMutation.mutate,
+                // Buddies
+                buddies: buddiesQuery,
+                addBuddy: addBuddyMutation,
+
+                // Wishlists
+                sharedEvents: sharedEventsQuery,
+                buddiesWishlists: buddiesWishlistsQuery,
+
+                // Lists
+                buddyLists: buddyListsQuery,
+                createBuddyList: createBuddyListMutation,
+                addBuddyToList: addBuddyToListMutation,
             }}
         >
             {children}
@@ -87,61 +146,4 @@ export const useBuddiesContext = () => {
         throw new Error('useBuddiesContext must be used within a BuddiesProvider');
     }
     return context;
-};
-
-// Fetch all buddies
-const fetchBuddies = async (userId: string | null) => {
-    if (!userId) throw new Error('User ID is required');
-    const { data, error } = await supabase
-        .from('buddies')
-        .select('buddy_user_id, buddy_user_id:users(id, display_name, avatar_url)')
-        .eq('user_id', userId);
-
-    if (error) throw new Error(error.message);
-    return data;
-};
-
-// Add a new buddy
-const addBuddy = async (userId: string, buddyUserId: string) => {
-    if (!userId || !buddyUserId) throw new Error('User ID and Buddy User ID are required');
-
-    const { data, error } = await supabase
-        .from('buddies')
-        .insert({ user_id: userId, buddy_user_id: buddyUserId });
-
-    if (error) throw new Error(error.message);
-    return data;
-};
-
-// Fetch buddy lists with buddies
-const fetchBuddyListsWithBuddies = async (userId: string | null) => {
-    if (!userId) throw new Error('User ID is required');
-
-    const { data, error } = await supabase
-        .from('buddy_lists')
-        .select('id, name, buddy_list_buddies(buddy_id:users(id, display_name, avatar_url))')
-        .eq('user_id', userId);
-
-    if (error) throw new Error(error.message);
-    return data;
-};
-
-// Create a new buddy list
-const createBuddyList = async (userId: string, listName: string) => {
-    const { data, error } = await supabase
-        .from('buddy_lists')
-        .insert({ user_id: userId, name: listName });
-
-    if (error) throw new Error(error.message);
-    return data;
-};
-
-// Add a buddy to a buddy list
-const addBuddyToList = async (buddyListId: number, buddyId: number) => {
-    const { data, error } = await supabase
-        .from('buddy_list_buddies')
-        .insert({ buddy_list_id: buddyListId, buddy_id: buddyId });
-
-    if (error) throw new Error(error.message);
-    return data;
 };
