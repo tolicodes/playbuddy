@@ -6,10 +6,9 @@ import React, {
     ReactNode,
     useMemo,
 } from 'react';
-import { useFetchUserProfile, useInsertUserProfile } from './useUserProfile';
+import { useFetchUserProfile } from './useUserProfile';
 import { onFetchUserProfile, onInitializeAuth, onPendingCallback, runAuthFlow, signOut as signOutUtil } from './useUserUtils';
 import { Session } from '@supabase/auth-js/src/lib/types'
-import { supabase } from '../supabaseClient';
 
 // Define the shape of the UserContext state
 export interface UserProfile {

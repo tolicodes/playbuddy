@@ -1,13 +1,15 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react"
-import { TouchableOpacity, View, Text } from "react-native"
+import { TouchableOpacity, View, Text, Image } from "react-native"
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { NavStack } from "../types";
 import * as amplitude from '@amplitude/analytics-react-native';
+import { useUserContext } from "./UserContext";
 
 
 const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean }) => {
     const navigation = useNavigation<NavStack>();
+    const { authUserId, userProfile } = useUserContext();
 
     return (
         <TouchableOpacity
@@ -19,7 +21,7 @@ const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean 
             }
             onPress={() => {
                 amplitude.logEvent('login_button_clicked')
-                navigation.navigate('Login')
+                navigation.navigate(!authUserId ? 'Login' : 'Profile')
             }}
         >
             <View style={{
@@ -32,7 +34,12 @@ const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean 
                 justifyContent: 'center', // Centers vertically
                 alignItems: 'center',     // Centers horizontally
             }}>
-                <FAIcon name="user" size={showLoginText ? 40 : 20} color="#007AFF" />
+                {
+                    authUserId ?
+                        <Image source={{ uri: userProfile?.avatar_url }} style={{ width: 30, height: 30, borderRadius: 15 }} />
+                        :
+                        <FAIcon name="user" size={showLoginText ? 40 : 20} color="#007AFF" />
+                }
             </View>
             {showLoginText && <Text>Login</Text>}
 

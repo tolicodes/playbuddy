@@ -6,8 +6,8 @@ export default function BuddyAddedConfirmation({ buddy, onAddAnotherBuddy }: { b
     return (
         <View style={styles.container}>
             <Text style={styles.heading}>You are now friends with</Text>
-            <Text style={styles.buddyName}>{buddy.displayName}</Text>
-            <Image source={{ uri: buddy.avatar }} style={styles.avatar} />
+            <Text style={styles.buddyName}>{buddy.name}</Text>
+            <Image source={{ uri: buddy.avatar_url }} style={styles.avatar} />
             <TouchableOpacity style={styles.button} onPress={() => onAddAnotherBuddy()}>
                 <Text style={styles.buttonText}>Add Another Buddy?</Text>
             </TouchableOpacity>

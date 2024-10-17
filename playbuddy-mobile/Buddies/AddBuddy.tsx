@@ -11,14 +11,16 @@ import { useBuddiesContext } from './BuddiesContext';
 const AddBuddy: React.FC = () => {
     const { authUserId } = useUserContext();
     const [barcode, setBarcode] = useState('');
-    const [addedBuddy, setAddedBuddy] = useState(false);
-    const { addBuddy } = useBuddiesContext();
+    // auth_user_id of the buddy that has been added
+    const [addedBuddyAuthUserId, setAddedBuddyAuthUserId] = useState('');
+    const { addBuddy, buddies } = useBuddiesContext();
+
+    const addedBuddy = buddies.data?.find((buddy: any) => buddy.user_id === addedBuddyAuthUserId);
 
     useEffect(() => {
-        console.log(barcode);
         if (barcode) {
-            addBuddy({ buddyUserId: barcode });
-            setAddedBuddy(true);
+            addBuddy.mutate({ buddyUserId: barcode });
+            setAddedBuddyAuthUserId(barcode);
             setBarcode('');
         }
     }, [barcode]);
@@ -42,18 +44,19 @@ const AddBuddy: React.FC = () => {
             </View>
 
             <View style={styles.lowerSection}>
-                <Text style={styles.title}>
-                    Scan your buddy's code to add them to your list
-                </Text>
+                {!addedBuddyAuthUserId || !addedBuddy
+                    ? (
+                        <>
+                            <Text style={styles.title}>
+                                Scan your buddy's code to add them to your list
+                            </Text>
 
-
-                {!addedBuddy
-                    ? <CameraScanner onBarcodeScanned={(barcode: string) => {
-                        setBarcode(barcode);
-                        setAddedBuddy(true);
-                    }} />
-                    : <BuddyAddedConfirmation buddy={barcode} onAddAnotherBuddy={() => {
-                        setAddedBuddy(false);
+                            <CameraScanner onBarcodeScanned={(barcode: string) => {
+                                setBarcode(barcode);
+                            }} />
+                        </>)
+                    : <BuddyAddedConfirmation buddy={addedBuddy} onAddAnotherBuddy={() => {
+                        setAddedBuddyAuthUserId('');
                     }} />
                 }
             </View>
@@ -71,7 +74,6 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 20,
     },
     lowerSection: {
         flex: 1,

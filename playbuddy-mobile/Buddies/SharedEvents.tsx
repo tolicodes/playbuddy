@@ -1,64 +1,24 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { Avatar } from 'react-native-paper';
-import Tooltip from 'react-native-walkthrough-tooltip';
+import React, { useMemo } from 'react';
+import { View } from 'react-native';
+import EventCalendarView from '../Calendar/EventCalendarView';
+import { useBuddiesContext } from './BuddiesContext';
+import { useCalendarContext } from '../Calendar/CalendarContext';
 
 const SharedEvents = () => {
-    const [showTooltip, setShowTooltip] = useState(false);
-    const [tooltipData, setTooltipData] = useState('');
+    const { sharedEvents } = useBuddiesContext();
+    const { filteredEvents } = useCalendarContext();
 
-    const events = [
-        { id: 1, name: 'Event 1' },
-        { id: 2, name: 'Event 2' },
-    ];
-
-    const avatars = [
-        { id: 1, name: 'John Doe', avatar: 'https://i.pravatar.cc/150?img=1' },
-        { id: 2, name: 'Jane Doe', avatar: 'https://i.pravatar.cc/150?img=2' },
-    ];
+    const sharedEventsWithMetadata = useMemo(() => {
+        if (!sharedEvents.data) return []
+        return filteredEvents.filter(event => sharedEvents.data.find(e => e.eventId === event.id))
+    }, [sharedEvents, filteredEvents]);
 
     return (
         <View>
-            <FlatList
-                data={events}
-                renderItem={({ item }) => (
-                    <View style={styles.eventContainer}>
-                        <Text style={styles.eventText}>{item.name}</Text>
-                        <View style={styles.avatarContainer}>
-                            {avatars.map((person) => (
-                                <TouchableOpacity
-                                    key={person.id}
-                                    onPress={() => {
-                                        setTooltipData(person.name);
-                                        setShowTooltip(true);
-                                    }}
-                                >
-                                    <Tooltip isVisible={showTooltip} content={<Text>{tooltipData}</Text>} placement="bottom">
-                                        <Avatar.Image size={50} source={{ uri: person.avatar }} />
-                                    </Tooltip>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-                )}
-                keyExtractor={(item) => item.id.toString()}
-            />
+            {/* it will get added internally */}
+            <EventCalendarView events={sharedEventsWithMetadata || []} />
         </View>
-    );
+    )
 };
-
-const styles = StyleSheet.create({
-    eventContainer: {
-        marginVertical: 10,
-    },
-    eventText: {
-        fontSize: 18,
-        marginBottom: 10,
-    },
-    avatarContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-});
 
 export default SharedEvents;

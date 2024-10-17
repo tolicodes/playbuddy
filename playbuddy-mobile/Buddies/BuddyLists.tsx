@@ -1,61 +1,55 @@
 import React from 'react';
-import { View, Text, FlatList, Button, StyleSheet } from 'react-native';
-import { Avatar } from 'react-native-paper';
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-const BuddyLists = () => {
-    const buddyLists = [
-        {
-            id: 1,
-            name: 'Main List',
-            members: [{ id: 1, name: 'John Doe', avatar: 'https://i.pravatar.cc/150?img=1' }],
-        },
-        {
-            id: 2,
-            name: 'Close Friends',
-            members: [{ id: 2, name: 'Jane Doe', avatar: 'https://i.pravatar.cc/150?img=2' }],
-        },
-    ];
-
+const BuddyListsScreen = () => {
     return (
-        <View>
-            {buddyLists.map((list) => (
-                <View key={list.id} style={styles.listContainer}>
-                    <Text style={styles.listName}>{list.name}</Text>
-                    <FlatList
-                        data={list.members}
-                        renderItem={({ item }) => (
-                            <View style={styles.memberContainer}>
-                                <Avatar.Image size={50} source={{ uri: item.avatar }} />
-                                <Text style={styles.memberText}>{item.name}</Text>
-                            </View>
-                        )}
-                        keyExtractor={(item) => item.id.toString()}
-                    />
-                </View>
-            ))}
-            <Button title="New Buddy List" onPress={() => { }} />
-        </View>
+        <SafeAreaView style={styles.container}>
+            <Text style={styles.title}>Buddy Lists</Text>
+            <Text style={styles.comingSoon}>Coming Soon</Text>
+
+            {/* Use Ionicons 'construct-outline' icon */}
+            <Ionicons name="construct-outline" size={150} color="#007AFF" style={styles.icon} />
+
+            <Text style={styles.description}>
+                Craft your buddy lists and match them with perfect events, from polycule snuggles to bondage fun!
+            </Text>
+        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    listContainer: {
-        marginVertical: 20,
-    },
-    listName: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    memberContainer: {
-        flexDirection: 'row',
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#F9F9FB', // iOS light background color
+        justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 5,
     },
-    memberText: {
-        marginLeft: 10,
-        fontSize: 16,
+    title: {
+        fontSize: 36,
+        fontWeight: '700',
+        color: '#1C1C1E', // iOS dark text color
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    comingSoon: {
+        fontSize: 28,
+        fontWeight: '600',
+        color: '#007AFF', // iOS blue color
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    icon: {
+        marginBottom: 30,
+    },
+    description: {
+        fontSize: 18,
+        textAlign: 'center',
+        color: '#3A3A3C',
+        marginHorizontal: 20,
     },
 });
 
-export default BuddyLists;
+export default BuddyListsScreen;

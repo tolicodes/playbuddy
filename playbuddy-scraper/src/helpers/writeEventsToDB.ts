@@ -11,36 +11,40 @@ async function upsertOrganizer({
   name,
   url,
   original_id,
+  event_id,  // Add event_id to the parameters
 }: {
   name: string;
   url: string;
   original_id?: string;
+  event_id: string;  // The event to link with the community
 }): Promise<string> {
   console.log("Upserting", name, url, original_id);
 
   // Check if the organizer exists by name or alias
   const { data: existingOrganizer, error: fetchError } = await supabaseClient
     .from("organizers")
-    .select("name")
+    .select("id, name")
     .or(`name.eq.${name},aliases.cs.{${name}}`)
     .single();
 
-  if (fetchError && fetchError.code !== "PGRST116") { // PGRST116: no rows returned
+  // Handle error if it's not the no rows error
+  if (fetchError && fetchError.code !== "PGRST116") {
     console.error("Error fetching organizer:", fetchError);
     throw fetchError;
   }
 
-  // If an organizer exists with the name or alias, use the original name
-  const organizerName = existingOrganizer ? existingOrganizer.name : name;
+  // If an organizer exists with the name or alias, use its name and ID
+  const organizerName = existingOrganizer?.name ?? name;
+  const organizerId = existingOrganizer?.id;
 
   // Upsert the organizer
-  const { data, error: upsertError } = await supabaseClient
+  const { data: upsertedOrganizer, error: upsertError } = await supabaseClient
     .from("organizers")
     .upsert(
       { name: organizerName, url, original_id },
       { onConflict: "name" }
     )
-    .select("id")
+    .select("id, name")
     .single();
 
   if (upsertError) {
@@ -48,25 +52,53 @@ async function upsertOrganizer({
     throw upsertError;
   }
 
-  // Insert community
-  const { error: communityInsertError } = await supabaseClient
+  const finalOrganizerId = upsertedOrganizer?.id;
+
+  // Check if the community for this organizer already exists
+  const { data: existingCommunity, error: communityFetchError } = await supabaseClient
     .from('communities')
-    .insert({
-      name: organizerName,
-      description: `Public community for ${organizerName}`,
-      organizer_id: data.id,
-      visibility: 'public',
-      type: 'organizer_public_community'
-    })
-    .select()
+    .select("id")
+    .eq("organizer_id", finalOrganizerId)
     .single();
 
-  if (communityInsertError) {
-    console.error("Error inserting community:", communityInsertError);
+  let communityId = existingCommunity?.id;
+
+  // If no existing community found, insert a new one
+  if (!communityId) {
+    const { data: newCommunity, error: communityInsertError } = await supabaseClient
+      .from('communities')
+      .insert({
+        name: organizerName,
+        description: `Public community for ${organizerName}`,
+        organizer_id: finalOrganizerId,
+        visibility: 'public',
+        type: 'organizer_public_community'
+      })
+      .select("id")
+      .single();
+
+    if (communityInsertError) {
+      console.error("Error inserting community:", communityInsertError);
+      throw communityInsertError;
+    }
+
+    communityId = newCommunity?.id;
   }
 
+  // Now insert a record into event_communities linking the event and the community
+  const { error: eventCommunityInsertError } = await supabaseClient
+    .from('event_communities')
+    .insert({
+      event_id,          // Link to the provided event
+      community_id: communityId  // Link to the newly created or existing community
+    });
 
-  return data?.id ?? "";
+  if (eventCommunityInsertError) {
+    console.error("Error inserting event_community:", eventCommunityInsertError);
+    throw eventCommunityInsertError;
+  }
+
+  return finalOrganizerId ?? "";
 }
 
 // Function to upsert an event

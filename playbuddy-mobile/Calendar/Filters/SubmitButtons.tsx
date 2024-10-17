@@ -22,7 +22,7 @@ const ButtonGroup: React.FC<ButtonGroupProps> = ({ resetFilters }) => {
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {
                 amplitude.logEvent('filter_done_button_clicked')
-                navigation.navigate('Calendar')
+                navigation.navigate('Calendar', { fromScreen: 'Filters' })
             }} style={buttonStyles.doneButton}>
                 <Text style={buttonStyles.doneButtonText}>Done</Text>
             </TouchableOpacity>

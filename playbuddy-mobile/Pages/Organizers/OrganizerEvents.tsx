@@ -8,8 +8,6 @@ export const OrganizerEvents = ({ route: { params: { communityId } } }: { route:
 
     const organizerEvents = filteredEvents.filter(event => event.communities?.some(community => community.id === communityId));
 
-    console.log('organizerEvents', organizerEvents[0])
-
     return (
         <View>
             <EventCalendarView events={organizerEvents} />

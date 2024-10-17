@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TextInput, Image, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
+import { Text, TextInput, Image, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
-import { useNavigation } from '@react-navigation/native';
 
 import { Event } from '../../Common/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { EventWithMetadata, NavStack } from '../types';
+import { EventWithMetadata } from '../types';
+
 import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
@@ -15,7 +15,6 @@ import WebsiteBanner from './WebsiteBanner';
 import { useUserContext } from '../Auth/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { MISC_URLS } from '../config';
-import { screen } from '@testing-library/react';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -121,8 +120,8 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
                 />
-
             </View>
+
 
             <Animated.View style={[styles.calendar, { height: animatedHeight }]}>
                 <Calendar
@@ -142,13 +141,15 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
                 />
             </Animated.View>
 
-            <EventList
-                sections={sections}
-                screen={'Calendar'}
-                sectionListRef={sectionListRef}
-                reloadEvents={reloadEvents}
-                isLoadingEvents={isLoadingEvents}
-            />
+            <View style={styles.eventListContainer}>
+                <EventList
+                    sections={sections}
+                    screen={'Calendar'}
+                    sectionListRef={sectionListRef}
+                    reloadEvents={reloadEvents}
+                    isLoadingEvents={isLoadingEvents}
+                />
+            </View>
 
         </SafeAreaView >
     );
@@ -156,6 +157,9 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
 
 const styles = StyleSheet.create({
     container: {
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%'
     },
     calendar: {
         width: '100%',
@@ -211,7 +215,7 @@ const styles = StyleSheet.create({
     },
     calendarIcon: {
         marginTop: -20,
-        marginRight: 10,
+        marginRight: 15,
         alignSelf: 'center',
     },
     googleCalendarIcon: {
@@ -222,6 +226,9 @@ const styles = StyleSheet.create({
     googleCalendarImage: {
         width: 30,  // Set your desired width
         height: 30, // Set your desired height
+    },
+    eventListContainer: {
+        flex: 1,
     }
 });
 

@@ -4,16 +4,20 @@ import { useUserContext } from './UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { Avatar } from './Avatar';
 
-export default function AccountDetails() {
+export default function AccountDetails({ route }: { route: any }) {
     const { userProfile, signOut } = useUserContext();
-    const { goBack } = useNavigation();
+    const { goBack, navigate } = useNavigation<NavStack>();
 
     const onPressSignOut = async () => {
         signOut(goBack);
     }
 
     const onPressHome = () => {
-        goBack();
+        if (route.params?.fromScreen) {
+            navigate(route.params.fromScreen);
+        } else {
+            goBack();
+        }
     }
 
     const onPressDeleteAccount = async () => {
@@ -23,7 +27,15 @@ export default function AccountDetails() {
             [
                 {
                     text: 'DELETE',
-                    onPress: () => { signOut(goBack); },
+                    onPress: () => {
+                        signOut(() => {
+                            if (route.params?.fromScreen) {
+                                navigate(route.params.fromScreen);
+                            } else {
+                                goBack();
+                            }
+                        });
+                    },
                     style: 'destructive',
                 },
                 {

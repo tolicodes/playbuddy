@@ -7,9 +7,24 @@ import { useState, useEffect } from "react";
 import { NavStack } from "../types";
 import { Event } from "../commonTypes";
 import * as amplitude from '@amplitude/analytics-react-native';
+import { SharedEvent, useBuddiesContext } from "../Buddies/BuddiesContext";
 
-const EventList = ({ sections, sectionListRef, isLoadingEvents }: { sections: any, screen: string, sectionListRef?: any, reloadEvents: any, isLoadingEvents: boolean }) => {
+type EventListProps = {
+    sections: any;
+    screen?: string;
+    sectionListRef?: any;
+    reloadEvents: any;
+    isLoadingEvents: boolean;
+};
+
+function getSharedBuddies(sharedEvents: SharedEvent[], eventId: string) {
+    return sharedEvents.find((sharedEvent: any) => sharedEvent.eventId === eventId)?.sharedBuddies;
+}
+
+const EventList = ({ sections, sectionListRef, isLoadingEvents, screen }: EventListProps) => {
     const navigation = useNavigation<NavStack>();
+
+    const { sharedEvents } = useBuddiesContext();
 
     // Handle event click
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -25,9 +40,11 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents }: { sections: an
         sections={sections}
         stickySectionHeadersEnabled={true}
         renderItem={({ item: event }: { item: EventWithMetadata }) => {
+            const sharedBuddies = getSharedBuddies(sharedEvents.data || [], event.id);
+
             return (
                 <View
-                    style={{ height: 100 }}
+                    style={{ height: 120 }}
                 >
                     <ListItem
                         item={event}
@@ -35,6 +52,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents }: { sections: an
                             amplitude.logEvent('event_list_item_clicked', { event_id: event.id });
                             setSelectedEvent(event)
                         }}
+                        sharedBuddies={sharedBuddies}
                     />
                 </View>
             )

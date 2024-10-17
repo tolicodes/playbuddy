@@ -45,7 +45,9 @@ const MyOrganizers: React.FC = () => {
             <FlatList
                 data={myOrganizerPublicCommunities}
                 renderItem={({ item }) => (
-                    <TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Organizer Events', { communityId: item.id, fromScreen: 'My Organizers' })}
+                    >
                         <View style={styles.organizerItem}>
                             <Text style={styles.organizerName}>{item.name}</Text>
                             <TouchableOpacity onPress={() => leaveCommunity.mutate({ community_id: item.id })} style={styles.unfollowButton}>
@@ -94,6 +96,8 @@ const AllOrganizers: React.FC = () => {
         .filter(organizer => organizer.name.toLowerCase().includes(searchQuery.toLowerCase()))
         .sort((a, b) => a.name.localeCompare(b.name));
 
+    const navigator = useNavigation();
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
@@ -109,17 +113,21 @@ const AllOrganizers: React.FC = () => {
                         renderItem={({ item }) => {
                             const isFollowing = myOrganizerPublicCommunities.some(community => community.id === item.id);
                             return (
-                                <View style={styles.organizerItem}>
+                                <TouchableOpacity
+                                    style={styles.organizerItem}
+                                    onPress={() => navigator.navigate('Organizer Events', { communityId: item.id })}
+                                >
                                     <Text style={styles.organizerName}>{item.name}</Text>
                                     <TouchableOpacity
-                                        onPress={() => isFollowing ? handleLeave(item.id) : handleJoin(item.id)}
+                                        onPress={(e) => {
+                                            e.stopPropagation();
+                                            isFollowing ? handleLeave(item.id) : handleJoin(item.id);
+                                        }}
                                         style={isFollowing ? styles.unfollowButton : styles.followButton}
                                     >
-
                                         <Text style={styles.buttonText}>{isFollowing ? 'Unfollow' : 'Follow'}</Text>
-
                                     </TouchableOpacity>
-                                </View>
+                                </TouchableOpacity>
                             );
                         }}
                         keyExtractor={(item) => item.id}

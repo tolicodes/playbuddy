@@ -11,7 +11,6 @@ import * as amplitude from '@amplitude/analytics-react-native';
 // Components
 import EventCalendarView from './Calendar/EventCalendarView';
 import { EventDetail } from './Calendar/EventDetail';
-import { Filters } from './Calendar/Filters/Filters';
 import AuthMain from './Auth/AuthMain';
 import Wishlist from './Pages/Wishlist';
 import Moar from './Pages/Moar';
@@ -30,6 +29,7 @@ import { OrganizerEvents } from './Pages/Organizers/OrganizerEvents';
 import { useCommonContext } from './Common/CommonContext';
 import { useUserContext } from './Auth/UserContext';
 import { useCalendarContext } from './Calendar/CalendarContext';
+import BuddyEvents from './Buddies/BuddyEvents';
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -37,13 +37,13 @@ const Drawer = createDrawerNavigator();
 const CalendarStack = createStackNavigator();
 
 // Helper Components
-const CustomBackButton = ({ navigation }) => (
+const CustomBackButton = ({ navigation }: { navigation: any }) => (
     <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingLeft: 10 }}>
         <IonIcon name="chevron-back" size={30} color="#007AFF" />
     </TouchableOpacity>
 );
 
-const CustomDrawerButton = ({ navigation }) => {
+const CustomDrawerButton = ({ navigation }: { navigation: any }) => {
     const { filters } = useCalendarContext();
     const hasFilters = !!filters.organizers.length;
 
@@ -65,11 +65,11 @@ const CustomDrawerButton = ({ navigation }) => {
 };
 
 // Navigation Options
-const detailsPageHeaderOptions = ({ navigation }) => ({
+const detailsPageHeaderOptions = ({ navigation }: { navigation: any }) => ({
     headerLeft: () => <CustomBackButton navigation={navigation} />,
 });
 
-const headerOptions = ({ navigation }) => ({
+const headerOptions = ({ navigation }: { navigation: any }) => ({
     headerRight: () => {
         const {
             locationAreas,
@@ -110,6 +110,7 @@ function CalendarStackNavigator() {
             />
             <CalendarStack.Screen name="Event Details" component={EventDetail} />
             <CalendarStack.Screen name="Organizer Events" component={OrganizerEvents} />
+            <CalendarStack.Screen name="Buddy Events" component={BuddyEvents} />
         </CalendarStack.Navigator>
     );
 }

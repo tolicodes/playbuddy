@@ -9,6 +9,7 @@ import eventsRoute from './routes/events.js';
 import kinksRoute from './routes/kinks.js';
 import wishlistRoute from './routes/wishlist.js';
 import communitiesRoute from './routes/communities.js';
+import buddiesRoutes from './routes/buddies.js';
 // import { errorLogger } from "middleware/errorLogger.js";
 
 export const app = express();
@@ -30,6 +31,7 @@ app.use('/events', eventsRoute); // For event-related routes
 app.use('/kinks', kinksRoute);   // For kinks-related routes
 app.use('/wishlist', wishlistRoute);   // For kinks-related routes
 app.use('/communities', communitiesRoute);   // For kinks-related routes
+app.use('/buddies', buddiesRoutes)
 
 const errorLogger = (err: any, req: Request, res: Response, next: NextFunction) => {
   console.log("Middleware Error Logger");

@@ -117,13 +117,14 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         locationAreas,
         selectedLocationArea,
         isLoadingLocationAreas,
+
         communities,
         myCommunitiesLists,
         joinCommunity,
         leaveCommunity,
         selectedCommunity,
         isLoadingMyCommunities,
-        isLoadingPublicCommunities
+        isLoadingPublicCommunities,
     ]);
 
     return (
