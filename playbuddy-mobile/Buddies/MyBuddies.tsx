@@ -22,12 +22,13 @@ const MyBuddies = () => {
 
         const avatarUrl = item.avatar_url && getSmallAvatarUrl(item.avatar_url);
         return (
-            <View style={styles.buddyContainer}>
-                <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-                <TouchableOpacity onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: item.user_id })}>
+            <TouchableOpacity onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: item.user_id })}>
+
+                <View style={styles.buddyContainer}>
+                    <Image source={{ uri: avatarUrl }} style={styles.avatar} />
                     <Text style={styles.buddyName}>{item.name}</Text>
-                </TouchableOpacity>
-            </View>
+                </View>
+            </TouchableOpacity>
         );
     }
 
