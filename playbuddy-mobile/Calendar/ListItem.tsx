@@ -117,7 +117,6 @@ const styles = StyleSheet.create({
     eventTime: {
         fontSize: 14,
         color: '#666',
-        width: 100,
         marginTop: 4
     },
     favoriteIcon: {
