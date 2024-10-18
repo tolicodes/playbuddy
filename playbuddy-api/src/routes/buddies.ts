@@ -33,7 +33,26 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
 
 // Add a new buddy
 router.post('/add', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { buddyUserId } = req.body;
+    let { buddyUserId, shareCode } = req.body;
+
+    if (shareCode) {
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('user_id')
+            .eq('share_code', shareCode);
+
+        if (error) throw error;
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: 'User not found with share code ' + shareCode });
+        }
+
+        buddyUserId = data[0].user_id;
+    }
+
+    if (!buddyUserId) {
+        return res.status(400).json({ error: 'Buddy user ID is required' });
+    }
 
     try {
         const { data, error } = await supabaseClient
@@ -42,12 +61,12 @@ router.post('/add', authenticateRequest, async (req: AuthenticatedRequest, res: 
 
         if (error) throw error;
 
-        res.status(201).json(data);
+        return res.status(201).json(data);
     } catch (error) {
         if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         } else {
-            res.status(500).json({ error: 'Failed to add buddy' });
+            return res.status(500).json({ error: 'Failed to add buddy' });
         }
     }
 });
@@ -62,12 +81,12 @@ router.get('/lists', authenticateRequest, async (req: AuthenticatedRequest, res:
 
         if (error) throw error;
 
-        res.json(data);
+        return res.json(data);
     } catch (error) {
         if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         } else {
-            res.status(500).json({ error: 'Failed to fetch buddy lists' });
+            return res.status(500).json({ error: 'Failed to fetch buddy lists' });
         }
     }
 });
@@ -83,12 +102,12 @@ router.post('/lists', authenticateRequest, async (req: AuthenticatedRequest, res
 
         if (error) throw error;
 
-        res.status(201).json(data);
+        return res.status(201).json(data);
     } catch (error) {
         if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         } else {
-            res.status(500).json({ error: 'Failed to create buddy list' });
+            return res.status(500).json({ error: 'Failed to create buddy list' });
         }
     }
 });
@@ -105,12 +124,12 @@ router.post('/lists/:listId/buddies', authenticateRequest, async (req: Authentic
 
         if (error) throw error;
 
-        res.status(201).json(data);
+        return res.status(201).json(data);
     } catch (error) {
         if (error instanceof Error) {
-            res.status(500).json({ error: error.message });
+            return res.status(500).json({ error: error.message });
         } else {
-            res.status(500).json({ error: 'Failed to add buddy to list' });
+            return res.status(500).json({ error: 'Failed to add buddy to list' });
         }
     }
 });

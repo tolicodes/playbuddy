@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TextInput } from 'react-native';
 import QRCodeStyled from 'react-native-qrcode-styled';
 
 import { useUserContext } from '../Auth/UserContext';
@@ -7,13 +7,17 @@ import CameraScanner from './CameraScanner';
 import BuddyAddedConfirmation from './AddBuddyConfirmation';
 import { LoginToAccess } from '../Common/LoginToAccess';
 import { useBuddiesContext } from './BuddiesContext';
+import { Button } from '@rneui/themed';
 
 const AddBuddy: React.FC = () => {
-    const { authUserId } = useUserContext();
+    const { authUserId, userProfile } = useUserContext();
     const [barcode, setBarcode] = useState('');
     // auth_user_id of the buddy that has been added
     const [addedBuddyAuthUserId, setAddedBuddyAuthUserId] = useState('');
+    const [addedBuddyShareCode, setAddedBuddyShareCode] = useState('');
     const { addBuddy, buddies } = useBuddiesContext();
+    const [buddyShareCode, setBuddyShareCode] = useState('');
+    const [scanning, setScanning] = useState(false);
 
     const addedBuddy = buddies.data?.find((buddy: any) => buddy.user_id === addedBuddyAuthUserId);
 
@@ -24,6 +28,14 @@ const AddBuddy: React.FC = () => {
             setBarcode('');
         }
     }, [barcode]);
+
+    useEffect(() => {
+        if (addedBuddyShareCode) {
+            addBuddy.mutate({ shareCode: addedBuddyShareCode });
+            setAddedBuddyShareCode(buddyShareCode);
+            setBuddyShareCode('');
+        }
+    }, [addedBuddyShareCode]);
 
     if (!authUserId) {
         return <LoginToAccess entityToAccess="buddies" />
@@ -36,24 +48,49 @@ const AddBuddy: React.FC = () => {
                     Have your buddy scan this code to add you as a buddy:
                 </Text>
                 <View style={styles.qrCodeWrapper}>
-                    {<QRCodeStyled data={authUserId} width={200} height={200} style={{
-                        width: 200,
-                        height: 200
+                    {<QRCodeStyled data={authUserId} width={100} height={100} style={{
+                        width: 100,
+                        height: 100
                     }} />}
                 </View>
+
+                <Text style={styles.shareCodeInstruction}>Or enter your share code:</Text>
+                <Text style={styles.shareCode}>{userProfile?.share_code}</Text>
             </View>
+
+            {/* Horizontal line */}
+            <View style={styles.horizontalLine} />
 
             <View style={styles.lowerSection}>
                 {!addedBuddyAuthUserId || !addedBuddy
                     ? (
                         <>
                             <Text style={styles.title}>
-                                Scan your buddy's code to add them to your list
+                                Scan your buddy's code:
                             </Text>
 
-                            <CameraScanner onBarcodeScanned={(barcode: string) => {
-                                setBarcode(barcode);
-                            }} />
+                            <CameraScanner
+                                onBarcodeScanned={(barcode: string) => {
+                                    setBarcode(barcode);
+                                }}
+                                scanning={scanning}
+                                setScanning={setScanning}
+                            />
+
+                            {!scanning &&
+                                <View style={styles.scanShareCodeContainer}>
+                                    <Text style={styles.title}>Or enter their share code:</Text>
+                                    <View style={styles.buddyShareCodeInputContainer}>
+                                        <TextInput style={styles.buddyShareCodeInput} value={buddyShareCode} onChangeText={(text) => setBuddyShareCode(text)} />
+                                        <Button title="Add Buddy" buttonStyle={styles.button} onPress={() => {
+                                            addBuddy.mutate({ shareCode: buddyShareCode });
+                                            setAddedBuddyShareCode(buddyShareCode);
+                                            setBuddyShareCode('');
+
+                                        }} />
+                                    </View>
+                                </View>
+                            }
                         </>)
                     : <BuddyAddedConfirmation buddy={addedBuddy} onAddAnotherBuddy={() => {
                         setAddedBuddyAuthUserId('');
@@ -81,7 +118,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     title: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: '600',
         color: '#1C1C1E', // Dark gray text for iOS aesthetic
         textAlign: 'center',
@@ -89,30 +126,65 @@ const styles = StyleSheet.create({
     },
     qrCodeWrapper: {
         backgroundColor: '#FFFFFF',
-        padding: 30,
+        padding: 15,
         borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.2,
         shadowRadius: 20, // Subtle shadow for QR code
         elevation: 10,
-        width: 200,
-        height: 200
+        width: 130,
+        height: 130
     },
-    scanButton: {
+    scanShareCodeContainer: {
+        marginTop: 20,
+    },
+    shareCodeInstruction: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#1C1C1E', // Dark gray text for iOS aesthetic
+        textAlign: 'center',
+        marginTop: 20,
+    },
+
+    shareCode: {
+        fontSize: 25,
+        fontWeight: '600',
+        color: '#1C1C1E', // Dark gray text for iOS aesthetic
+        textAlign: 'center',
+    },
+    horizontalLine: {
+        width: '100%',
+        height: 3,
+        backgroundColor: '#E0E0E0', // Light gray line
+        marginVertical: 10,
+    },
+    button: {
         backgroundColor: '#007AFF', // iOS blue
         paddingVertical: 15,
-        paddingHorizontal: 40,
         borderRadius: 10,
         shadowColor: '#007AFF',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6, // Button shadow for depth
     },
-    scanButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
-        fontWeight: '600',
+    buddyShareCodeInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 20,
+    },
+    buddyShareCodeInput: {
+        height: 55,
+        width: 200,
+        borderColor: 'gray',
+        borderWidth: 1,
+        borderRadius: 5,
+        padding: 10,
+        marginTop: 10,
+        // flex: 2,
+        marginRight: 10,
+        marginBottom: 10
     },
     camera: {
         flex: 1,

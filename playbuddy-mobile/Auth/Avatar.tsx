@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../supabaseClient'; // Supabase client
 import { useUserContext } from './UserContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 export const Avatar = () => {
     const [uploadImageUri, setUploadImageUri] = useState<string | null>(null);
@@ -91,7 +92,7 @@ export const Avatar = () => {
         }
     };
 
-    const avatarUrl = userProfile?.avatar_url;
+    const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url, 300);
 
     return (
         <View style={styles.container}>

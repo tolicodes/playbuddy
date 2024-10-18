@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { View, Image, ScrollView, TouchableOpacity, Text, StyleSheet, Pressable } from 'react-native';
-import { Tooltip } from '@rneui/themed';
-
-
+import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { View, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface Buddy {
     user_id: string;
@@ -15,28 +13,19 @@ interface BuddyAvatarCarouselProps {
 }
 
 export const BuddyAvatarCarousel: React.FC<BuddyAvatarCarouselProps> = ({ buddies }) => {
+    const navigation = useNavigation();
     return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
             {buddies.map((buddy, index) => {
-                const [tooltipVisible, setTooltipVisible] = useState(false);
                 return (
-                    <TouchableOpacity key={buddy.user_id} onPress={() => setTooltipVisible(!tooltipVisible)}>
-                        <Tooltip
-                            visible={tooltipVisible}
-                            onOpen={() => setTooltipVisible(true)}
-                            onClose={() => setTooltipVisible(false)}
-                            popover={<Text style={styles.tooltipText}>{buddy.name}</Text>}
-                        />
+                    <TouchableOpacity key={buddy.user_id} onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: buddy.user_id })}>
                         <View style={[styles.avatarContainer, index > 0 && styles.overlappingAvatar]}>
                             <Image source={{ uri: buddy.avatar_url || '' }} style={styles.avatar} />
-
                         </View>
-
-
                     </TouchableOpacity>
-                )
+                );
             })}
-        </ScrollView >
+        </ScrollView>
     );
 };
 
@@ -61,13 +50,13 @@ const styles = StyleSheet.create({
         // marginLeft: -15, // Negative margin to overlap avatars
     },
     avatar: {
-        width: 30,
-        height: 30,
+        width: 25,
+        height: 25,
         borderRadius: 15,
-        borderWidth: 2,
-        borderColor: '#fff',
+        marginLeft: 3,
+        // borderWidth: 2,
+        // borderColor: '#fff',
         backgroundColor: '#f0f0f0',
-
     },
     tooltip: {
         position: 'absolute',

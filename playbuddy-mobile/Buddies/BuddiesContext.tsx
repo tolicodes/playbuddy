@@ -34,7 +34,7 @@ export interface BuddyWishlist {
 
 interface BuddiesContextType {
     buddies: UseQueryResult<Buddy[], Error>;
-    addBuddy: UseMutationResult<null, Error, { buddyUserId: string }, unknown>;
+    addBuddy: UseMutationResult<null, Error, { buddyUserId?: string, shareCode?: string }, unknown>;
 
     sharedEvents: UseQueryResult<SharedEvent[], Error>;
     buddiesWishlists: UseQueryResult<BuddyWishlist[], Error>;
@@ -53,16 +53,20 @@ export const BuddiesProvider: React.FC<{ children: ReactNode }> = ({ children })
     const buddiesQuery = useQuery<Buddy[]>({
         queryKey: ['buddies'],
         queryFn: async () => {
-            const response = await axios.get(`${API_BASE_URL}/buddies`);
-            return response.data;
+            try {
+                const response = await axios.get(`${API_BASE_URL}/buddies`);
+                return response.data;
+            } catch (error) {
+                console.error('Error fetching buddies:', error);
+                throw error;
+            }
         },
         enabled: !!authUserId,
-
     });
 
     const addBuddyMutation = useMutation({
-        mutationFn: async ({ buddyUserId }: { buddyUserId: string }) => {
-            await axios.post(`${API_BASE_URL}/buddies/add`, { buddyUserId });
+        mutationFn: async ({ buddyUserId, shareCode }: { buddyUserId?: string, shareCode?: string }) => {
+            await axios.post(`${API_BASE_URL}/buddies/add`, { buddyUserId, shareCode });
             return null;
         },
         onSuccess: () => {
@@ -86,7 +90,6 @@ export const BuddiesProvider: React.FC<{ children: ReactNode }> = ({ children })
             return response.data;
         },
         enabled: !!authUserId,
-
     });
 
     const buddyListsQuery = useQuery({

@@ -3,11 +3,16 @@ import { Image, Text, View, StyleSheet } from 'react-native';
 import EventCalendarView from '../Calendar/EventCalendarView';
 import { useBuddiesContext } from './BuddiesContext';
 import { useCalendarContext } from '../Calendar/CalendarContext';
+import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 const BuddyEvents = ({ route }: { route: { params: { buddyAuthUserId: string } } }) => {
     const { buddyAuthUserId } = route.params;
     const { buddiesWishlists } = useBuddiesContext();
     const { filteredEvents } = useCalendarContext();
+
+    const buddyInfo = useMemo(() => {
+        return buddiesWishlists.data?.find(e => e.user_id === buddyAuthUserId)
+    }, [buddiesWishlists, buddyAuthUserId])
 
     const buddyEventsWithMetadata = useMemo(() => {
         if (!buddiesWishlists.data) return [];
@@ -15,18 +20,18 @@ const BuddyEvents = ({ route }: { route: { params: { buddyAuthUserId: string } }
         return filteredEvents.filter(event => buddiesWishlists.data.find(e => e.events.includes(event.id) && e.user_id === buddyAuthUserId))
     }, [buddiesWishlists, filteredEvents]);
 
-    const firstEvent = buddiesWishlists.data?.[0];
+    const avatarUrl = buddyInfo?.avatar_url && getSmallAvatarUrl(buddyInfo.avatar_url);
 
     return (
         <View>
             <View style={styles.titleContainer}>
-                {firstEvent?.avatar_url && (
+                {avatarUrl && (
                     <Image
-                        source={{ uri: firstEvent.avatar_url }}
+                        source={{ uri: avatarUrl }}
                         style={styles.avatar}
                     />
                 )}
-                <Text style={styles.title}>{firstEvent?.name}&apos;s Events</Text>
+                <Text style={styles.title}>{buddyInfo?.name}&apos;s Events</Text>
             </View>
             <EventCalendarView events={buddyEventsWithMetadata || []} />
         </View>

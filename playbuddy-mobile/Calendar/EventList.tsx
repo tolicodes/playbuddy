@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { NavStack } from "../types";
 import { Event } from "../commonTypes";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { SharedEvent, useBuddiesContext } from "../Buddies/BuddiesContext";
+import { BuddyWishlist, SharedEvent, useBuddiesContext } from "../Buddies/BuddiesContext";
 
 type EventListProps = {
     sections: any;
@@ -17,16 +17,23 @@ type EventListProps = {
     isLoadingEvents: boolean;
 };
 
-function getSharedBuddies(sharedEvents: SharedEvent[], eventId: string) {
-    return sharedEvents.find((sharedEvent: any) => sharedEvent.eventId === eventId)?.sharedBuddies;
+function getBuddiesAttending(buddiesWishlists: BuddyWishlist[], eventId: string) {
+    const buddiesWishlist = buddiesWishlists.filter((buddyWishlist: BuddyWishlist) => buddyWishlist.events.includes(eventId));
+    const buddiesAttending = buddiesWishlist.map((buddyWishlist: BuddyWishlist) => ({
+        user_id: buddyWishlist.user_id,
+        name: buddyWishlist.name,
+        avatar_url: buddyWishlist.avatar_url,
+    }));
+
+    return buddiesAttending;
 }
 
 const EventList = ({ sections, sectionListRef, isLoadingEvents, screen }: EventListProps) => {
     const navigation = useNavigation<NavStack>();
 
-    const { sharedEvents } = useBuddiesContext();
+    const { buddiesWishlists } = useBuddiesContext();
 
-    // Handle event click
+    // Handle event clickr
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     useEffect(() => {
@@ -40,7 +47,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents, screen }: EventL
         sections={sections}
         stickySectionHeadersEnabled={true}
         renderItem={({ item: event }: { item: EventWithMetadata }) => {
-            const sharedBuddies = getSharedBuddies(sharedEvents.data || [], event.id);
+            const buddiesAttending = getBuddiesAttending(buddiesWishlists.data || [], event.id);
 
             return (
                 <View
@@ -52,7 +59,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents, screen }: EventL
                             amplitude.logEvent('event_list_item_clicked', { event_id: event.id });
                             setSelectedEvent(event)
                         }}
-                        sharedBuddies={sharedBuddies}
+                        buddiesAttending={buddiesAttending}
                     />
                 </View>
             )

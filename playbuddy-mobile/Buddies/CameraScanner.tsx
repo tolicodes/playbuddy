@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 
-export default function CameraScreen({ onBarcodeScanned }: { onBarcodeScanned: (barcode: string) => void }) {
-    const [scanning, setScanning] = useState(false);
+export default function CameraScanner({ onBarcodeScanned, scanning, setScanning }: { onBarcodeScanned: (barcode: string) => void, scanning: boolean, setScanning: (scanning: boolean) => void }) {
     const [permission, requestPermission] = useCameraPermissions();
 
     const handleBarCodeScanned = ({ data }: { data: string }) => {
@@ -47,7 +46,7 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: '#007AFF',
-        padding: 20,
+        padding: 15,
         borderRadius: 10,
     },
     buttonText: {

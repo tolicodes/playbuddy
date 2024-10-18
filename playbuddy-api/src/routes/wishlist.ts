@@ -100,7 +100,7 @@ router.get('/buddies', authenticateRequest, async (req: AuthenticatedRequest, re
         return acc;
     }, [] as BuddyWishlist[]);
 
-    res.status(200).json(out);
+    return res.status(200).json(out);
 });
 
 // GET /wishlist - Get user's wishlist
@@ -230,6 +230,7 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
         const userWishlistSet = new Set(userWishlist.map(item => item.event_id));
         const sharedEventsMap = new Map<string, SharedEvent>();
 
+        // @ts-ignore
         buddiesWishlists.forEach((item: SharedEventRaw) => {
             if (userWishlistSet.has(item.event_id)) {
                 if (!sharedEventsMap.has(item.event_id)) {
@@ -250,10 +251,10 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
 
         const sharedEvents = Array.from(sharedEventsMap.values()) as SharedEvent[];
 
-        res.json(sharedEvents);
+        return res.json(sharedEvents);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Failed to fetch shared wishlist events');
+        return res.status(500).send('Failed to fetch shared wishlist events');
     }
 });
 

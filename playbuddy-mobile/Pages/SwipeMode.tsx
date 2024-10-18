@@ -10,6 +10,7 @@ import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
 import { useUserContext } from '../Auth/UserContext';
 import { LoginToAccess } from '../Common/LoginToAccess';
 import { Button } from '@rneui/themed';
+import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 export const SwipeMode: React.FC = () => {
     const { availableCardsToSwipe } = useCalendarContext();
@@ -52,25 +53,28 @@ export const SwipeMode: React.FC = () => {
     //     await AsyncStorage.setItem('plannerTooltipShown', 'true');
     // };
 
-    const renderCard = (event: Event) => (
-        <View style={styles.card}>
-            <Image source={{ uri: event?.image_url }} style={styles.image} />
-            <View style={styles.cardContent}>
-                <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{moment(event.start_date).format('dddd')}</Text>
-                <Text >{moment(event.start_date).format('MMM D')} {formatDate(event)}</Text>
+    const renderCard = (event: Event) => {
+        const imageUrl = event.image_url && getSmallAvatarUrl(event.image_url);
+        return (
+            <View style={styles.card}>
+                <Image source={{ uri: imageUrl }} style={styles.image} />
+                <View style={styles.cardContent}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{moment(event.start_date).format('dddd')}</Text>
+                    <Text >{moment(event.start_date).format('MMM D')} {formatDate(event)}</Text>
 
-                <Text style={styles.eventName}>{event.name}</Text>
+                    <Text style={styles.eventName}>{event.name}</Text>
 
-                <Text style={styles.organizer}>{event.organizer.name}</Text>
+                    <Text style={styles.organizer}>{event.organizer.name}</Text>
 
-                <Button
-                    title="More Info"
-                    onPress={() => Linking.openURL(event.event_url)}
+                    <Button
+                        title="More Info"
+                        onPress={() => Linking.openURL(event.event_url)}
 
-                />
+                    />
+                </View>
             </View>
-        </View>
-    );
+        );
+    }
 
     if (!authUserId) {
         return <LoginToAccess entityToAccess='Swipe Mode' />

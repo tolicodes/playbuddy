@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOp
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBuddiesContext } from './BuddiesContext';
 import { useNavigation } from '@react-navigation/native';
+import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 const MyBuddies = () => {
     const { buddies } = useBuddiesContext(); // Fetch buddies and loading state.
@@ -16,10 +17,13 @@ const MyBuddies = () => {
         );
     }
 
+
     const renderBuddy = ({ item }: { item: { avatar_url: string; name: string } }) => {
+
+        const avatarUrl = item.avatar_url && getSmallAvatarUrl(item.avatar_url);
         return (
             <View style={styles.buddyContainer}>
-                <Image source={{ uri: item.avatar_url }} style={styles.avatar} />
+                <Image source={{ uri: avatarUrl }} style={styles.avatar} />
                 <TouchableOpacity onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: item.user_id })}>
                     <Text style={styles.buddyName}>{item.name}</Text>
                 </TouchableOpacity>

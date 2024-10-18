@@ -5,6 +5,7 @@ import Markdown from 'react-native-markdown-display';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { WebView } from 'react-native-webview';
 import { formatDate } from './calendarUtils';
+import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (<WebView
@@ -43,13 +44,15 @@ export const EventDetail = ({ route }: any) => {
 
     const formattedPrice = formatPrice(selectedEvent.price);
 
+    const imageUrl = selectedEvent.image_url && getSmallAvatarUrl(selectedEvent.image_url);
+
     return (
         <ScrollView>
 
             {
                 selectedEvent.video_url
                     ? <VideoPlayer uri={selectedEvent.video_url} />
-                    : <Image source={{ uri: selectedEvent.image_url }} style={styles.fullViewImage} />
+                    : <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
             }
 
             <View style={{ padding: 20 }}>

@@ -8,18 +8,19 @@ import { useUserContext } from '../Auth/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatDate } from './calendarUtils';
 import { BuddyAvatarCarousel } from './BuddyAvatarCarousel';
+import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 interface ListItemProps {
     item: EventWithMetadata;
     setSelectedEvent: (event: Event) => void;
-    sharedBuddies?: {
+    buddiesAttending?: {
         user_id: string;
         name: string;
         avatar_url: string | null;
     }[];
 }
 
-export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, sharedBuddies }) => {
+export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, buddiesAttending: sharedBuddies }) => {
     const { toggleWishlistEvent, isOnWishlist, } = useCalendarContext(); // use the hook to handle wishlist
 
     const { authUserId } = useUserContext(); // use the hook to get the user ID
@@ -34,14 +35,15 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, shar
         toggleWishlistEvent.mutate({ eventId: item.id, isOnWishlist: !itemIsOnWishlist });
     };
 
+    const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
+
     return (
         <TouchableOpacity onPress={() => setSelectedEvent(item)}>
             <View style={styles.eventContainer}>
-                <Image source={{ uri: item.image_url }} style={styles.eventImage} />
+                <Image source={{ uri: imageUrl }} style={styles.eventImage} />
                 <View style={styles.eventDetails}>
-
                     <View style={styles.eventOrganizerAndBuddiesContainer}>
-                        <Text style={styles.eventOrganizer}>
+                        <View style={styles.organizerContainer}>
                             <View
                                 style={{
                                     width: 10,
@@ -51,29 +53,33 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, shar
                                     marginRight: 5,
                                 }}
                             />
-                            {item.organizer?.name}
-                        </Text>
-
-                        <View>
-                            {sharedBuddies && <BuddyAvatarCarousel buddies={sharedBuddies} />}
+                            <Text style={styles.eventOrganizer}>
+                                {item.organizer?.name}
+                            </Text>
                         </View>
+                        {sharedBuddies && (
+                            <View style={styles.buddyAvatarCarouselContainer}>
+                                <BuddyAvatarCarousel buddies={sharedBuddies} />
+                            </View>
+                        )}
                     </View>
 
-                    <Text style={styles.eventTitle}
-                        numberOfLines={2}
-                        ellipsizeMode="tail"
-                    >{item.name}</Text>
+                    <View style={styles.titleAndHeartContainer}>
+                        <Text style={styles.eventTitle}
+                            numberOfLines={2}
+                            ellipsizeMode="tail"
+                        >{item.name}</Text>
+                        {authUserId && (
+                            <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
+                                <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
 
                     <Text style={styles.eventTime}>{formattedDate}</Text>
-
                 </View>
-
-                {authUserId && <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
-                    <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
-                </TouchableOpacity>}
-
             </View>
-        </TouchableOpacity >
+        </TouchableOpacity>
     );
 };
 
@@ -85,12 +91,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
-        alignItems: 'center', // Aligns all content vertically centered
+        alignItems: 'center',
     },
     eventDetails: {
         flex: 1,
         height: 100,
-        justifyContent: 'center', // Aligns all content vertically centered
+        justifyContent: 'center',
     },
     eventImage: {
         width: 50,
@@ -101,13 +107,12 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
+        flex: 1,
+        marginRight: 10,
     },
     eventOrganizer: {
         fontSize: 14,
         color: 'black',
-        marginBottom: 4,
-        flexDirection: 'row',
-        alignItems: 'center',
     },
     eventTime: {
         fontSize: 14,
@@ -116,12 +121,26 @@ const styles = StyleSheet.create({
         marginTop: 4
     },
     favoriteIcon: {
-        paddingLeft: 10, // Adds some space between the event details and the star icon
+        paddingLeft: 10,
     },
     eventOrganizerAndBuddiesContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: 3
-    }
+        marginBottom: 4,
+    },
+    organizerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+
+    },
+    buddyAvatarCarouselContainer: {
+        marginLeft: 10
+    },
+    titleAndHeartContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginTop: -5
+    },
 });
