@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { Button } from '@rneui/themed';
 
 export default function CameraScanner({ onBarcodeScanned, scanning, setScanning }: { onBarcodeScanned: (barcode: string) => void, scanning: boolean, setScanning: (scanning: boolean) => void }) {
     const [permission, requestPermission] = useCameraPermissions();
@@ -26,13 +27,19 @@ export default function CameraScanner({ onBarcodeScanned, scanning, setScanning 
                     <Text style={styles.buttonText}>Scan QR Code</Text>
                 </TouchableOpacity>
             ) : (
-                <CameraView
-                    facing="back" style={styles.camera}
-                    barcodeScannerSettings={{
-                        barcodeTypes: ["qr"],
-                    }}
-                    onBarcodeScanned={handleBarCodeScanned}
-                />
+                <>
+                    <CameraView
+                        facing="back" style={styles.camera}
+                        barcodeScannerSettings={{
+                            barcodeTypes: ["qr"],
+                        }}
+                        onBarcodeScanned={handleBarCodeScanned}
+                    />
+                    <Button
+                        title="Cancel"
+                        onPress={() => setScanning(false)}
+                    />
+                </>
             )}
         </View>
     );

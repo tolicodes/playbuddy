@@ -96,7 +96,9 @@ export const Avatar = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Upload Your Avatar</Text>
+            <Text style={styles.title}>{
+                userProfile?.avatar_url ? 'Change Your Avatar' : 'Upload Your Avatar'
+            }</Text>
             <Text style={styles.subtitle}>This is how your buddies will identify you in the app!</Text>
             <TouchableOpacity onPress={pickImage} style={styles.circleContainer}>
                 <View style={styles.circle}>

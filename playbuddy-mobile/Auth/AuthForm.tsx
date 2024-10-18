@@ -4,6 +4,7 @@ import { Button, Input, Tab, Text } from '@rneui/themed';
 import { TabView, SceneMap } from 'react-native-tab-view';
 import { useUserContext } from './UserContext';
 import { useNavigation } from '@react-navigation/native';
+import { NavStack } from '../types';
 
 // Reusable Authentication Form
 const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
@@ -13,7 +14,7 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { signInWithEmail, signUpWithEmail } = useUserContext();
-    const { goBack } = useNavigation();
+    const { goBack, navigate } = useNavigation<NavStack>();
 
     const afterSignIn = useCallback(() => {
         setIsLoading(false);
@@ -22,6 +23,7 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
 
     const afterSignUp = useCallback(() => {
         setIsLoading(false);
+        navigate('User Profile');
     }, []);
 
     const handleAuth = () => {
