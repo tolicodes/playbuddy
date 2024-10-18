@@ -18,9 +18,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 10,
     },
+    codeTextEmoji: {
+        fontWeight: 'bold',
+        fontSize: 20,
+    },
     codeText: {
         fontWeight: 'bold',
-        // fontSize: 11,
+        fontSize: 11,
     },
     modalContainer: {
         flex: 1,
@@ -66,7 +70,7 @@ const styles = StyleSheet.create({
 
 const ICON_MAP: { [key: string]: React.ReactNode } = {
     'ALL': <Text>🌍</Text>,
-    'NYC': <Text style={styles.codeText}>🗽</Text>,
+    'NYC': <Text>🗽</Text>,
     // las vegas
     'LVG': <Text>🌴</Text>,
     // san diego
@@ -87,7 +91,11 @@ const ICON_MAP: { [key: string]: React.ReactNode } = {
 }
 
 export const getIcon = (code: string) => {
-    return ICON_MAP[code as keyof typeof ICON_MAP] || <Text>{code}</Text>;
+    return ICON_MAP[code as keyof typeof ICON_MAP] ?
+        <Text style={styles.codeTextEmoji}>
+            {ICON_MAP[code as keyof typeof ICON_MAP]}
+        </Text>
+        : <Text style={styles.codeText}>{code}</Text>;
 }
 
 const LocationDropdown: React.FC<LocationDropdownProps> = ({
