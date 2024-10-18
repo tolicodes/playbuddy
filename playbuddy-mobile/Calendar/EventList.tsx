@@ -50,9 +50,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents, screen }: EventL
             const buddiesAttending = getBuddiesAttending(buddiesWishlists.data || [], event.id);
 
             return (
-                <View
-                    style={{ height: 120 }}
-                >
+                <View>
                     <ListItem
                         item={event}
                         setSelectedEvent={(event) => {

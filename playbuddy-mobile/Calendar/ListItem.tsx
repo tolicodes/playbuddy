@@ -85,17 +85,15 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, budd
 
 const styles = StyleSheet.create({
     eventContainer: {
-        height: 100,
         flexDirection: 'row',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
         alignItems: 'center',
     },
     eventDetails: {
         flex: 1,
-        height: 100,
         justifyContent: 'center',
     },
     eventImage: {
@@ -131,7 +129,6 @@ const styles = StyleSheet.create({
     organizerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-
     },
     buddyAvatarCarouselContainer: {
         marginLeft: 10
@@ -140,6 +137,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        marginTop: -5
+
     },
 });
