@@ -1,6 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { NavStack } from '../types';
 
 interface Buddy {
     user_id: string;
@@ -13,7 +14,7 @@ interface BuddyAvatarCarouselProps {
 }
 
 export const BuddyAvatarCarousel: React.FC<BuddyAvatarCarouselProps> = ({ buddies }) => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavStack>();
     return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
             {buddies.map((buddy, index) => {

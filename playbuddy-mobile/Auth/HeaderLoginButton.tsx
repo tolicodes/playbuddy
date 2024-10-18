@@ -9,7 +9,7 @@ import { getSmallAvatarUrl } from "../Common/imageUtils";
 
 
 const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean }) => {
-    const navigation = useNavigation<NavStack>();
+    const { navigate } = useNavigation<NavStack>();
     const { authUserId, userProfile } = useUserContext();
 
     const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url);
@@ -24,7 +24,7 @@ const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean 
             }
             onPress={() => {
                 amplitude.logEvent('login_button_clicked')
-                navigation.navigate(!authUserId ? 'Login' : 'Profile')
+                navigate(!authUserId ? 'Login' : 'User Profile')
             }}
         >
             <View style={{

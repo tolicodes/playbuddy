@@ -4,14 +4,14 @@ import { useUserContext } from '../Auth/UserContext';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
-interface Buddy {
+export interface Buddy {
     user_id: string;
     name: string;
     avatar_url: string;
     share_code: string;
 }
 
-interface BuddyList {
+export interface BuddyList {
     id: number;
     name: string;
     buddy_list_buddies: { buddy_id: Buddy }[];

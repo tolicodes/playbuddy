@@ -4,10 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBuddiesContext } from './BuddiesContext';
 import { useNavigation } from '@react-navigation/native';
 import { getSmallAvatarUrl } from '../Common/imageUtils';
+import { NavStack } from '../types';
 
 const MyBuddies = () => {
     const { buddies } = useBuddiesContext(); // Fetch buddies and loading state.
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavStack>();
 
     if (buddies.isPending) {
         return (
@@ -18,7 +19,7 @@ const MyBuddies = () => {
     }
 
 
-    const renderBuddy = ({ item }: { item: { avatar_url: string; name: string } }) => {
+    const renderBuddy = ({ item }: { item: Buddy }) => {
 
         const avatarUrl = item.avatar_url && getSmallAvatarUrl(item.avatar_url);
         return (

@@ -14,11 +14,11 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { signInWithEmail, signUpWithEmail } = useUserContext();
-    const { goBack, navigate } = useNavigation<NavStack>();
+    const { navigate } = useNavigation<NavStack>();
 
     const afterSignIn = useCallback(() => {
         setIsLoading(false);
-        goBack();
+        navigate('Calendar');
     }, []);
 
     const afterSignUp = useCallback(() => {

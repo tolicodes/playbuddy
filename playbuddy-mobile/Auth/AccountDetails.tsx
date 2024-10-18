@@ -7,21 +7,20 @@ import { getSmallAvatarUrl } from '../Common/imageUtils';
 import QRCodeStyled from 'react-native-qrcode-styled';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { NavStack } from '../types';
 
-export default function AccountDetails({ route }: { route: any }) {
+export default function AccountDetails() {
     const { userProfile, signOut } = useUserContext();
-    const { goBack, navigate } = useNavigation<NavStack>();
+    const { navigate } = useNavigation<NavStack>();
 
     const onPressSignOut = async () => {
-        signOut(goBack);
+        signOut(() => {
+            navigate('Calendar');
+        });
     }
 
     const onPressHome = () => {
-        if (route.params?.fromScreen) {
-            navigate(route.params.fromScreen);
-        } else {
-            goBack();
-        }
+        navigate('Calendar');
     }
 
     const onPressDeleteAccount = async () => {
@@ -33,11 +32,7 @@ export default function AccountDetails({ route }: { route: any }) {
                     text: 'Delete',
                     onPress: () => {
                         signOut(() => {
-                            if (route.params?.fromScreen) {
-                                navigate(route.params.fromScreen);
-                            } else {
-                                goBack();
-                            }
+                            navigate('Calendar');
                         });
                     },
                     style: 'destructive',

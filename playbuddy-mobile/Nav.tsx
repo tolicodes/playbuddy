@@ -132,12 +132,9 @@ const TabNavigator = () => (
                     Calendar: "calendar",
                     Wishlist: "heart",
                     Communities: "users",
-                    Moar: "ellipsis-horizontal",
                     'Swipe Mode': "layer-group"
                 }[route.name];
-                return route.name === 'Moar'
-                    ? <IonIcon name={iconName} size={size} color={color} />
-                    : <FAIcon name={iconName} size={size} color={color} />;
+                return <FAIcon name={iconName} size={size} color={color} />;
             },
             tabBarButton: (props) => (
                 <TouchableOpacity
@@ -232,7 +229,7 @@ const DrawerNav = () => {
             <Drawer.Screen name="Moar" component={Moar}
                 options={{
                     drawerIcon: ({ color, size }) => (
-                        <IonIcon name="ellipsis-horizontal" size={size} color={color} />
+                        <IonIcon name="ellipsis-horizontal" size={size} color={color} style={{ width: 30 }} />
                     )
                 }}
 

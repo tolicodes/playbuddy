@@ -14,6 +14,10 @@ export type NavStackProps = {
     'Filters': undefined;
     'Communities': undefined;
     'Moar': undefined;
+
+    // Standalone Screens
+    'User Profile': undefined;
+    'Buddy Events': { buddyAuthUserId: string };
 }
 
 export type NavStack = StackNavigationProp<NavStackProps>

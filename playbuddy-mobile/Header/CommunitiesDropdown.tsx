@@ -1,11 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
+import { View, Image, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
 import { Community } from '../Common/CommonContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface CommunityDropdownProps {
     communities: Community[];
     selectedCommunity: Community | null;
     onSelectCommunity: (community: Community | null) => void;
+}
+
+const ICON_MAP: { [key: string]: React.ReactNode } = {
+    'All': <Ionicons name="ellipsis-horizontal" size={20} color="black" />,
+    'CT': <Ionicons name="hand-right-outline" size={20} color="black" />,
+    'ACR': <Image source={{
+        uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc/acro_icon.png'
+    }} style={{ width: 30, height: 30 }} />
+}
+
+export const getIcon = (code: string) => {
+    return ICON_MAP[code as keyof typeof ICON_MAP] || <Text>{code}</Text>;
 }
 
 const CommunityDropdown: React.FC<CommunityDropdownProps> = ({
@@ -29,10 +42,10 @@ const CommunityDropdown: React.FC<CommunityDropdownProps> = ({
             onPress={() => handleSelectCommunity(item)}
         >
             <View style={styles.codeCircle}>
-                <Text style={styles.codeText}>{item.code}</Text>
+                {getIcon(item.code)}
             </View>
             <Text style={styles.communityName}>{item.name}</Text>
-        </TouchableOpacity>
+        </TouchableOpacity >
     );
 
     const communitiesWithAll = [
@@ -48,9 +61,7 @@ const CommunityDropdown: React.FC<CommunityDropdownProps> = ({
         <View>
             <TouchableOpacity onPress={toggleDropdown}>
                 <View style={styles.codeCircle}>
-                    <Text style={styles.codeText}>
-                        {selectedCommunity ? selectedCommunity.code : '?'}
-                    </Text>
+                    {getIcon(selectedCommunity?.code || 'ALL')}
                 </View>
             </TouchableOpacity>
 

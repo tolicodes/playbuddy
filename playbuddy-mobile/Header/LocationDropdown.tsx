@@ -8,77 +8,6 @@ interface LocationDropdownProps {
     onSelectLocationArea: (locationArea: LocationArea) => void;
 }
 
-const LocationDropdown: React.FC<LocationDropdownProps> = ({
-    locationAreas,
-    selectedLocationArea,
-    onSelectLocationArea,
-}) => {
-    const [isOpen, setIsOpen] = useState(false);
-
-    const toggleDropdown = () => setIsOpen(!isOpen);
-
-    const handleSelectLocation = (locationArea: LocationArea) => {
-        onSelectLocationArea(locationArea);
-        setIsOpen(false);
-    };
-
-    const renderLocation = ({ item }: { item: LocationArea }) => (
-        <TouchableOpacity
-            style={styles.locationItem}
-            onPress={() => handleSelectLocation(item)}
-        >
-            <View style={styles.codeCircle}>
-                <Text style={styles.codeText}>{item.code}</Text>
-            </View>
-            <Text style={styles.locationName}>
-                {item.name}
-            </Text>
-        </TouchableOpacity>
-    );
-
-    const locationAreasWithAll = [
-        {
-            id: 'all',
-            name: 'All',
-            code: 'ALL',
-        },
-        ...locationAreas,
-    ];
-
-    return (
-        <View>
-            <TouchableOpacity onPress={toggleDropdown}>
-                <View style={styles.codeCircle}>
-                    <Text style={styles.codeText}>
-                        {selectedLocationArea ? selectedLocationArea.code : '?'}
-                    </Text>
-                </View>
-            </TouchableOpacity>
-
-            <Modal
-                visible={isOpen}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setIsOpen(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalHeader}>Locations</Text>
-                        <FlatList
-                            data={locationAreasWithAll}
-                            renderItem={renderLocation}
-                            keyExtractor={(item) => item.id}
-                        />
-                        <TouchableOpacity style={styles.closeButton} onPress={() => setIsOpen(false)}>
-                            <Text style={styles.closeButtonText}>Close</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-        </View>
-    );
-};
-
 const styles = StyleSheet.create({
     codeCircle: {
         width: 35,
@@ -91,7 +20,7 @@ const styles = StyleSheet.create({
     },
     codeText: {
         fontWeight: 'bold',
-        fontSize: 11,
+        // fontSize: 11,
     },
     modalContainer: {
         flex: 1,
@@ -134,5 +63,104 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
+const ICON_MAP: { [key: string]: React.ReactNode } = {
+    'ALL': <Text>🌍</Text>,
+    'NYC': <Text style={styles.codeText}>🗽</Text>,
+    // las vegas
+    'LVG': <Text>🌴</Text>,
+    // san diego
+    'SDG': <Text>🌞</Text>,
+    // san francisco
+    'SFR': <Text>🌉</Text>,
+    // los angeles
+    'LA': <Text>🌆</Text>,
+    // san jose
+    'SJ': <Text>🌲</Text>,
+    // Mexico
+    'MX': <Text>🇲🇽</Text>,
+    // Croatia
+    'HR': <Text>🇭🇷</Text>,
+    // Costa Rica
+    'CR': <Text>🇨🇷</Text>,
+
+}
+
+export const getIcon = (code: string) => {
+    return ICON_MAP[code as keyof typeof ICON_MAP] || <Text>{code}</Text>;
+}
+
+const LocationDropdown: React.FC<LocationDropdownProps> = ({
+    locationAreas,
+    selectedLocationArea,
+    onSelectLocationArea,
+}) => {
+    const [isOpen, setIsOpen] = useState(false);
+
+    const toggleDropdown = () => setIsOpen(!isOpen);
+
+    const handleSelectLocation = (locationArea: LocationArea) => {
+        onSelectLocationArea(locationArea);
+        setIsOpen(false);
+    };
+
+    const renderLocation = ({ item }: { item: LocationArea }) => (
+        <TouchableOpacity
+            style={styles.locationItem}
+            onPress={() => handleSelectLocation(item)}
+        >
+            <View style={styles.codeCircle}>
+                {getIcon(item.code)}
+            </View>
+            <Text style={styles.locationName}>
+                {item.name}
+            </Text>
+        </TouchableOpacity>
+    );
+
+    const locationAreasWithAll = [
+        {
+            id: 'all',
+            name: 'All',
+            code: 'ALL',
+        },
+        ...locationAreas,
+    ];
+
+    return (
+        <View>
+            <TouchableOpacity onPress={toggleDropdown}>
+                <View style={styles.codeCircle}>
+                    <Text style={styles.codeText}>
+                        {getIcon(selectedLocationArea?.code || 'ALL')}
+                    </Text>
+                </View>
+            </TouchableOpacity>
+
+            <Modal
+                visible={isOpen}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setIsOpen(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalHeader}>Locations</Text>
+                        <FlatList
+                            data={locationAreasWithAll}
+                            renderItem={renderLocation}
+                            keyExtractor={(item) => item.id}
+                        />
+                        <TouchableOpacity style={styles.closeButton} onPress={() => setIsOpen(false)}>
+                            <Text style={styles.closeButtonText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+        </View>
+    );
+};
+
+
 
 export default LocationDropdown;
