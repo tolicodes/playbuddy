@@ -7,4 +7,4 @@ openai_key.json
 .env
 types/
 dist/
-data
+data/*

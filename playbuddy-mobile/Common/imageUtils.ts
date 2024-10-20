@@ -7,3 +7,5 @@ export const getSmallAvatarUrl = (avatarUrl: string, size: number = 50) => {
 
     return newUrl;
 }
+
+

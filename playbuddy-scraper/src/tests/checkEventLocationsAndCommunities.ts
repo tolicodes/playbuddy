@@ -15,7 +15,7 @@ const getPreviousEventCount = () => {
 };
 
 // Function to save the new event count
-const saveEventCount = (count) => {
+const saveEventCount = (count: number) => {
     const data = JSON.stringify({ eventCount: count });
     fs.writeFileSync(eventCountFile, data);
 };
@@ -53,7 +53,7 @@ export const checkEvents = async () => {
             console.log('All events have location and community.');
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error:', error.message);
     }
 };

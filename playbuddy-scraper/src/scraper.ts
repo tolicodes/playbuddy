@@ -1,15 +1,17 @@
 import fs from "fs";
-import { Event } from "./commonTypes.js";
-
-import scrapeURLs from "./helpers/scrapeURLs.js";
+import { CreateEventInput, Event } from "./commonTypes.js";
 // import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp.js";
 import { scrapePluraEvents } from "./scrapers/scrapePluraEvents.js";
 import { scrapeEventbriteEventsFromOrganizersURLs } from "./scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage.js";
 import { scrapeOrganizerTantraNY } from "./scrapers/organizers/tantra_ny.js";
-import { writeEventsToDB } from "./helpers/writeEventsToDB.js";
+import { writeEventsToDB } from "./helpers/writeEventsToDB/writeEventsToDB.js";
 import { scrapeAcroFestivals, API_URL as ACROFESTIVALS_API_URL } from "./scrapers/acrofestivals.js";
+import { scrapeFacebookEvents as scrapeFacebook } from "./scrapers/facebook.js";
 
-export const filterEvents = (events: Event[]) => {
+const CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b'
+const ACRO_COMMUNITY_ID = '89d31ff0-05bf-4fa7-98e0-3376b44b4997';
+
+export const filterEvents = (events: CreateEventInput[]) => {
     // these are default Plura events that we want to exclude from the calendar
     const EXCLUDE_EVENT_IDS = [
         "e7179b3b-b4f8-40df-8d87-f205b0caaeb1", // New York LGBTQ+ Community Events Calendar
@@ -17,16 +19,18 @@ export const filterEvents = (events: Event[]) => {
     ];
 
     const filteredEvents = events.filter(
-        (event) => !EXCLUDE_EVENT_IDS.includes(event.id),
-    ) as Event[];
+        (event) => !event?.original_id || !EXCLUDE_EVENT_IDS.includes(event.original_id),
+    ) as CreateEventInput[];
 
     return filteredEvents;
 };
 
+
+
 type URLCache = string[];
 
-const getURLCache = (events: Event[]): URLCache => {
-    return events.map((event: Event) => event.event_url);
+const getURLCache = (events: CreateEventInput[]): URLCache => {
+    return events.map((event: CreateEventInput) => event.event_url);
 };
 
 interface FilePath {
@@ -83,10 +87,17 @@ const DATA_FILES: Record<string, FilePath> = {
     },
     acro_festivals: {
         path: "./data/all_acro_festivals_events.json",
+    },
+    // not used
+    // acro_facebook_urls: {
+    //     path: "./data/datasets/acro_facebook_urls.json",
+    // },
+    acro_facebook: {
+        path: "./data/acro_facebook.json",
     }
 };
 
-const getFromFile = (source: string) => {
+const getFromFile = (source: string): CreateEventInput[] => {
     return fileOperations.readJSON(DATA_FILES[source].path);
 };
 
@@ -106,6 +117,9 @@ const scrapeKinkEventbrite = async (urlCache: URLCache) => {
             sourceMetadata: {
                 source_ticketing_platform: "Eventbrite",
                 dataset: "Kink",
+                communities: [{
+                    id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
+                }]
             },
             urlCache,
         });
@@ -119,6 +133,9 @@ const scrapePlura = async (urlCache: URLCache) => {
         sourceMetadata: {
             source_ticketing_platform: "Plura",
             dataset: "Kink",
+            communities: [{
+                id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
+            }]
         },
     });
     writeFile("plura", pluraEventsOut);
@@ -130,6 +147,9 @@ const scrapeOrganizerTantraNYEvents = async (urlCache: URLCache) => {
         sourceMetadata: {
             dataset: "Kink",
             source_origination_platform: "organizer_api",
+            communities: [{
+                id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
+            }]
         },
     });
 
@@ -140,11 +160,31 @@ const scrapeAcroFestivalsEvents = async (urlCache: URLCache) => {
     const acroFestivalsEventsOut = await scrapeAcroFestivals({
         sourceMetadata: {
             dataset: "Acro",
+            communities: [{
+                id: ACRO_COMMUNITY_ID
+            }]
         },
         url: ACROFESTIVALS_API_URL,
     });
 
     writeFile("acro_festivals", acroFestivalsEventsOut);
+}
+
+const scrapeFacebookEvents = async (urlCache: URLCache) => {
+    const facebookEventsOut = await scrapeFacebook({
+        sourceMetadata: {
+            dataset: "Acro",
+            communities: [{
+                id: ACRO_COMMUNITY_ID
+            }]
+        },
+        urlCache: [],
+        url: 'http://facebook.com',
+    });
+
+    writeFile("acro_facebook", facebookEventsOut);
+
+    return facebookEventsOut;
 }
 
 // const scrapeWhatsapp = async (urlCache: URLCache) => {
@@ -157,16 +197,21 @@ const scrapeAcroFestivalsEvents = async (urlCache: URLCache) => {
 //     writeFile("whatsapp_events", whatsappEventsOut);
 // };
 
-export const scrapeEvents = async () => {
-    // GENERAL SETUP
-    const allEventsOld = getFromFile("all");
-    const urlCache = getURLCache(allEventsOld);
+export const scrapeEvents = async ({
+    freq = 'hourly'
+}: {
+    freq: 'hourly' | 'daily'
+}) => {
+    // GENERAL SETUP    
+    // we will fetch events later for matching
+    const urlCache: string[] = []
 
     const allScrapers = await Promise.all([
         scrapeKinkEventbrite(urlCache),
         scrapePlura(urlCache),
         scrapeOrganizerTantraNYEvents(urlCache),
         scrapeAcroFestivalsEvents(urlCache),
+        freq === 'daily' && scrapeFacebookEvents(urlCache),
         // scrapeWhatsapp(urlCache)
     ]);
 
@@ -175,13 +220,15 @@ export const scrapeEvents = async () => {
     const kinkEventbriteEvents = getFromFile("kink_eventbrite_events");
     const tantraNYEvents = getFromFile("tantra_ny");
     const acroFestivalsEvents = getFromFile("acro_festivals");
+    const facebookEvents = freq === 'daily' ? getFromFile("acro_facebook") : [];
 
     // Filter them to exclude certain events and dedupe
     const filteredEvents = filterEvents([
         ...pluraEvents,
         ...kinkEventbriteEvents,
         ...tantraNYEvents,
-        ...acroFestivalsEvents
+        ...acroFestivalsEvents,
+        ...facebookEvents,
     ]);
 
     await writeEventsToDB(filteredEvents);

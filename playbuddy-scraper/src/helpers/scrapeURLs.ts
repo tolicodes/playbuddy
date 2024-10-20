@@ -1,11 +1,11 @@
-import { Event, SourceMetadata } from "../commonTypes.js";
+import { CreateEventInput, SourceMetadata } from "../commonTypes.js";
 import { ScraperParams } from '../scrapers/types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
 import scrapeEventbriteAllEventsFromOrganizerPage from "../scrapers/eventbrite/scrapeEventbriteAllEventsFromOrganizerPage.js";
 
 type ScrapersConfig = {
   [domain: string]: {
-    scraper: (params: ScraperParams) => Promise<Event[] | null>;
+    scraper: (params: ScraperParams) => Promise<CreateEventInput[] | null>;
     eventRegex: RegExp;
     eventRegexIndex: number;
   };
@@ -42,8 +42,8 @@ const dedupeByLink = (arr: SourceMetadata[]): SourceMetadata[] => {
 export const scrapeURLs = async (
   links: SourceMetadata[],
   urlCache: string[],
-): Promise<Event[]> => {
-  const events: Event[] = [];
+): Promise<CreateEventInput[]> => {
+  const events: CreateEventInput[] = [];
 
   const filteredFromCache = links.filter((link) => {
     if (!link.source_url) return false;

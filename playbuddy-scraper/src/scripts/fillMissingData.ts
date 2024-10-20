@@ -69,7 +69,7 @@ const fillMissingData = async () => {
             console.log('No events missing community association.');
         }
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('Error:', error.message);
     }
 };

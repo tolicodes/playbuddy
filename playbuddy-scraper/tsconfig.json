@@ -27,6 +27,7 @@
     "strictPropertyInitialization": true,
     "target": "esnext",
     "useDefineForClassFields": true,
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "resolveJsonModule": true
   }
 }

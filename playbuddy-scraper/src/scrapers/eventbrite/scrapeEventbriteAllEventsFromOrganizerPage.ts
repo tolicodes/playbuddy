@@ -2,14 +2,14 @@ import axios from "axios";
 
 import cheerio from "cheerio";
 import scrapeEventbriteEventsFromOrganizerPage from "./scrapeEventbriteEventsFromOrganizerPage.js";
-import { Event } from "../../commonTypes.js";
+import { CreateEventInput } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
 
 const scrapeEventbriteAllEventsFromOrganizerPage = async ({
   url,
   sourceMetadata,
   urlCache,
-}: ScraperParams): Promise<Event[] | null> => {
+}: ScraperParams): Promise<CreateEventInput[] | null> => {
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);

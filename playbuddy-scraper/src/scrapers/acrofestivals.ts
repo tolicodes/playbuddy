@@ -2,7 +2,7 @@
 
 import axios from "axios";
 
-import { Event } from "../commonTypes.js";
+import { CreateEventInput, Event } from "../commonTypes.js";
 import { ScraperParams } from './types.js'
 
 export const API_URL = "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*";
@@ -11,18 +11,19 @@ export const API_URL = "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?
 export const scrapeAcroFestivals = async ({
     url = API_URL,
     sourceMetadata,
-}: ScraperParams): Promise<Event[]> => {
+}: ScraperParams): Promise<CreateEventInput[]> => {
     try {
         // Make a request to the Eventbrite API endpoint
         const data = await axios.get(url, {
             headers: {
+                // These are public headers
                 apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlY2hkdHZzamlvZ2lqeGJjenFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU1MjkyOTAsImV4cCI6MjAyMTEwNTI5MH0.GTTenJ30CynPTvRm9f0fJ7s8vj465avrZ30BGo18bms',
                 authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhlY2hkdHZzamlvZ2lqeGJjenFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDU1MjkyOTAsImV4cCI6MjAyMTEwNTI5MH0.GTTenJ30CynPTvRm9f0fJ7s8vj465avrZ30BGo18bms'
             }
         });
 
         // Extract relevant event details
-        const events = Object.values(data.data).map((event: any): Event => {
+        const events = Object.values(data.data).map((event: any): CreateEventInput => {
             const startDate = new Date(`${event.Date} ${event.StartTime}`);
             const endDate = new Date(startDate);
             endDate.setHours(endDate.getHours() + parseFloat(event.HoursDuration));
@@ -30,7 +31,7 @@ export const scrapeAcroFestivals = async ({
             const url = event.web_url || event.fb_url || event.ig_url || 'https://acrofestivals.org';
 
             return {
-                id: `acrofestivals-${event.id}`,
+                original_id: `acrofestivals-${event.id}`,
                 type: 'retreat',
                 recurring: 'none',
                 organizer: {
@@ -52,9 +53,9 @@ export const scrapeAcroFestivals = async ({
 
                 price: "",
                 description: `${event.description}\n\n
-                    Email: ${event.email}\n\n
-                    FB: ${event.fb_url}\n\n
-                    IG: ${event.ig_url}`,
+  Email: ${event.email}\n\n
+  FB: ${event.fb_url}\n\n
+  IG: ${event.ig_url}`,
 
                 tags: ["acro"],
 

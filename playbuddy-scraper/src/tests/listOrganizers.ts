@@ -1,25 +1,38 @@
 import fs from 'fs';
-import path from 'path';
 import { supabaseClient } from '../connections/supabaseClient.js';
 // Print table using table library
 import Table from 'cli-table3';
 
+interface Organizer {
+    organizer_id: string;
+    name: string;
+    count: number;
+}
+
+interface Event {
+    organizer_id: string;
+    organizer: {
+        name: string;
+    };
+}
+
 // Function to fetch organizers and event counts
-async function fetchOrganizersAndEventCount() {
+async function fetchOrganizersAndEventCount(): Promise<Organizer[]> {
     try {
         // Fetch organizers and their event count
         const { data: events, error } = await supabaseClient
             .from('events')
-            .select('organizer_id, organizers(name)');
+            .select('organizer_id, organizer!organizer_id(name)');
 
         if (error) throw error;
 
-        const organizers = events.reduce((acc, event) => {
+        // @ts-expect-error - TODO: fix this
+        const organizers = (events).reduce<Record<string, Organizer>>((acc, event: Event) => {
             const organizerId = event.organizer_id;
             if (!acc[organizerId]) {
                 acc[organizerId] = {
                     organizer_id: organizerId,
-                    name: event.organizers.name,
+                    name: event.organizer.name,
                     count: 0
                 };
             }
@@ -29,8 +42,6 @@ async function fetchOrganizersAndEventCount() {
 
         const data = Object.values(organizers);
 
-        if (error) throw error;
-
         return data;
     } catch (error) {
         console.error('Error fetching organizers and event counts:', error);
@@ -39,7 +50,7 @@ async function fetchOrganizersAndEventCount() {
 }
 
 // Function to save data to a file
-function saveOrganizersEventCount(data) {
+function saveOrganizersEventCount(data: Organizer[]): void {
     const filePath = './organizers_event_count.json';
 
     // Save the data to a file
@@ -49,9 +60,9 @@ function saveOrganizersEventCount(data) {
 }
 
 // Function to compare with previous data and create a table
-function compareWithPreviousRun(currentData) {
+function compareWithPreviousRun(currentData: Organizer[]): void {
     const filePath = './organizers_event_count.json';
-    const previousData = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf-8')) : [];
+    const previousData: Organizer[] = fs.existsSync(filePath) ? JSON.parse(fs.readFileSync(filePath, 'utf-8')) : [];
     const previousDate = fs.existsSync(filePath) ? fs.statSync(filePath).mtime.toISOString().split('T')[0] : 'N/A';
 
     const previousCount = previousData.length;
@@ -76,8 +87,6 @@ function compareWithPreviousRun(currentData) {
             currentCount: currentOrganizer.count
         };
     });
-
-
 
     const table = new Table({
         head: ['Name', `${previousDate}`, 'Current'],
@@ -105,7 +114,16 @@ function compareWithPreviousRun(currentData) {
     });
 }
 
-const testMatchingCommunities = async () => {
+interface OrganizerWithId {
+    id: string;
+    name: string;
+}
+
+interface CommunityWithOrganizerId {
+    organizer_id: string;
+}
+
+const testMatchingCommunities = async (): Promise<void> => {
     console.log("Testing for matching communities...");
 
     // Fetch all organizers
@@ -129,10 +147,10 @@ const testMatchingCommunities = async () => {
     }
 
     // Create a set of organizer IDs that have communities
-    const organizerIdsWithCommunities = new Set(communities.map(c => c.organizer_id));
+    const organizerIdsWithCommunities = new Set((communities as CommunityWithOrganizerId[]).map(c => c.organizer_id));
 
     // Find organizers without communities
-    const organizersWithoutCommunities = organizers.filter(org => !organizerIdsWithCommunities.has(org.id));
+    const organizersWithoutCommunities = (organizers as OrganizerWithId[]).filter(org => !organizerIdsWithCommunities.has(org.id));
 
     if (organizersWithoutCommunities.length === 0) {
         console.log("All organizers have matching communities.");
@@ -142,13 +160,43 @@ const testMatchingCommunities = async () => {
             console.log(`- ${org.name}`);
         });
     }
+}
 
+// all events have at least 2 communities   
+async function eventCommunities() {
+    const { data: events, error: eventsError } = await supabaseClient
+        .from('events')
+        .select('id, event_communities(community_id)')
+
+    if (eventsError) {
+        console.error("Error fetching events:", eventsError);
+        return;
+    }
+
+    if (!events) {
+        console.log("No events found.");
+        return;
+    }
+
+    const eventsWithLessThanTwoCommunities = events.filter(event =>
+        event.event_communities.length < 2
+    );
+
+    if (eventsWithLessThanTwoCommunities.length === 0) {
+        console.log("All events have at least 2 communities.");
+    } else {
+        console.log("Events with less than 2 communities:");
+        eventsWithLessThanTwoCommunities.forEach(event => {
+            console.log(`- Event ID: ${event.id}, Community Count: ${event.event_communities.length}`);
+        });
+    }
 }
 
 // Main function to run the process
-export const listOrganizers = async () => {
+export const listOrganizers = async (): Promise<void> => {
     const organizersEventCount = await fetchOrganizersAndEventCount();
-    saveOrganizersEventCount(organizersEventCount);
-    compareWithPreviousRun(organizersEventCount);
-    testMatchingCommunities();
+    await saveOrganizersEventCount(organizersEventCount);
+    await compareWithPreviousRun(organizersEventCount);
+    await testMatchingCommunities();
+    await eventCommunities();
 }

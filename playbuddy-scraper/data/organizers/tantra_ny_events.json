@@ -1,106 +1,6 @@
 [
   {
-    "id": "organizer-tantra_ny-6149",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "SACRED",
-    "start_date": "2024-10-17T22:30:00.000Z",
-    "end_date": "2024-10-18T04:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/sacred-tickets-1021450143877?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/sacred-tickets-1021450143877?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/sac.jpg",
-    "location": "The Loft (Tribeca) -  New York, NY 10007",
-    "price": "0",
-    "description": "",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5824",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Cuddle Party! - New York",
-    "start_date": "2024-10-18T22:30:00.000Z",
-    "end_date": "2024-10-19T01:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-936513766887?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/cuddle-party-a-warm-evening-of-connection-cuddles-and-consent-tickets-936513766887?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/cdp.jpg",
-    "location": "The Loft (Tribeca) -  New York, NY 10007",
-    "price": "0",
-    "description": "A workshop on Consent and Communication, cleverly disguised as a Pajama Party!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5276",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Tantra Speed Date® - Jersey City",
-    "start_date": "2024-10-19T21:30:00.000Z",
-    "end_date": "2024-10-20T00:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-988743497417?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-jersey-city-meet-singles-speed-dating-in-nj-tickets-988743497417?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/tsd.jpg",
-    "location": "Asana Soul Practice (Jersey City) - 124 1st Street Jersey City, NJ 07302",
-    "price": "0",
-    "description": "Join the speed dating revolution with a 94% match rate! Meet singles and ignite connections through fun, chemistry-building games!",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-5825",
-    "type": "event",
-    "recurring": "none",
-    "organizer": {
-      "id": "",
-      "name": "The Tantra Institute",
-      "url": "https://tantrany.com"
-    },
-    "name": "Snuggle Party! - New York",
-    "start_date": "2024-10-19T21:30:00.000Z",
-    "end_date": "2024-10-20T00:30:00.000Z",
-    "ticket_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1001232803267?aff=4jsontoli",
-    "event_url": "https://www.eventbrite.com/e/sacred-snuggle-party-new-york-a-warm-evening-of-sensual-exploration-tickets-1001232803267?aff=4jsontoli",
-    "image_url": "https://tantrany.com/images/events/sng.jpg",
-    "location": "The Loft (Tribeca) -  New York, NY 10007",
-    "price": "0",
-    "description": "A warm evening of sensual exploration and erotic connection, featuring guided practices, consensual touch, and intimate interactions",
-    "tags": [
-      "tantra"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
-  },
-  {
-    "id": "organizer-tantra_ny-6036",
+    "original_id": "organizer-tantra_ny-6036",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -122,10 +22,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5592",
+    "original_id": "organizer-tantra_ny-5592",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -147,10 +52,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6037",
+    "original_id": "organizer-tantra_ny-6037",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -172,10 +82,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6258",
+    "original_id": "organizer-tantra_ny-6258",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -197,10 +112,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5176",
+    "original_id": "organizer-tantra_ny-5176",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -222,10 +142,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5585",
+    "original_id": "organizer-tantra_ny-5585",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -247,10 +172,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6230",
+    "original_id": "organizer-tantra_ny-6230",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -272,10 +202,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6038",
+    "original_id": "organizer-tantra_ny-6038",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -297,10 +232,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6293",
+    "original_id": "organizer-tantra_ny-6293",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -322,10 +262,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6039",
+    "original_id": "organizer-tantra_ny-6039",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -347,10 +292,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6302",
+    "original_id": "organizer-tantra_ny-6302",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -372,10 +322,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5177",
+    "original_id": "organizer-tantra_ny-5177",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -397,10 +352,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6167",
+    "original_id": "organizer-tantra_ny-6167",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -422,10 +382,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5593",
+    "original_id": "organizer-tantra_ny-5593",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -447,10 +412,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6168",
+    "original_id": "organizer-tantra_ny-6168",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -472,10 +442,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6040",
+    "original_id": "organizer-tantra_ny-6040",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -497,10 +472,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5600",
+    "original_id": "organizer-tantra_ny-5600",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -522,10 +502,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6041",
+    "original_id": "organizer-tantra_ny-6041",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -547,10 +532,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5179",
+    "original_id": "organizer-tantra_ny-5179",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -572,10 +562,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5277",
+    "original_id": "organizer-tantra_ny-5277",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -597,10 +592,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5594",
+    "original_id": "organizer-tantra_ny-5594",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -622,10 +622,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6042",
+    "original_id": "organizer-tantra_ny-6042",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -647,10 +652,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6043",
+    "original_id": "organizer-tantra_ny-6043",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -672,10 +682,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5178",
+    "original_id": "organizer-tantra_ny-5178",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -697,10 +712,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5587",
+    "original_id": "organizer-tantra_ny-5587",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -722,10 +742,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6044",
+    "original_id": "organizer-tantra_ny-6044",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -747,10 +772,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6170",
+    "original_id": "organizer-tantra_ny-6170",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -772,10 +802,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6169",
+    "original_id": "organizer-tantra_ny-6169",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -797,10 +832,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6045",
+    "original_id": "organizer-tantra_ny-6045",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -822,10 +862,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5278",
+    "original_id": "organizer-tantra_ny-5278",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -847,10 +892,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5595",
+    "original_id": "organizer-tantra_ny-5595",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -872,10 +922,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6151",
+    "original_id": "organizer-tantra_ny-6151",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -897,10 +952,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6046",
+    "original_id": "organizer-tantra_ny-6046",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -922,10 +982,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6150",
+    "original_id": "organizer-tantra_ny-6150",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -947,10 +1012,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5091",
+    "original_id": "organizer-tantra_ny-5091",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -972,10 +1042,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6171",
+    "original_id": "organizer-tantra_ny-6171",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -997,10 +1072,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5054",
+    "original_id": "organizer-tantra_ny-5054",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1022,10 +1102,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5596",
+    "original_id": "organizer-tantra_ny-5596",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1047,10 +1132,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5588",
+    "original_id": "organizer-tantra_ny-5588",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1072,10 +1162,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6172",
+    "original_id": "organizer-tantra_ny-6172",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1097,10 +1192,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5598",
+    "original_id": "organizer-tantra_ny-5598",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1122,10 +1222,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6173",
+    "original_id": "organizer-tantra_ny-6173",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1147,10 +1252,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6175",
+    "original_id": "organizer-tantra_ny-6175",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1172,10 +1282,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5597",
+    "original_id": "organizer-tantra_ny-5597",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1197,10 +1312,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5599",
+    "original_id": "organizer-tantra_ny-5599",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1222,10 +1342,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5589",
+    "original_id": "organizer-tantra_ny-5589",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1247,10 +1372,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6264",
+    "original_id": "organizer-tantra_ny-6264",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1272,10 +1402,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5055",
+    "original_id": "organizer-tantra_ny-5055",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1297,10 +1432,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-6120",
+    "original_id": "organizer-tantra_ny-6120",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1322,10 +1462,15 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   },
   {
-    "id": "organizer-tantra_ny-5468",
+    "original_id": "organizer-tantra_ny-5468",
     "type": "event",
     "recurring": "none",
     "organizer": {
@@ -1347,6 +1492,11 @@
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
-    "source_origination_platform": "organizer_api"
+    "source_origination_platform": "organizer_api",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
   }
 ]

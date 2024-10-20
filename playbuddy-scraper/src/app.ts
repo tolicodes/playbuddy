@@ -10,16 +10,37 @@ export const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  next(err);
+});
+
 app.head("/", (req: Request, res: Response): void => {
   res.send();
 });
 
 app.get("/scrape", async (req: Request, res: Response): Promise<void> => {
-  await scrapeEvents();
+  await scrapeEvents({
+    freq: 'hourly'
+  })
+    ;
   res.send({
     status: "ok",
   });
 });
+
+// more expensive queries
+app.get("/scrape/daily", async (req: Request, res: Response): Promise<void> => {
+  await scrapeEvents({
+    freq: 'daily'
+  });
+
+  res.send({
+    status: "ok",
+  });
+});
+
+
 
 let server: Server;
 export async function start(port: number | string): Promise<Server> {

@@ -2,7 +2,7 @@ import puppeteer from "puppeteer";
 import cheerio from "cheerio";
 
 import { ScraperParams } from "./types.js";
-import { Event } from "../commonTypes.js";
+import { CreateEventInput, Event } from "../commonTypes.js";
 import { convertPartifulDateTime } from "../helpers/partifulDateUtils.js";
 import { extractHtmlToMarkdown } from "../helpers/extractHtmlToMarkdown.js";
 import { puppeteerConfig } from "../config.js";
@@ -12,7 +12,7 @@ async function scrapePartifulEvent({
     url: eventId,
     sourceMetadata,
     urlCache,
-}: ScraperParams): Promise<Event[] | null> {
+}: ScraperParams): Promise<CreateEventInput[] | null> {
     const url = `https://partiful.com/e/${eventId}`;
     const browser = await puppeteer.launch(puppeteerConfig);
     const page = await browser.newPage();
@@ -45,13 +45,11 @@ async function scrapePartifulEvent({
         const description = await extractHtmlToMarkdown(page, "div.description")
         const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
 
-        const eventDetails: Event = {
-            id: `plura-${eventId}`,
+        const eventDetails: CreateEventInput = {
             type: "event",
             recurring: "none",
             original_id: `plura-${eventId}`,
             organizer: {
-                id: '', // actually filled in by the DB, need to fill it in for ts, fix later
                 name: organizer,
                 url: organizerUrl,
             },

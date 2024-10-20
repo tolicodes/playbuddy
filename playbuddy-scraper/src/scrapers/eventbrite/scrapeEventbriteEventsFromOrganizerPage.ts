@@ -2,22 +2,21 @@ import axios from "axios";
 import TurndownService from 'turndown';
 
 import { ScraperParams } from "../types.js";
-import { Event, SourceMetadata } from "../../commonTypes.js";
+import { CreateEventInput, Event, SourceMetadata } from "../../commonTypes.js";
 
 import { EventbriteEvent } from "./types.js";
 
 
-const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], sourceMetadata: SourceMetadata): Event[] => {
+const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], sourceMetadata: SourceMetadata): CreateEventInput[] => {
   const turndownService = new TurndownService();
 
-  return eventbriteEvents.map((event): Event => {
+  return eventbriteEvents.map((event): CreateEventInput => {
     const start_date = event.start.utc;
     const end_date = event.end.utc;
 
     const summaryMarkdown = turndownService.turndown(event.description.html);
 
     return {
-      id: `eventbrite-${event.id}`,
       type: 'event',
       recurring: 'none',
       original_id: `eventbrite-${event.id}`,
@@ -42,6 +41,7 @@ const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], sourceMe
 
       source_ticketing_platform: "Eventbrite",
       ...sourceMetadata,
+      communities: sourceMetadata.communities || []
     };
   });
 }
@@ -50,7 +50,7 @@ const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], sourceMe
 const scrapeEventbriteEventsFromOrganizerPage = async ({
   url,
   sourceMetadata,
-}: ScraperParams): Promise<Event[]> => {
+}: ScraperParams): Promise<CreateEventInput[]> => {
   try {
     // Extract organizer ID from the URL
     const organizerId = url.split('/').pop()?.split('-').pop();
@@ -88,7 +88,7 @@ export const scrapeEventbriteEventsFromOrganizersURLs = async ({
   organizerURLs: string[];
   sourceMetadata: SourceMetadata;
   urlCache: string[];
-}): Promise<Event[]> => {
+}): Promise<CreateEventInput[]> => {
   const events = [];
 
   for (const organizerURL of organizerURLs) {
