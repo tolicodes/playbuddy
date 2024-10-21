@@ -1,5 +1,5 @@
 import fs from "fs";
-import { CreateEventInput, Event } from "./commonTypes.js";
+import { CreateEventInput } from "./commonTypes.js";
 // import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp.js";
 import { scrapePluraEvents } from "./scrapers/scrapePluraEvents.js";
 import { scrapeEventbriteEventsFromOrganizersURLs } from "./scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage.js";
@@ -51,49 +51,43 @@ const fileOperations = {
 };
 
 const DATA_FILES: Record<string, FilePath> = {
-    all: {
-        path: "./data/all_events.json",
-    },
-    all_fe: {
-        path: "../src/EventCalendar/all_events.json",
-    },
-
-    whatsapp_links: {
-        path: "./data/whatsapp_links.json",
-    },
-    whatsapp_events: {
-        path: "./data/all_whatsapp_events.json",
-    },
-    whatsapp_fe: {
-        path: "../src/EventCalendar/whatsapp_events.json",
-    },
-
-    // actually URLs
     // DATASET input
     kink_eventbrite_organizer_urls: {
         path: "./data/datasets/kink_eventbrite_organizer_urls.json",
     },
 
+
+    // OUTPUT (git ignored)
+    all: {
+        path: "./data/outputs/all_events.json",
+    },
+
+    whatsapp_links: {
+        path: "./data/outputs/whatsapp_links.json",
+    },
+    whatsapp_events: {
+        path: "./data/outputs/all_whatsapp_events.json",
+    },
+
+
+
     kink_eventbrite_events: {
-        path: "./data/all_kink_eventbrite_events.json",
+        path: "./data/outputs/all_kink_eventbrite_events.json",
     },
 
     plura: {
-        path: "./data/all_plura_events.json",
+        path: "./data/outputs/all_plura_events.json",
     },
 
     tantra_ny: {
-        path: "./data/organizers/tantra_ny_events.json",
+        path: "./data/outputs/organizers_tantra_ny_events.json",
     },
     acro_festivals: {
-        path: "./data/all_acro_festivals_events.json",
+        path: "./data/outputs/all_acro_festivals_events.json",
     },
-    // not used
-    // acro_facebook_urls: {
-    //     path: "./data/datasets/acro_facebook_urls.json",
-    // },
+
     acro_facebook: {
-        path: "./data/acro_facebook.json",
+        path: "./data/outputs/acro_facebook.json",
     }
 };
 

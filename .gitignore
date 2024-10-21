@@ -3,17 +3,3 @@ scripts/supabaseClient.js
 node_modules
 # Local Netlify folder
 .netlify
-playbuddy-scraper/data
-playbuddy-scraper/data/*
-playbuddy-scraper/data/all_acro_festivals_events.json
-playbuddy-scraper/data/all_kink_eventbrite_events.json
-playbuddy-scraper/data/all_plura_events.json
-playbuddy-scraper/data/organizers/tantra_ny_events.json
-playbuddy-scraper/eventCount.json
-playbuddy-scraper/organizers_event_count.json
-playbuddy-scraper/data/all_acro_festivals_events.json
-playbuddy-scraper/data/all_kink_eventbrite_events.json
-playbuddy-scraper/data/all_plura_events.json
-playbuddy-scraper/data/organizers/tantra_ny_events.json
-playbuddy-scraper/eventCount.json
-playbuddy-scraper/organizers_event_count.json
