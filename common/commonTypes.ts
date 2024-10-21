@@ -68,6 +68,12 @@ export interface SourceMetadata {
     // group name
     source_origination_group_name?: string;
 
+
+    // Fields
+    communities?: {
+        id: string;
+    }[]
+
 }
 
 
@@ -78,13 +84,13 @@ export type CreateOrganizerInput = { original_id?: string; name: string; url: st
 // we could omit a location name and it will use the code instead
 
 export type CreateLocationAreaInput = { code: string; name?: string } | { id: string }
-export type CreateCommunityInput = Omit<Community, 'id'> | Pick<Community, 'id'>;
+export type CreateCommunityInput = { name?: string; code: string } | { id: string }
 
 // We don't want to include id in the create input
 export type CreateEventInput = Omit<Event,
-    "id" & "organizer" & "location_area" & "communities"
+    "id" | "organizer" | "location_area" | "communities"
 > & {
     organizer: CreateOrganizerInput;
-    location_area: CreateLocationAreaInput;
+    location_area?: CreateLocationAreaInput;
     communities?: CreateCommunityInput[];
-}
+} & SourceMetadata

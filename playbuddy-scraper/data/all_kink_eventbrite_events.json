@@ -283,7 +283,7 @@
     "start_date": "2024-11-09T16:00:00Z",
     "end_date": "2024-11-09T21:00:00Z",
     "ticket_url": "https://www.eventbrite.com/e/pleasure-and-soul-a-sensual-salon-hit-me-up-tickets-1048416621337",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875533929%2F1679138945753%2F1%2Foriginal.20241016-003256?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=00faabe2c6742991d0a900bdfdbc8334",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F879190639%2F1679138945753%2F1%2Foriginal.20241020-193548?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&s=52f3b240c53be5a7afe2f1caf501f26f",
     "event_url": "https://www.eventbrite.com/e/pleasure-and-soul-a-sensual-salon-hit-me-up-tickets-1048416621337",
     "location": "120 Walker Street #floor 5, New York, NY 10013",
     "price": "39.02 USD",
@@ -373,7 +373,7 @@
     "start_date": "2024-11-15T00:00:00Z",
     "end_date": "2024-11-15T02:00:00Z",
     "ticket_url": "https://www.eventbrite.com/e/hmu-academy-role-play-that-works-for-you-tickets-1048372068077",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F875503449%2F1679138945753%2F1%2Foriginal.20241015-234046?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.5&fp-y=0.5&s=cdc0a008b209d989ab5a8abb3cb7c7d4",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F879183409%2F1679138945753%2F1%2Foriginal.20241020-191745?crop=focalpoint&fit=crop&h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&fp-x=0.005&fp-y=0.005&s=47658059a5d7cfb7b2d205cf2c3102bf",
     "event_url": "https://www.eventbrite.com/e/hmu-academy-role-play-that-works-for-you-tickets-1048372068077",
     "location": "120 Walker Street #floor 5, New York, NY 10013",
     "price": "28.23 USD",
@@ -470,153 +470,6 @@
     "description": "Hey folks we're back with another fun Commander Tourney for fabulous prizes including a Mox Diamond, Mana Vault, One Ring, and Mox Opal!",
     "tags": [
       "Seasonal & Holiday"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "communities": [
-      {
-        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
-      }
-    ]
-  },
-  {
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-983075624657",
-    "organizer": {
-      "id": "14144505274",
-      "name": "The Tantra Institute",
-      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
-      "original_id": "eventbrite-14144505274"
-    },
-    "name": "Tantra Speed Date® - Tampa! (St. Petersburg) Meet Singles Speed Dating",
-    "start_date": "2024-10-20T18:00:00Z",
-    "end_date": "2024-10-20T21:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-tampa-st-petersburg-meet-singles-speed-dating-tickets-983075624657",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-tampa-st-petersburg-meet-singles-speed-dating-tickets-983075624657",
-    "location": "1741 1st Ave N, St. Petersburg, FL 33713",
-    "price": "43.00 USD",
-    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
-    "tags": [
-      "Home & Lifestyle"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "communities": [
-      {
-        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
-      }
-    ]
-  },
-  {
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-978233511767",
-    "organizer": {
-      "id": "14144505274",
-      "name": "The Tantra Institute",
-      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
-      "original_id": "eventbrite-14144505274"
-    },
-    "name": "Tantra Speed Date® - Vancouver! (Meet Singles Speed Dating)",
-    "start_date": "2024-10-20T21:00:00Z",
-    "end_date": "2024-10-21T00:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-vancouver-meet-singles-speed-dating-tickets-978233511767",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
-    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-vancouver-meet-singles-speed-dating-tickets-978233511767",
-    "location": "1050 Homer Street #280, Vancouver, BC V6B 2W9",
-    "price": "45.00 CAD",
-    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
-    "tags": [
-      "Home & Lifestyle"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "communities": [
-      {
-        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
-      }
-    ]
-  },
-  {
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-1046631421757",
-    "organizer": {
-      "id": "14144505274",
-      "name": "The Tantra Institute",
-      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
-      "original_id": "eventbrite-14144505274"
-    },
-    "name": "Online Yoni Egg Workshop with Lauren Harkness",
-    "start_date": "2024-10-21T00:00:00Z",
-    "end_date": "2024-10-21T03:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/online-yoni-egg-workshop-with-lauren-harkness-tickets-1046631421757",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873708659%2F1493533057%2F1%2Foriginal.20201101-103300?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C800%2C400&s=6b80c4ea61cfda6324b1bee04daabe64",
-    "event_url": "https://www.eventbrite.com/e/online-yoni-egg-workshop-with-lauren-harkness-tickets-1046631421757",
-    "price": "59.00 USD",
-    "description": "Regular Yoni Egg Practice benefits not only your s\\*xual life but your entire life. Learn how to incorporate this practice into your life.",
-    "tags": [
-      "Health & Wellness"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "communities": [
-      {
-        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
-      }
-    ]
-  },
-  {
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-1046631983437",
-    "organizer": {
-      "id": "14144505274",
-      "name": "The Tantra Institute",
-      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
-      "original_id": "eventbrite-14144505274"
-    },
-    "name": "Core Erotic Blueprint™ Workshop with Genevieve!",
-    "start_date": "2024-10-21T01:00:00Z",
-    "end_date": "2024-10-21T03:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/core-erotic-blueprinttm-workshop-with-genevieve-tickets-1046631983437",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873709559%2F1493533057%2F1%2Foriginal.20211018-173545?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=826%2C0%2C1596%2C798&s=1c42bfbb55fa41c798ade0314781876f",
-    "event_url": "https://www.eventbrite.com/e/core-erotic-blueprinttm-workshop-with-genevieve-tickets-1046631983437",
-    "price": "75.00 USD",
-    "description": "Discover and Play in Your Core Erotic Blueprint™ Workshop, to turn yourself and your lovers on like wildfire!",
-    "tags": [
-      "Other"
-    ],
-    "source_ticketing_platform": "Eventbrite",
-    "dataset": "Kink",
-    "communities": [
-      {
-        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
-      }
-    ]
-  },
-  {
-    "type": "event",
-    "recurring": "none",
-    "original_id": "eventbrite-1046632504997",
-    "organizer": {
-      "id": "14144505274",
-      "name": "The Tantra Institute",
-      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
-      "original_id": "eventbrite-14144505274"
-    },
-    "name": "Transcending Victim Consciousness - Level I: The Victim Triangle",
-    "start_date": "2024-10-21T01:00:00Z",
-    "end_date": "2024-10-21T03:00:00Z",
-    "ticket_url": "https://www.eventbrite.com/e/transcending-victim-consciousness-level-i-the-victim-triangle-tickets-1046632504997",
-    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F873710329%2F1493533057%2F1%2Foriginal.20220113-232311?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C5%2C2028%2C1014&s=3c629a95452048f8c199136caee19fc7",
-    "event_url": "https://www.eventbrite.com/e/transcending-victim-consciousness-level-i-the-victim-triangle-tickets-1046632504997",
-    "price": "47.00 USD",
-    "description": "Gain tools to recognize when you (and others) are in victim consciousness, and how to transition intoco-creative awareness.",
-    "tags": [
-      "Home & Lifestyle"
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
@@ -1361,6 +1214,154 @@
   {
     "type": "event",
     "recurring": "none",
+    "original_id": "eventbrite-990259261107",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Santa Cruz! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-27T00:30:00Z",
+    "end_date": "2024-10-27T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-santa-cruz-meet-singles-speed-dating-tickets-990259261107",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-santa-cruz-meet-singles-speed-dating-tickets-990259261107",
+    "location": "738 Chestnut st, Santa Cruz, CA 95060",
+    "price": "48.76 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-913491125547",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Los Angeles! (Echo Park) Meet Singles Speed Dating",
+    "start_date": "2024-10-27T00:30:00Z",
+    "end_date": "2024-10-27T03:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-los-angeles-echo-park-meet-singles-speed-dating-tickets-913491125547",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F626172069%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=0d56f7921b989678c8d9cdc3c85814d3",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-los-angeles-echo-park-meet-singles-speed-dating-tickets-913491125547",
+    "location": "2110 Sunset Blvd, Echo Park, CA 90026",
+    "price": "54.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1050311549117",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Transcending Victim Consciousness - Level I: The Victim Triangle",
+    "start_date": "2024-10-27T01:00:00Z",
+    "end_date": "2024-10-27T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/transcending-victim-consciousness-level-i-the-victim-triangle-tickets-1050311549117",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F877818329%2F1493533057%2F1%2Foriginal.20220113-232311?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C5%2C2028%2C1014&s=b35e1d378f20f83e01014c6f6f02df5f",
+    "event_url": "https://www.eventbrite.com/e/transcending-victim-consciousness-level-i-the-victim-triangle-tickets-1050311549117",
+    "price": "47.00 USD",
+    "description": "Gain tools to recognize when you (and others) are in victim consciousness, and how to transition intoco-creative awareness.",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1050312582207",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Core Erotic Blueprint™ Workshop with Genevieve!",
+    "start_date": "2024-10-27T01:00:00Z",
+    "end_date": "2024-10-27T03:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/core-erotic-blueprinttm-workshop-with-genevieve-tickets-1050312582207",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F877819369%2F1493533057%2F1%2Foriginal.20211018-173545?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=826%2C0%2C1596%2C798&s=672816dfc1f9ef5871daeecfc4c3767c",
+    "event_url": "https://www.eventbrite.com/e/core-erotic-blueprinttm-workshop-with-genevieve-tickets-1050312582207",
+    "price": "75.00 USD",
+    "description": "Discover and Play in Your Core Erotic Blueprint™ Workshop, to turn yourself and your lovers on like wildfire!",
+    "tags": [
+      "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1013892719417",
+    "organizer": {
+      "id": "14144505274",
+      "name": "The Tantra Institute",
+      "url": "https://www.eventbrite.com/o/the-tantra-institute-14144505274",
+      "original_id": "eventbrite-14144505274"
+    },
+    "name": "Tantra Speed Date® - Phoenix! (Meet Singles Speed Dating)",
+    "start_date": "2024-10-27T01:30:00Z",
+    "end_date": "2024-10-27T04:30:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/tantra-speed-date-phoenix-meet-singles-speed-dating-tickets-1013892719417",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F846745739%2F1493533057%2F1%2Foriginal.20231023-022106?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C0%2C2160%2C1080&s=f208b3b7f101f27ed98eb0bec210c122",
+    "event_url": "https://www.eventbrite.com/e/tantra-speed-date-phoenix-meet-singles-speed-dating-tickets-1013892719417",
+    "location": "2024 N 7th St Ste 201, Phoenix, AZ 85006",
+    "price": "45.00 USD",
+    "description": "Join the speed dating revolution with a 94% connection rate! Meet singles and ignite sparks with fun, chemistry games!",
+    "tags": [
+      "Home & Lifestyle"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "recurring": "none",
     "original_id": "eventbrite-1035202908767",
     "organizer": {
       "id": "16960673418",
@@ -1768,6 +1769,36 @@
     "description": "A mixer for poly & non-monogamous folks",
     "tags": [
       "Other"
+    ],
+    "source_ticketing_platform": "Eventbrite",
+    "dataset": "Kink",
+    "communities": [
+      {
+        "id": "72f599a9-6711-4d4f-a82d-1cb66eac0b7b"
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "recurring": "none",
+    "original_id": "eventbrite-1039007277737",
+    "organizer": {
+      "id": "31043208919",
+      "name": "Miss Bloom Sex Educator",
+      "url": "https://www.eventbrite.com/o/miss-bloom-sex-educator-31043208919",
+      "original_id": "eventbrite-31043208919"
+    },
+    "name": "Spooky Sex Trivia Night",
+    "start_date": "2024-10-30T23:00:00Z",
+    "end_date": "2024-10-31T02:00:00Z",
+    "ticket_url": "https://www.eventbrite.com/e/spooky-sex-trivia-night-tickets-1039007277737",
+    "image_url": "https://img.evbuc.com/https%3A%2F%2Fcdn.evbuc.com%2Fimages%2F866872729%2F117673781537%2F1%2Foriginal.20241004-165015?h=230&w=460&auto=format%2Ccompress&q=75&sharp=10&rect=0%2C120%2C1920%2C960&s=15df6ff3d385701c52d1bed467b56b3c",
+    "event_url": "https://www.eventbrite.com/e/spooky-sex-trivia-night-tickets-1039007277737",
+    "location": "1150 Manhattan Avenue, Brooklyn, NY 11222",
+    "price": "23.18 USD",
+    "description": "Join us for a night of ridiculous and thought-provoking Sex Trivia with sexy prizes :)",
+    "tags": [
+      "Health & Wellness"
     ],
     "source_ticketing_platform": "Eventbrite",
     "dataset": "Kink",
