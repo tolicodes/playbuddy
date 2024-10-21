@@ -46,6 +46,11 @@ const fileOperations = {
     },
 
     writeJSON: (path: keyof typeof DATA_FILES, data: any) => {
+        if (!fs.existsSync('./data/outputs')) {
+            fs.mkdirSync('./data/outputs', { recursive: true });
+            console.log('Directory created');
+        }
+
         fs.writeFileSync(path, JSON.stringify(data, null, 2));
     },
 };
