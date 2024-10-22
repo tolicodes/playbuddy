@@ -33,6 +33,13 @@ export const createIcal = (events: Event[], type: CalendarType = 'calendar') => 
       summary: event.name,
       description: `${event.event_url} ${event.description}`,
       location: event.location,
+      x: [{
+        key: 'X-Organizer-ID',
+        value: event.organizer.id.toString(),
+      }, {
+        key: 'X-Organizer-Name',
+        value: event.organizer.name.toString(),
+      }]
     };
     calendar.createEvent(icalEvent);
   });
