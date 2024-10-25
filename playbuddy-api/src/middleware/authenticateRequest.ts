@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
+import { User } from '@supabase/supabase-js';
 
 // Middleware to authenticate request
 export const authenticateRequest = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -18,18 +19,7 @@ export const authenticateRequest = async (req: AuthenticatedRequest, res: Respon
 
         // Attach the user ID to the request object for use in the route handler
         req.authUserId = data.user.id;
-
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('id') // Select only the relevant `id` field from custom `users` table
-            .eq('user_id', req.authUserId)
-            .single();
-
-        if (userError || !userData) {
-            return res.status(400).json({ error: 'User not found in custom users table' });
-        }
-
-        req.userId = userData.id;
+        req.authUser = data.user;
 
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {
@@ -53,18 +43,7 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
 
         // Attach the user ID to the request object for use in the route handler
         req.authUserId = data.user.id;
-
-        const { data: userData, error: userError } = await supabaseClient
-            .from('users')
-            .select('id') // Select only the relevant `id` field from custom `users` table
-            .eq('user_id', req.authUserId)
-            .single();
-
-        if (userError || !userData) {
-            return next(); // User not found in custom users table, continue without authentication
-        }
-
-        req.userId = userData.id;
+        req.authUser = data.user;
 
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {
@@ -76,5 +55,5 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
 
 export interface AuthenticatedRequest extends Request {
     authUserId?: string; // This field will store the authenticated user's ID
-    userId?: string;     // This field will store the custom user ID from your `users` table
+    authUser?: User;
 }

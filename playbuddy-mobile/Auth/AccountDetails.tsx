@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, Share, SafeAreaView } from 'react-native';
-import { useUserContext } from './UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { Avatar } from './Avatar';
 import { getSmallAvatarUrl } from '../Common/imageUtils';
@@ -15,12 +15,12 @@ export default function AccountDetails() {
 
     const onPressSignOut = async () => {
         signOut(() => {
-            navigate('Calendar');
+            navigate('Main Calendar');
         });
     }
 
     const onPressHome = () => {
-        navigate('Calendar');
+        navigate('Main Calendar');
     }
 
     const onPressDeleteAccount = async () => {
@@ -32,7 +32,7 @@ export default function AccountDetails() {
                     text: 'Delete',
                     onPress: () => {
                         signOut(() => {
-                            navigate('Calendar');
+                            navigate('Main Calendar');
                         });
                     },
                     style: 'destructive',

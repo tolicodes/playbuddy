@@ -7,7 +7,7 @@ import { formatDate } from '../Calendar/calendarUtils';
 import { Event } from '../commonTypes';
 import moment from 'moment';
 import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
-import { useUserContext } from '../Auth/UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import { LoginToAccess } from '../Common/LoginToAccess';
 import { Button } from '@rneui/themed';
 import { getSmallAvatarUrl } from '../Common/imageUtils';

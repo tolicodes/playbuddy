@@ -1,90 +1,81 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from "../supabaseClient";
-import { Session } from '@supabase/auth-js/src/lib/types'
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+import { v4 as uuidv4 } from 'uuid';
+import 'react-native-get-random-values';
+import { supabase } from '../supabaseClient';
+import { UserProfile } from '../contexts/UserTypes';
+import { useOptimisticMutation } from '../contexts/helpers/useOptimisticMutation';
+import { useQuery } from '@tanstack/react-query';
 
+// We have to manually pass authUserId to avoid circular dependency
+export const useFetchUserProfile = (authUserId?: string) => {
+    return useQuery<UserProfile>({
+        queryKey: ['userProfile'],
+        queryFn: async () => {
+            try {
+                const { data } = await axios.get(`${API_BASE_URL}/profile/me`)
+                return data;
+            } catch (error) {
+                console.error('Error fetching user profile:', error);
+                throw error;
+            }
+        },
+        enabled: !!authUserId
+    });
+};
 
-// Function to fetch user profile from the custom `users` table
-const fetchUserProfile = async (authUserId: string) => {
-    if (!authUserId) return null;
+// Updated useUpdateAvatar with proper types
+export const useUploadAvatar = () => {
+    return useOptimisticMutation<UserProfile, UserProfile, { avatarUrl: string }, Error>({
+        mutationFn: async ({ avatarUrl }: { avatarUrl: string }) => {
+            if (!avatarUrl) throw new Error('No avatar URL provided');
 
-    try {
-        const { data, error } = await supabase
-            .from('users')
-            .select('*')
-            .eq('user_id', authUserId)
-            .single();
+            const response = await fetch(avatarUrl);
+            const blob = await response.blob();
+            const arrayBuffer = await new Response(blob).arrayBuffer();
+            const randomUUID = uuidv4();
 
-        if (error) {
-            throw new Error(`Fetching User Profile: ${error.message}`);
+            const fileName = `public/${randomUUID}.jpg`;
+
+            // Upload the image to Supabase Storage
+            const { error } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, arrayBuffer, { contentType: blob.type });
+
+            if (error) {
+                throw error;
+            }
+
+            const { data } = await supabase.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            return (await axios.put<UserProfile>(`${API_BASE_URL}/profile/me/update-avatar`, { avatarUrl: data.publicUrl })).data;
+        },
+        queryKey: ['userProfile'],
+        onMutateFn: (old: UserProfile | undefined, { avatarUrl }: { avatarUrl: string }) => {
+            if (!old) return;
+
+            return {
+                ...old,
+                avatar_url: avatarUrl,
+            };
         }
-
-        return {
-            ...data,
-            auth_user_id: data.user_id,
-        };
-    } catch (e) {
-        throw new Error(`Error fetching user profile: ${e.message}`);
-    }
-};
-
-// Hook to use in components
-export const useFetchUserProfile = (session: Session | null) => {
-    const authUserId = session?.user?.id;
-
-    const { data: profile, error } = useQuery({
-        queryKey: ['userProfile', authUserId],
-        queryFn: () => fetchUserProfile(authUserId || ''),
-        // due to hook limitations
-        enabled: !!session && !!authUserId,
     });
-
-    // not enough info
-    if (!session || !authUserId || !profile) {
-        return { data: null, error: null };
-    }
-
-    if (error || !profile) {
-        throw new Error('User profile not found', error?.message);
-    }
-
-    const userProfile = {
-        // copy from session
-        auth_user_id: session.user.id,
-
-        // we don't use this one
-        // user_id: profile.id,
-        email: session.user.email,
-
-        // copy from user table
-        share_code: profile.share_code,
-        name: profile.name,
-        avatar_url: profile.avatar_url,
-    };
-
-    return { data: userProfile, error }
 };
-
-// Function to insert a user with a referral code
-export const insertUserProfile = async ({ authUserId, name }: { authUserId: string, name: string }) => {
-    const shareCode = Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
-
-    try {
-        const data = await supabase
-            .from('users')
-            .insert([{ user_id: authUserId, share_code: shareCode, name }]);
-
-        return data;;
-    } catch (error) {
-        throw new Error(`Error inserting profile: ${error.message}`);
-    }
-};
-
-// Hook for the mutation
 export const useInsertUserProfile = () => {
-    return useMutation({
-        mutationFn: ((userData: { authUserId: string; name: string }) =>
-            insertUserProfile(userData)
-        )
-    });
-};
+    return useOptimisticMutation<UserProfile, UserProfile, { name: string }, Error>({
+        mutationFn: async ({ name }: { name: string }) => {
+            return (await axios.post<UserProfile>(`${API_BASE_URL}/profile/me`, { name })).data;
+        },
+        queryKey: ['userProfile'],
+        onMutateFn: (old: UserProfile | undefined, { name }: { name: string }) => {
+            if (!old) return;
 
+            return {
+                ...old,
+                name,
+            };
+        }
+    });
+}

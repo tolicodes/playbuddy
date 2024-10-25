@@ -3,7 +3,7 @@ import { UseMutationResult } from '@tanstack/react-query';
 import { useFilters, FilterState } from './hooks/useFilters';
 import { useEvents } from './hooks/useEvents';
 import { useWishlist } from './hooks/useWishlist';
-import { useUserContext } from '../Auth/UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import { useCommonContext } from '../Common/CommonContext';
 import { EventWithMetadata } from '../types';
 import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';

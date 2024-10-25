@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { Linking, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { Button, Input, Tab, Text } from '@rneui/themed';
 import { TabView, SceneMap } from 'react-native-tab-view';
-import { useUserContext } from './UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../types';
 
@@ -18,7 +18,7 @@ const AuthForm = ({ isSignUp }: { isSignUp: boolean }) => {
 
     const afterSignIn = useCallback(() => {
         setIsLoading(false);
-        navigate('Calendar');
+        navigate('Main Calendar');
     }, []);
 
     const afterSignUp = useCallback(() => {

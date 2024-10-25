@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient, UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import { useUserContext } from '../Auth/UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 

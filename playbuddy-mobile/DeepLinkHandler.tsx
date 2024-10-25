@@ -8,7 +8,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 
 // Define your path-to-screen mapping with optional parameters
 const NAV_MAPPING: { [key: string]: keyof NavStackProps } = {
-    '': 'Calendar',
+    '': 'Main Calendar',
     'wishlist': 'Wishlist',
     'communities': 'Communities',
     'moar': 'Moar',

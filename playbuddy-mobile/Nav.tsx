@@ -27,7 +27,7 @@ import { OrganizerEvents } from './Pages/Organizers/OrganizerEvents';
 
 // Hooks and Contexts
 import { useCommonContext } from './Common/CommonContext';
-import { useUserContext } from './Auth/UserContext';
+import { useUserContext } from './contexts/UserContext';
 import { useCalendarContext } from './Calendar/CalendarContext';
 import BuddyEvents from './Buddies/BuddyEvents';
 import AccountDetails from './Auth/AccountDetails';

@@ -1,7 +1,7 @@
 // hooks/useCommunities.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useUserContext } from '../../Auth/UserContext';
+import { useUserContext } from '../../contexts/UserContext';
 import { Community } from '../CommonContext';
 import { API_BASE_URL } from '../../config';
 import { queryClient as qc } from '../queryClient';

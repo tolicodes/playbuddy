@@ -4,7 +4,7 @@ import { TouchableOpacity, View, Text, Image } from "react-native"
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { NavStack } from "../types";
 import * as amplitude from '@amplitude/analytics-react-native';
-import { useUserContext } from "./UserContext";
+import { useUserContext } from "../contexts/UserContext";
 import { getSmallAvatarUrl } from "../Common/imageUtils";
 
 
@@ -13,6 +13,8 @@ const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean 
     const { authUserId, userProfile } = useUserContext();
 
     const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url);
+
+    const initials = userProfile?.name?.split(' ').map(name => name[0]).join('').slice(0, 2)
 
     return (
         <TouchableOpacity
@@ -39,7 +41,9 @@ const HeaderLoginButton = ({ showLoginText = false }: { showLoginText?: boolean 
             }}>
                 {
                     authUserId ?
-                        <Image source={{ uri: avatarUrl }} style={{ width: 30, height: 30, borderRadius: 15 }} />
+                        avatarUrl
+                            ? <Image source={{ uri: avatarUrl }} style={{ width: 30, height: 30, borderRadius: 15 }} />
+                            : <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#007AFF', }}>{initials}</Text>
                         :
                         <FAIcon name="user" size={showLoginText ? 40 : 20} color="#007AFF" />
                 }

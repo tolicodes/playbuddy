@@ -3,31 +3,39 @@ import axios from 'axios';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { AppState, Alert } from 'react-native';
 import { supabase } from '../supabaseClient';
-import { UserProfile } from './UserContext';
 import { Session } from '@supabase/auth-js/src/lib/types'
-import { insertUserProfile } from './useUserProfile';
+import { UserProfile } from '../contexts/UserTypes';
+import { UseMutationResult } from '@tanstack/react-query';
 
+export const useSetupAmplitude = (session?: Session | null, userProfile?: UserProfile | null) => {
+    useEffect(() => {
+        if (!session || !userProfile) return;
 
-// Helper: Set up Axios Authorization and Amplitude User Identification
-const setupSessionContext = (session: Session | null, userProfile: UserProfile | null) => {
-    // Axios setup
-    if (session?.access_token) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;
-    } else {
-        delete axios.defaults.headers.common['Authorization'];
-    }
-
-    // Amplitude setup
-    if (session?.user?.id && userProfile) {
-        // authuserId
         amplitude.setUserId(session.user.id);
         const identifyEvent = new amplitude.Identify();
         if (userProfile?.email) {
             identifyEvent.set('email', userProfile.email);
         }
         amplitude.identify(identifyEvent);
-    }
+    }, [session, userProfile]);
 };
+
+const setupAxios = (session: Session | null) => {
+    // Axios setup
+    if (session?.access_token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;
+    } else {
+        delete axios.defaults.headers.common['Authorization'];
+    }
+}
+
+export const useOnSessionReady = (session: Session | null, setAuthReady: (authReady: boolean) => void) => {
+    useEffect(() => {
+        if (!session) return;
+
+        setAuthReady(true);
+    }, [session, setAuthReady]);
+}
 
 // Initialize Auth State Listeners
 export const onInitializeAuth = (
@@ -36,11 +44,10 @@ export const onInitializeAuth = (
         setSession: (session: Session | null) => void
     }) => {
     useEffect(() => {
-
         // logout
         const authStateListener = supabase.auth.onAuthStateChange(async (event, session) => {
             if (!session?.user.id) {
-                setupSessionContext(null, null);
+                setupAxios(null)
                 setSession(null)
                 setAuthReady(true);
             }
@@ -57,11 +64,11 @@ export const onInitializeAuth = (
 
         // if we are already logged in
         const checkInitSession = async () => {
-            const { data, error } = await supabase.auth.getSession();
+            const { data } = await supabase.auth.getSession();
 
             if (data.session) {
+                setupAxios(data.session);
                 setSession(data.session)
-                setupSessionContext(data.session, null);
                 setAuthReady(true);
             }
         }
@@ -74,25 +81,7 @@ export const onInitializeAuth = (
         };
     }, []);
 };
-
-// Fetch User Profile Listener
-export const onFetchUserProfile = ({
-    userProfile,
-    session,
-    setAuthReady
-}: {
-    userProfile: UserProfile | null;
-    session: Session | null;
-    setAuthReady: (authReady: boolean) => void;
-}) => {
-    useEffect(() => {
-        if (!userProfile || !session) return;
-        setupSessionContext(session, userProfile);
-        setAuthReady(true);
-    }, [userProfile, session]);
-};
-
-// Pending callback listener
+// Allow to set a pending callback, and when auth is ready we run the callback  
 export const onPendingCallback = ({ authReady }: { authReady: boolean }) => {
     const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(null);
 
@@ -116,6 +105,7 @@ export const runAuthFlow = async ({
     setAuthReady,
     setSession,
     setPendingCallback,
+    insertUserProfile,
 }: {
     flowType: 'signUp' | 'signIn';
     email: string;
@@ -125,6 +115,7 @@ export const runAuthFlow = async ({
     setAuthReady: (authReady: boolean) => void;
     setSession: (session: Session) => void;
     setPendingCallback: (callback: (() => void) | null) => void;
+    insertUserProfile?: UseMutationResult<UserProfile>,
 }) => {
     try {
         setAuthReady(false);
@@ -140,13 +131,15 @@ export const runAuthFlow = async ({
 
         const session = data.session;
 
+        setupAxios(session);
+
         if (isSignUp && data?.user?.id && name) {
-            await insertUserProfile({ authUserId: data.user.id, name });
+            await insertUserProfile?.mutateAsync({ name });
         }
 
+        // we want the session to be set after the profile is inserted
         setSession(session);
         amplitude.logEvent(isSignUp ? 'sign_up' : 'sign_in', { email });
-        setupSessionContext(session, null); // Pass null for userProfile for now
     } catch (error) {
         Alert.alert(`Error ${flowType === 'signUp' ? 'Signing Up' : 'Signing In'}: ${error.message}`);
         setAuthReady(true);
@@ -170,8 +163,9 @@ export const signOut = async ({
 
         amplitude.logEvent('sign_out');
         setSession(null);
-        setupSessionContext(null, null);
         setAuthReady(true);
+
+        // call the callback immediately
         callback();
     } catch (error) {
         Alert.alert(`Error Signing Out: ${error.message}`);

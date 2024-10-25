@@ -4,7 +4,7 @@ import FAIcon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesom
 import { useCalendarContext } from "../Calendar/CalendarContext";
 import EventCalendarView from "../Calendar/EventCalendarView";
 import { useEffect } from "react";
-import { useUserContext } from "../Auth/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 import { Button } from '@rneui/themed';
 import { RouteProp } from '@react-navigation/native';
 import { NavStackProps } from '../types';

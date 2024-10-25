@@ -7,7 +7,7 @@ export type EventWithMetadata = Event & {
 }
 
 export type NavStackProps = {
-    'Calendar': undefined;
+    'Main Calendar': undefined;
     'Wishlist': { share_code?: string };
     'Login': undefined;
     'Event Details': { selectedEvent: Event };

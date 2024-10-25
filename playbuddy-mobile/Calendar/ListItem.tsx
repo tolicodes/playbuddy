@@ -4,7 +4,7 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { Event } from '../commonTypes';
 import { EventWithMetadata } from '../types';
 import { useCalendarContext } from './CalendarContext';
-import { useUserContext } from '../Auth/UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatDate } from './calendarUtils';
 import { BuddyAvatarCarousel } from './BuddyAvatarCarousel';

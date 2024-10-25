@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
 import QRCodeStyled from 'react-native-qrcode-styled';
 
-import { useUserContext } from '../Auth/UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import CameraScanner from './CameraScanner';
 import BuddyAddedConfirmation from './AddBuddyConfirmation';
 import { LoginToAccess } from '../Common/LoginToAccess';

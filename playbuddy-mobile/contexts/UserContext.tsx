@@ -6,45 +6,11 @@ import React, {
     ReactNode,
     useMemo,
 } from 'react';
-import { useFetchUserProfile } from './useUserProfile';
-import { onFetchUserProfile, onInitializeAuth, onPendingCallback, runAuthFlow, signOut as signOutUtil } from './useUserUtils';
+import { useFetchUserProfile, useInsertUserProfile } from '../Auth/useUserProfile';
+import { onInitializeAuth, onPendingCallback, runAuthFlow, signOut as signOutUtil, useOnSessionReady, useSetupAmplitude } from '../Auth/useUserUtils';
 import { Session } from '@supabase/auth-js/src/lib/types'
+import { UserContextType, SignInParams, SignUpParams } from './UserTypes';
 
-// Define the shape of the UserContext state
-export interface UserProfile {
-    // actually auth_user_id
-    auth_user_id: string;
-    share_code: string;
-    email?: string;
-    name?: string
-    avatar_url?: string;
-}
-
-export type SignUpParams = {
-    email: string,
-    password: string,
-    name: string,
-    callback: () => void
-}
-
-export type SignInParams = {
-    email: string,
-    password: string,
-    callback: () => void
-}
-
-export interface UserContextType {
-    // user table
-    // We don't use it
-    // userId: string | null;
-    // auth table
-    authUserId: string | null;
-    userProfile: UserProfile | null;
-    signInWithEmail: (params: SignInParams) => void;
-    signUpWithEmail: (params: SignUpParams) => void;
-    signOut: (callback: () => void) => void;
-    authReady: boolean;
-}
 
 // Create the UserContext
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -64,11 +30,19 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [session, setSession] = useState<Session | null>(null);
 
     // Fetch user profile. It will continue the flow later, depends on session being present
-    const { data: userProfile } = useFetchUserProfile(session);
+    // only fetch if auth is ready
+    const { data: userProfile } = useFetchUserProfile(authReady ? session?.user.id : undefined);
+
+    const insertUserProfile = useInsertUserProfile();
 
     // Setup listeners
-    onInitializeAuth({ setAuthReady, setSession });
-    onFetchUserProfile({ userProfile, session, setAuthReady });
+    onInitializeAuth({ setAuthReady, setSession, authReady });
+
+    useSetupAmplitude(session, userProfile);
+
+    useOnSessionReady(session, setAuthReady);
+
+    // when auth is ready we run the callback
     const { setPendingCallback } = onPendingCallback({ authReady });
 
     // Authentication functions
@@ -80,7 +54,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             callback,
             setAuthReady,
             setSession,
-            setPendingCallback
+            setPendingCallback,
         });
     }, []);
 
@@ -94,6 +68,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setAuthReady,
             setSession,
             setPendingCallback,
+            insertUserProfile,
         });
     }, []);
 
@@ -103,9 +78,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     const value = useMemo(
         () => ({
-            authUserId: userProfile?.auth_user_id || null,
-            // We don't use it
-            // userId: userProfile?.id || null,
+            authUserId: session?.user.id || null,
             userProfile,
             authReady,
             signInWithEmail,

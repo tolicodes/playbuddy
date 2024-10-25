@@ -8,7 +8,7 @@ const router = Router();
 
 // Fetch all communities for the authenticated user
 export const fetchMyCommunities = async (req: AuthenticatedRequest, res: Response) => {
-    const { authUserId } = req.query;
+    const { authUserId } = req;
 
     try {
         const { data: memberships, error: membershipsError } = await supabaseClient
@@ -48,7 +48,8 @@ export const fetchMyCommunities = async (req: AuthenticatedRequest, res: Respons
 
 // Join a community
 export const joinCommunity = async (req: AuthenticatedRequest, res: Response) => {
-    const { community_id, authUserId, join_code } = req.body;
+    const { authUserId } = req;
+    const { community_id, join_code } = req.body;
 
     try {
         // Fetch the community by ID
@@ -96,8 +97,8 @@ export const joinCommunity = async (req: AuthenticatedRequest, res: Response) =>
 
 // Leave a community
 export const leaveCommunity = async (req: AuthenticatedRequest, res: Response) => {
-    const { community_id, authUserId } = req.body;
-
+    const { community_id } = req.body;
+    const { authUserId } = req;
     try {
         // Remove the membership
         const { error: deleteError } = await supabaseClient

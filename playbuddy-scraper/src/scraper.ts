@@ -61,6 +61,10 @@ const DATA_FILES: Record<string, FilePath> = {
         path: "./data/datasets/kink_eventbrite_organizer_urls.json",
     },
 
+    burlesque_eventbrite_organizer_urls: {
+        path: "./data/datasets/burlesque_eventbrite_organizer_urls.json",
+    },
+
 
     // OUTPUT (git ignored)
     all: {
@@ -93,10 +97,18 @@ const DATA_FILES: Record<string, FilePath> = {
 
     acro_facebook: {
         path: "./data/outputs/acro_facebook.json",
-    }
+    },
+
+    burlesque_eventbrite_events: {
+        path: "./data/outputs/all_burlesque_eventbrite_events.json",
+    },
 };
 
 const getFromFile = (source: string): CreateEventInput[] => {
+    return fileOperations.readJSON(DATA_FILES[source].path);
+};
+
+const getInputFile = (source: string): string[] => {
     return fileOperations.readJSON(DATA_FILES[source].path);
 };
 
@@ -184,6 +196,28 @@ const scrapeFacebookEvents = async (urlCache: URLCache) => {
     writeFile("acro_facebook", facebookEventsOut);
 
     return facebookEventsOut;
+}
+
+const scrapeBurlesqueEventbrite = async (urlCache: URLCache) => {
+    const burlesqueEventbriteOrganizerURLs = getFromFile(
+        "burlesque_eventbrite_organizer_urls",
+    );
+
+    // SCRAPE EVENTBRITE EVENTS
+    const kinkEventbriteEventsOut =
+        await scrapeEventbriteEventsFromOrganizersURLs({
+            organizerURLs: burlesqueEventbriteOrganizerURLs,
+            sourceMetadata: {
+                source_ticketing_platform: "Eventbrite",
+                dataset: "Burlesque",
+                communities: [{
+                    id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
+                }]
+            },
+            urlCache,
+        });
+
+    writeFile("burlesque_eventbrite_events", burlesqueEventbriteEventsOut);
 }
 
 // const scrapeWhatsapp = async (urlCache: URLCache) => {

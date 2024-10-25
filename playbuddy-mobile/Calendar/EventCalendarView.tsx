@@ -12,7 +12,7 @@ import { useCalendarContext } from './CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
 import WebsiteBanner from './WebsiteBanner';
-import { useUserContext } from '../Auth/UserContext';
+import { useUserContext } from '../contexts/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { MISC_URLS } from '../config';
 
@@ -144,7 +144,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
             <View style={styles.eventListContainer}>
                 <EventList
                     sections={sections}
-                    screen={'Calendar'}
+                    screen={'Main Calendar'}
                     sectionListRef={sectionListRef}
                     reloadEvents={reloadEvents}
                     isLoadingEvents={isLoadingEvents}

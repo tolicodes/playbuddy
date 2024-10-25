@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { supabase } from '../supabaseClient'; // Supabase client
-import { useUserContext } from './UserContext';
-import { useQueryClient } from '@tanstack/react-query';
+import { useUserContext } from '../contexts/UserContext';
 import { getSmallAvatarUrl } from '../Common/imageUtils';
+import { useUploadAvatar } from './useUserProfile';
+
 
 export const Avatar = () => {
     const [uploadImageUri, setUploadImageUri] = useState<string | null>(null);
     const [uploading, setUploading] = useState(false);
     const { authUserId, userProfile } = useUserContext();
-    const queryClient = useQueryClient();
+    const uploadAvatar = useUploadAvatar();
 
     // Request permission to access the gallery
     useEffect(() => {
@@ -25,9 +25,19 @@ export const Avatar = () => {
     // Automatically upload the image after selection
     useEffect(() => {
         if (uploadImageUri && authUserId) {
-            uploadImage(authUserId);
+            setUploading(true);
+            uploadAvatar.mutate({ avatarUrl: uploadImageUri });
         }
     }, [uploadImageUri, authUserId]);
+
+    useEffect(() => {
+        if (uploadAvatar.isSuccess) {
+            setUploading(false);
+        } else if (uploadAvatar.isError) {
+            setUploading(false);
+            alert('Uploading Avatar failed')
+        }
+    }, [uploadAvatar.isSuccess, uploadAvatar.isError])
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -39,56 +49,6 @@ export const Avatar = () => {
 
         if (!result.canceled) {
             setUploadImageUri(result.assets[0].uri);
-        }
-    };
-
-    const updateUserAvatar = async (authUserId: string, avatarUrl: string) => {
-        try {
-            const { error } = await supabase
-                .from('users')
-                .update({ avatar_url: avatarUrl })
-                .eq('user_id', authUserId);
-
-            if (error) {
-                throw new Error(`Error updating user avatar: ${error.message}`);
-            }
-
-            queryClient.invalidateQueries(['userProfile', authUserId]);
-        } catch (error) {
-            console.error('Error updating user avatar:', error.message);
-        }
-    };
-
-    const uploadImage = async (authUserId: string) => {
-        if (!uploadImageUri || !authUserId) return;
-
-        try {
-            setUploading(true);
-            const response = await fetch(uploadImageUri);
-            const blob = await response.blob();
-            const arrayBuffer = await new Response(blob).arrayBuffer();
-            const fileName = `public/${Date.now()}.jpg`;
-
-            // Upload the image to Supabase Storage
-            const { error } = await supabase.storage
-                .from('avatars')
-                .upload(fileName, arrayBuffer, { contentType: blob.type });
-
-            if (error) {
-                throw error;
-            }
-
-            const { data } = await supabase.storage
-                .from('avatars')
-                .getPublicUrl(fileName);
-
-            await updateUserAvatar(authUserId, data.publicUrl);
-            alert('Image uploaded successfully!');
-        } catch (error) {
-            console.error('Error uploading image:', error.message, error);
-            alert('Failed to upload image');
-        } finally {
-            setUploading(false);
         }
     };
 

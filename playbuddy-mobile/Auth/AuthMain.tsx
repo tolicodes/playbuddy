@@ -1,7 +1,7 @@
 import React from 'react';
 import AccountDetails from "./AccountDetails"
 import AuthForm from "./AuthForm"
-import { useUserContext } from "./UserContext"
+import { useUserContext } from "../contexts/UserContext"
 
 const AuthMain = () => {
     const { authUserId } = useUserContext();
