@@ -36,7 +36,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const insertUserProfile = useInsertUserProfile();
 
     // Setup listeners
-    onInitializeAuth({ setAuthReady, setSession, authReady });
+    onInitializeAuth({ setAuthReady, setSession });
 
     useSetupAmplitude(session, userProfile);
 
