@@ -31,6 +31,7 @@ import { useUserContext } from './contexts/UserContext';
 import { useCalendarContext } from './Calendar/CalendarContext';
 import BuddyEvents from './Buddies/BuddyEvents';
 import AccountDetails from './Auth/AccountDetails';
+import { CommunityEvents } from './Pages/Communities/CommunityEvents';
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -111,6 +112,7 @@ function CalendarStackNavigator() {
             />
             <CalendarStack.Screen name="Event Details" component={EventDetail} />
             <CalendarStack.Screen name="Organizer Events" component={OrganizerEvents} />
+            <CalendarStack.Screen name="Community Events" component={CommunityEvents} />
             <CalendarStack.Screen name="Buddy Events" component={BuddyEvents} />
             <CalendarStack.Screen
                 name="User Profile"

@@ -1,65 +1,62 @@
-import React, { useState } from "react"
-import EventCalendarView from "../Calendar/EventCalendarView"
-
-import { View, Text, StyleSheet, Linking, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from "react";
+import EventCalendarView from "../Calendar/EventCalendarView";
+import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Community, LocationArea, useCommonContext } from "../Common/CommonContext";
 
 const Banner = () => {
-    const [isBannerPressed, setIsBannerPressed] = useState(false);
+    const [isBannerShown, setIsBannerShown] = useState(false);
     const [oldLocation, setOldLocation] = useState<LocationArea | null>(null);
     const [oldCommunity, setOldCommunity] = useState<Community | null>(null);
     const { selectedLocationArea, selectedCommunity, setSelectedLocationArea, setSelectedCommunity } = useCommonContext();
 
-    const handleBannerPress = () => {
-        if (isBannerPressed) {
-            setIsBannerPressed(false);
-            setSelectedLocationArea(oldLocation);
-            setSelectedCommunity(oldCommunity);
-            return;
-        }
-
-        setIsBannerPressed(true);
+    // on mount, set to all communities
+    useEffect(() => {
         setOldLocation(selectedLocationArea || null);
         setOldCommunity(selectedCommunity || null);
         setSelectedLocationArea(null);
         setSelectedCommunity(null);
+        setIsBannerShown(true);
+    }, []);
+
+    const handleBannerPress = () => {
+        setIsBannerShown(false);
+        setSelectedLocationArea(oldLocation);
+        setSelectedCommunity(oldCommunity);
+    };
+
+    if (!isBannerShown) {
+        return null;
     }
 
     return (
         <>
             <TouchableOpacity
-                style={isBannerPressed ? styles.bannerPressed : styles.banner}
+                style={styles.bannerBlue}
                 onPress={handleBannerPress}
             >
-                {isBannerPressed ? (
-                    <Text style={styles.bannerTextBold}>
-                        Now showing retreats from all communities worldwide. Filter on the top right.
-                    </Text>
-                ) : (
-                    <Text style={styles.bannerText}>🌎 See Retreats Worldwide 🌎</Text>
-                )}
+                <Text style={styles.bannerTextBold}>
+                    Now showing retreats from all communities worldwide. Filter on the top right.
+                </Text>
             </TouchableOpacity>
-            {isBannerPressed && (
-                <TouchableOpacity style={styles.banner} onPress={handleBannerPress}>
-                    <Text style={styles.bannerText}>
-                        Click to reset to &quot;{oldLocation?.name}&quot; and &quot;{oldCommunity?.name}&quot;.
-                    </Text>
-                </TouchableOpacity>
-            )}
+
+            <TouchableOpacity style={styles.bannerRed} onPress={handleBannerPress}>
+                <Text style={styles.bannerText}>
+                    Click to reset to &quot;{oldLocation?.name}&quot; and &quot;{oldCommunity?.name}&quot;.
+                </Text>
+            </TouchableOpacity>
         </>
     );
 };
 
 const styles = StyleSheet.create({
-    banner: {
-        backgroundColor: '#FF4D4D', // Red color
+    bannerRed: {
+        backgroundColor: '#FF4D4D',
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    bannerPressed: {
-        // ios blue color
-        backgroundColor: '#007AFF',
+    bannerBlue: {
+        backgroundColor: '#007AFF', // ios blue color
         padding: 10,
         alignItems: 'center',
         justifyContent: 'center',
@@ -77,14 +74,11 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Banner;
-
-
 export const Retreats = () => {
     return (
         <>
             <Banner />
             <EventCalendarView isRetreats={true} />
         </>
-    )
-}
+    );
+};

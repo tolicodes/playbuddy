@@ -8,7 +8,7 @@ import { getSmallAvatarUrl } from '../Common/imageUtils';
 const BuddyEvents = ({ route }: { route: { params: { buddyAuthUserId: string } } }) => {
     const { buddyAuthUserId } = route.params;
     const { buddiesWishlists } = useBuddiesContext();
-    const { filteredEvents } = useCalendarContext();
+    const { allEvents } = useCalendarContext();
 
     const buddyInfo = useMemo(() => {
         return buddiesWishlists.data?.find(e => e.user_id === buddyAuthUserId)
@@ -17,8 +17,8 @@ const BuddyEvents = ({ route }: { route: { params: { buddyAuthUserId: string } }
     const buddyEventsWithMetadata = useMemo(() => {
         if (!buddiesWishlists.data) return [];
 
-        return filteredEvents.filter(event => buddiesWishlists.data.find(e => e.events.includes(event.id) && e.user_id === buddyAuthUserId))
-    }, [buddiesWishlists, filteredEvents]);
+        return allEvents.filter(event => buddiesWishlists.data.find(e => e.events.includes(event.id) && e.user_id === buddyAuthUserId))
+    }, [buddiesWishlists, allEvents]);
 
     const avatarUrl = buddyInfo?.avatar_url && getSmallAvatarUrl(buddyInfo.avatar_url);
 

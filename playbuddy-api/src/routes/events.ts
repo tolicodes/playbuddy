@@ -41,23 +41,24 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
 
         const publicEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
 
-        // all private events
-        const privateEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'private')
+        // // all private events
+        // const privateEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'private')
 
-        let myPrivateEvents;
+        // this can include public events from private communities
+        let myPrivateCommunityEvents;
 
         // we want to extract events only from their private communities
         if (req.authUserId) {
             const myPrivateCommunities = await getMyPrivateCommunities(req.authUserId);
 
-            myPrivateEvents = privateEvents.filter((event: Event) => {
+            myPrivateCommunityEvents = withVisibleOrganizers.filter((event: Event) => {
                 return event.communities?.find((community) => myPrivateCommunities.includes(community.id))
             })
         }
 
         const combinedEvents = [
             ...publicEvents,
-            ...(myPrivateEvents || [])
+            ...(myPrivateCommunityEvents || [])
         ]
 
 

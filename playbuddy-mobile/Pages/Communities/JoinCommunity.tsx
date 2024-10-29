@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useJoinCommunity } from '../../Common/hooks/useCommunities';
 import { useNavigation } from '@react-navigation/native';
 
-export const CommunitiesJoinSection: React.FC = () => {
+export const JoinCommunity: React.FC = () => {
     const [communityCode, setCommunityCode] = useState<string>('');
     const joinCommunity = useJoinCommunity();
     const { navigate } = useNavigation();

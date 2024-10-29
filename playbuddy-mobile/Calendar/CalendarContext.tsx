@@ -19,6 +19,7 @@ type CalendarContextType = {
 
     // Events
     filteredEvents: EventWithMetadata[];
+    allEvents: EventWithMetadata[];
     reloadEvents: () => void;
     isLoadingEvents: boolean;
 
@@ -125,6 +126,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         // Events
         filteredEvents,
+        allEvents: eventsWithMetadata,
         reloadEvents,
         isLoadingEvents,
 
@@ -148,6 +150,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         // Events
         filteredEvents,
+        eventsWithMetadata,
         reloadEvents,
         isLoadingEvents,
 

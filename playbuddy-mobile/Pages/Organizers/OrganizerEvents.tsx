@@ -4,9 +4,9 @@ import EventCalendarView from "../../Calendar/EventCalendarView"
 import { useCalendarContext } from "../../Calendar/CalendarContext"
 
 export const OrganizerEvents = ({ route: { params: { communityId } } }: { route: { params: { communityId: string } } }) => {
-    const { filteredEvents } = useCalendarContext();
+    const { allEvents } = useCalendarContext();
 
-    const organizerEvents = filteredEvents.filter(event => event.communities?.some(community => community.id === communityId));
+    const organizerEvents = allEvents.filter(event => event.communities?.some(community => community.id === communityId));
 
     return (
         <View>

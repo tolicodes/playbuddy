@@ -1,33 +1,16 @@
-import React, { useMemo } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet } from "react-native";
-
-import { Community } from "../../../Common/commonTypes";
-import EventList from "../../Calendar/EventList";
-import { useCalendarContext } from "../../Calendar/CalendarContext";
-import { useGroupedEvents } from "../../Calendar/hooks/useGroupedEvents";
+import React from "react";
+import { Text, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 import { useCommonContext } from "../../Common/CommonContext";
+import { useNavigation } from "@react-navigation/native";
 
-
-const getMyPrivateEventSections = (myPrivateCommunities: Community[]) => {
-    const { filteredEvents } = useCalendarContext();
-    const communityIds = myPrivateCommunities.map((community) => community.id);
-    const myPrivateEvents = useMemo(() => filteredEvents.filter((event) => {
-        return event.communities?.some((community) => communityIds.includes(community.id))
-    }), [filteredEvents, communityIds]);
-
-    const { sections } = useGroupedEvents(myPrivateEvents || [])
-
-    return sections;
-}
-
-export const CommunitiesPlaySection: React.FC = () => {
+export const CommunitiesList: React.FC = () => {
     const { myCommunities } = useCommonContext();
     const privateCommunities = [
         ...myCommunities.myPrivateCommunities,
         ...myCommunities.myOrganizerPrivateCommunities
     ];
 
-    const myPrivateEventSections = getMyPrivateEventSections(privateCommunities)
+    const navigator = useNavigation();
 
     return (
         <>
@@ -37,7 +20,9 @@ export const CommunitiesPlaySection: React.FC = () => {
                     data={privateCommunities}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item }) => (
-                        <TouchableOpacity style={styles.communityItem}>
+                        <TouchableOpacity style={styles.communityItem}
+                            onPress={() => navigator.navigate('Community Events', { communityId: item.id })}
+                        >
                             <Text style={styles.communityName}>{item.name}</Text>
                         </TouchableOpacity>
                     )}
@@ -46,14 +31,6 @@ export const CommunitiesPlaySection: React.FC = () => {
             ) : (
                 <Text style={styles.emptyText}>You haven&apos;t joined any communities yet.</Text>
             )}
-
-            <Text style={styles.sectionTitle}>My Private Events!</Text>
-            <EventList
-                sections={myPrivateEventSections}
-                screen="Communities Play"
-                reloadEvents={() => { }}
-                isLoadingEvents={false}
-            />
         </>
     );
 }
@@ -73,7 +50,8 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: '#fff',
         borderRadius: 8,
-        marginBottom: 10,
+        margin: 16,
+        marginTop: 0,
         elevation: 2
     },
     communityName: {
