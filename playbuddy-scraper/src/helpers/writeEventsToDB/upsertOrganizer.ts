@@ -32,16 +32,16 @@ export async function upsertOrganizer({ name, url, original_id }: CreateOrganize
 
     // If an organizer exists with the name or alias, use its name and ID
     if (existingOrganizer) {
-        const communityId = await upsertCommunityFromOrganizer({
-            organizerId: existingOrganizer.id ?? "",
-            // use organizer name
-            organizerName: name
-        });
+        const { data: existingCommunity } = await supabaseClient
+            .from('communities')
+            .select("id")
+            .eq("organizer_id", existingOrganizer.id)
+            .single();
 
         return {
             organizerId: existingOrganizer.id,
-            communityId
-        };
+            communityId: existingCommunity?.id
+        }
     }
 
     // Upsert the organizer

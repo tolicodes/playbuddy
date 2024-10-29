@@ -5,6 +5,8 @@ import { Event } from '../../commonTypes';
 import { API_URL } from '../../config';
 import { getAvailableOrganizers } from '../calendarUtils';
 import { useQuery } from '@tanstack/react-query';
+import { useCommonContext } from '../../Common/CommonContext';
+import { useUserContext } from '../../contexts/UserContext';
 
 type OrganizerColorMap = { [key: string]: { color: string; priority: number } }
 type Organizer = {
@@ -33,7 +35,7 @@ const fetchEvents = async () => {
     return axios.get<Event[]>(API_URL.events).then(response => response.data);
 }
 
-export const useFetchEvents = (appState?: string) => {
+export const useFetchEvents = (appState?: string, authUserId?: string) => {
     const { data: events = [], isLoading: isLoadingEvents, refetch: reloadEvents } = useQuery({
         queryKey: ['events'],
         queryFn: fetchEvents,
@@ -42,15 +44,16 @@ export const useFetchEvents = (appState?: string) => {
     // Reload events when the app state changes
     useEffect(() => {
         reloadEvents();
-    }, [appState]);
+    }, [appState, authUserId]);
 
     return { events, reloadEvents, isLoadingEvents };
 };
 
 
 export const useEvents = (appState?: string) => {
+    const { authUserId } = useUserContext();
     // Fetch events based on app state
-    const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState);
+    const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState, authUserId || '');
 
     const organizers = useMemo(() =>
         getAvailableOrganizers(events || []),

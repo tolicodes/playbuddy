@@ -20,7 +20,7 @@ const fillMissingData = async () => {
         if (eventsMissingLocation.length > 0) {
             const eventIdsMissingLocation = eventsMissingLocation.map(event => event.id);
 
-            const { data, error: updateLocationError } = await supabaseClient
+            const { error: updateLocationError } = await supabaseClient
                 .from('events')
                 .update({ location_area_id: NYC_LOCATION_ID })
                 .in('id', eventIdsMissingLocation);

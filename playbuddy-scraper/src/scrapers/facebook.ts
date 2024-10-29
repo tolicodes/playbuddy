@@ -4,9 +4,6 @@ import { ScraperParams } from './types.js';
 import { ApifyClient } from 'apify-client';
 import { FacebookEventApifyResponse } from './fbTypes.js';
 
-const getEventUrls = () => {
-    return JSON.parse(fs.readFileSync('./data/datasets/fb_event_acroyoga.json', 'utf8'));
-};
 
 // Initialize the ApifyClient with API token
 const client = new ApifyClient({
@@ -66,8 +63,6 @@ async function mapFacebookEventToEvent(facebookEvent: FacebookEventApifyResponse
 
 export const scrapeFacebookEvents = async ({
     sourceMetadata,
-    // we can't use the urlCache for Search terms
-    urlCache,
 }: ScraperParams): Promise<CreateEventInput[]> => {
     try {
         // Run the Actor and wait for it to finish

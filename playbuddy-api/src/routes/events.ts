@@ -4,11 +4,13 @@ import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
-import { optionalAuthenticateRequest } from 'middleware/authenticateRequest.js';
+import { Event } from 'commonTypes.js';
+import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
+import { AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const cacheKey = "events";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
     const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
@@ -28,14 +30,38 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
           location_area:location_areas(id, name)
         `)
                 .gte("start_date", nycMidnightUTC),
-            flushCache // Pass the flushCache flag
+            flushCache
         );
 
         let response = JSON.parse(responseData)
 
         // filter out hidden organizers
-        // TODO: Fix in query abobe
-        response = response.filter((event: { organizer: { hidden: boolean } }) => !event.organizer.hidden);
+        const withVisibleOrganizers = response
+            .filter((event: Event) => !event.organizer.hidden)
+
+        const publicEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
+
+        // all private events
+        const privateEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'private')
+
+        let myPrivateEvents;
+
+        // we want to extract events only from their private communities
+        if (req.authUserId) {
+            const myPrivateCommunities = await getMyPrivateCommunities(req.authUserId);
+
+            myPrivateEvents = privateEvents.filter((event: Event) => {
+                return event.communities?.find((community) => myPrivateCommunities.includes(community.id))
+            })
+        }
+
+        const combinedEvents = [
+            ...publicEvents,
+            ...(myPrivateEvents || [])
+        ]
+
+
+        response = combinedEvents
 
         // if we request the wishlist, we need to filter the events
         if (calendarType === 'wishlist') {

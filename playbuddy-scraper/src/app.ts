@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
-import { scrapeEvents } from "./scraper.js";
+import { scrapeEvents, scrapeWhatsappEvents } from "./scraper.js";
 
 export const app = express();
 
@@ -40,7 +40,14 @@ app.get("/scrape/daily", async (req: Request, res: Response): Promise<void> => {
   });
 });
 
+app.get("/whatsapp", async (req: Request, res: Response): Promise<void> => {
+  const out = await scrapeWhatsappEvents();
 
+  res.send({
+    status: "ok",
+    out,
+  });
+});
 
 let server: Server;
 export async function start(port: number | string): Promise<Server> {

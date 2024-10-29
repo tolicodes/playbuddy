@@ -1,7 +1,7 @@
 import { CreateEventInput, SourceMetadata } from "../commonTypes.js";
 import { ScraperParams } from '../scrapers/types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
-import scrapeEventbriteAllEventsFromOrganizerPage from "../scrapers/eventbrite/scrapeEventbriteAllEventsFromOrganizerPage.js";
+import scrapeEventbriteAllEventsFromEventPage from "../scrapers/eventbrite/scrapeEventbriteAllEventsFromOrganizerPage.js";
 
 type ScrapersConfig = {
   [domain: string]: {
@@ -18,7 +18,7 @@ const SCRAPERS: ScrapersConfig = {
     eventRegexIndex: 1,
   },
   "eventbrite.com": {
-    scraper: scrapeEventbriteAllEventsFromOrganizerPage,
+    scraper: scrapeEventbriteAllEventsFromEventPage,
     eventRegex: /.*/,
     eventRegexIndex: 0,
   },
@@ -50,11 +50,6 @@ export const scrapeURLs = async (
     return !urlCache.includes(link.source_url);
   });
 
-  const dupes = links.filter((link) => {
-    if (!link.source_url) return false;
-    return urlCache.includes(link.source_url);
-  });
-
   // Remove duplicate URLs
   const dedupedLinks = dedupeByLink(filteredFromCache);
 
@@ -80,19 +75,30 @@ export const scrapeURLs = async (
       const eventId = match[eventRegexIndex];
       console.log(`Scraping ${domain} URL: ${url} with event ID: ${eventId}`);
       try {
-        // Set a timeout of 30 seconds (30000 milliseconds)
+        // Set a timeout of 60 seconds (60000 milliseconds)
         const eventsScraped = await Promise.race([
           scraper({
             url: eventId,
             sourceMetadata,
             urlCache,
           }),
-          timeout(15000),
+          timeout(60000),
         ]);
 
-        if (eventsScraped) {
-          events.push(...eventsScraped);
+        const eventsScrapedWithCommunities = eventsScraped?.map((event) => {
+          // while we scrape all the organizer's event, we only want to associate the event with the community of the original event
+          const isOriginalEvent = event.ticket_url === url;
+
+          return {
+            ...event,
+            communities: isOriginalEvent ? sourceMetadata.communities || [] : [],
+          };
+        });
+
+        if (eventsScrapedWithCommunities) {
+          events.push(...eventsScrapedWithCommunities);
         }
+
       } catch (error: any) {
         if (error?.message === "Timeout") {
           console.warn(`Scraping ${url} timed out.`);

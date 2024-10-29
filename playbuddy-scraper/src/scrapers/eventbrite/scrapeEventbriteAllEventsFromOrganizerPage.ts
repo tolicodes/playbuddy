@@ -5,10 +5,9 @@ import scrapeEventbriteEventsFromOrganizerPage from "./scrapeEventbriteEventsFro
 import { CreateEventInput } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
 
-const scrapeEventbriteAllEventsFromOrganizerPage = async ({
+const scrapeEventbriteAllEventsFromEventPage = async ({
   url,
   sourceMetadata,
-  urlCache,
 }: ScraperParams): Promise<CreateEventInput[] | null> => {
   try {
     const { data } = await axios.get(url);
@@ -18,7 +17,7 @@ const scrapeEventbriteAllEventsFromOrganizerPage = async ({
       $('[data-testid="organizer-name"] a').attr("href") || "";
 
     if (!organizerUrl) {
-      console.error("No organizer URL found");
+      console.log("No organizer URL found for ", sourceMetadata.source_url);
       return null;
     }
 
@@ -34,6 +33,13 @@ const scrapeEventbriteAllEventsFromOrganizerPage = async ({
 
     return eventsWithMetadata;
   } catch (error) {
+
+    // @ts-ignore
+    if (error?.response?.status === 404) {
+      console.log(`Eventbrite event not found: ${sourceMetadata.source_url}`);
+      return [];
+    }
+
     console.error(
       `Error scraping Eventbrite organizer from event page ${sourceMetadata.source_url}:`,
       error,
@@ -42,4 +48,4 @@ const scrapeEventbriteAllEventsFromOrganizerPage = async ({
   }
 };
 
-export default scrapeEventbriteAllEventsFromOrganizerPage;
+export default scrapeEventbriteAllEventsFromEventPage;

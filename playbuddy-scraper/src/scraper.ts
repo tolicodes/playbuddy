@@ -1,12 +1,13 @@
 import fs from "fs";
 import { CreateEventInput } from "./commonTypes.js";
-// import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp.js";
+import { scrapeWhatsappLinks } from "./scrapers/scrapeWhatsapp.js";
 import { scrapePluraEvents } from "./scrapers/scrapePluraEvents.js";
 import { scrapeEventbriteEventsFromOrganizersURLs } from "./scrapers/eventbrite/scrapeEventbriteEventsFromOrganizerPage.js";
 import { scrapeOrganizerTantraNY } from "./scrapers/organizers/tantra_ny.js";
 import { writeEventsToDB } from "./helpers/writeEventsToDB/writeEventsToDB.js";
 import { scrapeAcroFestivals, API_URL as ACROFESTIVALS_API_URL } from "./scrapers/acrofestivals.js";
 import { scrapeFacebookEvents as scrapeFacebook } from "./scrapers/facebook.js";
+import scrapeURLs from './helpers/scrapeURLs.js';
 
 const CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b'
 const ACRO_COMMUNITY_ID = '89d31ff0-05bf-4fa7-98e0-3376b44b4997';
@@ -29,9 +30,9 @@ export const filterEvents = (events: CreateEventInput[]) => {
 
 type URLCache = string[];
 
-const getURLCache = (events: CreateEventInput[]): URLCache => {
-    return events.map((event: CreateEventInput) => event.event_url);
-};
+// const getURLCache = (events: CreateEventInput[]): URLCache => {
+//     return events.map((event: CreateEventInput) => event.event_url);
+// };
 
 interface FilePath {
     path: string;
@@ -63,6 +64,10 @@ const DATA_FILES: Record<string, FilePath> = {
 
     burlesque_eventbrite_organizer_urls: {
         path: "./data/datasets/burlesque_eventbrite_organizer_urls.json",
+    },
+
+    whatsapp_groups: {
+        path: "./data/datasets/whatsapp_groups.json",
     },
 
 
@@ -108,7 +113,7 @@ const getFromFile = (source: string): CreateEventInput[] => {
     return fileOperations.readJSON(DATA_FILES[source].path);
 };
 
-const getInputFile = (source: string): string[] => {
+const getInputFile = (source: string): any[] => {
     return fileOperations.readJSON(DATA_FILES[source].path);
 };
 
@@ -198,38 +203,6 @@ const scrapeFacebookEvents = async (urlCache: URLCache) => {
     return facebookEventsOut;
 }
 
-const scrapeBurlesqueEventbrite = async (urlCache: URLCache) => {
-    const burlesqueEventbriteOrganizerURLs = getFromFile(
-        "burlesque_eventbrite_organizer_urls",
-    );
-
-    // SCRAPE EVENTBRITE EVENTS
-    const kinkEventbriteEventsOut =
-        await scrapeEventbriteEventsFromOrganizersURLs({
-            organizerURLs: burlesqueEventbriteOrganizerURLs,
-            sourceMetadata: {
-                source_ticketing_platform: "Eventbrite",
-                dataset: "Burlesque",
-                communities: [{
-                    id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
-                }]
-            },
-            urlCache,
-        });
-
-    writeFile("burlesque_eventbrite_events", burlesqueEventbriteEventsOut);
-}
-
-// const scrapeWhatsapp = async (urlCache: URLCache) => {
-//     // SCRAPE WHATSAPP EVENTS
-//     const whatsappLinksOut = await scrapeWhatsappLinks();
-
-//     writeFile("whatsapp_links", whatsappLinksOut);
-
-//     const whatsappEventsOut = await scrapeURLs(whatsappLinksOut, urlCache);
-//     writeFile("whatsapp_events", whatsappEventsOut);
-// };
-
 export const scrapeEvents = async ({
     freq = 'hourly'
 }: {
@@ -267,9 +240,24 @@ export const scrapeEvents = async ({
     await writeEventsToDB(filteredEvents);
 
     return filteredEvents
-
-    // Separate calendar for whatsapp events
-    // const whatsappEvents = getFromFile('whatsapp');
-    // const filteredWhatsappEvents = filterEvents(whatsappEvents);
-    // writeAllWhatsappEventsToFrontend(filteredWhatsappEvents)
 };
+
+export const scrapeWhatsappEvents = async (urlCache: URLCache = []) => {
+    const whatsappGroups = getInputFile("whatsapp_groups") as { group_name: string, community_id: string }[];
+
+    const whatsappLinksOut = await scrapeWhatsappLinks(whatsappGroups);
+
+    writeFile("whatsapp_links", whatsappLinksOut);
+
+    // const whatsappLinksOut = getFromFile("whatsapp_links");
+
+    const whatsappEventsOut = await scrapeURLs(whatsappLinksOut, urlCache);
+    writeFile("whatsapp_events", whatsappEventsOut);
+
+    const withVisibility = whatsappEventsOut.map((event) => ({
+        ...event,
+        visibility: 'private' as 'private' | 'public',
+    }));
+
+    writeEventsToDB(withVisibility);
+}

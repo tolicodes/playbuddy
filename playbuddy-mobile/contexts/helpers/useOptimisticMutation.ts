@@ -9,26 +9,26 @@ export interface UseOptimisticMutationOptions<TUpdateData, TData, TVariables, TE
 }
 
 // Optimistic mutation hook with rollback mechanism
-export const useOptimisticMutation = <TUpdateData, TData, TVariables, TError = Error>({
+export const useOptimisticMutation = <TQueryData, TMutateData, TVariables, TError = Error>({
     mutationFn,
     queryKey,
     onMutateFn,
     ...mutationOptions
-}: UseOptimisticMutationOptions<TUpdateData, TData, TVariables, TError>) => {
+}: UseOptimisticMutationOptions<TQueryData, TMutateData, TVariables, TError>) => {
     const queryClient = useQueryClient();
 
-    return useMutation<TData, TError, TVariables, { previousData: TUpdateData | undefined }>({
-        mutationFn: async (variables) => {
+    return useMutation<TMutateData, TError, TVariables, { previousData: TQueryData | undefined }>({
+        mutationFn: async (variables: TVariables) => {
             const data = await mutationFn(variables);
             return data;
         },
-        onMutate: async (variables) => {
+        onMutate: async (variables: TVariables) => {
             await queryClient.cancelQueries({ queryKey });
 
-            const previousData = queryClient.getQueryData<TUpdateData>(queryKey);
+            const previousData = queryClient.getQueryData<TQueryData>(queryKey);
 
             const updatedData = onMutateFn(previousData, variables);
-            queryClient.setQueryData<TUpdateData>(queryKey, updatedData);
+            queryClient.setQueryData<TQueryData>(queryKey, updatedData);
 
             return { previousData };
         },

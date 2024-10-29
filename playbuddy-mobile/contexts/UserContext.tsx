@@ -11,7 +11,6 @@ import { onInitializeAuth, onPendingCallback, runAuthFlow, signOut as signOutUti
 import { Session } from '@supabase/auth-js/src/lib/types'
 import { UserContextType, SignInParams, SignUpParams } from './UserTypes';
 
-
 // Create the UserContext
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -56,7 +55,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setSession,
             setPendingCallback,
         });
-    }, []);
+    }, [setPendingCallback]);
 
     const signUpWithEmail = useCallback(({ email, password, name, callback }: SignUpParams) => {
         runAuthFlow({
@@ -70,22 +69,24 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setPendingCallback,
             insertUserProfile,
         });
-    }, []);
+    }, [setPendingCallback, insertUserProfile]);
 
     const signOut = useCallback((callback: () => void) => {
         signOutUtil({ setAuthReady, setSession, callback });
     }, []);
 
+    const authUserId = useMemo(() => session?.user.id || null, [session]);
+
     const value = useMemo(
         () => ({
-            authUserId: session?.user.id || null,
+            authUserId,
             userProfile,
             authReady,
             signInWithEmail,
             signUpWithEmail,
             signOut,
         }),
-        [userProfile, authReady, signInWithEmail, signUpWithEmail, signOut]
+        [authUserId, userProfile, authReady, signInWithEmail, signUpWithEmail, signOut]
     );
 
     return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

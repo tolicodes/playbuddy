@@ -3,6 +3,7 @@
 import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { AuthenticatedRequest } from '../middleware/authenticateRequest.js';
+import { authenticateRequest } from '../middleware/authenticateRequest.js';
 
 const router = Router();
 
@@ -49,18 +50,18 @@ export const fetchMyCommunities = async (req: AuthenticatedRequest, res: Respons
 // Join a community
 export const joinCommunity = async (req: AuthenticatedRequest, res: Response) => {
     const { authUserId } = req;
-    const { community_id, join_code } = req.body;
+    const { join_code } = req.body;
 
     try {
         // Fetch the community by ID
         const { data: community, error: communityError } = await supabaseClient
             .from('communities')
-            .select('id, type, visibility, join_code')
-            .eq('id', community_id)
+            .select('id, type, name, visibility, join_code, auth_type')
+            .eq('join_code', join_code)
             .single();
 
         if (communityError) {
-            throw new Error(`Error fetching community: ${communityError.message}`);
+            throw new Error(`Error Joining: ${communityError.message}`);
         }
 
         if (!community) {
@@ -72,14 +73,20 @@ export const joinCommunity = async (req: AuthenticatedRequest, res: Response) =>
             return res.status(403).json({ error: 'Invalid join code' });
         }
 
+        const status = community.visibility === 'public'
+            ? 'approved'
+            : community.auth_type === 'code'
+                ? 'approved'
+                : 'pending';
+
         // Insert the membership request
         const { error: insertError } = await supabaseClient
             .from('community_memberships')
             .insert({
-                community_id,
+                community_id: community.id,
                 auth_user_id: authUserId,  // Use correct auth_user_id reference
                 role: community.visibility === 'public' ? 'public_member' : 'private_member',
-                status: community.visibility === 'public' ? 'approved' : 'pending',
+                status,
             });
 
         if (insertError) {
@@ -87,7 +94,11 @@ export const joinCommunity = async (req: AuthenticatedRequest, res: Response) =>
         }
 
         // Send success response
-        return res.status(200).json({ message: 'Join request successful' });
+        return res.status(200).json({
+            community_id: community.id,
+            name: community.name,
+            status,
+        });
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
         console.log('errorMessage', errorMessage)
@@ -143,8 +154,8 @@ export const fetchPublicCommunities = async (req: Request, res: Response) => {
 };
 
 router.get('/public', fetchPublicCommunities);
-router.get('/my', fetchMyCommunities);
+router.get('/my', authenticateRequest, fetchMyCommunities);
 
-router.post('/join', joinCommunity);
-router.post('/leave', leaveCommunity);
+router.post('/join', authenticateRequest, joinCommunity);
+router.post('/leave', authenticateRequest, leaveCommunity);
 export default router;

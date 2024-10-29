@@ -14,7 +14,7 @@ import { EventDetail } from './Calendar/EventDetail';
 import AuthMain from './Auth/AuthMain';
 import Wishlist from './Pages/Wishlist';
 import Moar from './Pages/Moar';
-import Communities from './Pages/Communities';
+import Communities from './Pages/Communities/CommunitiesNav';
 import HeaderLoginButton from './Auth/HeaderLoginButton';
 import DeepLinkHandler from './DeepLinkHandler';
 import { Retreats } from './Pages/Retreats';

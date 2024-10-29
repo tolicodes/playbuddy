@@ -1,19 +1,61 @@
-import { Client, LocalAuth, Message, Chat } from "whatsapp-web.js";
+import Whatsapp, { Client, Message, Chat } from "whatsapp-web.js";
 import qrcode from "qrcode-terminal";
 import { SourceMetadata } from "../commonTypes.js";
+import { puppeteerConfig } from "../config.js";
 
-const SCRAPE_GROUPS: string[] = [
-  "Rad Nu Yorkerz",
-  "Circling & AR ~ NYC",
-  "Youtopia DreamSpace Community Events",
-  "TREE 💃🌳🕺🏻 RAVE",
-];
+import {
+  S3Client,
+  PutObjectCommand,
+  HeadObjectCommand,
+  GetObjectCommand,
+  DeleteObjectCommand
+} from '@aws-sdk/client-s3'
+import { AwsS3Store } from "wwebjs-aws-s3";
 
-export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
+export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, community_id: string }[]): Promise<SourceMetadata[]> => {
   return new Promise<SourceMetadata[]>((resolve, reject) => {
+    const s3 = new S3Client({
+      region: 'us-east-2',
+      // endpoint: process.env.SUPABASE_S3_ENDPOINT || '',
+      credentials: {
+        accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY || ''
+      },
+      forcePathStyle: true
+    });
+
+    const putObjectCommand = PutObjectCommand;
+    const headObjectCommand = HeadObjectCommand;
+    const getObjectCommand = GetObjectCommand;
+    const deleteObjectCommand = DeleteObjectCommand;
+
+    const store = new AwsS3Store({
+      bucketName: process.env.SUPABASE_S3_BUCKET_NAME || '',
+      remoteDataPath: 'scraper-client',
+      s3Client: s3,
+      putObjectCommand,
+      headObjectCommand,
+      getObjectCommand,
+      deleteObjectCommand,
+      forcePathStyle: true,
+      webVersionCache: {
+        type: "remote",
+        remotePath:
+          "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
+      },
+    });
+
     const client = new Client({
-      authStrategy: new LocalAuth({ clientId: "client-one" }), // Specify a clientId to differentiate between different sessions
-      puppeteer: { headless: false },
+      authStrategy: new Whatsapp.RemoteAuth({
+        clientId: 'scraper',
+        dataPath: 'whatsapp-login/',
+        store: store,
+        backupSyncIntervalMs: 600000,
+      }),
+
+      puppeteer: {
+        ...puppeteerConfig,
+      }
     });
 
     client.on("qr", (qr: string) => {
@@ -41,7 +83,8 @@ export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
         const linkMatches: SourceMetadata[] = [];
 
         for (const group of groups) {
-          if (!SCRAPE_GROUPS.includes(group.name)) continue;
+          const existingGroup = whatsappGroups.find((g) => g.group_name === group.name);
+          if (!existingGroup) continue;
           console.log(`Processing group: ${group.name}`);
 
           // Fetch messages from the group
@@ -59,7 +102,9 @@ export const scrapeWhatsappLinks = (): Promise<SourceMetadata[]> => {
                 source_origination_group_id: group.id._serialized,
                 source_origination_group_name: group.name,
                 source_origination_platform: "WhatsApp",
-                timestamp_scraped: message.timestamp,
+                communities: [{
+                  id: existingGroup.community_id
+                }]
               });
             }
           });

@@ -13,8 +13,22 @@ export async function upsertEvent(event: CreateEventInput): Promise<number | und
         const { organizerId, communityId: organizerCommunityId } = await upsertOrganizer(event.organizer);
         if (!organizerId || !organizerCommunityId) return 0;
 
-        const eventExists = await checkExistingEvent(event, organizerId);
-        if (eventExists) return 0;
+        const existingEventId = await checkExistingEvent(event, organizerId);
+
+        // check visibility
+        // if the new event is public, then we mark it as public, even if it's private
+        // if it's private, we don't change the privacy (it's public by default)
+        if (existingEventId && event.visibility === 'public') {
+            await setVisibility(existingEventId, 'public');
+        }
+
+        if (existingEventId) {
+            // attach all custom communities (interest groups)
+            for (const community of event.communities || []) {
+                await attachCommunity(existingEventId, community.id);
+            }
+            return 0;
+        }
 
         // @ts-expect-error Not sure why this is complaining
         const locationAreaId = await upsertLocation(event.location_area?.code || '');
@@ -44,6 +58,18 @@ export async function upsertEvent(event: CreateEventInput): Promise<number | und
     return 0;
 }
 
+const setVisibility = async (eventId: string, visibility: 'public' | 'private') => {
+    const { error: visibilityError } = await supabaseClient
+        .from("events")
+        .update({ visibility })
+        .eq("id", eventId);
+
+    if (visibilityError) {
+        console.error(`Error setting visibility for event ${eventId}:`, visibilityError);
+        throw visibilityError;
+    }
+}
+
 const attachCommunity = async (eventId: string, communityId: string) => {
     const { error: communityError } = await supabaseClient
         .from("event_communities")
@@ -58,7 +84,7 @@ const attachCommunity = async (eventId: string, communityId: string) => {
     }
 }
 
-const checkExistingEvent = async (event: CreateEventInput, organizerId: string) => {
+const checkExistingEvent = async (event: CreateEventInput, organizerId: string): Promise<null | string> => {
     // Check for existing event by original_id or by start_date and organizer_id
     const { data: existingEvents, error: fetchError } = await supabaseClient
         .from("events")
@@ -84,16 +110,16 @@ const checkExistingEvent = async (event: CreateEventInput, organizerId: string) 
     if (fetchError && fetchError.code !== "PGRST116") {
         console.error(`Error fetching existing event ${event.name}:`, fetchError);
         // we'll assume it doesn't exist
-        return false;
+        return null;
     }
 
     if (existingEvents && existingEvents.length > 0) {
         console.log(`Event ${event.name} already exists.`);
-        return true;
+        return existingEvents[0].id;
     }
 
     // otherwise it doesn't exist
-    return false;
+    return null;
 }
 
 // Insert new event if it doesn't exist
@@ -126,6 +152,7 @@ const createEvent = async (event: CreateEventInput, organizerId: string, locatio
             source_origination_platform: event.source_origination_platform || '',
             source_ticketing_platform: event.source_ticketing_platform || '',
             dataset: event.dataset || '',
+            visibility: event.visibility || 'public',
 
             location_area_id: locationAreaId
         })

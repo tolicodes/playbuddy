@@ -2,7 +2,7 @@ import axios from "axios";
 import TurndownService from 'turndown';
 
 import { ScraperParams } from "../types.js";
-import { CreateEventInput, Event, SourceMetadata } from "../../commonTypes.js";
+import { CreateEventInput, SourceMetadata } from "../../commonTypes.js";
 
 import { EventbriteEvent } from "./types.js";
 

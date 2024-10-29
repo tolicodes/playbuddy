@@ -6,6 +6,7 @@ export type Organizer = {
     original_id?: string;
     name: string;
     url: string;
+    hidden?: boolean
 }
 
 export type LocationArea = {
@@ -17,7 +18,7 @@ export type LocationArea = {
 export type Community = {
     id: string;
     name: string;
-    code: string;
+    code?: string;
 }
 
 export interface Event extends SourceMetadata {
@@ -50,11 +51,13 @@ export interface Event extends SourceMetadata {
     location_area?: LocationArea;
     // community_ids (many to many via join table event_communities)
     communities?: Community[];
+    visibility?: 'public' | 'private';
+
 }
 
 export interface SourceMetadata {
     source_url?: string;
-    timestamp_scraped?: number;
+    timestamp_scraped?: string;
     dataset?: "Kink" | "Whatsapp POC" | 'Acro';
 
     // where it originated from
@@ -72,7 +75,7 @@ export interface SourceMetadata {
     // Fields
     communities?: {
         id: string;
-    }[]
+    }[];
 
 }
 

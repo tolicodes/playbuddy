@@ -2,7 +2,7 @@
 
 import axios from "axios";
 
-import { CreateEventInput, Event } from "../commonTypes.js";
+import { CreateEventInput } from "../commonTypes.js";
 import { ScraperParams } from './types.js'
 
 export const API_URL = "https://hechdtvsjiogijxbczqs.supabase.co/rest/v1/events?select=*";

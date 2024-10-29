@@ -3,3 +3,4 @@ scripts/supabaseClient.js
 node_modules
 # Local Netlify folder
 .netlify
+playbuddy-scraper/RemoteAuth-client-one.zip

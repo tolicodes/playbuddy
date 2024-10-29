@@ -3,7 +3,7 @@
 
 export const API_BASE_URL_PROD = 'https://api.playbuddy.me'
 
-export const API_BASE_URL_LOCAL = 'http://192.168.1.104:8080'
+export const API_BASE_URL_LOCAL = 'http://localhost:8080'
 export const API_BASE_URL = process.env.NODE_ENV === 'production' ? API_BASE_URL_PROD : API_BASE_URL_LOCAL;
 
 export const API_URL = {

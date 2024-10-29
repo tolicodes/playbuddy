@@ -1,7 +1,7 @@
 import axios from "axios";
 import { DateTime } from 'luxon';
 
-import { CreateEventInput, Event } from "../../commonTypes.js";
+import { CreateEventInput } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
 
 const API_URL = "https://tantrany.com/api/events-listings.json.php?user=toli";

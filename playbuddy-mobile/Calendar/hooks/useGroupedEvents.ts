@@ -33,7 +33,6 @@ export const useGroupedEvents = (events: EventWithMetadata[]) => {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date
     }, [groupedEvents]);
 
-
     // Create marked dates with dot colors for the calendar
     const markedDates = useMemo(() => {
         return Object.entries(groupedEvents).reduce((acc: Record<string, { marked: boolean; dotColor: string[] }>, [date, events]) => {

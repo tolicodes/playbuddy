@@ -5,24 +5,21 @@ import { useUserContext } from '../../contexts/UserContext';
 import { Community } from '../CommonContext';
 import { API_BASE_URL } from '../../config';
 import { queryClient as qc } from '../queryClient';
+import { useAuthorizedQuery } from '../../contexts/helpers/useAuthorizedQuery';
+import { useOptimisticMutation } from '../../contexts/helpers/useOptimisticMutation';
 
 // Fetch My Communities
 export const useFetchMyCommunities = () => {
-    const { authUserId } = useUserContext();
-
-    return useQuery({
+    return useAuthorizedQuery({
         queryKey: ['myCommunities'],
         queryFn: async () => {
             try {
-                const { data } = await axios.get(`${API_BASE_URL}/communities/my`, {
-                    params: { authUserId }
-                });
+                const { data } = await axios.get(`${API_BASE_URL}/communities/my`);
                 return data;
             } catch (error) {
                 if (error instanceof Error) {
                     throw new Error(`Failed to fetch my communities: ${error.message}`);
                 }
-                throw new Error('Failed to fetch my communities');
             }
         }
     });
@@ -30,7 +27,7 @@ export const useFetchMyCommunities = () => {
 
 // Fetch Public Communities
 export const useFetchPublicCommunities = () => {
-    return useQuery<Community[]>({
+    return useAuthorizedQuery<Community[]>({
         queryKey: ['publicCommunities'],
         queryFn: async () => {
             try {
@@ -40,48 +37,40 @@ export const useFetchPublicCommunities = () => {
                 if (error instanceof Error) {
                     throw new Error(`Failed to fetch public communities: ${error.message}`);
                 }
-                throw new Error('Failed to fetch public communities');
             }
         }
     });
 };
 
+type JoinCommunityData = { community_id: string; join_code?: string; type?: string }
+
+type JoinCommunityResponse = { status: string }
+
 // Join a Community
 export const useJoinCommunity = () => {
-    const { authUserId } = useUserContext();
-    const queryClient = useQueryClient(qc);
-
-    return useMutation<Community, Error, { community_id: string; join_code?: string }>({
+    return useOptimisticMutation<Community[], JoinCommunityResponse, JoinCommunityData>({
+        queryKey: ['myCommunities'],
         mutationFn: async (joinData) => {
             const { data } = await axios.post(`${API_BASE_URL}/communities/join`, {
                 ...joinData,
-                authUserId
             });
+
             return data;
         },
-        onMutate: async (joinData) => {
-            // Cancel any outgoing refetches (so they don't overwrite our optimistic update)
-            await queryClient.cancelQueries({ queryKey: ['myCommunities'] });
-
-            // Snapshot the previous value
-            const previousCommunities = queryClient.getQueryData<Community[]>(['myCommunities']);
-
-            // Optimistically update to the new value
-            queryClient.setQueryData<Community[]>(['myCommunities'], old => {
-                const newCommunity: Partial<Community> = { id: joinData.community_id, name: 'Joining...', type: joinData.type };
-                return old ? [...old, newCommunity as Community] : [newCommunity as Community];
-            });
-
-            // Return a context object with the snapshotted value
-            return { previousCommunities };
-        },
-        onError: (err, joinData, context) => {
-            // If the mutation fails, use the context returned from onMutate to roll back
-            queryClient.setQueryData(['myCommunities'], context?.previousCommunities);
-        },
-        onSettled: () => {
-            // Always refetch after error or success:
-            queryClient.invalidateQueries({ queryKey: ['myCommunities'] });
+        onMutateFn: (old, joinData) => {
+            // placeholder
+            const newCommunity = {
+                id: joinData.community_id,
+                name: 'Joining...',
+                type: joinData.type || '',
+                code: '',
+                organizer_id: '',
+                description: '',
+                visibility: '',
+            };
+            return old
+                ? [...old, newCommunity]
+                : [newCommunity];
         },
     });
 };

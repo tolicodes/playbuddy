@@ -19,6 +19,16 @@ export interface Community {
     type: string;
 }
 
+export interface JoinCommunityData {
+    community_id: string;
+    join_code?: string;
+    type?: string;
+}
+
+export interface LeaveCommunityData {
+    community_id: string;
+}
+
 interface CommonContextType {
     locationAreas: LocationArea[];
     selectedLocationArea: LocationArea | null;
@@ -35,12 +45,9 @@ interface CommonContextType {
         myOrganizerPublicCommunities: Community[];
     };
 
-    joinCommunity: UseMutationResult<Community, Error, {
-        community_id: string;
-        join_code?: string;
-    }, unknown>
+    joinCommunity: UseMutationResult<Community, Error, JoinCommunityData, unknown>
 
-    leaveCommunity: UseMutationResult<any, Error, { community_id: string, type: string }, unknown>
+    leaveCommunity: UseMutationResult<Community, Error, LeaveCommunityData, unknown>
 
     selectedCommunity: Community | null;
     setSelectedCommunity: (community: Community | null) => void;

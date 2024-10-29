@@ -2,55 +2,101 @@ import puppeteer from "puppeteer";
 import cheerio from "cheerio";
 
 import { ScraperParams } from "./types.js";
-import { CreateEventInput, Event } from "../commonTypes.js";
-import { convertPartifulDateTime } from "../helpers/partifulDateUtils.js";
-import { extractHtmlToMarkdown } from "../helpers/extractHtmlToMarkdown.js";
+import { CreateEventInput } from "../commonTypes.js";
 import { puppeteerConfig } from "../config.js";
-
+import TurndownService from "turndown";
 
 async function scrapePartifulEvent({
     url: eventId,
     sourceMetadata,
     urlCache,
 }: ScraperParams): Promise<CreateEventInput[] | null> {
+    // user Id to name map
+    async function getOrganizerData(page: puppeteer.Page): Promise<Map<string, string>> {
+        const userDataCache = new Map<string, string>();
+        return new Promise((resolve) => {
+            const responseHandler = async (response: puppeteer.HTTPResponse) => {
+                if (response.url().includes('getUsers') && response.request().method() === 'POST') {
+                    const responseBody = await response.json();
+                    const users = responseBody.result.data;
+
+                    if (!users) return;
+
+                    for (const user of users) {
+                        userDataCache.set(user.id, user.name);
+                    }
+                }
+            };
+
+            page.on('response', responseHandler);
+
+            // Trigger the network request by scrolling
+            page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+            // Set a timeout to resolve with null if no matching response is found
+            setTimeout(() => {
+                page.off('response', responseHandler);
+                resolve(userDataCache);
+            }, 5000);
+        });
+    }
+
     const url = `https://partiful.com/e/${eventId}`;
     const browser = await puppeteer.launch(puppeteerConfig);
     const page = await browser.newPage();
 
     try {
+        const userDataCachePromise = getOrganizerData(page);
+
         await page.goto(url, { waitUntil: "networkidle2" });
+
+
         const html = await page.content();
         const $ = cheerio.load(html);
 
-        // Extract event details
-        const name = $("h1 span.summary").first().text();
-        const dateString = $("time").attr("datetime") || "";
-        const timeString = $("time div div div:nth-child(2)").text() || "";
-        const { start_date, end_date } = convertPartifulDateTime({
-            dateString,
-            timeString,
-        });
+        const el = $('#__NEXT_DATA__');
+        const json = el.text();
+        const data = JSON.parse(json);
+        const event = data.props.pageProps.event;
+
+        // Extract event details from the parsed JSON data
+        const name = event.title;
+        const start_date = event.startDate;
+        const end_date = event.endDate;
 
         if (!start_date) {
             return null;
         }
 
-        const location = $(".icon-location-with-lock + span").text().trim();
-        const priceText = $(".icon-ticket").next().text().trim();
-        const priceMatch = priceText.match(/\$\d+(\.\d+)?/);
-        const price = priceMatch ? priceMatch[0] : "";
-        const imageUrl = $("section div img").attr("src") || "";
-        const organizer = $(".icon-crown-fancy").next().next().text().trim();
-        const organizerUrl = ""; // Currently not extracting, need to fix this
-        const description = await extractHtmlToMarkdown(page, "div.description")
-        const tags: string[] = []; // Assuming tags are available in a specific selector, update accordingly
+        const location = ""; // Location is not provided in the JSON data
+        const price = event.ticketing?.price ? `$${event.ticketing.price}` : "";
+        const imageUrl = event.image?.url || "";
+
+        const updatedBy = event.updatedBy;
+
+        // Extract user ID from updatedBy
+        const organizerUserId = updatedBy.split('/').pop() || '';
+
+        const userDataCache = await userDataCachePromise;
+
+        const organizerName = userDataCache.get(organizerUserId);
+
+        const organizerUrl = "https://partiful.com/u/" + organizerUserId // Organizer URL is not available in the JSON data
+
+        const turndownService = new TurndownService();
+
+        // Convert HTML to Markdown
+        const description = turndownService.turndown((event.description));
+
+        const tags: string[] = []; // Tags are not provided in the JSON data
 
         const eventDetails: CreateEventInput = {
             type: "event",
             recurring: "none",
-            original_id: `plura-${eventId}`,
+            original_id: `partiful-${eventId}`,
             organizer: {
-                name: organizer,
+                name: organizerName || "",
+                original_id: organizerUserId,
                 url: organizerUrl,
             },
             name,
