@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, ReactNode, useEffect, useMe
 import { UseMutationResult, useQuery } from '@tanstack/react-query';
 import { supabase } from '../supabaseClient';
 import { useFetchMyCommunities, useFetchPublicCommunities, useJoinCommunity, useLeaveCommunity } from './hooks/useCommunities';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface LocationArea {
     id: string;
@@ -51,7 +52,9 @@ interface CommonContextType {
 
     selectedCommunity: Community | null;
     setSelectedCommunity: (community: Community | null) => void;
+    showDefaultsModal: boolean;
     isLoadingCommunities: boolean;
+
 }
 
 const CommonContext = createContext<CommonContextType | undefined>(undefined);
@@ -73,8 +76,8 @@ const DEFAULT_LOCATION_ID = '73352aef-334c-49a6-9256-0baf91d56b49';
 const DEFAULT_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b';
 
 export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [selectedLocationArea, setSelectedLocationArea] = useState<LocationArea | null>(null);
-    const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
+    const [selectedLocationArea, doSetSelectedLocationArea] = useState<LocationArea | null>(null);
+    const [selectedCommunity, doSetSelectedCommunity] = useState<Community | null>(null);
 
     const { data: locationAreas = [], isLoading: isLoadingLocationAreas } = useQuery({
         queryKey: ['locationAreas'],
@@ -98,13 +101,64 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         myOrganizerPublicCommunities: myCommunities.filter((c) => c.type === 'organizer_public_community'),
     }), [myCommunities]);
 
-    useEffect(() => {
-        const location = locationAreas.find((l) => l.id === DEFAULT_LOCATION_ID);
-        setSelectedLocationArea(location || null);
+    const setSelectedLocationArea = (location: LocationArea | null) => {
+        doSetSelectedLocationArea(location || null);
+        if (location) {
+            AsyncStorage.setItem('selectedLocationArea', JSON.stringify(location));
+        } else {
+            AsyncStorage.removeItem('selectedLocationArea');
+        }
+    };
 
-        const community = publicCommunities.find((c) => c.id === DEFAULT_COMMUNITY_ID);
-        setSelectedCommunity(community || null);
-    }, [locationAreas, publicCommunities]);
+    const setSelectedCommunity = (community: Community | null) => {
+        doSetSelectedCommunity(community || null);
+        if (community) {
+            AsyncStorage.setItem('selectedCommunity', JSON.stringify(community));
+        } else {
+            AsyncStorage.removeItem('selectedCommunity');
+        }
+    };
+
+    // Show the defaults modal if the user hasn't selected a location or community
+    const [showDefaultsModal, setShowDefaultsModal] = useState(false);
+
+    useEffect(() => {
+        const initializeDefaults = async () => {
+            // wait for locationAreas and communities to load before initializing defaults
+
+            if (!locationAreas || !communities.interestGroups) {
+                return;
+            }
+
+            const [locationValue, communityValue] = await Promise.all([
+                AsyncStorage.getItem('selectedLocationArea'),
+                AsyncStorage.getItem('selectedCommunity')
+            ]);
+
+            // we set default values and show the modal
+            if (!locationValue || !communityValue) {
+                const defaultLocation = locationAreas.find((l) => l.id === DEFAULT_LOCATION_ID);
+                if (defaultLocation) {
+                    setSelectedLocationArea(defaultLocation);
+                }
+
+                const defaultCommunity = communities.interestGroups.find((c) => c.id === DEFAULT_COMMUNITY_ID);
+                if (defaultCommunity) {
+                    setSelectedCommunity(defaultCommunity);
+                }
+
+                setShowDefaultsModal(true);
+                return;
+            }
+
+            doSetSelectedLocationArea(JSON.parse(locationValue || 'null'));
+            doSetSelectedCommunity(JSON.parse(communityValue || 'null'));
+        };
+
+        initializeDefaults();
+    }, [locationAreas, communities]);
+
+
 
     const contextValue = useMemo(() => ({
         locationAreas,
@@ -119,6 +173,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
         selectedCommunity,
         setSelectedCommunity,
+        showDefaultsModal,
         isLoadingCommunities: isLoadingMyCommunities || isLoadingPublicCommunities,
     }), [
         locationAreas,
@@ -132,6 +187,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         selectedCommunity,
         isLoadingMyCommunities,
         isLoadingPublicCommunities,
+        showDefaultsModal
     ]);
 
     return (

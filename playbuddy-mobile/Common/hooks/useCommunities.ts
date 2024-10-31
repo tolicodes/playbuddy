@@ -27,7 +27,7 @@ export const useFetchMyCommunities = () => {
 
 // Fetch Public Communities
 export const useFetchPublicCommunities = () => {
-    return useAuthorizedQuery<Community[]>({
+    return useQuery<Community[]>({
         queryKey: ['publicCommunities'],
         queryFn: async () => {
             try {

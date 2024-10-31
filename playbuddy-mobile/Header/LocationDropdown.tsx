@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet } from 'react-native';
 import { LocationArea } from '../Common/CommonContext';
+import { getLocationIcon } from '../Common/icons';
 
 interface LocationDropdownProps {
     locationAreas: LocationArea[];
@@ -17,14 +18,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 10,
-    },
-    codeTextEmoji: {
-        fontWeight: 'bold',
-        fontSize: 20,
-    },
-    codeText: {
-        fontWeight: 'bold',
-        fontSize: 11,
     },
     modalContainer: {
         flex: 1,
@@ -68,35 +61,7 @@ const styles = StyleSheet.create({
     },
 });
 
-const ICON_MAP: { [key: string]: React.ReactNode } = {
-    'ALL': <Text>🌍</Text>,
-    'NYC': <Text>🗽</Text>,
-    // las vegas
-    'LVG': <Text>🌴</Text>,
-    // san diego
-    'SDG': <Text>🌞</Text>,
-    // san francisco
-    'SFR': <Text>🌉</Text>,
-    // los angeles
-    'LA': <Text>🌆</Text>,
-    // san jose
-    'SJ': <Text>🌲</Text>,
-    // Mexico
-    'MX': <Text>🇲🇽</Text>,
-    // Croatia
-    'HR': <Text>🇭🇷</Text>,
-    // Costa Rica
-    'CR': <Text>🇨🇷</Text>,
 
-}
-
-export const getIcon = (code: string) => {
-    return ICON_MAP[code as keyof typeof ICON_MAP] ?
-        <Text style={styles.codeTextEmoji}>
-            {ICON_MAP[code as keyof typeof ICON_MAP]}
-        </Text>
-        : <Text style={styles.codeText}>{code}</Text>;
-}
 
 const LocationDropdown: React.FC<LocationDropdownProps> = ({
     locationAreas,
@@ -118,7 +83,7 @@ const LocationDropdown: React.FC<LocationDropdownProps> = ({
             onPress={() => handleSelectLocation(item)}
         >
             <View style={styles.codeCircle}>
-                {getIcon(item.code)}
+                {getLocationIcon(item.code)}
             </View>
             <Text style={styles.locationName}>
                 {item.name}
@@ -140,7 +105,7 @@ const LocationDropdown: React.FC<LocationDropdownProps> = ({
             <TouchableOpacity onPress={toggleDropdown}>
                 <View style={styles.codeCircle}>
                     <Text style={styles.codeText}>
-                        {getIcon(selectedLocationArea?.code || 'ALL')}
+                        {getLocationIcon(selectedLocationArea?.code || 'ALL')}
                     </Text>
                 </View>
             </TouchableOpacity>

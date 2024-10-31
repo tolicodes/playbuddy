@@ -35,13 +35,10 @@ const Banner = () => {
                 onPress={handleBannerPress}
             >
                 <Text style={styles.bannerTextBold}>
-                    Now showing retreats from all communities worldwide. Filter on the top right.
+                    Showing all retreats worldwide 🌎
                 </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.bannerRed} onPress={handleBannerPress}>
-                <Text style={styles.bannerText}>
-                    Click to reset to &quot;{oldLocation?.name}&quot; and &quot;{oldCommunity?.name}&quot;.
+                <Text style={styles.resetLink} onPress={handleBannerPress}>
+                    Reset To Your Old Filters
                 </Text>
             </TouchableOpacity>
         </>
@@ -72,6 +69,11 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
     },
+    resetLink: {
+        color: '#fff',
+        fontWeight: 'bold',
+        textDecorationLine: 'underline',
+    }
 });
 
 export const Retreats = () => {
