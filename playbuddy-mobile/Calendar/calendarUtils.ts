@@ -146,7 +146,9 @@ export const EXPLICIT_WORDS = [
 
 
 export const formatDate = (item: Event, listDate = false, listDoW = false) => {
-    const timeRange = `${moment(item.start_date).format('hA')} - ${moment(item.end_date).format('hA')}`;
+    const startFormat = moment(item.start_date).minutes() === 0 ? 'hA' : 'h:mmA';
+    const endFormat = moment(item.end_date).minutes() === 0 ? 'hA' : 'h:mmA';
+    const timeRange = `${moment(item.start_date).format(startFormat)} - ${moment(item.end_date).format(endFormat)}`;
 
     const withDow = `${moment(item.start_date).format('dddd, MMM D, YYYY')} ${timeRange}`;
 
