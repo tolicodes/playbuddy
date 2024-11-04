@@ -9,7 +9,7 @@ export const CommunityEvents = ({ route: { params: { communityId } } }: { route:
     const communityEvents = allEvents.filter(event => event.communities?.some(community => community.id === communityId));
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <EventCalendarView events={communityEvents} />
         </View>
     )

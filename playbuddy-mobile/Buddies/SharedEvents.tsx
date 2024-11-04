@@ -14,7 +14,7 @@ const SharedEvents = () => {
     }, [sharedEvents, filteredEvents]);
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             {/* it will get added internally */}
             <EventCalendarView events={sharedEventsWithMetadata || []} />
         </View>

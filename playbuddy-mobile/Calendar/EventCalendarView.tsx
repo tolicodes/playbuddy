@@ -98,7 +98,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {!authUserId && <WebsiteBanner />}
             <View style={styles.searchContainer}>
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
@@ -152,7 +152,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
                 />
             </View>
 
-        </SafeAreaView >
+        </View >
     );
 };
 
@@ -160,7 +160,8 @@ const styles = StyleSheet.create({
     container: {
         display: 'flex',
         flexDirection: 'column',
-        height: '100%'
+        height: '100%',
+        flex: 1
     },
     calendar: {
         width: '100%',

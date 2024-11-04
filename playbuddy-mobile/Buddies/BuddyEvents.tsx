@@ -24,7 +24,7 @@ const BuddyEvents = ({ route }: { route: { params: { buddyAuthUserId: string } }
     const avatarUrl = buddyInfo?.avatar_url && getSmallAvatarUrl(buddyInfo.avatar_url);
 
     return (
-        <View>
+        <View style={{ flex: 1 }}>
             <View style={styles.titleContainer}>
                 {avatarUrl && (
                     <Image
@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginTop: 10,
-        marginBottom: 10
+        marginBottom: 10,
     },
     title: {
         fontSize: 20,

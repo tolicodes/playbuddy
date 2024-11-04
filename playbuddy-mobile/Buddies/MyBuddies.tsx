@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image'
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useBuddiesContext } from './BuddiesContext';
+import { Buddy, useBuddiesContext } from './BuddiesContext';
 import { useNavigation } from '@react-navigation/native';
 import { getSmallAvatarUrl } from '../Common/imageUtils';
 import { NavStack } from '../types';
@@ -20,12 +20,11 @@ const MyBuddies = () => {
     }
 
 
-    const renderBuddy = ({ item }: { item: Buddy }) => {
+    const Buddy = ({ item }: { item: Buddy }) => {
 
         const avatarUrl = item.avatar_url && getSmallAvatarUrl(item.avatar_url);
         return (
             <TouchableOpacity onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: item.user_id })}>
-
                 <View style={styles.buddyContainer}>
                     <Image source={{ uri: avatarUrl }} style={styles.avatar} />
                     <Text style={styles.buddyName}>{item.name}</Text>
@@ -35,25 +34,25 @@ const MyBuddies = () => {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
             {buddies.data && buddies.data?.length > 0 ? (
                 <FlatList
                     data={buddies.data}
                     keyExtractor={(item) => item.user_id}
-                    renderItem={renderBuddy}
+                    renderItem={Buddy}
                     contentContainerStyle={styles.listContainer}
                 />
             ) : (
                 <Text style={styles.noBuddiesText}>No buddies yet. Add some to your list!</Text>
             )}
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20,
+        paddingHorizontal: 20,
         backgroundColor: '#F9F9FB', // iOS light background color
     },
     loadingContainer: {

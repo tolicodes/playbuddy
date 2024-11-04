@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import EventCalendarView from "../Calendar/EventCalendarView";
-import { Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Community, LocationArea, useCommonContext } from "../Common/CommonContext";
 
 const Banner = () => {
@@ -78,9 +78,9 @@ const styles = StyleSheet.create({
 
 export const Retreats = () => {
     return (
-        <>
+        <View style={{ flex: 1 }}>
             <Banner />
             <EventCalendarView isRetreats={true} />
-        </>
+        </View>
     );
 };
