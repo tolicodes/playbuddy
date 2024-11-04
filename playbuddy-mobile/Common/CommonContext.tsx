@@ -156,7 +156,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         };
 
         initializeDefaults();
-    }, [locationAreas, communities]);
+    }, []);
 
 
 
