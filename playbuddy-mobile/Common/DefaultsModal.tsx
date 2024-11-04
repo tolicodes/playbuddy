@@ -55,7 +55,7 @@ const SelectionModal = () => {
             if (locationListRef.current && index !== -1 && locationAreas.length > 0) {
                 locationListRef.current.scrollToIndex({ index, animated: false });
             }
-        }, 1000);
+        }, 100);
     }
 
     useEffect(() => {
@@ -97,6 +97,7 @@ const SelectionModal = () => {
                         <FlatList
                             data={locationAreas}
                             ref={locationListRef}
+                            onLayout={scrollToLocation}
                             renderItem={({ item }) => renderLocationOption({
                                 id: item.id,
                                 name: item.name,

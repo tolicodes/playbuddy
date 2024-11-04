@@ -130,6 +130,10 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
                 return;
             }
 
+            if (selectedLocationArea && selectedCommunity) {
+                return;
+            }
+
             const [locationValue, communityValue] = await Promise.all([
                 AsyncStorage.getItem('selectedLocationArea'),
                 AsyncStorage.getItem('selectedCommunity')
@@ -156,7 +160,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         };
 
         initializeDefaults();
-    }, []);
+    }, [locationAreas, communities.interestGroups]);
 
 
 
