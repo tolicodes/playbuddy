@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Text, TextInput, Image, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
+import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
+import { Image } from 'expo-image'
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
 

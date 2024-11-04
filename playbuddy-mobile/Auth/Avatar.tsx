@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker';
 import { useUserContext } from '../contexts/UserContext';
 import { getSmallAvatarUrl } from '../Common/imageUtils';

@@ -1,7 +1,7 @@
 // screens/BuddyScreen.tsx
 import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
-
+import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image'
 export default function BuddyAddedConfirmation({ buddy, onAddAnotherBuddy }: { buddy: any, onAddAnotherBuddy: () => void }) {
     return (
         <View style={styles.container}>

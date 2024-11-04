@@ -32,7 +32,8 @@ function addEventMetadata({ events, organizerColorMap }: { events: Event[]; orga
 }
 
 const fetchEvents = async () => {
-    return axios.get<Event[]>(API_URL.events).then(response => response.data);
+    const data = await axios.get<Event[]>(API_URL.events).then(response => response.data);
+    return data
 }
 
 export const useFetchEvents = (appState?: string, authUserId?: string) => {
@@ -54,6 +55,7 @@ export const useEvents = (appState?: string) => {
     const { authUserId } = useUserContext();
     // Fetch events based on app state
     const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState, authUserId || '');
+
 
     const organizers = useMemo(() =>
         getAvailableOrganizers(events || []),

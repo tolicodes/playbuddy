@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { View, Image, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavStack } from '../types';
-
+import { Image } from 'expo-image'
 interface Buddy {
     user_id: string;
     name: string;

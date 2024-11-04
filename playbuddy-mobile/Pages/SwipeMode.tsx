@@ -1,7 +1,7 @@
 import React, { } from 'react';
-import { View, Text, StyleSheet, Image, Linking } from 'react-native';
+import { View, Text, StyleSheet, Linking } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-
+import { Image } from 'expo-image'
 import { useCalendarContext } from '../Calendar/CalendarContext';
 import { formatDate } from '../Calendar/calendarUtils';
 import { Event } from '../commonTypes';

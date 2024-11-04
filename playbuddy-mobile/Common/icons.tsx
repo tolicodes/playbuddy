@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, Text, StyleSheet } from 'react-native';
+import { Text, StyleSheet } from 'react-native';
+import { Image } from 'expo-image'
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const COMMUNITIES_ICON_MAP: { [key: string]: React.ReactNode } = {

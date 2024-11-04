@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { Image } from 'expo-image'
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBuddiesContext } from './BuddiesContext';
 import { useNavigation } from '@react-navigation/native';

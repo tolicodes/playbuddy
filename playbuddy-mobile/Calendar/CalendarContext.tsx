@@ -48,7 +48,7 @@ export const useCalendarContext = () => {
 };
 
 const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterState) => {
-    return eventsWithMetadata.filter(event => {
+    const out = eventsWithMetadata.filter(event => {
         const searchTerm = filters.search.toLowerCase();
         const organizerId = event.organizer?.id || '';
         const eventName = event.name?.toLowerCase() || '';
@@ -59,6 +59,7 @@ const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterSt
             (eventName.includes(searchTerm) || organizerName.includes(searchTerm))
         );
     });
+    return out
 };
 
 // Helper function to remove explicit events

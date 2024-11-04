@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { Image, Text, View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
+import { Image } from 'expo-image'
 import EventCalendarView from '../Calendar/EventCalendarView';
 import { useBuddiesContext } from './BuddiesContext';
 import { useCalendarContext } from '../Calendar/CalendarContext';
