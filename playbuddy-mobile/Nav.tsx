@@ -32,74 +32,12 @@ import { useCalendarContext } from './Calendar/CalendarContext';
 import BuddyEvents from './Buddies/BuddyEvents';
 import AccountDetails from './Auth/AccountDetails';
 import { CommunityEvents } from './Pages/Communities/CommunityEvents';
+import { detailsPageHeaderOptions, headerOptions } from './Common/Header';
 
 // Navigation
 const Tab = createBottomTabNavigator();
 const Drawer = createDrawerNavigator();
 const CalendarStack = createStackNavigator();
-
-// Helper Components
-const CustomBackButton = ({ navigation }: { navigation: any }) => (
-    <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingLeft: 10 }}>
-        <IonIcon name="chevron-back" size={30} color="#007AFF" />
-    </TouchableOpacity>
-);
-
-const CustomDrawerButton = ({ navigation }: { navigation: any }) => {
-    const { filters } = useCalendarContext();
-    const hasFilters = !!filters.organizers.length;
-
-    const onPressOpenFilters = () => {
-        amplitude.logEvent('calendar_filters_clicked');
-        navigation.navigate('Filters');
-    };
-
-    return (
-        <View style={{ marginLeft: 15, flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => navigation.toggleDrawer()}>
-                <IonIcon name="menu" size={30} color="#007AFF" />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.filterIcon} onPress={onPressOpenFilters}>
-                <FAIcon name="filter" size={20} color={hasFilters ? "#007AFF" : "#8E8E93"} />
-            </TouchableOpacity>
-        </View>
-    );
-};
-
-// Navigation Options
-const detailsPageHeaderOptions = ({ navigation }: { navigation: any }) => ({
-    headerLeft: () => <CustomBackButton navigation={navigation} />,
-});
-
-const headerOptions = ({ navigation }: { navigation: any }) => ({
-    headerRight: () => {
-        const {
-            locationAreas,
-            communities,
-            selectedLocationArea,
-            setSelectedLocationArea,
-            selectedCommunity,
-            setSelectedCommunity,
-        } = useCommonContext();
-
-        return (
-            <View style={styles.rightNavContainer}>
-                <CommunityDropdown
-                    communities={communities.interestGroups}
-                    selectedCommunity={selectedCommunity}
-                    onSelectCommunity={setSelectedCommunity}
-                />
-                <LocationDropdown
-                    locationAreas={locationAreas}
-                    selectedLocationArea={selectedLocationArea}
-                    onSelectLocationArea={setSelectedLocationArea}
-                />
-                <HeaderLoginButton />
-            </View>
-        );
-    },
-    headerLeft: () => <CustomDrawerButton navigation={navigation} />
-});
 
 // Stack Navigators
 function CalendarStackNavigator() {
@@ -250,15 +188,3 @@ export default function AppNavigator() {
         </NavigationContainer>
     );
 }
-
-const styles = StyleSheet.create({
-    rightNavContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-    },
-    filterIcon: {
-        marginLeft: 10,
-    },
-});
