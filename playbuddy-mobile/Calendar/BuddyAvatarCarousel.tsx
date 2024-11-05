@@ -3,6 +3,7 @@ import React from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { NavStack } from '../types';
 import { Image } from 'expo-image'
+import { AvatarCircle } from '../Auth/AvatarCircle';
 interface Buddy {
     user_id: string;
     name: string;
@@ -21,7 +22,7 @@ export const BuddyAvatarCarousel: React.FC<BuddyAvatarCarouselProps> = ({ buddie
                 return (
                     <TouchableOpacity key={buddy.user_id} onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: buddy.user_id })}>
                         <View style={[styles.avatarContainer, index > 0 && styles.overlappingAvatar]}>
-                            <Image source={{ uri: buddy.avatar_url || '' }} style={styles.avatar} />
+                            <AvatarCircle userProfile={buddy} size={25} />
                         </View>
                     </TouchableOpacity>
                 );
