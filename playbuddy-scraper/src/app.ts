@@ -98,6 +98,6 @@ export async function stop(signal?: string | Error): Promise<void> {
 
 // If this module is the main module, then start the server
 if (import.meta.url.endsWith(process.argv[1]!)) {
-  const port = process.env["PORT"] || "8080";
+  const port = process.env["PORT"] || "8082";
   await start(port);
 }
