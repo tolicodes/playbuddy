@@ -1,4 +1,5 @@
 import React from 'react';
+import { Image } from 'expo-image';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, Share, SafeAreaView } from 'react-native';
 import { useUserContext } from '../contexts/UserContext';
 import { useNavigation } from '@react-navigation/native';
@@ -60,8 +61,8 @@ export default function AccountDetails() {
 
                     {!userProfile?.avatar_url && (
                         <View style={styles.avatarInstructions}>
-                            <Text style={styles.avatarInstructionsHeader}>IMPORTANT:</Text>
-                            <Text style={styles.avatarInstructionsText}>Upload an avatar to help your buddies identify you!</Text>
+                            <Image source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc/question_person.png?t=2024-11-05T12%3A57%3A25.907Z' }} style={styles.avatarInstructionsImage} />
+                            <Text style={styles.avatarInstructionsText}>Please take 30 seconds to upload an avatar to help identify you!</Text>
                         </View>
                     )}
 
@@ -109,20 +110,20 @@ export default function AccountDetails() {
                             <TouchableOpacity style={styles.button} onPress={onPressHome}>
                                 <Text style={styles.buttonText}>Go to Home</Text>
                             </TouchableOpacity>
-
-                            <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={onPressSignOut}>
-                                <Text style={styles.buttonText}>Sign Out</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity style={[styles.button, styles.deleteAccountButton]} onPress={onPressDeleteAccount}>
-                                <Text style={styles.buttonText}>Delete Account</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity onPress={onPressSupport}>
-                                <Text style={styles.getSupport}>Get support or suggest features: toli@toli.me</Text>
-                            </TouchableOpacity>
                         </>
                     )}
+
+                    <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={onPressSignOut}>
+                        <Text style={styles.buttonText}>Sign Out</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={[styles.button, styles.deleteAccountButton]} onPress={onPressDeleteAccount}>
+                        <Text style={styles.buttonText}>Delete Account</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={onPressSupport}>
+                        <Text style={styles.getSupport}>Get support or suggest features: toli@toli.me</Text>
+                    </TouchableOpacity>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -158,23 +159,22 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     avatarInstructions: {
-        backgroundColor: '#FFD60A',
+        backgroundColor: '#007AFF',
         padding: 16,
         borderRadius: 10,
         marginBottom: 20,
         alignItems: 'center',
     },
-    avatarInstructionsHeader: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        marginBottom: 8,
-        color: '#000',
-        textAlign: 'center',
-    },
+
     avatarInstructionsText: {
-        color: '#000',
-        fontSize: 14,
+        fontSize: 16,
         textAlign: 'center',
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    avatarInstructionsImage: {
+        width: 30,
+        height: 30,
     },
     infoContainer: {
         backgroundColor: '#FFFFFF',
