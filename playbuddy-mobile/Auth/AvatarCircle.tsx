@@ -1,11 +1,11 @@
-import React from "react"
+import React, { useMemo } from "react"
 import { View, StyleSheet, Text } from "react-native"
 import { Image } from "expo-image"
 import { getSmallAvatarUrl } from "../Common/imageUtils";
 import { Buddy } from "../Buddies/BuddiesContext";
 
 export const AvatarCircle = ({ userProfile, size = 50 }: { userProfile: Buddy, size?: number }) => {
-    const styles = StyleSheet.create({
+    const styles = useMemo(() => StyleSheet.create({
         avatarContainer: {
             width: size,
             height: size,
@@ -26,7 +26,7 @@ export const AvatarCircle = ({ userProfile, size = 50 }: { userProfile: Buddy, s
             height: size,
             borderRadius: size / 2,
         }
-    })
+    }), [size]);
 
     const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url);
     const initials = userProfile?.name?.split(' ').map(name => name[0]).join('').slice(0, 2)
