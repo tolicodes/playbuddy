@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,20 +15,15 @@ import AuthMain from './Auth/AuthMain';
 import Wishlist from './Pages/Wishlist';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities/CommunitiesNav';
-import HeaderLoginButton from './Auth/HeaderLoginButton';
 import DeepLinkHandler from './DeepLinkHandler';
 import { Retreats } from './Pages/Retreats';
 import { SwipeMode } from './Pages/SwipeMode';
-import LocationDropdown from './Header/LocationDropdown';
-import CommunityDropdown from './Header/CommunitiesDropdown';
 import BuddiesMain from './Buddies/BuddiesMain';
 import { Organizers } from './Pages/Organizers/Organizers';
 import { OrganizerEvents } from './Pages/Organizers/OrganizerEvents';
 
 // Hooks and Contexts
-import { useCommonContext } from './Common/CommonContext';
 import { useUserContext } from './contexts/UserContext';
-import { useCalendarContext } from './Calendar/CalendarContext';
 import BuddyEvents from './Buddies/BuddyEvents';
 import AccountDetails from './Auth/AccountDetails';
 import { CommunityEvents } from './Pages/Communities/CommunityEvents';
@@ -72,8 +67,7 @@ const TabNavigator = () => (
             tabBarIcon: ({ color, size }) => {
                 const iconName = {
                     Calendar: "calendar",
-                    Wishlist: "heart",
-                    Communities: "users",
+                    'My Calendar': "heart",
                     'Swipe Mode': "layer-group"
                 }[route.name];
                 return <FAIcon name={iconName} size={size} color={color} />;
@@ -91,7 +85,7 @@ const TabNavigator = () => (
         })}
     >
         <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
-        <Tab.Screen name="Wishlist" component={Wishlist} />
+        <Tab.Screen name="My Calendar" component={Wishlist} />
         <Tab.Screen name="Swipe Mode" component={SwipeMode} />
     </Tab.Navigator>
 );
@@ -122,10 +116,18 @@ const DrawerNav = () => {
                 }}
             />
             <Drawer.Screen
-                name="Wishlist"
+                name="My Calendar"
                 component={Wishlist}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="heart" size={size} color={color} style={{ width: 30 }} />,
+                }}
+            />
+
+            <Drawer.Screen
+                name="Buddies"
+                component={BuddiesMain}
+                options={{
+                    drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} />,
                 }}
             />
 
@@ -143,13 +145,6 @@ const DrawerNav = () => {
                 component={Communities}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} style={{ width: 30 }} />,
-                }}
-            />
-            <Drawer.Screen
-                name="Buddies"
-                component={BuddiesMain}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} />,
                 }}
             />
 
