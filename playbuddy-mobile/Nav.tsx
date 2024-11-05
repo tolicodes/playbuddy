@@ -33,6 +33,7 @@ import BuddyEvents from './Buddies/BuddyEvents';
 import AccountDetails from './Auth/AccountDetails';
 import { CommunityEvents } from './Pages/Communities/CommunityEvents';
 import { detailsPageHeaderOptions, headerOptions } from './Common/Header';
+import { Filters } from './Calendar/Filters/Filters';
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -52,6 +53,7 @@ function CalendarStackNavigator() {
             <CalendarStack.Screen name="Organizer Events" component={OrganizerEvents} />
             <CalendarStack.Screen name="Community Events" component={CommunityEvents} />
             <CalendarStack.Screen name="Buddy Events" component={BuddyEvents} />
+            <CalendarStack.Screen name="Filters" component={Filters} />
             <CalendarStack.Screen
                 name="User Profile"
                 component={AccountDetails}
