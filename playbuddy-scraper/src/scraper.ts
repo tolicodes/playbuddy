@@ -186,21 +186,79 @@ const scrapeAcroFestivalsEvents = async (urlCache: URLCache) => {
     writeFile("acro_festivals", acroFestivalsEventsOut);
 }
 
-const scrapeFacebookEvents = async (urlCache: URLCache) => {
-    const facebookEventsOut = await scrapeFacebook({
+const filterAcroFacebookEvents = (events: CreateEventInput[]) => {
+    // const EXCLUDE_EVENT_NAMES = [
+    //     "workshop",
+    //     "class",
+    //     "jam",
+    //     "meetup",
+    //     "session",
+    //     "fundamentals",
+    //     "party",
+    //     "potluck",
+    //     "foundation",
+    //     "exchange",
+    //     "clinic",
+    //     "program",
+    //     "open gym",
+    //     "intro",
+    //     "pop-up",
+
+    // ]
+    // return events.filter((event) => !EXCLUDE_EVENT_NAMES.some((name) => event.name.toLowerCase().includes(name)));
+
+    const INCLUDE_EVENT_NAMES = [
+        "retreat",
+        "festival",
+        "getaway",
+        "camp",
+        "immersion",
+        "expedition",
+        "journey",
+        "escape",
+        "intensive",
+        "summit",
+        "weekend",
+        "weeklong",
+        "adventure"
+    ];
+
+
+    // Filter events that are long duration or have included keywords
+    return events.filter((event) => {
+        const eventNameLower = event.name.toLowerCase();
+
+        // Check if event name contains any of the included keywords
+        const hasIncludedKeyword = INCLUDE_EVENT_NAMES.some(name =>
+            eventNameLower.includes(name.toLowerCase())
+        );
+
+        // Check if event name contains duration keywords
+        const hasLongDuration = event.metadata.duration.includes('day') ||
+            event.metadata.duration.includes('week');
+
+        return hasIncludedKeyword || hasLongDuration;
+    });
+}
+
+const scrapeAcroFacebookEvents = async (urlCache: URLCache) => {
+    const facebookAcroEventsOut = await scrapeFacebook({
         sourceMetadata: {
             dataset: "Acro",
             communities: [{
                 id: ACRO_COMMUNITY_ID
-            }]
+            }],
+            source_origination_platform: "facebook",
         },
         urlCache: [],
         url: 'http://facebook.com',
     });
 
-    writeFile("acro_facebook", facebookEventsOut);
+    const filteredAcroFacebookEvents = filterAcroFacebookEvents(facebookAcroEventsOut);
 
-    return facebookEventsOut;
+    writeFile("acro_facebook", filteredAcroFacebookEvents);
+
+    return filteredAcroFacebookEvents;
 }
 
 export const scrapeEvents = async ({
@@ -212,34 +270,41 @@ export const scrapeEvents = async ({
     // we will fetch events later for matching
     const urlCache: string[] = []
 
-    const allScrapers = await Promise.all([
-        scrapeKinkEventbrite(urlCache),
-        scrapePlura(urlCache),
-        scrapeOrganizerTantraNYEvents(urlCache),
-        scrapeAcroFestivalsEvents(urlCache),
-        freq === 'daily' && scrapeFacebookEvents(urlCache),
-        // scrapeWhatsapp(urlCache)
-    ]);
+    if (freq === 'hourly') {
+        await Promise.all([
+            scrapeKinkEventbrite(urlCache),
+            scrapePlura(urlCache),
+            scrapeOrganizerTantraNYEvents(urlCache),
+            scrapeAcroFestivalsEvents(urlCache)
+        ]);
 
-    // Combine All Events
-    const pluraEvents = getFromFile("plura");
-    const kinkEventbriteEvents = getFromFile("kink_eventbrite_events");
-    const tantraNYEvents = getFromFile("tantra_ny");
-    const acroFestivalsEvents = getFromFile("acro_festivals");
-    const facebookEvents = freq === 'daily' ? getFromFile("acro_facebook") : [];
+        // Combine hourly events
+        const pluraEvents = getFromFile("plura");
+        const kinkEventbriteEvents = getFromFile("kink_eventbrite_events");
+        const tantraNYEvents = getFromFile("tantra_ny");
+        const acroFestivalsEvents = getFromFile("acro_festivals");
 
-    // Filter them to exclude certain events and dedupe
-    const filteredEvents = filterEvents([
-        ...pluraEvents,
-        ...kinkEventbriteEvents,
-        ...tantraNYEvents,
-        ...acroFestivalsEvents,
-        ...facebookEvents,
-    ]);
+        const filteredEvents = filterEvents([
+            ...pluraEvents,
+            ...kinkEventbriteEvents,
+            ...tantraNYEvents,
+            ...acroFestivalsEvents
+        ]);
 
-    await writeEventsToDB(filteredEvents);
+        await writeEventsToDB(filteredEvents);
+        return filteredEvents;
 
-    return filteredEvents
+    } else if (freq === 'daily') {
+        await scrapeAcroFacebookEvents(urlCache);
+
+        const acroFacebookEvents = getFromFile("acro_facebook");
+        const filteredEvents = filterEvents(acroFacebookEvents);
+
+        await writeEventsToDB(filteredEvents);
+        return filteredEvents;
+    }
+
+    return [];
 };
 
 export const scrapeWhatsappEvents = async (urlCache: URLCache = []) => {

@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { CreateEventInput, Event, SourceMetadata } from "../commonTypes.js";
+import { CreateEventInput, SourceMetadata } from "../commonTypes.js";
 import { ScraperParams } from './types.js';
 import { ApifyClient } from 'apify-client';
 import { FacebookEventApifyResponse } from './fbTypes.js';
@@ -11,7 +10,7 @@ const client = new ApifyClient({
 });
 
 const searchQueries = [
-    // 'acro festival',
+    'acro festival',
     'acro retreat',
 ];
 
@@ -55,9 +54,15 @@ async function mapFacebookEventToEvent(facebookEvent: FacebookEventApifyResponse
         //includes community
         ...sourceMetadata,
 
+        communities: sourceMetadata.communities,
+
         source_url: facebookEvent.url || '',
         dataset: 'Acro',
         source_origination_platform: 'facebook',
+
+        metadata: {
+            duration: facebookEvent.duration || '',
+        }
     };
 }
 
@@ -66,7 +71,7 @@ export const scrapeFacebookEvents = async ({
 }: ScraperParams): Promise<CreateEventInput[]> => {
     try {
         // Run the Actor and wait for it to finish
-        const run = await client.actor(ACTOR_ID).call(input);;
+        const run = await client.actor(ACTOR_ID).call(input);
         const { items } = await client.dataset(run.defaultDatasetId).listItems();
 
         // Map the raw Facebook events to our Event format
