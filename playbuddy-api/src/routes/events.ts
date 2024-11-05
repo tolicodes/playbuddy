@@ -4,7 +4,7 @@ import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
-import { Event } from 'commonTypes.js';
+import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 

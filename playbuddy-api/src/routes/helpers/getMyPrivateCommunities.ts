@@ -1,4 +1,4 @@
-import { supabaseClient } from "connections/supabaseClient.js";
+import { supabaseClient } from "../../connections/supabaseClient.js";
 
 export const getMyPrivateCommunities = async (authUserId?: string) => {
     if (!authUserId) {

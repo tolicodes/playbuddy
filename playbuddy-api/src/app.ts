@@ -11,7 +11,6 @@ import wishlistRoute from './routes/wishlist.js';
 import communitiesRoute from './routes/communities.js';
 import buddiesRoutes from './routes/buddies.js';
 import profileRoutes from './routes/profile.js'
-// import { errorLogger } from "middleware/errorLogger.js";
 
 export const app = express();
 
