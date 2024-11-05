@@ -2,6 +2,9 @@ import { CreateEventInput } from "commonTypes.js";
 import { supabaseClient } from "../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import { upsertLocation } from "./upsertLocation.js";
+import axios from "axios";
+import crypto from "crypto";
+import { supabaseClient as supabase } from '../../connections/supabaseClient.js';
 
 export async function upsertEvent(event: CreateEventInput): Promise<number | undefined> {
     try {
@@ -71,6 +74,23 @@ const setVisibility = async (eventId: string, visibility: 'public' | 'private') 
 }
 
 const attachCommunity = async (eventId: string, communityId: string) => {
+    // lookup if community event relationship already exists
+    const { data: existingCommunityEvent, error: existingCommunityEventError } = await supabaseClient
+        .from("event_communities")
+        .select("*")
+        .eq("event_id", eventId)
+        .eq("community_id", communityId);
+
+    if (existingCommunityEventError) {
+        console.error(`Error fetching existing community event ${eventId} ${communityId}:`, existingCommunityEventError);
+        throw existingCommunityEventError;
+    }
+
+    // if we already have a relationship, don't create a new one
+    if (existingCommunityEvent?.length > 0) {
+        return;
+    }
+
     const { error: communityError } = await supabaseClient
         .from("event_communities")
         .insert({
@@ -122,8 +142,58 @@ const checkExistingEvent = async (event: CreateEventInput, organizerId: string):
     return null;
 }
 
+const IMAGE_BUCKET_NAME = "event-images";
+
+const downloadImage = async (url: string) => {
+    try {
+        // Download the image
+        const response = await axios({
+            url,
+            method: 'GET',
+            responseType: 'arraybuffer', // Download image as binary data
+        });
+
+        const imageBuffer = Buffer.from(response.data, 'binary');
+
+        if (!response.headers['content-type'].startsWith('image/')) {
+            throw new Error('The provided URL does not contain an image.');
+        }
+
+        const extension = response.headers['content-type'].split('/')[1]; // Extract the file extension
+
+        // Create a random image name with the appropriate extension
+        const randomHash = crypto.randomBytes(16).toString('hex');
+        const imageName = `${randomHash}.${extension}`;
+
+        // Upload to Supabase Storage
+        const { data, error } = await supabase.storage
+            .from(IMAGE_BUCKET_NAME)
+            .upload(imageName, imageBuffer, {
+                contentType: response.headers['content-type'],
+                upsert: true, // overwrite if file already exists
+            });
+
+        if (error) {
+            console.error('Error uploading image:', error);
+            throw error;
+        }
+
+        const imagePath = data.path;
+
+        // get public url
+        const { data: publicUrlData } = await supabase.storage.from(IMAGE_BUCKET_NAME).getPublicUrl(imagePath);
+
+        return publicUrlData.publicUrl;
+
+    } catch (error) {
+        console.error('Error downloading or uploading image:', error);
+        return null;
+    }
+}
+
 // Insert new event if it doesn't exist
 const createEvent = async (event: CreateEventInput, organizerId: string, locationAreaId: string) => {
+    const imageUrl = await downloadImage(event.image_url);
     const { data: createdEvent, error: insertError } = await supabaseClient
         .from("events")
         .insert({
@@ -138,7 +208,7 @@ const createEvent = async (event: CreateEventInput, organizerId: string, locatio
 
             ticket_url: event.ticket_url || '',
             event_url: event.event_url || '',
-            image_url: event.image_url || '',
+            image_url: imageUrl || '',
 
             location: event.location || '',
             price: event.price || '',
@@ -158,8 +228,6 @@ const createEvent = async (event: CreateEventInput, organizerId: string, locatio
         })
         .select()
         .single();
-
-    console.log("createdEvent", event.name)
 
     if (insertError || !createdEvent) {
         console.error("Error inserting event:", insertError);

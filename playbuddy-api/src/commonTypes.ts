@@ -96,4 +96,5 @@ export type CreateEventInput = Omit<Event,
     organizer: CreateOrganizerInput;
     location_area?: CreateLocationAreaInput;
     communities?: CreateCommunityInput[];
+    metadata?: any;
 } & SourceMetadata

@@ -82,7 +82,7 @@ export const scrapeURLs = async (
             sourceMetadata,
             urlCache,
           }),
-          timeout(60000),
+          timeout(48000),
         ]);
 
         const eventsScrapedWithCommunities = eventsScraped?.map((event) => {
