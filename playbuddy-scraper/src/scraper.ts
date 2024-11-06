@@ -8,6 +8,7 @@ import { writeEventsToDB } from "./helpers/writeEventsToDB/writeEventsToDB.js";
 import { scrapeAcroFestivals, API_URL as ACROFESTIVALS_API_URL } from "./scrapers/acrofestivals.js";
 import { scrapeFacebookEvents as scrapeFacebook } from "./scrapers/facebook.js";
 import scrapeURLs from './helpers/scrapeURLs.js';
+import { supabaseClient } from "connections/supabaseClient.js";
 
 const CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b'
 const ACRO_COMMUNITY_ID = '89d31ff0-05bf-4fa7-98e0-3376b44b4997';
@@ -29,10 +30,6 @@ export const filterEvents = (events: CreateEventInput[]) => {
 
 
 type URLCache = string[];
-
-// const getURLCache = (events: CreateEventInput[]): URLCache => {
-//     return events.map((event: CreateEventInput) => event.event_url);
-// };
 
 interface FilePath {
     path: string;
@@ -107,6 +104,14 @@ const DATA_FILES: Record<string, FilePath> = {
     burlesque_eventbrite_events: {
         path: "./data/outputs/all_burlesque_eventbrite_events.json",
     },
+
+    url_cache: {
+        path: "./data/outputs/url_cache.json",
+    },
+
+    filtered_events: {
+        path: "./data/outputs/filtered_events.json",
+    },
 };
 
 const getFromFile = (source: string): CreateEventInput[] => {
@@ -121,10 +126,26 @@ const writeFile = (source: string, events: any[]) => {
     fileOperations.writeJSON(DATA_FILES[source].path, events);
 };
 
-const scrapeKinkEventbrite = async (urlCache: URLCache) => {
-    const kinkEventbriteOrganizerURLs = getFromFile(
+
+
+// URL CACHE
+
+const getURLCache = async (): Promise<URLCache> => {
+    const { data, error } = await supabaseClient.from('events').select('event_url');
+    if (error) {
+        console.error('Error fetching event urls from supabase', error);
+        return [];
+    }
+    return data.map((event: any) => event.event_url);
+};
+
+
+// SCRAPERS
+
+const scrapeKinkEventbrite = async () => {
+    const kinkEventbriteOrganizerURLs = getInputFile(
         "kink_eventbrite_organizer_urls",
-    ).map((organizer: any) => organizer.url);
+    );
 
     // SCRAPE EVENTBRITE EVENTS
     const kinkEventbriteEventsOut =
@@ -137,13 +158,12 @@ const scrapeKinkEventbrite = async (urlCache: URLCache) => {
                     id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
                 }]
             },
-            urlCache,
         });
 
     writeFile("kink_eventbrite_events", kinkEventbriteEventsOut);
 };
 
-const scrapePlura = async (urlCache: URLCache) => {
+const scrapePlura = async () => {
     // SCRAPE PLURA EVENTS
     const pluraEventsOut = await scrapePluraEvents({
         sourceMetadata: {
@@ -157,7 +177,7 @@ const scrapePlura = async (urlCache: URLCache) => {
     writeFile("plura", pluraEventsOut);
 };
 
-const scrapeOrganizerTantraNYEvents = async (urlCache: URLCache) => {
+const scrapeOrganizerTantraNYEvents = async () => {
     const organizerTantraNYEventsOut = await scrapeOrganizerTantraNY({
         url: "https://tantrany.com/api/events-listings.json.php?user=toli",
         sourceMetadata: {
@@ -172,7 +192,7 @@ const scrapeOrganizerTantraNYEvents = async (urlCache: URLCache) => {
     writeFile("tantra_ny", organizerTantraNYEventsOut);
 };
 
-const scrapeAcroFestivalsEvents = async (urlCache: URLCache) => {
+const scrapeAcroFestivalsEvents = async () => {
     const acroFestivalsEventsOut = await scrapeAcroFestivals({
         sourceMetadata: {
             dataset: "Acro",
@@ -241,7 +261,7 @@ const filterAcroFacebookEvents = (events: CreateEventInput[]) => {
     });
 }
 
-const scrapeAcroFacebookEvents = async (urlCache: URLCache) => {
+const scrapeAcroFacebookEvents = async () => {
     const facebookAcroEventsOut = await scrapeFacebook({
         sourceMetadata: {
             dataset: "Acro",
@@ -268,14 +288,16 @@ export const scrapeEvents = async ({
 }) => {
     // GENERAL SETUP    
     // we will fetch events later for matching
-    const urlCache: string[] = []
+    const urlCache = await getURLCache()
+
+    writeFile("url_cache", urlCache);
 
     if (freq === 'hourly') {
         await Promise.all([
-            scrapeKinkEventbrite(urlCache),
-            scrapePlura(urlCache),
-            scrapeOrganizerTantraNYEvents(urlCache),
-            scrapeAcroFestivalsEvents(urlCache)
+            scrapeKinkEventbrite(),
+            scrapePlura(),
+            scrapeOrganizerTantraNYEvents(),
+            scrapeAcroFestivalsEvents()
         ]);
 
         // Combine hourly events
@@ -291,16 +313,26 @@ export const scrapeEvents = async ({
             ...acroFestivalsEvents
         ]);
 
-        await writeEventsToDB(filteredEvents);
+        const filterOutExistingEvents = filteredEvents.filter((event) =>
+            !urlCache.includes(event.event_url)
+        );
+
+        writeFile("filtered_events", filterOutExistingEvents);
+
+
+        await writeEventsToDB(filterOutExistingEvents);
         return filteredEvents;
 
     } else if (freq === 'daily') {
-        await scrapeAcroFacebookEvents(urlCache);
+        await scrapeAcroFacebookEvents();
 
         const acroFacebookEvents = getFromFile("acro_facebook");
         const filteredEvents = filterEvents(acroFacebookEvents);
+        const filterExistingEvents = filteredEvents.filter((event) =>
+            !urlCache.includes(event.event_url)
+        );
 
-        await writeEventsToDB(filteredEvents);
+        await writeEventsToDB(filterExistingEvents);
         return filteredEvents;
     }
 

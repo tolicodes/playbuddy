@@ -83,11 +83,9 @@ const scrapeEventbriteEventsFromOrganizerPage = async ({
 export const scrapeEventbriteEventsFromOrganizersURLs = async ({
   organizerURLs,
   sourceMetadata,
-  urlCache,
 }: {
   organizerURLs: string[];
   sourceMetadata: SourceMetadata;
-  urlCache: string[];
 }): Promise<CreateEventInput[]> => {
   const events = [];
 
@@ -95,7 +93,6 @@ export const scrapeEventbriteEventsFromOrganizersURLs = async ({
     const organizerEvents = await scrapeEventbriteEventsFromOrganizerPage({
       url: organizerURL,
       sourceMetadata,
-      urlCache,
     });
     events.push(...organizerEvents);
   }
