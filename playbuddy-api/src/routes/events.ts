@@ -35,7 +35,8 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
 
         let response = JSON.parse(responseData)
 
-        // filter out hidden organizers
+        // filter out hidden organizers that we want to ignore but are still
+        // automatically injested into the database
         const withVisibleOrganizers = response
             .filter((event: Event) => !event.organizer.hidden)
 
