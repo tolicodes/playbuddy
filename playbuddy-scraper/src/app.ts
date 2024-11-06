@@ -40,7 +40,7 @@ app.get("/scrape/daily", async (req: Request, res: Response): Promise<void> => {
   });
 });
 
-app.get("/whatsapp", async (req: Request, res: Response): Promise<void> => {
+app.get("/scrape/whatsapp", async (req: Request, res: Response): Promise<void> => {
   const out = await scrapeWhatsappEvents();
 
   res.send({
