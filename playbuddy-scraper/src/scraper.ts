@@ -8,7 +8,7 @@ import { writeEventsToDB } from "./helpers/writeEventsToDB/writeEventsToDB.js";
 import { scrapeAcroFestivals, API_URL as ACROFESTIVALS_API_URL } from "./scrapers/acrofestivals.js";
 import { scrapeFacebookEvents as scrapeFacebook } from "./scrapers/facebook.js";
 import scrapeURLs from './helpers/scrapeURLs.js';
-import { supabaseClient } from "connections/supabaseClient.js";
+import { supabaseClient } from "./connections/supabaseClient.js";
 
 const CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b'
 const ACRO_COMMUNITY_ID = '89d31ff0-05bf-4fa7-98e0-3376b44b4997';
