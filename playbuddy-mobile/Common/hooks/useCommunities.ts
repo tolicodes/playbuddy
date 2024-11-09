@@ -15,7 +15,7 @@ export const useFetchMyCommunities = () => {
         queryFn: async () => {
             try {
                 const { data } = await axios.get(`${API_BASE_URL}/communities/my`);
-                return data;
+                return data as Community[];
             } catch (error) {
                 if (error instanceof Error) {
                     throw new Error(`Failed to fetch my communities: ${error.message}`);

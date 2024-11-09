@@ -2,8 +2,8 @@ import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import { MyCommunitiesSection } from './MyCommunitiesSection';
-import { CommunitiesManageSection } from './CommunitiesManageSection';
-import { PrivateEventsSection } from './PrivateEventsSection';
+import { MyEvents } from './MyEvents';
+import { JoinCommunitySection } from './JoinCommunitySection';
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -13,8 +13,8 @@ const CommunitiesNav = () => {
         <>
             <Tab.Navigator>
                 <Tab.Screen name="My Communities" component={MyCommunitiesSection} />
-                <Tab.Screen name="Private Events" component={PrivateEventsSection} />
-                <Tab.Screen name="Manage Communities" component={CommunitiesManageSection} />
+                <Tab.Screen name="My Events" component={MyEvents} />
+                <Tab.Screen name="Join Community" component={JoinCommunitySection} />
             </Tab.Navigator>
         </>
     );

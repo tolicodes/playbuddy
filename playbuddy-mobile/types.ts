@@ -8,16 +8,36 @@ export type EventWithMetadata = Event & {
 
 export type NavStackProps = {
     'Main Calendar': undefined;
-    'Wishlist': { share_code?: string };
-    'Login': undefined;
+
+    // Standalone
     'Event Details': { selectedEvent: Event };
+    'Community Events': { communityId: string };
+    'Buddy Events': { buddyAuthUserId: string };
     'Filters': undefined;
+    'User Profile': undefined;
+
+    // Tab Screens
+    'Calendar': undefined;
+    // Also in drawer
+    'My Calendar': { share_code?: string }
+    'Swipe Mode': undefined;
+
+
+
+    // Drawer Screens
+    // aka calendar
+    'Home': undefined;
+    'Buddies': undefined;
     'Communities': undefined;
+    'Retreats': undefined;
+    'Login': undefined;
+    'Profile': undefined;
     'Moar': undefined;
 
-    // Standalone Screens
-    'User Profile': undefined;
-    'Buddy Events': { buddyAuthUserId: string };
+    // Communities Nav
+    'My Communities': undefined;
+    'My Events': undefined;
+    'Join Community': undefined;
 }
 
 export type NavStack = StackNavigationProp<NavStackProps>

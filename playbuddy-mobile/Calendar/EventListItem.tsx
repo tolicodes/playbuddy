@@ -8,35 +8,33 @@ import { useCalendarContext } from './CalendarContext';
 import { useUserContext } from '../contexts/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { formatDate } from './calendarUtils';
-import { BuddyAvatarCarousel } from './BuddyAvatarCarousel';
+import { BuddyAvatarCarousel, Buddy } from './BuddyAvatarCarousel';
 import { getSmallAvatarUrl } from '../Common/imageUtils';
 
 interface ListItemProps {
     item: EventWithMetadata;
     setSelectedEvent: (event: Event) => void;
-    buddiesAttending?: {
-        user_id: string;
-        name: string;
-        avatar_url: string | null;
-    }[];
+    buddiesAttending?: Buddy[];
 }
 
-export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, buddiesAttending: sharedBuddies }) => {
-    const { toggleWishlistEvent, isOnWishlist, } = useCalendarContext(); // use the hook to handle wishlist
+export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, buddiesAttending: sharedBuddies }) => {
+    const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
+    const { authUserId } = useUserContext();
 
-    const { authUserId } = useUserContext(); // use the hook to get the user ID
-
-    const formattedDate = formatDate(item)
-
+    const formattedDate = formatDate(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
+    const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
 
     const handleToggleEventWishlist = () => {
-        amplitude.logEvent('event_wishlist_toggled', { event_id: item.id, is_on_wishlist: !itemIsOnWishlist });
-        // flip the old value
-        toggleWishlistEvent.mutate({ eventId: item.id, isOnWishlist: !itemIsOnWishlist });
+        amplitude.logEvent('event_wishlist_toggled', {
+            event_id: item.id,
+            is_on_wishlist: !itemIsOnWishlist
+        });
+        toggleWishlistEvent.mutate({
+            eventId: item.id,
+            isOnWishlist: !itemIsOnWishlist
+        });
     };
-
-    const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
 
     return (
         <TouchableOpacity onPress={() => setSelectedEvent(item)}>
@@ -46,17 +44,16 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, budd
                     <View style={styles.eventOrganizerAndBuddiesContainer}>
                         <View style={styles.organizerContainer}>
                             <View
-                                style={{
-                                    width: 10,
-                                    height: 10,
-                                    borderRadius: 5,
-                                    backgroundColor: item.organizerColor || 'white',
-                                    marginRight: 5,
-                                }}
+                                style={[styles.organizerDot, { backgroundColor: item.organizerColor || 'white' }]}
                             />
                             <Text style={styles.eventOrganizer}>
                                 {item.organizer?.name}
                             </Text>
+                            {item.visibility === 'private' && (
+                                <View style={styles.privateBadge}>
+                                    <Text style={styles.privateBadgeText}>Private</Text>
+                                </View>
+                            )}
                         </View>
                         {sharedBuddies && (
                             <View style={styles.buddyAvatarCarouselContainer}>
@@ -66,13 +63,20 @@ export const ListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, budd
                     </View>
 
                     <View style={styles.titleAndHeartContainer}>
-                        <Text style={styles.eventTitle}
+                        <Text
+                            style={styles.eventTitle}
                             numberOfLines={2}
                             ellipsizeMode="tail"
-                        >{item.name}</Text>
+                        >
+                            {item.name}
+                        </Text>
                         {authUserId && (
                             <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
-                                <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
+                                <FAIcon
+                                    name={itemIsOnWishlist ? 'heart' : 'heart-o'}
+                                    size={25}
+                                    color="red"
+                                />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -131,6 +135,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
+    organizerDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        marginRight: 5,
+    },
     buddyAvatarCarouselContainer: {
         marginLeft: 10
     },
@@ -138,6 +148,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-
     },
+    privateBadge: {
+        backgroundColor: '#FF6B6B',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+        marginLeft: 8,
+    },
+    privateBadgeText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 'bold',
+    }
 });

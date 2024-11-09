@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { TextInput, StyleSheet, SafeAreaView, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
+import { TextInput, StyleSheet, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
 import { Image } from 'expo-image'
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
@@ -16,6 +16,7 @@ import WebsiteBanner from './WebsiteBanner';
 import { useUserContext } from '../contexts/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { MISC_URLS } from '../config';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -33,7 +34,7 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
     const { authUserId } = useUserContext()
     const [searchQuery, setSearchQuery] = useState('');
 
-    let eventsUsed;
+    let eventsUsed: EventWithMetadata[];
 
     if (events) {
         eventsUsed = events
@@ -49,7 +50,24 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
         eventsUsed = filteredEvents
     }
 
-    const { sections, markedDates } = useGroupedEvents(eventsUsed);
+    // locally filter private events based on button on top
+    const [isPrivateEventsFiltered, setIsPrivateEventsFiltered] = useState(false);
+    const [eventsLocalFiltered, setEventsLocalFiltered] = useState<EventWithMetadata[]>([]);
+
+    // these don't apply globally, so we need to filter locally
+    useEffect(() => {
+        const eventsFiltered = isPrivateEventsFiltered
+            ? eventsUsed.filter(event => event.visibility === 'private')
+            : eventsUsed
+
+        setEventsLocalFiltered(eventsFiltered)
+    }, [isPrivateEventsFiltered, eventsUsed])
+
+    const onPressPrivateEvents = () => {
+        setIsPrivateEventsFiltered(!isPrivateEventsFiltered);
+    }
+
+    const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered);
     const sectionListRef = useRef<SectionList<Event>>(null);
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
 
@@ -105,6 +123,9 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
                     <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
                 </TouchableOpacity>
 
+                <TouchableOpacity style={styles.calendarIcon} onPress={onPressPrivateEvents}>
+                    <Ionicons name="lock-closed" size={30} color={isPrivateEventsFiltered ? "#007AFF" : "#8E8E93"} />
+                </TouchableOpacity>
 
                 {isOnWishlist && <TouchableOpacity style={styles.googleCalendarIcon} onPress={onPressGoogleCalendar}>
                     <Image

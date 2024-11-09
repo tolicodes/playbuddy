@@ -1,7 +1,7 @@
 import React from "react";
 import { SectionList, View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { EventWithMetadata } from "./../types";
-import { ListItem } from "./ListItem";
+import { EventListItem } from "./EventListItem";
 import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import { NavStack } from "../types";
@@ -51,7 +51,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents, screen }: EventL
 
             return (
                 <View>
-                    <ListItem
+                    <EventListItem
                         item={event}
                         setSelectedEvent={(event) => {
                             amplitude.logEvent('event_list_item_clicked', { event_id: event.id });

@@ -19,6 +19,11 @@ export type Community = {
     id: string;
     name: string;
     code?: string;
+    auth_type?: 'code' | 'approval';
+    type?: string;
+    organizer_id?: string;
+    description?: string;
+    visibility?: string;
 }
 
 export interface Event extends SourceMetadata {

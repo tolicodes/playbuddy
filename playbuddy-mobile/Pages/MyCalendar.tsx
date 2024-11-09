@@ -49,7 +49,7 @@ const ShareWishlistButton = () => {
     );
 };
 
-const Wishlist = ({ route }: { route: RouteProp<NavStackProps, 'Wishlist'> }) => {
+const MyCalendar = ({ route }: { route: RouteProp<NavStackProps, 'My Calendar'> }) => {
     const { setFilters, setFriendWishlistShareCode, friendWishlistShareCode } = useCalendarContext();
     const { authUserId } = useUserContext();
 
@@ -124,4 +124,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default Wishlist;
+export default MyCalendar;

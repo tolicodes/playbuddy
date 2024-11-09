@@ -31,15 +31,12 @@ function addEventMetadata({ events, organizerColorMap }: { events: Event[]; orga
     })).sort((a, b) => a.organizerPriority - b.organizerPriority);
 }
 
-const fetchEvents = async () => {
-    const data = await axios.get<Event[]>(API_URL.events).then(response => response.data);
-    return data
-}
-
 export const useFetchEvents = (appState?: string, authUserId?: string) => {
     const { data: events = [], isLoading: isLoadingEvents, refetch: reloadEvents } = useQuery({
         queryKey: ['events'],
-        queryFn: fetchEvents,
+        queryFn: async () => {
+            return axios.get<Event[]>(API_URL.events).then(response => response.data);
+        },
     });
 
     // Reload events when the app state changes
@@ -50,15 +47,30 @@ export const useFetchEvents = (appState?: string, authUserId?: string) => {
     return { events, reloadEvents, isLoadingEvents };
 };
 
+export const useFetchPrivateEvents = () => {
+    const { authUserId } = useUserContext();
+    const { data: privateEvents = [], isLoading: isLoadingPrivateEvents } = useQuery({
+        queryKey: ['events', authUserId],
+        queryFn: async () => {
+            return axios.get<Event[]>(API_URL.events, { params: { visibility: 'private' } }).then(response => response.data);
+        },
+        enabled: !!authUserId,
+    });
+
+    return { privateEvents, isLoadingPrivateEvents };
+};
+
 
 export const useEvents = (appState?: string) => {
     const { authUserId } = useUserContext();
     // Fetch events based on app state
     const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState, authUserId || '');
+    const { privateEvents, isLoadingPrivateEvents } = useFetchPrivateEvents();
 
+    const allEvents = [...events, ...privateEvents];
 
     const organizers = useMemo(() =>
-        getAvailableOrganizers(events || []),
+        getAvailableOrganizers(allEvents || []),
         [events]
     );
     const organizerColorMap = useMemo(() =>
@@ -68,9 +80,9 @@ export const useEvents = (appState?: string) => {
 
     // Map metadata to events and apply sorting
     const eventsWithMetadata = useMemo(() =>
-        addEventMetadata({ events, organizerColorMap }),
-        [events, organizerColorMap]
+        addEventMetadata({ events: allEvents, organizerColorMap }),
+        [allEvents, organizerColorMap]
     );
 
-    return { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents };
+    return { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents: isLoadingEvents || isLoadingPrivateEvents };
 };

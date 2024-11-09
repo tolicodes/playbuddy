@@ -40,6 +40,7 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
       forcePathStyle: true,
       webVersionCache: {
         type: "remote",
+        // todo: forgot what bug this fixes
         remotePath:
           "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
       },
@@ -47,7 +48,7 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
 
     const client = new Client({
       authStrategy: new Whatsapp.RemoteAuth({
-        clientId: 'scraper',
+        clientId: 'scraper1',
         dataPath: 'whatsapp-login/',
         store: store,
         backupSyncIntervalMs: 600000,
@@ -63,6 +64,7 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
     });
 
     client.on("ready", async () => {
+      console.log('ready');
       try {
         // Get all the groups
         console.log("Fetching chats...");

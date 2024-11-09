@@ -12,15 +12,13 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import EventCalendarView from './Calendar/EventCalendarView';
 import { EventDetail } from './Calendar/EventDetail';
 import AuthMain from './Auth/AuthMain';
-import Wishlist from './Pages/Wishlist';
+import MyCalendar from './Pages/MyCalendar';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities/CommunitiesNav';
 import DeepLinkHandler from './DeepLinkHandler';
 import { Retreats } from './Pages/Retreats';
 import { SwipeMode } from './Pages/SwipeMode';
 import BuddiesMain from './Buddies/BuddiesMain';
-import { Organizers } from './Pages/Organizers/Organizers';
-import { OrganizerEvents } from './Pages/Organizers/OrganizerEvents';
 
 // Hooks and Contexts
 import { useUserContext } from './contexts/UserContext';
@@ -45,7 +43,6 @@ function CalendarStackNavigator() {
                 options={{ headerShown: false }}
             />
             <CalendarStack.Screen name="Event Details" component={EventDetail} />
-            <CalendarStack.Screen name="Organizer Events" component={OrganizerEvents} />
             <CalendarStack.Screen name="Community Events" component={CommunityEvents} />
             <CalendarStack.Screen name="Buddy Events" component={BuddyEvents} />
             <CalendarStack.Screen name="Filters" component={Filters} />
@@ -85,7 +82,7 @@ const TabNavigator = () => (
         })}
     >
         <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
-        <Tab.Screen name="My Calendar" component={Wishlist} />
+        <Tab.Screen name="My Calendar" component={MyCalendar} />
         <Tab.Screen name="Swipe Mode" component={SwipeMode} />
     </Tab.Navigator>
 );
@@ -117,7 +114,7 @@ const DrawerNav = () => {
             />
             <Drawer.Screen
                 name="My Calendar"
-                component={Wishlist}
+                component={MyCalendar}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="heart" size={size} color={color} style={{ width: 30 }} />,
                 }}
@@ -130,15 +127,6 @@ const DrawerNav = () => {
                     drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} style={{ width: 30 }} />,
                 }}
             />
-
-            <Drawer.Screen
-                name="Organizers"
-                component={Organizers}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="users-cog" size={size} color={color} style={{ width: 30 }} />,
-                }}
-            />
-
 
             <Drawer.Screen
                 name="Communities"
@@ -169,7 +157,6 @@ const DrawerNav = () => {
                         <IonIcon name="ellipsis-horizontal" size={size} color={color} style={{ width: 30 }} />
                     )
                 }}
-
             />
 
         </Drawer.Navigator>

@@ -16,6 +16,12 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
     const calendarType = req.query.wishlist ? "wishlist" : "calendar";
 
+    if (req.query.visibility === 'private') {
+        if (!req.authUserId) {
+            throw Error('User not specified for private events');
+        }
+    }
+
     try {
         const redisClient = await connectRedisClient();
 
@@ -36,34 +42,34 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
         let response = JSON.parse(responseData)
 
         // filter out hidden organizers that we want to ignore but are still
-        // automatically injested into the database
-        const withVisibleOrganizers = response
+        // automatically ingested into the database
+        const eventsWithVisibleOrganizers = response
             .filter((event: Event) => !event.organizer.hidden)
 
-        const publicEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
+        const publicEvents = eventsWithVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
+        response = publicEvents;
 
         // // all private events
         // const privateEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'private')
 
-        // this can include public events from private communities
-        let myPrivateCommunityEvents;
-
         // we want to extract events only from their private communities
-        if (req.authUserId) {
+        if (req.query.visibility === 'private') {
+            if (!req.authUserId) {
+                console.error('User not specified');
+                throw Error('User not specified');
+            }
+
             const myPrivateCommunities = await getMyPrivateCommunities(req.authUserId);
 
-            myPrivateCommunityEvents = withVisibleOrganizers.filter((event: Event) => {
+            // must be in my private communities and be a private event
+            const myPrivateCommunityEvents = eventsWithVisibleOrganizers.filter((event: Event) => {
                 return event.communities?.find((community) => myPrivateCommunities.includes(community.id))
+                    && event.visibility === 'private'
             })
+
+            res.status(200).send(myPrivateCommunityEvents);
+            return;
         }
-
-        const combinedEvents = [
-            ...publicEvents,
-            ...(myPrivateCommunityEvents || [])
-        ]
-
-
-        response = combinedEvents
 
         // if we request the wishlist, we need to filter the events
         if (calendarType === 'wishlist') {

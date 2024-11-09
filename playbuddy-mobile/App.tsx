@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react'
 import 'react-native-gesture-handler';
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+import './Common/uxCam';
+
 import { UserProvider } from './contexts/UserContext';
 import { CalendarProvider } from './Calendar/CalendarContext';
 import Nav from './Nav';

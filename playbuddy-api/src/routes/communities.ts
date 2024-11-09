@@ -4,6 +4,7 @@ import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { authenticateRequest } from '../middleware/authenticateRequest.js';
+import { Community } from 'commonTypes.js';
 
 const router = Router();
 
@@ -28,7 +29,7 @@ export const fetchMyCommunities = async (req: AuthenticatedRequest, res: Respons
         if (communityIds.length > 0) {
             const { data: communities, error: communitiesError } = await supabaseClient
                 .from('communities')
-                .select('id, name, type, visibility, code')
+                .select('id, name, type, visibility, code, organizer_id')
                 .in('id', communityIds);
 
             if (communitiesError) {
@@ -47,12 +48,57 @@ export const fetchMyCommunities = async (req: AuthenticatedRequest, res: Respons
     }
 };
 
+const doJoinCommunity = async (authUserId: string, community: Community) => {
+    const status = community.auth_type === 'code'
+        ? 'approved'
+        : 'pending';
+
+    // Insert the membership request
+    const { error: insertError } = await supabaseClient
+        .from('community_memberships')
+        .insert({
+            community_id: community.id,
+            auth_user_id: authUserId,  // Use correct auth_user_id reference
+            role: community.visibility === 'public' ? 'public_member' : 'private_member',
+            status,
+        });
+
+    if (insertError) {
+        throw new Error(`Error joining community: ${insertError.message}`);
+    }
+};
+
 // Join a community
 export const joinCommunity = async (req: AuthenticatedRequest, res: Response) => {
     const { authUserId } = req;
-    const { join_code } = req.body;
+    const { join_code, community_id } = req.body;
 
     try {
+        if (community_id && !join_code) {
+            // Fetch the community by ID
+            const { data: community, error: communityError } = await supabaseClient
+                .from('communities')
+                .select('id, visibility')
+                .eq('id', community_id)
+                .single();
+
+            if (communityError) {
+                throw new Error(`Error Joining: ${communityError.message}`);
+            }
+
+            if (!community) {
+                return res.status(404).json({ error: 'Community not found' });
+            }
+
+            if (community.visibility === 'private') {
+                return res.status(403).json({ error: 'Community is private. Please use the join code to join.' });
+            }
+
+            await doJoinCommunity(authUserId!, community as Community);
+
+            return res.status(200).json(community);
+        }
+
         // Fetch the community by ID
         const { data: community, error: communityError } = await supabaseClient
             .from('communities')
@@ -73,25 +119,7 @@ export const joinCommunity = async (req: AuthenticatedRequest, res: Response) =>
             return res.status(403).json({ error: 'Invalid join code' });
         }
 
-        const status = community.visibility === 'public'
-            ? 'approved'
-            : community.auth_type === 'code'
-                ? 'approved'
-                : 'pending';
-
-        // Insert the membership request
-        const { error: insertError } = await supabaseClient
-            .from('community_memberships')
-            .insert({
-                community_id: community.id,
-                auth_user_id: authUserId,  // Use correct auth_user_id reference
-                role: community.visibility === 'public' ? 'public_member' : 'private_member',
-                status,
-            });
-
-        if (insertError) {
-            throw new Error(`Error joining community: ${insertError.message}`);
-        }
+        doJoinCommunity(authUserId!, community);
 
         // Send success response
         return res.status(200).json({
