@@ -4,3 +4,4 @@ node_modules
 # Local Netlify folder
 .netlify
 playbuddy-scraper/RemoteAuth-client-one.zip
+playbuddy-mobile/Common/.uxCam.ts.swp

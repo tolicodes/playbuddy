@@ -33,6 +33,7 @@
     "expo": "~51.0.37",
     "expo-apple-authentication": "~6.4.2",
     "expo-camera": "~15.0.16",
+    "expo-image": "~1.13.0",
     "expo-image-picker": "~15.0.7",
     "expo-linking": "~6.3.1",
     "expo-secure-store": "~13.0.2",
@@ -66,14 +67,14 @@
     "react-native-svg": "^15.7.1",
     "react-native-tab-view": "^3.5.2",
     "react-native-url-polyfill": "^2.0.0",
+    "react-native-ux-cam": "^6.0.1",
     "react-native-vector-icons": "^10.2.0",
     "react-native-video": "^6.6.2",
     "react-native-video-controls": "^2.8.1",
     "react-native-walkthrough-tooltip": "^1.6.0",
     "react-native-webview": "13.8.6",
     "url-parse": "^1.5.10",
-    "yup": "^1.4.0",
-    "expo-image": "~1.13.0"
+    "yup": "^1.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
