@@ -62,7 +62,9 @@ async function scrapePartifulEvent({
         // Extract event details from the parsed JSON data
         const name = event.title;
         const start_date = event.startDate;
-        const end_date = event.endDate;
+
+        const defaultEndTime = new Date(new Date(start_date).getTime() + 3 * 60 * 60 * 1000).toISOString();
+        const end_date = event.endDate ? event.endDate : defaultEndTime;
 
         if (!start_date) {
             return null;

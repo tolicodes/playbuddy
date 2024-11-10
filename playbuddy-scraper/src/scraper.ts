@@ -342,7 +342,11 @@ export const scrapeEvents = async ({
 export const scrapeWhatsappEvents = async (urlCache: URLCache = []) => {
     const whatsappGroups = getInputFile("whatsapp_groups") as { group_name: string, community_id: string }[];
 
-    const whatsappLinksOut = await scrapeWhatsappLinks(whatsappGroups);
+    const whatsappLinksOut = await scrapeWhatsappLinks(whatsappGroups, {
+        communities: [{
+            id: CONSCIOUS_TOUCH_INTEREST_GROUP_COMMUNITY_ID
+        }]
+    });
 
     writeFile("whatsapp_links", whatsappLinksOut);
 
@@ -350,6 +354,10 @@ export const scrapeWhatsappEvents = async (urlCache: URLCache = []) => {
 
     const whatsappEventsOut = await scrapeURLs(whatsappLinksOut, urlCache);
     writeFile("whatsapp_events", whatsappEventsOut);
+
+    // const whatsappEventsOut = getFromFile("whatsapp_events");
+
+    console.log('whatsappEventsOut', whatsappEventsOut.map((event) => event.name));
 
     const withVisibility = whatsappEventsOut.map((event) => ({
         ...event,

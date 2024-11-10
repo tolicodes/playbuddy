@@ -12,7 +12,7 @@ import {
 } from '@aws-sdk/client-s3'
 import { AwsS3Store } from "wwebjs-aws-s3";
 
-export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, community_id: string }[]): Promise<SourceMetadata[]> => {
+export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, community_id: string }[], sourceMetadata: SourceMetadata): Promise<SourceMetadata[]> => {
   return new Promise<SourceMetadata[]>((resolve, reject) => {
     const s3 = new S3Client({
       region: 'us-east-2',
@@ -38,25 +38,31 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
       getObjectCommand,
       deleteObjectCommand,
       forcePathStyle: true,
-      webVersionCache: {
-        type: "remote",
-        // todo: forgot what bug this fixes
-        remotePath:
-          "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html",
-      },
     });
 
-    const client = new Client({
-      authStrategy: new Whatsapp.RemoteAuth({
+    const authStrategy = process.env.NODE_ENV === 'production' ?
+      new Whatsapp.RemoteAuth({
         clientId: 'scraper1',
         dataPath: 'whatsapp-login/',
         store: store,
         backupSyncIntervalMs: 600000,
-      }),
+      }) :
+      new Whatsapp.LocalAuth();
+
+    const client = new Client({
+      authStrategy,
 
       puppeteer: {
         ...puppeteerConfig,
-      }
+      },
+
+      webVersionCache: {
+        type: "remote",
+        // remote execution context crashes 
+        // https://github.com/pedroslopez/whatsapp-web.js/issues/2789
+        remotePath:
+          "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/1.26.0.html",
+      },
     });
 
     client.on("qr", (qr: string) => {
@@ -90,23 +96,26 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
           console.log(`Processing group: ${group.name}`);
 
           // Fetch messages from the group
-          const messages: Message[] = await group.fetchMessages({ limit: 200 }); // Adjust the limit as needed
+          const messages: Message[] = await group.fetchMessages({ limit: 300 });
           console.log(
             `Fetched ${messages.length} messages from group: ${group.name}`,
           );
 
+          const communities = [...sourceMetadata.communities || [], {
+            id: existingGroup.community_id,
+          }];
+
           messages.forEach((message) => {
             // Check if the message contains a link from the specified domains
             const urls = message.body.match(domainRegex);
+
             if (urls && urls.length > 0) {
               linkMatches.push({
                 source_url: urls[0], // Only save the first matched link
                 source_origination_group_id: group.id._serialized,
                 source_origination_group_name: group.name,
                 source_origination_platform: "WhatsApp",
-                communities: [{
-                  id: existingGroup.community_id
-                }]
+                communities,
               });
             }
           });

@@ -230,7 +230,7 @@ const createEvent = async (event: CreateEventInput, organizerId: string, locatio
         .single();
 
     if (insertError || !createdEvent) {
-        console.error("Error inserting event:", insertError);
+        console.error(`Error inserting event ${event.name}:`, insertError);
         return null;
     }
 
