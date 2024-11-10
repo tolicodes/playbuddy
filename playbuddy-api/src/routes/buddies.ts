@@ -10,11 +10,27 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
     try {
         const { data, error } = await supabaseClient
             .from('buddies')
-            .select('auth_user_id, buddy_auth_user_id, user_1:users!auth_user_id(user_id, name, avatar_url, share_code), user_2:users!buddy_auth_user_id(user_id, name, avatar_url, share_code)')
+            .select(`
+                auth_user_id,
+                buddy_auth_user_id,
+                user_1:users!auth_user_id(
+                    user_id,
+                    name,
+                    avatar_url,
+                    share_code
+                ),
+                user_2:users!buddy_auth_user_id(
+                    user_id,
+                    name,
+                    avatar_url,
+                    share_code
+                )
+            `)
             .or(`auth_user_id.eq.${req.authUserId},buddy_auth_user_id.eq.${req.authUserId}`);
 
 
         if (error) {
+            console.error(`Error fetching buddies`, error);
             throw error;
         }
         const buddies = data.map(buddy =>
