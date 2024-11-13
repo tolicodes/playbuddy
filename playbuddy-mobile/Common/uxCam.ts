@@ -16,3 +16,11 @@ try {
 } catch (error) {
     // this means it's in dev probably which doesn't support uxcam
 }
+
+export const setUxCamUserIdentity = (email: string) => {
+    try {
+        RNUxcam.setUserIdentity(email)
+    } catch (error) {
+        // this means it's in dev probably which doesn't support uxcam
+    }
+}
