@@ -7,6 +7,9 @@ import { Session } from '@supabase/auth-js/src/lib/types'
 import { UserProfile } from '../contexts/UserTypes';
 import { UseMutationResult } from '@tanstack/react-query';
 
+import { setUxCamUserIdentity } from '../Common/uxCam';
+
+
 export const useSetupAmplitude = (session?: Session | null, userProfile?: UserProfile | null) => {
     useEffect(() => {
         if (!session || !userProfile) return;
@@ -17,6 +20,10 @@ export const useSetupAmplitude = (session?: Session | null, userProfile?: UserPr
             identifyEvent.set('email', userProfile.email);
         }
         amplitude.identify(identifyEvent);
+
+        if (userProfile.email) {
+            setUxCamUserIdentity(userProfile.email)
+        }
     }, [session, userProfile]);
 };
 
