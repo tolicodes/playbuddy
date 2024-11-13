@@ -14,7 +14,6 @@ export type NavStackProps = {
     'Community Events': { communityId: string };
     'Buddy Events': { buddyAuthUserId: string };
     'Filters': undefined;
-    'User Profile': undefined;
 
     // Tab Screens
     'Calendar': undefined;
@@ -31,7 +30,7 @@ export type NavStackProps = {
     'Communities': undefined;
     'Retreats': undefined;
     'Login': undefined;
-    'Profile': undefined;
+    'User Profile': undefined;
     'Moar': undefined;
 
     // Communities Nav

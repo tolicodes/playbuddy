@@ -1,8 +1,12 @@
 import React, { createContext, useState, useContext, ReactNode, useEffect, useMemo } from 'react';
 import { UseMutationResult, useQuery } from '@tanstack/react-query';
-import { supabase } from '../supabaseClient';
 import { useFetchMyCommunities, useFetchPublicCommunities, useJoinCommunity, useLeaveCommunity } from './hooks/useCommunities';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
+import { ALL_ITEM } from '../Header/const';
+
+export const ACRO_COMMUNITY_ID = '89d31ff0-05bf-4fa7-98e0-3376b44b4997';
 
 export interface LocationArea {
     id: string;
@@ -46,78 +50,94 @@ interface CommonContextType {
         myOrganizerPublicCommunities: Community[];
     };
 
-    joinCommunity: UseMutationResult<Community, Error, JoinCommunityData, unknown>
+    joinCommunity: UseMutationResult<Community, Error, JoinCommunityData, unknown>;
 
-    leaveCommunity: UseMutationResult<Community, Error, LeaveCommunityData, unknown>
+    leaveCommunity: UseMutationResult<Community, Error, LeaveCommunityData, unknown>;
 
     selectedCommunity: Community | null;
     setSelectedCommunity: (community: Community | null) => void;
     showDefaultsModal: boolean;
+    setShowDefaultsModal: (show: boolean) => void;
     isLoadingCommunities: boolean;
 
+    preferencesInfo: string;
 }
 
 const CommonContext = createContext<CommonContextType | undefined>(undefined);
 
-const fetchLocationAreas = async (): Promise<LocationArea[]> => {
-    const { data, error } = await supabase
-        .from('location_areas')
-        .select('id, name, code')
-        .order('name');
 
-    if (error) {
-        throw new Error(`Error fetching locations: ${error.message}`);
-    }
+const useFetchLocationAreas = () => {
+    const { data: locationAreas = [], isLoading: isLoadingLocationAreas } = useQuery({
+        queryKey: ['locationAreas'],
+        queryFn: async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/personalization/location-areas`);
+                return response.data;
+            } catch (error) {
+                console.error('Error fetching location areas', error);
+                return [];
+            }
+        },
+    });
 
-    return data || [];
+    return { locationAreas, isLoadingLocationAreas };
 };
-
-const DEFAULT_LOCATION_ID = '73352aef-334c-49a6-9256-0baf91d56b49';
-const DEFAULT_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b';
 
 export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [selectedLocationArea, doSetSelectedLocationArea] = useState<LocationArea | null>(null);
     const [selectedCommunity, doSetSelectedCommunity] = useState<Community | null>(null);
 
-    const { data: locationAreas = [], isLoading: isLoadingLocationAreas } = useQuery({
-        queryKey: ['locationAreas'],
-        queryFn: fetchLocationAreas,
-    });
-
+    const { locationAreas, isLoadingLocationAreas } = useFetchLocationAreas();
     const { data: myCommunities = [], isLoading: isLoadingMyCommunities } = useFetchMyCommunities();
     const { data: publicCommunities = [], isLoading: isLoadingPublicCommunities } = useFetchPublicCommunities();
 
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
 
-    const communities = useMemo(() => ({
-        interestGroups: publicCommunities.filter((c) => c.type === 'interest_group'),
-        organizerPublicCommunities: publicCommunities.filter((c) => c.type === 'organizer_public_community'),
-    }), [publicCommunities]);
+    const communities = useMemo(
+        () => ({
+            interestGroups: publicCommunities.filter((c) => c.type === 'interest_group'),
+            organizerPublicCommunities: publicCommunities.filter((c) => c.type === 'organizer_public_community'),
+        }),
+        [publicCommunities]
+    );
 
-    const myCommunitiesLists = useMemo(() => ({
-        myOrganizerPrivateCommunities: myCommunities.filter((c) => c.type === 'organizer_private_community'),
-        myPrivateCommunities: myCommunities.filter((c) => c.type === 'private_community'),
-        myOrganizerPublicCommunities: myCommunities.filter((c) => c.type === 'organizer_public_community'),
-    }), [myCommunities]);
+    const myCommunitiesLists = useMemo(
+        () => ({
+            myOrganizerPrivateCommunities: myCommunities.filter((c) => c.type === 'organizer_private_community'),
+            myPrivateCommunities: myCommunities.filter((c) => c.type === 'private_community'),
+            myOrganizerPublicCommunities: myCommunities.filter((c) => c.type === 'organizer_public_community'),
+        }),
+        [myCommunities]
+    );
+
+    const SELECTED_LOCATION_AREA_KEY = 'selectedLocationArea';
+    const SELECTED_COMMUNITY_KEY = 'selectedCommunity';
 
     const setSelectedLocationArea = (location: LocationArea | null) => {
         doSetSelectedLocationArea(location || null);
         if (location) {
-            AsyncStorage.setItem('selectedLocationArea', JSON.stringify(location));
+            AsyncStorage.setItem(SELECTED_LOCATION_AREA_KEY, JSON.stringify(location));
         } else {
-            AsyncStorage.removeItem('selectedLocationArea');
+            AsyncStorage.removeItem(SELECTED_LOCATION_AREA_KEY);
         }
     };
 
     const setSelectedCommunity = (community: Community | null) => {
         doSetSelectedCommunity(community || null);
         if (community) {
-            AsyncStorage.setItem('selectedCommunity', JSON.stringify(community));
+            AsyncStorage.setItem(SELECTED_COMMUNITY_KEY, JSON.stringify(community));
         } else {
-            AsyncStorage.removeItem('selectedCommunity');
+            AsyncStorage.removeItem(SELECTED_COMMUNITY_KEY);
         }
     };
+
+    // Welcome more info message
+    useEffect(() => {
+        if (selectedCommunity?.id === ACRO_COMMUNITY_ID) {
+            setSelectedLocationArea(ALL_ITEM); // Fixing the type error by setting it to null
+        }
+    }, [selectedCommunity]);
 
     // Show the defaults modal if the user hasn't selected a location or community
     const [showDefaultsModal, setShowDefaultsModal] = useState(false);
@@ -135,22 +155,12 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             }
 
             const [locationValue, communityValue] = await Promise.all([
-                AsyncStorage.getItem('selectedLocationArea'),
-                AsyncStorage.getItem('selectedCommunity')
+                AsyncStorage.getItem(SELECTED_LOCATION_AREA_KEY),
+                AsyncStorage.getItem(SELECTED_COMMUNITY_KEY),
             ]);
 
             // we set default values and show the modal
             if (!locationValue || !communityValue) {
-                const defaultLocation = locationAreas.find((l) => l.id === DEFAULT_LOCATION_ID);
-                if (defaultLocation) {
-                    setSelectedLocationArea(defaultLocation);
-                }
-
-                const defaultCommunity = communities.interestGroups.find((c) => c.id === DEFAULT_COMMUNITY_ID);
-                if (defaultCommunity) {
-                    setSelectedCommunity(defaultCommunity);
-                }
-
                 setShowDefaultsModal(true);
                 return;
             }
@@ -162,37 +172,42 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         initializeDefaults();
     }, [locationAreas, communities.interestGroups]);
 
+    const contextValue = useMemo(
+        () => ({
+            locationAreas,
+            selectedLocationArea,
+            setSelectedLocationArea,
+            isLoadingLocationAreas,
 
+            communities,
+            myCommunities: myCommunitiesLists,
+            joinCommunity,
+            leaveCommunity,
 
-    const contextValue = useMemo(() => ({
-        locationAreas,
-        selectedLocationArea,
-        setSelectedLocationArea,
-        isLoadingLocationAreas,
+            selectedCommunity,
+            setSelectedCommunity,
+            showDefaultsModal,
+            setShowDefaultsModal,
+            isLoadingCommunities: isLoadingMyCommunities || isLoadingPublicCommunities,
+        }),
+        [
+            locationAreas,
+            selectedLocationArea,
+            isLoadingLocationAreas,
 
-        communities,
-        myCommunities: myCommunitiesLists,
-        joinCommunity,
-        leaveCommunity,
+            communities,
 
-        selectedCommunity,
-        setSelectedCommunity,
-        showDefaultsModal,
-        isLoadingCommunities: isLoadingMyCommunities || isLoadingPublicCommunities,
-    }), [
-        locationAreas,
-        selectedLocationArea,
-        isLoadingLocationAreas,
-
-        communities,
-        myCommunitiesLists,
-        joinCommunity,
-        leaveCommunity,
-        selectedCommunity,
-        isLoadingMyCommunities,
-        isLoadingPublicCommunities,
-        showDefaultsModal
-    ]);
+            myCommunitiesLists,
+            joinCommunity,
+            leaveCommunity,
+            selectedCommunity,
+            setSelectedCommunity,
+            isLoadingMyCommunities,
+            isLoadingPublicCommunities,
+            showDefaultsModal,
+            setShowDefaultsModal,
+        ]
+    );
 
     return (
         <CommonContext.Provider value={contextValue}>

@@ -17,6 +17,7 @@ import { useUserContext } from '../contexts/UserContext';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { MISC_URLS } from '../config';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import PersonalizationModal from '../Common/DefaultsModal/PersonalizationModal';
 
 const CALENDAR_HEIGHT = 250;
 
@@ -117,6 +118,9 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
 
     return (
         <View style={styles.container}>
+            {/* we want to hide this when we navigate to register but show it when we navigate back */}
+            <PersonalizationModal />
+
             {!authUserId && <WebsiteBanner />}
             <View style={styles.searchContainer}>
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>

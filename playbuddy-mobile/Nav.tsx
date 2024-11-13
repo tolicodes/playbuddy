@@ -144,7 +144,7 @@ const DrawerNav = () => {
                 }}
             />
             <Drawer.Screen
-                name={authUserId ? "Profile" : "Login"}
+                name={authUserId ? "User Profile" : "Login"}
                 component={AuthMain}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,

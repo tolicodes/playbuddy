@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useEffect, useRef } from 'react';
 import { UseMutationResult } from '@tanstack/react-query';
 import { useFilters, FilterState } from './hooks/useFilters';
 import { useEvents } from './hooks/useEvents';
@@ -48,8 +48,8 @@ export const useCalendarContext = () => {
 };
 
 const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterState) => {
-    const out = eventsWithMetadata.filter(event => {
-        const searchTerm = filters.search.toLowerCase();
+    const searchTerm = filters.search.toLowerCase();
+    return eventsWithMetadata.filter(event => {
         const organizerId = event.organizer?.id || '';
         const eventName = event.name?.toLowerCase() || '';
         const organizerName = event.organizer?.name?.toLowerCase() || '';
@@ -59,7 +59,6 @@ const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterSt
             (eventName.includes(searchTerm) || organizerName.includes(searchTerm))
         );
     });
-    return out
 };
 
 // Helper function to remove explicit events
@@ -86,18 +85,15 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters)
-            // by location and community
-            // If we have a location and community, filter by that
-            // otherwise show all events
-
-
             .filter(event => {
-                if (selectedLocationArea && selectedLocationArea.id !== 'all' && selectedCommunity && selectedCommunity.id !== 'all') {
+                const hasValidLocation = selectedLocationArea && selectedLocationArea.id !== 'ALL';
+                const hasValidCommunity = selectedCommunity && selectedCommunity.id !== 'ALL';
+                if (hasValidLocation && hasValidCommunity) {
                     return event.location_area?.id === selectedLocationArea.id &&
                         event.communities?.some(community => community.id === selectedCommunity.id);
-                } else if (selectedLocationArea && selectedLocationArea.id !== 'all') {
+                } else if (hasValidLocation) {
                     return event.location_area?.id === selectedLocationArea.id;
-                } else if (selectedCommunity && selectedCommunity.id !== 'all') {
+                } else if (hasValidCommunity) {
                     return event.communities?.some(community => community.id === selectedCommunity.id);
                 }
                 return true;
@@ -144,29 +140,9 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         // Swipe Mode
         availableCardsToSwipe,
     }), [
-        // Filters
-        filters,
-        setFilters,
-        organizers,
-
-        // Events
-        filteredEvents,
-        eventsWithMetadata,
-        reloadEvents,
-        isLoadingEvents,
-
-        // Wishlist
-        wishlistEvents,
-        isOnWishlist,
-        toggleWishlistEvent,
-
-        // Friend's Wishlist
-        friendWishlistEvents,
-        setFriendWishlistShareCode,
-        friendWishlistShareCode,
-
-        // Swipe Mode
-        availableCardsToSwipe,
+        filters, setFilters, organizers, filteredEvents, eventsWithMetadata, reloadEvents, isLoadingEvents,
+        wishlistEvents, isOnWishlist, toggleWishlistEvent, friendWishlistEvents, setFriendWishlistShareCode,
+        friendWishlistShareCode, availableCardsToSwipe
     ]);
 
     return (

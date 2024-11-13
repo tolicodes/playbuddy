@@ -7,8 +7,7 @@ import { useCommonContext } from "../Common/CommonContext";
 import { View } from "react-native";
 import * as amplitude from '@amplitude/analytics-react-native';
 import HeaderLoginButton from "../Auth/HeaderLoginButton";
-import CommunityDropdown from "../Header/CommunitiesDropdown";
-import LocationDropdown from "../Header/LocationDropdown";
+import { CommunityDropdown, LocationAreaDropdown } from "../Header/DefaultsMenus";
 
 // Helper Components
 export const CustomBackButton = ({ navigation }: { navigation: any }) => (
@@ -61,12 +60,12 @@ export const headerOptions = ({ navigation }: { navigation: any }) => ({
                     selectedCommunity={selectedCommunity}
                     onSelectCommunity={setSelectedCommunity}
                 />
-                <LocationDropdown
+                <LocationAreaDropdown
                     locationAreas={locationAreas}
                     selectedLocationArea={selectedLocationArea}
                     onSelectLocationArea={setSelectedLocationArea}
                 />
-                <HeaderLoginButton />
+                <HeaderLoginButton headerButton={true} />
             </View>
         );
     },

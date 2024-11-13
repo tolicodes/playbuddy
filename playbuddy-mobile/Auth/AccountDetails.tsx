@@ -9,6 +9,7 @@ import QRCodeStyled from 'react-native-qrcode-styled';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { NavStack } from '../types';
+import { useCommonContext } from '../Common/CommonContext';
 
 export default function AccountDetails() {
     const { userProfile, signOut } = useUserContext();
@@ -62,11 +63,20 @@ export default function AccountDetails() {
                     {!userProfile?.avatar_url && (
                         <View style={styles.avatarInstructions}>
                             <Image source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc/question_person.png?t=2024-11-05T12%3A57%3A25.907Z' }} style={styles.avatarInstructionsImage} />
-                            <Text style={styles.avatarInstructionsText}>Please take 30 seconds to upload an avatar to help identify you!</Text>
+                            <Text style={styles.avatarInstructionsText}>Please take 30 seconds to upload an avatar to help your buddies identify you!</Text>
                         </View>
                     )}
 
                     <Avatar />
+
+                    {userProfile?.avatar_url && (
+                        <TouchableOpacity style={styles.button} onPress={onPressHome}>
+                            <View style={styles.iconTextContainer}>
+                                <Icon name="home" size={24} color="white" />
+                                <Text style={styles.buttonText}>Go to Home</Text>
+                            </View>
+                        </TouchableOpacity>
+                    )}
 
                     {avatarUrl && (
                         <>
@@ -106,10 +116,6 @@ export default function AccountDetails() {
                                     <Text style={styles.buttonText}>Add a Buddy</Text>
                                 </TouchableOpacity>
                             </View>
-
-                            <TouchableOpacity style={styles.button} onPress={onPressHome}>
-                                <Text style={styles.buttonText}>Go to Home</Text>
-                            </TouchableOpacity>
                         </>
                     )}
 
@@ -187,6 +193,11 @@ const styles = StyleSheet.create({
     infoItem: {
         marginBottom: 16,
         alignItems: 'center',
+    },
+    iconTextContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     sectionHeader: {
         fontSize: 20,

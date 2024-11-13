@@ -13,7 +13,6 @@ import { CommonProvider } from './Common/CommonContext';
 import { onFetchUpdateAsync } from './Common/ExpoUpdate';
 import { BuddiesProvider } from './Buddies/BuddiesContext';
 import { queryClient } from './Common/queryClient';
-import DefaultsModal from './Common/DefaultsModal';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
@@ -40,7 +39,6 @@ const App = () => {
 
           <BuddiesProvider>
             <CalendarProvider>
-              <DefaultsModal />
               <Nav />
             </CalendarProvider>
           </BuddiesProvider>

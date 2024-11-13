@@ -10,12 +10,12 @@ export const MyCommunitiesSection: React.FC = () => {
         ...myCommunities.myOrganizerPrivateCommunities
     ];
 
-    const { myCommunities: { myOrganizerPublicCommunities }, leaveCommunity } = useCommonContext();
+    const { myCommunities: { myOrganizerPublicCommunities } } = useCommonContext();
 
     return (
         <View style={styles.container}>
-            <CommunitiesList title="My Private Communities" communities={privateCommunities} onClickLeave={leaveCommunity} flex={1} />
-            <CommunitiesList title="My Public Communities" communities={myOrganizerPublicCommunities} onClickLeave={leaveCommunity} flex={2} />
+            <CommunitiesList title="My Private Communities" communities={privateCommunities} flex={1} />
+            <CommunitiesList title="My Public Communities" communities={myOrganizerPublicCommunities} flex={2} />
         </View>
     );
 }
