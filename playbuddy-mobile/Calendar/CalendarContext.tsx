@@ -28,11 +28,6 @@ type CalendarContextType = {
     isOnWishlist: (eventId: string) => boolean;
     toggleWishlistEvent: UseMutationResult<void, Error, { eventId: string; isOnWishlist: boolean }, unknown>;
 
-    // Friend's Wishlist
-    friendWishlistEvents: EventWithMetadata[];
-    setFriendWishlistShareCode: (shareCode: string | null) => void;
-    friendWishlistShareCode: string | null;
-
     // Swipe Mode
     availableCardsToSwipe: EventWithMetadata[];
 };
@@ -75,9 +70,6 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     const { authUserId } = useUserContext();
     const {
         wishlistEvents,
-        friendWishlistEvents,
-        setFriendWishlistShareCode,
-        friendWishlistShareCode,
         isOnWishlist,
         toggleWishlistEvent,
         swipeChoices,
@@ -131,18 +123,11 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         wishlistEvents,
         isOnWishlist,
         toggleWishlistEvent,
-
-        // Friend's Wishlist
-        friendWishlistEvents,
-        setFriendWishlistShareCode,
-        friendWishlistShareCode,
-
         // Swipe Mode
         availableCardsToSwipe,
     }), [
         filters, setFilters, organizers, filteredEvents, eventsWithMetadata, reloadEvents, isLoadingEvents,
-        wishlistEvents, isOnWishlist, toggleWishlistEvent, friendWishlistEvents, setFriendWishlistShareCode,
-        friendWishlistShareCode, availableCardsToSwipe
+        wishlistEvents, isOnWishlist, toggleWishlistEvent, availableCardsToSwipe
     ]);
 
     return (

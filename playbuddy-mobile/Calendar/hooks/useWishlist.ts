@@ -93,33 +93,9 @@ const useToggleWishlistEvent = () => {
         },
     });
 };
-
-const useFetchFriendWishlist = (shareCode: string | null) => {
-    const authReady = useAuthReady();
-    return useQuery({
-        queryKey: ['friendWishlist', shareCode],
-        queryFn: async () => {
-            if (!shareCode) return [];
-
-            const response = await axios.get(`${API_BASE_URL}/wishlist/friend/${shareCode}`);
-            return response.data; // Return the array of event IDs
-        },
-        enabled: !!authReady, // Only run the query if a shareCode is provided
-    });
-};
-
 // Combined Hook to manage both user and friend's wishlist
 export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
-    const [friendWishlistShareCode, setFriendWishlistShareCode] = useState<string | null>(null);
-
     const { data: wishlistEventIds, isLoading: isLoadingWishlistEvents } = useFetchWishlistEvents();
-    const { data: friendWishlistEventIds = [], isLoading: isLoadingFriendWishlistEvents } = useFetchFriendWishlist(friendWishlistShareCode);
-
-    // Memoized function to calculate friend wishlist events
-    const friendWishlistEvents = useMemo(() => {
-        const events = eventsWithMetadata.filter(event => friendWishlistEventIds.includes(event.id));
-        return events;
-    }, [friendWishlistEventIds, eventsWithMetadata]);
 
     // Memoized function to calculate wishlist events
     const wishlistEvents = useMemo(() => {
@@ -140,12 +116,6 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
         isLoadingWishlistEvents,
         isOnWishlist,
         toggleWishlistEvent,
-
-        friendWishlistEvents,
-        isLoadingFriendWishlistEvents,
-
-        friendWishlistShareCode,
-        setFriendWishlistShareCode,
 
         swipeChoices,
     };

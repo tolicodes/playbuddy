@@ -5,7 +5,6 @@ import { Event } from '../../commonTypes';
 import { API_URL } from '../../config';
 import { getAvailableOrganizers } from '../calendarUtils';
 import { useQuery } from '@tanstack/react-query';
-import { useCommonContext } from '../../Common/CommonContext';
 import { useUserContext } from '../../contexts/UserContext';
 
 type OrganizerColorMap = { [key: string]: { color: string; priority: number } }

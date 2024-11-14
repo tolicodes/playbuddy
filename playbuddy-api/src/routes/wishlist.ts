@@ -4,42 +4,6 @@ import { AuthenticatedRequest, authenticateRequest } from '../middleware/authent
 
 const router = Router();
 
-// GET /wishlist/friend/:shareCode - Fetch a friend's wishlist by share code
-router.get('/friend/:shareCode', async (req: Request, res: Response) => {
-    const { shareCode } = req.params;
-
-    // Step 1: Fetch user based on the share code
-    const { data: userData, error: userError } = await supabaseClient
-        .from('users')
-        .select('user_id')
-        .eq('share_code', shareCode)
-        .single();
-
-    if (userError || !userData) {
-        throw new Error(userError?.message || 'User not found');
-    }
-
-    const authUserId = userData.user_id;
-
-    // Step 2: Fetch the wishlist for the given user ID
-    const { data: wishlistData, error: wishlistError } = await supabaseClient
-        .from('event_wishlist')
-        .select('event_id')
-        .eq('user_id', authUserId);
-
-    if (wishlistError) {
-        throw new Error(wishlistError.message);
-    }
-
-    if (!wishlistData) {
-        throw new Error('Wishlist not found');
-    }
-
-    // Return the event IDs in the wishlist
-    const friendWishlistEventIds = wishlistData.map((item: { event_id: string }) => item.event_id);
-    return res.status(200).json(friendWishlistEventIds);
-});
-
 // GET /wishlist/buddies - View all events in buddies' wishlists
 router.get('/buddies', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
     // Fetch buddies

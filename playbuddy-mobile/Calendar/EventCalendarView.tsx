@@ -23,14 +23,12 @@ const CALENDAR_HEIGHT = 250;
 
 type EventCalendarViewProps = {
     isOnWishlist?: boolean
-    isFriendWishlist?: boolean
-    isRetreats?: boolean
     events?: EventWithMetadata[]
 }
 
-const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isRetreats = false, events }: EventCalendarViewProps = {}) => {
+const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewProps = {}) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
-    const { filters, setFilters, filteredEvents, wishlistEvents, friendWishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
+    const { filters, setFilters, filteredEvents, wishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
 
     const { authUserId } = useUserContext()
     const [searchQuery, setSearchQuery] = useState('');
@@ -40,13 +38,8 @@ const EventCalendarView = ({ isOnWishlist = false, isFriendWishlist = false, isR
     if (events) {
         eventsUsed = events
     }
-    else if (isFriendWishlist) {
-        eventsUsed = friendWishlistEvents
-    }
     else if (isOnWishlist) {
         eventsUsed = wishlistEvents
-    } else if (isRetreats) {
-        eventsUsed = filteredEvents.filter(event => event.type === 'retreat')
     } else {
         eventsUsed = filteredEvents
     }
