@@ -1,44 +1,23 @@
 import React from 'react'
-import { Text, View, StyleSheet, Share, TouchableOpacity } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icon
 import { useCalendarContext } from "../Calendar/CalendarContext";
 import EventCalendarView from "../Calendar/EventCalendarView";
 import { useEffect } from "react";
 import { useUserContext } from "../contexts/UserContext";
 import { Button } from '@rneui/themed';
-import { RouteProp } from '@react-navigation/native';
-import { NavStackProps } from '../types';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { NavStack, NavStackProps } from '../types';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { LoginToAccess } from '../Common/LoginToAccess';
-
-const getInstructions = (shareUrl: string) => `I'd like to share my calendar of playful events 🤗 via PlayBuddy
-
-**Links:**
-- Apple download: https://playbuddy.me/ios
-- Android download: https://playbuddy.me/android
-
-And once downloaded, copy and paste this URL into your browser (it's a little awkward but worth it) 😉
-
-${shareUrl}
-`;
-
-const WISHLIST_URL_BASE = 'playbuddy://wishlist';
+import { filterEvents } from '../../playbuddy-scraper/src/scraper';
+import { useCommonContext } from '../Common/CommonContext';
+import { useWishlist } from '../Calendar/hooks/useWishlist';
 
 const ShareWishlistButton = () => {
-    const { userProfile } = useUserContext();
-    // Function to handle sharing the wishlist
-    const handleShare = async () => {
-        amplitude.logEvent('wishlist_shared');
-        try {
-            const shareURL = `${WISHLIST_URL_BASE}?share_code=${userProfile?.share_code}`;
-            const shareMessage = getInstructions(shareURL);
-
-            await Share.share({
-                message: shareMessage,
-            });
-        } catch (error) {
-            throw new Error(`Error sharing wishlist: ${error.message}`);
-        }
+    const navigator = useNavigation<NavStack>();
+    const handleShare = () => {
+        navigator.navigate('Buddies');
     };
 
     return (
@@ -49,49 +28,20 @@ const ShareWishlistButton = () => {
     );
 };
 
-const MyCalendar = ({ route }: { route: RouteProp<NavStackProps, 'My Calendar'> }) => {
-    const { setFilters, setFriendWishlistShareCode, friendWishlistShareCode } = useCalendarContext();
+const MyCalendar = () => {
+    const { setFilters } = useCalendarContext();
     const { authUserId } = useUserContext();
 
-    const shareCodeFromRoute = route.params?.share_code;
-
-    useEffect(() => {
-        setFriendWishlistShareCode(shareCodeFromRoute || null);
-    }, [shareCodeFromRoute])
-
+    // reset filters on mount
     useEffect(() => {
         setFilters({ search: '', organizers: [] });
     }, [])
 
-    const resetWishlist = () => {
-        amplitude.logEvent('wishlist_reset');
-        setFriendWishlistShareCode(null)
-    }
-
-    if (friendWishlistShareCode) {
-        return (
-            <>
-                <Text style={{
-                    display: 'flex',
-                    textAlign: 'center',
-                    marginTop: 10,
-                    marginBottom: 10,
-                }}>
-                    You are viewing your friend's wishlist
-                </Text>
-                <Button onPress={resetWishlist}>Back to your wishlist</Button>
-                <EventCalendarView isOnWishlist={true} isFriendWishlist={true} />
-                <ShareWishlistButton />
-            </>
-        )
-    }
+    const { wishlistEvents } = useCalendarContext();
 
     return (
-        (friendWishlistShareCode || authUserId)
-            ? <>
-                <EventCalendarView isOnWishlist={true} isFriendWishlist={!!friendWishlistShareCode} />
-                <ShareWishlistButton />
-            </>
+        (authUserId)
+            ? <EventCalendarView events={wishlistEvents} />
             : (
                 <LoginToAccess entityToAccess='wishlist' />
             )
