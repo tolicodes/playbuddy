@@ -1,5 +1,5 @@
-import React from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
+import React, { Suspense } from "react";
+import { TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useCalendarContext } from "../Calendar/CalendarContext";
@@ -65,7 +65,9 @@ export const headerOptions = ({ navigation }: { navigation: any }) => ({
                     selectedLocationArea={selectedLocationArea}
                     onSelectLocationArea={setSelectedLocationArea}
                 />
-                <HeaderLoginButton headerButton={true} />
+                <Suspense fallback={<ActivityIndicator />}>
+                    <HeaderLoginButton headerButton={true} />
+                </Suspense>
             </View>
         );
     },

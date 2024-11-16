@@ -28,6 +28,11 @@ export const useSetupAmplitude = (session?: Session | null, userProfile?: UserPr
 };
 
 const setupAxios = (session: Session | null) => {
+    // for debugging
+    axios.interceptors.response.use((response) => {
+        return response;
+    });
+
     // Axios setup
     if (session?.access_token) {
         axios.defaults.headers.common['Authorization'] = `Bearer ${session.access_token}`;

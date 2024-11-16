@@ -4,7 +4,6 @@ import { PreferencesScreen } from './PreferencesScreen';
 import { WelcomeScreen } from './WelcomeScreen';
 import { useUserContext } from '../../contexts/UserContext';
 
-import { useFocusEffect } from '@react-navigation/native';
 import { useCommonContext } from '../CommonContext';
 
 const PersonalizationModal = () => {
@@ -15,10 +14,6 @@ const PersonalizationModal = () => {
     const handleClose = () => {
         setIsModalVisible(false);
     };
-
-    useFocusEffect(() => {
-        setIsModalVisible(true);
-    });
 
     return (
         <Modal visible={isModalVisible && showDefaultsModal} animationType="slide" transparent>

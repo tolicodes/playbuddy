@@ -32,4 +32,5 @@ export interface UserContextType {
     signUpWithEmail: (params: SignUpParams) => void;
     signOut: (callback: () => void) => void;
     authReady: boolean;
+    isLoadingUserProfile: boolean;
 }

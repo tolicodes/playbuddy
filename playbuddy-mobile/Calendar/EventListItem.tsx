@@ -88,8 +88,11 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
     );
 };
 
+export const ITEM_HEIGHT = 100;
+
 const styles = StyleSheet.create({
     eventContainer: {
+        height: ITEM_HEIGHT,
         flexDirection: 'row',
         paddingHorizontal: 16,
         paddingVertical: 12,

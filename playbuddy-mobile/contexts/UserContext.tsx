@@ -30,7 +30,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Fetch user profile. It will continue the flow later, depends on session being present
     // only fetch if auth is ready
-    const { data: userProfile } = useFetchUserProfile(authReady ? session?.user.id : undefined);
+    const { data: userProfile, isLoading: isLoadingUserProfile } = useFetchUserProfile(authReady ? session?.user.id : undefined);
 
     const insertUserProfile = useInsertUserProfile();
 
@@ -85,8 +85,9 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             signInWithEmail,
             signUpWithEmail,
             signOut,
+            isLoadingUserProfile,
         }),
-        [authUserId, userProfile, authReady, signInWithEmail, signUpWithEmail, signOut]
+        [authUserId, userProfile, authReady, signInWithEmail, signUpWithEmail, signOut, isLoadingUserProfile]
     );
 
     return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

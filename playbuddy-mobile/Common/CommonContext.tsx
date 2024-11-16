@@ -54,8 +54,8 @@ interface CommonContextType {
 
     leaveCommunity: UseMutationResult<Community, Error, LeaveCommunityData, unknown>;
 
-    selectedCommunity: Community | null;
-    setSelectedCommunity: (community: Community | null) => void;
+    selectedCommunity: Community | AllSelection | null;
+    setSelectedCommunity: (community: Community | AllSelection | null) => void;
     showDefaultsModal: boolean;
     setShowDefaultsModal: (show: boolean) => void;
     isLoadingCommunities: boolean;
@@ -83,9 +83,11 @@ const useFetchLocationAreas = () => {
     return { locationAreas, isLoadingLocationAreas };
 };
 
+export type AllSelection = typeof ALL_ITEM;
+
 export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [selectedLocationArea, doSetSelectedLocationArea] = useState<LocationArea | null>(null);
-    const [selectedCommunity, doSetSelectedCommunity] = useState<Community | null>(null);
+    const [selectedCommunity, doSetSelectedCommunity] = useState<Community | AllSelection | null>(null);
 
     const { locationAreas, isLoadingLocationAreas } = useFetchLocationAreas();
     const { data: myCommunities = [], isLoading: isLoadingMyCommunities } = useFetchMyCommunities();
@@ -123,7 +125,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }
     };
 
-    const setSelectedCommunity = (community: Community | null) => {
+    const setSelectedCommunity = (community: Community | AllSelection | null) => {
         doSetSelectedCommunity(community || null);
         if (community) {
             AsyncStorage.setItem(SELECTED_COMMUNITY_KEY, JSON.stringify(community));

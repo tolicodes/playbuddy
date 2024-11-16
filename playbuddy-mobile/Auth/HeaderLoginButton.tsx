@@ -1,6 +1,6 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import { TouchableOpacity, View, Text, StyleSheet } from "react-native";
+import { TouchableOpacity, View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { NavStack } from "../types";
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -22,7 +22,7 @@ const HeaderLoginButton = ({
     onPressButton?: () => void;
 }) => {
     const { navigate } = useNavigation<NavStack>();
-    const { authUserId, userProfile } = useUserContext();
+    const { authUserId, userProfile, isLoadingUserProfile, authReady } = useUserContext();
 
     const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url);
     const initials = userProfile?.name?.split(' ').map(name => name[0]).join('').slice(0, 2);
@@ -34,6 +34,10 @@ const HeaderLoginButton = ({
             onPressButton();
         }
     };
+
+    if (isLoadingUserProfile || !authReady) {
+        return <ActivityIndicator />;
+    }
 
     return (
         <TouchableOpacity
