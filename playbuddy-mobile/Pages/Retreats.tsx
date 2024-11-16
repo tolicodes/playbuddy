@@ -1,20 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import EventCalendarView from "../Calendar/EventCalendarView";
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { Community, LocationArea, useCommonContext } from "../Common/CommonContext";
+import { AllSelection, Community, LocationArea, useCommonContext } from "../Common/CommonContext";
+import { ALL_ITEM } from "../Header/const";
+import { useCalendarContext } from "../Calendar/CalendarContext";
+import { EventWithMetadata } from "../types";
 
 const Banner = () => {
     const [isBannerShown, setIsBannerShown] = useState(false);
-    const [oldLocation, setOldLocation] = useState<LocationArea | null>(null);
-    const [oldCommunity, setOldCommunity] = useState<Community | null>(null);
+    const [oldLocation, setOldLocation] = useState<LocationArea | AllSelection | null>(null);
+    const [oldCommunity, setOldCommunity] = useState<Community | AllSelection | null>(null);
     const { selectedLocationArea, selectedCommunity, setSelectedLocationArea, setSelectedCommunity } = useCommonContext();
 
     // on mount, set to all communities
     useEffect(() => {
         setOldLocation(selectedLocationArea || null);
         setOldCommunity(selectedCommunity || null);
-        setSelectedLocationArea(null);
-        setSelectedCommunity(null);
+        setSelectedLocationArea(ALL_ITEM);
+        setSelectedCommunity(ALL_ITEM);
         setIsBannerShown(true);
     }, []);
 
@@ -77,10 +80,19 @@ const styles = StyleSheet.create({
 });
 
 export const Retreats = () => {
+    const { allEvents } = useCalendarContext();
+    const [retreatEvents, setRetreatEvents] = useState<EventWithMetadata[]>();
+    useEffect(() => {
+        setTimeout(() => {
+            const retreats = allEvents.filter(event => event.type === 'retreat')
+            setRetreatEvents(retreats);
+        }, 100);
+    }, [allEvents])
+
     return (
         <View style={{ flex: 1 }}>
             <Banner />
-            <EventCalendarView isRetreats={true} />
+            <EventCalendarView events={retreatEvents} />
         </View>
     );
 };
