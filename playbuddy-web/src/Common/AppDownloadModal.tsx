@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from './config';
 import * as amplitude from '@amplitude/analytics-browser';
