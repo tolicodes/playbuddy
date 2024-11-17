@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { APP_STORE_URL } from './config';
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from './config';
 import * as amplitude from '@amplitude/analytics-browser';
-const KinkEventsMessage = () => <p><h4>KINKY EVENTS</h4> Some extra kinky events aren’t available in the app store. You can view them on the website while we work to resolve this.</p>;
 
 // Styled components for Modal
 const ModalOverlay = styled.div`
@@ -56,6 +55,16 @@ const CloseButton = styled.button`
   color: #999;
 `;
 
+const ImportantNote = styled.p`
+  font-size: 18px;
+  color: #ff0000;
+  font-weight: bold;
+  background-color: #ffffe0;
+  padding: 10px;
+  border: 2px solid #ff0000;
+  border-radius: 5px;
+`;
+
 // Main Component
 const StoreModal = () => {
   const [isMobile, setIsMobile] = useState(false);
@@ -95,26 +104,8 @@ const StoreModal = () => {
     }
   }, []);
 
-  const setDownloadModalShown = () => {
-    localStorage.setItem('downloadModalShown', 'true');
-  };
 
-  const isDownloadModalShown = () => {
-    return localStorage.getItem('downloadModalShown') === 'true';
-  };
-
-  // on mount check if the modal was already shown
-  useEffect(() => {
-    if (isDownloadModalShown()) {
-      setShowModal(false);
-      return;
-    }
-
-    // otherwise note it for next time to hide it
-    setDownloadModalShown();
-  }, [])
-
-  if (!isMobile || !showModal) return null;
+  if (!showModal) return null;
 
   return (
     <ModalOverlay>
@@ -122,41 +113,38 @@ const StoreModal = () => {
         <CloseButton onClick={handleClose}>&times;</CloseButton>
         <Title>Download The App</Title>
 
-        {platform === 'ios' ? (
-          <>
-            <p>
-              The app is currently in beta, meaning you'll have to install it via the TestFlight app. Click below to
-              download TestFlight and follow the instructions.
-            </p>
-            <KinkEventsMessage />
-            <ButtonsContainer>
-              <StoreButton
-                href={APP_STORE_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => amplitude.logEvent('app_store_clicked')}
-              >
-                <img
-                  src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&releaseDate=1311120000&h=5b3127492d87ec2af62ff4d2a7492b70"
-                  alt="Download on the App Store"
-                  width="150"
-                />
-              </StoreButton>
-            </ButtonsContainer>
-          </>
-        ) : (
-          <>
-            <p>
-              Email <a href="mailto:toli@toli.me">toli@toli.me</a> and I will send you
-              a link to download the app.
+        <StoreButton
+          href={APP_STORE_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => amplitude.logEvent('app_store_clicked_ios')}
+        >
+          <img
+            src={
+              "https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&releaseDate=1311120000&h=5b3127492d87ec2af62ff4d2a7492b70"
+            }
+            alt="Download on the App Store"
+            width="150"
+          />
+        </StoreButton>
+        <p>
+          <StoreButton
+            href={GOOGLE_PLAY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => amplitude.logEvent('app_store_clicked_android')}
+          >
+            <img
+              style={{ transform: 'scale(1.3)' }}
+              src={
+                "https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png"
+              }
+              alt="Download on Google Play"
+              width="150"
+            />
+          </StoreButton>
+        </p>
 
-            </p>
-            <p><h4>WHY?</h4> The app is currently in beta, meaning I have to <strong>add you to the super special invite-only list 🤫</strong>.</p>
-
-
-            <KinkEventsMessage />
-          </>
-        )}
       </ModalContent>
     </ModalOverlay>
   );
