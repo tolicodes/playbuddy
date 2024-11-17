@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { APP_STORE_URL, GOOGLE_PLAY_URL } from './config';
@@ -34,11 +35,6 @@ const Title = styled.h2`
   font-size: 24px;
 `;
 
-const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: space-around;
-`;
-
 const StoreButton = styled.a`
   display: inline-block;
   cursor: pointer;
@@ -53,16 +49,6 @@ const CloseButton = styled.button`
   font-size: 24px;
   cursor: pointer;
   color: #999;
-`;
-
-const ImportantNote = styled.p`
-  font-size: 18px;
-  color: #ff0000;
-  font-weight: bold;
-  background-color: #ffffe0;
-  padding: 10px;
-  border: 2px solid #ff0000;
-  border-radius: 5px;
 `;
 
 // Main Component
@@ -105,7 +91,7 @@ const StoreModal = () => {
   }, []);
 
 
-  if (!showModal) return null;
+  if (!isMobile || !showModal) return null;
 
   return (
     <ModalOverlay>
