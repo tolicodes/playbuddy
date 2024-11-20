@@ -8,15 +8,12 @@ import { JoinCommunitySection } from './JoinCommunitySection';
 const Tab = createMaterialTopTabNavigator();
 
 const CommunitiesNav = () => {
-
     return (
-        <>
-            <Tab.Navigator>
-                <Tab.Screen name="My Communities" component={MyCommunitiesSection} />
-                <Tab.Screen name="My Events" component={MyEvents} />
-                <Tab.Screen name="Join Community" component={JoinCommunitySection} />
-            </Tab.Navigator>
-        </>
+        <Tab.Navigator>
+            <Tab.Screen name="My Communities" component={MyCommunitiesSection} />
+            <Tab.Screen name="My Events" component={MyEvents} />
+            <Tab.Screen name="Join Community" component={JoinCommunitySection} />
+        </Tab.Navigator>
     );
 };
 

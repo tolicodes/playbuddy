@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import HeaderLoginButton from '../../Auth/HeaderLoginButton';
-import { useNavigation } from '@react-navigation/native';
+import HeaderLoginButton from '../../Pages/Auth/Buttons/HeaderLoginButton';
+import { logEvent } from '../hooks/logger';
 
 const features = [
     { id: '1', title: 'My Calendar', description: 'Add events to plan your week', icon: 'calendar' },
@@ -13,6 +13,16 @@ const features = [
 ];
 
 export const WelcomeScreen = ({ onClose: onClose }: { onClose: () => void }) => {
+    const onCloseWelcomeScreen = () => {
+        logEvent('welcome_screen_closed');
+        onClose();
+    }
+
+    const onSkipWelcomeScreen = () => {
+        logEvent('welcome_screen_skipped');
+        onClose();
+    }
+
     return (
         <View style={styles.container}>
             <Text style={styles.welcomeTitle}>Welcome to PlayBuddy!</Text>
@@ -21,7 +31,7 @@ export const WelcomeScreen = ({ onClose: onClose }: { onClose: () => void }) => 
             </Text>
 
             <View style={styles.loginButtonContainer}>
-                <HeaderLoginButton size={50} showLoginText={true} register={true} onPressButton={onClose} />
+                <HeaderLoginButton size={50} showLoginText={true} register={true} onPressButton={onCloseWelcomeScreen} />
             </View>
 
             <FlatList
@@ -38,7 +48,7 @@ export const WelcomeScreen = ({ onClose: onClose }: { onClose: () => void }) => 
                 )}
             />
 
-            <TouchableOpacity style={styles.noThanksButton} onPress={onClose}>
+            <TouchableOpacity style={styles.noThanksButton} onPress={onSkipWelcomeScreen}>
                 <Text style={styles.noThanksText}>Skip for now</Text>
             </TouchableOpacity>
         </View>

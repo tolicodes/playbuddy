@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ACRO_COMMUNITY_ID, Community, LocationArea, useCommonContext } from '../CommonContext';
-import { LocationAreaMenu, CommunityMenu } from '../../Header/DefaultsMenus';
+import { ACRO_COMMUNITY_ID, Community, LocationArea, useCommonContext } from '../hooks/CommonContext';
+import { LocationAreaMenu, CommunityMenu } from '../Header/DefaultsMenus';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { ALL_ITEM } from '../../Header/const';
+import { ALL_ITEM } from '../Header/const';
+import { logEvent } from '../hooks/logger';
 
 export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
     const {
@@ -13,7 +14,6 @@ export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
         setSelectedCommunity,
         selectedLocationArea,
         setSelectedLocationArea,
-        showDefaultsModal,
         setShowDefaultsModal,
     } = useCommonContext();
 
@@ -28,11 +28,13 @@ export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
     useEffect(() => {
         const defaultLocation = locationAreas.find((l: LocationArea) => l.id === DEFAULT_LOCATION_ID);
         if (defaultLocation) {
+            logEvent('default_location_selected', { location: defaultLocation.name });
             setTempSelectedLocationArea(defaultLocation);
         }
 
         const defaultCommunity = communities.interestGroups.find((c: Community) => c.id === DEFAULT_COMMUNITY_ID);
         if (defaultCommunity) {
+            logEvent('default_community_selected', { community: defaultCommunity.name });
             setTempSelectedCommunity(defaultCommunity);
         }
     }, [locationAreas, communities]);
@@ -40,6 +42,7 @@ export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
     // Welcome more info message
     useEffect(() => {
         if (tempSelectedCommunity?.id === ACRO_COMMUNITY_ID) {
+            logEvent('default_community_selected_acro', { community: 'Acro' });
             setPreferencesInfo('Currently, only acro retreats are supported. Select "ALL" in the retreats tab for worldwide events.');
             setTempSelectedLocationArea(ALL_ITEM); // Fixing the type error by setting it to null
         } else {
@@ -51,6 +54,7 @@ export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
         setSelectedLocationArea(tempSelectedLocationArea);
         setSelectedCommunity(tempSelectedCommunity);
         setShowDefaultsModal(false);
+        logEvent('personalization_modal_confirmed');
         onClose();
     }
     return (

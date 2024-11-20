@@ -2,22 +2,20 @@ import React, { } from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { Image } from 'expo-image'
-import { useCalendarContext } from '../Calendar/CalendarContext';
-import { formatDate } from '../Calendar/calendarUtils';
+import { useCalendarContext } from './Calendar/hooks/CalendarContext';
+import { formatDate } from './Calendar/hooks/calendarUtils';
 import { Event } from '../commonTypes';
 import moment from 'moment';
-import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
-import { useUserContext } from '../contexts/UserContext';
+import { useRecordSwipeChoice } from './Calendar/hooks/useWishlist';
+import { useUserContext } from './Auth/hooks/UserContext';
 import { LoginToAccess } from '../Common/LoginToAccess';
 import { Button } from '@rneui/themed';
-import { getSmallAvatarUrl } from '../Common/imageUtils';
+import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
+import { logEvent } from '../Common/hooks/logger';
 
 export const SwipeMode: React.FC = () => {
     const { availableCardsToSwipe } = useCalendarContext();
     const { authUserId } = useUserContext();
-
-    // const [showTooltip, setShowTooltip] = useState(false);
-    // const [isModalVisible, setModalVisible] = useState(false);
 
     const { toggleWishlistEvent, } = useCalendarContext(); // use the hook to handle wishlist
 
@@ -32,6 +30,8 @@ export const SwipeMode: React.FC = () => {
             choice: 'wishlist',
             list: 'main',
         });
+
+        logEvent('swipe_mode_swipe_right', { eventId });
     };
 
     const onSwipeLeft = (cardIndex: number) => {
@@ -43,15 +43,8 @@ export const SwipeMode: React.FC = () => {
             list: 'main',
         });
 
+        logEvent('swipe_mode_swipe_left', { eventId });
     };
-
-    // const handleAddToBuddyList = (listName: string, eventId: number) => {
-    // };
-
-    // const handleTooltipDismiss = async () => {
-    //     setShowTooltip(false);
-    //     await AsyncStorage.setItem('plannerTooltipShown', 'true');
-    // };
 
     const renderCard = (event: Event) => {
         const imageUrl = event.image_url && getSmallAvatarUrl(event.image_url);
@@ -68,7 +61,10 @@ export const SwipeMode: React.FC = () => {
 
                     <Button
                         title="More Info"
-                        onPress={() => Linking.openURL(event.event_url)}
+                        onPress={() => {
+                            Linking.openURL(event.event_url);
+                            logEvent('swipe_mode_more_info_click', { eventId: event.id });
+                        }}
 
                     />
                 </View>
@@ -141,12 +137,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: '#f8f9fa',
     },
-    headerText: {
-        fontSize: 18,
-        marginVertical: 10,
-        textAlign: 'center',
-        fontWeight: '600',
-    },
     card: {
         width: '100%',
         height: 500,
@@ -183,81 +173,5 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#555',
         marginBottom: 20,
-    },
-    tooltip: {
-        position: 'absolute',
-        top: 10,
-        left: 10,
-        right: 10,
-        padding: 10,
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    tooltipText: {
-        fontSize: 16,
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    wishlistButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 20,
-        padding: 10,
-        borderRadius: 20,
-        backgroundColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    wishlistButtonText: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#007AFF',
-        fontWeight: '600',
-    },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        width: '80%',
-        backgroundColor: '#fff',
-        borderRadius: 10,
-        padding: 20,
-        alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 10,
-        elevation: 10,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 20,
-    },
-    buddyListItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    buddyListText: {
-        marginLeft: 10,
-        fontSize: 16,
-        color: '#007AFF',
-    },
-    newBuddyListButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 20,
     },
 });

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Text, FlatList, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { MISC_URLS } from '../config'
 import * as amplitude from '@amplitude/analytics-react-native';
+import { logEvent } from '../Common/hooks/logger';
 
 type LinkItem = {
     id: string;
@@ -41,6 +42,7 @@ const links: LinkItem[] = [
 ];
 
 const getGoogleCalLink = () => {
+    logEvent('moar_get_google_cal_link');
     return MISC_URLS.addGoogleCalendar();
 };
 
@@ -54,6 +56,8 @@ const getAddYourEventsLink = () => {
         `Example Event:\n` +
         `Anything Else?`
     );
+
+    logEvent('moar_get_add_your_events_link');
 
     const mailtoLink = `mailto:toli@toli.me?subject=${subject}&body=${body}`;
     return mailtoLink;
@@ -75,13 +79,13 @@ const tools: LinkItem[] = [
 ];
 
 const Moar: React.FC = () => {
-    const handlePress = (url: string) => {
-        amplitude.logEvent('moar_link_clicked', { url });
+    const handlePress = useCallback((url: string, title: string) => {
+        logEvent('moar_link_clicked', { title });
         Linking.openURL(url);
-    };
+    }, []);
 
     const renderItem = ({ item }: { item: LinkItem }) => (
-        <TouchableOpacity style={styles.itemContainer} onPress={() => handlePress(item.url)}>
+        <TouchableOpacity style={styles.itemContainer} onPress={() => handlePress(item.url, item.title)}>
             <FAIcon name={item.icon} size={24} color="black" style={styles.icon} />
             <Text style={styles.link}>{item.title}</Text>
         </TouchableOpacity>
@@ -108,7 +112,10 @@ const Moar: React.FC = () => {
             <Text style={styles.getInTouch}>Got feedback? Want to add your event?</Text>
             <Text style={styles.getInTouch}>Contact me at</Text>
 
-            <TouchableOpacity onPress={() => Linking.openURL('mailto:toli@toli.me')}>
+            <TouchableOpacity onPress={() => {
+                logEvent('moar_get_in_touch_click_email');
+                Linking.openURL('mailto:toli@toli.me');
+            }}>
                 <Text style={{ color: 'blue', ...styles.getInTouch }}>toli@toli.me</Text>
             </TouchableOpacity>
         </SafeAreaView>

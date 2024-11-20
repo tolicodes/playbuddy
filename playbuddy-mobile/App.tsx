@@ -1,18 +1,18 @@
 import React, { useEffect } from 'react'
 import 'react-native-gesture-handler';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
-import './Common/uxCam';
+import './Common/hooks/uxCam';
 
-import { UserProvider } from './contexts/UserContext';
-import { CalendarProvider } from './Calendar/CalendarContext';
+import { UserProvider } from './Pages/Auth/hooks/UserContext';
+import { CalendarProvider } from './Pages/Calendar/hooks/CalendarContext';
 import Nav from './Nav';
 import * as Sentry from '@sentry/react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
-import { CommonProvider } from './Common/CommonContext';
-import { onFetchUpdateAsync } from './Common/ExpoUpdate';
-import { BuddiesProvider } from './Buddies/BuddiesContext';
-import { queryClient } from './Common/queryClient';
+import { CommonProvider } from './Common/hooks/CommonContext';
+import { onFetchUpdateAsync } from './Common/hooks/ExpoUpdate';
+import { BuddiesProvider } from './Pages/Buddies/hooks/BuddiesContext';
+import { queryClient } from './Common/hooks/queryClient';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 

@@ -3,9 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 
 const Banner = () => {
     return (
-
         <View style={styles.banner}>
-
             <Text style={styles.text}>
                 This is a demo functionality (Coming Soon)
             </Text>

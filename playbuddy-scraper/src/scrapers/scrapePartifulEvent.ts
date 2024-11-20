@@ -37,7 +37,7 @@ async function scrapePartifulEvent({
             setTimeout(() => {
                 page.off('response', responseHandler);
                 resolve(userDataCache);
-            }, 5000);
+            }, 10000);
         });
     }
 

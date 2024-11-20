@@ -1,27 +1,24 @@
 import React from 'react'
-import { Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icon
-import { useCalendarContext } from "../Calendar/CalendarContext";
-import EventCalendarView from "../Calendar/EventCalendarView";
+import { useCalendarContext } from "./Calendar/hooks/CalendarContext";
+import EventCalendarView from "./Calendar/EventCalendarView";
 import { useEffect } from "react";
-import { useUserContext } from "../contexts/UserContext";
-import { Button } from '@rneui/themed';
-import { RouteProp, useNavigation } from '@react-navigation/native';
-import { NavStack, NavStackProps } from '../types';
-import * as amplitude from '@amplitude/analytics-react-native';
+import { useUserContext } from "./Auth/hooks/UserContext";
+import { useNavigation } from '@react-navigation/native';
+import { NavStack } from '../types';
 import { LoginToAccess } from '../Common/LoginToAccess';
-import { filterEvents } from '../../playbuddy-scraper/src/scraper';
-import { useCommonContext } from '../Common/CommonContext';
-import { useWishlist } from '../Calendar/hooks/useWishlist';
+import { logEvent } from '../Common/hooks/logger';
 
 const ShareWishlistButton = () => {
     const navigator = useNavigation<NavStack>();
     const handleShare = () => {
+        logEvent('my_calendar_share_wishlist_click');
         navigator.navigate('Buddies');
     };
 
     return (
-        <TouchableOpacity style={styles.fab} onPress={handleShare}>
+        <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
             <FAIcon name="share" size={24} color="white" />
             <Text style={styles.shareButtonText}>Share</Text>
         </TouchableOpacity>
@@ -41,7 +38,12 @@ const MyCalendar = () => {
 
     return (
         (authUserId)
-            ? <EventCalendarView events={wishlistEvents} />
+            ? (
+                <>
+                    <ShareWishlistButton />
+                    <EventCalendarView events={wishlistEvents} />
+                </>
+            )
             : (
                 <LoginToAccess entityToAccess='wishlist' />
             )
@@ -50,10 +52,11 @@ const MyCalendar = () => {
 
 // Styles for the FAB button with "Share" text below the icon
 const styles = StyleSheet.create({
-    fab: {
+    shareButton: {
         position: 'absolute',
         bottom: 20,
         right: 20,
+        zIndex: 1000,
         backgroundColor: '#007AFF',
         borderRadius: 50,
         width: 60,

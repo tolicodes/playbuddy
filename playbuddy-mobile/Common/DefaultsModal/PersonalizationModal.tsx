@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Modal, View, StyleSheet } from 'react-native';
 import { PreferencesScreen } from './PreferencesScreen';
 import { WelcomeScreen } from './WelcomeScreen';
-import { useUserContext } from '../../contexts/UserContext';
+import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 
-import { useCommonContext } from '../CommonContext';
+import { useCommonContext } from '../../Common/hooks/CommonContext';
+import { logEvent } from '../hooks/logger';
 
 const PersonalizationModal = () => {
     const [isModalVisible, setIsModalVisible] = useState(true);
@@ -12,6 +13,7 @@ const PersonalizationModal = () => {
     const { showDefaultsModal } = useCommonContext();
 
     const handleClose = () => {
+        logEvent('personalization_modal_closed');
         setIsModalVisible(false);
     };
 

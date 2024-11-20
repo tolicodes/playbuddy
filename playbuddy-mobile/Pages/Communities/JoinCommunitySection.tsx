@@ -3,8 +3,9 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-nativ
 import { useJoinCommunity } from '../../Common/hooks/useCommunities';
 import { useNavigation } from '@react-navigation/native';
 import { CommunitiesList } from './CommunitiesList';
-import { useCommonContext } from '../../Common/CommonContext';
+import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { NavStack } from '../../types';
+import { logEvent } from '../../Common/hooks/logger';
 
 export const JoinCommunitySection: React.FC = () => {
     const [communityCode, setCommunityCode] = useState<string>('');
@@ -28,6 +29,8 @@ export const JoinCommunitySection: React.FC = () => {
                 type: 'private'
             });
 
+            logEvent('join_community_section_join_community', { communityCode });
+
             if (status === 'pending') {
                 alert(`Applied to join community: ${communityCode}`);
             } else {
@@ -37,6 +40,7 @@ export const JoinCommunitySection: React.FC = () => {
             setCommunityCode('');
         } catch {
             alert(`Failed to join community: ${communityCode}`);
+            logEvent('join_community_section_join_community_failed', { communityCode });
         }
     };
 

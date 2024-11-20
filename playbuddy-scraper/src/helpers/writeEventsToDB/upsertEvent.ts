@@ -26,6 +26,7 @@ export async function upsertEvent(event: CreateEventInput): Promise<number | und
         }
 
         if (existingEventId) {
+            console.log('attaching communities', existingEventId, event.communities);
             // attach all custom communities (interest groups)
             for (const community of event.communities || []) {
                 await attachCommunity(existingEventId, community.id);
@@ -45,6 +46,7 @@ export async function upsertEvent(event: CreateEventInput): Promise<number | und
 
         // attach all custom communities (interest groups)
         for (const community of event.communities || []) {
+            console.log('attaching community', createdEvent.id, community.id);
             await attachCommunity(createdEvent.id, community.id);
         }
 

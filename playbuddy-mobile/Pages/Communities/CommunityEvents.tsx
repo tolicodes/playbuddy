@@ -1,7 +1,7 @@
 import React from "react"
 import { View, Text, StyleSheet } from "react-native"
-import EventCalendarView from "../../Calendar/EventCalendarView"
-import { useCalendarContext } from "../../Calendar/CalendarContext"
+import EventCalendarView from "../Calendar/EventCalendarView"
+import { useCalendarContext } from "../Calendar/hooks/CalendarContext"
 import { useFetchMyCommunities } from "../../Common/hooks/useCommunities"
 
 export const CommunityEvents = ({ route: { params: { communityId } } }: { route: { params: { communityId: string } } }) => {

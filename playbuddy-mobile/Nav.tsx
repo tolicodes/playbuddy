@@ -9,24 +9,25 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import * as amplitude from '@amplitude/analytics-react-native';
 
 // Components
-import EventCalendarView from './Calendar/EventCalendarView';
-import { EventDetail } from './Calendar/EventDetail';
-import AuthMain from './Auth/AuthMain';
+import EventCalendarView from './Pages/Calendar/EventCalendarView';
+import { EventDetail } from './Pages/Calendar/EventDetail';
+import AuthMain from './Pages/Auth/AuthForm/AuthMain';
 import MyCalendar from './Pages/MyCalendar';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities/CommunitiesNav';
 import DeepLinkHandler from './DeepLinkHandler';
 import { Retreats } from './Pages/Retreats';
 import { SwipeMode } from './Pages/SwipeMode';
-import BuddiesMain from './Buddies/BuddiesMain';
+import BuddiesMain from './Pages/Buddies/screens/BuddiesMainScreen';
 
 // Hooks and Contexts
-import { useUserContext } from './contexts/UserContext';
-import BuddyEvents from './Buddies/BuddyEvents';
-import AccountDetails from './Auth/AccountDetails';
+import { useUserContext } from './Pages/Auth/hooks/UserContext';
+import BuddyEvents from './Pages/Buddies/screens/BuddyEventsScreen';
+import AccountDetails from './Pages/Auth/AuthForm/AccountDetails';
 import { CommunityEvents } from './Pages/Communities/CommunityEvents';
-import { detailsPageHeaderOptions, headerOptions } from './Common/Header';
-import { Filters } from './Calendar/Filters/Filters';
+import { detailsPageHeaderOptions, headerOptions } from './Common/Header/Header';
+import { Filters } from './Pages/Calendar/Filters/Filters';
+import { tagScreenName } from './Common/hooks/uxCam';
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -166,7 +167,17 @@ const DrawerNav = () => {
 // Root Navigator
 export default function AppNavigator() {
     return (
-        <NavigationContainer>
+        <NavigationContainer
+            onStateChange={(state) => {
+                if (!state) return;
+
+                // Get the current route
+                const currentRoute = state.routes[state.index];
+                if (currentRoute?.name) {
+                    tagScreenName(currentRoute.name);
+                }
+            }}
+        >
             <DeepLinkHandler />
             <DrawerNav />
         </NavigationContainer>

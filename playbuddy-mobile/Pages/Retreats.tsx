@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import EventCalendarView from "../Calendar/EventCalendarView";
+import EventCalendarView from "./Calendar/EventCalendarView";
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { AllSelection, Community, LocationArea, useCommonContext } from "../Common/CommonContext";
-import { ALL_ITEM } from "../Header/const";
-import { useCalendarContext } from "../Calendar/CalendarContext";
+import { AllSelection, Community, LocationArea, useCommonContext } from "../Common/hooks/CommonContext";
+import { ALL_ITEM } from "../Common/Header/const";
+import { useCalendarContext } from "./Calendar/hooks/CalendarContext";
 import { EventWithMetadata } from "../types";
+import { logEvent } from "../Common/hooks/logger";
 
 const Banner = () => {
     const [isBannerShown, setIsBannerShown] = useState(false);
@@ -19,12 +20,14 @@ const Banner = () => {
         setSelectedLocationArea(ALL_ITEM);
         setSelectedCommunity(ALL_ITEM);
         setIsBannerShown(true);
+        logEvent('retreats_banner_shown');
     }, []);
 
     const handleBannerPress = () => {
         setIsBannerShown(false);
         setSelectedLocationArea(oldLocation);
         setSelectedCommunity(oldCommunity);
+        logEvent('retreats_banner_reset_to_old_filters');
     };
 
     if (!isBannerShown) {
