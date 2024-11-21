@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { useCommonContext } from "../../Common/CommonContext";
+import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { CommunitiesList } from "./CommunitiesList";
 
 export const MyCommunitiesSection: React.FC = () => {
@@ -14,8 +14,8 @@ export const MyCommunitiesSection: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            <CommunitiesList title="My Private Communities" communities={privateCommunities} flex={1} />
-            <CommunitiesList title="My Public Communities" communities={myOrganizerPublicCommunities} flex={2} />
+            <CommunitiesList title="My Private Communities" communities={privateCommunities} flex={1} entityType="private_community" />
+            <CommunitiesList title="My Favorite Organizers" communities={myOrganizerPublicCommunities} flex={2} entityType="organizer" />
         </View>
     );
 }

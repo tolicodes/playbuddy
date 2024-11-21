@@ -20,10 +20,10 @@ export type Community = {
     name: string;
     code?: string;
     auth_type?: 'code' | 'approval';
-    type?: string;
+    type?: 'interest_group' | 'organizer_public_community' | 'organizer_private_community' | 'private_community';
     organizer_id?: string;
     description?: string;
-    visibility?: string;
+    visibility?: 'private' | 'public';
 }
 
 export interface Event extends SourceMetadata {

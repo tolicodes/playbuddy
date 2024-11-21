@@ -61,7 +61,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents }: EventListProps
                     <EventListItem
                         item={event}
                         setSelectedEvent={(event) => {
-                            logEvent('event_list_item_clicked', { event_id: event.id });
+                            logEvent('event_list_item_clicked', { event_id: event.id, event_name: event.name });
                             setSelectedEvent(event)
                         }}
                         buddiesAttending={buddiesAttending}

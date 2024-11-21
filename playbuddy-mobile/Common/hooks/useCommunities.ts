@@ -1,12 +1,12 @@
 // hooks/useCommunities.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { useUserContext } from '../../contexts/UserContext';
-import { Community } from '../CommonContext';
+import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
+import { Community } from './CommonContext';
 import { API_BASE_URL } from '../../config';
-import { queryClient as qc } from '../queryClient';
-import { useAuthorizedQuery } from '../../contexts/helpers/useAuthorizedQuery';
-import { useOptimisticMutation } from '../../contexts/helpers/useOptimisticMutation';
+import { queryClient as qc } from './queryClient';
+import { useAuthorizedQuery } from './useAuthorizedQuery';
+import { useOptimisticMutation } from './useOptimisticMutation';
 
 // Fetch My Communities
 export const useFetchMyCommunities = () => {
@@ -48,6 +48,7 @@ type JoinCommunityResponse = { status: string }
 
 // Join a Community
 export const useJoinCommunity = () => {
+    const { authUserId } = useUserContext();
     return useOptimisticMutation<Community[], JoinCommunityResponse, JoinCommunityData>({
         queryKey: ['myCommunities'],
         mutationFn: async (joinData) => {
@@ -72,6 +73,10 @@ export const useJoinCommunity = () => {
                 ? [...old, newCommunity]
                 : [newCommunity];
         },
+        onSettled: () => {
+            qc.invalidateQueries({ queryKey: ['myCommunities'] });
+            qc.invalidateQueries({ queryKey: ['events', authUserId] });
+        }
     });
 };
 
@@ -102,6 +107,6 @@ export const useLeaveCommunity = () => {
         },
         onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ['myCommunities'] });
-        },
+        }
     });
 };

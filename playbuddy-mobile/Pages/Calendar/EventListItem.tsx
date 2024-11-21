@@ -29,6 +29,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
     const handleToggleEventWishlist = () => {
         logEvent('event_list_item_wishlist_toggled', {
             event_id: item.id,
+            event_name: item.name,
             is_on_wishlist: !itemIsOnWishlist
         });
         toggleWishlistEvent.mutate({
@@ -38,7 +39,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
     };
     const handlePressEvent = () => {
         setSelectedEvent(item);
-        logEvent('event_list_item_clicked', { event_id: item.id });
+        logEvent('event_list_item_clicked', { event_id: item.id, event_name: item.name });
     }
 
     return (

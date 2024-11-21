@@ -125,7 +125,6 @@ export const joinCommunity = async (req: AuthenticatedRequest, res: Response) =>
         return res.status(200).json({
             community_id: community.id,
             name: community.name,
-            status,
         });
     } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';

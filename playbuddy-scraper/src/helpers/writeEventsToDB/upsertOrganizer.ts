@@ -45,7 +45,7 @@ export async function upsertOrganizer({ name, url, original_id }: CreateOrganize
     }
 
     // Upsert the organizer
-    const { data: upsertedOrganizer, error: upsertError } = await supabaseClient
+    const { data: insertedOrganizer, error: upsertError } = await supabaseClient
         .from("organizers")
         .upsert(
             { name, url, original_id },
@@ -59,7 +59,7 @@ export async function upsertOrganizer({ name, url, original_id }: CreateOrganize
         throw upsertError;
     }
 
-    const organizerId = upsertedOrganizer?.id;
+    const organizerId = insertedOrganizer?.id;
 
     // we don't need to return it, because it's already linked to the organizer
     // and transitively the event

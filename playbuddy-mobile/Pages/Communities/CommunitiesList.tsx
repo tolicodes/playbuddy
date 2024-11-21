@@ -1,20 +1,23 @@
 import React, { useState, useCallback } from "react";
 import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput } from "react-native";
-import { Community, useCommonContext } from "../../Common/CommonContext";
+import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { useFetchMyCommunities } from "../../Common/hooks/useCommunities";
 import { NavStack } from "../../types";
+import { logEvent } from "../../Common/hooks/logger";
 
 export const CommunitiesList = ({
     title,
     communities,
     showSearch = false,
     flex = 1,
+    entityType = 'organizer',
 }: {
     title: string,
     communities: Community[],
     showSearch?: boolean,
     flex?: number,
+    entityType?: 'private_community' | 'organizer',
 }) => {
     const navigation = useNavigation<NavStack>();
     const [searchQuery, setSearchQuery] = useState('');
@@ -23,10 +26,12 @@ export const CommunitiesList = ({
 
     const handleJoin = useCallback((communityId: string) => {
         joinCommunity.mutate({ community_id: communityId, type: 'organizer_public_community' });
+        logEvent('community_list_community_joined', { communityId });
     }, [joinCommunity]);
 
     const handleLeave = useCallback((communityId: string) => {
         leaveCommunity.mutate({ community_id: communityId });
+        logEvent('community_list_community_left', { communityId });
     }, [leaveCommunity]);
 
     const filteredCommunities = communities
@@ -35,12 +40,19 @@ export const CommunitiesList = ({
 
     if (communities.length === 0) {
         return (
-            <View style={styles.centeredView}>
-                <Text>You're not following any organizers yet.</Text>
-                <Button
-                    title="Follow an organizer"
-                    onPress={() => navigation.navigate('Join Community')}
-                />
+            <View style={{ flex: 1 }}>
+                <Text style={styles.listTitle}>{title}</Text>
+
+                <View style={styles.centeredView}>
+                    <Text>You're not following any {entityType === 'private_community' ? 'communities' : 'organizers'} yet.</Text>
+                    <Button
+                        title={`${entityType === 'private_community' ? 'Join community' : 'Follow organizer'}`}
+                        onPress={() => {
+                            navigation.navigate('Join Community');
+                            logEvent('community_list_navigate_to_join_community_button_pressed');
+                        }}
+                    />
+                </View>
             </View>
         );
     }
@@ -51,7 +63,7 @@ export const CommunitiesList = ({
             {showSearch && (
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Search communities..."
+                    placeholder={`Search ${entityType === 'private_community' ? 'communities' : 'organizers'}...`}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
@@ -64,7 +76,10 @@ export const CommunitiesList = ({
                     return (
                         <TouchableOpacity
                             style={styles.communityItem}
-                            onPress={() => navigation.navigate('Community Events', { communityId: item.id })}
+                            onPress={() => {
+                                navigation.navigate('Community Events', { communityId: item.id });
+                                logEvent('community_list_navigate_to_community_events', { communityId: item.id });
+                            }}
                         >
                             <View style={styles.communityItemContent}>
                                 <Text style={styles.communityName}>{item.name}</Text>
