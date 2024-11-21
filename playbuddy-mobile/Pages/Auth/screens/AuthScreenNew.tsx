@@ -3,14 +3,12 @@ import AccountDetails from "./AccountDetails"
 import AuthForm from "./AuthForm"
 import { useUserContext } from '../hooks/UserContext';
 
-const AuthMain = () => {
+const AuthScreen = () => {
     const { authUserId } = useUserContext();
 
     return authUserId
-        // just says they're logged in
         ? <AccountDetails key={authUserId} />
-        // Login
         : <AuthForm />
 }
 
-export default AuthMain;
+export default AuthScreen;

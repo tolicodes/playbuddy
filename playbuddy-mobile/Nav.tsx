@@ -11,7 +11,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 // Components
 import EventCalendarView from './Pages/Calendar/EventCalendarView';
 import { EventDetail } from './Pages/Calendar/EventDetail';
-import AuthMain from './Pages/Auth/AuthForm/AuthMain';
+import AuthScreen from './Pages/Auth/screens/AuthScreen';
 import MyCalendar from './Pages/MyCalendar';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities/CommunitiesNav';
@@ -23,7 +23,7 @@ import BuddiesMain from './Pages/Buddies/screens/BuddiesMainScreen';
 // Hooks and Contexts
 import { useUserContext } from './Pages/Auth/hooks/UserContext';
 import BuddyEvents from './Pages/Buddies/screens/BuddyEventsScreen';
-import AccountDetails from './Pages/Auth/AuthForm/AccountDetails';
+import AccountDetails from './Pages/Auth/screens/AccountDetails';
 import { CommunityEvents } from './Pages/Communities/CommunityEvents';
 import { detailsPageHeaderOptions, headerOptions } from './Common/Header/Header';
 import { Filters } from './Pages/Calendar/Filters/Filters';
@@ -146,7 +146,7 @@ const DrawerNav = () => {
             />
             <Drawer.Screen
                 name={authUserId ? "User Profile" : "Login"}
-                component={AuthMain}
+                component={AuthScreen}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,
                 }}
