@@ -2,6 +2,7 @@ import { CreateEventInput, SourceMetadata } from "../commonTypes.js";
 import { ScraperParams } from '../scrapers/types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
 import scrapeEventbriteAllEventsFromEventPage from "../scrapers/eventbrite/scrapeEventbriteAllEventsFromOrganizerPage.js";
+import scrapeLumaEventFromPage from "scrapers/luma.js";
 
 type ScrapersConfig = {
   [domain: string]: {
@@ -11,7 +12,7 @@ type ScrapersConfig = {
   };
 };
 
-const SCRAPERS: ScrapersConfig = {
+export const SCRAPERS: ScrapersConfig = {
   "partiful.com": {
     scraper: scrapePartifulEvent,
     eventRegex: /partiful\.com\/e\/([^\/?#]+)/,
@@ -19,6 +20,11 @@ const SCRAPERS: ScrapersConfig = {
   },
   "eventbrite.com": {
     scraper: scrapeEventbriteAllEventsFromEventPage,
+    eventRegex: /.*/,
+    eventRegexIndex: 0,
+  },
+  "lu.ma": {
+    scraper: scrapeLumaEventFromPage,
     eventRegex: /.*/,
     eventRegexIndex: 0,
   },
@@ -59,7 +65,14 @@ export const scrapeURLs = async (
     const url = sourceMetadata.source_url;
     if (!url) continue;
     console.log(`[${i}/${dedupedLinks.length}] Processing URL: ${url}`);
-    const domain = new URL(url).hostname.replace("www.", "");
+
+    const extractTLD = (url: string) => {
+      const domain = new URL(url).hostname.replace(/^www\./, "");
+      const parts = domain.split(".");
+      return parts.slice(-2).join("."); // Get the last two parts for the TLD
+    };
+
+    const domain = extractTLD(url);
 
     const scraperConfig = SCRAPERS[domain];
 
@@ -82,16 +95,20 @@ export const scrapeURLs = async (
             sourceMetadata,
             urlCache,
           }),
-          timeout(48000),
+          timeout(200000),
         ]);
 
         const eventsScrapedWithCommunities = eventsScraped?.map((event) => {
           // while we scrape all the organizer's event, we only want to associate the event with the community of the original event
+          // and not all of the other events from that organizers which we picked up
           const isOriginalEvent = event.ticket_url === url;
 
           return {
             ...event,
-            communities: isOriginalEvent ? sourceMetadata.communities || [] : [],
+            communities: [
+              ...event.communities || [],
+              ...(isOriginalEvent ? sourceMetadata.communities || [] : []),
+            ]
           };
         });
 

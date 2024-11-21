@@ -11,12 +11,12 @@ import {
   DeleteObjectCommand
 } from '@aws-sdk/client-s3'
 import { AwsS3Store } from "wwebjs-aws-s3";
+import { SCRAPERS } from "helpers/scrapeURLs.js";
 
 export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, community_id: string }[], sourceMetadata: SourceMetadata): Promise<SourceMetadata[]> => {
   return new Promise<SourceMetadata[]>((resolve, reject) => {
     const s3 = new S3Client({
       region: 'us-east-2',
-      // endpoint: process.env.SUPABASE_S3_ENDPOINT || '',
       credentials: {
         accessKeyId: process.env.SUPABASE_S3_ACCESS_KEY_ID || '',
         secretAccessKey: process.env.SUPABASE_S3_SECRET_ACCESS_KEY || ''
@@ -42,7 +42,7 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
 
     const authStrategy = process.env.NODE_ENV === 'production' ?
       new Whatsapp.RemoteAuth({
-        clientId: 'scraper1',
+        clientId: 'scraper2',
         dataPath: 'whatsapp-login/',
         store: store,
         backupSyncIntervalMs: 600000,
@@ -66,6 +66,7 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
     });
 
     client.on("qr", (qr: string) => {
+      console.log("qr ready");
       qrcode.generate(qr, { small: true });
     });
 
@@ -81,10 +82,11 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
         console.log(`Found ${groups.length} groups`);
 
         // Domains to search for
-        const domains = ["eventbrite.com", "partiful.com"];
+        const domains = Object.keys(SCRAPERS);
+        // match containing any of the domains
         const domainRegex = new RegExp(
-          `https?://(?:www\\.)?(?:${domains.join("|")})[\\w\\-./?=&%]*`,
-          "g",
+          `https?://(?:[\\w\\-.]+\\.)?(?:${domains.join("|")})[\\w\\-./?=&%]*`,
+          "ig",
         );
 
         // Container for matched links
@@ -106,6 +108,7 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
           }];
 
           messages.forEach((message) => {
+
             // Check if the message contains a link from the specified domains
             const urls = message.body.match(domainRegex);
 

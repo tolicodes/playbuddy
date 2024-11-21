@@ -5,11 +5,21 @@ import scrapeEventbriteEventsFromOrganizerPage from "./scrapeEventbriteEventsFro
 import { CreateEventInput } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
 
+const extractParamsFromUrl = (url: string) => {
+  // Create a URL object
+  const params = new URL(url).searchParams;
+
+  // Extract the values
+  const urlValue = params.get('url');
+  const referringTicketKey = params.get('referring_ticket_key');
+}
+
 const scrapeEventbriteAllEventsFromEventPage = async ({
   url,
   sourceMetadata,
 }: ScraperParams): Promise<CreateEventInput[] | null> => {
   try {
+    'https://api.lu.ma/url?url=legeyh1e&referring_ticket_key=miJO9Z'
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
