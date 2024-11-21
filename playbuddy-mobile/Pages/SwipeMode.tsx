@@ -31,7 +31,7 @@ export const SwipeMode: React.FC = () => {
             list: 'main',
         });
 
-        logEvent('swipe_mode_swipe_right', { eventId });
+        logEvent('swipe_mode_swipe_right', { event_id: eventId, event_name: availableCardsToSwipe[cardIndex].name });
     };
 
     const onSwipeLeft = (cardIndex: number) => {
@@ -43,7 +43,7 @@ export const SwipeMode: React.FC = () => {
             list: 'main',
         });
 
-        logEvent('swipe_mode_swipe_left', { eventId });
+        logEvent('swipe_mode_swipe_left', { event_id: eventId, event_name: availableCardsToSwipe[cardIndex].name });
     };
 
     const renderCard = (event: Event) => {
