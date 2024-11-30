@@ -29,7 +29,9 @@ export type NavStackProps = {
     'Buddies': undefined;
     'Communities': undefined;
     'Retreats': undefined;
-    'Login': undefined;
+
+    'Profile': undefined;
+    'Auth': undefined;
     'User Profile': undefined;
     'Moar': undefined;
 

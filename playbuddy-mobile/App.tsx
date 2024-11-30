@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import 'react-native-gesture-handler';
 import { QueryClientProvider } from '@tanstack/react-query';
-
+import 'expo-dev-client';
 import './Common/hooks/uxCam';
 
 import { UserProvider } from './Pages/Auth/hooks/UserContext';

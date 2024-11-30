@@ -23,6 +23,7 @@ router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
         const userProfile = {
             // copy from session
             email: req.authUser?.email,
+            phone: req.authUser?.phone,
 
             auth_user_id: data.user_id,
 
@@ -55,6 +56,46 @@ router.post('/me', authenticateRequest, async (req: AuthenticatedRequest, res: R
         const { data, error } = await supabaseClient
             .from('users')
             .insert([{ user_id: authUserId, share_code: shareCode, name }]);
+
+        if (error) {
+            return res.status(400).json({ error: error.message });
+        }
+
+        return res.json({ message: 'User profile created successfully', data });
+    } catch (error) {
+        console.error('Error inserting user profile:', error);
+        return res.status(500).json({ error: 'Error inserting user profile' });
+    }
+});
+
+// Update a user profile
+router.put('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { authUserId } = req;
+    const { name, avatar_url } = req.body;
+
+    if (!authUserId || !name) {
+        console.error('Missing required fields', authUserId, name)
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    try {
+        // Fetch the user's share code and create it if it doesn't exist
+        const { data: userData, error: fetchError } = await supabaseClient
+            .from('users')
+            .select('share_code')
+            .eq('user_id', authUserId)
+            .single();
+
+        if (fetchError) {
+            return res.status(400).json({ error: fetchError.message });
+        }
+
+        const shareCode = userData.share_code || Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code if it doesn't exist
+
+        const { data, error } = await supabaseClient
+            .from('users')
+            .update({ name, share_code: shareCode, avatar_url })
+            .eq('user_id', authUserId);
 
         if (error) {
             return res.status(400).json({ error: error.message });

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, NavigationProp, useNavigation } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
@@ -11,7 +11,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 // Components
 import EventCalendarView from './Pages/Calendar/EventCalendarView';
 import { EventDetail } from './Pages/Calendar/EventDetail';
-import AuthScreen from './Pages/Auth/screens/AuthScreen';
+import AuthScreen from './Pages/Auth/screens/AuthMainScreen';
 import MyCalendar from './Pages/MyCalendar';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities/CommunitiesNav';
@@ -19,15 +19,14 @@ import DeepLinkHandler from './DeepLinkHandler';
 import { Retreats } from './Pages/Retreats';
 import { SwipeMode } from './Pages/SwipeMode';
 import BuddiesMain from './Pages/Buddies/screens/BuddiesMainScreen';
-
+import ProfileScreen from './Pages/Auth/screens/AuthProfileScreen';
 // Hooks and Contexts
-import { useUserContext } from './Pages/Auth/hooks/UserContext';
 import BuddyEvents from './Pages/Buddies/screens/BuddyEventsScreen';
-import AccountDetails from './Pages/Auth/screens/AccountDetails';
 import { CommunityEvents } from './Pages/Communities/CommunityEvents';
 import { detailsPageHeaderOptions, headerOptions } from './Common/Header/Header';
 import { Filters } from './Pages/Calendar/Filters/Filters';
 import { tagScreenName } from './Common/hooks/uxCam';
+import { useUserContext } from './Pages/Auth/hooks/UserContext';
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -47,12 +46,11 @@ function CalendarStackNavigator() {
             <CalendarStack.Screen name="Community Events" component={CommunityEvents} />
             <CalendarStack.Screen name="Buddy Events" component={BuddyEvents} />
             <CalendarStack.Screen name="Filters" component={Filters} />
+
             <CalendarStack.Screen
-                name="User Profile"
-                component={AccountDetails}
-                options={{
-                    // drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,
-                }}
+                name="Profile"
+                component={ProfileScreen}
+                options={{ headerShown: false }}
             />
         </CalendarStack.Navigator>
     );
@@ -90,7 +88,8 @@ const TabNavigator = () => (
 
 // Drawer Navigator
 const DrawerNav = () => {
-    const { authUserId } = useUserContext();
+    const { isProfileComplete } = useUserContext();
+
     return (
         <Drawer.Navigator initialRouteName="Home" screenOptions={headerOptions}>
             <Drawer.Screen
@@ -145,8 +144,8 @@ const DrawerNav = () => {
                 }}
             />
             <Drawer.Screen
-                name={authUserId ? "User Profile" : "Login"}
-                component={AuthScreen}
+                name={isProfileComplete ? "Profile" : "Auth"}
+                component={isProfileComplete ? ProfileScreen : AuthScreen}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,
                 }}

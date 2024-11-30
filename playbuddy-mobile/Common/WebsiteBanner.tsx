@@ -8,7 +8,7 @@ const Banner = () => {
     const navigation = useNavigation<NavStack>()
     const handlePress = () => {
         logEvent('login_banner_clicked');
-        navigation.navigate('Login');
+        navigation.navigate('Auth');
     };
     return (
         <TouchableOpacity onPress={handlePress}>

@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.4.0",
+    "version": "4.5.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -24,7 +24,14 @@
       ],
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload pictures."
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to upload pictures.",
+        
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": ["com.googleusercontent.apps.929140353915-9pd1soj5ugifbg0ftb28ejc3jaggq0bv"],
+            "CFBundleURLName": "GoogleSignIn"
+          }
+        ]
       }
     },
     "android": {
@@ -79,9 +86,15 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
           "recordAudioAndroid": true
         }
-      ]
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.929140353915-9pd1soj5ugifbg0ftb28ejc3jaggq0bv"
+        }
+      ] 
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.3.0"
+    "runtimeVersion": "4.5.0"
   }
 }

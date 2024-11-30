@@ -9,10 +9,15 @@ import { logEvent } from '../../../Common/hooks/logger';
 
 
 export const Avatar = () => {
-    const [uploadImageUri, setUploadImageUri] = useState<string | null>(null);
+    const { authUserId, userProfile, session } = useUserContext();
+
+    const [uploadImageUri, setUploadImageUri] = useState<string | null>(
+        session?.user?.user_metadata?.avatar_url || null
+    );
+
+    console.log(uploadImageUri)
     const [uploading, setUploading] = useState(false);
-    const { authUserId, userProfile } = useUserContext();
-    const uploadAvatar = useUploadAvatar();
+    const uploadAvatar = useUploadAvatar(authUserId!);
 
     // Request permission to access the gallery
     useEffect(() => {
@@ -66,16 +71,18 @@ export const Avatar = () => {
             <Text style={styles.title}>{
                 userProfile?.avatar_url ? 'Change Your Avatar' : 'Upload Your Avatar'
             }</Text>
-            <Text style={styles.subtitle}>This is how your buddies will identify you in the app!</Text>
             <TouchableOpacity onPress={pickImage} style={styles.circleContainer}>
                 <View style={styles.circle}>
-                    {uploading ? (
-                        <ActivityIndicator size="large" color="#fff" />
-                    ) : avatarUrl ? (
-                        <Image source={{ uri: avatarUrl }} style={styles.image} />
-                    ) : (
-                        <Text style={styles.text}>Upload</Text>
-                    )}
+                    {uploading
+                        ? (
+                            <ActivityIndicator size="large" color="#fff" />
+                        )
+                        : avatarUrl
+                            ? (
+                                <Image source={{ uri: avatarUrl }} style={styles.image} />
+                            ) : (
+                                <Text style={styles.text}>Upload</Text>
+                            )}
                 </View>
             </TouchableOpacity>
         </View>

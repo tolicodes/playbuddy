@@ -22,20 +22,20 @@ const HeaderLoginButton = ({
     onPressButton?: () => void;
 }) => {
     const { navigate } = useNavigation<NavStack>();
-    const { authUserId, userProfile, isLoadingUserProfile, authReady } = useUserContext();
+    const { authUserId, userProfile, isLoadingUserProfile, isLoadingAuth, isProfileComplete } = useUserContext();
 
     const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url);
     const initials = userProfile?.name?.split(' ').map(name => name[0]).join('').slice(0, 2);
 
     const handlePressHeaderButton = () => {
         logEvent('login_button_clicked');
-        navigate(!authUserId ? 'Login' : 'User Profile');
+        navigate(isProfileComplete ? 'Profile' : 'Auth');
         if (onPressButton) {
             onPressButton();
         }
     };
 
-    if (isLoadingUserProfile || !authReady) {
+    if (isLoadingUserProfile || isLoadingAuth) {
         return <ActivityIndicator />;
     }
 

@@ -17,9 +17,8 @@ export default function AccountDetails() {
 
     const onPressSignOut = async () => {
         logEvent('account_details_press_sign_out');
-        signOut(() => {
-            navigate('Main Calendar');
-        });
+        signOut();
+        navigate('Main Calendar');
     }
 
     const onPressHome = () => {
@@ -36,9 +35,8 @@ export default function AccountDetails() {
                 {
                     text: 'Delete',
                     onPress: () => {
-                        signOut(() => {
-                            navigate('Main Calendar');
-                        });
+                        signOut();
+                        navigate('Main Calendar');
                     },
                     style: 'destructive',
                 },
@@ -62,12 +60,10 @@ export default function AccountDetails() {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 <View style={styles.centeredContent}>
-                    <Text style={styles.headerText}>Account Details</Text>
-
                     {!userProfile?.avatar_url && (
                         <View style={styles.avatarInstructions}>
                             <Image source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc/question_person.png?t=2024-11-05T12%3A57%3A25.907Z' }} style={styles.avatarInstructionsImage} />
-                            <Text style={styles.avatarInstructionsText}>Please take 30 seconds to upload an avatar to help your buddies identify you!</Text>
+                            <Text style={styles.avatarInstructionsText}>Your avatar helps your buddies identify you!</Text>
                         </View>
                     )}
 
@@ -85,7 +81,10 @@ export default function AccountDetails() {
                     {avatarUrl && (
                         <>
                             <View style={styles.infoContainer}>
-                                <InfoItem label="Logged in as" value={userProfile?.email} />
+                                <InfoItem label="Logged in as" value={
+                                    userProfile?.email ||
+                                    userProfile?.phone
+                                } />
                                 <InfoItem label="Display Name" value={userProfile?.name} />
 
                                 <Text style={styles.sectionHeader}>Wishlist Share Code</Text>

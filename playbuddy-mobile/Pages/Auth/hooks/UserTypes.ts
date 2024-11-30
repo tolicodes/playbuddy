@@ -12,12 +12,14 @@ export type SignUpParams = {
     password: string,
     name: string,
     callback: () => void
+    type: 'email' | 'phone' | 'google'
 }
 
 export type SignInParams = {
     email: string,
     password: string,
     callback: () => void
+    type: 'email' | 'phone' | 'google'
 }
 
 export interface UserContextType {
@@ -31,6 +33,9 @@ export interface UserContextType {
     signInWithEmail: (params: SignInParams) => void;
     signUpWithEmail: (params: SignUpParams) => void;
     signOut: (callback: () => void) => void;
+    phoneSendOtp: (params: { phone: string }) => void;
+    phoneVerifyOtp: (params: { phone: string, otp: string }) => void;
+    authWithGoogle: () => void;
     authReady: boolean;
     isLoadingUserProfile: boolean;
 }

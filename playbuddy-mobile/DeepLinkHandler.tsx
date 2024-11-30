@@ -2,14 +2,14 @@ import { useEffect } from 'react';
 import * as Linking from 'expo-linking';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack, NavStackProps } from './types';
-import * as Sentry from '@sentry/react-native';
 import URLParse from 'url-parse';
 import * as amplitude from '@amplitude/analytics-react-native';
+import { useUserContext } from './Pages/Auth/hooks/UserContext';
 
 // Define your path-to-screen mapping with optional parameters
 const NAV_MAPPING: { [key: string]: keyof NavStackProps } = {
     '': 'Main Calendar',
-    'wishlist': 'Wishlist',
+    'wishlist': 'My Calendar',
     'communities': 'Communities',
     'moar': 'Moar',
 };
