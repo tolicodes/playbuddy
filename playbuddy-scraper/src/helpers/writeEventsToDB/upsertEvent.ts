@@ -26,7 +26,6 @@ export async function upsertEvent(event: CreateEventInput): Promise<number | und
         }
 
         if (existingEventId) {
-            console.log('attaching communities', existingEventId, event.communities);
             // attach all custom communities (interest groups)
             for (const community of event.communities || []) {
                 await attachCommunity(existingEventId, community.id);
@@ -46,7 +45,6 @@ export async function upsertEvent(event: CreateEventInput): Promise<number | und
 
         // attach all custom communities (interest groups)
         for (const community of event.communities || []) {
-            console.log('attaching community', createdEvent.id, community.id);
             await attachCommunity(createdEvent.id, community.id);
         }
 
@@ -112,13 +110,15 @@ const checkExistingEvent = async (event: CreateEventInput, organizerId: string):
         .from("events")
         .select("id")
         // original_id matches
-        // OR start_date and organizer_id matches
-        // OR start_date and event name matches
+        // OR start_date and organizer_id matches and source_ticketing_platform does not match (to avoid false positive multiple events with same start date)
+        // OR start_date and event name matches 
 
         // original_id.eq.${event.original_id},
         // and(
         //   start_date.eq.${event.start_date},
         //   organizer_id.eq.${organizerId}
+        //   and(source_ticketing_platform.neq."${event.source_ticketing_platform}")
+
         // ),
         // and(
         //   start_date.eq.${event.start_date},
@@ -127,7 +127,7 @@ const checkExistingEvent = async (event: CreateEventInput, organizerId: string):
 
         // for some reason it doesn't like when I format it like above
 
-        .or(`original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`)
+        .or(`original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}",source_ticketing_platform.neq."${event.source_ticketing_platform}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`)
 
     if (fetchError && fetchError.code !== "PGRST116") {
         console.error(`Error fetching existing event ${event.name}:`, fetchError);
@@ -136,6 +136,7 @@ const checkExistingEvent = async (event: CreateEventInput, organizerId: string):
     }
 
     if (existingEvents && existingEvents.length > 0) {
+        console.log('existingEvents', existingEvents, event.source_ticketing_platform);
         console.log(`Event ${event.name} already exists.`);
         return existingEvents[0].id;
     }
