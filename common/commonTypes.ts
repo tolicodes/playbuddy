@@ -63,13 +63,13 @@ export interface Event extends SourceMetadata {
 export interface SourceMetadata {
     source_url?: string;
     timestamp_scraped?: string;
-    dataset?: "Kink" | "Whatsapp POC" | 'Acro';
+    dataset?: "Kink" | "Whatsapp POC" | 'Acro' | 'Conscious Touch';
 
     // where it originated from
-    source_origination_platform?: "WhatsApp" | "organizer_api" | 'acrofestivals' | 'facebook';
+    source_origination_platform?: "WhatsApp" | "organizer_api" | 'acrofestivals' | 'facebook' | 'lu.ma';
 
     // the ticketing platform it's sold on
-    source_ticketing_platform?: "Eventbrite" | "Plura" | "Partiful";
+    source_ticketing_platform?: "Eventbrite" | "Plura" | "Partiful" | "lu.ma";
 
     // group id
     source_origination_group_id?: string;

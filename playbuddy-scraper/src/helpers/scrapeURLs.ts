@@ -2,7 +2,7 @@ import { CreateEventInput, SourceMetadata } from "../commonTypes.js";
 import { ScraperParams } from '../scrapers/types.js'
 import scrapePartifulEvent from "../scrapers/scrapePartifulEvent.js";
 import scrapeEventbriteAllEventsFromEventPage from "../scrapers/eventbrite/scrapeEventbriteAllEventsFromOrganizerPage.js";
-import scrapeLumaEventFromPage from "scrapers/luma.js";
+import scrapeLumaEventFromPage from "../scrapers/luma.js";
 
 type ScrapersConfig = {
   [domain: string]: {

@@ -11,7 +11,7 @@ import {
   DeleteObjectCommand
 } from '@aws-sdk/client-s3'
 import { AwsS3Store } from "wwebjs-aws-s3";
-import { SCRAPERS } from "helpers/scrapeURLs.js";
+import { SCRAPERS } from "../helpers/scrapeURLs.js";
 
 export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, community_id: string }[], sourceMetadata: SourceMetadata): Promise<SourceMetadata[]> => {
   return new Promise<SourceMetadata[]>((resolve, reject) => {

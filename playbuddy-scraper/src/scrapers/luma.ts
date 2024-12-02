@@ -1,8 +1,7 @@
 import axios from "axios";
-import TurndownService from 'turndown';
+import { SourceMetadata, CreateEventInput } from "../commonTypes.js";
+import { ScraperParams } from "./types.js";
 
-import { ScraperParams } from "../types.js";
-import { CreateEventInput, SourceMetadata } from "../../commonTypes.js";
 
 const getApiUrlFromPage = (pageUrl: string) => {
     // Create a URL object

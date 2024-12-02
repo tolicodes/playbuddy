@@ -44,16 +44,18 @@ interface DropdownProps<T> {
     getIcon: (code: string) => React.ReactNode;
 }
 
+type DropdownProp = { id: string; name: string; code: string; }
+
 interface CommunityDropdownProps {
-    communities: Community[];
-    selectedCommunity: Community | null;
-    onSelectCommunity: (community: Community | null) => void;
+    communities: DropdownProp[]
+    selectedCommunity: DropdownProp | null;
+    onSelectCommunity: (community: DropdownProp | null) => void;
 }
 
 interface LocationAreaDropdownProps {
-    locationAreas: { id: string; name: string; code: string; }[];
-    selectedLocationArea: { id: string; name: string; code: string; } | null;
-    onSelectLocationArea: (locationArea: { id: string; name: string; code: string; } | null) => void;
+    locationAreas: DropdownProp[]
+    selectedLocationArea: DropdownProp | null;
+    onSelectLocationArea: (locationArea: DropdownProp | null) => void;
 }
 
 interface SearchHeaderProps {
