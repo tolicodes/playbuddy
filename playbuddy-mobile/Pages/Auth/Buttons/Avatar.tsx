@@ -17,16 +17,6 @@ export const Avatar = ({ name }: { name?: string }) => {
     const [uploading, setUploading] = useState(false);
     const uploadAvatar = useUploadAvatar(authUserId!);
 
-    // Request permission to access the gallery
-    useEffect(() => {
-        (async () => {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                alert('Sorry, we need camera roll permissions to make this work!');
-            }
-        })();
-    }, []);
-
     // Automatically upload the image after selection
     useEffect(() => {
         if (uploadImageUri && authUserId) {
@@ -49,6 +39,13 @@ export const Avatar = ({ name }: { name?: string }) => {
     }, [uploadAvatar.isSuccess, uploadAvatar.isError]);
 
     const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (status !== 'granted') {
+            alert('Sorry, we need camera roll permissions to make this work!');
+            return;
+        }
+
         const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,

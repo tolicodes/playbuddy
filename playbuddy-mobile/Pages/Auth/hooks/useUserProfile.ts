@@ -90,7 +90,7 @@ export const useSkippingWelcomeScreen = () => {
 
     useEffect(() => {
         const loadSkippingWelcomeScreen = async () => {
-            const savedValue = await AsyncStorage.getItem('isSkippingWelcomeScreen1');
+            const savedValue = await AsyncStorage.getItem('isSkippingWelcomeScreen');
             if (savedValue !== null) {
                 setIsSkippingWelcomeScreen(JSON.parse(savedValue));
             }
