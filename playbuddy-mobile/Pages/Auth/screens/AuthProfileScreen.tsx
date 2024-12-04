@@ -4,7 +4,6 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, Share, SafeAr
 import { useUserContext } from '../hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { Avatar } from '../Buttons/Avatar';
-import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import QRCodeStyled from 'react-native-qrcode-styled';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -50,10 +49,9 @@ export default function AccountDetails() {
 
     const onPressSupport = () => {
         logEvent('account_details_press_support');
-        Linking.openURL('mailto:toli@toli.me');
+        Linking.openURL('mailto:support@playbuddy.me');
     }
 
-    const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url, 300);
     const authUserId = userProfile?.auth_user_id;
 
     return (
@@ -69,62 +67,58 @@ export default function AccountDetails() {
 
                     <Avatar />
 
-                    {userProfile?.avatar_url && (
-                        <TouchableOpacity style={styles.button} onPress={onPressHome}>
-                            <View style={styles.iconTextContainer}>
-                                <Icon name="home" size={24} color="white" />
-                                <Text style={styles.buttonText}>Go to Home</Text>
+                    <TouchableOpacity style={styles.button} onPress={onPressHome}>
+                        <View style={styles.iconTextContainer}>
+                            <Icon name="home" size={24} color="white" />
+                            <Text style={styles.buttonText}>Go to Home</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    <>
+                        <View style={styles.infoContainer}>
+                            <InfoItem label="Logged in as" value={
+                                userProfile?.email ||
+                                userProfile?.phone
+                            } />
+                            <InfoItem label="Display Name" value={userProfile?.name} />
+
+                            <Text style={styles.sectionHeader}>Wishlist Share Code</Text>
+                            <Text style={styles.shareCodeInstruction}>
+                                To add you as a buddy, your friend can either enter your share code or scan your QR code:
+                            </Text>
+
+                            <View style={styles.qrCodeWrapper}>
+                                <QRCodeStyled data={authUserId} width={150} height={150} />
                             </View>
-                        </TouchableOpacity>
-                    )}
 
-                    {avatarUrl && (
-                        <>
-                            <View style={styles.infoContainer}>
-                                <InfoItem label="Logged in as" value={
-                                    userProfile?.email ||
-                                    userProfile?.phone
-                                } />
-                                <InfoItem label="Display Name" value={userProfile?.name} />
+                            <Text style={styles.shareCodeInstruction}>Or enter your share code:</Text>
 
-                                <Text style={styles.sectionHeader}>Wishlist Share Code</Text>
-                                <Text style={styles.shareCodeInstruction}>
-                                    To add you as a buddy, your friend can either enter your share code or scan your QR code:
-                                </Text>
-
-                                <View style={styles.qrCodeWrapper}>
-                                    <QRCodeStyled data={authUserId} width={150} height={150} />
-                                </View>
-
-                                <Text style={styles.shareCodeInstruction}>Or enter your share code:</Text>
-
-                                <View style={styles.shareCodeContainer}>
-                                    <Text style={styles.shareCode}>{userProfile?.share_code}</Text>
-                                    <TouchableOpacity
-                                        style={styles.shareIconButton}
-                                        onPress={() => {
-                                            logEvent('account_details_press_share_code');
-                                            Share.share({
-                                                message: `Add me as a buddy using the code ${userProfile?.share_code}`,
-                                            });
-                                        }}
-                                    >
-                                        <Icon name="share-outline" size={24} color="#007AFF" />
-                                    </TouchableOpacity>
-                                </View>
-
+                            <View style={styles.shareCodeContainer}>
+                                <Text style={styles.shareCode}>{userProfile?.share_code}</Text>
                                 <TouchableOpacity
-                                    style={styles.button}
+                                    style={styles.shareIconButton}
                                     onPress={() => {
-                                        logEvent('account_details_press_add_buddy');
-                                        navigate('Add Buddy');
+                                        logEvent('account_details_press_share_code');
+                                        Share.share({
+                                            message: `Add me as a buddy using the code ${userProfile?.share_code}`,
+                                        });
                                     }}
                                 >
-                                    <Text style={styles.buttonText}>Add a Buddy</Text>
+                                    <Icon name="share-outline" size={24} color="#007AFF" />
                                 </TouchableOpacity>
                             </View>
-                        </>
-                    )}
+
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={() => {
+                                    logEvent('account_details_press_add_buddy');
+                                    navigate('Add Buddy');
+                                }}
+                            >
+                                <Text style={styles.buttonText}>Add a Buddy</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </>
 
                     <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={onPressSignOut}>
                         <Text style={styles.buttonText}>Sign Out</Text>
@@ -135,7 +129,7 @@ export default function AccountDetails() {
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={onPressSupport}>
-                        <Text style={styles.getSupport}>Get support or suggest features: toli@toli.me</Text>
+                        <Text style={styles.getSupport}>Get support or suggest features: support@playbuddy.me</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

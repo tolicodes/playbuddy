@@ -1,82 +1,78 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ACRO_COMMUNITY_ID, Community, LocationArea, useCommonContext } from '../hooks/CommonContext';
-import { LocationAreaMenu, CommunityMenu } from '../Header/DefaultsMenus';
+import { ACRO_COMMUNITY_ID, Community, LocationArea, useCommonContext } from '../../../Common/hooks/CommonContext';
+import { LocationAreaMenu, CommunityMenu } from '../../../Common/Header/DefaultsMenus';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { ALL_ITEM } from '../Header/const';
-import { logEvent } from '../hooks/logger';
-
-export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
+import { logEvent } from '../../../Common/hooks/logger';
+import { useUpdateUserProfile } from '../hooks/useUserProfile';
+import { useUserContext } from '../hooks/UserContext';
+import { DEFAULT_LOCATION_AREA_ID, DEFAULT_COMMUNITY_ID, ALL_LOCATION_AREAS_ID, ALL_COMMUNITIES_ID } from '../../../Common/hooks/CommonContext';
+export const PreferencesScreen = () => {
+    const { authUserId } = useUserContext();
     const {
         locationAreas,
         communities,
-        selectedCommunity,
-        setSelectedCommunity,
-        selectedLocationArea,
-        setSelectedLocationArea,
-        setShowDefaultsModal,
     } = useCommonContext();
 
-    const DEFAULT_LOCATION_ID = '73352aef-334c-49a6-9256-0baf91d56b49';
-    const DEFAULT_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b'
+    const { selectedLocationAreaId, selectedCommunityId } = useUserContext();
 
     const [preferencesInfo, setPreferencesInfo] = useState('');
-    const [tempSelectedLocationArea, setTempSelectedLocationArea] = useState(selectedLocationArea);
-    const [tempSelectedCommunity, setTempSelectedCommunity] = useState(selectedCommunity);
+    const [tempSelectedLocationAreaId, setTempSelectedLocationAreaId] = useState(selectedLocationAreaId);
+    const [tempSelectedCommunityId, setTempSelectedCommunityId] = useState(selectedCommunityId);
+    const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '');
 
-    // set default values
+    // set default values to conscious touch and NYC    
     useEffect(() => {
-        const defaultLocation = locationAreas.find((l: LocationArea) => l.id === DEFAULT_LOCATION_ID);
-        if (defaultLocation) {
-            logEvent('default_location_selected', { location: defaultLocation.name });
-            setTempSelectedLocationArea(defaultLocation);
+        const defaultLocationId = locationAreas.find((l: LocationArea) => l.id === DEFAULT_LOCATION_AREA_ID)?.id;
+        if (!tempSelectedLocationAreaId && defaultLocationId) {
+            setTempSelectedLocationAreaId(defaultLocationId);
         }
 
-        const defaultCommunity = communities.interestGroups.find((c: Community) => c.id === DEFAULT_COMMUNITY_ID);
-        if (defaultCommunity) {
-            logEvent('default_community_selected', { community: defaultCommunity.name });
-            setTempSelectedCommunity(defaultCommunity);
+        const selectedCommunityId = communities.interestGroups.find((c: Community) => c.id === DEFAULT_COMMUNITY_ID)?.id;
+        if (!tempSelectedCommunityId && selectedCommunityId) {
+            setTempSelectedCommunityId(selectedCommunityId);
         }
     }, [locationAreas, communities]);
 
-    // Welcome more info message
+    // Welcome more info message for Acro
     useEffect(() => {
-        if (tempSelectedCommunity?.id === ACRO_COMMUNITY_ID) {
+        if (tempSelectedCommunityId === ACRO_COMMUNITY_ID) {
             logEvent('default_community_selected_acro', { community: 'Acro' });
             setPreferencesInfo('Currently, only acro retreats are supported. Select "ALL" in the retreats tab for worldwide events.');
-            setTempSelectedLocationArea(ALL_ITEM); // Fixing the type error by setting it to null
+            setTempSelectedLocationAreaId(ALL_LOCATION_AREAS_ID);
         } else {
             setPreferencesInfo('');
         }
-    }, [tempSelectedCommunity]);
+    }, [tempSelectedCommunityId]);
 
     const onPressConfirm = () => {
-        setSelectedLocationArea(tempSelectedLocationArea);
-        setSelectedCommunity(tempSelectedCommunity);
-        setShowDefaultsModal(false);
+        updateUserProfile({
+            selected_location_area_id: tempSelectedLocationAreaId || '',
+            selected_community_id: tempSelectedCommunityId || '',
+        });
         logEvent('personalization_modal_confirmed');
-        onClose();
     }
     return (
-        <View style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <Text style={styles.modalTitle}>Pick your default options</Text>
+        <View style={styles.container}>
             <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>Switch your defaults from the top right bar</Text>
                 <Icon name="arrow-up" size={18} color="#007aff" style={styles.iconArrow} />
             </View>
 
+            <Text style={styles.modalTitle}>Pick your default location and community</Text>
+
             <Text style={styles.sectionTitle}>Location</Text>
             <LocationAreaMenu
                 locationAreas={locationAreas}
-                selectedLocationArea={tempSelectedLocationArea}
-                onSelectLocationArea={setTempSelectedLocationArea}
+                selectedLocationAreaId={tempSelectedLocationAreaId || ALL_LOCATION_AREAS_ID}
+                onSelectLocationAreaId={setTempSelectedLocationAreaId}
             />
 
             <Text style={styles.sectionTitle}>Community</Text>
             <CommunityMenu
                 communities={communities.interestGroups}
-                selectedCommunity={tempSelectedCommunity}
-                onSelectCommunity={setTempSelectedCommunity}
+                selectedCommunityId={tempSelectedCommunityId || ALL_COMMUNITIES_ID}
+                onSelectCommunityId={setTempSelectedCommunityId}
             />
             {preferencesInfo && <Text style={styles.infoText}>{preferencesInfo}</Text>}
 
@@ -86,8 +82,14 @@ export const PreferencesScreen = ({ onClose }: { onClose: () => void }) => {
         </View>
     );
 }
-
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: 20,
+    },
     infoContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -101,6 +103,7 @@ const styles = StyleSheet.create({
         fontSize: 20,
         fontWeight: '600',
         marginBottom: 10,
+        textAlign: 'center',
     },
     sectionTitle: {
         fontSize: 18,

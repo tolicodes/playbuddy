@@ -18,7 +18,9 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
 
     if (req.query.visibility === 'private') {
         if (!req.authUserId) {
-            throw Error('User not specified for private events');
+            console.error('User not specified for private events');
+            res.status(401).send({ error: 'User not specified for private events' });
+            return;
         }
     }
 

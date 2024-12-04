@@ -4,7 +4,7 @@ import { Image } from "expo-image"
 import { getSmallAvatarUrl } from "../../../Common/hooks/imageUtils";
 import { Buddy } from "../../Buddies/hooks/BuddiesContext";
 
-export const AvatarCircle = ({ userProfile, size = 50 }: { userProfile: Buddy, size?: number }) => {
+export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfile: Buddy, size?: number, name?: string }) => {
     const styles = useMemo(() => StyleSheet.create({
         avatarContainer: {
             width: size,
@@ -28,15 +28,17 @@ export const AvatarCircle = ({ userProfile, size = 50 }: { userProfile: Buddy, s
         }
     }), [size]);
 
-    const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url);
-    const initials = userProfile?.name?.split(' ').map(name => name[0]).join('').slice(0, 2)
+    const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url, size * 2);
+
+    // name if provided
+    const initials = (name || userProfile?.name)?.split(' ').map(name => name[0]).join('').slice(0, 2)
 
     return (
         <View style={styles.avatarContainer}>
             {
                 avatarUrl
                     ? <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
-                    : <Text style={styles.avatarText}>{initials}</Text>
+                    : <Text style={styles.avatarText}>{initials || '?'}</Text>
             }
         </View>
     )

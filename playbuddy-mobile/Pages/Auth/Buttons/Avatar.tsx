@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Image } from 'expo-image'
 import * as ImagePicker from 'expo-image-picker';
 import { useUserContext } from '../hooks/UserContext';
-import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { useUploadAvatar } from '../hooks/useUserProfile';
 import { logEvent } from '../../../Common/hooks/logger';
+import { AvatarCircle } from './AvatarCircle';
+import { Buddy } from '../../Buddies/hooks/BuddiesContext';
 
-
-export const Avatar = () => {
+export const Avatar = ({ name }: { name?: string }) => {
     const { authUserId, userProfile, session } = useUserContext();
 
     const [uploadImageUri, setUploadImageUri] = useState<string | null>(
         session?.user?.user_metadata?.avatar_url || null
     );
 
-    console.log(uploadImageUri)
     const [uploading, setUploading] = useState(false);
     const uploadAvatar = useUploadAvatar(authUserId!);
 
@@ -43,11 +41,12 @@ export const Avatar = () => {
             setUploading(false);
             logEvent('avatar_upload_completed');
         } else if (uploadAvatar.isError) {
+            console.error('uploadAvatar.isError', uploadAvatar.error);
             setUploading(false);
-            alert('Uploading Avatar failed')
+            alert('Uploading Avatar failed');
             logEvent('avatar_upload_failed');
         }
-    }, [uploadAvatar.isSuccess, uploadAvatar.isError])
+    }, [uploadAvatar.isSuccess, uploadAvatar.isError]);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -64,25 +63,26 @@ export const Avatar = () => {
         }
     };
 
-    const avatarUrl = userProfile?.avatar_url && getSmallAvatarUrl(userProfile?.avatar_url, 300);
+    const Uploading = <ActivityIndicator size="large" color="#fff" />;
+    const AvatarElement = <AvatarCircle userProfile={userProfile} size={150} name={name} />;
+    const UploadText = <Text style={styles.uploadText}>Upload</Text>;
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>{
-                userProfile?.avatar_url ? 'Change Your Avatar' : 'Upload Your Avatar'
-            }</Text>
+            <Text style={styles.title}>
+                {userProfile?.avatar_url ? 'Change Your Avatar' : 'Upload Your Avatar'}
+            </Text>
             <TouchableOpacity onPress={pickImage} style={styles.circleContainer}>
                 <View style={styles.circle}>
-                    {uploading
-                        ? (
-                            <ActivityIndicator size="large" color="#fff" />
-                        )
-                        : avatarUrl
-                            ? (
-                                <Image source={{ uri: avatarUrl }} style={styles.image} />
-                            ) : (
-                                <Text style={styles.text}>Upload</Text>
-                            )}
+                    {uploading ? (
+                        Uploading
+                    ) : (
+                        <View style={styles.avatarContainer}>
+                            <View style={styles.avatarOverlay} />
+                            {AvatarElement}
+                            {UploadText}
+                        </View>
+                    )}
                 </View>
             </TouchableOpacity>
         </View>
@@ -99,12 +99,6 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         marginBottom: 5,
     },
-    subtitle: {
-        fontSize: 14,
-        color: '#888',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
     circleContainer: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -118,12 +112,29 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         overflow: 'hidden',
     },
-    image: {
-        width: '100%',
-        height: '100%',
+    uploadText: {
+        color: 'rgba(255, 255, 255, 0.8)', // Changed to a semi-transparent white for overlay effect
+        fontSize: 30,
+        fontWeight: 'bold',
+        textShadowColor: 'rgba(0, 0, 0, 0.5)', // Added shadow for better visibility
+        textShadowOffset: { width: 1, height: 1 }, // Shadow offset
+        textShadowRadius: 2, // Shadow radius
+        position: 'absolute',
+        zIndex: 10,
+        left: 0,
+        right: 0,
+        top: '50%',
+        textAlign: 'center',
+        transform: [{ translateY: -15 }], // Center vertically using transform
     },
-    text: {
-        color: '#fff',
-        fontSize: 18,
+    avatarContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    avatarOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Gray out the image
+        zIndex: 5,
     },
 });

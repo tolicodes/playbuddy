@@ -13,15 +13,18 @@ import {
 } from './authUtils';
 import { UserProfile } from './UserTypes';
 import { Session } from '@supabase/auth-js/src/lib/types';
-import { useFetchUserProfile } from './useUserProfile';
-import { useNavigation } from '@react-navigation/native';
-import { NavStack } from '../../../types';
+import { useFetchUserProfile, useSkippingWelcomeScreen } from './useUserProfile';
+
 
 interface UserContextType {
     authUserId: string | null;
     userProfile?: UserProfile | null;
     session: Session | null;
     isProfileComplete: boolean;
+    isDefaultsComplete: boolean;
+
+    isSkippingWelcomeScreen: boolean;
+    updateSkippingWelcomeScreen: (value: boolean) => void;
 
     isLoadingAuth: boolean;
     isLoadingUserProfile: boolean;
@@ -35,6 +38,9 @@ interface UserContextType {
     authenticateWithGoogle: () => Promise<void>;
 
     signOut: () => Promise<void>;
+
+    selectedLocationAreaId?: string | null;
+    selectedCommunityId?: string | null;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -78,7 +84,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         wrapAuthFunction(fetchSession)();
     }, []);
 
-    const isProfileComplete = userProfile?.name && userProfile?.avatar_url;
+    const isProfileComplete = !!userProfile?.name;
+    const isDefaultsComplete = !!userProfile?.selected_location_area_id && !!userProfile?.selected_community_id;
+
+    const { isSkippingWelcomeScreen, updateSkippingWelcomeScreen } = useSkippingWelcomeScreen();
 
     const value = useMemo(
         () => ({
@@ -86,9 +95,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             userProfile,
             session,
             isProfileComplete,
-
+            isDefaultsComplete,
             isLoadingAuth,
             isLoadingUserProfile,
+
+            isSkippingWelcomeScreen,
+            updateSkippingWelcomeScreen,
 
             signUpWithEmail: wrapAuthFunction(signUpWithEmail),
             signInWithEmail: wrapAuthFunction(signInWithEmail),
@@ -99,12 +111,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             authenticateWithGoogle: wrapAuthFunction(authenticateWithGoogle),
 
             signOut: wrapAuthFunction(signOut),
+
+            selectedLocationAreaId: userProfile?.selected_location_area_id,
+            selectedCommunityId: userProfile?.selected_community_id,
         }),
         [
             session,
             userProfile,
             isLoadingAuth,
             isLoadingUserProfile,
+
+            isSkippingWelcomeScreen,
+            updateSkippingWelcomeScreen,
+
             fetchSession,
             signUpWithEmail,
             signInWithEmail,

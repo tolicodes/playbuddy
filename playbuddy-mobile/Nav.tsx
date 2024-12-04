@@ -1,8 +1,8 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
-import { NavigationContainer, NavigationProp, useNavigation } from '@react-navigation/native';
+import { ActivityIndicator, GestureResponderEvent, TouchableOpacity, View } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BottomTabBarButtonProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
@@ -11,7 +11,7 @@ import * as amplitude from '@amplitude/analytics-react-native';
 // Components
 import EventCalendarView from './Pages/Calendar/EventCalendarView';
 import { EventDetail } from './Pages/Calendar/EventDetail';
-import AuthScreen from './Pages/Auth/screens/AuthMainScreen';
+import AuthMainScreen from './Pages/Auth/screens/AuthMainScreen';
 import MyCalendar from './Pages/MyCalendar';
 import Moar from './Pages/Moar';
 import Communities from './Pages/Communities/CommunitiesNav';
@@ -66,14 +66,14 @@ const TabNavigator = () => (
                     'My Calendar': "heart",
                     'Swipe Mode': "layer-group"
                 }[route.name];
-                return <FAIcon name={iconName} size={size} color={color} />;
+                return <FAIcon name={iconName!} size={size} color={color} />;
             },
-            tabBarButton: (props) => (
+            tabBarButton: (props: BottomTabBarButtonProps) => (
                 <TouchableOpacity
                     {...props}
-                    onPress={() => {
+                    onPress={(e: GestureResponderEvent) => {
                         amplitude.logEvent('Tab Clicked', { tabName: route.name });
-                        props.onPress?.();
+                        props.onPress?.(e);
                     }}
                 />
             ),
@@ -88,13 +88,23 @@ const TabNavigator = () => (
 
 // Drawer Navigator
 const DrawerNav = () => {
-    const { isProfileComplete } = useUserContext();
+    const { isSkippingWelcomeScreen, isDefaultsComplete, isLoadingUserProfile } = useUserContext();
+
+    const isLoading = isLoadingUserProfile;
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#007aff" />
+            </View>
+        );
+    }
 
     return (
         <Drawer.Navigator initialRouteName="Home" screenOptions={headerOptions}>
             <Drawer.Screen
                 name="Home"
-                component={TabNavigator}
+                component={isDefaultsComplete || isSkippingWelcomeScreen ? TabNavigator : AuthMainScreen}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="calendar" size={size} color={color} style={{ width: 30 }} />,
                 }}
@@ -144,8 +154,8 @@ const DrawerNav = () => {
                 }}
             />
             <Drawer.Screen
-                name={isProfileComplete ? "Profile" : "Auth"}
-                component={isProfileComplete ? ProfileScreen : AuthScreen}
+                name={isDefaultsComplete ? "Profile" : "Auth"}
+                component={isDefaultsComplete ? ProfileScreen : AuthMainScreen}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,
                 }}

@@ -16,7 +16,6 @@ import WebsiteBanner from '../../Common/WebsiteBanner';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { MISC_URLS } from '../../config';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import PersonalizationModal from '../../Common/DefaultsModal/PersonalizationModal';
 import { logEvent } from '../../Common/hooks/logger';
 
 const CALENDAR_HEIGHT = 250;
@@ -112,9 +111,6 @@ const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewPr
 
     return (
         <View style={styles.container}>
-            {/* we want to hide this when we navigate to register but show it when we navigate back */}
-            <PersonalizationModal />
-
             {!authUserId && <WebsiteBanner />}
             <View style={styles.searchContainer}>
                 <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
@@ -139,6 +135,8 @@ const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewPr
                     placeholder="Search events (filters on left)"
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
+                    autoCapitalize='none'
+                    autoCorrect={false}
                 />
             </View>
 

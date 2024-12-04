@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, } from "react-native";
-import HeaderLoginButton from "../Pages/Auth/Buttons/HeaderLoginButton";
+import HeaderLoginButton from "../Pages/Auth/Buttons/LoginButton";
 
 export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) => (
     <View style={{

@@ -4,9 +4,10 @@ import { useFilters, FilterState } from './useFilters';
 import { useEvents } from './useEvents';
 import { useWishlist } from './useWishlist';
 import { useUserContext } from '../../Auth/hooks/UserContext';
-import { useCommonContext } from '../../../Common/hooks/CommonContext';
 import { EventWithMetadata } from '../../../types';
 import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
+import { ALL_COMMUNITIES_ID } from '../../../Common/hooks/CommonContext';
+import { ALL_LOCATION_AREAS_ID } from '../../../Common/hooks/CommonContext';
 
 // Filter explicit events for apple test user
 const APPLE_USER_ID = '5d494e48-5457-4517-b183-dd1d8f2592a2';
@@ -66,7 +67,7 @@ const removeExplicitEvents = (eventsWithMetadata: EventWithMetadata[]) => {
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const { filters, setFilters } = useFilters();
     const { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents } = useEvents();
-    const { selectedLocationArea, selectedCommunity } = useCommonContext();
+    const { selectedLocationAreaId, selectedCommunityId } = useUserContext();
     const { authUserId } = useUserContext();
     const {
         wishlistEvents,
@@ -78,15 +79,15 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters)
             .filter(event => {
-                const hasValidLocation = selectedLocationArea && selectedLocationArea.id !== 'ALL';
-                const hasValidCommunity = selectedCommunity && selectedCommunity.id !== 'ALL';
+                const hasValidLocation = selectedLocationAreaId && selectedLocationAreaId !== ALL_LOCATION_AREAS_ID;
+                const hasValidCommunity = selectedCommunityId && selectedCommunityId !== ALL_COMMUNITIES_ID;
                 if (hasValidLocation && hasValidCommunity) {
-                    return event.location_area?.id === selectedLocationArea.id &&
-                        event.communities?.some(community => community.id === selectedCommunity.id);
+                    return event.location_area?.id === selectedLocationAreaId &&
+                        event.communities?.some(community => community.id === selectedCommunityId);
                 } else if (hasValidLocation) {
-                    return event.location_area?.id === selectedLocationArea.id;
+                    return event.location_area?.id === selectedLocationAreaId;
                 } else if (hasValidCommunity) {
-                    return event.communities?.some(community => community.id === selectedCommunity.id);
+                    return event.communities?.some(community => community.id === selectedCommunityId);
                 }
                 return true;
             });
@@ -95,7 +96,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         return authUserId && authUserId !== APPLE_USER_ID
             ? filtered
             : withoutExplicit;
-    }, [eventsWithMetadata, filters, authUserId, selectedLocationArea, selectedCommunity]);
+    }, [eventsWithMetadata, filters, authUserId, selectedLocationAreaId, selectedCommunityId]);
 
     const availableCardsToSwipe = useMemo(() => {
         return filteredEvents

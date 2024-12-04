@@ -4,6 +4,7 @@ import { AuthenticatedRequest, authenticateRequest } from '../middleware/authent
 
 const router = Router();
 
+
 // Fetch user profile by user_id
 router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { authUserId } = req;
@@ -11,7 +12,7 @@ router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
     try {
         const { data, error } = await supabaseClient
             .from('users')
-            .select('user_id, share_code, name, avatar_url')
+            .select('user_id, share_code, name, avatar_url, selected_community_id, selected_location_area_id')
             .eq('user_id', authUserId)
             .single();
 
@@ -27,10 +28,11 @@ router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
 
             auth_user_id: data.user_id,
 
-            // copy from user table
             share_code: data.share_code,
             name: data.name,
             avatar_url: data.avatar_url,
+            selected_community_id: data.selected_community_id,
+            selected_location_area_id: data.selected_location_area_id,
         };
 
         return res.json(userProfile)
@@ -40,43 +42,9 @@ router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
     }
 });
 
-// Insert a user profile with a referral code
-router.post('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { authUserId } = req;
-    const { name } = req.body;
-
-    if (!authUserId || !name) {
-        console.error('Missing required fields', authUserId, name)
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const shareCode = Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code
-
-    try {
-        const { data, error } = await supabaseClient
-            .from('users')
-            .insert([{ user_id: authUserId, share_code: shareCode, name }]);
-
-        if (error) {
-            return res.status(400).json({ error: error.message });
-        }
-
-        return res.json({ message: 'User profile created successfully', data });
-    } catch (error) {
-        console.error('Error inserting user profile:', error);
-        return res.status(500).json({ error: 'Error inserting user profile' });
-    }
-});
-
 // Update a user profile
 router.put('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { authUserId } = req;
-    const { name, avatar_url } = req.body;
-
-    if (!authUserId || !name) {
-        console.error('Missing required fields', authUserId, name)
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
 
     try {
         // Fetch the user's share code and create it if it doesn't exist
@@ -92,9 +60,27 @@ router.put('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
 
         const shareCode = userData.share_code || Math.random().toString(36).substr(2, 6).toUpperCase(); // Generates a 6-char alphanumeric code if it doesn't exist
 
+        const fieldsToUpdate = [
+            'name',
+            'avatar_url',
+            'selected_location_area_id',
+            'selected_community_id',
+        ];
+
+        const updateFields: any = { share_code: shareCode };
+
+        console.log('selected_location_area_id', req.body.selected_location_area_id);
+        console.log('selected_community_id', req.body.selected_community_id);
+
+        fieldsToUpdate.forEach(field => {
+            if (req.body.hasOwnProperty(field)) {
+                updateFields[field] = req.body[field];
+            }
+        });
+
         const { data, error } = await supabaseClient
             .from('users')
-            .update({ name, share_code: shareCode, avatar_url })
+            .update(updateFields)
             .eq('user_id', authUserId);
 
         if (error) {
@@ -129,29 +115,6 @@ router.post('/me/upload-avatar', authenticateRequest, async (req: AuthenticatedR
     } catch (error) {
         console.error('Error uploading avatar:', error);
         return res.status(500).json({ error: 'Failed to upload avatar' });
-    }
-});
-
-// Update the avatar URL for a user
-router.put('/me/update-avatar', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { avatarUrl } = req.body;
-
-    if (!avatarUrl) {
-        return res.status(400).json({ error: 'No avatar URL provided' });
-    }
-
-    try {
-        const { error } = await supabaseClient
-            .from('users')
-            .update({ avatar_url: avatarUrl })
-            .eq('user_id', req.authUserId);
-
-        if (error) throw error;
-
-        return res.json({ message: 'Avatar updated successfully' });
-    } catch (error) {
-        console.error('Error updating avatar:', error);
-        return res.status(500).json({ error: 'Failed to update avatar' });
     }
 });
 

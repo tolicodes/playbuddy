@@ -5,6 +5,9 @@ export interface UserProfile {
     email?: string;
     name?: string
     avatar_url?: string;
+
+    selected_location_area_id?: string | null;
+    selected_community_id?: string | null;
 }
 
 export type SignUpParams = {

@@ -29,9 +29,14 @@ const HeaderLoginButton = ({
 
     const handlePressHeaderButton = () => {
         logEvent('login_button_clicked');
-        navigate(isProfileComplete ? 'Profile' : 'Auth');
         if (onPressButton) {
             onPressButton();
+        } else {
+            if (isProfileComplete) {
+                navigate('Profile');
+            } else {
+                navigate('Auth', { skipWelcome: true });
+            }
         }
     };
 
@@ -64,7 +69,7 @@ const HeaderLoginButton = ({
             </View>
             {showLoginText && (
                 <Text style={styles.loginText}>
-                    {register ? 'Register' : 'Login'}
+                    {register ? 'Register or Login' : 'Login'}
                 </Text>
             )}
         </TouchableOpacity>
@@ -77,7 +82,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         paddingHorizontal: 20,
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#007AFF',
         padding: 10,
         borderRadius: 10,
         shadowColor: '#000',
@@ -85,6 +90,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 2,
         elevation: 3,
+        // width: '100%',
+        borderColor: '#007AFF',
+        borderWidth: 2,
     },
     headerButtonContainer: {
         alignSelf: 'center',
@@ -109,7 +117,7 @@ const styles = StyleSheet.create({
         color: '#007AFF',
     },
     loginText: {
-        color: '#007AFF',
+        color: 'white',
         fontWeight: 'bold',
         marginTop: 5,
     }

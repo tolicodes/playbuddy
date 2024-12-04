@@ -25,11 +25,6 @@ export const ProfileDetailsForm = () => {
             return;
         }
 
-        if (!userProfile?.avatar_url) {
-            Alert.alert('Please select an avatar');
-            return;
-        }
-
         logEvent('profile_details_press_save');
         updateUserProfile({ name, avatar_url: userProfile?.avatar_url });
     }
@@ -63,7 +58,7 @@ export const ProfileDetailsForm = () => {
                     />
 
                     <View style={{ marginVertical: 20 }}>
-                        <Avatar />
+                        <Avatar name={name} />
                     </View>
 
                     <TouchableOpacity style={styles.button} onPress={onPressCreateAccount}>

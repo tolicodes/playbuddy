@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import HeaderLoginButton from '../../Pages/Auth/Buttons/HeaderLoginButton';
-import { logEvent } from '../hooks/logger';
+import HeaderLoginButton from '../Buttons/LoginButton';
+import { logEvent } from '../../../Common/hooks/logger';
+import CheckBox from '@rneui/themed/dist/CheckBox';
 
 const features = [
     { id: '1', title: 'My Calendar', description: 'Add events to plan your week', icon: 'calendar' },
@@ -12,27 +13,28 @@ const features = [
     { id: '5', title: 'Personalization', description: 'Set your home location and community', icon: 'location' }
 ];
 
-export const WelcomeScreen = ({ onClose: onClose }: { onClose: () => void }) => {
-    const onCloseWelcomeScreen = () => {
-        logEvent('welcome_screen_closed');
-        onClose();
+export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegister: () => void, onClickSkip: () => void }) => {
+    const doOnClickRegister = () => {
+        logEvent('welcome_screen_register_clicked');
+        onClickRegister();
     }
 
-    const onSkipWelcomeScreen = () => {
+    const doOnClickSkip = () => {
+        if (!isChecked) {
+            Alert.alert('Please confirm that you understand that an account is required to see most content ');
+            return;
+        }
+
+        onClickSkip();
+
         logEvent('welcome_screen_skipped');
-        onClose();
     }
+
+    const [isChecked, setIsChecked] = useState(false);
 
     return (
         <View style={styles.container}>
             <Text style={styles.welcomeTitle}>Welcome to PlayBuddy!</Text>
-            <Text style={styles.suggestionText}>
-                Creating an account unlocks <Text style={styles.highlightedText}>5x more events</Text> and features:
-            </Text>
-
-            <View style={styles.loginButtonContainer}>
-                <HeaderLoginButton size={50} showLoginText={true} register={true} onPressButton={onCloseWelcomeScreen} />
-            </View>
 
             <FlatList
                 data={features}
@@ -48,7 +50,23 @@ export const WelcomeScreen = ({ onClose: onClose }: { onClose: () => void }) => 
                 )}
             />
 
-            <TouchableOpacity style={styles.noThanksButton} onPress={onSkipWelcomeScreen}>
+            <Text style={styles.whyRegister}>
+                To comply with local laws and app store guidelines, please create an account.
+            </Text>
+
+            <View style={styles.loginButtonContainer}>
+                <HeaderLoginButton size={50} showLoginText={true} register={true} onPressButton={doOnClickRegister} />
+            </View>
+
+            <View style={styles.checkboxContainer}>
+                <CheckBox
+                    title="Skipping means fewer shown events (under 20%)."
+                    checked={isChecked}
+                    onPress={() => setIsChecked(!isChecked)}
+                />
+            </View>
+
+            <TouchableOpacity style={styles.noThanksButton} onPress={doOnClickSkip}>
                 <Text style={styles.noThanksText}>Skip for now</Text>
             </TouchableOpacity>
         </View>
@@ -59,7 +77,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: 'center',
-        width: '90%'
+        padding: 20,
     },
     welcomeTitle: {
         fontSize: 20,
@@ -68,17 +86,17 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 20
     },
-    suggestionText: {
+    whyRegister: {
         fontSize: 16,
-        color: '#666',
         textAlign: 'center',
+        marginTop: 20
     },
     highlightedText: {
         fontWeight: 'bold',
         color: '#007AFF'
     },
     loginButtonContainer: {
-        marginVertical: 20
+        marginTop: 10
     },
     featureItem: {
         flexDirection: 'row',
@@ -103,7 +121,6 @@ const styles = StyleSheet.create({
         color: '#666'
     },
     noThanksButton: {
-        marginTop: 20,
         paddingVertical: 10,
         alignItems: 'center',
         color: '#666'
@@ -111,5 +128,13 @@ const styles = StyleSheet.create({
     noThanksText: {
         fontSize: 16,
         color: '#333'
+    },
+    checkboxContainer: {
+        padding: 20
+    },
+    skipText: {
+        fontSize: 14,
+        color: '#666',
+        textAlign: 'center'
     }
 });

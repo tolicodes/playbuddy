@@ -6,6 +6,9 @@ import { supabase } from '../../../supabaseClient';
 import { UserProfile } from './UserTypes';
 import { useOptimisticMutation } from '../../../Common/hooks/useOptimisticMutation';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
 
 // We have to manually pass authUserId to avoid circular dependency
 // we need authUserId to check if user is logged in and not fetch otherwise
@@ -18,14 +21,13 @@ export const useFetchUserProfile = (authUserId?: string) => {
             try {
                 const { data } = await axios.get(`${API_BASE_URL}/profile/me`)
                 return data;
-            } catch (error) {
+            } catch (error: any) {
                 throw new Error(`Error fetching user profile ${error.message}`);
             }
         },
     });
 };
 
-// Updated useUpdateAvatar with proper types
 export const useUploadAvatar = (authUserId: string) => {
     return useOptimisticMutation<UserProfile, UserProfile, { avatarUrl: string }, Error>({
         mutationFn: async ({ avatarUrl }: { avatarUrl: string }) => {
@@ -51,7 +53,7 @@ export const useUploadAvatar = (authUserId: string) => {
                 .from('avatars')
                 .getPublicUrl(fileName);
 
-            return (await axios.put<UserProfile>(`${API_BASE_URL}/profile/me/update-avatar`, { avatarUrl: data.publicUrl })).data;
+            return (await axios.put<UserProfile>(`${API_BASE_URL}/profile/me`, { avatar_url: data.publicUrl })).data;
         },
         queryKey: ['userProfile', authUserId],
         onMutateFn: (old: UserProfile | undefined, { avatarUrl }: { avatarUrl: string }) => {
@@ -65,54 +67,42 @@ export const useUploadAvatar = (authUserId: string) => {
     });
 };
 
-export const useUpdateAvatar = (authUserId: string) => {
-    return useOptimisticMutation<UserProfile, UserProfile, { avatarUrl: string }, Error>({
-        mutationFn: async ({ avatarUrl }: { avatarUrl: string }) => {
-            return (await axios.put<UserProfile>(`${API_BASE_URL}/profile/me/update-avatar`, { avatarUrl })).data;
+export const useUpdateUserProfile = (authUserId: string) => {
+    return useOptimisticMutation<UserProfile, UserProfile, Partial<UserProfile>, Error>({
+        mutationFn: async (updateFields: Partial<UserProfile>) => {
+            return (await axios.put<UserProfile>(`${API_BASE_URL}/profile/me`, updateFields)).data;
         },
         queryKey: ['userProfile', authUserId],
-        onMutateFn: (old: UserProfile | undefined, { avatarUrl }: { avatarUrl: string }) => {
+        onMutateFn: (old: UserProfile | undefined, updateFields: Partial<UserProfile>) => {
             if (!old) return;
 
             return {
                 ...old,
-                avatar_url: avatarUrl,
-            };
-        }
-    });
-};
-
-export const useInsertUserProfile = (authUserId: string) => {
-    return useOptimisticMutation<UserProfile, UserProfile, { name: string }, Error>({
-        mutationFn: async ({ name }: { name: string }) => {
-            return (await axios.post<UserProfile>(`${API_BASE_URL}/profile/me`, { name })).data;
-        },
-        queryKey: ['userProfile', authUserId],
-        onMutateFn: (old: UserProfile | undefined, { name }: { name: string }) => {
-            if (!old) return;
-
-            return {
-                ...old,
-                name,
+                ...updateFields,
             };
         }
     });
 }
 
-export const useUpdateUserProfile = (authUserId: string) => {
-    return useOptimisticMutation<UserProfile, UserProfile, { name: string, avatar_url?: string }, Error>({
-        mutationFn: async ({ name, avatar_url }: { name: string, avatar_url?: string }) => {
-            return (await axios.put<UserProfile>(`${API_BASE_URL}/profile/me`, { name, avatar_url })).data;
-        },
-        queryKey: ['userProfile', authUserId],
-        onMutateFn: (old: UserProfile | undefined, { name, avatar_url }: { name: string, avatar_url?: string }) => {
-            if (!old) return;
 
-            return {
-                ...old,
-                name,
-                avatar_url,
-            };
-        }
-    });
-}   
+export const useSkippingWelcomeScreen = () => {
+    const [isSkippingWelcomeScreen, setIsSkippingWelcomeScreen] = useState<boolean>(false);
+
+    useEffect(() => {
+        const loadSkippingWelcomeScreen = async () => {
+            const savedValue = await AsyncStorage.getItem('isSkippingWelcomeScreen1');
+            if (savedValue !== null) {
+                setIsSkippingWelcomeScreen(JSON.parse(savedValue));
+            }
+        };
+
+        loadSkippingWelcomeScreen();
+    }, []);
+
+    const updateSkippingWelcomeScreen = async (value: boolean) => {
+        setIsSkippingWelcomeScreen(value);
+        await AsyncStorage.setItem('isSkippingWelcomeScreen', JSON.stringify(value));
+    };
+
+    return { isSkippingWelcomeScreen, updateSkippingWelcomeScreen };
+}

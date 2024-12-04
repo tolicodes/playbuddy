@@ -59,7 +59,7 @@ const getAddYourEventsLink = () => {
 
     logEvent('moar_get_add_your_events_link');
 
-    const mailtoLink = `mailto:toli@toli.me?subject=${subject}&body=${body}`;
+    const mailtoLink = `mailto:support@playbuddy.me?subject=${subject}&body=${body}`;
     return mailtoLink;
 };
 
@@ -114,9 +114,9 @@ const Moar: React.FC = () => {
 
             <TouchableOpacity onPress={() => {
                 logEvent('moar_get_in_touch_click_email');
-                Linking.openURL('mailto:toli@toli.me');
+                Linking.openURL('mailto:support@playbuddy.me');
             }}>
-                <Text style={{ color: 'blue', ...styles.getInTouch }}>toli@toli.me</Text>
+                <Text style={{ color: 'blue', ...styles.getInTouch }}>support@playbuddy.me</Text>
             </TouchableOpacity>
         </SafeAreaView>
     );

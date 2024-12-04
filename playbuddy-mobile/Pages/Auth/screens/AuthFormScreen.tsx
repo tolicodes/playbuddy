@@ -20,7 +20,7 @@ const GoogleLogin: React.FC = () => {
     );
 };
 
-const AuthScreen: React.FC = () => {
+const AuthFormScreen: React.FC = () => {
     const [showEmailLogin, setShowEmailLogin] = useState<boolean>(false);
 
     return (
@@ -71,4 +71,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AuthScreen;
+export default AuthFormScreen;

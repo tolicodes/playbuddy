@@ -5,21 +5,22 @@ import * as amplitude from '@amplitude/analytics-react-native';
 import { setUxCamUserIdentity } from '../../../Common/hooks/uxCam';
 
 import { Alert } from 'react-native';
-import { Dispatch, SetStateAction, useCallback, useEffect } from 'react';
+import { Dispatch, SetStateAction, useEffect } from 'react';
 
 import { AppState } from 'react-native';
 import { UserProfile } from './UserTypes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { AuthError } from '@supabase/supabase-js';
 
 GoogleSignin.configure({
     iosClientId: '929140353915-9pd1soj5ugifbg0ftb28ejc3jaggq0bv.apps.googleusercontent.com',
     scopes: ['openid', 'email', 'profile'],
 });
 
-const handleAuthError = (error: any, action: string): never => {
+const handleAuthError = (error: AuthError | null, action: string): never => {
     console.error(`Error during ${action}:`, error);
-    Alert.alert(`Error: ${action}`, error.message || 'Something went wrong.');
-    throw new Error(error.message || `Failed to ${action}`);
+    Alert.alert(`Error: ${action}`, error?.message || 'Something went wrong.');
+    throw new Error(error?.message || `Failed to ${action}`);
 };
 
 // EMAIL AUTH

@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput } from "react-native";
 import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
-import { useFetchMyCommunities } from "../../Common/hooks/useCommunities";
+import { useFetchMyCommunities, useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
 import { NavStack } from "../../types";
 import { logEvent } from "../../Common/hooks/logger";
 
@@ -21,7 +21,8 @@ export const CommunitiesList = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const [searchQuery, setSearchQuery] = useState('');
-    const { joinCommunity, leaveCommunity } = useCommonContext();
+    const joinCommunity = useJoinCommunity();
+    const leaveCommunity = useLeaveCommunity();
     const { data: myCommunities = [] } = useFetchMyCommunities();
 
     const handleJoin = useCallback((communityId: string) => {

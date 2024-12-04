@@ -50,6 +50,7 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
 
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {
+        console.log('error', error);
         return next();
     }
 };

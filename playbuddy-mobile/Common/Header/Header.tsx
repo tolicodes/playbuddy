@@ -3,14 +3,17 @@ import { TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
-import { useCommonContext } from "../hooks/CommonContext";
+import { ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID, useCommonContext } from "../hooks/CommonContext";
 import { View } from "react-native";
-import HeaderLoginButton from "../../Pages/Auth/Buttons/HeaderLoginButton";
+import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
 import { CommunityDropdown, LocationAreaDropdown } from "./DefaultsMenus";
 import { logEvent } from "../hooks/logger";
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { useUpdateUserProfile } from "../../Pages/Auth/hooks/useUserProfile";
+import { NavStack } from "../../types";
 
 // Helper Components
-export const CustomBackButton = ({ navigation }: { navigation: any }) => {
+export const CustomBackButton = ({ navigation }: { navigation: NavStack }) => {
     const onPress = () => {
         navigation.goBack();
         logEvent('header_back_button_clicked');
@@ -23,7 +26,7 @@ export const CustomBackButton = ({ navigation }: { navigation: any }) => {
 };
 
 
-export const CustomDrawerButton = ({ navigation }: { navigation: any }) => {
+export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
     const { filters } = useCalendarContext();
     const hasFilters = !!filters.organizers.length;
 
@@ -50,32 +53,41 @@ export const CustomDrawerButton = ({ navigation }: { navigation: any }) => {
 
 
 // Navigation Options
-export const detailsPageHeaderOptions = ({ navigation }: { navigation: any }) => ({
+export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack }) => ({
     headerLeft: () => <CustomBackButton navigation={navigation} />,
 });
 
-export const headerOptions = ({ navigation }: { navigation: any }) => ({
+export const headerOptions = ({ navigation }: { navigation: NavStack }) => ({
     headerRight: () => {
         const {
             locationAreas,
             communities,
-            selectedLocationArea,
-            setSelectedLocationArea,
-            selectedCommunity,
-            setSelectedCommunity,
         } = useCommonContext();
+
+        const { selectedLocationAreaId, selectedCommunityId } = useUserContext();
+
+        const { authUserId } = useUserContext();
+        const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '');
+
+        const setSelectedLocationAreaId = (locationAreaId: string | null) => {
+            updateUserProfile({ selected_location_area_id: locationAreaId });
+        };
+
+        const setSelectedCommunityId = (communityId: string | null) => {
+            updateUserProfile({ selected_community_id: communityId });
+        };
 
         return (
             <View style={customStyles.rightNavContainer}>
                 <CommunityDropdown
                     communities={communities.interestGroups}
-                    selectedCommunity={selectedCommunity}
-                    onSelectCommunity={setSelectedCommunity}
+                    selectedCommunityId={selectedCommunityId || ALL_COMMUNITIES_ID}
+                    onSelectCommunityId={setSelectedCommunityId}
                 />
                 <LocationAreaDropdown
                     locationAreas={locationAreas}
-                    selectedLocationArea={selectedLocationArea}
-                    onSelectLocationArea={setSelectedLocationArea}
+                    selectedLocationAreaId={selectedLocationAreaId || ALL_LOCATION_AREAS_ID}
+                    onSelectLocationAreaId={setSelectedLocationAreaId}
                 />
                 <Suspense fallback={<ActivityIndicator />}>
                     <HeaderLoginButton headerButton={true} />
