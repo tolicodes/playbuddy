@@ -7,7 +7,7 @@ import { Event } from "../Common/commonTypes";
 
 // import whatsappEvents from './all_whatsapp_events.json'
 import { OptionType } from "../Common/types";
-import { API_URL } from '../Common/config';
+import { API_BASE_URL, API_URL } from '../Common/config';
 
 export const colors = [
     '#7986CB', '#33B679', '#8E24AA', '#E67C73', '#F6BF26', '#F4511E', '#039BE5', '#616161',
@@ -66,6 +66,12 @@ export const getEvents = async (): Promise<Event[]> => {
         console.error(error);
         return [];
     }
+}
+
+
+export const getUserCalendar = async ({ share_code }: { share_code?: string }): Promise<string[]> => {
+    const { data } = await axios.get<string[]>(`${API_BASE_URL}/wishlist/code/${share_code}`);
+    return data;
 }
 
 // export const getWhatsappEvents = () => {

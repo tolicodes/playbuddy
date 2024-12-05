@@ -7,7 +7,8 @@ const getAuthUser = async (token: string) => {
     const { data, error } = await supabaseClient.auth.getUser(token);
 
     if (error || !data) {
-        throw Error('Invalid token')
+        console.error('Invalid token')
+        return;
     }
 
     return {
@@ -23,11 +24,15 @@ export const authenticateRequest = async (req: AuthenticatedRequest, res: Respon
     }
 
     try {
-        const { authUserId, authUser } = await getAuthUser(token);
+        const user = await getAuthUser(token);
+        if (!user) {
+            console.error('No user found');
+            return next();
+        }
 
         // Attach the user ID to the request object for use in the route handler
-        req.authUserId = authUserId
-        req.authUser = authUser;
+        req.authUserId = user.authUserId
+        req.authUser = user.authUser;
 
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {
@@ -42,11 +47,15 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
     }
 
     try {
-        const { authUserId, authUser } = await getAuthUser(token);
+        const user = await getAuthUser(token);
+        if (!user) {
+            console.error('No user found');
+            return next();
+        }
 
         // Attach the user ID to the request object for use in the route handler
-        req.authUserId = authUserId
-        req.authUser = authUser;
+        req.authUserId = user.authUserId
+        req.authUser = user.authUser;
 
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {

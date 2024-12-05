@@ -11,10 +11,10 @@ import FavoriteKinks from './User/FavoriteKinks/FavoriteKinks';
 import QueryProvider from './Common/QueryProvider';
 import { EventCalendar } from './EventCalendar/EventCalendar';
 import { Header } from './Common/Header';
-import AppDownloadModal from './Common/AppDownloadModal';
 
 import * as amplitude from '@amplitude/analytics-browser';
 import { Support } from './Common/Support';
+import { PBCal } from './PBCal';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
@@ -34,9 +34,6 @@ function App() {
               }}
             >
               <Header />
-
-              <AppDownloadModal />
-
               <Routes>
                 <Route
                   path="support"
@@ -69,6 +66,11 @@ function App() {
                 <Route
                   path="/calendar/whatsapp"
                   element={<EventCalendar type="Whatsapp" />}
+                />
+
+                <Route
+                  path="/pb"
+                  element={<PBCal />}
                 />
               </Routes>
             </div>

@@ -222,4 +222,32 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
     }
 });
 
+// GET /wishlist/code/:share_code - Get user's wishlist by promo code
+router.get('/code/:share_code', async (req: Request, res: Response) => {
+    const { share_code } = req.params;
+
+    const { data: user, error: userError } = await supabaseClient
+        .from('users')
+        .select('user_id')
+        .eq('share_code', share_code)
+        .single();
+
+    if (userError || !user) {
+        throw new Error(`Error fetching user: ${userError.message}`);
+    }
+
+    const { data, error } = await supabaseClient
+        .from('event_wishlist')
+        .select('event_id')
+        .eq('user_id', user.user_id)
+
+    if (error) {
+        throw new Error(`Error fetching calendar: ${error.message}`);
+    }
+
+    const eventIds = data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
+
+    res.status(200).json(eventIds);
+});
+
 export default router;

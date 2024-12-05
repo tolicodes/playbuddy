@@ -21,6 +21,7 @@ import {
     // getAvailableGroups, 
     getAvailableOrganizers, getEvents, getTooltipContent, jsonToCsv, mapEventsToFullCalendar
 } from './calendarUtils';
+import AppDownloadModal from '../Common/AppDownloadModal';
 
 export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
     const [events, setEvents] = useState<Event[]>([]);
@@ -99,6 +100,8 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
 
     return (
         <>
+            <AppDownloadModal />
+
             <EventFilters onFilterChange={onFilterOrganizers} options={currentViewOrganizers} entityName="organizers" />
             {
                 // type === 'Whatsapp' && <EventFilters onFilterChange={onFilterGroups} options={currentViewGroups} entityName="groups" />

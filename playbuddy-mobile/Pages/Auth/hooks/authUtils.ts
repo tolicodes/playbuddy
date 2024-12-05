@@ -14,6 +14,7 @@ import { AuthError } from '@supabase/supabase-js';
 
 GoogleSignin.configure({
     iosClientId: '929140353915-9pd1soj5ugifbg0ftb28ejc3jaggq0bv.apps.googleusercontent.com',
+    webClientId: '929140353915-gv3am3vcpu0ckb37mlu5msieqv2jv74a.apps.googleusercontent.com',
     scopes: ['openid', 'email', 'profile'],
 });
 
