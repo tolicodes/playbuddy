@@ -33,9 +33,10 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 .from("events")
                 .select(`
           *,
-          organizer:organizers(id, name, url, hidden),
+          organizer:organizers(id, name, url, hidden, promo_codes(id, promo_code, discount, discount_type, scope, organizer_id, event_id)),
           communities!inner(id, name),
-          location_area:location_areas(id, name)
+          location_area:location_areas(id, name),
+          promo_codes:promo_codes(id, promo_code, discount, discount_type, scope, organizer_id, event_id)
         `)
                 .gte("start_date", nycMidnightUTC),
             flushCache

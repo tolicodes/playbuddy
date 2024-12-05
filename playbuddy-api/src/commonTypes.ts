@@ -7,6 +7,7 @@ export type Organizer = {
     name: string;
     url: string;
     hidden?: boolean
+    promo_codes: PromoCode[];
 }
 
 export type LocationArea = {
@@ -24,6 +25,16 @@ export type Community = {
     organizer_id?: string;
     description?: string;
     visibility?: 'private' | 'public';
+}
+
+export interface PromoCode {
+    id: string;
+    promo_code: string;
+    discount: number;
+    discount_type: 'percentage' | 'fixed';
+    scope: 'event' | 'organizer';
+    organizer_id?: string;
+    event_id?: string;
 }
 
 export interface Event extends SourceMetadata {
@@ -57,6 +68,8 @@ export interface Event extends SourceMetadata {
     // community_ids (many to many via join table event_communities)
     communities?: Community[];
     visibility?: 'public' | 'private';
+
+    promo_codes: PromoCode[];
 
 }
 

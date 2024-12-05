@@ -42,6 +42,20 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
         logEvent('event_list_item_clicked', { event_id: item.id, event_name: item.name });
     }
 
+    const eventPromoCode = item.promo_codes?.find(code => code.scope === 'event');
+    const organizerPromoCode = item.organizer?.promo_codes?.find(code => code.scope === 'organizer');
+
+    const promoCode = eventPromoCode || organizerPromoCode;
+
+    const PromoCode = promoCode && (
+        <View style={styles.promoCodeBadge}>
+            <Text style={styles.promoCodeText}>
+                {promoCode.discount_type === 'percentage' ? '' : '$'}
+                {promoCode.discount}{promoCode.discount_type === 'percentage' ? '%' : ''} off
+            </Text>
+        </View>
+    )
+
     return (
         <TouchableOpacity onPress={handlePressEvent}>
             <View style={styles.eventContainer}>
@@ -60,6 +74,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
                                     <Text style={styles.privateBadgeText}>Private</Text>
                                 </View>
                             )}
+                            {PromoCode}
                         </View>
                         {sharedBuddies && (
                             <View style={styles.buddyAvatarCarouselContainer}>
@@ -125,6 +140,7 @@ const styles = StyleSheet.create({
     eventOrganizer: {
         fontSize: 14,
         color: 'black',
+        marginRight: 10,
     },
     eventTime: {
         fontSize: 14,
@@ -169,5 +185,27 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 12,
         fontWeight: 'bold',
-    }
+    },
+    promoBadge: {
+        backgroundColor: '#FFD700',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+    },
+    promoBadgeText: {
+        color: 'black',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    promoCodeText: {
+        fontSize: 12,
+        color: 'black',
+        fontWeight: 'bold',
+    },
+    promoCodeBadge: {
+        backgroundColor: '#FFD700',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 12,
+    },
 });

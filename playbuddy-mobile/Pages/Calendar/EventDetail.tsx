@@ -48,6 +48,27 @@ export const EventDetail = ({ route }: any) => {
 
     const imageUrl = selectedEvent.image_url && getSmallAvatarUrl(selectedEvent.image_url);
 
+
+    const eventPromoCode = selectedEvent.promo_codes?.find(code => code.scope === 'event');
+    const organizerPromoCode = selectedEvent.organizer?.promo_codes?.find(code => code.scope === 'organizer');
+
+    const promoCode = eventPromoCode || organizerPromoCode;
+
+    const PromoCode = promoCode && (
+        <View style={styles.promoCodeContainer}>
+
+            <View style={styles.promoCodeBubble}>
+                <Text style={styles.promoCodeText}>
+                    Code: {promoCode.promo_code}
+                </Text>
+            </View>
+            <Text style={styles.promoCodeDiscount}>
+                - {promoCode.discount_type === 'percentage' ? '' : '$'}
+                {promoCode.discount}{promoCode.discount_type === 'percentage' ? '%' : ''} off
+            </Text>
+        </View>
+    )
+
     return (
         <ScrollView>
 
@@ -68,6 +89,7 @@ export const EventDetail = ({ route }: any) => {
                     </Text>
                 </TouchableOpacity>
 
+
                 <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
 
                 <Text style={styles.eventTime}>
@@ -77,6 +99,9 @@ export const EventDetail = ({ route }: any) => {
                 {formattedPrice && <Text style={styles.fullViewPrice}>
                     Price: {formattedPrice}
                 </Text>}
+
+                {PromoCode}
+
                 <Markdown>
                     {selectedEvent.description}
                 </Markdown>
@@ -144,5 +169,37 @@ const styles = StyleSheet.create({
     },
     controlsContainer: {
         padding: 10,
+    },
+    promoCodeContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    promoCodeBadge: {
+        backgroundColor: '#FFD700',
+        padding: 8,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
+        marginVertical: 10,
+    },
+    promoCodeText: {
+        fontSize: 14,
+        color: 'black',
+        fontWeight: 'bold',
+    },
+    promoCodeLabel: {
+        fontSize: 14,
+        color: 'black',
+        fontWeight: 'bold',
+    },
+    promoCodeBubble: {
+        backgroundColor: '#FFD700',
+        padding: 8,
+        borderRadius: 12,
+    },
+    promoCodeDiscount: {
+        fontSize: 14,
+        color: 'black',
+        fontWeight: 'bold',
     },
 })
