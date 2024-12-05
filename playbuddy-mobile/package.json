@@ -8,6 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "build": "eas build:version:sync --platform all && eas build --non-interactive --platform all",
+    "run-local": "eas build:run -p ios --latest",
     "update": "eas update --branch production --message "
   },
   "dependencies": {

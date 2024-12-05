@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import HeaderLoginButton from '../Buttons/LoginButton';
 import { logEvent } from '../../../Common/hooks/logger';
 import CheckBox from '@rneui/themed/dist/CheckBox';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
+
 
 const features = [
-    { id: '1', title: 'My Calendar', description: 'Add events to plan your week', icon: 'calendar' },
-    { id: '2', title: 'Buddies', description: 'Share your calendar & coordinate plans', icon: 'people' },
-    { id: '3', title: 'Communities', description: 'Join groups with private events', icon: 'chatbubbles' },
-    { id: '4', title: 'Swipe Mode', description: 'Swipe through events to plan your week', icon: 'heart' },
-    { id: '5', title: 'Personalization', description: 'Set your home location and community', icon: 'location' }
+    { id: '1', title: 'My Calendar', description: 'Add events to plan your week', icon: 'heart' },
+    { id: '2', title: 'Buddies', description: 'Share your calendar & coordinate plans', icon: 'user-friends' },
+    { id: '3', title: 'Communities', description: 'Join groups with private events', icon: 'users' },
+    { id: '4', title: 'Swipe Mode', description: 'Swipe through events to plan your week', icon: 'layer-group' },
+    { id: '5', title: 'Personalization', description: 'Set your home location and community', icon: 'map-marker-alt' }
 ];
 
 export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegister: () => void, onClickSkip: () => void }) => {
@@ -41,7 +42,7 @@ export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegiste
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.featureItem}>
-                        <Ionicons name={item.icon as any} size={24} color="#007AFF" style={styles.featureIcon} />
+                        <FAIcon name={item.icon as any} size={24} color="#007AFF" style={styles.featureIcon} />
                         <View style={styles.featureTextContainer}>
                             <Text style={styles.featureTitle}>{item.title}</Text>
                             <Text style={styles.featureDescription}>{item.description}</Text>
@@ -106,7 +107,9 @@ const styles = StyleSheet.create({
         borderBottomColor: '#E0E0E0'
     },
     featureIcon: {
-        marginRight: 10
+        marginRight: 10,
+        width: 30,
+        textAlign: 'center'
     },
     featureTextContainer: {
         flex: 1
