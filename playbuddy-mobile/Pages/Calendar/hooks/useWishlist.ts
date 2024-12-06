@@ -5,34 +5,27 @@ import { EventWithMetadata } from '../../../types';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { API_BASE_URL } from '../../../config';
 import { supabase } from '../../../supabaseClient';
+import { useAuthorizedQuery } from '../../../Common/hooks/useAuthorizedQuery';
 
 const useGetAuthUserId = () => {
     const { authUserId } = useUserContext();
     return authUserId;
 };
 
-const useAuthReady = () => {
-    const { authReady } = useUserContext();
-    return authReady;
-}
-
-const fetchWishlistEvents = async () => {
-    try {
-        const response = await axios.get(`${API_BASE_URL}/wishlist`);
-        return response.data;
-    } catch (error) {
-        throw new Error(`Error fetching wishlist events: ${error.message}`);
-    }
-};
 
 // Hook to fetch wishlist events for the current user
 const useFetchWishlistEvents = () => {
-    const authReady = useAuthReady();
     const authUserId = useGetAuthUserId();
-    return useQuery({
+    return useAuthorizedQuery({
         queryKey: ['wishlistEvents', authUserId],
-        queryFn: () => fetchWishlistEvents(),
-        enabled: !!authReady,
+        queryFn: async () => {
+            try {
+                const response = await axios.get(`${API_BASE_URL}/wishlist`);
+                return response.data;
+            } catch (error) {
+                throw new Error(`Error fetching wishlist events: ${error.message}`);
+            }
+        },
     });
 };
 
@@ -95,7 +88,8 @@ const useToggleWishlistEvent = () => {
 };
 // Combined Hook to manage both user and friend's wishlist
 export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
-    const { data: wishlistEventIds, isLoading: isLoadingWishlistEvents } = useFetchWishlistEvents();
+    const { data: wishlistEventIds, isLoading: isLoadingWishlistEvents, } = useFetchWishlistEvents();
+    console.log('wishlistEventIds', wishlistEventIds)
 
     // Memoized function to calculate wishlist events
     const wishlistEvents = useMemo(() => {
