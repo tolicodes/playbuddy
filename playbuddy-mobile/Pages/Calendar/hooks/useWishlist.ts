@@ -89,7 +89,6 @@ const useToggleWishlistEvent = () => {
 // Combined Hook to manage both user and friend's wishlist
 export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
     const { data: wishlistEventIds, isLoading: isLoadingWishlistEvents, } = useFetchWishlistEvents();
-    console.log('wishlistEventIds', wishlistEventIds)
 
     // Memoized function to calculate wishlist events
     const wishlistEvents = useMemo(() => {
