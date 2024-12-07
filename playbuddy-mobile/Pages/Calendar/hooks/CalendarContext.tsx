@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo, useEffect } from 'react';
 import { UseMutationResult } from '@tanstack/react-query';
 import { useFilters, FilterState } from './useFilters';
 import { useEvents } from './useEvents';
@@ -75,6 +75,14 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         toggleWishlistEvent,
         swipeChoices,
     } = useWishlist(eventsWithMetadata);
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            reloadEvents();
+        }, 60000); // 60000 milliseconds = 1 minute
+
+        return () => clearInterval(intervalId); // Cleanup interval on component unmount
+    }, [reloadEvents]);
 
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters)
