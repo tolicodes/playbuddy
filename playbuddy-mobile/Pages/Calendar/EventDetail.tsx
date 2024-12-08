@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Button } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import { Image } from 'expo-image'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
@@ -11,6 +11,8 @@ import { addOrReplacePromoCode } from './promoCode';
 import { useNavigation } from '@react-navigation/native';
 import { EventWithMetadata, NavStack } from '../../types';
 import { generateGoogleCalendarUrl } from './hooks/generateGoogleCalendarUrl';
+import { useUserContext } from '../Auth/hooks/UserContext';
+import { ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (<WebView
@@ -41,45 +43,60 @@ const formatPrice = (price: string) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericPrice);
 };
 
+const PromoCode = ({ promoCode }: { promoCode: any }) => (
+    <View style={styles.promoCodeContainer}>
+        <View style={styles.promoCodeBubble}>
+            <Text style={styles.promoCodeText}>
+                Promo Code: {promoCode.promo_code}
+                <Text style={styles.promoCodeDiscount}>
+                    &nbsp;({promoCode.discount_type === 'percent' ? '' : '$'}
+                    {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off)
+                </Text>
+            </Text>
+        </View>
+    </View>
+);
+
+const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCalendar }: any) => (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <TouchableOpacity onPress={addPromoCodeToUrlAndOpen}>
+            <Text style={styles.fullViewTitle}>
+                {selectedEvent.name}
+                <MaterialIcons name="open-in-new" size={24} color="blue" />
+            </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.googleCalendarButton} onPress={onPressGoogleCalendar}>
+            <View>
+                <Image
+                    source={require('./images/google-calendar.png')}
+                    style={styles.googleCalendarImage}
+                />
+                <Text style={styles.googleCalendarButtonText}>Add to Cal</Text>
+            </View>
+        </TouchableOpacity>
+    </View>
+);
 
 export const EventDetail = ({ route }: any) => {
     const navigation = useNavigation<NavStack>();
     const selectedEvent = route?.params?.selectedEvent as EventWithMetadata;
 
-    if (!selectedEvent) return
+    const { selectedLocationAreaId, selectedCommunityId } = useUserContext();
+
+    if (!selectedEvent) return null;
 
     const formattedPrice = formatPrice(selectedEvent.price);
-
     const imageUrl = selectedEvent.image_url && getSmallAvatarUrl(selectedEvent.image_url);
-
 
     const eventPromoCode = selectedEvent.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = selectedEvent.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-
     const promoCode = eventPromoCode || organizerPromoCode;
-
-    const PromoCode = promoCode && (
-        <View style={styles.promoCodeContainer}>
-
-            <View style={styles.promoCodeBubble}>
-                <Text style={styles.promoCodeText}>
-                    Promo Code: {promoCode.promo_code}
-
-                    <Text style={styles.promoCodeDiscount}>
-                        &nbsp;({promoCode.discount_type === 'percent' ? '' : '$'}
-                        {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off)
-                    </Text>
-                </Text>
-            </View>
-
-        </View>
-    )
 
     const addPromoCodeToUrlAndOpen = () => {
         const eventUrlWithPromoCode = addOrReplacePromoCode(selectedEvent.event_url, promoCode?.promo_code);
         logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url })
         Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url)
-
     }
 
     const onClickOrganizer = () => {
@@ -92,8 +109,6 @@ export const EventDetail = ({ route }: any) => {
 
     const onPressGoogleCalendar = () => {
         logEvent('event_detail_google_calendar_clicked', { event_id: selectedEvent.id })
-        // addEventToGoogleCalendar(selectedEvent);
-
         const calendarUrl = generateGoogleCalendarUrl({
             title: selectedEvent.name,
             startDate: selectedEvent.start_date,
@@ -105,37 +120,23 @@ export const EventDetail = ({ route }: any) => {
         Linking.openURL(calendarUrl).catch(err => {
             throw new Error(`Failed to open Google Calendar: ${err}`)
         });
-
     }
+
+    const locationAreaIsAll = selectedLocationAreaId === ALL_LOCATION_AREAS_ID;
 
     return (
         <ScrollView>
-
-            {
-                selectedEvent.video_url
-                    ? <VideoPlayer uri={selectedEvent.video_url} />
-                    : <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
+            {selectedEvent.video_url
+                ? <VideoPlayer uri={selectedEvent.video_url} />
+                : <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
             }
 
             <View style={{ padding: 20 }}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <TouchableOpacity onPress={addPromoCodeToUrlAndOpen}>
-                        <Text style={styles.fullViewTitle}>
-                            {selectedEvent.name}
-                            <MaterialIcons name="open-in-new" size={24} color="blue" />
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={styles.googleCalendarButton} onPress={onPressGoogleCalendar}>
-                        <View>
-                            <Image
-                                source={require('./images/google-calendar.png')}
-                                style={styles.googleCalendarImage}
-                            />
-                            <Text style={styles.googleCalendarButtonText}>+ Cal</Text>
-                        </View>
-                    </TouchableOpacity>
-                </View>
+                <EventHeader
+                    selectedEvent={selectedEvent}
+                    addPromoCodeToUrlAndOpen={addPromoCodeToUrlAndOpen}
+                    onPressGoogleCalendar={onPressGoogleCalendar}
+                />
 
                 <TouchableOpacity onPress={onClickOrganizer}>
                     <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
@@ -149,13 +150,18 @@ export const EventDetail = ({ route }: any) => {
                     Price: {formattedPrice}
                 </Text>}
 
-                {PromoCode}
+                {locationAreaIsAll && <Text style={styles.eventLocation}>
+                    {selectedEvent.location_area?.name}
+                </Text>}
+
+                {promoCode && <PromoCode promoCode={promoCode} />}
 
                 <Markdown>
                     {selectedEvent.description}
                 </Markdown>
             </View>
-        </ScrollView>)
+        </ScrollView>
+    )
 }
 
 const styles = StyleSheet.create({
@@ -269,12 +275,18 @@ const styles = StyleSheet.create({
     googleCalendarButton: {
         flexDirection: 'row',
         alignItems: 'center',
-
     },
     googleCalendarButtonText: {
-        fontSize: 11,
+        fontSize: 10,
         color: 'black',
         fontWeight: 'bold',
+        textAlign: 'center',
         marginTop: 3,
+        width: 30,
+    },
+    eventLocation: {
+        fontSize: 14,
+        color: '#666',
+        marginTop: 10,
     },
 }) 
