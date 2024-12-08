@@ -59,9 +59,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     useInitializeAuth(setSession);
 
-    const { data: userProfile, isLoading: isLoadingUserProfile } = useFetchUserProfile(session?.user?.id);
+    const { data: userProfile, isLoading: isLoadingUserProfile, isError: isErrorUserProfile } = useFetchUserProfile(session?.user?.id);
 
     useSetupTracking(session, userProfile);
+
+    // bug: token drops sometimes, we should log out and back in    
+    useEffect(() => {
+        if (isErrorUserProfile) {
+            signOut();
+            setSession(null);
+            setIsLoadingAuth(false);
+        }
+    }, [isErrorUserProfile]);
 
     const wrapAuthFunction = <T extends (...args: any[]) => Promise<Session | null | void>>(
         authFn: T
