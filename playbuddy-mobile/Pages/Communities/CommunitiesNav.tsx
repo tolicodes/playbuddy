@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 
 import { MyCommunitiesSection } from './MyCommunitiesSection';
@@ -7,12 +7,16 @@ import { JoinCommunitySection } from './JoinCommunitySection';
 
 const Tab = createMaterialTopTabNavigator();
 
-const CommunitiesNav = () => {
+const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }) => {
+    const TypedMyCommunitiesSection = () => useMemo(() => <MyCommunitiesSection type={type} />, [type]);
+    const TypedMyEvents = () => useMemo(() => <MyEvents type={type} />, [type]);
+    const TypedJoinCommunitySection = () => useMemo(() => <JoinCommunitySection type={type} />, [type]);
+
     return (
         <Tab.Navigator>
-            <Tab.Screen name="My Communities" component={MyCommunitiesSection} />
-            <Tab.Screen name="My Events" component={MyEvents} />
-            <Tab.Screen name="Join Community" component={JoinCommunitySection} />
+            <Tab.Screen name="My Communities" component={TypedMyCommunitiesSection} />
+            <Tab.Screen name="My Events" component={TypedMyEvents} />
+            <Tab.Screen name="Join Community" component={TypedJoinCommunitySection} />
         </Tab.Navigator>
     );
 };

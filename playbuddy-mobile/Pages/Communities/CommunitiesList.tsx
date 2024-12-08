@@ -59,8 +59,7 @@ export const CommunitiesList = ({
     }
 
     return (
-        <View style={[styles.list, { flex }]}>
-            <Text style={styles.listTitle}>{title}</Text>
+        <View style={[styles.list]}>
             {showSearch && (
                 <TextInput
                     style={styles.searchInput}
@@ -110,12 +109,15 @@ export const CommunitiesList = ({
 };
 
 const styles = StyleSheet.create({
-    list: {},
+    list: {
+        height: '100%'
+    },
     listTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         marginVertical: 10,
-        textAlign: 'center'
+        textAlign: 'center',
+
     },
     communityItem: {
         padding: 15,

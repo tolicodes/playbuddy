@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { CommunitiesList } from "./CommunitiesList";
 
-export const MyCommunitiesSection: React.FC = () => {
+export const MyCommunitiesSection = ({ type }: { type: 'organizer' | 'private' } = { type: 'private' }) => {
     const { myCommunities } = useCommonContext();
     const privateCommunities = [
         ...myCommunities.myPrivateCommunities,
@@ -14,8 +14,8 @@ export const MyCommunitiesSection: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            <CommunitiesList title="My Private Communities" communities={privateCommunities} flex={1} entityType="private_community" />
-            <CommunitiesList title="My Favorite Organizers" communities={myOrganizerPublicCommunities} flex={2} entityType="organizer" />
+            {type === 'private' && <CommunitiesList title="My Private Communities" communities={privateCommunities} flex={1} entityType="private_community" />}
+            {type === 'organizer' && <CommunitiesList title="My Favorite Organizers" communities={myOrganizerPublicCommunities} flex={2} entityType="organizer" />}
         </View>
     );
 }

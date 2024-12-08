@@ -7,7 +7,7 @@ import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { NavStack } from '../../types';
 import { logEvent } from '../../Common/hooks/logger';
 
-export const JoinCommunitySection: React.FC = () => {
+export const JoinCommunitySection = ({ type }: { type: 'organizer' | 'private' } = { type: 'private' }) => {
     const [communityCode, setCommunityCode] = useState<string>('');
     const joinCommunity = useJoinCommunity();
     const { navigate } = useNavigation<NavStack>();
@@ -46,7 +46,7 @@ export const JoinCommunitySection: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.joinContainer}>
+            {type === 'private' && <View style={styles.joinContainer}>
                 <Text style={styles.joinTitle}>Join a Private Community</Text>
                 <Text style={styles.joinSubtitle}>Ask your group organizer for the join code.</Text>
                 <TextInput
@@ -64,16 +64,16 @@ export const JoinCommunitySection: React.FC = () => {
                 >
                     <Text style={styles.buttonText}>Join</Text>
                 </TouchableOpacity>
-            </View>
+            </View>}
 
-            <View style={{ flex: 3 }}>
+            {type === 'organizer' && <View >
                 <CommunitiesList
                     title="Follow Organizers"
                     communities={organizerPublicCommunities}
                     flex={1}
                     showSearch={true}
                 />
-            </View>
+            </View>}
         </View>
     );
 };

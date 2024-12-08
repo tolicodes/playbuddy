@@ -1,10 +1,11 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, SafeAreaView, TextInput } from "react-native";
-import { Community, LeaveCommunityData, useCommonContext } from "../../Common/hooks/CommonContext";
+import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { UseMutationResult } from "@tanstack/react-query";
 import { logEvent } from "../../Common/hooks/logger";
 import { NavStack } from "../../types";
+import { useLeaveCommunity } from "../../Common/hooks/useCommunities";
 
 const CommunityList = ({
     title,
@@ -14,7 +15,7 @@ const CommunityList = ({
 }: {
     title: string,
     communities: Community[],
-    onClickLeave: UseMutationResult<Community, Error, LeaveCommunityData, unknown>,
+    onClickLeave: UseMutationResult<Community, Error, unknown>,
     showSearch?: boolean
 }) => {
     const navigation = useNavigation<NavStack>();
@@ -82,7 +83,9 @@ export const CommunitiesList: React.FC = () => {
         ...myCommunities.myOrganizerPrivateCommunities
     ];
 
-    const { myCommunities: { myOrganizerPublicCommunities }, leaveCommunity } = useCommonContext();
+    const leaveCommunity = useLeaveCommunity();
+
+    const { myCommunities: { myOrganizerPublicCommunities } } = useCommonContext();
 
     return (
         <SafeAreaView style={styles.container}>

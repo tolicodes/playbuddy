@@ -15,15 +15,19 @@ const getMyEvents = (myCommunities: Community[]) => {
     return myEvents;
 }
 
-export const MyEvents: React.FC = () => {
+export const MyEvents = ({ type }: { type: 'organizer' | 'private' } = { type: 'private' }) => {
     const { myCommunities } = useCommonContext();
-    const communities = [
+    const privateCommunities = [
         ...myCommunities.myPrivateCommunities,
         ...myCommunities.myOrganizerPrivateCommunities,
-        ...myCommunities.myOrganizerPublicCommunities
+    ] as Community[];
 
-    ];
-    const myEvents = getMyEvents(communities);
+    const organizerCommunities = [
+        ...myCommunities.myOrganizerPublicCommunities
+    ] as Community[];
+
+
+    const myEvents = getMyEvents(type === 'private' ? privateCommunities : organizerCommunities);
 
     return <>
         <EventCalendarView events={myEvents} />

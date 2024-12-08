@@ -50,8 +50,8 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
     const PromoCode = promoCode && (
         <View style={styles.promoCodeBadge}>
             <Text style={styles.promoCodeText}>
-                {promoCode.discount_type === 'percentage' ? '' : '$'}
-                {promoCode.discount}{promoCode.discount_type === 'percentage' ? '%' : ''} off
+                {promoCode.discount_type === 'percent' ? '' : '$'}
+                {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off
             </Text>
         </View>
     )

@@ -63,8 +63,8 @@ export const EventDetail = ({ route }: any) => {
                 </Text>
             </View>
             <Text style={styles.promoCodeDiscount}>
-                - {promoCode.discount_type === 'percentage' ? '' : '$'}
-                {promoCode.discount}{promoCode.discount_type === 'percentage' ? '%' : ''} off
+                - {promoCode.discount_type === 'percent' ? '' : '$'}
+                {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off
             </Text>
         </View>
     )

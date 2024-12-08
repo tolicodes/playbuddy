@@ -27,6 +27,7 @@ import { detailsPageHeaderOptions, headerOptions } from './Common/Header/Header'
 import { Filters } from './Pages/Calendar/Filters/Filters';
 import { tagScreenName } from './Common/hooks/uxCam';
 import { useUserContext } from './Pages/Auth/hooks/UserContext';
+import { OrganizersNav } from './Pages/Organizers/OrganizersNav';
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -127,6 +128,14 @@ const DrawerNav = () => {
                 component={MyCalendar}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="heart" size={size} color={color} style={{ width: 30 }} />,
+                }}
+            />
+
+            <Drawer.Screen
+                name="Organizers"
+                component={OrganizersNav}
+                options={{
+                    drawerIcon: ({ color, size }) => <FAIcon name="users-cog" size={size} color={color} style={{ width: 30 }} />,
                 }}
             />
 

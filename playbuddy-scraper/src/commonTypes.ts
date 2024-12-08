@@ -31,7 +31,7 @@ export interface PromoCode {
     id: string;
     promo_code: string;
     discount: number;
-    discount_type: 'percentage' | 'fixed';
+    discount_type: 'percent' | 'fixed';
     scope: 'event' | 'organizer';
     organizer_id?: string;
     event_id?: string;
