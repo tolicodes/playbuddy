@@ -33,11 +33,13 @@ interface CommonContextType {
     communities: {
         interestGroups: Community[];
         organizerPublicCommunities: Community[];
+        allCommunities: Community[];
     };
     myCommunities: {
         myOrganizerPrivateCommunities: Community[];
         myPrivateCommunities: Community[];
         myOrganizerPublicCommunities: Community[];
+        allMyCommunities: Community[];
     };
 
 
@@ -75,8 +77,9 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         () => ({
             interestGroups: publicCommunities.filter((c) => c.type === 'interest_group'),
             organizerPublicCommunities: publicCommunities.filter((c) => c.type === 'organizer_public_community'),
+            allCommunities: [...publicCommunities, ...myCommunities],
         }),
-        [publicCommunities]
+        [publicCommunities, myCommunities]
     );
 
     const myCommunitiesLists = useMemo(
@@ -84,6 +87,7 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
             myOrganizerPrivateCommunities: myCommunities.filter((c) => c.type === 'organizer_private_community'),
             myPrivateCommunities: myCommunities.filter((c) => c.type === 'private_community'),
             myOrganizerPublicCommunities: myCommunities.filter((c) => c.type === 'organizer_public_community'),
+            allMyCommunities: myCommunities
         }),
         [myCommunities]
     );
