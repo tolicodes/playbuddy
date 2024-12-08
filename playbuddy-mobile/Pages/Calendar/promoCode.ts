@@ -1,4 +1,6 @@
-export function addOrReplacePromoCode(url: string, promoCode: string) {
+export function addOrReplacePromoCode(url: string, promoCode?: string) {
+    if (!promoCode) return url;
+
     try {
         // Parse the URL
         const urlObj = new URL(url);

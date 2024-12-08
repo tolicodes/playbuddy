@@ -45,6 +45,7 @@ export const useCalendarContext = () => {
 
 const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterState) => {
     const searchTerm = filters.search.toLowerCase();
+
     return eventsWithMetadata.filter(event => {
         const organizerId = event.organizer?.id || '';
         const eventName = event.name?.toLowerCase() || '';

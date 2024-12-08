@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'r
 import { Image } from 'expo-image'
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
-import * as amplitude from '@amplitude/analytics-react-native';
 import { WebView } from 'react-native-webview';
 import { formatDate } from './hooks/calendarUtils';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { logEvent } from '../../Common/hooks/logger';
 import { addOrReplacePromoCode } from './promoCode';
+import { useNavigation } from '@react-navigation/native';
+import { EventWithMetadata, NavStack } from '../../types';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (<WebView
@@ -41,7 +42,8 @@ const formatPrice = (price: string) => {
 
 
 export const EventDetail = ({ route }: any) => {
-    const selectedEvent = route?.params?.selectedEvent;
+    const navigation = useNavigation<NavStack>();
+    const selectedEvent = route?.params?.selectedEvent as EventWithMetadata;
 
     if (!selectedEvent) return
 
@@ -72,6 +74,21 @@ export const EventDetail = ({ route }: any) => {
         </View>
     )
 
+    const addPromoCodeToUrlAndOpen = () => {
+        const eventUrlWithPromoCode = addOrReplacePromoCode(selectedEvent.event_url, promoCode?.promo_code);
+        logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url })
+        Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url)
+
+    }
+
+    const onClickOrganizer = () => {
+        logEvent('event_detail_organizer_clicked', { organizer_id: selectedEvent.organizer.id })
+        const community = selectedEvent.communities?.find(community => community.organizer_id === selectedEvent.organizer.id)?.id;
+        if (community) {
+            navigation.navigate('Community Events', { communityId: community })
+        }
+    }
+
     return (
         <ScrollView>
 
@@ -82,11 +99,7 @@ export const EventDetail = ({ route }: any) => {
             }
 
             <View style={{ padding: 20 }}>
-                <TouchableOpacity onPress={() => {
-                    const eventUrlWithPromoCode = addOrReplacePromoCode(selectedEvent.event_url, promoCode.promo_code);
-                    logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url })
-                    Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url)
-                }}>
+                <TouchableOpacity onPress={addPromoCodeToUrlAndOpen}>
                     <Text style={styles.fullViewTitle}>
                         {selectedEvent.name}
                         <MaterialIcons name="open-in-new" size={24} color="blue" />
@@ -94,7 +107,9 @@ export const EventDetail = ({ route }: any) => {
                 </TouchableOpacity>
 
 
-                <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
+                <TouchableOpacity onPress={onClickOrganizer}>
+                    <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
+                </TouchableOpacity>
 
                 <Text style={styles.eventTime}>
                     {formatDate(selectedEvent, true)}
@@ -147,8 +162,9 @@ const styles = StyleSheet.create({
     },
     eventOrganizer: {
         fontSize: 16,
-        color: 'black',
-        marginBottom: 5
+        color: 'blue',
+        marginBottom: 5,
+        textDecorationLine: 'underline',
     },
     eventTime: {
         fontSize: 14,

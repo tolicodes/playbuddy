@@ -14,16 +14,11 @@ export const CommunityEvents = ({ route: { params: { communityId } } }: { route:
         event => event.communities?.some(community => community.id === communityId)
     );
 
-    const organizerId = myCommunities?.find(community => community.id === communityId)?.organizer_id;
-
-    const organizerEvents = allEvents.filter(event => event.organizer?.id === organizerId);
-
-    const combinedEvents = [...communityEvents, ...organizerEvents];
 
     return (
         <View style={{ flex: 1 }}>
             <Text style={styles.communityName}>{thisCommunity?.name}</Text>
-            <EventCalendarView events={combinedEvents} />
+            <EventCalendarView events={communityEvents} />
         </View>
     )
 }

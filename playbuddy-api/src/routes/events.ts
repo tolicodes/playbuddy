@@ -34,7 +34,7 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 .select(`
           *,
           organizer:organizers(id, name, url, hidden, promo_codes(id, promo_code, discount, discount_type, scope, organizer_id, event_id)),
-          communities!inner(id, name),
+          communities!inner(id, name, organizer_id),
           location_area:location_areas(id, name),
           promo_codes:promo_codes(id, promo_code, discount, discount_type, scope, organizer_id, event_id)
         `)
