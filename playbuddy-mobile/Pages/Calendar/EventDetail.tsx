@@ -8,6 +8,7 @@ import { WebView } from 'react-native-webview';
 import { formatDate } from './hooks/calendarUtils';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { logEvent } from '../../Common/hooks/logger';
+import { addOrReplacePromoCode } from './promoCode';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (<WebView
@@ -59,13 +60,15 @@ export const EventDetail = ({ route }: any) => {
 
             <View style={styles.promoCodeBubble}>
                 <Text style={styles.promoCodeText}>
-                    Code: {promoCode.promo_code}
+                    Promo Code: {promoCode.promo_code}
+
+                    <Text style={styles.promoCodeDiscount}>
+                        &nbsp;({promoCode.discount_type === 'percent' ? '' : '$'}
+                        {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off)
+                    </Text>
                 </Text>
             </View>
-            <Text style={styles.promoCodeDiscount}>
-                - {promoCode.discount_type === 'percent' ? '' : '$'}
-                {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off
-            </Text>
+
         </View>
     )
 
@@ -80,8 +83,9 @@ export const EventDetail = ({ route }: any) => {
 
             <View style={{ padding: 20 }}>
                 <TouchableOpacity onPress={() => {
-                    logEvent('event_detail_link_clicked', { event_url: selectedEvent.event_url })
-                    Linking.openURL(selectedEvent.event_url)
+                    const eventUrlWithPromoCode = addOrReplacePromoCode(selectedEvent.event_url, promoCode.promo_code);
+                    logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url })
+                    Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url)
                 }}>
                     <Text style={styles.fullViewTitle}>
                         {selectedEvent.name}
