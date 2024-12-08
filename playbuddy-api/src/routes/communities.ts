@@ -49,7 +49,7 @@ export const fetchMyCommunities = async (req: AuthenticatedRequest, res: Respons
 };
 
 const doJoinCommunity = async (authUserId: string, community: Community) => {
-    const status = community.auth_type === 'code'
+    const status = (community.auth_type === 'code' || community.visibility === 'public')
         ? 'approved'
         : 'pending';
 
