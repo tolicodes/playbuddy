@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TextInput, StyleSheet, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
 import { Image } from 'expo-image'
 import moment from 'moment';
@@ -65,9 +65,20 @@ const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewPr
     const sectionListRef = useRef<SectionList<Event>>(null);
     const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
 
+    const debounce = (func: (query: string) => void, delay: number) => {
+        let timeout: NodeJS.Timeout;
+        return (query: string) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func(query), delay);
+        };
+    };
+
+    const debouncedSetFilters = useCallback(debounce((query) => {
+        setFilters({ ...filters, search: query });
+    }, 200), [filters]);
 
     useEffect(() => {
-        setFilters({ ...filters, search: searchQuery });
+        debouncedSetFilters(searchQuery);
     }, [searchQuery]);
 
     // Toggle calendar expansion
