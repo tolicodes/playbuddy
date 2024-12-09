@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, GestureResponderEvent, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, GestureResponderEvent, TouchableOpacity, View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { BottomTabBarButtonProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -28,6 +28,28 @@ import { Filters } from './Pages/Calendar/Filters/Filters';
 import { tagScreenName } from './Common/hooks/uxCam';
 import { useUserContext } from './Pages/Auth/hooks/UserContext';
 import { OrganizersNav } from './Pages/Organizers/OrganizersNav';
+import { useCalendarContext } from './Pages/Calendar/hooks/CalendarContext';
+
+// Badge Component
+const Badge = ({ count }: { count: number }) => (
+    <View
+        style={{
+            position: 'absolute',
+            right: -6,
+            top: -3,
+            backgroundColor: 'red',
+            borderRadius: 6,
+            width: 20,
+            height: 20,
+            justifyContent: 'center',
+            alignItems: 'center',
+        }}
+    >
+        <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+            {count}
+        </Text>
+    </View>
+);
 
 // Navigation
 const Tab = createBottomTabNavigator();
@@ -62,11 +84,25 @@ const TabNavigator = () => (
     <Tab.Navigator
         screenOptions={({ route }) => ({
             tabBarIcon: ({ color, size }) => {
+                const { availableCardsToSwipe } = useCalendarContext();
+
                 const iconName = {
                     Calendar: "calendar",
                     'My Calendar': "heart",
                     'Swipe Mode': "layer-group"
                 }[route.name];
+
+                if (route.name === 'Swipe Mode') {
+
+                    return (
+                        <View>
+                            <FAIcon name="layer-group" size={size} color={color} />
+                            {availableCardsToSwipe.length > 0 && (
+                                <Badge count={availableCardsToSwipe.length} />
+                            )}
+                        </View>
+                    );
+                }
                 return <FAIcon name={iconName!} size={size} color={color} />;
             },
             tabBarButton: (props: BottomTabBarButtonProps) => (
