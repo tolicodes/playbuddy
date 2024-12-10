@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { Community } from './CommonContext';
 import { API_BASE_URL } from '../../config';
-import { queryClient as qc } from './queryClient';
+import { queryClient as qc } from './reactQueryClient';
 import { useAuthorizedQuery } from './useAuthorizedQuery';
 import { useOptimisticMutation } from './useOptimisticMutation';
 
