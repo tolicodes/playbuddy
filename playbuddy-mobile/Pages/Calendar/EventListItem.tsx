@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image'
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { Event } from '../../commonTypes';
-import { EventWithMetadata } from '../../types';
+import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import { useCalendarContext } from './hooks/CalendarContext';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { formatDate } from './hooks/calendarUtils';

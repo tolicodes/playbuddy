@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { EventWithMetadata } from '../../../types';
+import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { API_BASE_URL } from '../../../config';
 import { supabase } from '../../../supabaseClient';

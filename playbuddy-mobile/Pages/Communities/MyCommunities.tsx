@@ -4,7 +4,7 @@ import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { UseMutationResult } from "@tanstack/react-query";
 import { logEvent } from "../../Common/hooks/logger";
-import { NavStack } from "../../types";
+import { NavStack } from "../../Common/Nav/NavStackType";
 import { useLeaveCommunity } from "../../Common/hooks/useCommunities";
 
 const CommunityList = ({
@@ -32,7 +32,7 @@ const CommunityList = ({
                 <Button
                     title="Follow an organizer"
                     onPress={() => {
-                        navigation.navigate('All Organizers' as never);
+                        navigation.navigate('Organizers', { screen: 'All Organizers' });
                         logEvent('my_communities_navigate_to_all_organizers');
                     }}
                 />
@@ -55,7 +55,7 @@ const CommunityList = ({
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.communityItem}
                         onPress={() => {
-                            navigation.navigate('Community Events', { communityId: item.id } as never);
+                            navigation.navigate('Communities', { screen: 'Community Events', params: { communityId: item.id } });
                             logEvent('my_communities_navigate_to_community_events', { communityId: item.id });
                         }}
                     >

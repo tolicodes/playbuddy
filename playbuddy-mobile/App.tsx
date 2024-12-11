@@ -6,13 +6,14 @@ import './Common/hooks/uxCam';
 
 import { UserProvider } from './Pages/Auth/hooks/UserContext';
 import { CalendarProvider } from './Pages/Calendar/hooks/CalendarContext';
-import Nav from './Nav';
+import Nav from './Common/Nav/Nav';
 import * as Sentry from '@sentry/react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { CommonProvider } from './Common/hooks/CommonContext';
 import { onFetchUpdateAsync } from './Common/hooks/ExpoUpdate';
 import { BuddiesProvider } from './Pages/Buddies/hooks/BuddiesContext';
-import { queryClient } from './Common/hooks/queryClient';
+import { queryClient } from './Common/hooks/reactQueryClient';
+// import './Common/hooks/appsFlyer';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
@@ -34,18 +35,14 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <UserProvider>
-
         <CommonProvider>
-
           <BuddiesProvider>
             <CalendarProvider>
               <Nav />
             </CalendarProvider>
           </BuddiesProvider>
-
         </CommonProvider>
       </UserProvider>
-
     </QueryClientProvider>
   );
 };

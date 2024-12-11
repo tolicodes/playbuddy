@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { NavStack } from '../../../types';
+import { NavStack } from '../../../Common/Nav/NavStackType';
 import buttonStyles from './styles/buttonStyles';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { logEvent } from '../../../Common/hooks/logger';

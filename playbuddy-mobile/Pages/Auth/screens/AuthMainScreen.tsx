@@ -3,7 +3,7 @@ import AuthForm from "./AuthFormScreen"
 import { useUserContext } from '../hooks/UserContext';
 import { ProfileDetailsForm } from './AuthProfileDetailsFormScreen';
 import { WelcomeScreen } from './WelcomeScreen';
-import { NavStack } from '../../../types';
+import { NavStack } from '../../../Common/Nav/NavStackType';
 import { useNavigation } from '@react-navigation/native';
 import { PreferencesScreen } from './PreferencesScreen';
 

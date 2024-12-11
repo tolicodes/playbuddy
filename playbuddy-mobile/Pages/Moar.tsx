@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { MISC_URLS } from '../config'
-import * as amplitude from '@amplitude/analytics-react-native';
 import { logEvent } from '../Common/hooks/logger';
 
 type LinkItem = {

@@ -51,6 +51,7 @@
     "react": "18.2.0",
     "react-hook-form": "^7.53.0",
     "react-native": "0.74.5",
+    "react-native-appsflyer": "^6.15.1",
     "react-native-calendars": "^1.1306.0",
     "react-native-deck-swiper": "^2.0.17",
     "react-native-element-dropdown": "^2.12.1",
@@ -80,7 +81,9 @@
     "react-native-walkthrough-tooltip": "^1.6.0",
     "react-native-webview": "13.8.6",
     "url-parse": "^1.5.10",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "react-native-branch": "6.2.1",
+    "@config-plugins/react-native-branch": "8.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

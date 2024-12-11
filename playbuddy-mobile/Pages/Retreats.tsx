@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import EventCalendarView from "./Calendar/EventCalendarView";
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useCalendarContext } from "./Calendar/hooks/CalendarContext";
-import { EventWithMetadata } from "../types";
+import { EventWithMetadata } from "../Common/Nav/NavStackType";
 import { logEvent } from "../Common/hooks/logger";
 import { useUserContext } from "./Auth/hooks/UserContext";
 import { useUpdateUserProfile } from './Auth/hooks/useUserProfile';

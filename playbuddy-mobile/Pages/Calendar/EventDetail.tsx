@@ -7,12 +7,15 @@ import { WebView } from 'react-native-webview';
 import { formatDate } from './hooks/calendarUtils';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { logEvent } from '../../Common/hooks/logger';
-import { addOrReplacePromoCode } from './promoCode';
+
+import { FormattedPromoCode } from './PromoCode';
+import { addOrReplacePromoCode } from '../Auth/screens/usePromoCode';
+
 import { useNavigation } from '@react-navigation/native';
-import { EventWithMetadata, NavStack } from '../../types';
+import { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
 import { generateGoogleCalendarUrl } from './hooks/generateGoogleCalendarUrl';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
+import { ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (<WebView
@@ -43,19 +46,7 @@ const formatPrice = (price: string) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericPrice);
 };
 
-const PromoCode = ({ promoCode }: { promoCode: any }) => (
-    <View style={styles.promoCodeContainer}>
-        <View style={styles.promoCodeBubble}>
-            <Text style={styles.promoCodeText}>
-                Promo Code: {promoCode.promo_code}
-                <Text style={styles.promoCodeDiscount}>
-                    &nbsp;({promoCode.discount_type === 'percent' ? '' : '$'}
-                    {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off)
-                </Text>
-            </Text>
-        </View>
-    </View>
-);
+
 
 const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCalendar }: any) => (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -82,7 +73,7 @@ export const EventDetail = ({ route }: any) => {
     const navigation = useNavigation<NavStack>();
     const selectedEvent = route?.params?.selectedEvent as EventWithMetadata;
 
-    const { selectedLocationAreaId, selectedCommunityId } = useUserContext();
+    const { selectedLocationAreaId } = useUserContext();
 
     if (!selectedEvent) return null;
 
@@ -103,7 +94,7 @@ export const EventDetail = ({ route }: any) => {
         logEvent('event_detail_organizer_clicked', { organizer_id: selectedEvent.organizer.id })
         const community = selectedEvent.communities?.find(community => community.organizer_id === selectedEvent.organizer.id)?.id;
         if (community) {
-            navigation.navigate('Community Events', { communityId: community })
+            navigation.navigate('Details', { screen: 'Community Events', params: { communityId: community } })
         }
     }
 
@@ -154,7 +145,7 @@ export const EventDetail = ({ route }: any) => {
                     {selectedEvent.location_area?.name}
                 </Text>}
 
-                {promoCode && <PromoCode promoCode={promoCode} />}
+                {promoCode && <FormattedPromoCode promoCode={promoCode} />}
 
                 <Markdown>
                     {selectedEvent.description}

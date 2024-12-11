@@ -4,7 +4,7 @@ import { useFilters, FilterState } from './useFilters';
 import { useEvents } from './useEvents';
 import { useWishlist } from './useWishlist';
 import { useUserContext } from '../../Auth/hooks/UserContext';
-import { EventWithMetadata } from '../../../types';
+import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
 import { EXPLICIT_WORDS, OrganizerFilterOption } from './calendarUtils';
 import { ALL_COMMUNITIES_ID } from '../../../Common/hooks/CommonContext';
 import { ALL_LOCATION_AREAS_ID } from '../../../Common/hooks/CommonContext';

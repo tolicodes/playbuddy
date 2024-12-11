@@ -7,7 +7,7 @@ import { logEvent } from '../../../Common/hooks/logger';
 import { useUpdateUserProfile } from "../hooks/useUserProfile";
 import { signOut } from "../hooks/authUtils";
 import { useNavigation } from "@react-navigation/native";
-import { NavStack } from "../../../types";
+import { NavStack } from "../../../Common/Nav/NavStackType";
 
 export const ProfileDetailsForm = () => {
     const { authUserId, userProfile, isLoadingUserProfile, session } = useUserContext()

@@ -7,7 +7,7 @@ import { Avatar } from '../Buttons/Avatar';
 import QRCodeStyled from 'react-native-qrcode-styled';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { NavStack } from '../../../types';
+import { NavStack } from '../../../Common/Nav/NavStackType';
 import { logEvent } from '../../../Common/hooks/logger';
 
 export default function AccountDetails() {
@@ -17,7 +17,7 @@ export default function AccountDetails() {
     const onPressSignOut = async () => {
         logEvent('account_details_press_sign_out');
         signOut();
-        navigate('Main Calendar');
+        navigate('Home');
     }
 
     const onPressHome = () => {
@@ -112,7 +112,7 @@ export default function AccountDetails() {
                                 style={styles.button}
                                 onPress={() => {
                                     logEvent('account_details_press_add_buddy');
-                                    navigate('Add Buddy');
+                                    navigate('Buddies', { screen: 'Add Buddy' });
                                 }}
                             >
                                 <Text style={styles.buttonText}>Add a Buddy</Text>

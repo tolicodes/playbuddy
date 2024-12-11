@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { NavStack } from '../../types';
+import { NavStack } from '../../Common/Nav/NavStackType';
 import { AvatarCircle } from '../Auth/Buttons/AvatarCircle';
 import { logEvent } from '../../Common/hooks/logger';
 
@@ -21,7 +21,7 @@ export const BuddyAvatarCarousel: React.FC<BuddyAvatarCarouselProps> = ({ buddie
 
     const handlePress = (buddyUserId: string) => {
         logEvent('buddy_avatar_carousel_press', { buddyUserId });
-        navigation.navigate('Buddy Events', { buddyAuthUserId: buddyUserId });
+        navigation.navigate('Details', { screen: 'Buddy Events', params: { buddyAuthUserId: buddyUserId } });
     };
 
     return (

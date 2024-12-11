@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import { TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import FAIcon from 'react-native-vector-icons/FontAwesome';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
 import { ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID, useCommonContext } from "../hooks/CommonContext";
 import { View } from "react-native";
@@ -10,7 +10,7 @@ import { CommunityDropdown, LocationAreaDropdown } from "./DefaultsMenus";
 import { logEvent } from "../hooks/logger";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useUpdateUserProfile } from "../../Pages/Auth/hooks/useUserProfile";
-import { NavStack } from "../../types";
+import { NavStack } from "../Nav/NavStackType";
 
 // Helper Components
 export const CustomBackButton = ({ navigation }: { navigation: NavStack }) => {
@@ -35,7 +35,7 @@ export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => 
         logEvent('header_drawer_button_clicked');
     };
     const onPressOpenFilters = () => {
-        navigation.navigate('Filters');
+        navigation.navigate('Details', { screen: 'Filters' });
         logEvent('header_filter_button_clicked');
     };
 

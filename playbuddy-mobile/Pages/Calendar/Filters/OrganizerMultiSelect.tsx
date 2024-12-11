@@ -6,7 +6,7 @@ import DropdownItem from './DropdownItem';
 import { OrganizerFilterOption } from '../hooks/calendarUtils';
 import SubmitButtons from './SubmitButtons';
 import { useNavigation } from '@react-navigation/native';
-import { NavStack } from '../../../types';
+import { NavStack } from '../../../Common/Nav/NavStackType';
 import { logEvent } from '../../../Common/hooks/logger';
 
 interface OrganizerMultiSelectProps {

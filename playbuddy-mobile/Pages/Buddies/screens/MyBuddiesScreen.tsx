@@ -4,7 +4,7 @@ import { Image } from 'expo-image'
 import { Buddy, useBuddiesContext } from '../hooks/BuddiesContext';
 import { useNavigation } from '@react-navigation/native';
 import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
-import { NavStack } from '../../../types';
+import { NavStack } from '../../../Common/Nav/NavStackType';
 
 const MyBuddies = () => {
     const { buddies } = useBuddiesContext(); // Fetch buddies and loading state.
@@ -22,7 +22,7 @@ const MyBuddies = () => {
     const Buddy = ({ item }: { item: Buddy }) => {
         const avatarUrl = item.avatar_url && getSmallAvatarUrl(item.avatar_url);
         return (
-            <TouchableOpacity onPress={() => navigation.navigate('Buddy Events', { buddyAuthUserId: item.user_id })}>
+            <TouchableOpacity onPress={() => navigation.navigate('Details', { screen: 'Buddy Events', params: { buddyAuthUserId: item.user_id } })}>
                 <View style={styles.buddyContainer}>
                     <Image source={{ uri: avatarUrl }} style={styles.avatar} />
                     <Text style={styles.buddyName}>{item.name}</Text>

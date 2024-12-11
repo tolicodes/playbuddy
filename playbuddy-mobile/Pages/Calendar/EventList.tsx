@@ -1,10 +1,10 @@
 import React from "react";
 import { SectionList, View, Text, StyleSheet, ActivityIndicator, PixelRatio } from "react-native";
-import { EventWithMetadata } from "../../types";
+import { EventWithMetadata } from "../../Common/Nav/NavStackType";
 import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
 import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
-import { NavStack } from "../../types";
+import { NavStack } from "../../Common/Nav/NavStackType";
 import { Event } from "../../commonTypes";
 import * as amplitude from '@amplitude/analytics-react-native';
 import { BuddyWishlist, SharedEvent, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
@@ -40,7 +40,7 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents }: EventListProps
 
     useEffect(() => {
         if (selectedEvent) {
-            navigation.navigate('Event Details', { selectedEvent });
+            navigation.navigate('Details', { screen: 'Event Details', params: { selectedEvent } });
         }
     }, [selectedEvent]);
 

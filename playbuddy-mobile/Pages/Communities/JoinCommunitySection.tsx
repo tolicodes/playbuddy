@@ -4,7 +4,7 @@ import { useJoinCommunity } from '../../Common/hooks/useCommunities';
 import { useNavigation } from '@react-navigation/native';
 import { CommunitiesList } from './CommunitiesList';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
-import { NavStack } from '../../types';
+import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
 
 export const JoinCommunitySection = ({ type }: { type: 'organizer' | 'private' } = { type: 'private' }) => {
@@ -35,7 +35,7 @@ export const JoinCommunitySection = ({ type }: { type: 'organizer' | 'private' }
                 alert(`Applied to join community: ${communityCode}`);
             } else {
                 alert(`Joined community: ${communityCode}`);
-                navigate('My Communities');
+                navigate('Communities', { screen: 'My Communities' });
             }
             setCommunityCode('');
         } catch {

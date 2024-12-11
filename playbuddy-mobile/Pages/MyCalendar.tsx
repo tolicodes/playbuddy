@@ -1,12 +1,12 @@
 import React from 'react'
 import { Text, StyleSheet, TouchableOpacity, View } from 'react-native';
-import FAIcon from 'react-native-vector-icons/FontAwesome'; // Import FontAwesome icon
+import FAIcon from 'react-native-vector-icons/FontAwesome5'; // Import FontAwesome icon
 import { useCalendarContext } from "./Calendar/hooks/CalendarContext";
 import EventCalendarView from "./Calendar/EventCalendarView";
 import { useEffect } from "react";
 import { useUserContext } from "./Auth/hooks/UserContext";
 import { useNavigation } from '@react-navigation/native';
-import { NavStack } from '../types';
+import { NavStack } from '../Common/Nav/NavStackType';
 import { LoginToAccess } from '../Common/LoginToAccess';
 import { logEvent } from '../Common/hooks/logger';
 

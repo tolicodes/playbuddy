@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput }
 import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { useFetchMyCommunities, useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
-import { NavStack } from "../../types";
+import { NavStack } from "../../Common/Nav/NavStackType";
 import { logEvent } from "../../Common/hooks/logger";
 
 export const CommunitiesList = ({
@@ -49,7 +49,7 @@ export const CommunitiesList = ({
                     <Button
                         title={`${entityType === 'private_community' ? 'Join community' : 'Follow organizer'}`}
                         onPress={() => {
-                            navigation.navigate('Join Community');
+                            navigation.navigate('Communities', { screen: 'Join Community' });
                             logEvent('community_list_navigate_to_join_community_button_pressed');
                         }}
                     />
@@ -77,7 +77,7 @@ export const CommunitiesList = ({
                         <TouchableOpacity
                             style={styles.communityItem}
                             onPress={() => {
-                                navigation.navigate('Community Events', { communityId: item.id });
+                                navigation.navigate('Communities', { screen: 'Community Events', params: { communityId: item.id } });
                                 logEvent('community_list_navigate_to_community_events', { communityId: item.id });
                             }}
                         >

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import FAIcon from 'react-native-vector-icons/FontAwesome';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import dropdownStyles from './styles/dropdownStyles';
 import { OrganizerFilterOption } from '../hooks/calendarUtils';
 

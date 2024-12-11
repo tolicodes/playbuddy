@@ -1,8 +1,8 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
 import { TouchableOpacity, View, Text, StyleSheet, ActivityIndicator } from "react-native";
-import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { NavStack } from "../../../types";
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
+import { NavStack } from "../../../Common/Nav/NavStackType";
 import { useUserContext } from "../hooks/UserContext";
 import { getSmallAvatarUrl } from "../../../Common/hooks/imageUtils";
 import { Image } from 'expo-image';

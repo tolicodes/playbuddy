@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { NavStack } from '../types';
+import { NavStack } from './Nav/NavStackType';
 import { logEvent } from './hooks/logger';
 
 const Banner = () => {

@@ -6,8 +6,8 @@ import { Calendar } from 'react-native-calendars';
 
 import { Event } from '../../../Common/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
-import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { EventWithMetadata } from '../../types';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
+import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 
 import { useCalendarContext } from './hooks/CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
