@@ -15,6 +15,13 @@ import { UserProfile } from './UserTypes';
 import { Session } from '@supabase/auth-js/src/lib/types';
 import { useFetchUserProfile, useSkippingWelcomeScreen } from './useUserProfile';
 
+export type DeepLinkParams = {
+    slug: string;
+    type: string;
+    params: {
+        communityId: string;
+    }
+}
 
 interface UserContextType {
     authUserId: string | null;
@@ -41,6 +48,10 @@ interface UserContextType {
 
     selectedLocationAreaId?: string | null;
     selectedCommunityId?: string | null;
+
+    deepLinkParams: DeepLinkParams | null;
+
+    setDeepLinkParams: (params: DeepLinkParams) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -56,6 +67,8 @@ export const useUserContext = (): UserContextType => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
+
+    const [deepLinkParams, setDeepLinkParams] = useState<| null>(null);
 
     useInitializeAuth(setSession);
 
@@ -123,6 +136,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             selectedLocationAreaId: userProfile?.selected_location_area_id,
             selectedCommunityId: userProfile?.selected_community_id,
+
+            deepLinkParams,
+            setDeepLinkParams,
         }),
         [
             session,
@@ -140,6 +156,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneVerifyOtp,
             authenticateWithGoogle,
             signOut,
+
+            deepLinkParams,
+            setDeepLinkParams,
         ]
     );
 
