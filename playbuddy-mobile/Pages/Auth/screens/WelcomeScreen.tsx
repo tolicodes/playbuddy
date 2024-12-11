@@ -4,6 +4,9 @@ import HeaderLoginButton from '../Buttons/LoginButton';
 import { logEvent } from '../../../Common/hooks/logger';
 import CheckBox from '@rneui/themed/dist/CheckBox';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
+import { usePromoCode } from './usePromoCode';
+import { PromoCode } from '../../../commonTypes';
+import { formatDiscount } from '../../Calendar/PromoCode';
 
 
 const features = [
@@ -14,7 +17,52 @@ const features = [
     { id: '5', title: 'Personalization', description: 'Set your home location and community', icon: 'map-marker-alt' }
 ];
 
+
+const PromoBox = ({ promoCode, communityName }: { promoCode: PromoCode, communityName: string }) => {
+    return (
+        <View style={promoBoxStyles.promoBox}>
+            <Text style={promoBoxStyles.promoText}>
+                Congrats! You get <Text style={promoBoxStyles.discountText}>{formatDiscount(promoCode)} {communityName}&apos;s</Text> Events! Create an account below
+            </Text>
+        </View>
+    );
+};
+
+const promoBoxStyles = StyleSheet.create({
+    promoBox: {
+        backgroundColor: '#FFD700', // Bright yellow background
+        padding: 10, // Increased padding for a more spacious look
+        borderRadius: 10, // More rounded corners for a softer appearance
+        marginBottom: 10, // Slightly larger margin for better spacing
+        elevation: 10, // More pronounced raised effect for Android
+        shadowColor: '#000', // Shadow color for iOS
+        shadowOffset: { width: 0, height: 4 }, // Larger shadow offset for iOS
+        shadowOpacity: 0.3, // Increased shadow opacity for iOS
+        shadowRadius: 5, // Larger shadow radius for a more diffused shadow on iOS
+    },
+    promoText: {
+        fontSize: 14, // Larger font size for better readability
+        textAlign: 'center',
+        color: '#000', // Black text color for better contrast
+    },
+    discountText: {
+        color: '#000', // Black color for the discount text
+        fontWeight: 'bold', // Bold text for emphasis on discount
+    },
+    linkText: {
+        fontSize: 18, // Larger font size for consistency
+        textAlign: 'center',
+        color: '#007AFF',
+        fontWeight: 'bold', // Bold link text for emphasis
+        textDecorationLine: 'underline', // Underline for link text to indicate interactivity
+    }
+});
+
 export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegister: () => void, onClickSkip: () => void }) => {
+    const promoCodeData = usePromoCode();
+
+    const promoCode = promoCodeData?.promoCode;
+    const organizer = promoCodeData?.organizer;
     const doOnClickRegister = () => {
         logEvent('welcome_screen_register_clicked');
         onClickRegister();
@@ -36,6 +84,11 @@ export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegiste
     return (
         <View style={styles.container}>
             <Text style={styles.welcomeTitle}>Welcome to PlayBuddy!</Text>
+
+            {promoCode?.discount && <PromoBox
+                promoCode={promoCode}
+                communityName={organizer?.name || ''}
+            />}
 
             <FlatList
                 data={features}
@@ -85,7 +138,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#333',
         textAlign: 'center',
-        marginBottom: 20
+        marginBottom: 10
     },
     whyRegister: {
         fontSize: 16,
