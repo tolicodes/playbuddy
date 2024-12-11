@@ -26,8 +26,7 @@ export const authenticateRequest = async (req: AuthenticatedRequest, res: Respon
     try {
         const user = await getAuthUser(token);
         if (!user) {
-            console.error('No user found');
-            return next();
+            throw new Error('No user found');
         }
 
         // Attach the user ID to the request object for use in the route handler
@@ -49,7 +48,7 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
     try {
         const user = await getAuthUser(token);
         if (!user) {
-            console.error('No user found');
+            // No user found, so we don't attach anything to the request
             return next();
         }
 
@@ -59,7 +58,7 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
 
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {
-        console.log('error', error);
+        console.log('optionalAuthenticateRequest error', error);
         return next();
     }
 };
