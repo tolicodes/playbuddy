@@ -38,7 +38,7 @@ export interface PromoCode {
 }
 
 export interface Event extends SourceMetadata {
-    id: string;
+    id: number;
     original_id?: string;
     name: string;
     start_date: string;

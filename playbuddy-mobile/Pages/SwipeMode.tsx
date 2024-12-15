@@ -1,4 +1,4 @@
-import React, { } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Linking } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import { Image } from 'expo-image'
@@ -13,7 +13,7 @@ import { Button } from '@rneui/themed';
 import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
 import { logEvent } from '../Common/hooks/logger';
 
-export const SwipeMode: React.FC = () => {
+export const SwipeMode = () => {
     const { availableCardsToSwipe } = useCalendarContext();
     const { authUserId } = useUserContext();
 
@@ -21,8 +21,14 @@ export const SwipeMode: React.FC = () => {
 
     const recordSwipe = useRecordSwipeChoice();
 
+    const [initialCards, setInitialCards] = useState(availableCardsToSwipe);
+    useEffect(() => {
+        setInitialCards(availableCardsToSwipe);
+    }, [])
+
     const onSwipeRight = (cardIndex: number) => {
-        const eventId = availableCardsToSwipe[cardIndex].id;
+        const eventId = initialCards[cardIndex].id;
+
         toggleWishlistEvent.mutate({ eventId, isOnWishlist: true });
 
         recordSwipe.mutate({
@@ -31,11 +37,11 @@ export const SwipeMode: React.FC = () => {
             list: 'main',
         });
 
-        logEvent('swipe_mode_swipe_right', { event_id: eventId, event_name: availableCardsToSwipe[cardIndex].name });
+        logEvent('swipe_mode_swipe_right', { event_id: eventId, event_name: initialCards[cardIndex].name });
     };
 
     const onSwipeLeft = (cardIndex: number) => {
-        const eventId = availableCardsToSwipe[cardIndex].id;
+        const eventId = initialCards[cardIndex].id;
 
         recordSwipe.mutate({
             event_id: eventId,
@@ -43,11 +49,12 @@ export const SwipeMode: React.FC = () => {
             list: 'main',
         });
 
-        logEvent('swipe_mode_swipe_left', { event_id: eventId, event_name: availableCardsToSwipe[cardIndex].name });
+        logEvent('swipe_mode_swipe_left', { event_id: eventId, event_name: initialCards[cardIndex].name });
     };
 
     const renderCard = (event: Event) => {
-        const imageUrl = event.image_url && getSmallAvatarUrl(event.image_url);
+        // TODO: find out why event is not always available
+        const imageUrl = event?.image_url && getSmallAvatarUrl(event?.image_url);
         return (
             <View style={styles.card}>
                 <Image source={{ uri: imageUrl }} style={styles.image} />
@@ -89,7 +96,7 @@ export const SwipeMode: React.FC = () => {
     return (
         <View style={styles.container}>
             <Swiper
-                cards={availableCardsToSwipe}
+                cards={initialCards}
                 renderCard={renderCard}
                 onSwipedRight={onSwipeRight}
                 onSwipedLeft={onSwipeLeft}

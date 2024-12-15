@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
+import { fetchPaginatedRecords } from 'helpers/fetchPaginatedRecords.js';
 
 const router = Router();
 
@@ -83,8 +84,47 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
     res.status(200).json(eventIds);
 });
 
-// POST /wishlist/:eventId - Add an event to the wishlist
-router.post('/:eventId', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/swipe_mode_choices', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        if (!req.authUserId) throw new Error('Unauthorized')
+        const data = await fetchPaginatedRecords('swipe_mode_choices', req.authUserId);
+
+        const swipeModeChosenWishlist = data
+            .filter((choice) => choice.choice === 'wishlist')
+            .map((choice) => choice.event_id);
+
+        const swipeModeChosenSkip = data
+            .filter((choice) => choice.choice === 'skip')
+            .map((choice) => choice.event_id);
+
+        return res.status(200).json({
+            swipeModeChosenWishlist,
+            swipeModeChosenSkip,
+        });
+    } catch (error) {
+        console.error(`Error fetching swipe mode choices: ${error.message}`);
+        return res.status(500).json({ error: 'Failed to fetch swipe mode choices' });
+    }
+});
+
+router.post('/swipe_mode_choices', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { event_id, choice, list } = req.body;
+
+    const { data, error } = await supabaseClient
+        .from('swipe_mode_choices')
+        .insert([{ event_id, user_id: req.authUserId, choice, list }]);
+
+    console.log('recording swipe choice', { event_id, choice, list })
+
+    if (error) {
+        console.error(`Error recording swipe choice: ${error.message}`);
+        return res.status(500).json({ error: 'Failed to record swipe choice' });
+    }
+
+    return res.status(200).json(data);
+});
+
+const addEventToWishlist = async (req: AuthenticatedRequest, res: Response) => {
     const { eventId } = req.params;
     if (!req.authUserId) throw new Error('Unauthorized')
 
@@ -101,7 +141,13 @@ router.post('/:eventId', authenticateRequest, async (req: AuthenticatedRequest, 
     }
 
     return res.status(201).json({ message: 'Event added to wishlist' });
-});
+}
+
+// Phase this out
+router.post('/:eventId', authenticateRequest, addEventToWishlist);
+
+
+router.post('/add/:eventId', authenticateRequest, addEventToWishlist);
 
 // DELETE /wishlist/:eventId - Remove an event from the wishlist
 router.delete('/:eventId', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
@@ -242,7 +288,8 @@ router.get('/code/:share_code', async (req: Request, res: Response) => {
         .eq('user_id', user.user_id)
 
     if (error) {
-        throw new Error(`Error fetching calendar: ${error.message}`);
+        console.error(`Error fetching calendar: ${error.message}`);
+        return res.status(500).json({ error: 'Failed to fetch calendar' });
     }
 
     const eventIds = data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);

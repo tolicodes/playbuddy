@@ -35,7 +35,6 @@ const EventList = ({ sections, sectionListRef, isLoadingEvents }: EventListProps
 
     const { buddiesWishlists } = useBuddiesContext();
 
-    // Handle event clickr
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     useEffect(() => {

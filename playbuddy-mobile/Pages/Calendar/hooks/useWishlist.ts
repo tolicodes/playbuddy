@@ -6,6 +6,7 @@ import { useUserContext } from '../../Auth/hooks/UserContext';
 import { API_BASE_URL } from '../../../config';
 import { supabase } from '../../../supabaseClient';
 import { useAuthorizedQuery } from '../../../Common/hooks/useAuthorizedQuery';
+import { useOptimisticMutation } from '../../../Common/hooks/useOptimisticMutation';
 
 const useGetAuthUserId = () => {
     const { authUserId } = useUserContext();
@@ -13,7 +14,6 @@ const useGetAuthUserId = () => {
 };
 
 
-// Hook to fetch wishlist events for the current user
 const useFetchWishlistEvents = () => {
     const authUserId = useGetAuthUserId();
     return useAuthorizedQuery({
@@ -102,7 +102,7 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 
     const toggleWishlistEvent = useToggleWishlistEvent();
 
-    const swipeChoices = useSwipeChoices();
+    const swipeChoices = useFetchSwipeChoices();
 
     return {
         wishlistEvents,
@@ -115,125 +115,54 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 };
 
 
-
-// SWIPE CHOICES
-
-const recordSwipeChoice = async ({
-    event_id,
-    user_id,
-    choice,
-    list = 'main',
-}: {
-    event_id: number;
-    user_id?: string | null;
-    choice: 'wishlist' | 'skip';
-    list?: string;
-}) => {
-    if (!user_id) {
-        console.error('User ID is required, skipping recording');
-        return;
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('swipe_mode_choices')
-            .insert([{ event_id, user_id, choice, list }]);
-
-        if (error) {
-            console.error('Supabase insert error:', error);
-            throw new Error(error.message);
-        }
-
-        return data;
-    } catch (e) {
-        console.error(e)
-    }
-};
-
-
 export const useRecordSwipeChoice = () => {
-    const queryClient = useQueryClient();
-    const authUserId = useGetAuthUserId();
+    const qc = useQueryClient();
 
-    return useMutation({
-        mutationFn: (props: any) => {
-            return recordSwipeChoice({
-                ...props,
-                user_id: authUserId,
-            })
+    return useOptimisticMutation<SwipeModeChoiceList, SwipeModeChoice, SwipeModeChoice>({
+        queryKey: ['swipe_mode_choices'],
+
+        mutationFn: (props) => {
+            return axios.post(`${API_BASE_URL}/wishlist/swipe_mode_choices`, props);
         },
-        // onMutate: async ({ event_id, choice, list }) => {
-        //     // Cancel any outgoing refetches (so they don't overwrite optimistic updates)
-        //     // await queryClient.cancelQueries(['swipe_mode_choices']);
-
-        //     // Snapshot the previous value
-        //     const previousChoices = queryClient.getQueryData(['swipe_mode_choices']);
-
-        //     // Optimistically update with the new choice
-        //     queryClient.setQueryData(['swipe_mode_choices'], (oldChoices: any) => [
-        //         ...oldChoices,
-        //         { event_id, choice, list },
-        //     ]);
-
-        //     // Return the context to be used in case of rollback
-        //     return { previousChoices };
-        // },
-        // If the mutation fails, roll back to the previous value
-        onError: (err, newChoice, context: any) => {
-            queryClient.setQueryData(['swipe_mode_choices'], context?.previousChoices);
-
-            throw new Error(`Error recording swipe choice: ${err.message} [${newChoice}]`);
+        onMutateFn: (old, newChoice) => {
+            if (!old) return;
+            return {
+                swipeModeChosenWishlist: [
+                    ...old.swipeModeChosenWishlist,
+                    ...(newChoice.choice === 'wishlist' ? [newChoice.event_id] : []),
+                ],
+                swipeModeChosenSkip: [
+                    ...old.swipeModeChosenSkip,
+                    ...(newChoice.choice === 'skip' ? [newChoice.event_id] : []),
+                ],
+            }
         },
-        // Always refetch after error or success
         onSettled: () => {
-            // queryClient.invalidateQueries(['swipe_mode_choices']);
-        },
+            qc.invalidateQueries({ queryKey: ['swipe_mode_choices'] });
+            qc.invalidateQueries({ queryKey: ['wishlistEvents'] });
+        }
     });
 };
 
 
 
-interface SwipeModeChoices {
+interface SwipeModeChoice {
     event_id: number;
     choice: 'wishlist' | 'skip';
     list?: string;
 }
 
-interface SwipeModeChosen {
+interface SwipeModeChoiceList {
     swipeModeChosenWishlist: number[];
     swipeModeChosenSkip: number[];
 }
 
-const fetchSwipeChoices = async (user_id: string): Promise<SwipeModeChosen> => {
-    const { data, error } = await supabase
-        .from('swipe_mode_choices')
-        .select('event_id, choice')
-        .eq('user_id', user_id);
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    const swipeModeChosenWishlist = data
-        ?.filter((choice: SwipeModeChoices) => choice.choice === 'wishlist')
-        .map((choice: SwipeModeChoices) => choice.event_id) || [];
-
-    const swipeModeChosenSkip = data
-        ?.filter((choice: SwipeModeChoices) => choice.choice === 'skip')
-        .map((choice: SwipeModeChoices) => choice.event_id) || [];
-
-    return {
-        swipeModeChosenWishlist,
-        swipeModeChosenSkip,
-    };
-};
-
-export const useSwipeChoices = () => {
+export const useFetchSwipeChoices = () => {
     const authUserId = useGetAuthUserId();
 
-    const { data } = useQuery<SwipeModeChosen>({
-        queryKey: ['swipe_mode_choices', authUserId],
-        queryFn: () => fetchSwipeChoices(authUserId!),
+    const { data } = useQuery<SwipeModeChoiceList>({
+        queryKey: ['swipe_mode_choices'],
+        queryFn: () => axios.get(`${API_BASE_URL}/wishlist/swipe_mode_choices`).then(res => res.data),
         enabled: !!authUserId, // Only fetch if the user_id exists
     });
 

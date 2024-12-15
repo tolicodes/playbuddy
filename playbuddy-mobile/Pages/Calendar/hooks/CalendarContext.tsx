@@ -26,8 +26,8 @@ type CalendarContextType = {
 
     // Wishlist
     wishlistEvents: EventWithMetadata[];
-    isOnWishlist: (eventId: string) => boolean;
-    toggleWishlistEvent: UseMutationResult<void, Error, { eventId: string; isOnWishlist: boolean }, unknown>;
+    isOnWishlist: (eventId: number) => boolean;
+    toggleWishlistEvent: UseMutationResult<void, Error, { eventId: number; isOnWishlist: boolean }, unknown>;
 
     // Swipe Mode
     availableCardsToSwipe: EventWithMetadata[];
@@ -77,14 +77,6 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         swipeChoices,
     } = useWishlist(eventsWithMetadata);
 
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            reloadEvents();
-        }, 60000); // 60000 milliseconds = 1 minute
-
-        return () => clearInterval(intervalId); // Cleanup interval on component unmount
-    }, [reloadEvents]);
-
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters)
             .filter(event => {
@@ -110,10 +102,10 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     const availableCardsToSwipe = useMemo(() => {
         return filteredEvents
             .filter(event =>
-                !swipeChoices?.swipeModeChosenWishlist.some(choice => choice + '' === event.id + '') &&
-                !swipeChoices?.swipeModeChosenSkip.some(choice => choice + '' === event.id + '')
+                !swipeChoices?.swipeModeChosenWishlist.some(choice => choice === event.id) &&
+                !swipeChoices?.swipeModeChosenSkip.some(choice => choice === event.id)
             )
-            .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+            .sort((a, b) => new Date(a.start_date) < new Date(b.start_date) ? -1 : 1);
     }, [swipeChoices, filteredEvents]);
 
     // Memoize the context value to prevent unnecessary re-renders
