@@ -32,7 +32,8 @@ export const DrawerNav = () => {
                 listeners={({ navigation }) => ({
                     drawerItemPress: (e) => {
                         e.preventDefault();
-                        navigation.navigate('Home', { screen: 'Main Calendar' });
+
+                        navigation.navigate('HomeScreen');
                     },
                 })}
             />
