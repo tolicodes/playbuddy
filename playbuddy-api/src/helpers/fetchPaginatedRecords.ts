@@ -1,4 +1,5 @@
-import { supabaseClient } from "connections/supabaseClient.js";
+import { supabaseClient } from "../connections/supabaseClient.js";
+import moment from "moment";
 
 export async function fetchPaginatedRecords(tableName: string, userId: string, pageSize: number = 1000) {
     let allData: any[] = [];
@@ -11,7 +12,7 @@ export async function fetchPaginatedRecords(tableName: string, userId: string, p
             .from(tableName)
             .select('id, event_id, choice, event:events!inner(start_date)', { count: 'exact' })
             .eq('user_id', userId)
-            .gte('event.start_date', new Date().toISOString())
+            .gte('event.start_date', moment().subtract(1, 'day').toISOString())
             .range(from, to);
 
         if (error) {
