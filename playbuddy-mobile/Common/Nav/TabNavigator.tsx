@@ -11,11 +11,13 @@ import { Badge } from "./Badge";
 import EventCalendarView from "../../Pages/Calendar/EventCalendarView";
 import MyCalendar from "../../Pages/MyCalendar";
 import { SwipeMode } from "../../Pages/SwipeMode";
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
     const { availableCardsToSwipe } = useCalendarContext();
+    const { authUserId } = useUserContext();
 
     return (
         <Tab.Navigator
@@ -57,7 +59,7 @@ export const TabNavigator = () => {
                     tabBarIcon: ({ color, size }) => (
                         <View>
                             <FAIcon name="layer-group" size={size} color={color} />
-                            {availableCardsToSwipe.length > 0 && <Badge count={availableCardsToSwipe.length} />}
+                            {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />}
                         </View>
                     ),
                 }}
