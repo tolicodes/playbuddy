@@ -2,18 +2,20 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { PromoCode } from '../../commonTypes';
 
-export const FormattedPromoCode = ({ promoCode }: { promoCode: PromoCode }) => (
-    <View style={styles.promoCodeContainer}>
-        <View style={styles.promoCodeBubble}>
-            <Text style={styles.promoCodeText}>
-                Promo Code: {promoCode.promo_code}
-                <Text style={styles.promoCodeDiscount}>
-                    &nbsp;({formatDiscount(promoCode)})
+export const FormattedPromoCode = ({ promoCode }: { promoCode: PromoCode }) => {
+    return (
+        <View style={styles.promoCodeContainer}>
+            <View style={styles.promoCodeBubble}>
+                <Text style={styles.promoCodeText}>
+                    Promo Code: {promoCode.promo_code}
+                    <Text style={styles.promoCodeDiscount}>
+                        &nbsp;({formatDiscount(promoCode)})
+                    </Text>
                 </Text>
-            </Text>
+            </View>
         </View>
-    </View>
-);
+    );
+}
 
 export const formatDiscount = (promoCode: PromoCode) => {
     if (promoCode.discount_type === 'percent') {
