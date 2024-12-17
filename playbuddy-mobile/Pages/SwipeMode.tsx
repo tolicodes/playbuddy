@@ -53,18 +53,24 @@ export const SwipeMode = () => {
     };
 
     const renderCard = (event: Event) => {
+        if (!event) {
+            return (
+                <NoEventsToSwipe />
+            )
+        }
+
         // TODO: find out why event is not always available
         const imageUrl = event?.image_url && getSmallAvatarUrl(event?.image_url);
         return (
             <View style={styles.card}>
                 <Image source={{ uri: imageUrl }} style={styles.image} />
                 <View style={styles.cardContent}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{moment(event.start_date).format('dddd')}</Text>
-                    <Text >{moment(event.start_date).format('MMM D')} {formatDate(event)}</Text>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{moment(event?.start_date).format('dddd')}</Text>
+                    <Text >{moment(event?.start_date).format('MMM D')} {formatDate(event)}</Text>
 
                     <Text style={styles.eventName}>{event.name}</Text>
 
-                    <Text style={styles.organizer}>{event.organizer.name}</Text>
+                    <Text style={styles.organizer}>{event?.organizer?.name}</Text>
 
                     <Button
                         title="More Info"
@@ -100,7 +106,6 @@ export const SwipeMode = () => {
                 renderCard={renderCard}
                 onSwipedRight={onSwipeRight}
                 onSwipedLeft={onSwipeLeft}
-                cardIndex={0}
                 backgroundColor={'#f8f9fa'}
                 stackSize={3}
                 verticalSwipe={false}
