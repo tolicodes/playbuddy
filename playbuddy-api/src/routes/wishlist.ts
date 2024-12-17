@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
-import { fetchPaginatedRecords } from 'helpers/fetchPaginatedRecords.js';
+import { fetchPaginatedRecords } from '../helpers/fetchPaginatedRecords.js';
 
 const router = Router();
 
@@ -101,8 +101,8 @@ router.get('/swipe_mode_choices', authenticateRequest, async (req: Authenticated
             swipeModeChosenWishlist,
             swipeModeChosenSkip,
         });
-    } catch (error) {
-        console.error(`Error fetching swipe mode choices: ${error.message}`);
+    } catch (error: any) {
+        console.error(`Error fetching swipe mode choices: ${error?.message}`);
         return res.status(500).json({ error: 'Failed to fetch swipe mode choices' });
     }
 });
@@ -294,7 +294,7 @@ router.get('/code/:share_code', async (req: Request, res: Response) => {
 
     const eventIds = data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
 
-    res.status(200).json(eventIds);
+    return res.status(200).json(eventIds);
 });
 
 export default router;

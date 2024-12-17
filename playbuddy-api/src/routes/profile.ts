@@ -69,9 +69,6 @@ router.put('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
 
         const updateFields: any = { share_code: shareCode };
 
-        console.log('selected_location_area_id', req.body.selected_location_area_id);
-        console.log('selected_community_id', req.body.selected_community_id);
-
         fieldsToUpdate.forEach(field => {
             if (req.body.hasOwnProperty(field)) {
                 updateFields[field] = req.body[field];
