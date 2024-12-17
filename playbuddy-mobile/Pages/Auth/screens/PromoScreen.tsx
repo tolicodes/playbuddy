@@ -5,7 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NavStack } from "../../../Common/Nav/NavStackType";
 import { usePromoCode } from "./usePromoCode";
 
-export const PromoScreen = () => {
+export const PromoScreen = ({ setIsSkippingWelcomeDueToPromo }: { setIsSkippingWelcomeDueToPromo: (value: boolean) => void }) => {
     const navigation = useNavigation<NavStack>();
 
     const promoCodeData = usePromoCode();
@@ -17,6 +17,10 @@ export const PromoScreen = () => {
     const { promoCode, communityId, organizer } = promoCodeData;
 
     const onPressExplore = useCallback(() => {
+        // when they click home, it will skip the welcome screen, but 
+        // when they enter app again, it will not skip the welcome screen
+        setIsSkippingWelcomeDueToPromo(true);
+
         navigation.navigate('Details', { screen: 'Community Events', params: { communityId: communityId || '' } });
     }, [navigation]);
 
@@ -66,6 +70,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
         color: "#0077bd",
         marginBottom: 8,
+        textAlign: "center",
     },
     discountText: {
         fontSize: 36,
