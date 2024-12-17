@@ -13,7 +13,7 @@ const MyBuddies = () => {
     if (buddies.isPending) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <ActivityIndicator />
             </View>
         );
     }

@@ -60,7 +60,7 @@ export const Avatar = ({ name }: { name?: string }) => {
         }
     };
 
-    const Uploading = <ActivityIndicator size="large" color="#fff" />;
+    const Uploading = <ActivityIndicator />;
     const AvatarElement = <AvatarCircle userProfile={userProfile} size={150} name={name} />;
     const UploadText = <Text style={styles.uploadText}>Upload</Text>;
 

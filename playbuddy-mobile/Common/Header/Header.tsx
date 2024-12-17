@@ -102,7 +102,7 @@ const customStyles = StyleSheet.create({
     rightNavContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         paddingHorizontal: 10,
     },
     filterIcon: {

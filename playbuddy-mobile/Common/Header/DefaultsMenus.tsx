@@ -139,7 +139,7 @@ const Menu = ({
         <View style={styles.menuContainer}>
             <SearchHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
             {loading ? (
-                <ActivityIndicator size="large" color="#007aff" style={styles.loading} />
+                <ActivityIndicator style={styles.loading} />
             ) : (
                 <FlatList
                     ref={listRef}
@@ -171,7 +171,7 @@ const Dropdown = ({
     const toggleDropdown = () => setIsOpen(!isOpen);
 
     if (items.length === 0) {
-        return (<ActivityIndicator size="large" color="#007aff" style={styles.loading} />);
+        return (<ActivityIndicator style={styles.loading} color="#007aff" />);
     }
 
     const selectedItem = items.find(item => item.id === selectedItemId)!;
@@ -386,7 +386,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     loading: {
-        marginTop: 10,
+        marginRight: 10,
+        alignSelf: 'center',
     },
 });
 

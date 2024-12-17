@@ -17,10 +17,6 @@ const AddBuddy: React.FC = () => {
     const [shareCode, setShareCode] = useState('');
     const [addedBuddy, setAddedBuddy] = useState<any>(null);
 
-    if (!authUserId) {
-        return <LoginToAccess entityToAccess="buddies" />;
-    }
-
     const handleAddBuddy = async (buddyId?: string, buddyShareCode?: string) => {
         try {
             await addBuddy.mutateAsync({ buddyUserId: buddyId, shareCode: buddyShareCode });
