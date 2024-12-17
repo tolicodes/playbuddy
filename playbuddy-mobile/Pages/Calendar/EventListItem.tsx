@@ -61,12 +61,15 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
             <View style={styles.eventContainer}>
                 <Image source={{ uri: imageUrl }} style={styles.eventImage} />
                 <View style={styles.eventDetails}>
-                    <View style={styles.eventOrganizerAndBuddiesContainer}>
+                    <View style={styles.eventOrganizerAndBadgesContainer}>
                         <View style={styles.organizerContainer}>
                             <View
                                 style={[styles.organizerDot, { backgroundColor: item.organizerColor || 'white' }]}
                             />
-                            <Text style={styles.eventOrganizer}>
+                            <Text style={styles.eventOrganizer}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                            >
                                 {item.organizer?.name}
                             </Text>
                             {item.visibility === 'private' && (
@@ -74,13 +77,13 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
                                     <Text style={styles.privateBadgeText}>Private</Text>
                                 </View>
                             )}
-                            {PromoCode}
                         </View>
                         {sharedBuddies && (
                             <View style={styles.buddyAvatarCarouselContainer}>
                                 <BuddyAvatarCarousel buddies={sharedBuddies} />
                             </View>
                         )}
+                        {PromoCode}
                     </View>
 
                     <View style={styles.titleAndHeartContainer}>
@@ -150,15 +153,17 @@ const styles = StyleSheet.create({
     favoriteIcon: {
         paddingLeft: 10,
     },
-    eventOrganizerAndBuddiesContainer: {
+    eventOrganizerAndBadgesContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 4,
+        display: 'flex',
     },
     organizerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        flex: 2
     },
     organizerDot: {
         width: 10,
@@ -167,6 +172,7 @@ const styles = StyleSheet.create({
         marginRight: 5,
     },
     buddyAvatarCarouselContainer: {
+        flex: 1,
         marginLeft: 10
     },
     titleAndHeartContainer: {
