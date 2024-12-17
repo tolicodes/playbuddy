@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { View } from "react-native";
@@ -13,18 +13,28 @@ const HomeStack = createStackNavigator();
 export function HomeStackNavigator() {
     const { isSkippingWelcomeScreen, isDefaultsComplete, isLoadingUserProfile, deepLinkParams: deepLinkParams } = useUserContext();
 
+    const [isSkippingWelcomeDueToPromo, setIsSkippingWelcomeDueToPromo] = useState(false);
+
     if (isLoadingUserProfile) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator size="large" color="#007aff" />
+                <ActivityIndicator />
             </View>
         );
     }
 
+    const PromoScreenWrap = () => {
+        return <PromoScreen setIsSkippingWelcomeDueToPromo={setIsSkippingWelcomeDueToPromo} />
+    }
+
     let HomeScreen;
-    if (deepLinkParams && !isDefaultsComplete) {
+    // if they are skipping welcome due to promo being clicked, 
+    // they should not see the welcome screen until they refresh the app
+    if (isSkippingWelcomeDueToPromo) {
+        HomeScreen = TabNavigator;
+    } else if (deepLinkParams) {
         if (deepLinkParams.type === 'organizer_promo_code') {
-            HomeScreen = PromoScreen;
+            HomeScreen = PromoScreenWrap;
         } else {
             throw new Error(`Unknown deep link type: ${deepLinkParams.type}`);
         }
