@@ -5,10 +5,18 @@ import AddBuddy from './AddBuddy/AddBuddyScreen';
 import SharedEvents from './SharedEventsScreen';
 import MyBuddies from './MyBuddiesScreen';
 import BuddyLists from './BuddyListsScreen';
+import { LoginToAccess } from '../../../Common/LoginToAccess';
+import { useUserContext } from '../../Auth/hooks/UserContext';
 
 const Tab = createMaterialTopTabNavigator();
 
 const BuddiesTab = () => {
+    const { authUserId } = useUserContext();
+
+    if (!authUserId) {
+        return <LoginToAccess entityToAccess="Buddies" />;
+    }
+
     return (
         <>
             <Tab.Navigator>
