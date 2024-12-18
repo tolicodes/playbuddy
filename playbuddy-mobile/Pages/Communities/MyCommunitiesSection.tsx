@@ -14,8 +14,8 @@ export const MyCommunitiesSection = ({ type }: { type: 'organizer' | 'private' }
 
     return (
         <View style={styles.container}>
-            {type === 'private' && <CommunitiesList title="My Private Communities" communities={privateCommunities} flex={1} entityType="private_community" />}
-            {type === 'organizer' && <CommunitiesList title="My Favorite Organizers" communities={myOrganizerPublicCommunities} flex={2} entityType="organizer" />}
+            {type === 'private' && <CommunitiesList title="My Private Communities" communities={privateCommunities} entityType="private_community" />}
+            {type === 'organizer' && <CommunitiesList title="My Favorite Organizers" communities={myOrganizerPublicCommunities} entityType="organizer" />}
         </View>
     );
 }

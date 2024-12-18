@@ -10,7 +10,6 @@ export const CommunitiesList = ({
     title,
     communities,
     showSearch = false,
-    flex = 1,
     entityType = 'organizer',
 }: {
     title: string,
@@ -26,7 +25,7 @@ export const CommunitiesList = ({
     const { data: myCommunities = [] } = useFetchMyCommunities();
 
     const handleJoin = useCallback((communityId: string) => {
-        joinCommunity.mutate({ community_id: communityId, type: 'organizer_public_community' });
+        joinCommunity.mutate({ community_id: communityId, type: entityType === 'organizer' ? 'organizer_public_community' : 'private_community' });
         logEvent('community_list_community_joined', { communityId });
     }, [joinCommunity]);
 
@@ -77,7 +76,13 @@ export const CommunitiesList = ({
                         <TouchableOpacity
                             style={styles.communityItem}
                             onPress={() => {
-                                navigation.navigate('Communities', { screen: 'Community Events', params: { communityId: item.id } });
+                                navigation.navigate(
+                                    'Details',
+                                    {
+                                        screen: 'Community Events',
+                                        params: { communityId: item.id }
+                                    }
+                                );
                                 logEvent('community_list_navigate_to_community_events', { communityId: item.id });
                             }}
                         >

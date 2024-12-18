@@ -16,7 +16,7 @@ const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }
     const TypedJoinCommunitySection = () => useMemo(() => <JoinCommunitySection type={type} />, [type]);
 
     if (!authUserId) {
-        return <LoginToAccess entityToAccess="Communities" />;
+        return <LoginToAccess entityToAccess={type === 'organizer' ? 'Organizer' : 'Communities'} />;
     }
 
     return (
