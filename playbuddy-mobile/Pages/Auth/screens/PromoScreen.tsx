@@ -27,7 +27,7 @@ export const PromoScreen = ({ setIsSkippingWelcomeDueToPromo }: { setIsSkippingW
     return (
         <View style={styles.container}>
             <Text style={styles.title}>🎉 Welcome to PlayBuddy!</Text>
-            <Text style={styles.subtitle}>As a token of appreciation,</Text>
+            <Text style={styles.subtitle}>As a token of appreciation</Text>
             <Text style={styles.organizerName}>{organizer?.name}</Text>
             <Text style={styles.subtitle}>is offering:</Text>
             <Text style={styles.discountText}>{formatDiscount(promoCode)}</Text>
