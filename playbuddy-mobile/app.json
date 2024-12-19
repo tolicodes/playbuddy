@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.6.0",
+    "version": "4.7.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -114,9 +114,17 @@
           "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
           "iosAppDomain": "l.playbuddy.me"
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.jpeg",
+          "color": "#ffffff",
+          "mode": "production"
+        }
       ]
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.6.0"
+    "runtimeVersion": "4.7.0"
   }
 }
