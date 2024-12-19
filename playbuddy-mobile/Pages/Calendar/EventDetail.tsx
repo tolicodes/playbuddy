@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
-import { Image } from 'expo-image'
+import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
 import { WebView } from 'react-native-webview';
@@ -16,62 +16,63 @@ import { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
 import { generateGoogleCalendarUrl } from './hooks/generateGoogleCalendarUrl';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
+import { useCalendarContext } from './hooks/CalendarContext';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
-    return (<WebView
-        style={styles.video}
-        allowsFullscreenVideo
-        allowsInlineMediaPlayback
-        mediaPlaybackRequiresUserAction={false}
-        source={{ uri }}
-    />)
+    return (
+        <WebView
+            style={styles.video}
+            allowsFullscreenVideo
+            allowsInlineMediaPlayback
+            mediaPlaybackRequiresUserAction={false}
+            source={{ uri }}
+        />
+    );
 };
 
 const formatPrice = (price: string) => {
-    // blank
     if (!price) return '';
-
-    // Free event (BUG NOW) so ''
-    if (price === '0') return '';
-
-    // Attempt to convert to number
+    if (price === '0') return 'Free';
     const numericPrice = parseFloat(price);
-
-    // If conversion fails, return the original string
-    if (isNaN(numericPrice)) {
-        return price;
-    }
-
-    // Format as USD currency
+    if (isNaN(numericPrice)) return price;
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(numericPrice);
 };
 
+const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCalendar }: { selectedEvent: EventWithMetadata, addPromoCodeToUrlAndOpen: () => void, onPressGoogleCalendar: () => void }) => {
+    const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
+    const itemIsOnWishlist = isOnWishlist(selectedEvent.id);
 
+    return (
+        <View style={styles.headerContainer}>
+            <TouchableOpacity onPress={addPromoCodeToUrlAndOpen} style={styles.flexOne}>
+                <Text style={styles.fullViewTitle} numberOfLines={2}>
+                    {selectedEvent.name}
+                </Text>
+            </TouchableOpacity>
 
-const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCalendar }: { selectedEvent: EventWithMetadata, addPromoCodeToUrlAndOpen: () => void, onPressGoogleCalendar: () => void }) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'nowrap' }}>
-        <TouchableOpacity onPress={addPromoCodeToUrlAndOpen} style={{ flex: 1 }}>
-            <Text style={styles.fullViewTitle} numberOfLines={2}>
-                {selectedEvent.name}
-            </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.googleCalendarButton} onPress={onPressGoogleCalendar}>
-            <View>
-                <Image
-                    source={require('./images/google-calendar.png')}
-                    style={styles.googleCalendarImage}
+            <TouchableOpacity onPress={() => toggleWishlistEvent.mutate({ eventId: selectedEvent.id, isOnWishlist: !itemIsOnWishlist })} style={styles.favoriteIcon}>
+                <MaterialIcons
+                    name={itemIsOnWishlist ? 'favorite' : 'favorite-border'}
+                    size={35}
+                    color="red"
                 />
-                <Text style={styles.googleCalendarButtonText}>Add to Cal</Text>
-            </View>
-        </TouchableOpacity>
-    </View>
-);
+            </TouchableOpacity>
 
-export const EventDetail = ({ route }: { route: any }) => {
+            <TouchableOpacity style={styles.googleCalendarButton} onPress={onPressGoogleCalendar}>
+                <View>
+                    <Image
+                        source={require('./images/google-calendar.png')}
+                        style={styles.googleCalendarImage}
+                    />
+                </View>
+            </TouchableOpacity>
+        </View>
+    );
+};
+
+export const EventDetail = ({ route }: { route: { params: { selectedEvent: EventWithMetadata } } }) => {
     const navigation = useNavigation<NavStack>();
-    const selectedEvent = route?.params?.selectedEvent as EventWithMetadata;
-
+    const selectedEvent = route?.params?.selectedEvent;
     const { selectedLocationAreaId } = useUserContext();
 
     if (!selectedEvent) return null;
@@ -85,20 +86,20 @@ export const EventDetail = ({ route }: { route: any }) => {
 
     const addPromoCodeToUrlAndOpen = () => {
         const eventUrlWithPromoCode = addOrReplacePromoCode(selectedEvent.event_url, promoCode?.promo_code);
-        logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url })
-        Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url)
-    }
+        logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url });
+        Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url);
+    };
 
     const onClickOrganizer = () => {
-        logEvent('event_detail_organizer_clicked', { organizer_id: selectedEvent.organizer.id })
+        logEvent('event_detail_organizer_clicked', { organizer_id: selectedEvent.organizer.id });
         const community = selectedEvent.communities?.find(community => community.organizer_id === selectedEvent.organizer.id)?.id;
         if (community) {
-            navigation.navigate('Details', { screen: 'Community Events', params: { communityId: community } })
+            navigation.navigate('Details', { screen: 'Community Events', params: { communityId: community } });
         }
-    }
+    };
 
     const onPressGoogleCalendar = () => {
-        logEvent('event_detail_google_calendar_clicked', { event_id: selectedEvent.id })
+        logEvent('event_detail_google_calendar_clicked', { event_id: selectedEvent.id });
         const calendarUrl = generateGoogleCalendarUrl({
             title: selectedEvent.name,
             startDate: selectedEvent.start_date,
@@ -108,20 +109,21 @@ export const EventDetail = ({ route }: { route: any }) => {
         });
 
         Linking.openURL(calendarUrl).catch(err => {
-            throw new Error(`Failed to open Google Calendar: ${err}`)
+            throw new Error(`Failed to open Google Calendar: ${err}`);
         });
-    }
+    };
 
     const locationAreaIsAll = selectedLocationAreaId === ALL_LOCATION_AREAS_ID;
 
     return (
-        <ScrollView>
-            {selectedEvent.video_url
-                ? <VideoPlayer uri={selectedEvent.video_url} />
-                : <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
-            }
+        <ScrollView style={styles.scrollView}>
+            {selectedEvent.video_url ? (
+                <VideoPlayer uri={selectedEvent.video_url} />
+            ) : (
+                <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
+            )}
 
-            <View style={{ padding: 20 }}>
+            <View style={styles.contentContainer}>
                 <EventHeader
                     selectedEvent={selectedEvent}
                     addPromoCodeToUrlAndOpen={addPromoCodeToUrlAndOpen}
@@ -129,20 +131,26 @@ export const EventDetail = ({ route }: { route: any }) => {
                 />
 
                 <TouchableOpacity onPress={onClickOrganizer}>
-                    <Text style={styles.eventOrganizer}>{selectedEvent.organizer.name}</Text>
+                    <Text style={styles.eventOrganizer}>
+                        <Text style={styles.eventOrganizerLabel}>Organizer:</Text> {selectedEvent.organizer.name}
+                    </Text>
                 </TouchableOpacity>
 
                 <Text style={styles.eventTime}>
                     {formatDate(selectedEvent, true)}
                 </Text>
 
-                {formattedPrice && <Text style={styles.fullViewPrice}>
-                    Price: {formattedPrice}
-                </Text>}
+                {formattedPrice && (
+                    <Text style={styles.fullViewPrice}>
+                        Price: {formattedPrice}
+                    </Text>
+                )}
 
-                {locationAreaIsAll && <Text style={styles.eventLocation}>
-                    {selectedEvent.location_area?.name}
-                </Text>}
+                {locationAreaIsAll && (
+                    <Text style={styles.eventLocation}>
+                        {selectedEvent.location_area?.name}
+                    </Text>
+                )}
 
                 {promoCode && <FormattedPromoCode promoCode={promoCode} />}
 
@@ -165,10 +173,23 @@ export const EventDetail = ({ route }: { route: any }) => {
                 </Markdown>
             </View>
         </ScrollView>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
+    scrollView: {
+        backgroundColor: '#f8f8f8',
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        flexWrap: 'nowrap',
+        marginBottom: 20,
+    },
+    flexOne: {
+        flex: 1,
+    },
     fullViewContainer: {
         position: 'relative',
         left: 0,
@@ -179,18 +200,19 @@ const styles = StyleSheet.create({
     },
     fullViewImage: {
         width: '100%',
-        height: 200,
+        height: 250,
         marginBottom: 20,
+        borderRadius: 10,
     },
     fullViewTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
-        color: 'blue',
+        color: '#007AFF',
         marginRight: 20,
     },
     fullViewTime: {
         fontSize: 18,
-        color: 'black',
+        color: '#000',
     },
     fullViewLocation: {
         fontSize: 18,
@@ -198,18 +220,23 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     fullViewPrice: {
-        fontSize: 14,
+        fontSize: 16,
         color: '#666',
+        marginTop: 10,
     },
     eventOrganizer: {
         fontSize: 16,
-        color: 'blue',
-        marginBottom: 5,
-        textDecorationLine: 'underline',
+        color: '#007AFF',
+        marginBottom: 10,
+    },
+    eventOrganizerLabel: {
+        fontSize: 16,
+        color: 'black',
     },
     eventTime: {
-        fontSize: 14,
+        fontSize: 16,
         color: '#666',
+        marginBottom: 10,
     },
     videoContainer: {
         flex: 1,
@@ -219,14 +246,16 @@ const styles = StyleSheet.create({
     },
     video: {
         width: '100%',
-        height: 300,  // Adjust height as per your requirement
+        height: 300,
+        borderRadius: 10,
     },
     contentContainer: {
         flex: 1,
-        padding: 10,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 50,
+        padding: 20,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        marginTop: -20,
     },
     controlsContainer: {
         padding: 10,
@@ -245,12 +274,12 @@ const styles = StyleSheet.create({
     },
     promoCodeText: {
         fontSize: 14,
-        color: 'black',
+        color: '#000',
         fontWeight: 'bold',
     },
     promoCodeLabel: {
         fontSize: 14,
-        color: 'black',
+        color: '#000',
         fontWeight: 'bold',
     },
     promoCodeBubble: {
@@ -260,7 +289,7 @@ const styles = StyleSheet.create({
     },
     promoCodeDiscount: {
         fontSize: 14,
-        color: 'black',
+        color: '#000',
         fontWeight: 'bold',
     },
     googleCalendarIcon: {
@@ -274,7 +303,7 @@ const styles = StyleSheet.create({
     },
     googleCalendarText: {
         fontSize: 11,
-        color: 'black',
+        color: '#000',
         fontWeight: 'bold',
     },
     googleCalendarButton: {
@@ -283,29 +312,34 @@ const styles = StyleSheet.create({
     },
     googleCalendarButtonText: {
         fontSize: 10,
-        color: 'black',
+        color: '#000',
         fontWeight: 'bold',
         textAlign: 'center',
         marginTop: 3,
         width: 30,
     },
     eventLocation: {
-        fontSize: 14,
+        fontSize: 16,
         color: '#666',
         marginTop: 10,
     },
     ticketButton: {
         backgroundColor: '#007AFF',
-        paddingVertical: 10,
-        paddingHorizontal: 8,
-        borderRadius: 5,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 10,
         alignItems: 'center',
-        marginVertical: 5,
-        marginBottom: 20,
+        marginVertical: 10,
     },
     buttonText: {
         color: '#fff',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
     },
-}) 
+    favoriteIcon: {
+        marginRight: 10,
+    },
+    padding20: {
+        padding: 20,
+    },
+});
