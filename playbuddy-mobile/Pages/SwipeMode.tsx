@@ -12,10 +12,13 @@ import { LoginToAccess } from '../Common/LoginToAccess';
 import { Button } from '@rneui/themed';
 import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
 import { logEvent } from '../Common/hooks/logger';
+import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
 
 export const SwipeMode = () => {
     const { availableCardsToSwipe } = useCalendarContext();
     const { authUserId } = useUserContext();
+
+    useBadgeNotifications({ availableCardsToSwipe: availableCardsToSwipe.length });
 
     const { toggleWishlistEvent, } = useCalendarContext(); // use the hook to handle wishlist
 
