@@ -143,11 +143,9 @@ const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewPr
                     style={[styles.searchBox, searchQuery
                         ? { borderColor: '#007AFF', borderWidth: 3 }
                         : { borderColor: '#DDD' }]}
-                    placeholder="Search events (filters on left)"
+                    placeholder="Search events (filters on top)"
                     value={searchQuery}
                     onChangeText={text => setSearchQuery(text)}
-                    autoCapitalize='none'
-                    autoCorrect={false}
                 />
             </View>
 
