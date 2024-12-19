@@ -1,10 +1,11 @@
 import React, { useState, useCallback } from "react";
 import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput } from "react-native";
-import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
+import { Community } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { useFetchMyCommunities, useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { logEvent } from "../../Common/hooks/logger";
+import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 
 export const CommunitiesList = ({
     title,
@@ -23,6 +24,8 @@ export const CommunitiesList = ({
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
     const { data: myCommunities = [] } = useFetchMyCommunities();
+
+    const { allEvents } = useCalendarContext();
 
     const handleJoin = useCallback((communityId: string) => {
         joinCommunity.mutate({ community_id: communityId, type: entityType === 'organizer' ? 'organizer_public_community' : 'private_community' });
@@ -72,6 +75,8 @@ export const CommunitiesList = ({
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
                     const isJoined = myCommunities?.some(community => community.id === item.id);
+
+                    const eventCount = allEvents.filter(event => event.communities?.some(community => community.id === item.id)).length;
                     return (
                         <TouchableOpacity
                             style={styles.communityItem}
@@ -88,6 +93,9 @@ export const CommunitiesList = ({
                         >
                             <View style={styles.communityItemContent}>
                                 <Text style={styles.communityName}>{item.name}</Text>
+                                <View style={styles.eventCountContainer}>
+                                    <Text style={styles.eventCount}>{eventCount}</Text>
+                                </View>
                                 <TouchableOpacity
                                     onPress={(e) => {
                                         e.stopPropagation();
@@ -104,12 +112,12 @@ export const CommunitiesList = ({
                                     </Text>
                                 </TouchableOpacity>
                             </View>
-                        </TouchableOpacity>
+                        </TouchableOpacity >
                     );
                 }}
                 style={{ height: 200 }}
             />
-        </View>
+        </View >
     );
 };
 
@@ -146,7 +154,23 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#333',
         flex: 1,
-        marginRight: 10
+        marginRight: 10,
+    },
+    eventCountContainer: {
+        backgroundColor: '#007AFF',
+        borderRadius: 20,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: 40,
+        marginRight: 5,
+    },
+    eventCount: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: 'white',
+        textAlign: 'center',
     },
     buttonText: {
         color: '#fff',
