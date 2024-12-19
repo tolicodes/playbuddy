@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import 'react-native-gesture-handler';
 import { QueryClientProvider } from '@tanstack/react-query';
 import 'expo-dev-client';
@@ -10,7 +10,7 @@ import Nav from './Common/Nav/Nav';
 import * as Sentry from '@sentry/react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { CommonProvider } from './Common/hooks/CommonContext';
-import { onFetchUpdateAsync } from './Common/hooks/ExpoUpdate';
+import { useFetchExpoUpdateAsync } from './Common/hooks/ExpoUpdate';
 import { BuddiesProvider } from './Pages/Buddies/hooks/BuddiesContext';
 import { queryClient } from './Common/hooks/reactQueryClient';
 // import './Common/hooks/appsFlyer';
@@ -26,11 +26,7 @@ Sentry.init({
 
 
 const App = () => {
-  useEffect(() => {
-    if (!__DEV__) {
-      onFetchUpdateAsync();
-    }
-  }, []);
+  useFetchExpoUpdateAsync();
 
   return (
     <QueryClientProvider client={queryClient}>
