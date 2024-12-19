@@ -48,12 +48,11 @@ const formatPrice = (price: string) => {
 
 
 
-const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCalendar }: any) => (
-    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <TouchableOpacity onPress={addPromoCodeToUrlAndOpen}>
-            <Text style={styles.fullViewTitle}>
+const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCalendar }: { selectedEvent: EventWithMetadata, addPromoCodeToUrlAndOpen: () => void, onPressGoogleCalendar: () => void }) => (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'nowrap' }}>
+        <TouchableOpacity onPress={addPromoCodeToUrlAndOpen} style={{ flex: 1 }}>
+            <Text style={styles.fullViewTitle} numberOfLines={2}>
                 {selectedEvent.name}
-                <MaterialIcons name="open-in-new" size={24} color="blue" />
             </Text>
         </TouchableOpacity>
 
@@ -69,7 +68,7 @@ const EventHeader = ({ selectedEvent, addPromoCodeToUrlAndOpen, onPressGoogleCal
     </View>
 );
 
-export const EventDetail = ({ route }: any) => {
+export const EventDetail = ({ route }: { route: any }) => {
     const navigation = useNavigation<NavStack>();
     const selectedEvent = route?.params?.selectedEvent as EventWithMetadata;
 
@@ -147,6 +146,20 @@ export const EventDetail = ({ route }: any) => {
 
                 {promoCode && <FormattedPromoCode promoCode={promoCode} />}
 
+                {selectedEvent.ticket_url && (
+                    <TouchableOpacity
+                        style={styles.ticketButton}
+                        onPress={() => {
+                            logEvent('event_detail_get_tickets_clicked', { event_id: selectedEvent.id });
+                            Linking.openURL(selectedEvent.ticket_url).catch(err => {
+                                throw new Error(`Failed to open ticket URL: ${err}`);
+                            });
+                        }}
+                    >
+                        <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>
+                    </TouchableOpacity>
+                )}
+
                 <Markdown>
                     {selectedEvent.description}
                 </Markdown>
@@ -173,6 +186,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         color: 'blue',
+        marginRight: 20,
     },
     fullViewTime: {
         fontSize: 18,
@@ -279,5 +293,19 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#666',
         marginTop: 10,
+    },
+    ticketButton: {
+        backgroundColor: '#007AFF',
+        paddingVertical: 10,
+        paddingHorizontal: 8,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginVertical: 5,
+        marginBottom: 20,
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 }) 
