@@ -40,6 +40,7 @@ async function sendPushNotification(expoPushToken: string, availableCardsToSwipe
 
 // we currently use this to schedule a daily notification
 async function scheduleDailyNotification(availableCardsToSwipe: number) {
+  await Notifications.cancelAllScheduledNotificationsAsync();
   await Notifications.scheduleNotificationAsync({
     content: {
       title: `${availableCardsToSwipe} new events!`,
