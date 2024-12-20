@@ -14,12 +14,15 @@ export default function CameraScanner({ onBarcodeScanned, scanning, setScanning 
 
     if (!permission?.granted) {
         return (
-            <TouchableOpacity style={styles.button} onPress={() => {
-                requestPermission();
-                logEvent('add_buddy_camera_permission_request');
-            }}>
-                <Text style={styles.buttonText}>Grant Camera Permission</Text>
-            </TouchableOpacity>
+            <>
+                <TouchableOpacity style={styles.button} onPress={() => {
+                    requestPermission();
+                    logEvent('add_buddy_camera_permission_request');
+                }}>
+                    <Text style={styles.buttonText}>Grant Camera Permission</Text>
+                </TouchableOpacity>
+                <Text style={styles.cameraPermissionText}>Grant camera permission to scan QR codes. No images will be retained.</Text>
+            </>
         );
     }
 
@@ -69,6 +72,12 @@ const styles = StyleSheet.create({
         fontSize: 18,
         color: '#fff',
         textAlign: 'center',
+    },
+    cameraPermissionText: {
+        fontSize: 16,
+        color: '#000',
+        textAlign: 'center',
+        marginTop: 10,
     },
     camera: {
         width: 200,

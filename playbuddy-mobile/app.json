@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.7.0",
+    "version": "4.7.1",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -91,9 +91,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
-          "recordAudioAndroid": true
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera. This app uses the camera to scan QR codes for event check-ins.",
         }
       ],
       [
@@ -125,6 +123,6 @@
       ]
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.7.0"
+    "runtimeVersion": "4.7.1"
   }
 }
