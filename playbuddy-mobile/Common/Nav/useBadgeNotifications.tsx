@@ -47,8 +47,8 @@ async function scheduleDailyNotification(availableCardsToSwipe: number) {
       body: 'Swipe through and add favorites to your calendar.',
     },
     trigger: {
-      // 3:32PM
-      hour: 12 + 3,
+      // 4:32PM
+      hour: 12 + 4,
       minute: 32,
       repeats: true,
     },
