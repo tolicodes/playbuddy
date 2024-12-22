@@ -40,28 +40,19 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
       forcePathStyle: true,
     });
 
-    const authStrategy = process.env.NODE_ENV === 'production' ?
+    const authStrategy =
       new Whatsapp.RemoteAuth({
-        clientId: 'scraper2',
+        clientId: 'scraper3',
         dataPath: 'whatsapp-login/',
         store: store,
         backupSyncIntervalMs: 600000,
-      }) :
-      new Whatsapp.LocalAuth();
+      })
 
     const client = new Client({
       authStrategy,
 
       puppeteer: {
         ...puppeteerConfig,
-      },
-
-      webVersionCache: {
-        type: "remote",
-        // remote execution context crashes 
-        // https://github.com/pedroslopez/whatsapp-web.js/issues/2789
-        remotePath:
-          "https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/1.26.0.html",
       },
     });
 
@@ -70,13 +61,14 @@ export const scrapeWhatsappLinks = (whatsappGroups: { group_name: string, commun
       qrcode.generate(qr, { small: true });
     });
 
-    client.on("ready", async () => {
+    client.on("remote_session_saved", async () => {
       console.log('ready');
       try {
         // Get all the groups
         console.log("Fetching chats...");
         const chats: Chat[] = await client.getChats();
         console.log(`Fetched ${chats.length} chats`);
+        console.log(chats);
 
         const groups = chats.filter((chat) => chat.isGroup);
         console.log(`Found ${groups.length} groups`);

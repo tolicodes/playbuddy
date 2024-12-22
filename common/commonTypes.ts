@@ -69,7 +69,7 @@ export interface Event extends SourceMetadata {
     communities?: Community[];
     visibility?: 'public' | 'private';
 
-    promo_codes: PromoCode[];
+    promo_codes?: PromoCode[];
 
 }
 

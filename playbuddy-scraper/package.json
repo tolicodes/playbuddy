@@ -60,7 +60,7 @@
     "react-tooltip": "^5.27.1",
     "redis": "^4.7.0",
     "turndown": "^7.2.0",
-    "whatsapp-web.js": "^1.26.0",
+    "whatsapp-web.js": "^1.26.1-alpha.3",
     "wwebjs-aws-s3": "^1.0.2",
     "wwebjs-google-cloud-storage": "^1.0.9"
   },
