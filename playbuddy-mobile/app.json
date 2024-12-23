@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.7.1",
+    "version": "4.8.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -123,6 +123,6 @@
       ]
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.7.1"
+    "runtimeVersion": "4.8.0"
   }
 }

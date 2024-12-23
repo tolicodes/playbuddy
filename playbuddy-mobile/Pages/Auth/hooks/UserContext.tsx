@@ -4,6 +4,7 @@ import {
     phoneSendOtp,
     phoneVerifyOtp,
     authenticateWithGoogle,
+    authenticateWithApple,
     useInitializeAuth,
     signUpWithEmail,
     signInWithEmail,
@@ -43,7 +44,7 @@ interface UserContextType {
     phoneVerifyOtp: ({ phone, otp }: { phone: string, otp: string }) => Promise<void>;
 
     authenticateWithGoogle: () => Promise<void>;
-
+    authenticateWithApple: () => Promise<void>;
     signOut: () => Promise<void>;
 
     selectedLocationAreaId?: string | null;
@@ -122,6 +123,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneVerifyOtp: wrapAuthFunction(phoneVerifyOtp),
 
             authenticateWithGoogle: wrapAuthFunction(authenticateWithGoogle),
+            authenticateWithApple: wrapAuthFunction(authenticateWithApple),
 
             signOut: wrapAuthFunction(signOut),
 
@@ -146,6 +148,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phoneSendOtp,
             phoneVerifyOtp,
             authenticateWithGoogle,
+            authenticateWithApple,
             signOut,
 
             deepLinkParams,

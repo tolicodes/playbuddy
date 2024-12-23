@@ -11,6 +11,8 @@ import { AppState } from 'react-native';
 import { UserProfile } from './UserTypes';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { AuthError } from '@supabase/supabase-js';
+import * as AppleAuthentication from 'expo-apple-authentication'
+
 
 GoogleSignin.configure({
     iosClientId: '929140353915-9pd1soj5ugifbg0ftb28ejc3jaggq0bv.apps.googleusercontent.com',
@@ -79,6 +81,35 @@ export const authenticateWithGoogle = async (): Promise<Session | null> => {
         return null;
     }
 };
+
+export const authenticateWithApple = async (): Promise<Session | null> => {
+    try {
+        const credential = await AppleAuthentication.signInAsync({
+            requestedScopes: [
+                AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+                AppleAuthentication.AppleAuthenticationScope.EMAIL,
+            ],
+        })
+        // Sign in via Supabase Auth.
+        if (!credential.identityToken) {
+            handleAuthError(null, 'Apple authentication - no identityToken');
+            return null;
+        }
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
+            provider: 'apple',
+            token: credential.identityToken,
+        })
+
+
+        if (error || !data.session) handleAuthError(error, 'Apple authentication');
+
+        return data.session || null;
+    } catch (error: any) {
+        handleAuthError(error, 'Apple authentication');
+        return null;
+    }
+}
 
 // SIGN OUT
 export const signOut = async (): Promise<void> => {

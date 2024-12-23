@@ -8,15 +8,26 @@ import { PhoneLogin } from './PhoneLogin';
 const GoogleLogin: React.FC = () => {
     const { authenticateWithGoogle } = useUserContext();
     return (
-        <View style={styles.googleContainer}>
-            <Button
-                title="Sign in with Google"
-                onPress={authenticateWithGoogle}
-                buttonStyle={styles.googleButton}
-                titleStyle={styles.buttonTitle}
-                containerStyle={styles.buttonContainer}
-            />
-        </View>
+        <Button
+            title="Sign in with Google"
+            onPress={authenticateWithGoogle}
+            buttonStyle={styles.googleButton}
+            titleStyle={styles.buttonTitle}
+            containerStyle={styles.buttonContainer}
+        />
+    );
+};
+
+const AppleLogin: React.FC = () => {
+    const { authenticateWithApple } = useUserContext();
+    return (
+        <Button
+            title="Sign in with Apple"
+            onPress={authenticateWithApple}
+            buttonStyle={styles.appleButton}
+            titleStyle={styles.buttonTitle}
+            containerStyle={styles.buttonContainer}
+        />
     );
 };
 
@@ -32,7 +43,12 @@ const AuthFormScreen: React.FC = () => {
             <View style={styles.orContainer}>
                 <Text style={styles.orText}>or continue with</Text>
             </View>
-            <GoogleLogin />
+
+            <View style={styles.ssoContainer}>
+                <GoogleLogin />
+
+                <AppleLogin />
+            </View>
         </View>
     );
 }
@@ -49,14 +65,18 @@ const styles = StyleSheet.create({
     orText: {
         textAlign: 'center',
     },
-    googleContainer: {
-        padding: 20,
-        backgroundColor: 'white',
-        borderRadius: 10,
-        marginBottom: 20,
+    ssoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 5,
+        paddingHorizontal: 20,
+    },
+
+    appleButton: {
+        backgroundColor: 'black',
+        borderRadius: 10,
+        paddingVertical: 12,
+        marginLeft: 10,
     },
     buttonContainer: {
         marginVertical: 10,
