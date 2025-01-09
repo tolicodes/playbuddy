@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.8.0",
+    "version": "4.8.5",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -19,6 +19,7 @@
     },
     "ios": {
       "supportsTablet": true,
+      "usesAppleSignIn": true,
       "associatedDomains": [
         "applinks:playbuddy.me",
         "applinks:playbuddy.onelink.me",
@@ -101,28 +102,16 @@
         }
       ],
       [
-        "react-native-appsflyer",
-        {
-          
-        }
-      ],
-      [
-        "@config-plugins/react-native-branch",
-        {
-          "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
-          "iosAppDomain": "l.playbuddy.me"
-        }
-      ],
-      [
         "expo-notifications",
         {
           "icon": "./assets/icon.jpeg",
           "color": "#ffffff",
           "mode": "production"
         }
-      ]
+      ],
+      "expo-apple-authentication"
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.8.0"
+    "runtimeVersion": "4.8.5"
   }
 }
