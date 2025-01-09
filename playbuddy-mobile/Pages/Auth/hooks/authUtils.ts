@@ -101,8 +101,16 @@ export const authenticateWithApple = async (): Promise<Session | null> => {
             token: credential.identityToken,
         })
 
+        if (error || !data.session) {
+            handleAuthError(error, 'Apple authentication');
 
-        if (error || !data.session) handleAuthError(error, 'Apple authentication');
+            return null;
+        }
+
+        // we want to add in the full name to use as default (setFullNameFromOAuthedUser in wrap function)
+        data.session.user.user_metadata.full_name = credential.fullName?.nickname ||
+            `${credential.fullName?.givenName} ${credential.fullName?.familyName} `
+
 
         return data.session || null;
     } catch (error: any) {

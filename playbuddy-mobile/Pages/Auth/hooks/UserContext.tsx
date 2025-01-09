@@ -53,6 +53,9 @@ interface UserContextType {
     deepLinkParams: DeepLinkParams | null;
 
     setDeepLinkParams: (params: DeepLinkParams) => void;
+
+    fullNameFromOAuthedUser: string | null;
+    setFullNameFromOAuthedUser: (fullName: string) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -86,6 +89,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const session = await authFn(...args);
                 setupAxiosHeaders(session as Session | null);
 
+                if (session?.user.user_metadata.full_name) {
+                    setFullNameFromOAuthedUser(session.user.user_metadata.full_name);
+                }
+
                 setSession(session || null);
             } finally {
                 setIsLoadingAuth(false);
@@ -102,6 +109,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const isDefaultsComplete = !!userProfile?.selected_location_area_id && !!userProfile?.selected_community_id;
 
     const { isSkippingWelcomeScreen, updateSkippingWelcomeScreen } = useSkippingWelcomeScreen();
+
+    const [fullNameFromOAuthedUser, setFullNameFromOAuthedUser] = useState<string | null>(null);
 
     const value = useMemo(
         () => ({
@@ -132,6 +141,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             deepLinkParams,
             setDeepLinkParams,
+
+            fullNameFromOAuthedUser,
+            setFullNameFromOAuthedUser,
         }),
         [
             session,
@@ -153,6 +165,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             deepLinkParams,
             setDeepLinkParams,
+
+            fullNameFromOAuthedUser,
+            setFullNameFromOAuthedUser,
         ]
     );
 

@@ -11,7 +11,7 @@ import { NavStack } from '../../../Common/Nav/NavStackType';
 import { logEvent } from '../../../Common/hooks/logger';
 
 export default function AccountDetails() {
-    const { userProfile, signOut } = useUserContext();
+    const { userProfile, signOut, fullNameFromOAuthedUser } = useUserContext();
     const { navigate } = useNavigation<NavStack>();
 
     const onPressSignOut = async () => {
@@ -80,7 +80,7 @@ export default function AccountDetails() {
                                 userProfile?.email ||
                                 userProfile?.phone
                             } />
-                            <InfoItem label="Display Name" value={userProfile?.name} />
+                            <InfoItem label="Display Name" value={userProfile?.name || fullNameFromOAuthedUser || ''} />
 
                             <Text style={styles.sectionHeader}>Wishlist Share Code</Text>
                             <Text style={styles.shareCodeInstruction}>
