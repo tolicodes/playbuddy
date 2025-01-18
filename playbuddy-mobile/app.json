@@ -54,7 +54,9 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.RECORD_AUDIO",
-        "com.google.android.gms.permission.AD_ID"
+        "com.google.android.gms.permission.AD_ID",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED"
       ]
     },
     "web": {
