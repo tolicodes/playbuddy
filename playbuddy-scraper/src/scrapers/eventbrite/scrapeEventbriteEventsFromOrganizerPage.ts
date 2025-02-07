@@ -6,11 +6,16 @@ import { CreateEventInput, SourceMetadata } from "../../commonTypes.js";
 
 import { EventbriteEvent } from "./types.js";
 
+const filterByRegion = (event: EventbriteEvent, region: string) => {
+  return event.venue?.address?.region === region;
+}
 
 const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], sourceMetadata: SourceMetadata): CreateEventInput[] => {
   const turndownService = new TurndownService();
 
-  return eventbriteEvents.map((event): CreateEventInput => {
+  const nyEvents = eventbriteEvents.filter(event => filterByRegion(event, 'NY'));
+
+  return nyEvents.map((event): CreateEventInput => {
     const start_date = event.start.utc;
     const end_date = event.end.utc;
 

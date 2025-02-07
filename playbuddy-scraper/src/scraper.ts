@@ -207,26 +207,6 @@ const scrapeAcroFestivalsEvents = async () => {
 }
 
 const filterAcroFacebookEvents = (events: CreateEventInput[]) => {
-    // const EXCLUDE_EVENT_NAMES = [
-    //     "workshop",
-    //     "class",
-    //     "jam",
-    //     "meetup",
-    //     "session",
-    //     "fundamentals",
-    //     "party",
-    //     "potluck",
-    //     "foundation",
-    //     "exchange",
-    //     "clinic",
-    //     "program",
-    //     "open gym",
-    //     "intro",
-    //     "pop-up",
-
-    // ]
-    // return events.filter((event) => !EXCLUDE_EVENT_NAMES.some((name) => event.name.toLowerCase().includes(name)));
-
     const INCLUDE_EVENT_NAMES = [
         "retreat",
         "festival",
