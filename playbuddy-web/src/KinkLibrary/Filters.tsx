@@ -28,15 +28,15 @@ const Filters: React.FC<FiltersProps> = ({ categories, onFilterChange }) => {
 
   // Apply filters
   useEffect(() => {
-    amplitude.logEvent('filter_change', {
-      searchText,
-      selectedCategories,
-      isRecommended,
-      status,
-      needsSupplies,
-      level,
-      isGroup
-    });
+    // amplitude.logEvent('filter_change', {
+    //   searchText,
+    //   selectedCategories,
+    //   isRecommended,
+    //   status,
+    //   needsSupplies,
+    //   level,
+    //   isGroup
+    // });
 
 
     onFilterChange({
