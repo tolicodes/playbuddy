@@ -11,6 +11,7 @@ import communitiesRoute from './routes/communities.js';
 import buddiesRoutes from './routes/buddies.js';
 import profileRoutes from './routes/profile.js';
 import personalizationRoutes from './routes/personalization.js';
+import userEventsRoute from './routes/user_events.js';
 
 export const app = express();
 
@@ -32,6 +33,7 @@ app.use('/communities', communitiesRoute);
 app.use('/buddies', buddiesRoutes);
 app.use('/profile', profileRoutes);
 app.use('/personalization', personalizationRoutes);
+app.use('/user_events', userEventsRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

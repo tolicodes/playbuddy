@@ -158,7 +158,7 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
                     <TouchableOpacity
                         style={styles.ticketButton}
                         onPress={() => {
-                            logEvent('event_detail_get_tickets_clicked', { event_id: selectedEvent.id });
+                            logEvent('event_detail_get_tickets_clicked', { event_id: selectedEvent.id, event_name: selectedEvent.name, promo_code: promoCode });
                             Linking.openURL(selectedEvent.ticket_url).catch(err => {
                                 throw new Error(`Failed to open ticket URL: ${err}`);
                             });
