@@ -4,11 +4,11 @@ import { AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware
 const router = Router();
 
 router.post('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { event_name, event_props } = req.body;
+    const { user_event_name, user_event_props } = req.body;
 
     const { data, error } = await supabaseClient
         .from('user_events')
-        .insert([{ event_name, event_props, auth_user_id: req.authUserId || null }]);
+        .insert([{ user_event_name, user_event_props, auth_user_id: req.authUserId || null }]);
 
     if (error) {
         console.error(`Error recording user event: ${error.message}`);
