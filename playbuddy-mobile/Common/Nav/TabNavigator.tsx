@@ -10,6 +10,7 @@ import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
 import { Badge } from "./Badge";
 import EventCalendarView from "../../Pages/Calendar/EventCalendarView";
 import MyCalendar from "../../Pages/MyCalendar";
+import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
 import { SwipeMode } from "../../Pages/SwipeMode";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 
@@ -49,6 +50,15 @@ export const TabNavigator = () => {
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <FAIcon name="heart" size={size} color={color} />
+                    ),
+                }}
+            />
+            <Tab.Screen
+                name="Organizers"
+                component={OrganizersNav}
+                options={{
+                    tabBarIcon: ({ color, size }) => (
+                        <FAIcon name="users-cog" size={size} color={color} />
                     ),
                 }}
             />
