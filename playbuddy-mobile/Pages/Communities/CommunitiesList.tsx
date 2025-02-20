@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput } from "react-native";
+import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput, Switch } from "react-native";
 import { Community } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { useFetchMyCommunities, useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
@@ -21,6 +21,7 @@ export const CommunitiesList = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const [searchQuery, setSearchQuery] = useState('');
+    const [showNoEventOrganizers, setShowNoEventOrganizers] = useState(false);
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
     const { data: myCommunities = [] } = useFetchMyCommunities();
@@ -39,6 +40,7 @@ export const CommunitiesList = ({
 
     const filteredCommunities = communities
         .filter(community => community.name.toLowerCase().includes(searchQuery.toLowerCase()))
+        .filter(community => showNoEventOrganizers || allEvents.some(event => event.communities?.some(c => c.id === community.id)))
         .sort((a, b) => a.name.localeCompare(b.name));
 
     if (communities.length === 0) {
@@ -70,6 +72,13 @@ export const CommunitiesList = ({
                     onChangeText={setSearchQuery}
                 />
             )}
+            <View style={styles.switchContainer}>
+                <Text>Show organizers with no events</Text>
+                <Switch
+                    value={showNoEventOrganizers}
+                    onValueChange={setShowNoEventOrganizers}
+                />
+            </View>
             <FlatList
                 data={filteredCommunities}
                 keyExtractor={(item) => item.id}
@@ -79,7 +88,9 @@ export const CommunitiesList = ({
                     const eventCount = allEvents.filter(event => event.communities?.some(community => community.id === item.id)).length;
                     return (
                         <TouchableOpacity
-                            style={styles.communityItem}
+                            style={[styles.communityItem, {
+                                backgroundColor: eventCount > 0 ? 'white' : 'lightgray',
+                            }]}
                             onPress={() => {
                                 navigation.navigate(
                                     'Details',
@@ -91,7 +102,7 @@ export const CommunitiesList = ({
                                 logEvent('community_list_navigate_to_community_events', { communityId: item.id });
                             }}
                         >
-                            <View style={styles.communityItemContent}>
+                            <View style={[styles.communityItemContent]}>
                                 <Text style={styles.communityName}>{item.name}</Text>
                                 <View style={styles.eventCountContainer}>
                                     <Text style={styles.eventCount}>{eventCount}</Text>
@@ -208,5 +219,12 @@ const styles = StyleSheet.create({
         borderColor: '#e0e0e0',
         borderWidth: 1,
         fontSize: 16,
+    },
+    switchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 15,
+        paddingTop: 0,
     },
 });
