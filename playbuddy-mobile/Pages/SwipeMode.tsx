@@ -4,7 +4,7 @@ import Swiper from 'react-native-deck-swiper';
 import { Image } from 'expo-image'
 import { useCalendarContext } from './Calendar/hooks/CalendarContext';
 import { formatDate } from './Calendar/hooks/calendarUtils';
-import { Event, PromoCode } from '../commonTypes';
+import { Community, Event, PromoCode } from '../commonTypes';
 import moment from 'moment';
 import { useRecordSwipeChoice } from './Calendar/hooks/useWishlist';
 import { useUserContext } from './Auth/hooks/UserContext';
@@ -14,14 +14,16 @@ import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
 import { logEvent } from '../Common/hooks/logger';
 import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
 import { addOrReplacePromoCode } from './Auth/screens/usePromoCode';
+import { useCommonContext } from '../Common/hooks/CommonContext';
 
 export const SwipeMode = () => {
     const { availableCardsToSwipe } = useCalendarContext();
+    const { myCommunities: { allMyCommunities } } = useCommonContext();
     const { authUserId } = useUserContext();
 
-    useBadgeNotifications({ availableCardsToSwipe: availableCardsToSwipe.length });
+    useBadgeNotifications({ availableCardsToSwipe });
 
-    const { toggleWishlistEvent, } = useCalendarContext(); // use the hook to handle wishlist
+    const { toggleWishlistEvent } = useCalendarContext(); // use the hook to handle wishlist
 
     const recordSwipe = useRecordSwipeChoice();
 
