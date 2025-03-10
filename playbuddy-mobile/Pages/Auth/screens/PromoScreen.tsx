@@ -1,5 +1,5 @@
 import React, { useCallback } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Linking } from "react-native";
 import { formatDiscount } from "../../Calendar/PromoCode";
 import { useNavigation } from "@react-navigation/native";
 import { NavStack } from "../../../Common/Nav/NavStackType";
@@ -11,7 +11,13 @@ export const PromoScreen = ({ setIsSkippingWelcomeDueToPromo }: { setIsSkippingW
     const promoCodeData = usePromoCode();
 
     if (!promoCodeData) {
-        throw Error('Error parsing promo code deep link: promo code data not found. How did you get to PromoScreen?');
+        return <View>
+            <Text>
+                Error processing promo code. Contact <Text style={{ color: 'blue' }} onPress={() => Linking.openURL('mailto:toli@toli.me')}>toli@toli.me</Text> for support.
+                {"\n\n"}
+                In the meantime, <Text style={{ color: 'blue' }} onPress={() => navigation.navigate('Home')}>create an account</Text>.
+            </Text>
+        </View>
     }
 
     const { promoCode, communityId, organizer } = promoCodeData;

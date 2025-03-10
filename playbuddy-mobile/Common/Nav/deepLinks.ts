@@ -7,6 +7,13 @@ export const deepLinks = [
             "communityId": "84b9068c-1cf7-41ee-8c75-af844618052d"
         }
     },
+    {
+        "slug": "everyday",
+        "type": "organizer_promo_code",
+        "params": {
+            "communityId": "84b9068c-1cf7-41ee-8c75-af844618052d"
+        }
+    },
     // Lauren & Russel
     {
         "slug": "1ovjTQ41nPb",
