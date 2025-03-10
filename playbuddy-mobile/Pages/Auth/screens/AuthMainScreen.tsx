@@ -1,67 +1,71 @@
 import React, { useEffect, useState } from 'react';
-import AuthForm from "./AuthFormScreen"
+import AuthForm from "./AuthFormScreen";
 import { useUserContext } from '../hooks/UserContext';
 import { ProfileDetailsForm } from './AuthProfileDetailsFormScreen';
 import { WelcomeScreen } from './WelcomeScreen';
 import { NavStack } from '../../../Common/Nav/NavStackType';
 import { useNavigation } from '@react-navigation/native';
 import { PreferencesScreen } from './PreferencesScreen';
+import ErrorScreen from './ErrorScreen';
 
-type AuthStep = 'welcome' | 'auth' | 'details' | 'preferences';
+type AuthStep = 'welcome' | 'auth' | 'details' | 'preferences' | 'error';
 
 const AuthMainScreen = () => {
-    const { authUserId, userProfile, isProfileComplete, isDefaultsComplete, updateSkippingWelcomeScreen } = useUserContext();
-    const { navigate } = useNavigation<NavStack>();
+    const { authUserId, isProfileComplete, isDefaultsComplete, updateSkippingWelcomeScreen, isLoading, isError } = useUserContext();
+    const navigation = useNavigation<NavStack>();
     const [step, setStep] = useState<AuthStep>('welcome');
 
-    // If we already created a user profile, we can skip the details screen
-    // If they created an account but not a profile, we ask for user's name and avatar
-    // If they haven't created an account, we ask them to sign in with Google, email, or phone
-    // If the continue from the welcome screen, we will show the auth screen
     useEffect(() => {
-        if (isDefaultsComplete) {
-            navigate('Main Calendar');
+        if (isLoading) {
+            return;
         }
 
-        // user is not logged in
+        if (isError) {
+            setStep('error');
+            return;
+        }
+
+        if (isDefaultsComplete) {
+            navigation.navigate('Main Calendar');
+            return;
+        }
+
         if (!authUserId) {
             setStep('welcome');
+            return;
         }
 
-        // "auth" step is set by the welcome screen
-
-        // if the user created an account but not a profile, we ask for their name and avatar
-        if (authUserId && !isProfileComplete) {
+        if (!isProfileComplete) {
             setStep('details');
+            return;
         }
 
-        // if the user has a profile, we ask for their preferences
-        if (authUserId && isProfileComplete) {
-            setStep('preferences');
-        }
-
-    }, [authUserId, userProfile, isProfileComplete]);
-
+        setStep('preferences');
+    }, [authUserId, isProfileComplete, isDefaultsComplete, navigation]);
 
     const onClickSkip = () => {
         updateSkippingWelcomeScreen(true);
-    }
+    };
+
 
     const renderStep = () => {
         switch (step) {
-            case 'welcome': return <WelcomeScreen onClickRegister={() => {
-                setStep('auth');
-            }} onClickSkip={onClickSkip} />;
-            case 'auth': return <AuthForm />;
-            case 'details': return <ProfileDetailsForm />;
-            case 'preferences': return <PreferencesScreen />;
-            default: {
+            case 'welcome':
+                return <WelcomeScreen onClickRegister={() => setStep('auth')} onClickSkip={onClickSkip} />;
+            case 'auth':
+                return <AuthForm />;
+            case 'details':
+                return <ProfileDetailsForm />;
+            case 'preferences':
+                return <PreferencesScreen />;
+            case 'error':
+                return <ErrorScreen />;
+            default:
                 throw new Error(`Unknown step: ${step}`);
-            }
         }
-    }
+    };
 
     return renderStep();
-}
+};
 
 export default AuthMainScreen;

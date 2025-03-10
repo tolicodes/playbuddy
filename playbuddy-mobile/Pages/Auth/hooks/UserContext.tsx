@@ -16,6 +16,8 @@ import { UserProfile } from './UserTypes';
 import { Session } from '@supabase/auth-js/src/lib/types';
 import { useFetchUserProfile, useSkippingWelcomeScreen } from './useUserProfile';
 
+import * as Sentry from '@sentry/react-native';
+
 export type DeepLinkParams = {
     slug: string;
     type: string;
@@ -34,8 +36,11 @@ interface UserContextType {
     isSkippingWelcomeScreen: boolean;
     updateSkippingWelcomeScreen: (value: boolean) => void;
 
+    isLoading: boolean;
+
     isLoadingAuth: boolean;
     isLoadingUserProfile: boolean;
+    isError: boolean;
 
     signUpWithEmail: (email: string, password: string) => Promise<void>;
     signInWithEmail: (email: string, password: string) => Promise<void>;
@@ -72,11 +77,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [session, setSession] = useState<Session | null>(null);
     const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
 
-    const [deepLinkParams, setDeepLinkParams] = useState<| null>(null);
+    const [deepLinkParams, setDeepLinkParams] = useState<DeepLinkParams | null>(null);
 
     useInitializeAuth(setSession);
 
-    const { data: userProfile, isLoading: isLoadingUserProfile } = useFetchUserProfile(session?.user?.id);
+    const { data: userProfile, isLoading: isLoadingUserProfile, isError: isErrorUserProfile } = useFetchUserProfile(session?.user?.id);
 
     useSetupTracking(session, userProfile);
 
@@ -119,6 +124,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             session,
             isProfileComplete,
             isDefaultsComplete,
+
+            isError: isErrorUserProfile,
+            isLoading: isLoadingAuth || isLoadingUserProfile,
             isLoadingAuth,
             isLoadingUserProfile,
 
