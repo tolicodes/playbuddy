@@ -60,7 +60,7 @@
       ]
     },
     "web": {
-      "favicon": "./assets/images/favicon.jpeg"
+      "favicon": "./assets/favicon.jpeg"
     },
     "extra": {
       "eas": {
