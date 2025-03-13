@@ -42,6 +42,8 @@ export type NavStackProps = {
         params: { buddyAuthUserId: string }
     } | {
         screen: 'Filters',
+    } | {
+        screen: 'PromoScreen',
     };
 
 }
