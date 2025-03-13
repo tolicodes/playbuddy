@@ -6,8 +6,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useState, useEffect } from "react";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { Event } from "../../commonTypes";
-import * as amplitude from '@amplitude/analytics-react-native';
-import { BuddyWishlist, SharedEvent, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
+import { BuddyWishlist, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
 import sectionListGetItemLayout from 'react-native-section-list-get-item-layout'
 import { logEvent } from "../../Common/hooks/logger";
 
