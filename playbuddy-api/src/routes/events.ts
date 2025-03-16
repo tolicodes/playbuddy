@@ -33,16 +33,34 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 .from("events")
                 .select(`
           *,
-          organizer:organizers(id, name, url, hidden, promo_codes(id, promo_code, discount, discount_type, scope, organizer_id, event_id)),
+          organizer:organizers(id, name, url, hidden, promo_codes(id, promo_code, discount, discount_type, scope, organizer_id)),
           communities!inner(id, name, organizer_id),
           location_area:location_areas(id, name),
-          promo_codes:promo_codes(id, promo_code, discount, discount_type, scope, organizer_id, event_id)
+          promo_code_event(
+              promo_codes(*)
+          )
         `)
                 .gte("start_date", nycMidnightUTC),
             flushCache
         );
 
-        let response = JSON.parse(responseData)
+        let response = JSON.parse(responseData);
+
+        const transformPromoCodes = (response: any) => {
+            return response.map((responseItem: any) => {
+                const promoCodes = responseItem.promo_code_event.map((code: any) => code.promo_codes);
+                const newResponseItem = {
+                    ...responseItem,
+                    promo_codes: promoCodes
+                }
+
+                delete newResponseItem.promo_code_event;
+
+                return newResponseItem;
+            })
+        }
+
+        response = transformPromoCodes(response);
 
         // filter out hidden organizers that we want to ignore but are still
         // automatically ingested into the database

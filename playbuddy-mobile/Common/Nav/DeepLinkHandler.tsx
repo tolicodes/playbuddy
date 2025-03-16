@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
-import * as Linking from 'expo-linking';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
 import URLParse from 'url-parse';
 import { deepLinks } from './deepLinks';
 import { DeepLinkParams, useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { logEvent } from '../hooks/logger';
+
+import branch from 'react-native-branch';
+
 
 const handleNavigate = ({
     navigation,
@@ -42,24 +44,15 @@ export default function DeepLinkHandler() {
     const { setDeepLinkParams: setDeepLinkParams } = useUserContext();
 
     useEffect(() => {
-        // Handle initial deep link
-        Linking.getInitialURL().then((url) => {
-            logEvent('initial_deep_link', { url });
-            if (url) {
-                handleNavigate({ navigation, url, setDeepLinkParams });
-            }
-        });
 
-        // Listen to deep links
-        const urlListener = Linking.addEventListener('url', (event) => {
-            logEvent('deep_link', { url: event.url });
-            handleNavigate({ navigation, url: event.url, setDeepLinkParams });
+        branch.subscribe({
+            onOpenComplete: async (data) => {
+                logEvent('initial_deep_link', { url: data.uri });
+                if (data.uri) {
+                    handleNavigate({ navigation, url: data.uri, setDeepLinkParams });
+                }
+            },
         });
-
-        // Cleanup the listener
-        return () => {
-            urlListener.remove();
-        };
     }, [navigation]);
 
 

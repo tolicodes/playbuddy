@@ -2,7 +2,7 @@ import { useUserContext } from "../hooks/UserContext";
 import { useCalendarContext } from "../../Calendar/hooks/CalendarContext";
 import { Organizer, PromoCode } from "../../../commonTypes";
 
-export const usePromoCode = (): { promoCode: PromoCode, communityId: string, organizer: Organizer } | null => {
+export const usePromoCode = (): { promoCodes: PromoCode[], communityId: string, organizer: Organizer, maxDiscountCode: PromoCode } | null => {
     const { deepLinkParams } = useUserContext();
     const { allEvents } = useCalendarContext();
     const communityId = deepLinkParams?.params?.communityId;
@@ -13,23 +13,25 @@ export const usePromoCode = (): { promoCode: PromoCode, communityId: string, org
         event.communities?.some(community => community.id === communityId)
     );
 
-    const organizer = communityEvents.find(event => event.organizer)?.organizer;
+    if (!communityEvents.length) return null;
 
-    if (!organizer) return null;
+    const organizer = communityEvents[0].organizer;
 
-    const promoCode = communityEvents.reduce<PromoCode | null>((acc, event) => {
-        if (acc) return acc;
-        return event.promo_codes?.find(code => code.scope === 'event') ||
-            event.organizer?.promo_codes?.find(code => code.scope === 'organizer') ||
-            null;
-    }, null);
+    const promoCodes = [
+        ...communityEvents.map(event => event.promo_codes).flat(),
+        ...organizer.promo_codes
+    ];
 
-    if (!promoCode) return null;
+    if (!promoCodes.length) return null;
+
+    const maxDiscount = Math.max(...promoCodes.map(code => code.discount));
+    const maxDiscountCode = promoCodes.find(code => code.discount === maxDiscount);
 
     return {
-        promoCode,
+        promoCodes,
         communityId,
-        organizer
+        organizer,
+        maxDiscountCode: maxDiscountCode!
     };
 }
 

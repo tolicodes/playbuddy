@@ -95,14 +95,23 @@ export interface SourceMetadata {
         id: string;
     }[];
 
+    type?: 'event' | 'retreat'
+
+    promo_codes?: PromoCode[];
+
 }
+
+// Metadata for a list of events
+interface EventMetadata extends SourceMetadata {
+    id: string;
+}
+
+export type EventsMetadata = EventMetadata[];
 
 
 // either pass an id or inputs to create a new one
 export type CreateOrganizerInput = { original_id?: string; name: string; url: string } | { id: string }
 
-
-// we could omit a location name and it will use the code instead
 
 export type CreateLocationAreaInput = { code: string; name?: string } | { id: string }
 export type CreateCommunityInput = { name?: string; code: string } | { id: string }
