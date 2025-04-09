@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, FlatList, StyleSheet } from "react-native";
 
-import { Community } from "../../../Common/commonTypes";
+import { Community } from "../../../common/types/commonTypes";
 
 export const CommunitiesManageSection: React.FC = () => {
     const [managedCommunities] = useState<Community[]>([
