@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the source files
-SOURCE_FILES=("common/commonTypes.ts" "common/config.ts")
+SOURCE_FILES=("common/types/commonTypes.ts" "common/types/userEventTypes.ts" "common/config.ts")
 
 # Define the target directories
 TARGET_DIRECTORIES=(
