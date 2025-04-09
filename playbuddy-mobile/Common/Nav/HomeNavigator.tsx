@@ -7,11 +7,12 @@ import { TabNavigator } from "./TabNavigator";
 import { DetailStackNavigator } from "./DetailsPageNavigator";
 import AuthMainScreen from '../../Pages/Auth/screens/AuthMainScreen';
 import { PromoScreen } from "../../Pages/Auth/screens/PromoScreen";
+import DeepLinkHandler from "./DeepLinkHandler";
 
 const HomeStack = createStackNavigator();
 
 export function HomeStackNavigator() {
-    const { isSkippingWelcomeScreen, isDefaultsComplete, isLoadingUserProfile, deepLinkParams: deepLinkParams } = useUserContext();
+    const { isSkippingWelcomeScreen, isDefaultsComplete, isLoadingUserProfile, initialDeepLink } = useUserContext();
 
     const [isSkippingWelcomeDueToPromo, setIsSkippingWelcomeDueToPromo] = useState(false);
 
@@ -32,11 +33,9 @@ export function HomeStackNavigator() {
     // they should not see the welcome screen until they refresh the app
     if (isSkippingWelcomeDueToPromo) {
         HomeScreen = TabNavigator;
-    } else if (deepLinkParams) {
-        if (deepLinkParams.type === 'organizer_promo_code') {
+    } else if (initialDeepLink) {
+        if (initialDeepLink.type === 'organizer_promo_code' || initialDeepLink.type === 'event_promo_code') {
             HomeScreen = PromoScreenWrap;
-        } else {
-            throw new Error(`Unknown deep link type: ${deepLinkParams.type}`);
         }
     } else if (isDefaultsComplete || isSkippingWelcomeScreen) {
         HomeScreen = TabNavigator;

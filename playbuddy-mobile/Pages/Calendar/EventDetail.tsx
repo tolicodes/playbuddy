@@ -9,7 +9,7 @@ import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { logEvent } from '../../Common/hooks/logger';
 
 import { FormattedPromoCode } from './PromoCode';
-import { addOrReplacePromoCode } from '../Auth/screens/usePromoCode';
+import { addOrReplacePromoCodeToEventbriteUrl } from '../Auth/screens/usePromoCode';
 
 import { useNavigation } from '@react-navigation/native';
 import { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
@@ -85,7 +85,7 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
     const promoCode = eventPromoCode || organizerPromoCode;
 
     const addPromoCodeToUrlAndOpen = () => {
-        const eventUrlWithPromoCode = addOrReplacePromoCode(selectedEvent.event_url, promoCode?.promo_code);
+        const eventUrlWithPromoCode = addOrReplacePromoCodeToEventbriteUrl(selectedEvent.event_url, promoCode?.promo_code);
         logEvent('event_detail_link_clicked', { event_url: eventUrlWithPromoCode || selectedEvent.event_url });
         Linking.openURL(eventUrlWithPromoCode || selectedEvent.event_url);
     };

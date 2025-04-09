@@ -13,7 +13,7 @@ import { Button } from '@rneui/themed';
 import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
 import { logEvent } from '../Common/hooks/logger';
 import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
-import { addOrReplacePromoCode } from './Auth/screens/usePromoCode';
+import { addOrReplacePromoCodeToEventbriteUrl } from './Auth/screens/usePromoCode';
 import { useCommonContext } from '../Common/hooks/CommonContext';
 
 export const SwipeMode = () => {
@@ -87,7 +87,7 @@ export const SwipeMode = () => {
         const imageUrl = event?.image_url && getSmallAvatarUrl(event?.image_url);
 
         const addPromoCodeToUrlAndOpen = (eventUrl: string, promoCode: PromoCode | undefined) => {
-            const eventUrlWithPromoCode = addOrReplacePromoCode(eventUrl, promoCode?.promo_code);
+            const eventUrlWithPromoCode = addOrReplacePromoCodeToEventbriteUrl(eventUrl, promoCode?.promo_code);
             Linking.openURL(eventUrlWithPromoCode || event.event_url)
         }
 

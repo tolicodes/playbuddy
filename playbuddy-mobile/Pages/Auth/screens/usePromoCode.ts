@@ -1,41 +1,27 @@
 import { useUserContext } from "../hooks/UserContext";
-import { useCalendarContext } from "../../Calendar/hooks/CalendarContext";
-import { Organizer, PromoCode } from "../../../commonTypes";
+import { Organizer, PromoCode, Event } from "../../../commonTypes";
 
-export const usePromoCode = (): { promoCodes: PromoCode[], communityId: string, organizer: Organizer, maxDiscountCode: PromoCode } | null => {
-    const { deepLinkParams } = useUserContext();
-    const { allEvents } = useCalendarContext();
-    const communityId = deepLinkParams?.params?.communityId;
+export const usePromoCode = (): {
+    featuredPromoCode: PromoCode;
+    featuredEvent: Event;
+    promoCodes: PromoCode[];
+    organizer: Organizer;
+} | null => {
+    const { initialDeepLink } = useUserContext();
 
-    if (!communityId) return null;
+    if (!initialDeepLink) return null;
 
-    const communityEvents = allEvents.filter(event =>
-        event.communities?.some(community => community.id === communityId)
-    );
-
-    if (!communityEvents.length) return null;
-
-    const organizer = communityEvents[0].organizer;
-
-    const promoCodes = [
-        ...communityEvents.map(event => event.promo_codes).flat(),
-        ...organizer.promo_codes
-    ];
-
-    if (!promoCodes.length) return null;
-
-    const maxDiscount = Math.max(...promoCodes.map(code => code.discount));
-    const maxDiscountCode = promoCodes.find(code => code.discount === maxDiscount);
+    const featuredEvent = initialDeepLink?.featured_event;
 
     return {
-        promoCodes,
-        communityId,
-        organizer,
-        maxDiscountCode: maxDiscountCode!
-    };
+        featuredPromoCode: initialDeepLink.featured_promo_code,
+        featuredEvent: featuredEvent,
+        promoCodes: initialDeepLink.promo_codes ?? [],
+        organizer: initialDeepLink.organizer,
+    }
 }
 
-export function addOrReplacePromoCode(url: string, promoCode?: string) {
+export function addOrReplacePromoCodeToEventbriteUrl(url: string, promoCode?: string) {
     if (!promoCode) return url;
 
     try {

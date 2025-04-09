@@ -17,8 +17,10 @@ export default function AppNavigator() {
                 }
             }}
         >
-            <DeepLinkHandler />
+
             <DrawerNav />
+            <DeepLinkHandler />
+
         </NavigationContainer>
     );
 }

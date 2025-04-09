@@ -15,16 +15,7 @@ import {
 import { UserProfile } from './UserTypes';
 import { Session } from '@supabase/auth-js/src/lib/types';
 import { useFetchUserProfile, useSkippingWelcomeScreen } from './useUserProfile';
-
-import * as Sentry from '@sentry/react-native';
-
-export type DeepLinkParams = {
-    slug: string;
-    type: string;
-    params: {
-        communityId: string;
-    }
-}
+import { DeepLink } from '../../../commonTypes';
 
 interface UserContextType {
     authUserId: string | null;
@@ -55,9 +46,9 @@ interface UserContextType {
     selectedLocationAreaId?: string | null;
     selectedCommunityId?: string | null;
 
-    deepLinkParams: DeepLinkParams | null;
+    initialDeepLink: DeepLink | null;
 
-    setDeepLinkParams: (params: DeepLinkParams) => void;
+    setInitialDeepLink: (deepLink: DeepLink) => void;
 
     fullNameFromOAuthedUser: string | null;
     setFullNameFromOAuthedUser: (fullName: string) => void;
@@ -77,7 +68,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [session, setSession] = useState<Session | null>(null);
     const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
 
-    const [deepLinkParams, setDeepLinkParams] = useState<DeepLinkParams | null>(null);
+    const [initialDeepLink, setInitialDeepLink] = useState<DeepLink | null>(null);
 
     useInitializeAuth(setSession);
 
@@ -147,8 +138,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             selectedLocationAreaId: userProfile?.selected_location_area_id,
             selectedCommunityId: userProfile?.selected_community_id,
 
-            deepLinkParams,
-            setDeepLinkParams,
+            initialDeepLink,
+            setInitialDeepLink,
 
             fullNameFromOAuthedUser,
             setFullNameFromOAuthedUser,
@@ -171,8 +162,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             authenticateWithApple,
             signOut,
 
-            deepLinkParams,
-            setDeepLinkParams,
+            initialDeepLink,
+            setInitialDeepLink,
 
             fullNameFromOAuthedUser,
             setFullNameFromOAuthedUser,
