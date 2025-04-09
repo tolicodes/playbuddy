@@ -1,4 +1,4 @@
-import { supabaseClient } from "connections/supabaseClient";
+import { supabaseClient } from "../connections/supabaseClient";
 import { Router } from "express";
 import { Request, Response } from "express";
 
