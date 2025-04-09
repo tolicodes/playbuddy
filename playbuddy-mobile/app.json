@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.12.0",
+    "version": "4.13.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
