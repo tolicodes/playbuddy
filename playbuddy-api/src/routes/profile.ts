@@ -115,4 +115,28 @@ router.post('/me/upload-avatar', authenticateRequest, async (req: AuthenticatedR
     }
 });
 
+router.post('/me/deep-link', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+
+    // The new row object. Additional fields can be added as needed.
+    const newRow = {
+        auth_user_id: req.authUserId,
+        deep_link_id: req.body.deep_link_id,
+        claimed_on: req.body.claimed_on ?? null
+    };
+
+    const { data, error } = await supabaseClient
+        .from('user_deep_links')
+        .insert(newRow)
+        .select() // If you want to return the newly inserted row
+        .single(); // If you're inserting exactly one row
+
+    if (error) {
+        // In a real app, you might throw a custom error or handle it differently
+        throw new Error(`Failed to insert user_deep_links record: ${error.message}`);
+    }
+
+    // data should be the inserted row, or undefined if no "select()" was used
+    return res.json(data);
+});
+
 export default router;
