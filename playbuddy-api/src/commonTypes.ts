@@ -1,7 +1,7 @@
 // only edit /common/commonTypes.ts 
 // These are copied
 
-import { UE } from "./userEventTypes";
+import { UE, UserEventInput } from "./userEventTypes";
 
 
 /**
