@@ -21,6 +21,7 @@ export const PBCal = () => {
 
 
     const pbEvents = events.filter((event) => wishlistEvents.find((wishlistEvent) => {
+        // @ts-ignore
         return wishlistEvent === event.id;
     }));
 

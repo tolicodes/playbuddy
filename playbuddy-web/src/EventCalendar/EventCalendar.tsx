@@ -143,6 +143,7 @@ export const EventCalendar = ({ type }: { type?: 'Whatsapp' }) => {
                             buttonText: 'Agenda'
                         }
                     }}
+                    // @ts-ignore
                     events={mapEventsToFullCalendar(filteredEvents, currentViewOrganizers)}
                     eventDidMount={(info) => {
                         const event = info.event;
