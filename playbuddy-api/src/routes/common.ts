@@ -1,4 +1,4 @@
-import { supabaseClient } from "../connections/supabaseClient";
+import { supabaseClient } from "../connections/supabaseClient.js"
 import { Router } from "express";
 import { Request, Response } from "express";
 
@@ -13,7 +13,10 @@ router.get('/deep-links', async (req: Request, res: Response) => {
           *,
           organizer:organizer_id (*),
           community:community_id (*),
-          featured_event:featured_event_id (*),
+          featured_event:featured_event_id (
+            *,
+            organizer:organizer_id ( * )
+          ),
           featured_promo_code:featured_promo_code_id (*),
           deep_link_promo_codes (
             promo_codes:promo_code_id (
