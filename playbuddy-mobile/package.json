@@ -11,7 +11,8 @@
     "build-local": "eas build -p ios --profile development --local",
     "run-local": "eas build:run -p ios --latest",
     "prebuild": "npx expo prebuild --clean",
-    "update": "eas update --branch production --message "
+    "update": "eas update --branch production --message ",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@amplitude/analytics-react-native": "^1.4.10",
@@ -54,6 +55,7 @@
     "expo-video": "^1.2.7",
     "formik": "^2.4.6",
     "moment": "^2.30.1",
+    "patch-package": "^8.0.0",
     "react": "18.2.0",
     "react-hook-form": "^7.53.0",
     "react-native": "0.74.5",
