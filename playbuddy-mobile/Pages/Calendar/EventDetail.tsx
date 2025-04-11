@@ -132,7 +132,7 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
 
                 <TouchableOpacity onPress={onClickOrganizer}>
                     <Text style={styles.eventOrganizer}>
-                        <Text style={styles.eventOrganizerLabel}>Organizer:</Text> {selectedEvent.organizer.name}
+                        <Text style={styles.eventOrganizerLabel}>Organizer:</Text> {selectedEvent.organizer?.name}
                     </Text>
                 </TouchableOpacity>
 

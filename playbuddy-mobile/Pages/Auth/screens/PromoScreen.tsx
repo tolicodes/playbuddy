@@ -45,9 +45,10 @@ export const PromoScreen = ({
     /* 3️⃣  explore btn */
     const onExplore = () => {
         setIsSkippingWelcomeDueToPromo(true);
-        navigation.navigate('Organizers', { screen: 'My Communities' });
-    };
+        const community = organizer.communities[0].id;
 
+        navigation.navigate('Details', { screen: 'Community Events', params: { communityId: community } });
+    };
     /* 4️⃣  render */
     return (
         <SafeAreaView style={styles.safe}>
@@ -104,28 +105,23 @@ export const PromoScreen = ({
                 </TouchableOpacity>
 
                 {/* other promos */}
-                {promoCodes.length > 1 && (
+                {promoCodes.length > 0 && (
                     <>
                         <Text style={styles.sectionHeader}>Other Promos</Text>
 
-                        <FlatList
-                            data={promoCodes.filter((c) => c.promo_code !== featuredPromoCode.promo_code)}
-                            keyExtractor={(item) => item.id ?? item.promo_code}
-                            renderItem={({ item }) => (
+                        {promoCodes.filter((c) => c.promo_code !== featuredPromoCode.promo_code).map(item => (
+                            <View style={styles.cardWrapper} key={item.promo_code}>
                                 <TouchableOpacity style={styles.card} onPress={() => copy(item.promo_code)}>
                                     <Text style={styles.cardTitle}>{formatDiscount(item)}</Text>
                                     <Text style={styles.productTypeCard}>{item.product_type}</Text>
 
                                     <View style={styles.codeRow}>
-                                        <Text selectable style={styles.cardCode}>
-                                            {item.promo_code}
-                                        </Text>
+                                        <Text selectable style={styles.cardCode}>{item.promo_code}</Text>
                                         <Text style={styles.copyBtn}>Copy</Text>
                                     </View>
                                 </TouchableOpacity>
-                            )}
-                            contentContainerStyle={{ paddingBottom: 40 }}
-                        />
+                            </View>
+                        ))}
                     </>
                 )}
             </ScrollView>
@@ -226,32 +222,30 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     },
     card: {
-        flexDirection: "row",
         backgroundColor: "#FFF",
         borderRadius: 14,
         padding: 16,
-        marginVertical: 8,
-        width: "100%",
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
-        alignItems: "center",
+        alignItems: "flex-start", // let content flow top-down
+        width: "100%",
     },
+
     cardCode: {
-        fontSize: 18,
-        fontWeight: "bold",
+        fontSize: 16,
+        fontWeight: "600",
         color: "#7055D3",
+        flexShrink: 1,
     },
-    cardEvent: {
-        fontSize: 12,
-        color: "#999",
-    },
+
     copyBtn: {
         color: "#7055D3",
         fontWeight: "600",
-        paddingHorizontal: 12,
+        marginLeft: 12,
+        fontSize: 14,
     },
     sectionHeader: {
         fontSize: 20,
@@ -297,10 +291,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
     },
-    eventBanner: {
-        width: "100%",
-        height: 180,
-        borderRadius: 12,
-        marginVertical: 10,
+
+    cardWrapper: {
+        width: '100%',
+        paddingHorizontal: 0,
+        marginBottom: 12,
     },
 });
