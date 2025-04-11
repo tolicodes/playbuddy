@@ -23,6 +23,26 @@ const findBySlug = (uri: string, list: DeepLink[]) => {
     return list.find((d) => d.slug === slug);
 };
 
+
+import * as Clipboard from 'expo-clipboard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const FIRST_LAUNCH_KEY = 'isFirstLaunch';
+
+export async function handleFirstInstall() {
+    try {
+        const alreadyLaunched = await AsyncStorage.getItem(FIRST_LAUNCH_KEY);
+        if (!alreadyLaunched) {
+            // Mark as launched
+            await AsyncStorage.setItem(FIRST_LAUNCH_KEY, 'true');
+
+            await Clipboard.getStringAsync();
+        }
+    } catch (error) {
+        console.error('Error checking first install:', error);
+    }
+}
+
 /* ───────── custom hook handles queueing & processing ───────── */
 function useBranchDeepLinkQueue(deepLinks: DeepLink[], isLoading: boolean) {
     const { setInitialDeepLink } = useUserContext();
@@ -49,8 +69,9 @@ function useBranchDeepLinkQueue(deepLinks: DeepLink[], isLoading: boolean) {
 
     /* 1️⃣  subscribe immediately for live opens */
     useEffect(() => {
-        const unsub = branch.subscribe(({ uri }) => {
+        const unsub = branch.subscribe(async ({ uri }) => {
             if (!uri) return;
+
             queuedUri.current = uri;
             process(uri);                    // may run immediately if ready
         });
@@ -61,10 +82,14 @@ function useBranchDeepLinkQueue(deepLinks: DeepLink[], isLoading: boolean) {
     /* 2️⃣  cold‑start / first install */
     useEffect(() => {
         (async () => {
+            await handleFirstInstall();
             const data = await branch.getLatestReferringParams(); // cached params
-            if (data?.uri) {
-                queuedUri.current = data.uri;
-                process(data.uri);
+
+            const branchUrl = data?.['+url'] || data?.['~referring_link'];
+
+            if (branchUrl) {
+                queuedUri.current = branchUrl
+                process(branchUrl);
             }
         })();
     }, []); // run once
