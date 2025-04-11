@@ -13,7 +13,8 @@ import profileRoutes from './routes/profile.js';
 import personalizationRoutes from './routes/personalization.js';
 import userEventsRoute from './routes/user_events.js';
 import commonRoute from './routes/common.js';
-
+import organizersRoute from './routes/organizers.js';
+import promoCodesRoute from './routes/promo_codes.js';
 export const app = express();
 
 // Middleware setup
@@ -36,6 +37,8 @@ app.use('/profile', profileRoutes);
 app.use('/personalization', personalizationRoutes);
 app.use('/user_events', userEventsRoute);
 app.use('/common', commonRoute);
+app.use('/organizers', organizersRoute);
+app.use('/promo_codes', promoCodesRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
