@@ -11,7 +11,12 @@ router.get('/deep-links', async (req: Request, res: Response) => {
             .from('deep_links')
             .select(`
           *,
-          organizer:organizer_id (*),
+          organizer:organizer_id (*,
+          communities:communities (
+        *,
+              organizer:organizer_id ( * )
+            )
+          ),
           community:community_id (*),
           featured_event:featured_event_id (
             *,
