@@ -10,7 +10,7 @@ import { PromoScreen } from "../../Pages/Auth/screens/PromoScreen";
 const DetailStack = createStackNavigator();
 
 const PromoScreenWrap = () => {
-    return <PromoScreen setIsSkippingWelcomeDueToPromo={() => { }} />
+    return <PromoScreen setIsPromoScreenViewed={() => { }} />
 }
 
 export const DetailStackNavigator = () => (
@@ -19,6 +19,10 @@ export const DetailStackNavigator = () => (
         <DetailStack.Screen name="Community Events" component={CommunityEvents} />
         <DetailStack.Screen name="Buddy Events" component={BuddyEvents} />
         <DetailStack.Screen name="Filters" component={Filters} />
-        <DetailStack.Screen name="PromoScreen" component={PromoScreenWrap} />
+        <DetailStack.Screen name="PromoScreen"
+            options={{
+                headerShown: false
+            }}
+            component={PromoScreenWrap} />
     </DetailStack.Navigator>
 );

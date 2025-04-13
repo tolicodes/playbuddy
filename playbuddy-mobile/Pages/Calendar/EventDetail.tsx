@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
@@ -17,6 +17,8 @@ import { generateGoogleCalendarUrl } from './hooks/generateGoogleCalendarUrl';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
 import { useCalendarContext } from './hooks/CalendarContext';
+import * as Clipboard from 'expo-clipboard';
+import PromoCodeSection from './PromoCodeSection';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (
@@ -82,7 +84,10 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
 
     const eventPromoCode = selectedEvent.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = selectedEvent.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const promoCode = eventPromoCode || organizerPromoCode;
+
+    const initialPromoCode = useUserContext().initialDeepLink?.featured_promo_code;
+
+    const promoCode = initialPromoCode || eventPromoCode || organizerPromoCode;
 
     const addPromoCodeToUrlAndOpen = () => {
         const eventUrlWithPromoCode = addOrReplacePromoCodeToEventbriteUrl(selectedEvent.event_url, promoCode?.promo_code);
@@ -152,13 +157,20 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
                     </Text>
                 )}
 
-                {promoCode && <FormattedPromoCode promoCode={promoCode} />}
+                {promoCode && <PromoCodeSection promoCode={promoCode.promo_code} />}
+
 
                 {selectedEvent.ticket_url && (
                     <TouchableOpacity
                         style={styles.ticketButton}
                         onPress={() => {
-                            logEvent('event_detail_get_tickets_clicked', { event_id: selectedEvent.id, event_name: selectedEvent.name, promo_code: promoCode });
+                            logEvent('event_detail_get_tickets_clicked', {
+                                event_id: selectedEvent.id,
+                                event_name: selectedEvent.name,
+                                promo_code_id: promoCode?.id,
+                                promo_code_code: promoCode?.promo_code,
+                                initial_deep_link: initialPromoCode?.id,
+                            });
                             Linking.openURL(selectedEvent.ticket_url).catch(err => {
                                 throw new Error(`Failed to open ticket URL: ${err}`);
                             });
@@ -175,6 +187,9 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
         </ScrollView>
     );
 };
+
+
+
 
 const styles = StyleSheet.create({
     scrollView: {
@@ -260,23 +275,52 @@ const styles = StyleSheet.create({
     controlsContainer: {
         padding: 10,
     },
+
     promoCodeContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#fffbe6',       // a very light gold tone for a subtle highlight
+        borderWidth: 1,
+        borderColor: '#FFD700',            // gold border color
+        padding: 12,                       // increased padding for breathing room
+        borderRadius: 12,
         marginVertical: 10,
+        // iOS shadow
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        // Android shadow (elevation)
+        elevation: 3,
     },
+    copyButton: {
+        backgroundColor: '#FFD700',        // gold background for the copy button
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderRadius: 8,
+    },
+    copyButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#000',
+    },
+    // Optional: if you want to boost the promo code text appearance (assuming FormattedPromoCode uses it)
+    promoCodeText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000',
+    },
+
+
     promoCodeBadge: {
-        backgroundColor: '#FFD700',
+        backgroundColor: 'red',
         padding: 8,
         borderRadius: 12,
         alignSelf: 'flex-start',
         marginVertical: 10,
     },
-    promoCodeText: {
-        fontSize: 14,
-        color: '#000',
-        fontWeight: 'bold',
-    },
+
     promoCodeLabel: {
         fontSize: 14,
         color: '#000',
@@ -292,6 +336,7 @@ const styles = StyleSheet.create({
         color: '#000',
         fontWeight: 'bold',
     },
+
     googleCalendarIcon: {
         width: 30,
         height: 30,

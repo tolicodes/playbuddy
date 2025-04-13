@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import {
     SafeAreaView,
     ScrollView,
@@ -8,7 +8,6 @@ import {
     TouchableOpacity,
     Alert,
     Image,
-    FlatList
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
@@ -20,36 +19,46 @@ import { usePromoCode } from './usePromoCode';
 import { formatDate } from '../../Calendar/hooks/calendarUtils';
 
 export const PromoScreen = ({
-    setIsSkippingWelcomeDueToPromo
+    onPromoScreenViewed,
 }: {
-    setIsSkippingWelcomeDueToPromo: (v: boolean) => void;
+    onPromoScreenViewed: () => void;
 }) => {
     const navigation = useNavigation<NavStack>();
     const promoCode = usePromoCode();
 
-    /* 1️⃣  redirect runs once, not during render */
+    // If no promo code is available, redirect to HomeScreen immediately.
     useEffect(() => {
-        if (!promoCode) navigation.replace('Home');
+        if (!promoCode) {
+            navigation.replace('HomeScreen');
+        }
     }, [promoCode, navigation]);
 
-    if (!promoCode) return null; // early exit while redirecting
+    if (!promoCode) return null; // early exit during redirect
 
     const { featuredPromoCode, featuredEvent, promoCodes, organizer } = promoCode;
 
-    /* 2️⃣  copy helper */
+    // Helper: copy a code to clipboard
     const copy = async (code: string) => {
         await Clipboard.setStringAsync(code);
         Alert.alert('Promo Code Copied', `${code} copied to clipboard.`);
     };
 
-    /* 3️⃣  explore btn */
-    const onExplore = () => {
-        setIsSkippingWelcomeDueToPromo(true);
-        const community = organizer.communities[0].id;
+    // onExplore: update the flag then reset the navigator, navigating to the event details
+    const onClickLink = (link: 'event_details' | 'community_events') => {
+        if (link === 'community_events') {
+            navigation.navigate('Details', {
+                screen: 'Community Events',
+                params: { communityId: organizer.communities[0].id },
+            });
+        } else {
+            navigation.navigate('Details', {
+                screen: 'Event Details',
+                params: { selectedEvent: featuredEvent },
+            });
+        }
+        onPromoScreenViewed();
+    }
 
-        navigation.navigate('Details', { screen: 'Community Events', params: { communityId: community } });
-    };
-    /* 4️⃣  render */
     return (
         <SafeAreaView style={styles.safe}>
             <ScrollView contentContainerStyle={styles.scroll}>
@@ -76,52 +85,55 @@ export const PromoScreen = ({
                                 resizeMode="cover"
                             />
                         )}
-
                         <Text style={styles.featuredEventName}>{featuredEvent.name}</Text>
                         <Text style={styles.eventDate}>{formatDate(featuredEvent, true, true)}</Text>
-
                         <TouchableOpacity
                             style={styles.eventBtn}
-                            onPress={() =>
-                                navigation.navigate('Details', {
-                                    screen: 'Event Details',
-                                    params: { selectedEvent: featuredEvent }
-                                })
-                            }
+                            onPress={() => onClickLink('event_details')}
                         >
                             <Text style={styles.eventBtnText}>Go to Event</Text>
                         </TouchableOpacity>
                     </>
                 )}
 
-                {/* copy‑box */}
-                <TouchableOpacity style={styles.codeBox} onPress={() => copy(featuredPromoCode.promo_code)}>
+                {/* Code copy box */}
+                <TouchableOpacity
+                    style={styles.codeBox}
+                    onPress={() => copy(featuredPromoCode.promo_code)}
+                >
                     <Text style={styles.codeLabel}>Tap to copy:</Text>
-                    <Text style={styles.code}>{featuredPromoCode.promo_code} 📋</Text>
+                    <Text style={styles.code}>
+                        {featuredPromoCode.promo_code} 📋
+                    </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.exploreBtn} onPress={onExplore}>
-                    <Text style={styles.exploreText}>Explore {featuredEvent ? 'All' : ''} Events</Text>
+                {/* Explore button */}
+                <TouchableOpacity style={styles.exploreBtn} onPress={() => onClickLink('community_events')}>
+                    <Text style={styles.exploreText}>
+                        Explore {featuredEvent ? 'All' : ''} Events
+                    </Text>
                 </TouchableOpacity>
 
-                {/* other promos */}
+                {/* Render other promo codes */}
                 {promoCodes.length > 0 && (
                     <>
                         <Text style={styles.sectionHeader}>Other Promos</Text>
-
-                        {promoCodes.filter((c) => c.promo_code !== featuredPromoCode.promo_code).map(item => (
-                            <View style={styles.cardWrapper} key={item.promo_code}>
-                                <TouchableOpacity style={styles.card} onPress={() => copy(item.promo_code)}>
-                                    <Text style={styles.cardTitle}>{formatDiscount(item)}</Text>
-                                    <Text style={styles.productTypeCard}>{item.product_type}</Text>
-
-                                    <View style={styles.codeRow}>
-                                        <Text selectable style={styles.cardCode}>{item.promo_code}</Text>
-                                        <Text style={styles.copyBtn}>Copy</Text>
-                                    </View>
-                                </TouchableOpacity>
-                            </View>
-                        ))}
+                        {promoCodes
+                            .filter((c) => c.promo_code !== featuredPromoCode.promo_code)
+                            .map((item) => (
+                                <View style={styles.cardWrapper} key={item.promo_code}>
+                                    <TouchableOpacity style={styles.card} onPress={() => copy(item.promo_code)}>
+                                        <Text style={styles.cardTitle}>{formatDiscount(item)}</Text>
+                                        <Text style={styles.productTypeCard}>{item.product_type}</Text>
+                                        <View style={styles.codeRow}>
+                                            <Text selectable style={styles.cardCode}>
+                                                {item.promo_code}
+                                            </Text>
+                                            <Text style={styles.copyBtn}>Copy</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
                     </>
                 )}
             </ScrollView>
@@ -129,7 +141,6 @@ export const PromoScreen = ({
     );
 };
 
-/*──────────────── styles (unchanged except for safe/scroll) ─────────────*/
 const styles = StyleSheet.create({
     safe: { flex: 1, backgroundColor: '#F5ECFF' },
     scroll: { alignItems: 'center', paddingTop: 20, paddingHorizontal: 24 },
@@ -137,164 +148,151 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 180,
         borderRadius: 12,
-        marginVertical: 10
+        marginVertical: 10,
     },
-    /* outer ScrollView content */
-    scrollContent: {
-        flexGrow: 1,
-        alignItems: 'center'
-    },
-
     title: {
         fontSize: 24,
-        fontWeight: "700",
-        color: "#2D005F",
+        fontWeight: '700',
+        color: '#2D005F',
         marginBottom: 12,
     },
     subtitle: {
         fontSize: 16,
-        color: "#4C4C4C",
-        textAlign: "center",
+        color: '#4C4C4C',
+        textAlign: 'center',
     },
     organizer: {
         fontSize: 20,
-        fontWeight: "600",
-        color: "#7055D3",
+        fontWeight: '600',
+        color: '#7055D3',
         marginVertical: 8,
-        textAlign: "center",
+        textAlign: 'center',
     },
     discount: {
         fontSize: 32,
-        fontWeight: "800",
-        color: "#2D005F",
+        fontWeight: '800',
+        color: '#2D005F',
         marginTop: 16,
-        textAlign: "center",
+        textAlign: 'center',
     },
     productTypeMain: {
         fontSize: 20,
-        fontWeight: "600",
-        color: "#9C27B0",
-        textAlign: "center",
+        fontWeight: '600',
+        color: '#9C27B0',
+        textAlign: 'center',
         marginBottom: 12,
     },
     productTypeCard: {
         fontSize: 16,
-        fontWeight: "600",
-        color: "#9C27B0",
+        fontWeight: '600',
+        color: '#9C27B0',
         marginBottom: 6,
     },
     codeBox: {
-        backgroundColor: "#EEE1FF",
+        backgroundColor: '#EEE1FF',
         paddingVertical: 12,
         paddingHorizontal: 20,
         borderRadius: 16,
-        alignItems: "center",
+        alignItems: 'center',
         marginBottom: 20,
     },
     codeLabel: {
         fontSize: 14,
-        color: "#5D5D5D",
+        color: '#5D5D5D',
         marginBottom: 4,
     },
     code: {
         fontSize: 28,
-        fontWeight: "600",
-        color: "#2D005F",
-        backgroundColor: "#EDE1FF",
+        fontWeight: '600',
+        color: '#2D005F',
+        backgroundColor: '#EDE1FF',
         paddingVertical: 6,
         paddingHorizontal: 20,
         borderRadius: 12,
-        overflow: "hidden",
+        overflow: 'hidden',
     },
     exploreBtn: {
-        backgroundColor: "#2D005F",
+        backgroundColor: '#2D005F',
         borderRadius: 30,
         paddingVertical: 14,
         paddingHorizontal: 36,
         marginBottom: 20,
     },
     exploreText: {
-        color: "#FFF",
+        color: '#FFF',
         fontSize: 16,
-        fontWeight: "600",
+        fontWeight: '600',
     },
-    codeList: {
-        paddingBottom: 100,
+    cardWrapper: {
+        width: '100%',
+        marginBottom: 12,
     },
     card: {
-        backgroundColor: "#FFF",
+        backgroundColor: '#FFF',
         borderRadius: 14,
         padding: 16,
-        shadowColor: "#000",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 6,
         elevation: 2,
-        alignItems: "flex-start", // let content flow top-down
-        width: "100%",
+        alignItems: 'flex-start',
+        width: '100%',
     },
-
     cardCode: {
         fontSize: 16,
-        fontWeight: "600",
-        color: "#7055D3",
+        fontWeight: '600',
+        color: '#7055D3',
         flexShrink: 1,
     },
-
     copyBtn: {
-        color: "#7055D3",
-        fontWeight: "600",
+        color: '#7055D3',
+        fontWeight: '600',
         marginLeft: 12,
         fontSize: 14,
     },
     sectionHeader: {
         fontSize: 20,
-        fontWeight: "700",
-        color: "#2D005F",
-        alignSelf: "flex-start",
+        fontWeight: '700',
+        color: '#2D005F',
+        alignSelf: 'flex-start',
         marginTop: 16,
         marginBottom: 4,
     },
     cardTitle: {
         fontSize: 18,
-        fontWeight: "600",
-        color: "#2D005F",
+        fontWeight: '600',
+        color: '#2D005F',
         marginBottom: 8,
     },
     codeRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     featuredEventName: {
         fontSize: 22,
-        fontWeight: "700",
-        color: "#2D005F",
+        fontWeight: '700',
+        color: '#2D005F',
         marginTop: 12,
-        textAlign: "center",
+        textAlign: 'center',
     },
     eventDate: {
         fontSize: 14,
-        color: "#555",
-        textAlign: "center",
+        color: '#555',
+        textAlign: 'center',
         marginBottom: 10,
     },
     eventBtn: {
-        backgroundColor: "#7055D3",
+        backgroundColor: '#7055D3',
         borderRadius: 24,
         paddingVertical: 12,
         paddingHorizontal: 28,
         marginBottom: 20,
     },
     eventBtnText: {
-        color: "white",
+        color: 'white',
         fontSize: 16,
-        fontWeight: "600",
-    },
-
-    cardWrapper: {
-        width: '100%',
-        paddingHorizontal: 0,
-        marginBottom: 12,
+        fontWeight: '600',
     },
 });

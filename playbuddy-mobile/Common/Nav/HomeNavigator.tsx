@@ -1,20 +1,23 @@
-import React, { useState } from "react";
-import { createStackNavigator } from "@react-navigation/stack";
+import React, { useEffect, useState } from 'react';
+import { createStackNavigator } from '@react-navigation/stack';
+import { View, ActivityIndicator } from 'react-native';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
-import { View } from "react-native";
-import { ActivityIndicator } from "react-native";
-import { TabNavigator } from "./TabNavigator";
-import { DetailStackNavigator } from "./DetailsPageNavigator";
+import { TabNavigator } from './TabNavigator';
+import { DetailStackNavigator } from './DetailsPageNavigator';
 import AuthMainScreen from '../../Pages/Auth/screens/AuthMainScreen';
-import { PromoScreen } from "../../Pages/Auth/screens/PromoScreen";
-import DeepLinkHandler from "./DeepLinkHandler";
+import { PromoScreen } from '../../Pages/Auth/screens/PromoScreen';
+import { useNavigation } from '@react-navigation/native';
 
 const HomeStack = createStackNavigator();
 
 export function HomeStackNavigator() {
-    const { isSkippingWelcomeScreen, isDefaultsComplete, isLoadingUserProfile, initialDeepLink } = useUserContext();
-
-    const [isSkippingWelcomeDueToPromo, setIsSkippingWelcomeDueToPromo] = useState(false);
+    const {
+        isSkippingWelcomeScreen,
+        isDefaultsComplete,
+        isLoadingUserProfile,
+        initialDeepLink,
+    } = useUserContext();
+    const [isPromoScreenViewed, setIsPromoScreenViewed] = useState(false);
 
     if (isLoadingUserProfile) {
         return (
@@ -24,29 +27,39 @@ export function HomeStackNavigator() {
         );
     }
 
-    const PromoScreenWrap = () => {
-        return <PromoScreen setIsSkippingWelcomeDueToPromo={setIsSkippingWelcomeDueToPromo} />
-    }
-
-    let HomeScreen;
-    // if they are skipping welcome due to promo being clicked, 
-    // they should not see the welcome screen until they refresh the app
-    if (isSkippingWelcomeDueToPromo) {
-        HomeScreen = TabNavigator;
-    } else if (initialDeepLink) {
-        if (initialDeepLink.type === 'organizer_promo_code' || initialDeepLink.type === 'event_promo_code') {
-            HomeScreen = PromoScreenWrap;
+    // Instead of trying to swap the home screen component on the fly,
+    // decide the initial home screen based on the current state.
+    // When the user finishes with the promo screen, perform a navigation reset.
+    const determineHomeScreen = () => {
+        if (initialDeepLink && !isPromoScreenViewed) {
+            if (
+                initialDeepLink.type === 'organizer_promo_code' ||
+                initialDeepLink.type === 'event_promo_code'
+            ) {
+                return 'PromoScreen';
+            }
         }
-    } else if (isDefaultsComplete || isSkippingWelcomeScreen) {
-        HomeScreen = TabNavigator;
-    } else {
-        HomeScreen = AuthMainScreen;
-    }
+        if (isDefaultsComplete || isSkippingWelcomeScreen) {
+            return 'TabNavigator';
+        }
+        return 'AuthMainScreen';
+    };
+
+    const initialScreen = determineHomeScreen();
+
+    const PromoScreenWrap = () => (
+        <PromoScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
+    );
 
     return (
         <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-            <HomeStack.Screen name="HomeScreen" component={HomeScreen} />
-            {/* Screens link Event Details  and Community Events */}
+            {initialScreen === 'PromoScreen' ? (
+                <HomeStack.Screen name="HomeScreen" component={PromoScreenWrap} />
+            ) : initialScreen === 'TabNavigator' ? (
+                <HomeStack.Screen name="HomeScreen" component={TabNavigator} />
+            ) : (
+                <HomeStack.Screen name="HomeScreen" component={AuthMainScreen} />
+            )}
             <HomeStack.Screen name="Details" component={DetailStackNavigator} />
         </HomeStack.Navigator>
     );
