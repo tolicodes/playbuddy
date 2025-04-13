@@ -13,14 +13,7 @@ export const useFetchMyCommunities = () => {
     return useAuthorizedQuery({
         queryKey: ['myCommunities'],
         queryFn: async () => {
-            try {
-                const { data } = await axios.get(`${API_BASE_URL}/communities/my`);
-                return data as Community[];
-            } catch (error) {
-                if (error instanceof Error) {
-                    throw new Error(`Failed to fetch my communities: ${error.message}`);
-                }
-            }
+            return (await axios.get(`${API_BASE_URL}/communities/my`)).data;
         }
     });
 };
@@ -30,14 +23,7 @@ export const useFetchPublicCommunities = () => {
     return useQuery<Community[]>({
         queryKey: ['publicCommunities'],
         queryFn: async () => {
-            try {
-                const { data } = await axios.get(`${API_BASE_URL}/communities/public`);
-                return data;
-            } catch (error) {
-                if (error instanceof Error) {
-                    throw new Error(`Failed to fetch public communities: ${error.message}`);
-                }
-            }
+            return (await axios.get(`${API_BASE_URL}/communities/public`)).data;
         }
     });
 };
