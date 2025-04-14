@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     code: {
-        fontSize: 28,
+        fontSize: 24,
         fontWeight: '600',
         color: '#2D005F',
         backgroundColor: '#EDE1FF',

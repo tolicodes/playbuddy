@@ -1,70 +1,61 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { TextInput, StyleSheet, Animated, TouchableOpacity, View, SectionList, Linking } from 'react-native';
-import { Image } from 'expo-image'
+import { TextInput, StyleSheet, Animated, TouchableOpacity, View, Linking, SectionList } from 'react-native';
+import { Image } from 'expo-image';
 import moment from 'moment';
 import { Calendar } from 'react-native-calendars';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { Event } from '../../../common/types/commonTypes';
 import { SECTION_DATE_FORMAT, useGroupedEvents } from './hooks/useGroupedEvents';
-import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { EventWithMetadata } from '../../Common/Nav/NavStackType';
-
 import { useCalendarContext } from './hooks/CalendarContext';
 import { CustomCalendarDay, CustomCalendarDayProps } from './CustomCalendarDay';
 import EventList from './EventList';
 import WebsiteBanner from '../../Common/WebsiteBanner';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { MISC_URLS } from '../../config';
-import Ionicons from 'react-native-vector-icons/Ionicons';
 import { logEvent } from '../../Common/hooks/logger';
 
-const CALENDAR_HEIGHT = 250;
+const CALENDAR_HEIGHT = 250; // Shorter height for week view
+
+// Provided helper – opens the Google Calendar link.
+const getGoogleCalLink = () => {
+    logEvent('moar_get_google_cal_link');
+    return MISC_URLS.addGoogleCalendar();
+};
 
 type EventCalendarViewProps = {
-    isOnWishlist?: boolean
-    events?: EventWithMetadata[]
-}
+    isOnWishlist?: boolean;
+    events?: EventWithMetadata[];
+};
 
-const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewProps = {}) => {
+const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = false, events }) => {
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(true);
     const { filters, setFilters, filteredEvents, wishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
-
-    const { authUserId } = useUserContext()
+    const { authUserId } = useUserContext();
     const [searchQuery, setSearchQuery] = useState('');
 
     let eventsUsed: EventWithMetadata[];
-
     if (events) {
-        eventsUsed = events
-    }
-    else if (isOnWishlist) {
-        eventsUsed = wishlistEvents
+        eventsUsed = events;
+    } else if (isOnWishlist) {
+        eventsUsed = wishlistEvents;
     } else {
-        eventsUsed = filteredEvents
+        eventsUsed = filteredEvents;
     }
 
-    // locally filter private events based on button on top
+    // Local private events filter (if needed)
     const [isPrivateEventsFiltered, setIsPrivateEventsFiltered] = useState(false);
     const [eventsLocalFiltered, setEventsLocalFiltered] = useState<EventWithMetadata[]>([]);
-
-    // these don't apply globally, so we need to filter locally
     useEffect(() => {
         const eventsFiltered = isPrivateEventsFiltered
             ? eventsUsed.filter(event => event.visibility === 'private')
-            : eventsUsed
+            : eventsUsed;
+        setEventsLocalFiltered(eventsFiltered);
+    }, [isPrivateEventsFiltered, eventsUsed]);
 
-        setEventsLocalFiltered(eventsFiltered)
-    }, [isPrivateEventsFiltered, eventsUsed])
-
-    const onPressPrivateEvents = () => {
-        logEvent('event_calendar_view_on_press_private_events');
-        setIsPrivateEventsFiltered(!isPrivateEventsFiltered);
-    }
-
-    const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered);
-    const sectionListRef = useRef<SectionList<Event>>(null);
-    const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;  // Persist across renders
-
+    // Debounce search input
     const debounce = (func: (query: string) => void, delay: number) => {
         let timeout: NodeJS.Timeout;
         return (query: string) => {
@@ -72,7 +63,6 @@ const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewPr
             timeout = setTimeout(() => func(query), delay);
         };
     };
-
     const debouncedSetFilters = useCallback(debounce((query) => {
         setFilters({ ...filters, search: query });
     }, 200), [filters]);
@@ -81,183 +71,174 @@ const EventCalendarView = ({ isOnWishlist = false, events }: EventCalendarViewPr
         debouncedSetFilters(searchQuery);
     }, [searchQuery]);
 
-    // Toggle calendar expansion
-    const onPressCalendar = () => {
-        logEvent('event_calendar_view_on_press_calendar');
-        Animated.timing(animatedHeight, {
-            toValue: isCalendarExpanded ? 0 : CALENDAR_HEIGHT, // Toggle between 0 and the actual content height
-            duration: 300,
-            useNativeDriver: false, // Height animations cannot use native driver
-        }).start();
+    const sectionListRef = useRef<SectionList<Event>>(null);
+    const animatedHeight = useRef(new Animated.Value(CALENDAR_HEIGHT)).current;
 
+    // Toggle calendar expansion (for fun, you might change the icon color etc.)
+    const onPressExpand = () => {
+        logEvent('event_calendar_view_on_press_expand');
+        Animated.timing(animatedHeight, {
+            toValue: isCalendarExpanded ? 0 : CALENDAR_HEIGHT,
+            duration: 300,
+            useNativeDriver: false,
+        }).start();
         setIsCalendarExpanded(!isCalendarExpanded);
     };
 
-    const onPressDay = (day: any) => {
-        logEvent('event_calendar_view_on_press_day');
-        const date = moment(day.dateString).format(SECTION_DATE_FORMAT);
-        const sectionIndex = sections.findIndex(section => section.title === date);
-
+    // Scroll to today's date in the SectionList
+    const onPressToday = () => {
+        logEvent('event_calendar_view_on_press_today');
+        const today = moment().format(SECTION_DATE_FORMAT);
+        const { sections } = useGroupedEvents(eventsLocalFiltered);
+        const sectionIndex = sections.findIndex(section => section.title === today);
         if (sectionIndex !== -1 && sectionListRef.current) {
             sectionListRef.current.scrollToLocation({
                 sectionIndex,
-                itemIndex: sectionIndex === 0 ? 0 : -1,
+                itemIndex: 0,
                 animated: true,
             });
         }
     };
 
+    // Open Google Calendar link
     const onPressGoogleCalendar = () => {
-        logEvent('event_calendar_view_on_press_google_calendar', {
-            isOnWishlist,
-            authUserId,
-        });
-
-        const params = isOnWishlist ? { wishlist: true, authUserId: authUserId || '' } : {};
-
-        const url = MISC_URLS.addGoogleCalendar(params);
-
+        logEvent('event_calendar_view_on_press_google_calendar', { isOnWishlist, authUserId });
+        const url = getGoogleCalLink();
         Linking.openURL(url);
-    }
+    };
+
+    // Prepare calendar props for week view.
+    const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered);
+    const calendarProps = {
+        markedDates,
+        onDayPress: (day: CustomCalendarDayProps) => {
+            logEvent('event_calendar_view_on_press_day');
+            const date = moment(day.dateString).format(SECTION_DATE_FORMAT);
+            const sectionIndex = sections.findIndex(section => section.title === date);
+            if (sectionIndex !== -1 && sectionListRef.current) {
+                sectionListRef.current.scrollToLocation({
+                    sectionIndex,
+                    itemIndex: sectionIndex === 0 ? 0 : -1,
+                    animated: true,
+                });
+            }
+        },
+        dayComponent: (props: CustomCalendarDayProps) => <CustomCalendarDay {...props} />,
+        theme: {
+            selectedDayBackgroundColor: '#FF69B4',
+            todayTextColor: '#FF69B4',
+            arrowColor: '#FF69B4',
+            textSectionTitleColor: '#333',
+        },
+        hideExtraDays: true,    // Show only the current week
+        disableMonthChange: true,
+    };
 
     return (
         <View style={styles.container}>
             {!authUserId && <WebsiteBanner />}
-            <View style={styles.searchContainer}>
-                <TouchableOpacity style={styles.calendarIcon} onPress={onPressCalendar}>
-                    <FAIcon name="calendar" size={30} color={isCalendarExpanded ? "#007AFF" : "#8E8E93"} />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.calendarIcon} onPress={onPressPrivateEvents}>
-                    <Ionicons name="lock-closed" size={30} color={isPrivateEventsFiltered ? "#007AFF" : "#8E8E93"} />
-                </TouchableOpacity>
-
-                {isOnWishlist && <TouchableOpacity style={styles.googleCalendarIcon} onPress={onPressGoogleCalendar}>
-                    <Image
-                        source={require('./images/google-calendar.png')}
-                        style={styles.googleCalendarImage}
+            <View style={styles.topBar}>
+                {/* Bubble search */}
+                <View style={styles.searchBubble}>
+                    <Ionicons name="search" size={20} color="#888" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search events"
+                        placeholderTextColor="#888"
+                        value={searchQuery}
+                        onChangeText={setSearchQuery}
                     />
-                </TouchableOpacity>}
-
-                <TextInput
-                    style={[styles.searchBox, searchQuery
-                        ? { borderColor: '#007AFF', borderWidth: 3 }
-                        : { borderColor: '#DDD' }]}
-                    placeholder="Search events (filters on top)"
-                    value={searchQuery}
-                    onChangeText={text => setSearchQuery(text)}
-                />
-            </View>
-
-
-            <Animated.View style={[styles.calendar, { height: animatedHeight }]}>
-                <Calendar
-                    markedDates={markedDates}
-                    onDayPress={onPressDay}
-                    dayComponent={(props: CustomCalendarDayProps) => (
-                        <CustomCalendarDay
-                            {...props}
+                </View>
+                {/* Top bar buttons */}
+                <View style={styles.topButtons}>
+                    <TouchableOpacity style={styles.topButton} onPress={onPressToday}>
+                        <Ionicons name="today-outline" size={24} color="#888" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.topButton} onPress={onPressGoogleCalendar}>
+                        <Image
+                            source={require('./images/google-calendar.png')}
+                            style={styles.googleCalendarImage}
                         />
-                    )}
-                    theme={{
-                        selectedDayBackgroundColor: 'blue',
-                        todayTextColor: 'blue',
-                        arrowColor: 'blue',
-                        lineHeight: 10,
-                    }}
-                />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.topButton} onPress={onPressExpand}>
+                        <FAIcon name={isCalendarExpanded ? "angle-double-up" : "angle-double-down"} size={24} color="#888" />
+                    </TouchableOpacity>
+                </View>
+            </View>
+            <Animated.View style={[styles.calendarContainer, { height: isCalendarExpanded ? CALENDAR_HEIGHT : 0 }]}>
+                <Calendar {...calendarProps} style={styles.calendar} />
             </Animated.View>
-
             <View style={styles.eventListContainer}>
                 <EventList
                     sections={sections}
-                    screen={'Main Calendar'}
                     sectionListRef={sectionListRef}
                     reloadEvents={reloadEvents}
                     isLoadingEvents={isLoadingEvents}
                 />
             </View>
-
-        </View >
+        </View>
     );
 };
 
+export default EventCalendarView;
+
 const styles = StyleSheet.create({
     container: {
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        flex: 1
+        flex: 1,
+        backgroundColor: '#F2F2F2',
     },
-    calendar: {
-        width: '100%',
-        overflow: 'hidden',
-    },
-    emptyList: {
-        padding: 20,
-    },
-    sectionHeader: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        backgroundColor: '#f4f4f4',
-        paddingVertical: 8,
-        paddingHorizontal: 20,
-        color: '#333',
-    },
-    controlLabel: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 10,
-    },
-    searchContainer: {
+    topBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'flex-start',
-        padding: 20,
-        paddingBottom: 0,
-        paddingTop: 10,
-        backgroundColor: 'white',
-        marginBottom: -20,
-    },
-    searchBox: {
-        height: 40,
-        flex: 1,
-        borderColor: '#DDD',
-        borderWidth: 1,
-        paddingHorizontal: 10,
-        marginBottom: 20,
-        borderRadius: 8,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
         backgroundColor: '#fff',
+    },
+    searchBubble: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#EFEFEF',
+        borderRadius: 25,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
         fontSize: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
+        color: '#333',
+    },
+    topButtons: {
+        flexDirection: 'row',
+        marginLeft: 12,
+    },
+    topButton: {
+        marginHorizontal: 4,
+        backgroundColor: '#FFF',
+        padding: 6,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
         elevation: 2,
     },
-    filterIcon: {
-        marginTop: -20,
-        marginLeft: 10,
-        marginRight: 20,
-        alignSelf: 'center',
+    calendarContainer: {
+        width: '100%',
+        overflow: 'hidden',
+        height: CALENDAR_HEIGHT,
     },
-    calendarIcon: {
-        marginTop: -20,
-        marginRight: 15,
-        alignSelf: 'center',
-    },
-    googleCalendarIcon: {
-        marginTop: -20,
-        marginRight: 10,
-        alignSelf: 'center',
-    },
-    googleCalendarImage: {
-        width: 30,  // Set your desired width
-        height: 30, // Set your desired height
+    calendar: {
+        height: CALENDAR_HEIGHT,
+        borderTopWidth: 1,
+        borderTopColor: '#ccc',
     },
     eventListContainer: {
         flex: 1,
-    }
+    },
+    googleCalendarImage: {
+        width: 26,
+        height: 26,
+    },
 });
-
-export default EventCalendarView;
