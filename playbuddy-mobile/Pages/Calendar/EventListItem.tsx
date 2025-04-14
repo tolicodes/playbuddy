@@ -1,24 +1,26 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Image } from 'expo-image'
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Share, Linking } from 'react-native';
+import { Image } from 'expo-image';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 import { Event } from '../../commonTypes';
 import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import { useCalendarContext } from './hooks/CalendarContext';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { formatDate } from './hooks/calendarUtils';
-import { BuddyAvatarCarousel } from './BuddyAvatarCarousel';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { logEvent } from '../../Common/hooks/logger';
 import { Buddy } from '../Buddies/hooks/BuddiesContext';
+import { TicketPromoModal } from './TicketPromoModal';
 
 interface ListItemProps {
     item: EventWithMetadata;
-    setSelectedEvent: (event: Event) => void;
+    onPress: (event: Event) => void;
     buddiesAttending?: Buddy[];
 }
 
-export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent, buddiesAttending: sharedBuddies }) => {
+
+export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
 
@@ -26,192 +28,240 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, setSelectedEvent,
     const itemIsOnWishlist = isOnWishlist(item.id);
     const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
 
+    // Navigate to event details.
+    const handlePressEvent = () => {
+        onPress(item);
+        logEvent('event_list_item_clicked', { event_id: item.id, event_name: item.name });
+    };
+
+    // Toggle wishlist status.
     const handleToggleEventWishlist = () => {
         logEvent('event_list_item_wishlist_toggled', {
             event_id: item.id,
             event_name: item.name,
-            is_on_wishlist: !itemIsOnWishlist
+            is_on_wishlist: !itemIsOnWishlist,
         });
         toggleWishlistEvent.mutate({
             eventId: item.id,
-            isOnWishlist: !itemIsOnWishlist
+            isOnWishlist: !itemIsOnWishlist,
         });
     };
-    const handlePressEvent = () => {
-        setSelectedEvent(item);
-        logEvent('event_list_item_clicked', { event_id: item.id, event_name: item.name });
-    }
 
+
+
+    // Share the ticket URL via the Share menu.
+    const handlePressShare = async () => {
+        if (item.ticket_url) {
+            try {
+                await Share.share({ message: item.ticket_url });
+                logEvent('event_list_item_share_pressed', { event_id: item.id });
+            } catch (error) {
+                logEvent('event_list_item_share_error', { event_id: item.id, error });
+            }
+        }
+    };
+
+    // Determine promo code from event or organizer.
     const eventPromoCode = item.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = item.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-
     const promoCode = eventPromoCode || organizerPromoCode;
 
-    const PromoCode = promoCode && (
-        <View style={styles.promoCodeBadge}>
-            <Text style={styles.promoCodeText}>
-                {promoCode.discount_type === 'percent' ? '' : '$'}
-                {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off
-            </Text>
-        </View>
-    )
+    const [discountModalVisible, setDiscountModalVisible] = useState(false);
+
+    // Open the ticket URL directly.
+    const handlePressTickets = () => {
+        if (!promoCode) {
+            Linking.openURL(item.ticket_url);
+            logEvent('event_list_item_ticket_pressed', { event_id: item.id, event_name: item.name });
+        } else {
+            setDiscountModalVisible(true);
+            logEvent('event_list_item_ticket_discount_modal_opened', { event_id: item.id, event_name: item.name });
+        }
+    };
 
     return (
-        <TouchableOpacity onPress={handlePressEvent}>
-            <View style={styles.eventContainer}>
-                <Image source={{ uri: imageUrl }} style={styles.eventImage} />
-                <View style={styles.eventDetails}>
-                    <View style={styles.eventOrganizerAndBadgesContainer}>
-                        <View style={styles.organizerContainer}>
-                            <View
-                                style={[styles.organizerDot, { backgroundColor: item.organizerColor || 'white' }]}
-                            />
-                            <Text style={styles.eventOrganizer}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                            >
-                                {item.organizer?.name}
-                            </Text>
-                            {item.visibility === 'private' && (
-                                <View style={styles.privateBadge}>
-                                    <Text style={styles.privateBadgeText}>Private</Text>
-                                </View>
-                            )}
-                        </View>
-                        {sharedBuddies && (
-                            <View style={styles.buddyAvatarCarouselContainer}>
-                                <BuddyAvatarCarousel buddies={sharedBuddies} />
+        <>
+            <TicketPromoModal
+                visible={discountModalVisible}
+                promoCode={promoCode?.promo_code || 'N/A'}
+                discount={promoCode?.discount + (promoCode?.discount_type === 'percent' ? '%' : '$')}
+                onClose={() => setDiscountModalVisible(false)}
+                organizerName={item.organizer?.name || ''}
+                onBuyTicket={() => {
+                    // Handle ticket purchase logic, e.g., open ticket URL
+                    Linking.openURL(item.ticket_url);
+                    setDiscountModalVisible(false);
+                }}
+            />
+            <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8} style={styles.wrapper}>
+                <View style={styles.cardWrapper}>
+                    {/* Top Section: Image & Details */}
+                    <View style={styles.topSection}>
+                        {imageUrl && (
+                            <View style={styles.imageContainer}>
+                                <Image source={{ uri: imageUrl }} style={styles.eventImage} />
                             </View>
                         )}
-                        {PromoCode}
+                        <View style={styles.detailsContainer}>
+                            {/* Organizer Row */}
+                            <View style={styles.organizerRow}>
+                                <View style={styles.organizerContainer}>
+                                    <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
+                                    <Text style={styles.organizerName} numberOfLines={1}>
+                                        {item.organizer?.name}
+                                    </Text>
+                                </View>
+                                {authUserId && (
+                                    <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
+                                        <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
+                                    </TouchableOpacity>
+                                )}
+                            </View>
+                            {/* Title Row */}
+                            <View style={styles.titleAndDiscountRow}>
+                                <Text style={styles.eventTitle} numberOfLines={1}>
+                                    {item.name}
+                                </Text>
+                                {promoCode && (
+                                    <View style={styles.discountBadge}>
+                                        <Text style={styles.discountText}>
+                                            {promoCode.discount_type === 'percent'
+                                                ? `${promoCode.discount}% off`
+                                                : `$${promoCode.discount} off`}
+                                        </Text>
+                                    </View>
+                                )}
+                            </View>
+                            {/* Time Row */}
+                            <View style={styles.timeRow}>
+                                <Text style={styles.eventTime}>{formattedDate}</Text>
+                            </View>
+                        </View>
                     </View>
-
-                    <View style={styles.titleAndHeartContainer}>
-                        <Text
-                            style={styles.eventTitle}
-                            numberOfLines={2}
-                            ellipsizeMode="tail"
-                        >
-                            {item.name}
-                        </Text>
-                        {authUserId && (
-                            <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.favoriteIcon}>
-                                <FAIcon
-                                    name={itemIsOnWishlist ? 'heart' : 'heart-o'}
-                                    size={25}
-                                    color="red"
-                                />
-                            </TouchableOpacity>
-                        )}
+                    {/* Button Row */}
+                    <View style={styles.buttonRow}>
+                        <TouchableOpacity style={styles.button} onPress={handlePressEvent}>
+                            <FAIcon name="info-circle" size={16} color="#888" style={styles.buttonIcon} />
+                            <Text style={styles.buttonText}>Details</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={handlePressShare}>
+                            <IonIcon name="share-social" size={16} color="#888" style={styles.buttonIcon} />
+                            <Text style={styles.buttonText}>Share</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.button} onPress={handlePressTickets}>
+                            <FAIcon name="ticket" size={16} color="#888" style={styles.buttonIcon} />
+                            <Text style={styles.buttonText}>Tickets</Text>
+                        </TouchableOpacity>
                     </View>
-
-                    <Text style={styles.eventTime}>{formattedDate}</Text>
                 </View>
-            </View>
-        </TouchableOpacity>
+            </TouchableOpacity>
+        </>
     );
 };
 
-export const ITEM_HEIGHT = 100;
+export const ITEM_HEIGHT = 150;
 
 const styles = StyleSheet.create({
-    eventContainer: {
+    wrapper: {
         height: ITEM_HEIGHT,
+    },
+    cardWrapper: {
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 12,
+        overflow: 'hidden',
+        marginVertical: 8,
+        marginHorizontal: 16,
+    },
+    topSection: {
         flexDirection: 'row',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
+        padding: 12,
         alignItems: 'center',
     },
-    eventDetails: {
-        flex: 1,
-        justifyContent: 'center',
+    imageContainer: {
+        marginRight: 12,
     },
     eventImage: {
         width: 50,
         height: 50,
-        marginRight: 16,
+        borderRadius: 8,
+        backgroundColor: '#eee',
+    },
+    detailsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+    },
+    organizerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    organizerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flex: 1,
+    },
+    organizerDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        marginRight: 6,
+    },
+    organizerName: {
+        fontSize: 14,
+        color: '#000',
+    },
+    heartContainer: {
+        marginLeft: 8,
+    },
+    titleAndDiscountRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
     },
     eventTitle: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
         flex: 1,
-        marginRight: 10,
     },
-    eventOrganizer: {
-        fontSize: 14,
+    discountBadge: {
+        backgroundColor: '#FFD700',
+        borderRadius: 8,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginLeft: 8,
+    },
+    discountText: {
+        fontSize: 12,
+        fontWeight: 'bold',
         color: 'black',
-        marginRight: 10,
+    },
+    timeRow: {
+        marginBottom: 4,
     },
     eventTime: {
         fontSize: 14,
         color: '#666',
-        marginTop: 4
     },
-    favoriteIcon: {
-        paddingLeft: 10,
-    },
-    eventOrganizerAndBadgesContainer: {
+    buttonRow: {
         flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 4,
-        display: 'flex',
+        borderTopWidth: 1,
+        borderTopColor: '#ccc',
     },
-    organizerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flex: 2
-    },
-    organizerDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        marginRight: 5,
-    },
-    buddyAvatarCarouselContainer: {
+    button: {
         flex: 1,
-        marginLeft: 10
-    },
-    titleAndHeartContainer: {
         flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        paddingVertical: 10,
     },
-    privateBadge: {
-        backgroundColor: '#FF6B6B',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 12,
-        marginLeft: 8,
+    buttonIcon: {
+        marginRight: 4,
     },
-    privateBadgeText: {
-        color: 'white',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    promoBadge: {
-        backgroundColor: '#FFD700',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 12,
-    },
-    promoBadgeText: {
-        color: 'black',
-        fontSize: 12,
-        fontWeight: 'bold',
-    },
-    promoCodeText: {
-        fontSize: 12,
-        color: 'black',
-        fontWeight: 'bold',
-    },
-    promoCodeBadge: {
-        backgroundColor: '#FFD700',
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        borderRadius: 12,
+    buttonText: {
+        fontSize: 14,
+        color: '#888',
     },
 });

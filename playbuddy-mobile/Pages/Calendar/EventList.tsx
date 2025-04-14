@@ -1,115 +1,139 @@
-import React from "react";
-import { SectionList, View, Text, StyleSheet, ActivityIndicator, PixelRatio } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+    SectionList,
+    View,
+    Text,
+    StyleSheet,
+    ActivityIndicator,
+    PixelRatio,
+    SectionListRenderItemInfo,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import sectionListGetItemLayout from 'react-native-section-list-get-item-layout';
+
 import { EventWithMetadata } from "../../Common/Nav/NavStackType";
 import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
-import { useNavigation } from "@react-navigation/native";
-import { useState, useEffect } from "react";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { Event } from "../../commonTypes";
 import { BuddyWishlist, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
-import sectionListGetItemLayout from 'react-native-section-list-get-item-layout'
 import { logEvent } from "../../Common/hooks/logger";
 
-type EventListProps = {
-    sections: any;
-    screen?: string;
-    sectionListRef?: any;
-    reloadEvents: any;
-    isLoadingEvents: boolean;
+const HEADER_HEIGHT = 40;
+
+const getBuddiesAttending = (buddiesWishlists: BuddyWishlist[], eventId: string) => {
+    const buddiesWishlist = buddiesWishlists.filter(bw => bw.events.includes(eventId));
+    return buddiesWishlist.map(({ user_id, name, avatar_url }) => ({ user_id, name, avatar_url }));
 };
 
-function getBuddiesAttending(buddiesWishlists: BuddyWishlist[], eventId: string) {
-    const buddiesWishlist = buddiesWishlists.filter((buddyWishlist: BuddyWishlist) => buddyWishlist.events.includes(eventId));
-    const buddiesAttending = buddiesWishlist.map((buddyWishlist: BuddyWishlist) => ({
-        user_id: buddyWishlist.user_id,
-        name: buddyWishlist.name,
-        avatar_url: buddyWishlist.avatar_url,
-    }));
+type SectionType = {
+    title: string;              // e.g., "Apr 13, 2025"
+    data: EventWithMetadata[];  // events for that date
+};
 
-    return buddiesAttending;
+interface EventListProps {
+    sections: SectionType[];
+    sectionListRef?: React.RefObject<SectionList<Event>>;
+    reloadEvents?: () => void;
+    isLoadingEvents?: boolean;
 }
 
-const EventList = ({ sections, sectionListRef, isLoadingEvents }: EventListProps) => {
+const EventList: React.FC<EventListProps> = ({
+    sections,
+    sectionListRef,
+    reloadEvents,
+    isLoadingEvents,
+}) => {
     const navigation = useNavigation<NavStack>();
-
     const { buddiesWishlists } = useBuddiesContext();
-
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     useEffect(() => {
         if (selectedEvent) {
-            navigation.navigate('Details', { screen: 'Event Details', params: { selectedEvent } });
+            navigation.navigate('Details', {
+                screen: 'Event Details',
+                params: { selectedEvent },
+            });
         }
     }, [selectedEvent]);
 
-    return (<SectionList
-        ref={sectionListRef}
-        sections={sections}
-        stickySectionHeadersEnabled={true}
-        getItemLayout={sectionListGetItemLayout({
-            getItemHeight: () => ITEM_HEIGHT,
-            getSeparatorHeight: () => 1 / PixelRatio.get(),
-            getSectionHeaderHeight: () => HEADER_HEIGHT,
-        })}
-        renderItem={({ item: event }: { item: EventWithMetadata }) => {
-            const buddiesAttending = getBuddiesAttending(buddiesWishlists.data || [], event.id);
+    const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
+        const buddiesAttending = getBuddiesAttending(buddiesWishlists.data || [], event.id);
 
-            return (
-                <View>
-                    <EventListItem
-                        item={event}
-                        setSelectedEvent={(event) => {
-                            logEvent('event_list_item_clicked', { event_id: event.id, event_name: event.name });
-                            setSelectedEvent(event)
-                        }}
-                        buddiesAttending={buddiesAttending}
-                    />
+        return (
+            <View style={styles.eventItemWrapper}>
+                <EventListItem
+                    item={event}
+                    onPress={(e) => {
+                        setSelectedEvent(e);
+                    }}
+                />
+            </View>
+        );
+    };
+
+    const renderSectionHeader = ({ section }: { section: SectionType }) => (
+        <View style={styles.sectionHeaderWrapper}>
+            <Text style={styles.sectionHeader}>{section.title}</Text>
+        </View>
+    );
+
+    return (
+        <SectionList
+            ref={sectionListRef}
+            sections={sections}
+            keyExtractor={(item, i) => `${i}_${item.id}`}
+            stickySectionHeadersEnabled={true}
+            renderItem={renderItem}
+            renderSectionHeader={renderSectionHeader}
+            getItemLayout={sectionListGetItemLayout({
+                getItemHeight: () => ITEM_HEIGHT,
+                // getSeparatorHeight: () => 2,
+                getSectionHeaderHeight: () => HEADER_HEIGHT + 2,
+            })}
+            ListEmptyComponent={
+                <View style={styles.emptyList}>
+                    {isLoadingEvents ? (
+                        <ActivityIndicator size="large" color="#007AFF" />
+                    ) : (
+                        <Text style={styles.emptyText}>No events found</Text>
+                    )}
                 </View>
-            )
-        }}
-        renderSectionHeader={({ section }: any) => {
-            return (
-                <Text style={styles.sectionHeader}>{section.title}</Text>
-            )
-        }}
-        keyExtractor={(item, i) => `${i}_${item.id}`}
-        ListEmptyComponent={<View style={styles.emptyList}>
-            {isLoadingEvents
-                ? <ActivityIndicator size="large" color="#007AFF" />
-                : <Text>No events found</Text>
             }
-
-        </View>}
-        onScrollToIndexFailed={(e) => {
-            console.log('scroll_to_index_failed', e);
-            logEvent('event_list_scroll_to_index_failed');
-        }}
-
-    // initialNumToRender={1000}
-    // TODO: Implement pull to refresh
-    // onRefresh={() => reloadEvents()}
-    />)
-}
-
-const HEADER_HEIGHT = 40;
-
-const styles = StyleSheet.create({
-    sectionHeader: {
-        backgroundColor: 'lightgrey',
-        padding: 10,
-        fontSize: 16,
-        fontWeight: 'bold',
-        height: HEADER_HEIGHT,
-    },
-    emptyList: {
-        padding: 20,
-        textAlign: 'center',
-        flex: 1,
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        alignContent: 'center',
-    },
-});
+            onScrollToIndexFailed={(e) => {
+                console.log('scroll_to_index_failed', e);
+                logEvent('event_list_scroll_to_index_failed');
+            }}
+        />
+    );
+};
 
 export default EventList;
+
+const styles = StyleSheet.create({
+    sectionHeaderWrapper: {
+        backgroundColor: '#F9F9F9',
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        justifyContent: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#DDD',
+    },
+    sectionHeader: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#333',
+    },
+    emptyList: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    emptyText: {
+        fontSize: 16,
+        color: '#888',
+    },
+    eventItemWrapper: {
+        backgroundColor: 'white',
+    },
+});

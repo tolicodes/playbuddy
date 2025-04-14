@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -19,6 +19,7 @@ import { ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
 import { useCalendarContext } from './hooks/CalendarContext';
 import * as Clipboard from 'expo-clipboard';
 import PromoCodeSection from './PromoCodeSection';
+import { TicketPromoModal } from './TicketPromoModal';
 
 const VideoPlayer = ({ uri }: { uri: string }) => {
     return (
@@ -120,75 +121,97 @@ export const EventDetail = ({ route }: { route: { params: { selectedEvent: Event
 
     const locationAreaIsAll = selectedLocationAreaId === ALL_LOCATION_AREAS_ID;
 
+    const [discountModalVisible, setDiscountModalVisible] = useState(false);
+
+
     return (
-        <ScrollView style={styles.scrollView}>
-            {selectedEvent.video_url ? (
-                <VideoPlayer uri={selectedEvent.video_url} />
-            ) : (
-                <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
-            )}
-
-            <View style={styles.contentContainer}>
-                <EventHeader
-                    selectedEvent={selectedEvent}
-                    addPromoCodeToUrlAndOpen={addPromoCodeToUrlAndOpen}
-                    onPressGoogleCalendar={onPressGoogleCalendar}
-                />
-
-                <TouchableOpacity onPress={onClickOrganizer}>
-                    <Text style={styles.eventOrganizer}>
-                        <Text style={styles.eventOrganizerLabel}>Organizer:</Text> {selectedEvent.organizer?.name}
-                    </Text>
-                </TouchableOpacity>
-
-                <Text style={styles.eventTime}>
-                    {formatDate(selectedEvent, true)}
-                </Text>
-
-                {formattedPrice && (
-                    <Text style={styles.fullViewPrice}>
-                        Price: {formattedPrice}
-                    </Text>
+        <>
+            <TicketPromoModal
+                visible={discountModalVisible}
+                promoCode={promoCode?.promo_code || 'N/A'}
+                discount={promoCode?.discount + (promoCode?.discount_type === 'percent' ? '%' : '$')}
+                onClose={() => setDiscountModalVisible(false)}
+                onBuyTicket={() => {
+                    // Handle ticket purchase logic, e.g., open ticket URL
+                    Linking.openURL(selectedEvent.ticket_url);
+                    setDiscountModalVisible(false);
+                }}
+            />
+            <ScrollView style={styles.scrollView}>
+                {selectedEvent.video_url ? (
+                    <VideoPlayer uri={selectedEvent.video_url} />
+                ) : (
+                    <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
                 )}
 
-                {locationAreaIsAll && (
-                    <Text style={styles.eventLocation}>
-                        {selectedEvent.location_area?.name}
-                    </Text>
-                )}
+                <View style={styles.contentContainer}>
+                    <EventHeader
+                        selectedEvent={selectedEvent}
+                        addPromoCodeToUrlAndOpen={addPromoCodeToUrlAndOpen}
+                        onPressGoogleCalendar={onPressGoogleCalendar}
+                    />
 
-                {promoCode && <PromoCodeSection promoCode={promoCode.promo_code} />}
-
-
-                {selectedEvent.ticket_url && (
-                    <TouchableOpacity
-                        style={styles.ticketButton}
-                        onPress={() => {
-                            logEvent('event_detail_get_tickets_clicked', {
-                                event_id: selectedEvent.id,
-                                event_name: selectedEvent.name,
-                                promo_code_id: promoCode?.id,
-                                promo_code_code: promoCode?.promo_code,
-                                initial_deep_link: initialPromoCode?.id,
-                            });
-                            Linking.openURL(selectedEvent.ticket_url).catch(err => {
-                                throw new Error(`Failed to open ticket URL: ${err}`);
-                            });
-                        }}
-                    >
-                        <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>
+                    <TouchableOpacity onPress={onClickOrganizer}>
+                        <Text style={styles.eventOrganizer}>
+                            <Text style={styles.eventOrganizerLabel}>Organizer:</Text> {selectedEvent.organizer?.name}
+                        </Text>
                     </TouchableOpacity>
-                )}
 
-                <Markdown>
-                    {selectedEvent.description}
-                </Markdown>
-            </View>
-        </ScrollView>
+                    <Text style={styles.eventTime}>
+                        {formatDate(selectedEvent, true)}
+                    </Text>
+
+                    {formattedPrice && (
+                        <Text style={styles.fullViewPrice}>
+                            Price: {formattedPrice}
+                        </Text>
+                    )}
+
+                    {locationAreaIsAll && (
+                        <Text style={styles.eventLocation}>
+                            {selectedEvent.location_area?.name}
+                        </Text>
+                    )}
+
+                    {promoCode && <PromoCodeSection promoCode={promoCode.promo_code} />}
+
+
+                    {selectedEvent.ticket_url && (
+                        <TouchableOpacity
+                            style={styles.ticketButton}
+                            onPress={() => {
+                                logEvent('event_detail_get_tickets_clicked', {
+                                    event_id: selectedEvent.id,
+                                    event_name: selectedEvent.name,
+                                    organizer_name: selectedEvent.organizer?.name,
+                                    promo_code_id: promoCode?.id,
+                                    promo_code_code: promoCode?.promo_code,
+                                    initial_deep_link: initialPromoCode?.id,
+                                });
+
+                                // Open the ticket URL directly.
+                                if (!promoCode) {
+                                    Linking.openURL(selectedEvent.ticket_url);
+                                    logEvent('event_detail_ticket_pressed', { event_id: selectedEvent.id, event_name: selectedEvent.name });
+                                } else {
+                                    setDiscountModalVisible(true);
+                                    logEvent('event_detail_ticket_discount_modal_opened', { event_id: selectedEvent.id, event_name: selectedEvent.name });
+                                }
+
+                            }}
+                        >
+                            <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>
+                        </TouchableOpacity>
+                    )}
+
+                    <Markdown>
+                        {selectedEvent.description}
+                    </Markdown>
+                </View>
+            </ScrollView>
+        </>
     );
 };
-
-
 
 
 const styles = StyleSheet.create({
