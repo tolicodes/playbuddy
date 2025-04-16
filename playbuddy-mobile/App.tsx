@@ -13,6 +13,8 @@ import { CommonProvider } from './Common/hooks/CommonContext';
 import { useFetchExpoUpdateAsync } from './Common/hooks/ExpoUpdate';
 import { BuddiesProvider } from './Pages/Buddies/hooks/BuddiesContext';
 import { queryClient } from './Common/hooks/reactQueryClient';
+import { PaperProvider } from 'react-native-paper';
+import DeepLinkHandler from './Common/Nav/DeepLinkHandler';
 // import './Common/hooks/appsFlyer';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
@@ -34,7 +36,10 @@ const App = () => {
         <CommonProvider>
           <BuddiesProvider>
             <CalendarProvider>
-              <Nav />
+              <PaperProvider>
+                <DeepLinkHandler />
+                <Nav />
+              </PaperProvider>
             </CalendarProvider>
           </BuddiesProvider>
         </CommonProvider>

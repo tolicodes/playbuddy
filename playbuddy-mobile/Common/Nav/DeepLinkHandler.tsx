@@ -1,4 +1,4 @@
-/*
+/** 
 ────────────────────────────────────────────────────────────────
 DeepLinkHandler.tsx
 
@@ -56,7 +56,6 @@ Result:
 ────────────────────────────────────────────────────────────────
 */
 
-
 import { useEffect, useRef } from 'react';
 import branch from 'react-native-branch';
 import URLParse from 'url-parse';
@@ -64,33 +63,22 @@ import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { logEvent } from '../hooks/logger';
 import { useFetchDeepLinks } from '../hooks/useDeepLinks';
 import { DeepLink, UE } from '../../commonTypes';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
 
+// Utility function to extract the slug from the URI and match it against your deep link list.
 const findBySlug = (uri: string, list: DeepLink[]) => {
     const slug = new URLParse(uri).pathname.split('/').pop();
     return list.find((d) => d.slug === slug);
 };
-
-const FIRST_LAUNCH_KEY = 'isFirstLaunch';
-
-export async function handleFirstInstall() {
-    try {
-        const alreadyLaunched = await AsyncStorage.getItem(FIRST_LAUNCH_KEY);
-        if (!alreadyLaunched) {
-            await AsyncStorage.setItem(FIRST_LAUNCH_KEY, 'true');
-        }
-    } catch (error) {
-        console.error('Error checking first install:', error);
-    }
-}
 
 export default function DeepLinkHandler() {
     const { data: deepLinks = [], isLoading } = useFetchDeepLinks();
     const { setInitialDeepLink } = useUserContext();
     const queuedUri = useRef<string | null>(null);
 
+    // Function that processes a URI, matching it to a deep link (via its slug) and updating the UserContext.
     const process = (uri: string) => {
-        if (isLoading) return;
+        if (isLoading) return; // Defer if deep links are still loading
         const dl = findBySlug(uri, deepLinks);
         if (!dl) return;
 
@@ -103,11 +91,11 @@ export default function DeepLinkHandler() {
             id: dl.id,
             type: dl.type,
             organizer_id: dl.organizer?.id,
-            community_id: dl.community?.id
+            community_id: dl.community?.id,
         });
     };
 
-    // subscribe to branch deep links
+    // 1. Subscribe to Branch deep-link events.
     useEffect(() => {
         const unsub = branch.subscribe(async ({ uri }) => {
             if (!uri) return;
@@ -117,10 +105,9 @@ export default function DeepLinkHandler() {
         return () => unsub();
     }, [deepLinks, isLoading]);
 
-    // handle first install by checking for branch params
+    // 2. On first install, check for cold-start branch parameters.
     useEffect(() => {
         (async () => {
-            await handleFirstInstall();
             const data = await branch.getLatestReferringParams();
             const branchUrl = data?.['+url'] || data?.['~referring_link'];
             if (branchUrl) {
@@ -130,6 +117,23 @@ export default function DeepLinkHandler() {
         })();
     }, []);
 
+    // 3. Clipboard fallback: if no Branch URI was queued, check the clipboard.
+    useEffect(() => {
+        (async () => {
+            if (!queuedUri.current) {
+                const clipboardText = await Clipboard.getStringAsync();
+                if (
+                    clipboardText &&
+                    (clipboardText.includes('l.playbuddy.me') || clipboardText.includes('bclc8-alternate.app.link') || clipboardText.includes('bclc8'))
+                ) {
+                    queuedUri.current = clipboardText;
+                    process(clipboardText);
+                }
+            }
+        })();
+    }, [isLoading, deepLinks]);
+
+    // 4. Reprocess any queued deep link once the deep link data has finished loading.
     useEffect(() => {
         if (queuedUri.current) process(queuedUri.current);
     }, [isLoading, deepLinks]);

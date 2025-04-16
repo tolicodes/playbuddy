@@ -1,7 +1,6 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { DrawerNav } from "./DrawerNav";
-import DeepLinkHandler from "./DeepLinkHandler";
 import { tagScreenName } from "../hooks/uxCam";
 
 export default function AppNavigator() {
@@ -19,8 +18,6 @@ export default function AppNavigator() {
         >
 
             <DrawerNav />
-            <DeepLinkHandler />
-
         </NavigationContainer>
     );
 }
