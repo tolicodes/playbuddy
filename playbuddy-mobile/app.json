@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "4.16.1",
+    "version": "5.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -57,6 +57,28 @@
         "com.google.android.gms.permission.AD_ID",
         "android.permission.SCHEDULE_EXACT_ALARM",
         "android.permission.RECEIVE_BOOT_COMPLETED"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
+              "host": "applinks:playbuddy.onelink.me", 
+              "pathPrefix": "/RWsB" 
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "playbuddy" 
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "web": {
@@ -115,7 +137,10 @@
       ["@config-plugins/react-native-branch", {
         "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
         "iosAppDomain": "l.playbuddy.me"
-      }]
+      }],
+      [
+        "react-native-appsflyer"
+      ]
     ],
     "owner": "tolicodes1",
     "runtimeVersion": "4.16.1"
