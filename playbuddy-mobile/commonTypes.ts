@@ -696,6 +696,9 @@ export interface Users {
 
     /** References communities.id (nullable). */
     selected_community_id: string | null;
+
+    /** References deep_links.id (nullable). */
+    initial_deep_link_id: string | null;
 }
 
 /**

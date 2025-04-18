@@ -14,9 +14,10 @@ import sectionListGetItemLayout from 'react-native-section-list-get-item-layout'
 import { EventWithMetadata } from "../../Common/Nav/NavStackType";
 import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
 import { NavStack } from "../../Common/Nav/NavStackType";
-import { Event } from "../../commonTypes";
+import { Event, UE } from "../../commonTypes";
 import { BuddyWishlist, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
-import { logEvent } from "../../Common/hooks/logger";
+import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from "../../Common/hooks/logger";
+import { useUserContext } from "../Auth/hooks/UserContext";
 
 const HEADER_HEIGHT = 40;
 
@@ -45,6 +46,7 @@ const EventList: React.FC<EventListProps> = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const { buddiesWishlists } = useBuddiesContext();
+    const { authUserId, currentDeepLink } = useUserContext();
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     useEffect(() => {
@@ -59,12 +61,21 @@ const EventList: React.FC<EventListProps> = ({
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
         const buddiesAttending = getBuddiesAttending(buddiesWishlists.data || [], event.id);
 
+        const promoCode = event.promo_codes ? event.promo_codes[0] : null;
+
         return (
             <View style={styles.eventItemWrapper}>
                 <EventListItem
                     item={event}
                     onPress={(e) => {
-                        setSelectedEvent(e);
+                        // in case we navigate back to the same event, we need to trigger a re-render
+                        setSelectedEvent({ ...e });
+                        logEvent(UE.EventListItemClicked, {
+                            auth_user_id: authUserId ?? '',
+                            ...getAnalyticsPropsEvent(e),
+                            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+                            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+                        });
                     }}
                 />
             </View>

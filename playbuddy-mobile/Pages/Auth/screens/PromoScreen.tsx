@@ -17,6 +17,9 @@ import { formatDiscount } from '../../Calendar/PromoCode';
 import { NavStack } from '../../../Common/Nav/NavStackType';
 import { usePromoCode } from './usePromoCode';
 import { formatDate } from '../../Calendar/hooks/calendarUtils';
+import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, logEvent } from '../../../Common/hooks/logger';
+import { UE } from '../../../commonTypes';
+import { useUserContext } from '../hooks/UserContext';
 
 export const PromoScreen = ({
     onPromoScreenViewed,
@@ -25,6 +28,16 @@ export const PromoScreen = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const promoCode = usePromoCode();
+    const { authUserId } = useUserContext();
+    useEffect(() => {
+        if (!promoCode) return;
+        logEvent(UE.PromoScreenViewed, {
+            ...getAnalyticsPropsDeepLink(promoCode.deepLink),
+            ...getAnalyticsPropsEvent(featuredEvent),
+            auth_user_id: authUserId,
+            has_promo: !!featuredPromoCode,
+        });
+    }, [promoCode]);
 
     // If no promo code is available, redirect to HomeScreen immediately.
     useEffect(() => {
@@ -39,6 +52,11 @@ export const PromoScreen = ({
 
     // Helper: copy a code to clipboard
     const copy = async (code: string) => {
+        logEvent(UE.PromoScreenPromoCodeCopied, {
+            ...getAnalyticsPropsDeepLink(promoCode.deepLink),
+            ...getAnalyticsPropsEvent(featuredEvent),
+            auth_user_id: authUserId,
+        });
         await Clipboard.setStringAsync(code);
         Alert.alert('Promo Code Copied', `${code} copied to clipboard.`);
     };
@@ -46,11 +64,23 @@ export const PromoScreen = ({
     // onExplore: update the flag then reset the navigator, navigating to the event details
     const onClickLink = (link: 'event_details' | 'community_events') => {
         if (link === 'community_events') {
+            logEvent(UE.PromoScreenExploreClicked, {
+                ...getAnalyticsPropsDeepLink(promoCode.deepLink),
+                ...getAnalyticsPropsEvent(featuredEvent),
+                auth_user_id: authUserId,
+            });
+
             navigation.navigate('Details', {
                 screen: 'Community Events',
                 params: { communityId: organizer.communities[0].id },
             });
         } else {
+            logEvent(UE.PromoScreenEventDetailsClicked, {
+                ...getAnalyticsPropsDeepLink(promoCode.deepLink),
+                ...getAnalyticsPropsEvent(featuredEvent),
+                auth_user_id: authUserId,
+            });
+
             navigation.navigate('Details', {
                 screen: 'Event Details',
                 params: { selectedEvent: featuredEvent },

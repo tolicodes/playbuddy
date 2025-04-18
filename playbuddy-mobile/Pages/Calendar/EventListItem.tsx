@@ -3,13 +3,13 @@ import { View, Text, TouchableOpacity, StyleSheet, Share, Linking } from 'react-
 import { Image } from 'expo-image';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { Event } from '../../commonTypes';
+import { Event, UE } from '../../commonTypes';
 import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import { useCalendarContext } from './hooks/CalendarContext';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { formatDate } from './hooks/calendarUtils';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
-import { logEvent } from '../../Common/hooks/logger';
+import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from '../../Common/hooks/logger';
 import { Buddy } from '../Buddies/hooks/BuddiesContext';
 import { TicketPromoModal } from './TicketPromoModal';
 
@@ -23,6 +23,7 @@ interface ListItemProps {
 export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
+    const { currentDeepLink } = useUserContext();
 
     const formattedDate = formatDate(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
@@ -31,14 +32,21 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     // Navigate to event details.
     const handlePressEvent = () => {
         onPress(item);
-        logEvent('event_list_item_clicked', { event_id: item.id, event_name: item.name });
+        logEvent(UE.EventListItemClicked, {
+            auth_user_id: authUserId ?? '',
+            ...getAnalyticsPropsEvent(item),
+            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+        });
     };
 
     // Toggle wishlist status.
     const handleToggleEventWishlist = () => {
-        logEvent('event_list_item_wishlist_toggled', {
-            event_id: item.id,
-            event_name: item.name,
+        logEvent(UE.EventListItemWishlistToggled, {
+            auth_user_id: authUserId ?? '',
+            ...getAnalyticsPropsEvent(item),
+            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
             is_on_wishlist: !itemIsOnWishlist,
         });
         toggleWishlistEvent.mutate({
@@ -52,19 +60,31 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     // Share the ticket URL via the Share menu.
     const handlePressShare = async () => {
         if (item.ticket_url) {
-            try {
-                await Share.share({ message: item.ticket_url });
-                logEvent('event_list_item_share_pressed', { event_id: item.id });
-            } catch (error) {
-                logEvent('event_list_item_share_error', { event_id: item.id, error });
-            }
+            await Share.share({ message: item.ticket_url });
+            logEvent(UE.EventListItemSharePressed, {
+                auth_user_id: authUserId ?? '',
+                ...getAnalyticsPropsEvent(item),
+                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+                ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+            });
+
         }
+    };
+
+    const handleModalCopyPromoCode = () => {
+        logEvent(UE.EventListItemPromoModalPromoCopied, {
+            auth_user_id: authUserId ?? '',
+            ...getAnalyticsPropsEvent(item),
+            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+        });
     };
 
     // Determine promo code from event or organizer.
     const eventPromoCode = item.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = item.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const promoCode = eventPromoCode || organizerPromoCode;
+    const featuredPromoCode = currentDeepLink?.featured_event.id === item.id ? currentDeepLink?.featured_promo_code : null;
+    const promoCode = featuredPromoCode || eventPromoCode || organizerPromoCode;
 
     const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
@@ -72,10 +92,20 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     const handlePressTickets = () => {
         if (!promoCode) {
             Linking.openURL(item.ticket_url);
-            logEvent('event_list_item_ticket_pressed', { event_id: item.id, event_name: item.name });
+            logEvent(UE.EventListItemTicketPressed, {
+                auth_user_id: authUserId,
+                ...getAnalyticsPropsEvent(item),
+                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+                ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+            });
         } else {
             setDiscountModalVisible(true);
-            logEvent('event_list_item_ticket_discount_modal_opened', { event_id: item.id, event_name: item.name });
+            logEvent(UE.EventListItemDiscountModalOpened, {
+                auth_user_id: authUserId,
+                ...getAnalyticsPropsEvent(item),
+                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+                ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+            });
         }
     };
 
@@ -88,10 +118,17 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                 onClose={() => setDiscountModalVisible(false)}
                 organizerName={item.organizer?.name || ''}
                 onBuyTicket={() => {
+                    logEvent(UE.EventListItemPromoModalTicketPressed, {
+                        auth_user_id: authUserId,
+                        ...getAnalyticsPropsEvent(item),
+                        ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
+                        ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
+                    });
                     // Handle ticket purchase logic, e.g., open ticket URL
                     Linking.openURL(item.ticket_url);
                     setDiscountModalVisible(false);
                 }}
+                onCopy={handleModalCopyPromoCode}
             />
             <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8} style={styles.wrapper}>
                 <View style={styles.cardWrapper}>

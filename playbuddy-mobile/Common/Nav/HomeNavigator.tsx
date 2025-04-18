@@ -6,7 +6,6 @@ import { TabNavigator } from './TabNavigator';
 import { DetailStackNavigator } from './DetailsPageNavigator';
 import AuthMainScreen from '../../Pages/Auth/screens/AuthMainScreen';
 import { PromoScreen } from '../../Pages/Auth/screens/PromoScreen';
-import { useNavigation } from '@react-navigation/native';
 
 const HomeStack = createStackNavigator();
 
@@ -15,7 +14,7 @@ export function HomeStackNavigator() {
         isSkippingWelcomeScreen,
         isDefaultsComplete,
         isLoadingUserProfile,
-        initialDeepLink,
+        currentDeepLink,
     } = useUserContext();
     const [isPromoScreenViewed, setIsPromoScreenViewed] = useState(false);
 
@@ -31,10 +30,10 @@ export function HomeStackNavigator() {
     // decide the initial home screen based on the current state.
     // When the user finishes with the promo screen, perform a navigation reset.
     const determineHomeScreen = () => {
-        if (initialDeepLink && !isPromoScreenViewed) {
+        if (currentDeepLink && !isPromoScreenViewed) {
             if (
-                initialDeepLink.type === 'organizer_promo_code' ||
-                initialDeepLink.type === 'event_promo_code'
+                currentDeepLink.type === 'organizer_promo_code' ||
+                currentDeepLink.type === 'event_promo_code'
             ) {
                 return 'PromoScreen';
             }

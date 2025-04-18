@@ -1,308 +1,447 @@
-/* ────────────────────────────────────────────────────────────────
-   User‑Event model (value + type in one declaration)
-   --------------------------------------------------
-   • One **const enum** holds every event name string.
-   • A generic helper builds each event interface in one line.
-   • A final union (`UserEventInput`) covers all event variants.
-   • No string literal is ever duplicated.
-   --------------------------------------------------
-   Save this in e.g.  userEvents.ts
-────────────────────────────────────────────────────────────────── */
+// userEvents.ts
 
-/*─────────────────────────────────────────────────────────────────
-  1)  All event names – ONE place, ONE time
-─────────────────────────────────────────────────────────────────*/
+/**
+ * Consolidated User-Event definitions
+ *
+ * 1) UE enum lists every event name once.
+ * 2) EventPayloadMap maps names to their payload types (or null).
+ * 3) UERecord<E> builds { user_event_name, user_event_props }.
+ * 4) AllUserEventInput is the union of all events.
+ * 5) UserEventName is the union of event-name literals.
+ */
+
+/**
+ * 1) Single source of truth for all event names
+ */
 export const enum UE {
-    /* account‑details */
+    // Account Details
     AccountDetailsPressAddBuddy = 'account_details_press_add_buddy',
     AccountDetailsPressDeleteAccount = 'account_details_press_delete_account',
     AccountDetailsPressHome = 'account_details_press_home',
     AccountDetailsPressShareCode = 'account_details_press_share_code',
     AccountDetailsPressSignOut = 'account_details_press_sign_out',
 
-    /* avatar */
+    // Auth Flow
+    LoginBannerClicked = 'login_banner_clicked',
+    LoginButtonClicked = 'login_button_clicked',
+
+    // Avatar
     AvatarPressPickImage = 'avatar_press_pick_image',
     AvatarUploadCompleted = 'avatar_upload_completed',
     AvatarUploadFailed = 'avatar_upload_failed',
     AvatarUploadStarted = 'avatar_upload_started',
 
-    /* buddy / calendar */
+    // Buddy / Calendar
     BuddyAvatarCarouselPress = 'buddy_avatar_carousel_press',
     CalendarDayClicked = 'calendar_day_clicked',
 
-    /* community events / lists */
+    // Community Events / Lists
     CommunityEventsCommunityJoined = 'community_events_community_joined',
     CommunityListCommunityJoined = 'community_list_community_joined',
     CommunityListCommunityLeft = 'community_list_community_left',
-    CommunityListNavigateToCommunityEvents =
-    'community_list_navigate_to_community_events',
-    CommunityListNavigateToJoinCommunityButtonPressed =
-    'community_list_navigate_to_join_community_button_pressed',
+    CommunityListNavigateToCommunityEvents = 'community_list_navigate_to_community_events',
+    CommunityListNavigateToJoinCommunityButtonPressed = 'community_list_navigate_to_join_community_button_pressed',
 
-    /* deep‑link */
-    DeepLinkParamsSet = 'deep_link_params_set',
-    DefaultCommunitySelectedAcro = 'default_community_selected_acro',
+    // Deep-Link Lifecycle
+    DeepLinkAttributed = 'deep_link_attributed',
+    DeepLinkDetected = 'deep_link_detected',
 
-    /* defaults‑menu */
+    // Defaults-Menu
     DefaultsMenuCommunityItemSelected = 'defaults_menu_community_item_selected',
     DefaultsMenuLocationItemSelected = 'defaults_menu_location_item_selected',
 
-    /* event‑calendar view */
-    EventCalendarViewOnPressCalendar = 'event_calendar_view_on_press_calendar',
-    EventCalendarViewOnPressDay = 'event_calendar_view_on_press_day',
-    EventCalendarViewOnPressPrivateEvents =
-    'event_calendar_view_on_press_private_events',
-
-    /* event‑detail */
+    // Event-Detail & Tickets Flow
+    EventDetailDeepLinkPromoCodeSeen = 'event_detail_deep_link_promo_code_seen',
+    EventDetailDiscountModalOpened = 'event_detail_discount_modal_opened',
     EventDetailGetTicketsClicked = 'event_detail_get_tickets_clicked',
     EventDetailGoogleCalendarClicked = 'event_detail_google_calendar_clicked',
     EventDetailLinkClicked = 'event_detail_link_clicked',
+    EventDetailModalTicketPressed = 'event_detail_modal_ticket_pressed',
     EventDetailOrganizerClicked = 'event_detail_organizer_clicked',
+    EventDetailPromoCodeCopied = 'event_detail_promo_code_copied',
+    EventDetailPromoCodeSeen = 'event_detail_promo_code_seen',
+    EventDetailTicketPressed = 'event_detail_ticket_pressed',
+    EventDetailWishlistToggled = 'event_detail_wishlist_toggled',
+    EventDetailTicketPromoModalPromoCopied = 'event_detail_ticket_promo_modal_promo_code_copied',
+    EventDetailHeaderTitleClicked = 'event_detail_header_title_clicked',
 
-    /* event‑list */
+    // Event-List
     EventListItemClicked = 'event_list_item_clicked',
+    EventListItemDiscountModalOpened = 'event_list_item_discount_modal_opened',
+    EventListItemTicketPressed = 'event_list_item_ticket_pressed',
     EventListItemWishlistToggled = 'event_list_item_wishlist_toggled',
-
-    /* filters & header */
+    EventListItemSharePressed = 'event_list_item_share_pressed',
+    EventListItemPromoModalTicketPressed = 'event_list_item_promo_modal_ticket_pressed',
+    EventListItemPromoModalPromoCopied = 'event_list_item_promo_modal_promo_code_copied',
+    // Filters & Header
     FilterDoneButtonClicked = 'filter_done_button_clicked',
     FilterOrganizers = 'filter_organizers',
-    FilterOrganizersReset = 'filter_organizers_reset',
     FilterResetButtonClicked = 'filter_reset_button_clicked',
     HeaderBackButtonClicked = 'header_back_button_clicked',
     HeaderDrawerButtonClicked = 'header_drawer_button_clicked',
     HeaderFilterButtonClicked = 'header_filter_button_clicked',
 
-    /* misc / onboarding */
-    InitialDeepLink = 'initial_deep_link',
-    LoginBannerClicked = 'login_banner_clicked',
-    LoginButtonClicked = 'login_button_clicked',
+    // Moar
     MoarGetAddYourEventsLink = 'moar_get_add_your_events_link',
     MoarGetGoogleCalLink = 'moar_get_google_cal_link',
     MoarGetInTouchClickEmail = 'moar_get_in_touch_click_email',
     MoarLinkClicked = 'moar_link_clicked',
+
+    // My Calendar
     MyCalendarShareWishlistClick = 'my_calendar_share_wishlist_click',
     PersonalizationModalConfirmed = 'personalization_modal_confirmed',
-    ProfileDetailsPressSave = 'profile_details_press_save',
 
-    /* swipe‑mode */
+    // Onboarding & Misc
+    ProfileInitialDeepLinkAssigned = 'profile_initial_deep_link_assigned',
+
+    ProfileDetailsPressSave = 'profile_details_press_save',
+    WelcomeScreenRegisterClicked = 'welcome_screen_register_clicked',
+    WelcomeScreenSkipped = 'welcome_screen_skipped',
+
+    // Promo Screen
+    PromoScreenViewed = 'promo_screen_viewed',
+    PromoScreenPromoCodeCopied = 'promo_screen_promo_code_copied',
+    PromoScreenExploreClicked = 'promo_screen_explore_clicked',
+    PromoScreenEventDetailsClicked = 'promo_screen_event_details_clicked',
+
+    // Swipe Mode
     SwipeModeMoreInfoClick = 'swipe_mode_more_info_click',
     SwipeModeSwipeLeft = 'swipe_mode_swipe_left',
     SwipeModeSwipeRight = 'swipe_mode_swipe_right',
 
-    /* welcome */
-    WelcomeScreenRegisterClicked = 'welcome_screen_register_clicked',
-    WelcomeScreenSkipped = 'welcome_screen_skipped'
+    // Ticket-Promo Modal
 }
 
-/*─────────────────────────────────────────────────────────────────
-  2)  Helper to build each event interface in one line
-─────────────────────────────────────────────────────────────────*/
-type UERecord<Name extends UE, Props> = {
-    user_event_name: Name;
-    user_event_props: Props;
+/**
+ * 2) Map event names to their payload shapes (or null for no props)
+ */
+export interface EventPayloadMap {
+    // Account Details
+    [UE.AccountDetailsPressAddBuddy]: null;
+    [UE.AccountDetailsPressDeleteAccount]: null;
+    [UE.AccountDetailsPressHome]: null;
+    [UE.AccountDetailsPressShareCode]: null;
+    [UE.AccountDetailsPressSignOut]: { auth_user_id: string };
+
+    // Auth Flow
+    [UE.LoginBannerClicked]: null;
+    [UE.LoginButtonClicked]: null;
+    [UE.ProfileDetailsPressSave]: { auth_user_id: string };
+
+    // Avatar
+    [UE.AvatarPressPickImage]: null;
+    [UE.AvatarUploadCompleted]: null;
+    [UE.AvatarUploadFailed]: null;
+    [UE.AvatarUploadStarted]: null;
+
+    // Buddy / Calendar
+    [UE.BuddyAvatarCarouselPress]: { buddyUserId: string };
+    [UE.CalendarDayClicked]: null;
+
+    // Community Events / Lists
+    [UE.CommunityEventsCommunityJoined]: { communityId: string };
+    [UE.CommunityListCommunityJoined]: { communityId: string };
+    [UE.CommunityListCommunityLeft]: { communityId: string };
+    [UE.CommunityListNavigateToCommunityEvents]: { communityId: string };
+    [UE.CommunityListNavigateToJoinCommunityButtonPressed]: null;
+
+    // Deep-Link Lifecycle
+    [UE.DeepLinkAttributed]: {
+        auth_user_id: string | null;
+        deep_link_id: string;
+        deep_link_slug: string;
+        deep_link_type: string;
+        organizer_id?: string;
+        community_id?: string;
+    };
+    [UE.DeepLinkDetected]: {
+        auth_user_id: string | null;
+        deep_link_id: string;
+        deep_link_slug: string;
+        deep_link_type: string;
+        organizer_id?: string;
+        community_id?: string;
+        url: string;
+        source: 'branch' | 'clipboard' | 'cold_start';
+    };
+    [UE.ProfileInitialDeepLinkAssigned]: {
+        auth_user_id: string | null;
+        initial_deep_link_id: string;
+        initial_deep_link_slug: string;
+        organizer_id?: string;
+        community_id?: string;
+    };
+
+    // Defaults-Menu
+    [UE.DefaultsMenuCommunityItemSelected]: { itemId: string; itemName: string };
+    [UE.DefaultsMenuLocationItemSelected]: { itemId: string; itemName: string };
+
+    // Event-Detail & Tickets Flow
+    [UE.EventDetailDeepLinkPromoCodeSeen]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        deep_link_id: string;
+        deep_link_slug: string;
+        featured_promo_code_code?: string;
+        featured_promo_code_id?: string;
+    };
+    [UE.EventDetailDiscountModalOpened]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventDetailHeaderTitleClicked]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        organizer_name?: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventDetailGetTicketsClicked]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        organizer_name?: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventDetailGoogleCalendarClicked]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+    };
+    [UE.EventDetailLinkClicked]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        event_url: string;
+    };
+    [UE.EventDetailModalTicketPressed]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+    };
+    [UE.EventDetailOrganizerClicked]: {
+        auth_user_id: string | null;
+        organizer_id: string;
+        organizer_name: string;
+        event_id: string;
+        event_name: string;
+    };
+    [UE.EventDetailPromoCodeCopied]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id: string;
+        promo_code_code: string;
+    };
+    [UE.EventDetailPromoCodeSeen]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id: string;
+        promo_code_code: string;
+    };
+    [UE.EventDetailTicketPressed]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+    };
+    [UE.EventDetailWishlistToggled]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        is_on_wishlist: boolean;
+    };
+
+    [UE.EventDetailTicketPromoModalPromoCopied]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id: string;
+        promo_code_code: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+
+    // Event-List
+    [UE.EventListItemClicked]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventListItemDiscountModalOpened]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventListItemTicketPressed]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+
+    [UE.EventListItemPromoModalTicketPressed]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventListItemPromoModalPromoCopied]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+    [UE.EventListItemWishlistToggled]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        is_on_wishlist: boolean;
+    };
+    [UE.EventListItemSharePressed]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+        promo_code_id?: string;
+        promo_code_code?: string;
+    };
+
+    // Filters & Header
+    [UE.FilterDoneButtonClicked]: null;
+    [UE.FilterOrganizers]: { selectedOrganizerIds: string[] };
+    [UE.FilterResetButtonClicked]: null;
+    [UE.HeaderBackButtonClicked]: null;
+    [UE.HeaderDrawerButtonClicked]: null;
+    [UE.HeaderFilterButtonClicked]: null;
+
+    // Moar
+    [UE.MoarGetAddYourEventsLink]: null;
+    [UE.MoarGetGoogleCalLink]: null;
+    [UE.MoarGetInTouchClickEmail]: null;
+    [UE.MoarLinkClicked]: null;
+
+    // My Calendar
+    [UE.MyCalendarShareWishlistClick]: null;
+    [UE.PersonalizationModalConfirmed]: null;
+
+    // Onboarding & Misc
+    [UE.WelcomeScreenRegisterClicked]: {
+        promo_code_code?: string;
+        organizer_name?: string;
+        organizer_id?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+        deep_link_type?: string;
+    };
+    [UE.WelcomeScreenSkipped]: {
+        promo_code_code?: string;
+        organizer_name?: string;
+        organizer_id?: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+        deep_link_type?: string;
+        checked_skip: boolean;
+    };
+
+    // Promo Screen
+    [UE.PromoScreenViewed]: {
+        auth_user_id: string | null;
+        deep_link_id: string;
+        deep_link_slug: string;
+        promo_code_id: string;
+        promo_code_code: string;
+        has_promo: boolean;
+    };
+
+    [UE.PromoScreenPromoCodeCopied]: {
+        auth_user_id: string | null;
+        deep_link_id: string;
+        deep_link_slug: string;
+        promo_code_id: string;
+        promo_code_code: string;
+    };
+
+    [UE.PromoScreenExploreClicked]: {
+        auth_user_id: string | null;
+        deep_link_id: string;
+        deep_link_slug: string;
+        promo_code_id: string;
+        promo_code_code: string;
+    };
+
+    [UE.PromoScreenEventDetailsClicked]: {
+        auth_user_id: string | null;
+        deep_link_id: string;
+        deep_link_slug: string;
+        promo_code_id: string;
+        promo_code_code: string;
+    };
+
+    // Swipe Mode
+    [UE.SwipeModeMoreInfoClick]: null;
+    [UE.SwipeModeSwipeLeft]: null;
+    [UE.SwipeModeSwipeRight]: null;
+
+    // Ticket-Promo Modal
+    [UE.EventDetailTicketPromoModalPromoCopied]: {
+        auth_user_id: string | null;
+        event_id: string;
+        event_name: string;
+        promo_code_id: string;
+        promo_code_code: string;
+        deep_link_id?: string;
+        deep_link_slug?: string;
+    };
+}
+
+/**
+ * 3) Helper: builds { name; props } based on EventPayloadMap
+ */
+export type UERecord<K extends UE> = {
+    user_event_name: K;
+    user_event_props: EventPayloadMap[K];
 };
 
-/*─────────────────────────────────────────────────────────────────
-  3)  Concrete event interfaces
-     (null‑prop events first, then events with payload)
-─────────────────────────────────────────────────────────────────*/
-/* --- events whose props are null --- */
-export type AccountDetailsPressAddBuddy = UERecord<UE.AccountDetailsPressAddBuddy, null>;
-export type AccountDetailsPressDeleteAccount = UERecord<UE.AccountDetailsPressDeleteAccount, null>;
-export type AccountDetailsPressHome = UERecord<UE.AccountDetailsPressHome, null>;
-export type AccountDetailsPressShareCode = UERecord<UE.AccountDetailsPressShareCode, null>;
-export type AccountDetailsPressSignOut = UERecord<UE.AccountDetailsPressSignOut, null>;
-export type AvatarPressPickImage = UERecord<UE.AvatarPressPickImage, null>;
-export type AvatarUploadCompleted = UERecord<UE.AvatarUploadCompleted, null>;
-export type AvatarUploadFailed = UERecord<UE.AvatarUploadFailed, null>;
-export type AvatarUploadStarted = UERecord<UE.AvatarUploadStarted, null>;
-export type CalendarDayClicked = UERecord<UE.CalendarDayClicked, null>;
-export type CommunityListNavigateToJoinCommunityButtonPressed =
-    UERecord<UE.CommunityListNavigateToJoinCommunityButtonPressed, null>;
-export type EventCalendarViewOnPressCalendar =
-    UERecord<UE.EventCalendarViewOnPressCalendar, null>;
-export type EventCalendarViewOnPressDay = UERecord<UE.EventCalendarViewOnPressDay, null>;
-export type EventCalendarViewOnPressPrivateEvents =
-    UERecord<UE.EventCalendarViewOnPressPrivateEvents, null>;
-export type FilterDoneButtonClicked = UERecord<UE.FilterDoneButtonClicked, null>;
-export type FilterOrganizersReset = UERecord<UE.FilterOrganizersReset, null>;
-export type FilterResetButtonClicked = UERecord<UE.FilterResetButtonClicked, null>;
-export type HeaderBackButtonClicked = UERecord<UE.HeaderBackButtonClicked, null>;
-export type HeaderDrawerButtonClicked = UERecord<UE.HeaderDrawerButtonClicked, null>;
-export type HeaderFilterButtonClicked = UERecord<UE.HeaderFilterButtonClicked, null>;
-export type LoginBannerClicked = UERecord<UE.LoginBannerClicked, null>;
-export type LoginButtonClicked = UERecord<UE.LoginButtonClicked, null>;
-export type MoarGetAddYourEventsLink = UERecord<UE.MoarGetAddYourEventsLink, null>;
-export type MoarGetGoogleCalLink = UERecord<UE.MoarGetGoogleCalLink, null>;
-export type MoarGetInTouchClickEmail = UERecord<UE.MoarGetInTouchClickEmail, null>;
-export type MyCalendarShareWishlistClick = UERecord<UE.MyCalendarShareWishlistClick, null>;
-export type PersonalizationModalConfirmed = UERecord<UE.PersonalizationModalConfirmed, null>;
-export type ProfileDetailsPressSave = UERecord<UE.ProfileDetailsPressSave, null>;
-export type WelcomeScreenRegisterClicked = UERecord<UE.WelcomeScreenRegisterClicked, null>;
-export type WelcomeScreenSkipped = UERecord<UE.WelcomeScreenSkipped, null>;
+/**
+ * 4) Union of all events with correct name & props
+ */
+export type UserEventInput = {
+    [K in keyof EventPayloadMap]: UERecord<K>;
+}[keyof EventPayloadMap];
 
-/* --- events WITH payload --- */
-export type BuddyAvatarCarouselPress = UERecord<
-    UE.BuddyAvatarCarouselPress,
-    { buddyUserId: string }
->;
+// Also include events not in the map (null props)
+export type UserEventInputNulls = UERecord<Exclude<UE, keyof EventPayloadMap>>;
 
-export type CommunityEventsCommunityJoined = UERecord<
-    UE.CommunityEventsCommunityJoined,
-    { communityId: string }
->;
+export type AllUserEventInput = UserEventInput | UserEventInputNulls;
 
-export type CommunityListCommunityJoined = UERecord<
-    UE.CommunityListCommunityJoined,
-    { communityId: string }
->;
-
-export type CommunityListCommunityLeft = UERecord<
-    UE.CommunityListCommunityLeft,
-    { communityId: string }
->;
-
-export type CommunityListNavigateToCommunityEvents = UERecord<
-    UE.CommunityListNavigateToCommunityEvents,
-    { communityId: string }
->;
-
-export type DeepLinkParamsSet = UERecord<
-    UE.DeepLinkParamsSet,
-    { slug: string; type: string; communityId: string }
->;
-
-export type DefaultCommunitySelectedAcro = UERecord<
-    UE.DefaultCommunitySelectedAcro,
-    { community: string }
->;
-
-export type DefaultsMenuCommunityItemSelected = UERecord<
-    UE.DefaultsMenuCommunityItemSelected,
-    { itemId: string; itemName: string }
->;
-
-export type DefaultsMenuLocationItemSelected = UERecord<
-    UE.DefaultsMenuLocationItemSelected,
-    { itemId: string; itemName: string }
->;
-
-export type EventDetailGetTicketsClicked = UERecord<
-    UE.EventDetailGetTicketsClicked,
-    { event_id: number; event_name: string }
->;
-
-export type EventDetailGoogleCalendarClicked = UERecord<
-    UE.EventDetailGoogleCalendarClicked,
-    { event_id: number }
->;
-
-export type EventDetailLinkClicked = UERecord<
-    UE.EventDetailLinkClicked,
-    { event_url: string }
->;
-
-export type EventDetailOrganizerClicked = UERecord<
-    UE.EventDetailOrganizerClicked,
-    { organizer_id: number }
->;
-
-export type EventListItemClicked = UERecord<
-    UE.EventListItemClicked,
-    { event_id: number; event_name: string }
->;
-
-export type EventListItemWishlistToggled = UERecord<
-    UE.EventListItemWishlistToggled,
-    { event_id: number; event_name: string; is_on_wishlist: boolean }
->;
-
-export type FilterOrganizers = UERecord<
-    UE.FilterOrganizers,
-    { selectedOrganizerIds: string[] }
->;
-
-export type InitialDeepLink = UERecord<
-    UE.InitialDeepLink,
-    { url: string | null }
->;
-
-export type MoarLinkClicked = UERecord<
-    UE.MoarLinkClicked,
-    { title: string }
->;
-
-export type SwipeModeMoreInfoClick = UERecord<
-    UE.SwipeModeMoreInfoClick,
-    { eventId: number }
->;
-
-export type SwipeModeSwipeLeft = UERecord<
-    UE.SwipeModeSwipeLeft,
-    { event_id: number; event_name: string }
->;
-
-export type SwipeModeSwipeRight = UERecord<
-    UE.SwipeModeSwipeRight,
-    { event_id: number; event_name: string }
->;
-
-/*─────────────────────────────────────────────────────────────────
-  4)  Union of every event interface
-─────────────────────────────────────────────────────────────────*/
-export type UserEventInput =
-    | AccountDetailsPressAddBuddy
-    | AccountDetailsPressDeleteAccount
-    | AccountDetailsPressHome
-    | AccountDetailsPressShareCode
-    | AccountDetailsPressSignOut
-    | AvatarPressPickImage
-    | AvatarUploadCompleted
-    | AvatarUploadFailed
-    | AvatarUploadStarted
-    | BuddyAvatarCarouselPress
-    | CalendarDayClicked
-    | CommunityEventsCommunityJoined
-    | CommunityListCommunityJoined
-    | CommunityListCommunityLeft
-    | CommunityListNavigateToCommunityEvents
-    | CommunityListNavigateToJoinCommunityButtonPressed
-    | DeepLinkParamsSet
-    | DefaultCommunitySelectedAcro
-    | DefaultsMenuCommunityItemSelected
-    | DefaultsMenuLocationItemSelected
-    | EventCalendarViewOnPressCalendar
-    | EventCalendarViewOnPressDay
-    | EventCalendarViewOnPressPrivateEvents
-    | EventDetailGetTicketsClicked
-    | EventDetailGoogleCalendarClicked
-    | EventDetailLinkClicked
-    | EventDetailOrganizerClicked
-    | EventListItemClicked
-    | EventListItemWishlistToggled
-    | FilterDoneButtonClicked
-    | FilterOrganizers
-    | FilterOrganizersReset
-    | FilterResetButtonClicked
-    | HeaderBackButtonClicked
-    | HeaderDrawerButtonClicked
-    | HeaderFilterButtonClicked
-    | InitialDeepLink
-    | LoginBannerClicked
-    | LoginButtonClicked
-    | MoarGetAddYourEventsLink
-    | MoarGetGoogleCalLink
-    | MoarGetInTouchClickEmail
-    | MoarLinkClicked
-    | MyCalendarShareWishlistClick
-    | PersonalizationModalConfirmed
-    | ProfileDetailsPressSave
-    | SwipeModeMoreInfoClick
-    | SwipeModeSwipeLeft
-    | SwipeModeSwipeRight
-    | WelcomeScreenRegisterClicked
-    | WelcomeScreenSkipped;
-
-/** union of all literal strings, e.g. "swipe_mode_swipe_right" | … */
+/**
+ * 5) Union of all literal event-name strings
+ */
 export type UserEventName = `${UE}`;
-

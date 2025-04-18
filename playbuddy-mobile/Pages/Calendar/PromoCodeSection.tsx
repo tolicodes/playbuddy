@@ -2,25 +2,27 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Clipboard from 'expo-clipboard';
+import { PromoCode } from '../../commonTypes';
 
-const PromoCodeSection = ({ promoCode }: { promoCode: string }) => {
+const PromoCodeSection = ({ promoCode, onCopy }: { promoCode: PromoCode, onCopy: () => void }) => {
     const handleCopy = () => {
-        Clipboard.setStringAsync(promoCode);
+        onCopy();
+        Clipboard.setStringAsync(promoCode.promo_code);
         Alert.alert('Copied!', 'Promo code copied to clipboard.');
     };
 
     return (
-        <View style={styles.promoContainer}>
+        <TouchableOpacity onPress={handleCopy} style={styles.promoContainer}>
             {/* Floating label */}
             <Text style={styles.promoLabel}>Promo Code</Text>
             <View style={styles.promoContent}>
-                <Text style={styles.promoText}>{promoCode}</Text>
+                <Text style={styles.promoText}>{promoCode.promo_code}</Text>
                 <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
                     <MaterialIcons name="content-copy" size={18} color="black" style={styles.copyIcon} />
                     <Text style={styles.copyButtonText}>Copy</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </TouchableOpacity>
     );
 };
 

@@ -2,6 +2,9 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { logEvent } from '../../Common/hooks/logger';
+import { Event, UE } from '../../commonTypes';
+import { useUserContext } from '../Auth/hooks/UserContext';
 
 interface TicketPromoModalProps {
     visible: boolean;
@@ -10,6 +13,7 @@ interface TicketPromoModalProps {
     organizerName: string; // Organizer name to be displayed in the offer text
     onClose: () => void;
     onBuyTicket: () => void;
+    onCopy: () => void;
 }
 
 export const TicketPromoModal: React.FC<TicketPromoModalProps> = ({
@@ -19,10 +23,13 @@ export const TicketPromoModal: React.FC<TicketPromoModalProps> = ({
     organizerName,
     onClose,
     onBuyTicket,
+    onCopy,
 }) => {
     const handleCopyCode = async () => {
         await Clipboard.setStringAsync(promoCode);
         Alert.alert("Promo Code Copied", "The promo code has been copied to your clipboard.");
+
+        onCopy();
     };
 
     return (
@@ -38,12 +45,13 @@ export const TicketPromoModal: React.FC<TicketPromoModalProps> = ({
                     <Text style={styles.offerText}>
                         {organizerName} is offering a {discount} discount for this event!
                     </Text>
-                    <View style={styles.promoCodeContainer}>
-                        <Text style={styles.promoCodeValue}>{promoCode}</Text>
-                        <TouchableOpacity onPress={handleCopyCode}>
+                    <TouchableOpacity onPress={handleCopyCode}>
+                        <View style={styles.promoCodeContainer}>
+                            <Text style={styles.promoCodeValue}>{promoCode}</Text>
                             <Ionicons name="copy-outline" size={20} color="#333" style={styles.copyIcon} />
-                        </TouchableOpacity>
-                    </View>
+                        </View>
+                    </TouchableOpacity>
+
                     <View style={styles.buttonRow}>
                         <TouchableOpacity style={styles.actionButton} onPress={onBuyTicket}>
                             <Text style={styles.actionButtonText}>Buy Ticket</Text>

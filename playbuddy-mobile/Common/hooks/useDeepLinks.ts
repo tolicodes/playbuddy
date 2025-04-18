@@ -14,10 +14,10 @@ export const useFetchDeepLinks = () => {
 
 // USER
 
-export const useAddDeepLinkToUser = (deepLinkId: string) => {
+export const useAddDeepLinkToUser = () => {
     return useMutation({
-        mutationFn: async () => {
-            return (await axios.post(`${API_BASE_URL}/me/add-deep-link`, { deepLinkId })).data as DeepLink;
+        mutationFn: async (deepLinkId: string) => {
+            return (await axios.post(`${API_BASE_URL}/me/deep-link`, { deepLinkId })).data as DeepLink;
         }
     });
 }

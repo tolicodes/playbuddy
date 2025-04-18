@@ -3,14 +3,15 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Ale
 import { Input } from "@rneui/themed";
 import { useUserContext } from "../hooks/UserContext";
 import { Avatar } from '../Buttons/Avatar';
-import { logEvent } from '../../../Common/hooks/logger';
+import { getAnalyticsPropsInitialDeepLink, logEvent } from '../../../Common/hooks/logger';
 import { useUpdateUserProfile } from "../hooks/useUserProfile";
 import { signOut } from "../hooks/authUtils";
 import { useNavigation } from "@react-navigation/native";
 import { NavStack } from "../../../Common/Nav/NavStackType";
+import { UE } from "../../../userEventTypes";
 
 export const ProfileDetailsForm = () => {
-    const { authUserId, userProfile, isLoadingUserProfile, session } = useUserContext()
+    const { authUserId, userProfile, isLoadingUserProfile, session, currentDeepLink } = useUserContext()
     const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '')
     const [name, setName] = useState<string>(
         userProfile?.name
@@ -25,13 +26,26 @@ export const ProfileDetailsForm = () => {
             return;
         }
 
-        logEvent('profile_details_press_save');
-        updateUserProfile({ name, avatar_url: userProfile?.avatar_url });
+        logEvent(UE.ProfileDetailsPressSave, {
+            auth_user_id: authUserId || '',
+        });
+
+        if (currentDeepLink?.id) {
+            logEvent(UE.ProfileInitialDeepLinkAssigned, {
+                auth_user_id: authUserId || '',
+                ...getAnalyticsPropsInitialDeepLink(currentDeepLink),
+            });
+        }
+
+        updateUserProfile({
+            name, avatar_url: userProfile?.avatar_url,
+            initial_deep_link_id: currentDeepLink?.id || undefined,
+        });
     }
     const { navigate } = useNavigation<NavStack>();
 
     const onPressSignOut = async () => {
-        logEvent('account_details_press_sign_out');
+        logEvent(UE.AccountDetailsPressSignOut);
         signOut();
         navigate('Main Calendar');
     }

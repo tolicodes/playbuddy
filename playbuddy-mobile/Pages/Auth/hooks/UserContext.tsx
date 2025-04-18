@@ -46,9 +46,9 @@ interface UserContextType {
     selectedLocationAreaId?: string | null;
     selectedCommunityId?: string | null;
 
-    initialDeepLink: DeepLink | null;
+    currentDeepLink: DeepLink | null;
 
-    setInitialDeepLink: (deepLink: DeepLink) => void;
+    setCurrentDeepLink: (deepLink: DeepLink) => void;
 
     fullNameFromOAuthedUser: string | null;
     setFullNameFromOAuthedUser: (fullName: string) => void;
@@ -68,7 +68,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [session, setSession] = useState<Session | null>(null);
     const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
 
-    const [initialDeepLink, setInitialDeepLink] = useState<DeepLink | null>(null);
+    const [currentDeepLink, setCurrentDeepLink] = useState<DeepLink | null>(null);
 
     useInitializeAuth(setSession);
 
@@ -138,8 +138,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             selectedLocationAreaId: userProfile?.selected_location_area_id,
             selectedCommunityId: userProfile?.selected_community_id,
 
-            initialDeepLink,
-            setInitialDeepLink,
+            currentDeepLink,
+            setCurrentDeepLink,
+
 
             fullNameFromOAuthedUser,
             setFullNameFromOAuthedUser,
@@ -162,8 +163,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             authenticateWithApple,
             signOut,
 
-            initialDeepLink,
-            setInitialDeepLink,
+            currentDeepLink,
+            setCurrentDeepLink,
 
             fullNameFromOAuthedUser,
             setFullNameFromOAuthedUser,

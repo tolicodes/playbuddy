@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import HeaderLoginButton from '../Buttons/LoginButton';
-import { logEvent } from '../../../Common/hooks/logger';
+import { getAnalyticsPropsDeepLink, logEvent } from '../../../Common/hooks/logger';
 import CheckBox from '@rneui/themed/dist/CheckBox';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { usePromoCode } from './usePromoCode';
-import { PromoCode } from '../../../commonTypes';
+import { PromoCode, UE } from '../../../commonTypes';
 import { formatDiscount } from '../../Calendar/PromoCode';
+import { useUserContext } from '../hooks/UserContext';
 
 
 const features = [
@@ -59,24 +60,31 @@ const promoBoxStyles = StyleSheet.create({
 });
 
 export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegister: () => void, onClickSkip: () => void }) => {
-    const promoCodeData = usePromoCode();
+    const promoCode = usePromoCode();
 
-    const promoCode = promoCodeData?.promoCode;
-    const organizer = promoCodeData?.organizer;
     const doOnClickRegister = () => {
-        logEvent('welcome_screen_register_clicked');
+        if (promoCode?.deepLink) {
+            logEvent(UE.WelcomeScreenRegisterClicked, {
+                // May have deep link or not
+                ...(promoCode.deepLink ? getAnalyticsPropsDeepLink(promoCode.deepLink) : {}),
+            });
+        }
         onClickRegister();
     }
 
     const doOnClickSkip = () => {
         if (!isChecked) {
-            Alert.alert('Please confirm that you understand that an account is required to see most content ');
+            Alert.alert('We can only show you 20% of events if you skip due to App Store guidelines. Please confirm that you understand that an account is required to see most content ');
             return;
         }
 
         onClickSkip();
 
-        logEvent('welcome_screen_skipped');
+        logEvent(UE.WelcomeScreenSkipped, {
+            // May have deep link or not
+            ...(promoCode?.deepLink ? getAnalyticsPropsDeepLink(promoCode.deepLink) : {}),
+            checked_skip: isChecked,
+        });
     }
 
     const [isChecked, setIsChecked] = useState(false);
@@ -85,9 +93,9 @@ export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegiste
         <View style={styles.container}>
             <Text style={styles.welcomeTitle}>Welcome to PlayBuddy!</Text>
 
-            {promoCode?.discount && <PromoBox
-                promoCode={promoCode}
-                communityName={organizer?.name || ''}
+            {promoCode?.featuredPromoCode && <PromoBox
+                promoCode={promoCode.featuredPromoCode}
+                communityName={promoCode.organizer?.name || ''}
             />}
 
             <FlatList
