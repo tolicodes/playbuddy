@@ -36,7 +36,7 @@ export const TabNavigator = () => {
             }}
         >
             <Tab.Screen
-                name="Main Calendar"
+                name="Calendar"
                 component={EventCalendarView}
                 options={{
                     tabBarIcon: ({ color, size }) => (

@@ -30,7 +30,10 @@ export const PromoScreen = ({
     const promoCode = usePromoCode();
     const { authUserId } = useUserContext();
     useEffect(() => {
-        if (!promoCode) return;
+        if (!promoCode) {
+            navigation.replace('Home');
+            return;
+        };
         logEvent(UE.PromoScreenViewed, {
             ...getAnalyticsPropsDeepLink(promoCode.deepLink),
             ...getAnalyticsPropsEvent(featuredEvent),
@@ -38,13 +41,6 @@ export const PromoScreen = ({
             has_promo: !!featuredPromoCode,
         });
     }, [promoCode]);
-
-    // If no promo code is available, redirect to HomeScreen immediately.
-    useEffect(() => {
-        if (!promoCode) {
-            navigation.replace('HomeScreen');
-        }
-    }, [promoCode, navigation]);
 
     if (!promoCode) return null; // early exit during redirect
 
@@ -61,8 +57,14 @@ export const PromoScreen = ({
         Alert.alert('Promo Code Copied', `${code} copied to clipboard.`);
     };
 
-    // onExplore: update the flag then reset the navigator, navigating to the event details
+
+    // we want to go to the community events screen but if they want
+    // to go back, they will go to the home screen instead of this one
     const onClickLink = (link: 'event_details' | 'community_events') => {
+        const firstScreen = authUserId ? 'Home' : 'Auth';
+
+        if (!promoCode) return;
+
         if (link === 'community_events') {
             logEvent(UE.PromoScreenExploreClicked, {
                 ...getAnalyticsPropsDeepLink(promoCode.deepLink),
@@ -70,9 +72,12 @@ export const PromoScreen = ({
                 auth_user_id: authUserId,
             });
 
-            navigation.navigate('Details', {
-                screen: 'Community Events',
-                params: { communityId: organizer.communities[0].id },
+            navigation.reset({
+                index: 1,
+                routes: [
+                    { name: firstScreen },
+                    { name: 'Community Events', params: { communityId: organizer.communities[0].id } },
+                ],
             });
         } else {
             logEvent(UE.PromoScreenEventDetailsClicked, {
@@ -81,13 +86,18 @@ export const PromoScreen = ({
                 auth_user_id: authUserId,
             });
 
-            navigation.navigate('Details', {
-                screen: 'Event Details',
-                params: { selectedEvent: featuredEvent },
+            navigation.reset({
+                index: 1,
+                routes: [
+                    { name: firstScreen },
+
+                    { name: 'Event Details', params: { selectedEvent: featuredEvent } },
+                ],
             });
         }
+
         onPromoScreenViewed();
-    }
+    };
 
     return (
         <SafeAreaView style={styles.safe}>

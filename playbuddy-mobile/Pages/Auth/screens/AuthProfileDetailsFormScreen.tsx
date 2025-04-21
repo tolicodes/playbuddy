@@ -45,9 +45,11 @@ export const ProfileDetailsForm = () => {
     const { navigate } = useNavigation<NavStack>();
 
     const onPressSignOut = async () => {
-        logEvent(UE.AccountDetailsPressSignOut);
+        logEvent(UE.AccountDetailsPressSignOut, {
+            auth_user_id: authUserId || '',
+        });
         signOut();
-        navigate('Main Calendar');
+        navigate('Calendar');
     }
 
 

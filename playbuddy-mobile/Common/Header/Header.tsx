@@ -1,119 +1,183 @@
-import React, { Suspense } from "react";
-import { TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
+// HeaderOptions.tsx (Refactored Clean Version with Animation and Fixed PromoScreen Back Behavior)
+
+import React, { Suspense, useEffect, useRef } from "react";
+import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
-import { ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID, useCommonContext } from "../hooks/CommonContext";
-import { View } from "react-native";
-import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
-import { CommunityDropdown, LocationAreaDropdown } from "./DefaultsMenus";
-import { logEvent } from "../hooks/logger";
+import { useCommonContext, ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID } from "../hooks/CommonContext";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useUpdateUserProfile } from "../../Pages/Auth/hooks/useUserProfile";
+import { CommunityDropdown, LocationAreaDropdown } from "./DefaultsMenus";
+import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
 import { NavStack } from "../Nav/NavStackType";
+import { logEvent } from "../hooks/logger";
+import { UE } from "../../commonTypes";
 
-// Helper Components
+// Custom Back Button
 export const CustomBackButton = ({ navigation }: { navigation: NavStack }) => {
     const onPress = () => {
         navigation.goBack();
-        logEvent('header_back_button_clicked');
-    }
-    return (
-        <TouchableOpacity onPress={onPress} style={customStyles.backButton}>
-            <IonIcon name="chevron-back" size={30} color="#007AFF" />
-        </TouchableOpacity>
-    );
-};
-
-
-export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
-    const { filters } = useCalendarContext();
-    const hasFilters = !!filters.organizers.length;
-
-    const onPressToggleDrawer = () => {
-        navigation.toggleDrawer();
-        logEvent('header_drawer_button_clicked');
-    };
-    const onPressOpenFilters = () => {
-        navigation.navigate('Details', { screen: 'Filters' });
-        logEvent('header_filter_button_clicked');
+        logEvent(UE.HeaderBackButtonClicked);
     };
 
     return (
-        <View style={customStyles.drawerButtonContainer}>
-            <TouchableOpacity onPress={onPressToggleDrawer}>
-                <IonIcon name="menu" size={30} color="#007AFF" />
-            </TouchableOpacity>
-            <TouchableOpacity style={customStyles.filterIcon} onPress={onPressOpenFilters}>
-                <FAIcon name="filter" size={20} color={hasFilters ? "#007AFF" : "#8E8E93"} />
+        <View style={styles.backButtonContainer}>
+            <TouchableOpacity onPress={onPress}>
+                <IonIcon name="chevron-back" size={30} color="#007AFF" />
             </TouchableOpacity>
         </View>
     );
 };
 
+// Custom Drawer Button
+export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
+    const onPressToggleDrawer = () => {
+        navigation.toggleDrawer();
+        logEvent(UE.HeaderDrawerButtonClicked);
+    };
+    return (
+        <View style={styles.drawerButtonContainer}>
+            <TouchableOpacity onPress={onPressToggleDrawer}>
+                <IonIcon name="menu" size={30} color="#007AFF" />
+            </TouchableOpacity>
+        </View>
+    );
+};
 
-// Navigation Options
+// Header Title Text with Animation
+const HeaderTitleText = ({ title }: { title: string }) => {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+        }).start();
+    }, [title]);
+
+    return (
+        <Animated.View style={{ ...styles.titleContainer, opacity: fadeAnim }}>
+            <Text numberOfLines={1} style={styles.headerTitleText}>{title}</Text>
+        </Animated.View>
+    );
+};
+
+// Header Left Section (Button + Title)
+const HeaderLeft = ({ navigation, isRootScreen, title }: { navigation: NavStack, isRootScreen: boolean, title: string }) => (
+    <View style={styles.headerLeftContainer}>
+        {isRootScreen ? <CustomDrawerButton navigation={navigation} /> : <CustomBackButton navigation={navigation} />}
+        <HeaderTitleText title={title} />
+    </View>
+);
+
+// Header Right (Community, Location, Login)
+export const HeaderRight = () => {
+    const { locationAreas, communities } = useCommonContext();
+    const { selectedLocationAreaId, selectedCommunityId, authUserId } = useUserContext();
+    const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '');
+
+    const setSelectedLocationAreaId = (id: string | null) => {
+        updateUserProfile({ selected_location_area_id: id });
+    };
+
+    const setSelectedCommunityId = (id: string | null) => {
+        updateUserProfile({ selected_community_id: id });
+    };
+
+    return (
+        <View style={styles.rightNavContainer}>
+            <CommunityDropdown
+                communities={communities.interestGroups}
+                selectedCommunityId={selectedCommunityId || ALL_COMMUNITIES_ID}
+                onSelectCommunityId={setSelectedCommunityId}
+            />
+            <LocationAreaDropdown
+                locationAreas={locationAreas}
+                selectedLocationAreaId={selectedLocationAreaId || ALL_LOCATION_AREAS_ID}
+                onSelectLocationAreaId={setSelectedLocationAreaId}
+            />
+            <Suspense fallback={<ActivityIndicator />}>
+                <HeaderLoginButton headerButton />
+            </Suspense>
+        </View>
+    );
+};
+
+// Smart Header Options (auto Drawer vs Back detection)
+export const headerOptions = ({ navigation }: { navigation: NavStack }) => {
+    const state = navigation.getState();
+
+    const getDeepestRoute = (state: any): any => {
+        if (!state || !state.routes || state.routes.length === 0) return null;
+        const route = state.routes[state.index];
+        if (route.state) {
+            return getDeepestRoute(route.state);
+        }
+        return route;
+    };
+
+    const currentRoute = getDeepestRoute(state);
+    const currentRouteName = currentRoute?.name;
+
+    const rootScreens = ['Home', 'Calendar', 'Swipe Mode', 'My Calendar', 'Organizers', 'Auth'];
+
+    const isRootScreen = rootScreens.includes(currentRouteName);
+
+    if (currentRouteName === 'PromoScreen') {
+        return {
+            headerLeft: () => <View />,
+            headerRight: () => <View />,
+            headerTitle: 'Welcome!',
+        };
+    }
+
+    let headerTitle = currentRouteName || 'Home';
+
+    if (currentRoute?.name === 'Event Details' && currentRoute.params?.selectedEvent?.name) {
+        headerTitle = currentRoute.params.selectedEvent.name;
+    }
+
+    return {
+        headerTitle: '',
+        headerLeft: () => <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={headerTitle} />,
+        headerRight: () => <HeaderRight />,
+    };
+};
+
+// Simple Header Options for Details Pages
 export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack }) => ({
     headerLeft: () => <CustomBackButton navigation={navigation} />,
 });
 
-export const headerOptions = ({ navigation }: { navigation: NavStack }) => ({
-    headerRight: () => {
-        const {
-            locationAreas,
-            communities,
-        } = useCommonContext();
-
-        const { selectedLocationAreaId, selectedCommunityId } = useUserContext();
-
-        const { authUserId } = useUserContext();
-        const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '');
-
-        const setSelectedLocationAreaId = (locationAreaId: string | null) => {
-            updateUserProfile({ selected_location_area_id: locationAreaId });
-        };
-
-        const setSelectedCommunityId = (communityId: string | null) => {
-            updateUserProfile({ selected_community_id: communityId });
-        };
-
-        return (
-            <View style={customStyles.rightNavContainer}>
-                <CommunityDropdown
-                    communities={communities.interestGroups}
-                    selectedCommunityId={selectedCommunityId || ALL_COMMUNITIES_ID}
-                    onSelectCommunityId={setSelectedCommunityId}
-                />
-                <LocationAreaDropdown
-                    locationAreas={locationAreas}
-                    selectedLocationAreaId={selectedLocationAreaId || ALL_LOCATION_AREAS_ID}
-                    onSelectLocationAreaId={setSelectedLocationAreaId}
-                />
-                <Suspense fallback={<ActivityIndicator />}>
-                    <HeaderLoginButton headerButton={true} />
-                </Suspense>
-            </View>
-        );
-    },
-    headerLeft: () => <CustomDrawerButton navigation={navigation} />
-});
-
-const customStyles = StyleSheet.create({
+// Styles
+const styles = StyleSheet.create({
     rightNavContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 10,
     },
-    filterIcon: {
-        marginLeft: 10,
-    },
-    backButton: {
-        paddingLeft: 10,
-    },
     drawerButtonContainer: {
         marginLeft: 15,
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    backButtonContainer: {
+        paddingLeft: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerLeftContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 1,
+    },
+    titleContainer: {
+        marginLeft: 8,
+    },
+    headerTitleText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000',
     },
 });

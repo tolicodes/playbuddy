@@ -22,7 +22,7 @@ export default function AccountDetails() {
 
     const onPressHome = () => {
         logEvent('account_details_press_home');
-        navigate('Main Calendar');
+        navigate('Calendar');
     }
 
     const onPressDeleteAccount = async () => {
@@ -35,7 +35,7 @@ export default function AccountDetails() {
                     text: 'Delete',
                     onPress: () => {
                         signOut();
-                        navigate('Main Calendar');
+                        navigate('Calendar');
                     },
                     style: 'destructive',
                 },

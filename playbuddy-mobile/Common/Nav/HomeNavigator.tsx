@@ -1,35 +1,30 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { View, ActivityIndicator } from 'react-native';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { TabNavigator } from './TabNavigator';
-import { DetailStackNavigator } from './DetailsPageNavigator';
 import AuthMainScreen from '../../Pages/Auth/screens/AuthMainScreen';
 import { PromoScreen } from '../../Pages/Auth/screens/PromoScreen';
+import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
+import EventDetail from '../../Pages/Calendar/EventDetail';
+import BuddyEvents from '../../Pages/Buddies/screens/BuddyEventsScreen';
+import { useNavigation } from '@react-navigation/native';
+import { NavStack } from './NavStackType';
 
 const HomeStack = createStackNavigator();
 
 export function HomeStackNavigator() {
+    const [isPromoScreenViewed, setIsPromoScreenViewed] = useState(false);
+    const navigation = useNavigation<NavStack>();
     const {
         isSkippingWelcomeScreen,
         isDefaultsComplete,
         isLoadingUserProfile,
         currentDeepLink,
     } = useUserContext();
-    const [isPromoScreenViewed, setIsPromoScreenViewed] = useState(false);
 
-    if (isLoadingUserProfile) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator />
-            </View>
-        );
-    }
 
-    // Instead of trying to swap the home screen component on the fly,
-    // decide the initial home screen based on the current state.
-    // When the user finishes with the promo screen, perform a navigation reset.
-    const determineHomeScreen = () => {
+    const initialHomeScreen = useMemo(() => {
         if (currentDeepLink && !isPromoScreenViewed) {
             if (
                 currentDeepLink.type === 'organizer_promo_code' ||
@@ -39,27 +34,39 @@ export function HomeStackNavigator() {
             }
         }
         if (isDefaultsComplete || isSkippingWelcomeScreen) {
-            return 'TabNavigator';
+            return 'Home';
         }
-        return 'AuthMainScreen';
-    };
+        return 'Auth';
+    }, [currentDeepLink, isPromoScreenViewed, isDefaultsComplete, isSkippingWelcomeScreen]);
 
-    const initialScreen = determineHomeScreen();
+    useEffect(() => {
+        if (initialHomeScreen === 'PromoScreen') {
+            console.log('initialHomeScreen', initialHomeScreen);
+            navigation.navigate(initialHomeScreen as any);
+        }
+    }, [initialHomeScreen, navigation]);
+
+    if (isLoadingUserProfile) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <ActivityIndicator />
+            </View>
+        );
+    }
 
     const PromoScreenWrap = () => (
         <PromoScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
     );
 
     return (
-        <HomeStack.Navigator screenOptions={{ headerShown: false }}>
-            {initialScreen === 'PromoScreen' ? (
-                <HomeStack.Screen name="HomeScreen" component={PromoScreenWrap} />
-            ) : initialScreen === 'TabNavigator' ? (
-                <HomeStack.Screen name="HomeScreen" component={TabNavigator} />
-            ) : (
-                <HomeStack.Screen name="HomeScreen" component={AuthMainScreen} />
-            )}
-            <HomeStack.Screen name="Details" component={DetailStackNavigator} />
+        <HomeStack.Navigator initialRouteName={initialHomeScreen} screenOptions={{ headerShown: false, }}>
+            <HomeStack.Screen name="Home" component={TabNavigator} />
+            <HomeStack.Screen name="Auth" component={AuthMainScreen} />
+            <HomeStack.Screen name="PromoScreen" component={PromoScreenWrap} />
+
+            <HomeStack.Screen name="Event Details" component={EventDetail} />
+            <HomeStack.Screen name="Community Events" component={CommunityEvents} />
+            <HomeStack.Screen name="Buddy Events" component={BuddyEvents} />
         </HomeStack.Navigator>
     );
 }

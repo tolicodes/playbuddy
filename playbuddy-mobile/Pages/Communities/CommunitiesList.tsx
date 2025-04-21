@@ -6,6 +6,7 @@ import { useFetchMyCommunities, useJoinCommunity, useLeaveCommunity } from "../.
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { logEvent } from "../../Common/hooks/logger";
 import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
+import { UE } from "../../commonTypes";
 
 export const CommunitiesList = ({
     title,
@@ -93,13 +94,12 @@ export const CommunitiesList = ({
                             }]}
                             onPress={() => {
                                 navigation.navigate(
-                                    'Details',
+                                    'Community Events',
                                     {
-                                        screen: 'Community Events',
-                                        params: { communityId: item.id }
+                                        communityId: item.id
                                     }
                                 );
-                                logEvent('community_list_navigate_to_community_events', { communityId: item.id });
+                                logEvent(UE.CommunityListNavigateToCommunityEvents, { communityId: item.id });
                             }}
                         >
                             <View style={[styles.communityItemContent]}>

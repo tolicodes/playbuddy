@@ -41,7 +41,7 @@ const links: LinkItem[] = [
 ];
 
 const getGoogleCalLink = () => {
-    logEvent('moar_get_google_cal_link');
+    // logEvent('moar_get_google_cal_link');
     return MISC_URLS.addGoogleCalendar();
 };
 
@@ -56,7 +56,7 @@ const getAddYourEventsLink = () => {
         `Anything Else?`
     );
 
-    logEvent('moar_get_add_your_events_link');
+    // logEvent('moar_get_add_your_events_link');
 
     const mailtoLink = `mailto:support@playbuddy.me?subject=${subject}&body=${body}`;
     return mailtoLink;

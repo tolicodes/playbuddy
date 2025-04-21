@@ -69,7 +69,7 @@ The Calendar section allows users to view events in a calendar format.
 
 **Key Components:**
 
-- `EventCalendarView.tsx`: Main calendar view displaying events.
+- `EventCalendarView.tsx`: Calendar view displaying events.
 - `CustomCalendarDay.tsx`: Custom day component for the calendar.
 - `EventList.tsx`: Lists events for a selected day.
 - `EventDetail.tsx`: Displays detailed information about a selected event.

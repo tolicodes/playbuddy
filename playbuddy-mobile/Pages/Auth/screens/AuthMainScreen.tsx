@@ -26,7 +26,7 @@ const AuthMainScreen = () => {
         }
 
         if (isDefaultsComplete) {
-            navigation.navigate('Main Calendar');
+            navigation.navigate('Calendar');
             return;
         }
 

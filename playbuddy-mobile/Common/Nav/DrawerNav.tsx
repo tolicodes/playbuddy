@@ -14,6 +14,8 @@ import MyCalendar from "../../Pages/MyCalendar";
 import AuthMainScreen from "../../Pages/Auth/screens/AuthMainScreen";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import ProfileScreen from "../../Pages/Auth/screens/AuthProfileScreen";
+import Admin from "../../Pages/Admin/Admin";
+import AdminNav from "../../Pages/Admin/AdminNav";
 
 const Drawer = createDrawerNavigator();
 
@@ -24,16 +26,17 @@ export const DrawerNav = () => {
 
         <Drawer.Navigator initialRouteName="Home" screenOptions={headerOptions}>
             <Drawer.Screen
-                name="Home"
+                name="HomeDrawer"
                 component={HomeStackNavigator}
                 options={{
                     drawerIcon: ({ color, size }) => <FAIcon name="home" size={size} color={color} />,
+                    drawerLabel: 'Home',
                 }}
                 listeners={({ navigation }) => ({
                     drawerItemPress: (e) => {
                         e.preventDefault();
 
-                        navigation.navigate('HomeScreen');
+                        navigation.navigate('Home');
                     },
                 })}
             />
@@ -97,6 +100,16 @@ export const DrawerNav = () => {
                     ),
                 }}
             />
+
+            {/* <Drawer.Screen
+                name="Admin"
+                component={AdminNav}
+                options={{
+                    drawerIcon: ({ color, size }) => (
+                        <IonIcon name="ellipsis-horizontal" size={size} color={color} />
+                    ),
+                }}
+            /> */}
         </Drawer.Navigator>
     );
 };

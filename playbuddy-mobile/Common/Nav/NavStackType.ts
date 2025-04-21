@@ -10,9 +10,7 @@ export type NavStackProps = {
     // Starts with Drawer as root
 
     'Home': undefined;
-    // Switch between Promo, Auth, and TabNav
-    'HomeScreen': undefined;
-    'Main Calendar': undefined;
+    'Calendar': undefined;
 
     'Swipe Mode': undefined;
     'My Calendar': { share_code?: string }
@@ -30,21 +28,17 @@ export type NavStackProps = {
     'Retreats': undefined;
     'Moar': undefined;
 
-    // Details Stack
-    'Details': {
-        screen: 'Event Details',
-        params: { selectedEvent: Event }
-    } | {
-        screen: 'Community Events',
-        params: { communityId: string }
-    } | {
-        screen: 'Buddy Events',
-        params: { buddyAuthUserId: string }
-    } | {
-        screen: 'Filters',
-    } | {
-        screen: 'PromoScreen',
+    'Event Details': {
+        selectedEvent: Event
     };
+    'Community Events': {
+        communityId: string
+    };
+    'Buddy Events': {
+        buddyAuthUserId: string
+    };
+    'Filters': undefined;
+    'PromoScreen': undefined;
 
 }
 

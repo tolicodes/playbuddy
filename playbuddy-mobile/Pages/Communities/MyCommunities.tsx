@@ -6,6 +6,7 @@ import { UseMutationResult } from "@tanstack/react-query";
 import { logEvent } from "../../Common/hooks/logger";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { useLeaveCommunity } from "../../Common/hooks/useCommunities";
+import { UE } from "../../commonTypes";
 
 const CommunityList = ({
     title,
@@ -55,8 +56,8 @@ const CommunityList = ({
                 renderItem={({ item }) => (
                     <TouchableOpacity style={styles.communityItem}
                         onPress={() => {
-                            navigation.navigate('Communities', { screen: 'Community Events', params: { communityId: item.id } });
-                            logEvent('my_communities_navigate_to_community_events', { communityId: item.id });
+                            navigation.navigate('Community Events', { communityId: item.id });
+                            logEvent(UE.CommunityListNavigateToCommunityEvents, { communityId: item.id });
                         }}
                     >
                         <View style={styles.communityItemContent}>

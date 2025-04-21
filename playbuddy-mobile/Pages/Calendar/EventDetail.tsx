@@ -170,7 +170,9 @@ export const EventDetail = ({ route }) => {
         )?.id;
 
         if (community) {
-            navigation.navigate('Details', { screen: 'Community Events', params: { communityId: community } });
+            navigation.navigate('Community Events', {
+                communityId: community
+            });
         }
     };
 
