@@ -310,13 +310,14 @@ export const EventDetail = ({ route }) => {
 
 const styles = StyleSheet.create({
     scrollView: {
-        backgroundColor: '#f8f8f8',
+        backgroundColor: '#fefaff', // Very soft background
     },
     headerContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 20,
+        alignItems: 'center',
+        marginBottom: 24,
+        paddingTop: 10,
     },
     flexOne: {
         flex: 1,
@@ -325,74 +326,84 @@ const styles = StyleSheet.create({
         width: '100%',
         height: 250,
         marginBottom: 20,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        overflow: 'hidden',
     },
     fullViewTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#007AFF',
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#7F5AF0', // friendly purple
         marginRight: 20,
     },
     eventOrganizer: {
-        fontSize: 16,
-        color: '#007AFF',
-        marginBottom: 10,
-    },
-    eventOrganizerLabel: {
-        fontSize: 16,
-        color: 'black',
+        fontSize: 18,
+        color: '#5C5C5C',
+        fontWeight: '500',
+        marginBottom: 8,
     },
     eventTime: {
         fontSize: 16,
-        color: '#666',
+        color: '#8E8E93', // soft gray
+        marginBottom: 6,
+    },
+    eventLocation: {
+        fontSize: 16,
+        color: '#8E8E93',
         marginBottom: 10,
     },
     video: {
         width: '100%',
-        height: 300,
-        borderRadius: 10,
+        height: 280,
+        borderRadius: 16,
+        marginBottom: 20,
     },
     contentContainer: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        marginTop: -20,
+        paddingHorizontal: 24,
+        paddingTop: 20,
+        backgroundColor: '#ffffff',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        marginTop: -30,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: -3 },
+        shadowRadius: 10,
+        elevation: 5,
     },
     googleCalendarButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        padding: 6,
+        backgroundColor: '#ECE6FF',
+        borderRadius: 8,
+        marginLeft: 8,
     },
     googleCalendarImage: {
         width: 26,
         height: 26,
     },
-    fullViewPrice: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 10,
-    },
-    eventLocation: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 10,
-    },
     ticketButton: {
-        backgroundColor: '#007AFF',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 10,
+        backgroundColor: '#7F5AF0',
+        paddingVertical: 14,
+        paddingHorizontal: 20,
+        borderRadius: 12,
         alignItems: 'center',
-        marginVertical: 10,
+        marginVertical: 20,
+        shadowColor: '#7F5AF0',
+        shadowOpacity: 0.4,
+        shadowOffset: { width: 0, height: 5 },
+        shadowRadius: 10,
+        elevation: 3,
     },
     buttonText: {
         color: '#fff',
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
     favoriteIcon: {
-        marginRight: 10,
+        padding: 4,
     },
 });
+
 
 export default EventDetail;
