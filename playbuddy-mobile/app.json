@@ -137,10 +137,7 @@
       ["@config-plugins/react-native-branch", {
         "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
         "iosAppDomain": "l.playbuddy.me"
-      }],
-      [
-        "react-native-appsflyer"
-      ]
+      }]
     ],
     "owner": "tolicodes1",
     "runtimeVersion": "4.16.1"
