@@ -196,7 +196,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     );
 };
 
-export const ITEM_HEIGHT = 150;
+export const ITEM_HEIGHT = 110;
 
 const styles = StyleSheet.create({
     wrapper: {
@@ -208,8 +208,9 @@ const styles = StyleSheet.create({
         borderColor: '#ccc',
         borderRadius: 12,
         overflow: 'hidden',
-        marginVertical: 8,
         marginHorizontal: 16,
+        marginBottom: 10,
+        height: ITEM_HEIGHT - 10,
     },
     topSection: {
         flexDirection: 'row',

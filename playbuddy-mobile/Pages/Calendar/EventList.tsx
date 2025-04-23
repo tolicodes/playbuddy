@@ -95,8 +95,8 @@ const EventList: React.FC<EventListProps> = ({
             renderSectionHeader={renderSectionHeader}
             getItemLayout={sectionListGetItemLayout({
                 getItemHeight: () => ITEM_HEIGHT,
-                // getSeparatorHeight: () => 2,
-                getSectionHeaderHeight: () => HEADER_HEIGHT + 2,
+                // getSeparatorHeight: () => 1,
+                getSectionHeaderHeight: () => HEADER_HEIGHT,
             })}
             ListEmptyComponent={
                 <View style={styles.emptyList}>
@@ -121,10 +121,9 @@ const styles = StyleSheet.create({
     sectionHeaderWrapper: {
         backgroundColor: '#F9F9F9',
         paddingHorizontal: 20,
-        paddingVertical: 8,
+        height: HEADER_HEIGHT,
+        paddingBottom: 10,
         justifyContent: 'center',
-        borderBottomWidth: 1,
-        borderBottomColor: '#DDD',
     },
     sectionHeader: {
         fontSize: 16,
