@@ -4,7 +4,7 @@ import { View, ActivityIndicator } from 'react-native';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { TabNavigator } from './TabNavigator';
 import AuthMainScreen from '../../Pages/Auth/screens/AuthMainScreen';
-import { PromoScreen } from '../../Pages/Auth/screens/PromoScreen';
+import { PromoScreen } from '../../Pages/Auth/screens/Promo/PromoScreen';
 import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
 import EventDetail from '../../Pages/Calendar/EventDetail';
 import BuddyEvents from '../../Pages/Buddies/screens/BuddyEventsScreen';

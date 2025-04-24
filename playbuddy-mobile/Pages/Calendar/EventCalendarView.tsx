@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text, Animated, SectionList, Linking } from 'react-native';
+import {
+    View,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    Text,
+    Animated,
+    SectionList,
+    Linking
+} from 'react-native';
 import { Image } from 'expo-image';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { format, startOfWeek, addDays, subWeeks, addWeeks, isSameDay } from 'date-fns';
-import moment from 'moment';
+import moment from 'moment-timezone';
+import { format, startOfWeek, addDays, subWeeks, addWeeks } from 'date-fns';
 
 import { useCalendarContext } from './hooks/CalendarContext';
 import { useGroupedEvents, SECTION_DATE_FORMAT } from './hooks/useGroupedEvents';
@@ -36,8 +45,7 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
     const sectionListRef = useRef<SectionList>(null);
     const animatedHeight = useRef(new Animated.Value(WEEK_HEIGHT)).current;
 
-    const eventsUsed = events ? events : isOnWishlist ? wishlistEvents : filteredEvents;
-
+    const eventsUsed = events ?? (isOnWishlist ? wishlistEvents : filteredEvents);
     const [eventsLocalFiltered, setEventsLocalFiltered] = useState<EventWithMetadata[]>(eventsUsed);
 
     useEffect(() => {
@@ -46,8 +54,14 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
 
     const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered);
 
-    const startOfCurrentWeek = useMemo(() => startOfWeek(currentDate, { weekStartsOn: 0 }), [currentDate]);
-    const weekDays = useMemo(() => Array.from({ length: 7 }).map((_, i) => addDays(startOfCurrentWeek, i)), [startOfCurrentWeek]);
+    const startOfCurrentWeek = useMemo(
+        () => startOfWeek(currentDate, { weekStartsOn: 0 }),
+        [currentDate]
+    );
+    const weekDays = useMemo(
+        () => Array.from({ length: 7 }).map((_, i) => addDays(startOfCurrentWeek, i)),
+        [startOfCurrentWeek]
+    );
 
     const onPressExpand = () => {
         logEvent('event_calendar_view_on_press_expand');
@@ -84,12 +98,17 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
         scrollToDate(day);
     };
 
-    const hasEventsOnDay = (day: Date) => {
-        return eventsLocalFiltered.some(event => isSameDay(event.start_date, day));
-    };
+    // Use moment-timezone for clean day comparison in NY timezone
+    const isSameDayNY = (d1: Date | string, d2: Date | string) =>
+        moment(d1).tz('America/New_York').isSame(moment(d2).tz('America/New_York'), 'day');
 
-    const goToPrev = () => setCurrentDate(prev => isCalendarExpanded ? subWeeks(prev, 4) : subWeeks(prev, 1));
-    const goToNext = () => setCurrentDate(prev => isCalendarExpanded ? addWeeks(prev, 4) : addWeeks(prev, 1));
+    const hasEventsOnDay = (day: Date | string) =>
+        eventsLocalFiltered.some(event => isSameDayNY(event.start_date, day));
+
+    const goToPrev = () =>
+        setCurrentDate(prev => (isCalendarExpanded ? subWeeks(prev, 4) : subWeeks(prev, 1)));
+    const goToNext = () =>
+        setCurrentDate(prev => (isCalendarExpanded ? addWeeks(prev, 4) : addWeeks(prev, 1)));
 
     const debounce = (func: (query: string) => void, delay: number) => {
         let timeout: NodeJS.Timeout;
@@ -99,9 +118,12 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
         };
     };
 
-    const debouncedSetFilters = useCallback(debounce((query) => {
-        setFilters({ ...filters, search: query });
-    }, 200), [filters]);
+    const debouncedSetFilters = useCallback(
+        debounce(query => {
+            setFilters({ ...filters, search: query });
+        }, 200),
+        [filters]
+    );
 
     useEffect(() => {
         debouncedSetFilters(searchQuery);
@@ -157,27 +179,28 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
                         markedDates={markedDates}
                         onDayPress={day => onSelectDay(new Date(day.dateString))}
                         hideExtraDays={false}
-                        dayComponent={({ date, state }: { date: any, state: any }) => {
-                            const isSelected = isSameDay(new Date(date.dateString), selectedDate);
+                        dayComponent={({ date, state }) => {
+                            const iso = date.dateString;
+                            const selected = isSameDayNY(iso, selectedDate);
                             return (
                                 <TouchableOpacity
-                                    style={[
-                                        {
-                                            width: 30,
-                                            height: 30,
-                                            borderRadius: 15,
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            backgroundColor: isSelected ? '#9C6ADE' : '#f7f2fa',
-                                            opacity: hasEventsOnDay(new Date(date.dateString)) ? 1 : 0.5,
-                                        }
-                                    ]}
-                                    onPress={() => onSelectDay(new Date(date.dateString))}
+                                    style={{
+                                        width: 30,
+                                        height: 30,
+                                        borderRadius: 15,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        backgroundColor: selected ? '#9C6ADE' : '#f7f2fa',
+                                        opacity: hasEventsOnDay(iso) ? 1 : 0.5,
+                                    }}
+                                    onPress={() => onSelectDay(new Date(iso))}
                                 >
-                                    <Text style={{
-                                        color: isSelected ? 'white' : state === 'disabled' ? '#ccc' : '#333',
-                                        fontWeight: 'bold'
-                                    }}>
+                                    <Text
+                                        style={{
+                                            color: selected ? 'white' : state === 'disabled' ? '#ccc' : '#333',
+                                            fontWeight: 'bold',
+                                        }}
+                                    >
                                         {date.day}
                                     </Text>
                                 </TouchableOpacity>
@@ -206,24 +229,30 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
                             textMonthFontSize: 18,
                             textDayHeaderFontSize: 14,
                         }}
-
                     />
                 ) : (
                     <View style={styles.weekStrip}>
-                        {weekDays.map(day => (
-                            <TouchableOpacity
-                                key={day.toISOString()}
-                                style={[
-                                    styles.dayBubble,
-                                    isSameDay(day, selectedDate) && styles.selectedDayBubble,
-                                    !hasEventsOnDay(day) && styles.noEvents
-                                ]}
-                                onPress={() => onSelectDay(day)}
-                            >
-                                <Text style={[styles.dayName, isSameDay(day, selectedDate) && styles.selectedDayName]}>{format(day, 'EEE')}</Text>
-                                <Text style={[styles.dayNumber, isSameDay(day, selectedDate) && styles.selectedDayNumber]}>{format(day, 'd')}</Text>
-                            </TouchableOpacity>
-                        ))}
+                        {weekDays.map(day => {
+                            const selected = isSameDayNY(day, selectedDate);
+                            return (
+                                <TouchableOpacity
+                                    key={day.toISOString()}
+                                    style={[
+                                        styles.dayBubble,
+                                        selected && styles.selectedDayBubble,
+                                        !hasEventsOnDay(day) && styles.noEvents,
+                                    ]}
+                                    onPress={() => onSelectDay(day)}
+                                >
+                                    <Text style={[styles.dayName, selected && styles.selectedDayName]}>
+                                        {moment(day).format('ddd')}
+                                    </Text>
+                                    <Text style={[styles.dayNumber, selected && styles.selectedDayNumber]}>
+                                        {moment(day).format('D')}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
                 )}
             </Animated.View>
@@ -245,23 +274,65 @@ export default EventCalendarView;
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F2F2F2' },
-    topBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff' },
-    searchBubble: { flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: '#EFEFEF', borderRadius: 25, paddingHorizontal: 12, paddingVertical: 6 },
+    topBar: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        backgroundColor: '#fff',
+    },
+    searchBubble: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#EFEFEF',
+        borderRadius: 25,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+    },
     searchIcon: { marginRight: 8 },
     searchInput: { flex: 1, fontSize: 16, color: '#333' },
     topButtons: { flexDirection: 'row', marginLeft: 12 },
-    topButton: { marginHorizontal: 4, backgroundColor: '#FFF', padding: 6, borderRadius: 20, justifyContent: 'center', alignItems: 'center', elevation: 2 },
+    topButton: {
+        marginHorizontal: 4,
+        backgroundColor: '#FFF',
+        padding: 6,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 2,
+    },
     googleCalendarImage: { width: 26, height: 26 },
-    monthHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10, backgroundColor: '#fff' },
+    monthHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        backgroundColor: '#fff',
+    },
     monthText: { fontSize: 18, fontWeight: '600', color: '#333' },
     calendarContainer: { width: '100%', overflow: 'hidden', backgroundColor: '#fff' },
-    weekStrip: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 10 },
-    dayBubble: { alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 24, backgroundColor: '#f7f2fa' },
-    selectedDayBubble: { backgroundColor: '#9C6ADE', color: 'black' },
+    weekStrip: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+    },
+    dayBubble: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 40,
+        height: 40,
+        borderRadius: 24,
+        backgroundColor: '#f7f2fa',
+    },
+    selectedDayBubble: { backgroundColor: '#9C6ADE' },
     dayName: { fontSize: 12, color: '#666' },
     dayNumber: { fontWeight: 'bold', color: '#333' },
     selectedDayName: { color: '#fff' },
     selectedDayNumber: { color: '#fff' },
+    noEvents: { opacity: 0.5 },
     eventListContainer: { flex: 1 },
-    noEvents: { backgroundColor: '#f7f2fa', opacity: 0.5 },
 });
