@@ -119,7 +119,7 @@ export const headerOptions = ({ navigation }: { navigation: NavStack }) => {
     const currentRoute = getDeepestRoute(state);
     const currentRouteName = currentRoute?.name;
 
-    const rootScreens = ['Home', 'Calendar', 'Swipe Mode', 'My Calendar', 'Organizers', 'Auth'];
+    const rootScreens = ['Home', 'Calendar', 'Swipe Mode', 'My Calendar', 'Organizers', 'Auth', 'Weekly Picks'];
 
     const isRootScreen = rootScreens.includes(currentRouteName);
 

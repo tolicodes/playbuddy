@@ -106,8 +106,10 @@ export const EventDetail = ({ route }) => {
     // Determine the promo code to use: initial deep link > event > organizer.
     const eventPromoCode = selectedEvent.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = selectedEvent.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const featuredPromoCode = currentDeepLink?.featured_event.id === selectedEvent.id ? currentDeepLink?.featured_promo_code : null;
-    const promoCode = featuredPromoCode || eventPromoCode || organizerPromoCode;
+    const featuredPromoCode = currentDeepLink?.featured_event?.id === selectedEvent?.id ? currentDeepLink?.featured_promo_code : null;
+
+    const featuredPromoCodeFromWeeklyPromo = currentDeepLink?.deep_link_events?.find(event => event.event.id === selectedEvent.id)?.featured_promo_code;
+    const promoCode = featuredPromoCode || featuredPromoCodeFromWeeklyPromo || eventPromoCode || organizerPromoCode;
 
     useEffect(() => {
         // This is just for all promo codes

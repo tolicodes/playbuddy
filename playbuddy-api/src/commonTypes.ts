@@ -701,6 +701,12 @@ export interface Users {
     initial_deep_link_id: string | null;
 }
 
+export interface DeepLinkEvent {
+    event: Event;
+    description: string;
+    featured_promo_code: PromoCode;
+}
+
 /**
  * Represents a single deep link record.
  */
@@ -739,7 +745,8 @@ export interface DeepLink {
     featured_event: Event;
 
     featured_promo_code: PromoCode;
-}
 
+    deep_link_events: DeepLinkEvent[]
+}
 
 export { UE };

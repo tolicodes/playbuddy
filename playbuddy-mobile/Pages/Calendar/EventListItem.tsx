@@ -83,7 +83,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     // Determine promo code from event or organizer.
     const eventPromoCode = item.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = item.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const featuredPromoCode = currentDeepLink?.featured_event.id === item.id ? currentDeepLink?.featured_promo_code : null;
+    const featuredPromoCode = currentDeepLink?.featured_event?.id === item.id ? currentDeepLink?.featured_promo_code : null;
     const promoCode = featuredPromoCode || eventPromoCode || organizerPromoCode;
 
     const [discountModalVisible, setDiscountModalVisible] = useState(false);

@@ -10,6 +10,7 @@ import EventDetail from '../../Pages/Calendar/EventDetail';
 import BuddyEvents from '../../Pages/Buddies/screens/BuddyEventsScreen';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
+import { WeeklyPromoList as WeeklyPicks } from '../../Pages/Auth/screens/Promo/WeeklyPicks';
 
 const HomeStack = createStackNavigator();
 
@@ -33,6 +34,7 @@ export function HomeStackNavigator() {
                 return 'PromoScreen';
             }
         }
+
         if (isDefaultsComplete || isSkippingWelcomeScreen) {
             return 'Home';
         }
@@ -40,8 +42,7 @@ export function HomeStackNavigator() {
     }, [currentDeepLink, isPromoScreenViewed, isDefaultsComplete, isSkippingWelcomeScreen]);
 
     useEffect(() => {
-        if (initialHomeScreen === 'PromoScreen') {
-            console.log('initialHomeScreen', initialHomeScreen);
+        if (initialHomeScreen === 'PromoScreen' || initialHomeScreen === 'Weekly Picks') {
             navigation.navigate(initialHomeScreen as any);
         }
     }, [initialHomeScreen, navigation]);
@@ -63,6 +64,7 @@ export function HomeStackNavigator() {
             <HomeStack.Screen name="Home" component={TabNavigator} />
             <HomeStack.Screen name="Auth" component={AuthMainScreen} />
             <HomeStack.Screen name="PromoScreen" component={PromoScreenWrap} />
+            <HomeStack.Screen name="Weekly Picks" component={WeeklyPicks} />
 
             <HomeStack.Screen name="Event Details" component={EventDetail} />
             <HomeStack.Screen name="Community Events" component={CommunityEvents} />

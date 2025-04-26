@@ -95,7 +95,6 @@ const EventList: React.FC<EventListProps> = ({
             renderSectionHeader={renderSectionHeader}
             getItemLayout={sectionListGetItemLayout({
                 getItemHeight: () => ITEM_HEIGHT,
-                // getSeparatorHeight: () => 1,
                 getSectionHeaderHeight: () => HEADER_HEIGHT,
             })}
             ListEmptyComponent={

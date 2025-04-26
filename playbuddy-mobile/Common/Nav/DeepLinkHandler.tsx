@@ -15,88 +15,86 @@ import { useEffect, useRef, useCallback } from 'react';
 import branch from 'react-native-branch';
 import URLParse from 'url-parse';
 import * as Clipboard from 'expo-clipboard';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFetchDeepLinks, useAddDeepLinkToUser } from '../hooks/useDeepLinks';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { getAnalyticsPropsDeepLink, logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
-import type { DeepLink } from '../../commonTypes'
+import type { DeepLink } from '../../commonTypes';
+
+const CLIPBOARD_CHECK_KEY = 'hasCheckedDeepLinkClipboard';
 
 export default function DeepLinkHandler() {
-    // 1) Fetch deep-link definitions
     const { data: deepLinks = [], isLoading: loadingLinks } = useFetchDeepLinks();
     const addDeepLink = useAddDeepLinkToUser();
-
-    // 2) User context for updating current deep link and identifying user
     const { setCurrentDeepLink, authUserId } = useUserContext();
     const queue = useRef<string | null>(null);
 
-    // Utility: match URL slug to a DeepLink object
-    const matchDeepLink = useCallback((url: string): DeepLink | undefined => {
-        const slug = new URLParse(url).pathname.split('/').pop();
-        return deepLinks.find(d => d.slug === slug);
-    }, [deepLinks]);
+    const matchDeepLink = useCallback(
+        (url: string): DeepLink | undefined => {
+            const slug = new URLParse(url).pathname.split('/').pop();
+            return deepLinks.find(d => d.slug === slug);
+        },
+        [deepLinks],
+    );
 
-    // Central URL handler: sets context and tracks events
-    const handleUrl = useCallback(async (
-        url: string,
-        source: 'branch' | 'clipboard' | 'cold_start'
-    ) => {
-        // If deep-links not yet loaded, queue the URL
-        if (loadingLinks) {
-            queue.current = url;
-            return;
-        }
+    const handleUrl = useCallback(
+        async (url: string, source: 'branch' | 'clipboard' | 'cold_start') => {
+            if (loadingLinks) {
+                queue.current = url;
+                return;
+            }
+            const dl = matchDeepLink(url);
+            if (!dl) return;
 
-        // Attempt to find matching deepLink
-        const dl = matchDeepLink(url);
-        if (!dl) return;
+            queue.current = null;
+            setCurrentDeepLink(dl);
 
-        // Clear queue and update context
-        queue.current = null;
-        setCurrentDeepLink(dl);
-
-        // Track deep-link detection event
-        logEvent(UE.DeepLinkDetected, {
-            auth_user_id: authUserId,
-            url,
-            source,
-            ...getAnalyticsPropsDeepLink(dl),
-        });
-
-        // If user is authenticated, attribute deep-link to their profile
-        if (authUserId) {
-            addDeepLink.mutate(dl.id);
-            logEvent(UE.DeepLinkAttributed, {
+            logEvent(UE.DeepLinkDetected, {
                 auth_user_id: authUserId,
+                url,
+                source,
                 ...getAnalyticsPropsDeepLink(dl),
             });
-        }
-    }, [loadingLinks, authUserId, matchDeepLink, setCurrentDeepLink, addDeepLink]);
+
+            if (authUserId) {
+                addDeepLink.mutate(dl.id);
+                logEvent(UE.DeepLinkAttributed, {
+                    auth_user_id: authUserId,
+                    ...getAnalyticsPropsDeepLink(dl),
+                });
+            }
+        },
+        [loadingLinks, authUserId, matchDeepLink, setCurrentDeepLink, addDeepLink],
+    );
 
     useEffect(() => {
-        // Subscribe to live Branch deep-link events
-        const unsubscribe = branch.subscribe(({ uri }) => {
+        // Branch subscription & cold-start handling
+        const unsub = branch.subscribe(({ uri }) => {
             if (uri) handleUrl(uri, 'branch');
         });
-
-        // Handle cold-start Branch parameters
         branch.getLatestReferringParams().then(data => {
             const url = data['+url'] || data['~referring_link'];
             if (url) handleUrl(url, 'cold_start');
         });
 
-        // Fallback: read clipboard for potential deep-link URLs
-        Clipboard.getStringAsync().then(text => {
-            if (text && /(?:l\.playbuddy\.me|bclc8)/.test(text)) {
-                handleUrl(text, 'clipboard');
+        // Clipboard fallback — but only once ever
+        (async () => {
+            const alreadyChecked = await AsyncStorage.getItem(CLIPBOARD_CHECK_KEY);
+            if (!alreadyChecked) {
+                const text = await Clipboard.getStringAsync();
+                if (text && /(?:l\.playbuddy\.me|bclc8)/.test(text)) {
+                    await handleUrl(text, 'clipboard');
+                }
+                await AsyncStorage.setItem(CLIPBOARD_CHECK_KEY, 'true');
             }
-        });
+        })();
 
-        return () => unsubscribe();
+        return () => unsub();
     }, [handleUrl]);
 
     useEffect(() => {
-        // When deepLinks finish loading, reprocess any queued URL
+        // Re-process any queued URL once links finish loading
         if (!loadingLinks && queue.current) {
             handleUrl(queue.current, 'branch');
         }
