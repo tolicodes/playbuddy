@@ -73,21 +73,14 @@ export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegiste
     }
 
     const doOnClickSkip = () => {
-        if (!isChecked) {
-            Alert.alert('We can only show you 20% of events if you skip due to App Store guidelines. Please confirm that you understand that an account is required to see most content ');
-            return;
-        }
-
+        Alert.alert('We can only show you 20% of events if you skip due to App Store guidelines. Please confirm that you understand that an account is required to see most content ');
         onClickSkip();
 
         logEvent(UE.WelcomeScreenSkipped, {
             // May have deep link or not
             ...(promoCode?.deepLink ? getAnalyticsPropsDeepLink(promoCode.deepLink) : {}),
-            checked_skip: isChecked,
         });
     }
-
-    const [isChecked, setIsChecked] = useState(false);
 
     return (
         <View style={styles.container}>
@@ -118,14 +111,6 @@ export const WelcomeScreen = ({ onClickRegister, onClickSkip }: { onClickRegiste
 
             <View style={styles.loginButtonContainer}>
                 <HeaderLoginButton size={50} showLoginText={true} register={true} onPressButton={doOnClickRegister} />
-            </View>
-
-            <View style={styles.checkboxContainer}>
-                <CheckBox
-                    title="Skipping means fewer shown events (under 20%)."
-                    checked={isChecked}
-                    onPress={() => setIsChecked(!isChecked)}
-                />
             </View>
 
             <TouchableOpacity style={styles.noThanksButton} onPress={doOnClickSkip}>

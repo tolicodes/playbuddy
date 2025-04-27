@@ -35,6 +35,10 @@ export function HomeStackNavigator() {
             }
         }
 
+        if (currentDeepLink && currentDeepLink.type === 'weekly_picks') {
+            return 'Weekly Picks';
+        }
+
         if (isDefaultsComplete || isSkippingWelcomeScreen) {
             return 'Home';
         }
