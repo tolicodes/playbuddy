@@ -234,26 +234,24 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
                     <View style={styles.weekStrip}>
                         {weekDays.map(day => {
                             const selected = isSameDayNY(day, selectedDate);
+                            const hasEvent = hasEventsOnDay(day);
                             return (
                                 <TouchableOpacity
                                     key={day.toISOString()}
-                                    style={[
-                                        styles.dayBubble,
-                                        selected && styles.selectedDayBubble,
-                                        !hasEventsOnDay(day) && styles.noEvents,
-                                    ]}
+                                    style={[styles.weekDay, selected && styles.weekDaySelected, hasEvent && !selected && styles.weekDayHasEvent]}
                                     onPress={() => onSelectDay(day)}
                                 >
-                                    <Text style={[styles.dayName, selected && styles.selectedDayName]}>
+                                    <Text style={[styles.weekDayText, selected && styles.weekDayTextSelected]}>
                                         {moment(day).format('ddd')}
                                     </Text>
-                                    <Text style={[styles.dayNumber, selected && styles.selectedDayNumber]}>
+                                    <Text style={[styles.weekDayNumber, selected && styles.weekDayNumberSelected]}>
                                         {moment(day).format('D')}
                                     </Text>
                                 </TouchableOpacity>
                             );
                         })}
                     </View>
+
                 )}
             </Animated.View>
 
@@ -313,13 +311,7 @@ const styles = StyleSheet.create({
     },
     monthText: { fontSize: 18, fontWeight: '600', color: '#333' },
     calendarContainer: { width: '100%', overflow: 'hidden', backgroundColor: '#fff' },
-    weekStrip: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 10,
-    },
+
     dayBubble: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -335,4 +327,44 @@ const styles = StyleSheet.create({
     selectedDayNumber: { color: '#fff' },
     noEvents: { opacity: 0.5 },
     eventListContainer: { flex: 1 },
+    weekStrip: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        backgroundColor: '#ffffff',
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    weekDay: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+    },
+    weekDayHasEvent: {
+        backgroundColor: '#f0e8fc',
+    },
+    weekDaySelected: {
+        backgroundColor: '#9C6ADE',
+    },
+    weekDayText: {
+        fontSize: 12,
+        color: '#666',
+    },
+    weekDayTextSelected: {
+        color: '#fff',
+        fontWeight: '600',
+    },
+    weekDayNumber: {
+        fontSize: 16,
+        color: '#333',
+        fontWeight: '500',
+    },
+    weekDayNumberSelected: {
+        color: '#fff',
+    },
+
 });

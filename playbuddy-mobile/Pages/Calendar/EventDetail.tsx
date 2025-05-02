@@ -203,8 +203,15 @@ export const EventDetail = ({ route }) => {
     const locationAreaIsAll = selectedLocationAreaId === ALL_LOCATION_AREAS_ID;
     const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
+    // hack for invalid links (presale for TTI)
+    const availableSoon = !selectedEvent.ticket_url?.includes('https');
+
     // Handle "Get Tickets" button press.
     const handleGetTickets = () => {
+        if (availableSoon) {
+            return;
+        }
+
         logEvent(UE.EventDetailGetTicketsClicked, {
             auth_user_id: authUserId ?? '',
             ...getAnalyticsPropsEvent(selectedEvent),
@@ -299,7 +306,7 @@ export const EventDetail = ({ route }) => {
 
                     {selectedEvent.ticket_url && (
                         <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
-                            <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>
+                            {availableSoon ? <Text style={styles.buttonText}>Available Soon!</Text> : <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>}
                         </TouchableOpacity>
                     )}
 

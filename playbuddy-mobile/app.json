@@ -116,7 +116,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera. This app uses the camera to scan QR codes for event check-ins.",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera. This app uses the camera to scan QR codes for event check-ins."
         }
       ],
       [
