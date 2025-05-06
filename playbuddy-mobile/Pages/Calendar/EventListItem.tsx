@@ -196,7 +196,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     );
 };
 
-export const ITEM_HEIGHT = 110;
+export const ITEM_HEIGHT = 150;
 
 const styles = StyleSheet.create({
     wrapper: {
