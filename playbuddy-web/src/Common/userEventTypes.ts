@@ -367,7 +367,6 @@ export interface EventPayloadMap {
         deep_link_id?: string;
         deep_link_slug?: string;
         deep_link_type?: string;
-        checked_skip: boolean;
     };
 
     // Promo Screen

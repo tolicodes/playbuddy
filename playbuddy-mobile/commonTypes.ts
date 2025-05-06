@@ -207,7 +207,7 @@ export interface EventDataSource {
 }
 
 /**
-  * A scraper returns this: it's a normalized CreateEventInput
+  * A scraper returns this: it's a normalized NormalizedEventInput
   * before community/location dependencies are resolved.
   */
 export interface NormalizedEventInput extends Omit<Event, 'id' | 'organizer' | 'location_area' | 'communities' | 'promo_codes'> {
@@ -221,13 +221,15 @@ export interface NormalizedEventInput extends Omit<Event, 'id' | 'organizer' | '
      * The communities the event belongs to (many to many via join table event_communities)
      * For example, a community could be "Acro" or "Conscious Touch"
      */
-    communities?: Omit<Community, 'id'> | { id: string }[];
+    communities?: Omit<Community, 'id'>[] | { id: string }[];
 
     /**
      * The promo codes for the event
      * May be event specific or organizer specific
      */
     promo_codes?: Omit<PromoCode, 'id'> | { id: string };
+
+    metadata?: Record<string, unknown>;
 }
 
 /**
