@@ -28,7 +28,6 @@ This document provides an overview of the React Native application, explaining i
     - [**Buddies API**](#buddies-api)
   - [**Supabase Storage**](#supabase-storage)
   - [**Analytics and Tracking**](#analytics-and-tracking)
-  - [Navigation](#navigation-1)
   - [Navigation Architecture](#navigation-architecture)
 
 ## Introduction
@@ -326,27 +325,34 @@ Here’s a structured mapping of your API and Supabase setup based on the existi
 
 This structure covers the core data entities and API interactions for managing users, events, communities, buddies, and related functionalities.
 
-## Navigation
-
 ## Navigation Architecture
 
-The app uses React Navigation with a nested navigator structure:
-
-1. **Root Navigator**: The main navigator that determines authentication state
-
-   - Renders `HomeNavigator` when user is authenticated
-     - Contains `AuthNav`
-
-2. **HomeNavigator**: A stack navigator that includes:
-
-   - `TabNavigator`: Main app tabs (Calendar, Communities, Buddies, Profile)
-   - `EventDetail`: Screen for viewing event details
-   - `CommunityEvents`: Screen for community-specific events
-   - `PromoScreen`: Promotional content screen
-   - `WeeklyPicks`: Curated event recommendations
-
-3. **TabNavigator**: Bottom tab navigation with:
-   - Calendar Tab: Event discovery and management
-   - Communities Tab: Community browsing and interaction
-   - Profile Tab: User settings and preferences
-   - Swipe Mode Tab: Event discovery and management
+NavigationContainer
+• wraps the whole tree and lives in Common/Nav/Nav.tsx.
+Drawer Navigator – Common/Nav/DrawerNav.tsx
+Routes shown in the side-drawer:
+‑ HomeDrawer → HomeStackNavigator (main app)
+‑ Profile / Login (decided by isDefaultsComplete)
+‑ Retreats
+‑ Moar
+Home Stack – Common/Nav/HomeNavigator.tsx
+‑ Home → TabNavigator (bottom tabs)
+‑ AuthNav (authentication flow)
+‑ PromoScreen
+‑ Weekly Picks
+‑ Event Details (details page)
+‑ Community Events
+Auth Stack – Pages/Auth/screens/AuthNav.tsx
+‑ Welcome
+‑ Login Form
+‑ Profile Details
+‑ Profile
+Bottom-Tab Navigator – Common/Nav/TabNavigator.tsx
+Tabs (each is a screen in the Home Stack):
+‑ Calendar (event calendar view)
+‑ My Calendar
+‑ Organizers → its own nested stack (Pages/Organizers/OrganizersNav.tsx)
+‑ Swipe Mode
+Key points • Drawer is the true app “root” after the NavigationContainer.
+• The Home stack handles initial deep-link / auth gating, then lands on the tab bar.
+• Every header is configured via headerOptions in Common/Header/Header.tsx, which automatically decides whether to show a back button or a drawer button depending on whether the screen is a root-level one.

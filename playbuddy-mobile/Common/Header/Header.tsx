@@ -3,10 +3,6 @@
 import React, { Suspense, useEffect, useRef } from "react";
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { useCommonContext, ALL_COMMUNITIES_ID, ALL_LOCATION_AREAS_ID } from "../hooks/CommonContext";
-import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
-import { useUpdateUserProfile } from "../../Pages/Auth/hooks/useUserProfile";
-import { CommunityDropdown, LocationAreaDropdown } from "./DefaultsMenus";
 import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
 import { NavStack } from "../Nav/NavStackType";
 import { logEvent } from "../hooks/logger";
@@ -70,32 +66,10 @@ const HeaderLeft = ({ navigation, isRootScreen, title }: { navigation: NavStack,
     </View>
 );
 
-// Header Right (Community, Location, Login)
+// Header Right (Login)
 export const HeaderRight = () => {
-    const { locationAreas, communities } = useCommonContext();
-    const { selectedLocationAreaId, selectedCommunityId, authUserId } = useUserContext();
-    const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '');
-
-    const setSelectedLocationAreaId = (id: string | null) => {
-        updateUserProfile({ selected_location_area_id: id });
-    };
-
-    const setSelectedCommunityId = (id: string | null) => {
-        updateUserProfile({ selected_community_id: id });
-    };
-
     return (
         <View style={styles.rightNavContainer}>
-            <CommunityDropdown
-                communities={communities.interestGroups}
-                selectedCommunityId={selectedCommunityId || ALL_COMMUNITIES_ID}
-                onSelectCommunityId={setSelectedCommunityId}
-            />
-            <LocationAreaDropdown
-                locationAreas={locationAreas}
-                selectedLocationAreaId={selectedLocationAreaId || ALL_LOCATION_AREAS_ID}
-                onSelectLocationAreaId={setSelectedLocationAreaId}
-            />
             <Suspense fallback={<ActivityIndicator />}>
                 <HeaderLoginButton headerButton />
             </Suspense>
