@@ -6,18 +6,30 @@ This document provides an overview of the React Native application, explaining i
 
 ## Table of Contents
 
-1. [Introduction](#introduction)
-2. [App Structure](#app-structure)
-3. [Navigation](#navigation)
-4. [Authentication](#authentication)
-5. [Calendar and Events](#calendar-and-events)
-6. [Wishlist and Swipe Mode](#wishlist-and-swipe-mode)
-7. [Communities](#communities)
-8. [Buddies](#buddies)
-9. [Filters](#filters)
-10. [Common Components](#common-components)
-11. [Third-Party Integrations](#third-party-integrations)
-12. [Conclusion](#conclusion)
+- [App Documentation](#app-documentation)
+  - [Table of Contents](#table-of-contents)
+  - [Introduction](#introduction)
+  - [App Structure](#app-structure)
+  - [Navigation](#navigation)
+  - [Authentication](#authentication)
+  - [Calendar and Events](#calendar-and-events)
+  - [Wishlist and Swipe Mode](#wishlist-and-swipe-mode)
+  - [Communities](#communities)
+  - [Buddies](#buddies)
+  - [Filters](#filters)
+  - [Common Components](#common-components)
+  - [Third-Party Integrations](#third-party-integrations)
+  - [Conclusion](#conclusion)
+  - [**Supabase Database Tables**](#supabase-database-tables)
+  - [**API Endpoints**](#api-endpoints)
+    - [**Events API**](#events-api)
+    - [**Wishlist API**](#wishlist-api)
+    - [**Communities API**](#communities-api)
+    - [**Buddies API**](#buddies-api)
+  - [**Supabase Storage**](#supabase-storage)
+  - [**Analytics and Tracking**](#analytics-and-tracking)
+  - [Navigation](#navigation-1)
+  - [Navigation Architecture](#navigation-architecture)
 
 ## Introduction
 
@@ -313,3 +325,28 @@ Here’s a structured mapping of your API and Supabase setup based on the existi
 ---
 
 This structure covers the core data entities and API interactions for managing users, events, communities, buddies, and related functionalities.
+
+## Navigation
+
+## Navigation Architecture
+
+The app uses React Navigation with a nested navigator structure:
+
+1. **Root Navigator**: The main navigator that determines authentication state
+
+   - Renders `HomeNavigator` when user is authenticated
+     - Contains `AuthNav`
+
+2. **HomeNavigator**: A stack navigator that includes:
+
+   - `TabNavigator`: Main app tabs (Calendar, Communities, Buddies, Profile)
+   - `EventDetail`: Screen for viewing event details
+   - `CommunityEvents`: Screen for community-specific events
+   - `PromoScreen`: Promotional content screen
+   - `WeeklyPicks`: Curated event recommendations
+
+3. **TabNavigator**: Bottom tab navigation with:
+   - Calendar Tab: Event discovery and management
+   - Communities Tab: Community browsing and interaction
+   - Profile Tab: User settings and preferences
+   - Swipe Mode Tab: Event discovery and management
