@@ -13,12 +13,14 @@ import MyCalendar from "../../Pages/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
 import { SwipeMode } from "../../Pages/SwipeMode";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
-
+import { useNavigation } from "@react-navigation/native";
+import { headerOptions } from "../Header/Header";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
     const { availableCardsToSwipe } = useCalendarContext();
     const { authUserId } = useUserContext();
+    const navigation = useNavigation();
 
     return (
         <Tab.Navigator
@@ -32,7 +34,6 @@ export const TabNavigator = () => {
                         }}
                     />
                 ),
-                headerShown: false,
             }}
         >
             <Tab.Screen
@@ -42,6 +43,7 @@ export const TabNavigator = () => {
                     tabBarIcon: ({ color, size }) => (
                         <FAIcon name="calendar" size={size} color={color} />
                     ),
+                    ...headerOptions({ navigation, title: 'Calendar', isRootScreen: true }),
                 }}
             />
             <Tab.Screen
@@ -51,6 +53,7 @@ export const TabNavigator = () => {
                     tabBarIcon: ({ color, size }) => (
                         <FAIcon name="heart" size={size} color={color} />
                     ),
+                    ...headerOptions({ navigation, title: 'My Calendar', isRootScreen: true }),
                 }}
             />
             <Tab.Screen
@@ -60,6 +63,7 @@ export const TabNavigator = () => {
                     tabBarIcon: ({ color, size }) => (
                         <FAIcon name="users-cog" size={size} color={color} />
                     ),
+                    ...headerOptions({ navigation, title: 'Organizers', isRootScreen: true }),
                 }}
             />
             <Tab.Screen
@@ -72,6 +76,7 @@ export const TabNavigator = () => {
                             {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />}
                         </View>
                     ),
+                    ...headerOptions({ navigation, title: 'Swipe Mode', isRootScreen: true }),
                 }}
             />
         </Tab.Navigator>

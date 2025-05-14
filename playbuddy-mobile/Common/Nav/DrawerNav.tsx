@@ -1,93 +1,68 @@
 import React from "react";
 import { createDrawerNavigator } from "@react-navigation/drawer";
+
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { HomeStackNavigator } from "./HomeNavigator";
-import Communities from "../../Pages/Communities/CommunitiesNav";
 import { Retreats } from "../../Pages/Retreats";
-import BuddiesMain from "../../Pages/Buddies/screens/BuddiesMainScreen";
-import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
-import Moar from "../../Pages/Moar";
 import { headerOptions } from "../Header/Header";
-import IonIcon from 'react-native-vector-icons/Ionicons';
-import { SwipeMode } from "../../Pages/SwipeMode";
-import MyCalendar from "../../Pages/MyCalendar";
-import AuthMainScreen from "../../Pages/Auth/screens/AuthMainScreen";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import ProfileScreen from "../../Pages/Auth/screens/AuthProfileScreen";
-import Admin from "../../Pages/Admin/Admin";
-import AdminNav from "../../Pages/Admin/AdminNav";
+import { useNavigation } from "@react-navigation/native";
+import { View } from "react-native";
+import Moar from "../../Pages/Moar";
+import LoginFormScreen from "../../Pages/Auth/screens/LoginFormScreen";
+import { NavStack } from "./NavStackType";
 
 const Drawer = createDrawerNavigator();
 
 export const DrawerNav = () => {
     const { isDefaultsComplete } = useUserContext();
+    const navigation = useNavigation<NavStack>();
+
+    const getIcon = (name: string) => {
+        const getter = ({ color, size }: { color: string, size: number }) => {
+            return (<View style={{ flexDirection: 'column', alignItems: 'center', width: size + 5, height: size + 5 }}>
+                <FAIcon name={name} size={size} color={color} />
+            </View>)
+        }
+        return getter;
+    }
 
     return (
-
-        <Drawer.Navigator initialRouteName="Home" screenOptions={headerOptions}>
+        <Drawer.Navigator>
             <Drawer.Screen
                 name="HomeDrawer"
                 component={HomeStackNavigator}
                 options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="home" size={size} color={color} />,
-                    drawerLabel: 'Home',
+                    drawerIcon: getIcon('home'),
+                    title: 'Home',
+                    headerShown: false,
                 }}
                 listeners={({ navigation }) => ({
                     drawerItemPress: (e) => {
                         e.preventDefault();
 
+                        // This is inside the HomeStackNavigator
                         navigation.navigate('Home');
                     },
                 })}
             />
-            <Drawer.Screen
-                name="Swipe Mode"
-                component={SwipeMode}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="layer-group" size={size} color={color} style={{ width: 30 }} />,
-                }}
-            />
-            <Drawer.Screen
-                name="My Calendar"
-                component={MyCalendar}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="heart" size={size} color={color} style={{ width: 30 }} />,
-                }}
-            />
 
             <Drawer.Screen
-                name="Organizers"
-                component={OrganizersNav}
+                name={isDefaultsComplete ? "Profile" : "Login"}
                 options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="users-cog" size={size} color={color} />,
+                    drawerIcon: getIcon('user'),
+                    ...headerOptions({ navigation, title: isDefaultsComplete ? "Profile" : "Login" }),
                 }}
-            />
-            <Drawer.Screen
-                name="Buddies"
-                component={BuddiesMain}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="user-friends" size={size} color={color} />,
-                }}
-            />
-            <Drawer.Screen
-                name="Communities"
-                component={Communities}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="users" size={size} color={color} />,
-                }}
-            />
-            <Drawer.Screen
-                name={isDefaultsComplete ? "Profile" : "Auth"}
-                component={isDefaultsComplete ? ProfileScreen : AuthMainScreen}
-                options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="user" size={size} color={color} style={{ width: 30 }} />,
-                }}
+                component={isDefaultsComplete ? ProfileScreen : LoginFormScreen}
             />
             <Drawer.Screen
                 name="Retreats"
                 component={Retreats}
                 options={{
-                    drawerIcon: ({ color, size }) => <FAIcon name="campground" size={size} color={color} />,
+                    drawerIcon: getIcon('campground'),
+                    ...headerOptions({ navigation, title: 'Retreats' }),
+
                 }}
             />
 
@@ -95,21 +70,11 @@ export const DrawerNav = () => {
                 name="Moar"
                 component={Moar}
                 options={{
-                    drawerIcon: ({ color, size }) => (
-                        <IonIcon name="ellipsis-horizontal" size={size} color={color} />
-                    ),
+                    drawerIcon: getIcon('ellipsis-h'),
+                    ...headerOptions({ navigation, title: 'Moar' }),
+
                 }}
             />
-
-            {/* <Drawer.Screen
-                name="Admin"
-                component={AdminNav}
-                options={{
-                    drawerIcon: ({ color, size }) => (
-                        <IonIcon name="ellipsis-horizontal" size={size} color={color} />
-                    ),
-                }}
-            /> */}
         </Drawer.Navigator>
     );
 };

@@ -4,7 +4,7 @@ import Swiper from 'react-native-deck-swiper';
 import { Image } from 'expo-image'
 import { useCalendarContext } from './Calendar/hooks/CalendarContext';
 import { formatDate } from './Calendar/hooks/calendarUtils';
-import { Community, Event, PromoCode } from '../commonTypes';
+import { Event } from '../commonTypes';
 import moment from 'moment';
 import { useRecordSwipeChoice } from './Calendar/hooks/useWishlist';
 import { useUserContext } from './Auth/hooks/UserContext';
@@ -13,12 +13,9 @@ import { Button } from '@rneui/themed';
 import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
 import { logEvent } from '../Common/hooks/logger';
 import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
-import { addOrReplacePromoCodeToEventbriteUrl } from './Auth/screens/usePromoCode';
-import { useCommonContext } from '../Common/hooks/CommonContext';
 
 export const SwipeMode = () => {
     const { availableCardsToSwipe } = useCalendarContext();
-    const { myCommunities: { allMyCommunities } } = useCommonContext();
     const { authUserId } = useUserContext();
 
     useBadgeNotifications({ availableCardsToSwipe });
@@ -86,9 +83,8 @@ export const SwipeMode = () => {
         // TODO: find out why event is not always available
         const imageUrl = event?.image_url && getSmallAvatarUrl(event?.image_url);
 
-        const addPromoCodeToUrlAndOpen = (eventUrl: string, promoCode: PromoCode | undefined) => {
-            const eventUrlWithPromoCode = addOrReplacePromoCodeToEventbriteUrl(eventUrl, promoCode?.promo_code);
-            Linking.openURL(eventUrlWithPromoCode || event.event_url)
+        const openUrl = (eventUrl: string) => {
+            Linking.openURL(eventUrl)
         }
 
         return (
@@ -119,7 +115,7 @@ export const SwipeMode = () => {
                     <Button
                         title="Get Tickets"
                         onPress={() => {
-                            addPromoCodeToUrlAndOpen(event.event_url, promoCode);
+                            openUrl(event.event_url);
                             logEvent('swipe_mode_more_info_click', { eventId: event.id });
                         }}
 

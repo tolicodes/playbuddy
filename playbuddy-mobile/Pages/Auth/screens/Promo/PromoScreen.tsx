@@ -62,8 +62,6 @@ export const PromoScreen = ({
     // we want to go to the community events screen but if they want
     // to go back, they will go to the home screen instead of this one
     const onClickLink = (link: 'event_details' | 'community_events') => {
-        const firstScreen = authUserId ? 'Home' : 'Auth';
-
         if (!promoCode) return;
 
         if (link === 'community_events') {
@@ -73,13 +71,7 @@ export const PromoScreen = ({
                 auth_user_id: authUserId,
             });
 
-            navigation.reset({
-                index: 1,
-                routes: [
-                    { name: firstScreen },
-                    { name: 'Community Events', params: { communityId: organizer.communities[0].id } },
-                ],
-            });
+            navigation.navigate('Community Events', { communityId: organizer.communities[0].id });
         } else {
             logEvent(UE.PromoScreenEventDetailsClicked, {
                 ...getAnalyticsPropsDeepLink(promoCode.deepLink),
@@ -87,14 +79,7 @@ export const PromoScreen = ({
                 auth_user_id: authUserId,
             });
 
-            navigation.reset({
-                index: 1,
-                routes: [
-                    { name: firstScreen },
-
-                    { name: 'Event Details', params: { selectedEvent: featuredEvent } },
-                ],
-            });
+            navigation.navigate('Event Details', { selectedEvent: featuredEvent });
         }
 
         onPromoScreenViewed();

@@ -3,12 +3,15 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavStack } from './Nav/NavStackType';
 import { logEvent } from './hooks/logger';
+import { useUserContext } from '../Pages/Auth/hooks/UserContext';
 
 const Banner = () => {
     const navigation = useNavigation<NavStack>()
+    const { authUserId } = useUserContext();
+    const isLoggedIn = !!authUserId;
     const handlePress = () => {
         logEvent('login_banner_clicked');
-        navigation.navigate('Auth');
+        navigation.navigate('AuthNav', { screen: isLoggedIn ? 'Profile' : 'Login Form' });
     };
     return (
         <TouchableOpacity onPress={handlePress}>

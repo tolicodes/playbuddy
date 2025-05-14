@@ -31,8 +31,8 @@ const AppleLogin: React.FC = () => {
     );
 };
 
-const AuthFormScreen: React.FC = () => {
-    const [showEmailLogin, setShowEmailLogin] = useState<boolean>(false);
+const LoginFormScreen: React.FC = () => {
+    const [showEmailLogin, setShowEmailLogin] = useState<boolean>(true);
 
     return (
         <View style={styles.authContainer}>
@@ -46,7 +46,6 @@ const AuthFormScreen: React.FC = () => {
 
             <View style={styles.ssoContainer}>
                 <GoogleLogin />
-
                 <AppleLogin />
             </View>
         </View>
@@ -55,7 +54,7 @@ const AuthFormScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
     authContainer: {
-        flex: 1,
+        flex: .9,
         justifyContent: 'center',
     },
     orContainer: {
@@ -87,8 +86,9 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
     },
     buttonTitle: {
+        fontSize: 15,
         fontWeight: '600',
     },
 });
 
-export default AuthFormScreen;
+export default LoginFormScreen;

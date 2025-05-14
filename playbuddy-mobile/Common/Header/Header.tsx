@@ -104,43 +104,12 @@ export const HeaderRight = () => {
 };
 
 // Smart Header Options (auto Drawer vs Back detection)
-export const headerOptions = ({ navigation }: { navigation: NavStack }) => {
-    const state = navigation.getState();
-
-    const getDeepestRoute = (state: any): any => {
-        if (!state || !state.routes || state.routes.length === 0) return null;
-        const route = state.routes[state.index];
-        if (route.state) {
-            return getDeepestRoute(route.state);
-        }
-        return route;
-    };
-
-    const currentRoute = getDeepestRoute(state);
-    const currentRouteName = currentRoute?.name;
-
-    const rootScreens = ['Home', 'Calendar', 'Swipe Mode', 'My Calendar', 'Organizers', 'Auth', 'Weekly Picks'];
-
-    const isRootScreen = rootScreens.includes(currentRouteName);
-
-    if (currentRouteName === 'PromoScreen') {
-        return {
-            headerLeft: () => <View />,
-            headerRight: () => <View />,
-            headerTitle: 'Welcome!',
-        };
-    }
-
-    let headerTitle = currentRouteName || 'Home';
-
-    if (currentRoute?.name === 'Event Details' && currentRoute.params?.selectedEvent?.name) {
-        headerTitle = currentRoute.params.selectedEvent.name;
-    }
-
+export const headerOptions = ({ navigation, title, isRootScreen = false }: { navigation: NavStack, title: string, isRootScreen?: boolean }) => {
     return {
         headerTitle: '',
-        headerLeft: () => <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={headerTitle} />,
+        headerLeft: () => <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={title} />,
         headerRight: () => <HeaderRight />,
+        headerShown: true,
     };
 };
 

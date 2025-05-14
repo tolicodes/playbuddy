@@ -174,7 +174,8 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     buttonContainer: {
-        marginVertical: 10,
+        marginTop: 10,
+        marginBottom: 0,
     },
     errorText: {
         color: 'red',

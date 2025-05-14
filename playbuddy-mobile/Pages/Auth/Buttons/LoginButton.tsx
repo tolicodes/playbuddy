@@ -33,9 +33,9 @@ const HeaderLoginButton = ({
             onPressButton();
         } else {
             if (isProfileComplete) {
-                navigate('Profile');
+                navigate('AuthNav', { screen: 'Profile' });
             } else {
-                navigate('Auth', { skipWelcome: true });
+                navigate('AuthNav', { screen: 'Login Form' });
             }
         }
     };

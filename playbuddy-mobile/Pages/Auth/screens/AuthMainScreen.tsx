@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import AuthForm from "./AuthFormScreen";
+import LoginForm from "./LoginFormScreen";
 import { useUserContext } from '../hooks/UserContext';
-import { ProfileDetailsForm } from './AuthProfileDetailsFormScreen';
-import { WelcomeScreen } from './WelcomeScreen';
 import { NavStack } from '../../../Common/Nav/NavStackType';
 import { useNavigation } from '@react-navigation/native';
 import { PreferencesScreen } from './PreferencesScreen';
 import ErrorScreen from './ErrorScreen';
+import WelcomeScreen from './WelcomeScreen';
+import { ProfileDetailsForm } from './AuthProfileDetailsFormScreen';
 
 type AuthStep = 'welcome' | 'auth' | 'details' | 'preferences' | 'error';
 
@@ -51,9 +51,9 @@ const AuthMainScreen = () => {
     const renderStep = () => {
         switch (step) {
             case 'welcome':
-                return <WelcomeScreen onClickRegister={() => setStep('auth')} onClickSkip={onClickSkip} />;
+                return <WelcomeScreen onClickRegister={() => navigation.navigate('Login Form')} onClickSkip={onClickSkip} />;
             case 'auth':
-                return <AuthForm />;
+                return <LoginForm />;
             case 'details':
                 return <ProfileDetailsForm />;
             case 'preferences':

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
 import { useUserContext } from '../../hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../../../../Common/Nav/NavStackType';
@@ -13,6 +13,7 @@ export const WeeklyPromoList = () => {
 
     // flatten & sort events
     const mappedEvents = currentDeepLink?.deep_link_events
+        .filter((e) => new Date(e.event.start_date) > new Date())
         ?.map((e) => ({
             dateKey: new Date(e.event.start_date).toDateString(),
             dayOfWeek: new Date(e.event.start_date).toLocaleDateString('en-US', { weekday: 'short' }),
@@ -34,25 +35,25 @@ export const WeeklyPromoList = () => {
 
     const getFullEvent = (id: number) => allEvents.find((ev) => ev.id === id);
 
-    const onPressDate = (eventsForDay: typeof mappedEvents) => {
-        const full = getFullEvent(eventsForDay[0].eventId);
+    const onPressEvent = (eventId: number) => {
+        const full = getFullEvent(eventId);
         if (full) navigation.navigate('Event Details', { selectedEvent: full });
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.header}>PB's Weekly Picks</Text>
-            <TouchableOpacity
-                onPress={() => navigation.navigate('Home')}
-                style={[styles.homeButton, styles.centeredButton, styles.homeButtonHighlight]}
-            >
-                <FontAwesome name="home" size={24} color="#FFF" />
-                <Text style={styles.homeButtonText}>Take me Home</Text>
-            </TouchableOpacity>
+        <SafeAreaView>
+            <ScrollView contentContainerStyle={styles.container}>
+                <Text style={styles.header}>PB's Weekly Picks</Text>
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('Home')}
+                    style={[styles.homeButton, styles.centeredButton, styles.homeButtonHighlight]}
+                >
+                    <FontAwesome name="home" size={24} color="#FFF" />
+                    <Text style={styles.homeButtonText}>Take me Home</Text>
+                </TouchableOpacity>
 
-            {Object.entries(eventsByDate).map(([dateKey, events]) => (
-                <TouchableOpacity key={dateKey} onPress={() => onPressDate(events)}>
-                    <View style={styles.card}>
+                {Object.entries(eventsByDate).map(([dateKey, events]) => (
+                    <View key={dateKey} style={styles.card}>
                         {/* Day column */}
                         <View style={styles.dayWrapper}>
                             <Text style={styles.day}>{events[0].dayOfWeek}</Text>
@@ -62,34 +63,36 @@ export const WeeklyPromoList = () => {
                         <View style={styles.detailsColumn}>
                             {events.map((item, i) => (
                                 <React.Fragment key={item.eventId}>
-                                    <View style={styles.eventRow}>
-                                        <View style={styles.textContainer}>
-                                            <Text style={styles.eventTitle} numberOfLines={2}>
-                                                {item.title}
-                                            </Text>
-                                            <Text style={styles.organizer}>{item.organizer}</Text>
-                                            <Text style={styles.description} numberOfLines={2}>
-                                                {item.description}
-                                            </Text>
+                                    <TouchableOpacity onPress={() => onPressEvent(item.eventId)}>
+                                        <View style={styles.eventRow}>
+                                            <View style={styles.textContainer}>
+                                                <Text style={styles.eventTitle} numberOfLines={2}>
+                                                    {item.title}
+                                                </Text>
+                                                <Text style={styles.organizer}>{item.organizer}</Text>
+                                                <Text style={styles.description} numberOfLines={2}>
+                                                    {item.description}
+                                                </Text>
+                                            </View>
+                                            <View style={styles.imageWrapper}>
+                                                <Image source={{ uri: item.image }} style={styles.image} />
+                                                {item.promoCodeDiscount && (
+                                                    <View style={styles.discountBubble}>
+                                                        <Text style={styles.discountText}>{item.promoCodeDiscount}</Text>
+                                                    </View>
+                                                )}
+                                            </View>
                                         </View>
-                                        <View style={styles.imageWrapper}>
-                                            <Image source={{ uri: item.image }} style={styles.image} />
-                                            {item.promoCodeDiscount && (
-                                                <View style={styles.discountBubble}>
-                                                    <Text style={styles.discountText}>{item.promoCodeDiscount}</Text>
-                                                </View>
-                                            )}
-                                        </View>
-                                    </View>
+                                    </TouchableOpacity>
                                     {/* Separator between events */}
                                     {i < events.length - 1 && <View style={styles.separator} />}
                                 </React.Fragment>
                             ))}
                         </View>
                     </View>
-                </TouchableOpacity>
-            ))}
-        </ScrollView>
+                ))}
+            </ScrollView>
+        </SafeAreaView>
     );
 };
 
