@@ -160,6 +160,13 @@ export interface Event extends EventDataSource {
      */
     promo_codes?: PromoCode[];
 
+    /**
+     * Is this event a weekly pick?
+     */
+    weekly_pick?: boolean;
+
+    short_description?: string;
+
 }
 
 /**

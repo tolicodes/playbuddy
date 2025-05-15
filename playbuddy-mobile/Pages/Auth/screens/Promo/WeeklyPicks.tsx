@@ -7,22 +7,36 @@ import { useCalendarContext } from '../../../Calendar/hooks/CalendarContext';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 
 export const WeeklyPromoList = () => {
-    const { currentDeepLink } = useUserContext();
     const { allEvents } = useCalendarContext();
     const navigation = useNavigation<NavStack>();
 
+    const weeklyPicks = allEvents.filter((e) => e.weekly_pick);
+
     // flatten & sort events
-    const mappedEvents = currentDeepLink?.deep_link_events
-        .filter((e) => new Date(e.event.start_date) > new Date())
-        ?.map((e) => ({
-            dateKey: new Date(e.event.start_date).toDateString(),
-            dayOfWeek: new Date(e.event.start_date).toLocaleDateString('en-US', { weekday: 'short' }),
-            title: e.event.name,
-            organizer: e.event.organizer.name,
-            description: e.description,
-            image: e.event.image_url,
-            promoCodeDiscount: e.featured_promo_code ? `${e.featured_promo_code.discount}% off` : null,
-            eventId: e.event.id,
+    const mappedEvents = weeklyPicks
+        // Filter for events happening next week (Monday to Sunday)
+        .filter((e) => {
+            const eventDate = new Date(e.start_date);
+            const today = new Date();
+            const nextMonday = new Date(today);
+            nextMonday.setDate(today.getDate() + (8 - today.getDay()) % 7);
+            nextMonday.setHours(0, 0, 0, 0);
+
+            const nextSunday = new Date(nextMonday);
+            nextSunday.setDate(nextMonday.getDate() + 6);
+            nextSunday.setHours(23, 59, 59, 999);
+
+            return eventDate >= nextMonday && eventDate <= nextSunday;
+        })
+        .map((e) => ({
+            dateKey: new Date(e.start_date).toDateString(),
+            dayOfWeek: new Date(e.start_date).toLocaleDateString('en-US', { weekday: 'short' }),
+            title: e.name,
+            organizer: e.organizer.name,
+            description: e.short_description,
+            image: e.image_url,
+            promoCodeDiscount: e.promo_codes?.[0] ? `${e.promo_codes[0].discount}% off` : null,
+            eventId: e.id,
         }))
         .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime())
         || [];
