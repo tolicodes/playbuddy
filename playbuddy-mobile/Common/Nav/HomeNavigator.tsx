@@ -86,7 +86,6 @@ export function HomeStackNavigator() {
 
         // If the user doesn't have a profile, navigate to Welcome
         if (!authUserId) {
-            console.log('nav to welcome')
             navigation.navigate('AuthNav', { screen: 'Welcome' });
             return;
         }
@@ -117,7 +116,8 @@ export function HomeStackNavigator() {
             <HomeStack.Screen name="AuthNav"
                 component={AuthNav} />
             <HomeStack.Screen name="PromoScreen"
-                component={PromoScreenWrap} />
+                component={PromoScreenWrap}
+            />
             <HomeStack.Screen name="Weekly Picks"
                 component={WeeklyPicks} />
 

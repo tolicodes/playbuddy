@@ -28,16 +28,18 @@ export const WeeklyPromoList = () => {
 
             return eventDate >= nextMonday && eventDate <= nextSunday;
         })
-        .map((e) => ({
-            dateKey: new Date(e.start_date).toDateString(),
-            dayOfWeek: new Date(e.start_date).toLocaleDateString('en-US', { weekday: 'short' }),
-            title: e.name,
-            organizer: e.organizer.name,
-            description: e.short_description,
-            image: e.image_url,
-            promoCodeDiscount: e.promo_codes?.[0] ? `${e.promo_codes[0].discount}% off` : null,
-            eventId: e.id,
-        }))
+        .map((e) => {
+            return {
+                dateKey: new Date(e.start_date).toDateString(),
+                dayOfWeek: new Date(e.start_date).toLocaleDateString('en-US', { weekday: 'short' }),
+                title: e.name,
+                organizer: e.organizer.name,
+                description: e.short_description,
+                image: e.image_url,
+                promoCodeDiscount: e.promo_codes?.[0] ? `${e.promo_codes[0].discount}% off` : null,
+                eventId: e.id,
+            }
+        })
         .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime())
         || [];
 

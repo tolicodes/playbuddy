@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Image, Dimensions } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, Image, Dimensions, Linking } from 'react-native';
 import HeaderLoginButton from '../Buttons/LoginButton';
 import { getAnalyticsPropsDeepLink, logEvent } from '../../../Common/hooks/logger';
 import { usePromoCode } from './usePromoCode';
@@ -11,71 +11,92 @@ import { NavStack } from '../../../Common/Nav/NavStackType';
 
 const { width } = Dimensions.get('window');
 
-const PromoBox = ({ promoCode, communityName }: { promoCode: PromoCode, communityName: string }) => (
+// Promo message for featured community discounts
+const PromoBox = ({ promoCode, communityName }: { promoCode: PromoCode; communityName: string }) => (
     <View style={styles.promoBox}>
         <Text style={styles.promoText}>
-            🎉 Enjoy <Text style={styles.promoHighlight}>{formatDiscount(promoCode)}</Text> off <Text style={styles.promoHighlight}>{communityName}</Text> events!
+            🎉 <Text style={styles.promoHighlight}>{formatDiscount(promoCode)}</Text> off <Text style={styles.promoHighlight}>{communityName}</Text>
         </Text>
     </View>
 );
 
-const WelcomeScreen = () => {
-    const promoCode = usePromoCode();
-    const { updateSkippingWelcomeScreen } = useUserContext();
-    const navigation = useNavigation<NavStack>();
-
-    const { isSkippingWelcomeScreen } = useUserContext();
-
-    useEffect(() => {
-        if (isSkippingWelcomeScreen) {
-            navigation.navigate('Home');
-        }
-    }, [isSkippingWelcomeScreen]);
-
-    const handleRegister = () => {
-        if (promoCode?.deepLink) {
-            logEvent(UE.WelcomeScreenRegisterClicked, getAnalyticsPropsDeepLink(promoCode.deepLink));
-        }
-        navigation.navigate('Login Form');
-    };
-
-    const handleSkip = () => {
-        Alert.alert(
-            'Limited Access',
-            'You can always go back to "Login" in the Left menu to create an account'
-        );
-        updateSkippingWelcomeScreen(true);
-        navigation.navigate('Home');
-
-        if (promoCode?.deepLink) {
-            logEvent(UE.WelcomeScreenSkipped, getAnalyticsPropsDeepLink(promoCode.deepLink));
+// City availability with email fallback
+const CityAvailabilityBox = () => {
+    const onPressEmail = async () => {
+        const url = 'mailto:pb@playbuddy.me';
+        const canOpen = await Linking.canOpenURL(url);
+        if (canOpen) {
+            Linking.openURL(url);
+        } else {
+            Alert.alert(
+                'Please send your request to pb@playbuddy.me'
+            );
         }
     };
 
     return (
-        <View style={styles.container}>
-            <Image source={require('../../../assets/logo.png')} style={styles.logo} />
+        <View style={styles.cityBox}>
+            <Text style={styles.cityHeader}>🗽 NYC Only</Text>
+            <Text style={styles.cityText}>
+                Launching city by city to ensure every event is <Text style={styles.boldText}>vetted</Text> and top-quality.
+            </Text>
+            <TouchableOpacity style={styles.cityButton} onPress={onPressEmail} activeOpacity={0.7}>
+                <Text style={styles.cityButtonText}>Become a City Ambassador</Text>
+            </TouchableOpacity>
+        </View>
+    );
+};
 
+const WelcomeScreen = () => {
+    const promoCode = usePromoCode();
+    const { updateSkippingWelcomeScreen, isSkippingWelcomeScreen } = useUserContext();
+    const navigation = useNavigation<NavStack>();
+
+    useEffect(() => {
+        if (isSkippingWelcomeScreen) navigation.replace('Home');
+    }, [isSkippingWelcomeScreen]);
+
+    const handleRegister = () => {
+        if (promoCode?.deepLink) logEvent(UE.WelcomeScreenRegisterClicked, getAnalyticsPropsDeepLink(promoCode.deepLink));
+        navigation.navigate('Login Form');
+    };
+
+    const handleSkip = () => {
+        updateSkippingWelcomeScreen(true);
+        Alert.alert(
+            'Limited Access',
+            'You can always log in later from the menu to unlock all events.'
+        );
+        navigation.replace('Home');
+        if (promoCode?.deepLink) logEvent(UE.WelcomeScreenSkipped, getAnalyticsPropsDeepLink(promoCode.deepLink));
+    };
+
+    return (
+        <ScrollView contentContainerStyle={styles.container} bounces={false}>
+            <Image source={require('../../../assets/logo.png')} style={styles.logo} />
             <Text style={styles.title}>Welcome to PlayBuddy</Text>
 
             {promoCode?.featuredPromoCode && (
-                <PromoBox promoCode={promoCode.featuredPromoCode} communityName={promoCode.organizer?.name || ''} />
+                <PromoBox
+                    promoCode={promoCode.featuredPromoCode}
+                    communityName={promoCode.organizer?.name || ''}
+                />
             )}
+
+            <CityAvailabilityBox />
 
             <View style={styles.card}>
                 <Text style={styles.subtitle}>
-                    App Store policy limits{'\n'}
-                    🔥 <Text style={styles.spicyHighlight}>Spicy Events</Text> 🔥{'\n'}
-                    Create an account to unlock all!
+                    App Store policy limits{'\n'}🔥 <Text style={styles.spicy}>Spicy Events</Text> 🔥
+                    {'\n'}
+                    Create an account to unlock all events!
                 </Text>
-
                 <HeaderLoginButton size={60} showLoginText register onPressButton={handleRegister} />
-
-                <TouchableOpacity onPress={handleSkip} style={styles.skipButton}>
+                <TouchableOpacity onPress={handleSkip} style={styles.skipButton} activeOpacity={0.7}>
                     <Text style={styles.skipText}>Skip for now</Text>
                 </TouchableOpacity>
             </View>
-        </View>
+        </ScrollView>
     );
 };
 
@@ -83,93 +104,107 @@ export default WelcomeScreen;
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 24,
-        backgroundColor: 'white',
+        padding: 24,
+        backgroundColor: '#FFF',
     },
     logo: {
         width: 80,
         height: 80,
-        marginBottom: 15,
+        marginBottom: 20,
         borderRadius: 12,
     },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: '700',
         color: '#333',
-        marginBottom: 15,
+        marginBottom: 24,
         textAlign: 'center',
     },
     promoBox: {
         backgroundColor: '#D8F3DC',
-        padding: 20,
-        borderRadius: 18,
-        marginBottom: 25,
+        paddingVertical: 16,
+        paddingHorizontal: 20,
+        borderRadius: 16,
+        marginBottom: 20,
         width: width * 0.9,
-        borderLeftWidth: 7,
-        borderLeftColor: '#1B9C85',
-        shadowColor: '#1B9C85',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 3,
+        alignItems: 'center',
     },
     promoText: {
-        textAlign: 'center',
-        fontSize: 17,
+        fontSize: 18,
         color: '#1B4332',
-        lineHeight: 24,
+        textAlign: 'center',
     },
     promoHighlight: {
-        fontWeight: 'bold',
+        fontWeight: '700',
         color: '#1B9C85',
     },
+    cityBox: {
+        backgroundColor: '#EEF5FF',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 24,
+        width: width * 0.9,
+        alignItems: 'center',
+    },
+    cityHeader: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#00509D',
+        marginBottom: 6,
+    },
+    cityText: {
+        fontSize: 15,
+        color: '#333',
+        textAlign: 'center',
+        marginBottom: 12,
+    },
+    cityButton: {
+        backgroundColor: '#00509D',
+        borderRadius: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 24,
+    },
+    cityButtonText: {
+        color: '#FFF',
+        fontSize: 15,
+        fontWeight: '600',
+    },
     card: {
-        backgroundColor: '#fff',
-        padding: 26,
-        borderRadius: 22,
+        backgroundColor: '#FFF',
+        padding: 24,
+        borderRadius: 20,
         width: width * 0.9,
         shadowColor: '#000',
+        shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 9,
-        elevation: 7,
+        shadowRadius: 8,
+        elevation: 6,
         alignItems: 'center',
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
+        color: '#4C4C4C',
         textAlign: 'center',
-        marginBottom: 25,
-        lineHeight: 24,
+        marginBottom: 20,
+        lineHeight: 22,
     },
-    policyHighlight: {
-        fontWeight: '700',
-        color: '#D72638',
-    },
-    spicyHighlight: {
+    spicy: {
         fontWeight: '700',
         color: '#FF4500',
     },
     skipButton: {
-        marginTop: 22,
+        marginTop: 16,
         paddingVertical: 10,
-        paddingHorizontal: 20,
-        borderRadius: 25,
-        backgroundColor: '#f4f4f4',
     },
     skipText: {
         color: '#666',
         fontSize: 16,
         fontWeight: '500',
     },
-    subtitle: {
-        fontSize: 17,
-        color: '#4C4C4C',
-        textAlign: 'center',
-        marginBottom: 30,
-        lineHeight: 26,
+    boldText: {
+        fontWeight: 'bold',
     },
 });
