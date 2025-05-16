@@ -23,20 +23,21 @@ const PromoBox = ({ promoCode, communityName }: { promoCode: PromoCode; communit
 // City availability with email fallback
 const CityAvailabilityBox = () => {
     const onPressEmail = async () => {
-        const url = 'mailto:pb@playbuddy.me';
+        const url = `mailto:pb@playbuddy.me?subject=I%20want%20to%20become%20a%20PlayBuddy%20City%20Ambassador!&body=Here%20is%20a%20list%20of%20my%20favorite%20organizers%3A`;
         const canOpen = await Linking.canOpenURL(url);
         if (canOpen) {
             Linking.openURL(url);
         } else {
             Alert.alert(
-                'Please send your request to pb@playbuddy.me'
+                'Please send your request to pb@playbuddy.me',
+                'Subject: I want to become a PlayBuddy City Ambassador!'
             );
         }
     };
 
     return (
         <View style={styles.cityBox}>
-            <Text style={styles.cityHeader}>🗽 NYC Only</Text>
+            <Text style={styles.cityHeader}>🗽 NYC Only 🗽</Text>
             <Text style={styles.cityText}>
                 Launching city by city to ensure every event is <Text style={styles.boldText}>vetted</Text> and top-quality.
             </Text>
@@ -83,11 +84,10 @@ const WelcomeScreen = () => {
                 />
             )}
 
-            <CityAvailabilityBox />
-
             <View style={styles.card}>
                 <Text style={styles.subtitle}>
-                    App Store policy limits{'\n'}🔥 <Text style={styles.spicy}>Spicy Events</Text> 🔥
+                    App Store policy limits
+                    {'\n'}🔥 <Text style={styles.spicy}>Spicy Events</Text> 🔥
                     {'\n'}
                     Create an account to unlock all events!
                 </Text>
@@ -96,6 +96,9 @@ const WelcomeScreen = () => {
                     <Text style={styles.skipText}>Skip for now</Text>
                 </TouchableOpacity>
             </View>
+
+            <CityAvailabilityBox />
+
         </ScrollView>
     );
 };
@@ -148,6 +151,7 @@ const styles = StyleSheet.create({
         marginBottom: 24,
         width: width * 0.9,
         alignItems: 'center',
+        marginTop: 20,
     },
     cityHeader: {
         fontSize: 18,
