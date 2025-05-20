@@ -196,14 +196,14 @@ export const SwipeMode = () => {
                     },
                 }}
             />
-            {/* <View style={styles.undoButtonContainer}>
+            <View style={styles.undoButtonContainer}>
                 <Button
                     icon={<Icon name="undo" size={24} color="white" />}
                     onPress={undoSwipe}
                     buttonStyle={styles.undoButton}
                     disabled={swipedCards.length === 0}
                 />
-            </View> */}
+            </View>
         </View>
     );
 };
