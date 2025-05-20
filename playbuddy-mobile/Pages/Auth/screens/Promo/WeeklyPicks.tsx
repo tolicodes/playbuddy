@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useUserContext } from '../../hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../../../../Common/Nav/NavStackType';
 import { useCalendarContext } from '../../../Calendar/hooks/CalendarContext';
@@ -26,7 +25,7 @@ export const WeeklyPromoList = () => {
             nextSunday.setDate(nextMonday.getDate() + 6);
             nextSunday.setHours(23, 59, 59, 999);
 
-            return eventDate >= nextMonday && eventDate <= nextSunday;
+            return eventDate >= new Date() && eventDate <= nextSunday;
         })
         .map((e) => {
             return {
