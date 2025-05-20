@@ -91,7 +91,8 @@
     "react-native-walkthrough-tooltip": "^1.6.0",
     "react-native-webview": "13.8.6",
     "url-parse": "^1.5.10",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "expo-linear-gradient": "~13.0.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

@@ -310,7 +310,7 @@ export const EventDetail = ({ route }) => {
                         </TouchableOpacity>
                     )}
 
-                    <Markdown>{selectedEvent.description}</Markdown>
+                    <Markdown>{selectedEvent.description.replace('\n', '\n\n')}</Markdown>
                 </View>
             </ScrollView>
         </>

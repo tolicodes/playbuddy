@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Linking } from 'react-native';
+import { View, Text, StyleSheet, Linking, Dimensions } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
-import { Image } from 'expo-image'
+import { Image } from 'expo-image';
 import { useCalendarContext } from './Calendar/hooks/CalendarContext';
 import { formatDate } from './Calendar/hooks/calendarUtils';
 import { Event } from '../commonTypes';
@@ -13,6 +13,9 @@ import { Button } from '@rneui/themed';
 import { getSmallAvatarUrl } from '../Common/hooks/imageUtils';
 import { logEvent } from '../Common/hooks/logger';
 import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+
+const CARD_HEIGHT = Dimensions.get('window').height * 0.6;
 
 export const SwipeMode = () => {
     const { availableCardsToSwipe } = useCalendarContext();
@@ -20,14 +23,17 @@ export const SwipeMode = () => {
 
     useBadgeNotifications({ availableCardsToSwipe });
 
-    const { toggleWishlistEvent } = useCalendarContext(); // use the hook to handle wishlist
+    const { toggleWishlistEvent } = useCalendarContext();
 
     const recordSwipe = useRecordSwipeChoice();
 
     const [initialCards, setInitialCards] = useState(availableCardsToSwipe);
+    const [swipedCards, setSwipedCards] = useState([]);
+    const [swiperRef, setSwiperRef] = useState(null);
+
     useEffect(() => {
         setInitialCards(availableCardsToSwipe);
-    }, [])
+    }, []);
 
     const onSwipeRight = (cardIndex: number) => {
         const eventId = initialCards[cardIndex].id;
@@ -39,6 +45,8 @@ export const SwipeMode = () => {
             choice: 'wishlist',
             list: 'main',
         });
+
+        setSwipedCards([...swipedCards, { index: cardIndex, direction: 'right' }]);
 
         logEvent('swipe_mode_swipe_right', { event_id: eventId, event_name: initialCards[cardIndex].name });
     };
@@ -52,14 +60,29 @@ export const SwipeMode = () => {
             list: 'main',
         });
 
+        setSwipedCards([...swipedCards, { index: cardIndex, direction: 'left' }]);
+
         logEvent('swipe_mode_swipe_left', { event_id: eventId, event_name: initialCards[cardIndex].name });
+    };
+
+    const undoSwipe = () => {
+        if (swipedCards.length > 0) {
+            const lastSwipe = swipedCards[swipedCards.length - 1];
+            swiperRef.swipeBack();
+            setSwipedCards(swipedCards.slice(0, -1));
+
+            if (lastSwipe.direction === 'right') {
+                const eventId = initialCards[lastSwipe.index].id;
+                toggleWishlistEvent.mutate({ eventId, isOnWishlist: false });
+            }
+
+            logEvent('swipe_mode_undo', { event_id: initialCards[lastSwipe.index].id });
+        }
     };
 
     const renderCard = (event: Event) => {
         if (!event) {
-            return (
-                <NoEventsToSwipe />
-            )
+            return <NoEventsToSwipe />;
         }
 
         const eventPromoCode = event.promo_codes?.find(code => code.scope === 'event');
@@ -71,28 +94,26 @@ export const SwipeMode = () => {
             <View style={styles.promoCodeBadge}>
                 <Text style={styles.promoCodeText}>
                     Promo Code: {promoCode.promo_code}&nbsp;
-
                 </Text>
                 <Text style={styles.promoCodeText}>
                     {promoCode.discount_type === 'percent' ? '' : '$'}
                     {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : ''} off
                 </Text>
             </View>
-        )
+        );
 
-        // TODO: find out why event is not always available
         const imageUrl = event?.image_url && getSmallAvatarUrl(event?.image_url);
 
         const openUrl = (eventUrl: string) => {
-            Linking.openURL(eventUrl)
-        }
+            Linking.openURL(eventUrl);
+        };
 
         return (
             <View style={styles.card}>
                 <Image source={{ uri: imageUrl }} style={styles.image} />
-                <View style={styles.cardContent}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{moment(event?.start_date).format('dddd')}</Text>
-                    <Text >{moment(event?.start_date).format('MMM D')} {formatDate(event)}</Text>
+                <View style={styles.textOverlay}>
+                    <Text style={styles.dateTextCenter}>{moment(event?.start_date).format('dddd')}</Text>
+                    <Text style={styles.dateTextCenter}>{moment(event?.start_date).format('MMM D')} {formatDate(event)}</Text>
 
                     {PromoCode}
 
@@ -106,43 +127,39 @@ export const SwipeMode = () => {
 
                     <Text style={styles.organizer}>{event?.organizer?.name}</Text>
 
-                    {/* {event.sharedBuddies && (
-                        <View style={styles.buddyAvatarCarouselContainer}>
-                            <BuddyAvatarCarousel buddies={event.sharedBuddies} />
-                        </View>
-                    )} */}
-
                     <Button
                         title="Get Tickets"
+                        buttonStyle={styles.button}
                         onPress={() => {
                             openUrl(event.event_url);
                             logEvent('swipe_mode_more_info_click', { eventId: event.id });
                         }}
-
                     />
                 </View>
             </View>
         );
-    }
+    };
 
     if (!authUserId) {
-        return <LoginToAccess entityToAccess='Swipe Mode' />
+        return <LoginToAccess entityToAccess='Swipe Mode' />;
     }
 
     const NoEventsToSwipe = () => {
-        return <View style={styles.container}>
-            <Text>You're done swiping for today! Go have fun!</Text>
-        </View>
-    }
+        return (
+            <View style={styles.container}>
+                <Text style={styles.textCenter}>You're done swiping for today! Go have fun!</Text>
+            </View>
+        );
+    };
 
     if (!availableCardsToSwipe.length) {
-        return <NoEventsToSwipe />
+        return <NoEventsToSwipe />;
     }
-
 
     return (
         <View style={styles.container}>
             <Swiper
+                ref={swiper => setSwiperRef(swiper)}
                 cards={initialCards}
                 renderCard={renderCard}
                 onSwipedRight={onSwipeRight}
@@ -160,7 +177,7 @@ export const SwipeMode = () => {
                                 fontSize: 24,
                                 borderRadius: 5,
                                 padding: 10,
-                                textAlign: 'right',
+                                textAlign: 'center',
                             },
                         },
                     },
@@ -173,14 +190,22 @@ export const SwipeMode = () => {
                                 fontSize: 24,
                                 borderRadius: 5,
                                 padding: 10,
+                                textAlign: 'center',
                             },
                         },
                     },
                 }}
             />
-
+            {/* <View style={styles.undoButtonContainer}>
+                <Button
+                    icon={<Icon name="undo" size={24} color="white" />}
+                    onPress={undoSwipe}
+                    buttonStyle={styles.undoButton}
+                    disabled={swipedCards.length === 0}
+                />
+            </View> */}
         </View>
-    )
+    );
 };
 
 const styles = StyleSheet.create({
@@ -192,7 +217,7 @@ const styles = StyleSheet.create({
     },
     card: {
         width: '100%',
-        height: 600,
+        height: CARD_HEIGHT,
         borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
@@ -201,44 +226,56 @@ const styles = StyleSheet.create({
         elevation: 10,
         backgroundColor: '#fff',
         overflow: 'hidden',
-        padding: 10,
-        borderColor: '#ddd',
-        borderWidth: 1,
     },
     image: {
         width: '100%',
-        height: 200,
-        borderTopLeftRadius: 10,
-        borderTopRightRadius: 10,
+        height: '100%',
+        position: 'absolute',
+        borderRadius: 10,
     },
-    cardContent: {
+    textOverlay: {
+        position: 'absolute',
+        bottom: 0,
+        width: '100%',
         padding: 20,
-        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    },
+    dateTextCenter: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
+        textAlign: 'center',
+        fontFamily: 'Avenir-Heavy',
     },
     eventName: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        color: '#333',
+        color: '#fff',
         textAlign: 'center',
-        marginTop: 20
+        marginTop: 10,
+        fontFamily: 'Avenir-Heavy',
     },
     organizer: {
         fontSize: 16,
-        color: '#555',
-        marginBottom: 20,
+        color: '#fff',
+        marginBottom: 10,
+        textAlign: 'center',
+        fontFamily: 'Avenir-Book',
     },
     promoCodeBadge: {
         backgroundColor: '#FFD700',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 12,
-        marginVertical: 10
+        marginVertical: 10,
+        textAlign: 'center',
     },
     promoCodeText: {
         fontSize: 12,
         color: 'black',
         fontWeight: 'bold',
-        textAlign: 'center'
+        textAlign: 'center',
+        fontFamily: 'Avenir-Book',
     },
     privateBadge: {
         backgroundColor: '#FF6B6B',
@@ -251,9 +288,29 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 12,
         fontWeight: 'bold',
+        textAlign: 'center',
+        fontFamily: 'Avenir-Book',
     },
-    buddyAvatarCarouselContainer: {
-        flex: 1,
-        marginLeft: 10
+    button: {
+        backgroundColor: '#007bff',
+        borderRadius: 20,
+        paddingHorizontal: 30,
+        paddingVertical: 10,
+        marginTop: 10,
+        fontFamily: 'Avenir-Book',
+    },
+    textCenter: {
+        textAlign: 'center',
+    },
+    undoButtonContainer: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+    },
+    undoButton: {
+        backgroundColor: '#007bff',
+        borderRadius: 30,
+        width: 60,
+        height: 60,
     },
 });
