@@ -12,6 +12,7 @@ import { View } from "react-native";
 import Moar from "../../Pages/Moar";
 import LoginFormScreen from "../../Pages/Auth/screens/LoginFormScreen";
 import { NavStack } from "./NavStackType";
+import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
 
 const Drawer = createDrawerNavigator();
 
@@ -62,6 +63,16 @@ export const DrawerNav = () => {
                 options={{
                     drawerIcon: getIcon('campground'),
                     ...headerOptions({ navigation, title: 'Retreats' }),
+
+                }}
+            />
+
+            <Drawer.Screen
+                name="Weekly Picks"
+                component={WeeklyPicks}
+                options={{
+                    drawerIcon: getIcon('calendar-week'),
+                    ...headerOptions({ navigation, title: 'PB\'s Weekly Picks' }),
 
                 }}
             />

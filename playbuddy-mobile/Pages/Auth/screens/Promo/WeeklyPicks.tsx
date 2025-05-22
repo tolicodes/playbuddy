@@ -1,80 +1,116 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../../../../Common/Nav/NavStackType';
 import { useCalendarContext } from '../../../Calendar/hooks/CalendarContext';
-import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
-export const WeeklyPromoList = () => {
+export const WeeklyPicks = () => {
     const { allEvents } = useCalendarContext();
     const navigation = useNavigation<NavStack>();
+    const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+    const [weekDates, setWeekDates] = useState<string[]>([]);
+    const [visibleWeeks, setVisibleWeeks] = useState<number[]>([]);
 
-    const weeklyPicks = allEvents.filter((e) => e.weekly_pick);
+    useEffect(() => {
+        const generateWeekDates = () => {
+            const dates = [];
+            for (let i = 0; i < 3; i++) {
+                const start = startOfWeek(addWeeks(new Date(), i), { weekStartsOn: 1 });
+                const end = endOfWeek(start, { weekStartsOn: 1 });
+                dates.push(`${format(start, 'MMM d')} - ${format(end, 'MMM d')}${i === 0 ? ' (this week)' : ''}`);
+            }
+            setWeekDates(dates);
+        };
+        generateWeekDates();
+    }, []);
 
-    // flatten & sort events
-    const mappedEvents = weeklyPicks
-        // Filter for events happening next week (Monday to Sunday)
-        .filter((e) => {
-            const eventDate = new Date(e.start_date);
-            const today = new Date();
-            const nextMonday = new Date(today);
-            nextMonday.setDate(today.getDate() + (8 - today.getDay()) % 7);
-            nextMonday.setHours(0, 0, 0, 0);
+    useEffect(() => {
+        const visibleWeeks = weekDates.reduce((acc, _, index) => {
+            if (getWeeklyPicks(index).length > 0) {
+                acc.push(index);
+            }
+            return acc;
+        }, [] as number[]);
+        setVisibleWeeks(visibleWeeks);
+        if (visibleWeeks.length > 0 && !visibleWeeks.includes(currentWeekOffset)) {
+            setCurrentWeekOffset(visibleWeeks[0]);
+        }
+    }, [weekDates, allEvents]);
 
-            const nextSunday = new Date(nextMonday);
-            nextSunday.setDate(nextMonday.getDate() + 6);
-            nextSunday.setHours(23, 59, 59, 999);
+    const getWeeklyPicks = (weekOffset: number) => {
+        const startDate = startOfWeek(addWeeks(new Date(), weekOffset), { weekStartsOn: 1 });
+        const endDate = endOfWeek(startDate, { weekStartsOn: 1 });
 
-            return eventDate >= new Date() && eventDate <= nextSunday;
-        })
-        .map((e) => {
-            return {
-                dateKey: new Date(e.start_date).toDateString(),
-                dayOfWeek: new Date(e.start_date).toLocaleDateString('en-US', { weekday: 'short' }),
+        return allEvents
+            .filter((e) => e.weekly_pick)
+            .filter((e) => {
+                const eventDate = new Date(e.start_date);
+                return eventDate >= startDate && eventDate <= endDate;
+            })
+            .map((e) => ({
+                dateKey: format(new Date(e.start_date), 'yyyy-MM-dd'),
+                dayOfWeek: format(new Date(e.start_date), 'EEE'),
                 title: e.name,
                 organizer: e.organizer.name,
                 description: e.short_description,
                 image: e.image_url,
                 promoCodeDiscount: e.promo_codes?.[0] ? `${e.promo_codes[0].discount}% off` : null,
                 eventId: e.id,
-            }
-        })
-        .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime())
-        || [];
+            }))
+            .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());
+    };
 
-    // group by date
-    const eventsByDate = mappedEvents.reduce<Record<string, typeof mappedEvents>>((acc, ev) => {
+    const eventsByDate = getWeeklyPicks(currentWeekOffset).reduce<Record<string, any[]>>((acc, ev) => {
         (acc[ev.dateKey] = acc[ev.dateKey] || []).push(ev);
         return acc;
     }, {});
 
-    const getFullEvent = (id: number) => allEvents.find((ev) => ev.id === id);
-
     const onPressEvent = (eventId: number) => {
-        const full = getFullEvent(eventId);
+        const full = allEvents.find((ev) => ev.id === eventId);
         if (full) navigation.navigate('Event Details', { selectedEvent: full });
     };
 
-    return (
-        <SafeAreaView>
-            <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.header}>PB's Weekly Picks</Text>
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('Home')}
-                    style={[styles.homeButton, styles.centeredButton, styles.homeButtonHighlight]}
-                >
-                    <FontAwesome name="home" size={24} color="#FFF" />
-                    <Text style={styles.homeButtonText}>Take me Home</Text>
-                </TouchableOpacity>
+    const handlePrevWeek = () => {
+        const prevWeekIndex = visibleWeeks.findIndex(week => week === currentWeekOffset) - 1;
+        if (prevWeekIndex >= 0) {
+            setCurrentWeekOffset(visibleWeeks[prevWeekIndex]);
+        }
+    };
 
+    const handleNextWeek = () => {
+        const nextWeekIndex = visibleWeeks.findIndex(week => week === currentWeekOffset) + 1;
+        if (nextWeekIndex < visibleWeeks.length) {
+            setCurrentWeekOffset(visibleWeeks[nextWeekIndex]);
+        }
+    };
+
+    if (visibleWeeks.length === 0) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.noEventsText}>No events available for the next few weeks.</Text>
+            </View>
+        );
+    }
+
+    return (
+        <View style={styles.container}>
+            <View style={styles.weekSelector}>
+                <TouchableOpacity onPress={handlePrevWeek} disabled={currentWeekOffset === visibleWeeks[0]}>
+                    <Ionicons name="chevron-back" size={24} color={currentWeekOffset === visibleWeeks[0] ? '#CCC' : '#6A1B9A'} />
+                </TouchableOpacity>
+                <Text style={styles.weekText}>{weekDates[currentWeekOffset]}</Text>
+                <TouchableOpacity onPress={handleNextWeek} disabled={currentWeekOffset === visibleWeeks[visibleWeeks.length - 1]}>
+                    <Ionicons name="chevron-forward" size={24} color={currentWeekOffset === visibleWeeks[visibleWeeks.length - 1] ? '#CCC' : '#6A1B9A'} />
+                </TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={styles.eventsContainer}>
                 {Object.entries(eventsByDate).map(([dateKey, events]) => (
                     <View key={dateKey} style={styles.card}>
-                        {/* Day column */}
                         <View style={styles.dayWrapper}>
                             <Text style={styles.day}>{events[0].dayOfWeek}</Text>
                         </View>
-
-                        {/* All events that day */}
                         <View style={styles.detailsColumn}>
                             {events.map((item, i) => (
                                 <React.Fragment key={item.eventId}>
@@ -99,7 +135,6 @@ export const WeeklyPromoList = () => {
                                             </View>
                                         </View>
                                     </TouchableOpacity>
-                                    {/* Separator between events */}
                                     {i < events.length - 1 && <View style={styles.separator} />}
                                 </React.Fragment>
                             ))}
@@ -107,44 +142,27 @@ export const WeeklyPromoList = () => {
                     </View>
                 ))}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        paddingBottom: 32,
+        flex: 1,
     },
-    header: {
-        fontSize: 24,
-        fontWeight: '700',
-        textAlign: 'center',
-        marginVertical: 10,
-        color: '#2D005F',
-    },
-    homeButton: {
+    weekSelector: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#6A1B9A',
-        padding: 12,
-        borderRadius: 12,
-        marginHorizontal: 16,
-        marginBottom: 14,
+        paddingHorizontal: 20,
+        paddingVertical: 20,
     },
-    homeButtonHighlight: {
-        backgroundColor: '#8E24AA',
-        borderWidth: 2,
-        borderColor: '#FFF',
+    weekText: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#6A1B9A',
     },
-    homeButtonText: {
-        marginLeft: 8,
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#FFF',
-    },
-    centeredButton: {
-        alignSelf: 'center',
+    eventsContainer: {
     },
     card: {
         flexDirection: 'row',
@@ -222,5 +240,11 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 12,
         fontWeight: '600',
+    },
+    noEventsText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 20,
+        color: '#666',
     },
 });

@@ -118,8 +118,6 @@ export function HomeStackNavigator() {
             <HomeStack.Screen name="PromoScreen"
                 component={PromoScreenWrap}
             />
-            <HomeStack.Screen name="Weekly Picks"
-                component={WeeklyPicks} />
 
             <HomeStack.Screen name="Event Details"
                 options={headerOptions({ navigation, title: 'Event Details' })}
