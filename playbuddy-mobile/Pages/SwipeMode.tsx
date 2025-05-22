@@ -167,6 +167,8 @@ export const SwipeMode = () => {
                 backgroundColor={'#f8f9fa'}
                 stackSize={3}
                 verticalSwipe={false}
+                cardIndex={0}
+                stackSeparation={20}
                 overlayLabels={{
                     left: {
                         title: 'SKIP',
@@ -221,11 +223,13 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 6 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 10,
+        shadowOpacity: 0.3,
+        shadowRadius: 15,
+        elevation: 15,
         backgroundColor: '#fff',
         overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#ddd',
     },
     image: {
         width: '100%',
