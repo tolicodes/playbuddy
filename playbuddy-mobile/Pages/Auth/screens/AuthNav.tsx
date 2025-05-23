@@ -14,7 +14,11 @@ const AuthNav = () => {
     const navigation = useNavigation<NavStack>();
     return (
         <AuthStack.Navigator>
-            <AuthStack.Screen name="Welcome" component={WelcomeScreen} />
+            <AuthStack.Screen name="Welcome" component={WelcomeScreen} options={
+                {
+                    headerShown: false,
+                }
+            } />
             <AuthStack.Screen name="Login Form" component={LoginFormScreen} options={
                 headerOptions({ navigation, title: 'Login' })
             } />
