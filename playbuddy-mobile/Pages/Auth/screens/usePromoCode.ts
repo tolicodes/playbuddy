@@ -1,6 +1,5 @@
 import { useUserContext } from "../hooks/UserContext";
 import { Organizer, PromoCode, Event, DeepLink } from "../../../commonTypes";
-import { useMemo } from "react";
 
 export const usePromoCode = (): {
     featuredPromoCode: PromoCode;
