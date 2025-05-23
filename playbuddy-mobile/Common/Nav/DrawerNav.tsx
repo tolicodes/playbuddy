@@ -54,7 +54,7 @@ export const DrawerNav = () => {
                 name="Promos"
                 component={PromosScreen}
                 options={{
-                    ...headerOptions({ navigation, title: 'All Promos' }),
+                    ...headerOptions({ navigation, title: 'Promos' }),
                     drawerIcon: ({ size }) => (
                         <View style={{ flexDirection: 'column', alignItems: 'center', width: size + 5, height: size + 5 }}>
                             <FAIcon name="ticket-alt" size={size} color="#FFD700" />
