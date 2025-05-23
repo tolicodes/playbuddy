@@ -13,7 +13,7 @@ import Moar from "../../Pages/Moar";
 import LoginFormScreen from "../../Pages/Auth/screens/LoginFormScreen";
 import { NavStack } from "./NavStackType";
 import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
-import { AllPromos } from "../../Pages/Auth/screens/Promo/AllPromos";
+import { PromosScreen } from "../../Pages/Auth/screens/Promo/PromosScreen";
 
 const Drawer = createDrawerNavigator();
 
@@ -51,8 +51,8 @@ export const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name="All Promos"
-                component={AllPromos}
+                name="Promos"
+                component={PromosScreen}
                 options={{
                     ...headerOptions({ navigation, title: 'All Promos' }),
                     drawerIcon: ({ size }) => (
