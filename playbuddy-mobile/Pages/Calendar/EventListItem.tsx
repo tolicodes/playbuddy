@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Share, Linking } from 'react-native';
 import { Image } from 'expo-image';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import IonIcon from 'react-native-vector-icons/Ionicons';
 import { Event, UE } from '../../commonTypes';
 import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import { useCalendarContext } from './hooks/CalendarContext';
@@ -12,6 +11,7 @@ import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from '../../Common/hooks/logger';
 import { Buddy } from '../Buddies/hooks/BuddiesContext';
 import { TicketPromoModal } from './TicketPromoModal';
+import { getEventPromoCodes } from '../Auth/screens/usePromoCode';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -24,6 +24,8 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
     const { currentDeepLink } = useUserContext();
+
+    const promoCode = getEventPromoCodes(item)?.[0];
 
     const formattedDate = formatDate(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
@@ -56,21 +58,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     };
 
 
-
-    // Share the ticket URL via the Share menu.
-    const handlePressShare = async () => {
-        if (item.ticket_url) {
-            await Share.share({ message: item.ticket_url });
-            logEvent(UE.EventListItemSharePressed, {
-                auth_user_id: authUserId ?? '',
-                ...getAnalyticsPropsEvent(item),
-                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-                ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-            });
-
-        }
-    };
-
     const handleModalCopyPromoCode = () => {
         logEvent(UE.EventListItemPromoModalPromoCopied, {
             auth_user_id: authUserId ?? '',
@@ -80,34 +67,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
         });
     };
 
-    // Determine promo code from event or organizer.
-    const eventPromoCode = item.promo_codes?.find(code => code.scope === 'event');
-    const organizerPromoCode = item.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const featuredPromoCode = currentDeepLink?.featured_event?.id === item.id ? currentDeepLink?.featured_promo_code : null;
-    const promoCode = featuredPromoCode || eventPromoCode || organizerPromoCode;
-
     const [discountModalVisible, setDiscountModalVisible] = useState(false);
-
-    // Open the ticket URL directly.
-    const handlePressTickets = () => {
-        if (!promoCode) {
-            Linking.openURL(item.ticket_url);
-            logEvent(UE.EventListItemTicketPressed, {
-                auth_user_id: authUserId,
-                ...getAnalyticsPropsEvent(item),
-                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-                ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-            });
-        } else {
-            setDiscountModalVisible(true);
-            logEvent(UE.EventListItemDiscountModalOpened, {
-                auth_user_id: authUserId,
-                ...getAnalyticsPropsEvent(item),
-                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-                ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-            });
-        }
-    };
 
     return (
         <>
@@ -156,7 +116,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                             </View>
                             {/* Title Row */}
                             <View style={styles.titleAndDiscountRow}>
-                                <Text style={styles.eventTitle} numberOfLines={1}>
+                                <Text style={styles.eventTitle} numberOfLines={2}>
                                     {item.name}
                                 </Text>
                                 {promoCode && (
@@ -175,28 +135,13 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                             </View>
                         </View>
                     </View>
-                    {/* Button Row */}
-                    <View style={styles.buttonRow}>
-                        <TouchableOpacity style={styles.button} onPress={handlePressEvent}>
-                            <FAIcon name="info-circle" size={16} color="#888" style={styles.buttonIcon} />
-                            <Text style={styles.buttonText}>Details</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.button} onPress={handlePressShare}>
-                            <IonIcon name="share-social" size={16} color="#888" style={styles.buttonIcon} />
-                            <Text style={styles.buttonText}>Share</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.button} onPress={handlePressTickets}>
-                            <FAIcon name="ticket" size={16} color="#888" style={styles.buttonIcon} />
-                            <Text style={styles.buttonText}>Tickets</Text>
-                        </TouchableOpacity>
-                    </View>
                 </View>
             </TouchableOpacity>
         </>
     );
 };
 
-export const ITEM_HEIGHT = 150;
+export const ITEM_HEIGHT = 120;
 
 const styles = StyleSheet.create({
     wrapper: {
