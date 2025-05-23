@@ -13,6 +13,7 @@ import Moar from "../../Pages/Moar";
 import LoginFormScreen from "../../Pages/Auth/screens/LoginFormScreen";
 import { NavStack } from "./NavStackType";
 import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
+import { AllPromos } from "../../Pages/Auth/screens/Promo/AllPromos";
 
 const Drawer = createDrawerNavigator();
 
@@ -50,22 +51,18 @@ export const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name={isDefaultsComplete ? "Profile" : "Login"}
+                name="All Promos"
+                component={AllPromos}
                 options={{
-                    drawerIcon: getIcon('user'),
-                    ...headerOptions({ navigation, title: isDefaultsComplete ? "Profile" : "Login" }),
+                    ...headerOptions({ navigation, title: 'All Promos' }),
+                    drawerIcon: ({ size }) => (
+                        <View style={{ flexDirection: 'column', alignItems: 'center', width: size + 5, height: size + 5 }}>
+                            <FAIcon name="ticket-alt" size={size} color="#FFD700" />
+                        </View>
+                    ),
                 }}
-                component={isDefaultsComplete ? ProfileScreen : LoginFormScreen}
             />
-            <Drawer.Screen
-                name="Retreats"
-                component={Retreats}
-                options={{
-                    drawerIcon: getIcon('campground'),
-                    ...headerOptions({ navigation, title: 'Retreats' }),
 
-                }}
-            />
 
             <Drawer.Screen
                 name="Weekly Picks"
@@ -73,6 +70,25 @@ export const DrawerNav = () => {
                 options={{
                     drawerIcon: getIcon('calendar-week'),
                     ...headerOptions({ navigation, title: 'PB\'s Weekly Picks' }),
+
+                }}
+            />
+
+            <Drawer.Screen
+                name={isDefaultsComplete ? "Profile" : "Login"}
+                options={{
+                    drawerIcon: getIcon('user'),
+                    ...headerOptions({ navigation, title: isDefaultsComplete ? "Profile" : "Login" }),
+                }}
+                component={isDefaultsComplete ? ProfileScreen : LoginFormScreen}
+            />
+
+            <Drawer.Screen
+                name="Retreats"
+                component={Retreats}
+                options={{
+                    drawerIcon: getIcon('campground'),
+                    ...headerOptions({ navigation, title: 'Retreats' }),
 
                 }}
             />
