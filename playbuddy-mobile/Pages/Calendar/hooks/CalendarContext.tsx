@@ -95,11 +95,11 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         const withoutExplicit = removeExplicitEvents(filtered);
 
         // comment this in if we are releasing to apple
-        // return authUserId && authUserId !== APPLE_USER_ID
-        //     ? filtered
-        //     : withoutExplicit;
+        return authUserId && authUserId !== APPLE_USER_ID
+            ? filtered
+            : withoutExplicit;
 
-        return filtered;
+        // return filtered;
     }, [eventsWithMetadata, filters, authUserId, selectedLocationAreaId, selectedCommunityId]);
 
     const availableCardsToSwipe = useMemo(() => {
