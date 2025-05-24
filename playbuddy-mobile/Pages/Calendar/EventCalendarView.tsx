@@ -24,6 +24,7 @@ import { logEvent } from '../../Common/hooks/logger';
 import { MISC_URLS } from '../../config';
 import { Calendar } from 'react-native-calendars';
 import { EventWithMetadata } from '../../Common/Nav/NavStackType';
+import { FeedbackInviteModal } from '../FeedbackInviteModal';
 
 const WEEK_HEIGHT = 70;
 const MONTH_HEIGHT = 300;
@@ -32,6 +33,7 @@ interface EventCalendarViewProps {
     isOnWishlist?: boolean;
     events?: EventWithMetadata[];
 }
+
 
 const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = false, events }) => {
     const { filters, setFilters, filteredEvents, wishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
@@ -132,6 +134,7 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
     return (
         <View style={styles.container}>
             {!authUserId && <WebsiteBanner />}
+            <FeedbackInviteModal />
 
             {/* Top Bar */}
             <View style={styles.topBar}>
