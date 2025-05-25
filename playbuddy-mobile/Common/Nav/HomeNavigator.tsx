@@ -8,7 +8,6 @@ import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
 import EventDetail from '../../Pages/Calendar/EventDetail';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
-import { WeeklyPromoList as WeeklyPicks } from '../../Pages/Auth/screens/Promo/WeeklyPicks';
 import AuthNav from '../../Pages/Auth/screens/AuthNav';
 import { headerOptions } from '../Header/Header';
 

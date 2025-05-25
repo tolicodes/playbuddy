@@ -107,10 +107,19 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
     const hasEventsOnDay = (day: Date | string) =>
         eventsLocalFiltered.some(event => isSameDayNY(event.start_date, day));
 
-    const goToPrev = () =>
-        setCurrentDate(prev => (isCalendarExpanded ? subWeeks(prev, 4) : subWeeks(prev, 1)));
-    const goToNext = () =>
-        setCurrentDate(prev => (isCalendarExpanded ? addWeeks(prev, 4) : addWeeks(prev, 1)));
+    const goToPrev = () => {
+        const prevDate = isCalendarExpanded ? subWeeks(currentDate, 4) : subWeeks(currentDate, 1);
+
+        setCurrentDate(prevDate);
+        setSelectedDate(prevDate);
+        scrollToDate(prevDate);
+    };
+    const goToNext = () => {
+        const nextDate = isCalendarExpanded ? addWeeks(currentDate, 4) : addWeeks(currentDate, 1);
+        setCurrentDate(nextDate);
+        setSelectedDate(nextDate);
+        scrollToDate(nextDate);
+    };
 
     const debounce = (func: (query: string) => void, delay: number) => {
         let timeout: NodeJS.Timeout;
@@ -164,11 +173,11 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
             {/* Month + Arrows */}
             {!isCalendarExpanded && (
                 <View style={styles.monthHeader}>
-                    <TouchableOpacity onPress={goToPrev}>
+                    <TouchableOpacity onPress={goToPrev} style={styles.monthHeaderButton}>
                         <FAIcon name="chevron-left" size={20} color="#333" />
                     </TouchableOpacity>
                     <Text style={styles.monthText}>{format(currentDate, 'MMMM yyyy')}</Text>
-                    <TouchableOpacity onPress={goToNext}>
+                    <TouchableOpacity onPress={goToNext} style={styles.monthHeaderButton}>
                         <FAIcon name="chevron-right" size={20} color="#333" />
                     </TouchableOpacity>
                 </View>
@@ -309,7 +318,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 16,
-        paddingVertical: 10,
         backgroundColor: '#fff',
     },
     monthText: { fontSize: 18, fontWeight: '600', color: '#333' },
@@ -369,5 +377,8 @@ const styles = StyleSheet.create({
     weekDayNumberSelected: {
         color: '#fff',
     },
+    monthHeaderButton: {
+        paddingHorizontal: 8,
+    }
 
 });
