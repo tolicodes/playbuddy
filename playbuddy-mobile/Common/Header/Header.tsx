@@ -9,9 +9,13 @@ import { logEvent } from "../hooks/logger";
 import { UE } from "../../commonTypes";
 
 // Custom Back Button
-export const CustomBackButton = ({ navigation }: { navigation: NavStack }) => {
+export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
     const onPress = () => {
-        navigation.goBack();
+        if (backToWelcome) {
+            navigation.navigate('AuthNav', { screen: 'Welcome' });
+        } else {
+            navigation.goBack();
+        }
         logEvent(UE.HeaderBackButtonClicked);
     };
 
@@ -59,9 +63,9 @@ const HeaderTitleText = ({ title }: { title: string }) => {
 };
 
 // Header Left Section (Button + Title)
-const HeaderLeft = ({ navigation, isRootScreen, title }: { navigation: NavStack, isRootScreen: boolean, title: string }) => (
+const HeaderLeft = ({ navigation, isRootScreen, title, backToWelcome }: { navigation: NavStack, isRootScreen: boolean, title: string, backToWelcome?: boolean }) => (
     <View style={styles.headerLeftContainer}>
-        {isRootScreen ? <CustomDrawerButton navigation={navigation} /> : <CustomBackButton navigation={navigation} />}
+        {isRootScreen ? <CustomDrawerButton navigation={navigation} /> : <CustomBackButton navigation={navigation} backToWelcome={backToWelcome} />}
         <HeaderTitleText title={title} />
     </View>
 );
@@ -78,10 +82,10 @@ export const HeaderRight = () => {
 };
 
 // Smart Header Options (auto Drawer vs Back detection)
-export const headerOptions = ({ navigation, title, isRootScreen = false }: { navigation: NavStack, title: string, isRootScreen?: boolean }) => {
+export const headerOptions = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
     return {
         headerTitle: '',
-        headerLeft: () => <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={title} />,
+        headerLeft: () => <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={title} backToWelcome={backToWelcome} />,
         headerRight: () => <HeaderRight />,
         headerShown: true,
     };

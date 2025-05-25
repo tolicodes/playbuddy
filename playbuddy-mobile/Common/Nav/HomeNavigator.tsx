@@ -117,7 +117,7 @@ export function HomeStackNavigator() {
                 component={AuthNav} />
             <HomeStack.Screen name="PromoScreen"
                 component={PromoScreenWrap}
-                options={headerOptions({ navigation, title: 'Welcome!' })}
+                options={headerOptions({ navigation, title: 'Welcome!', backToWelcome: true })}
             />
 
             <HomeStack.Screen name="Event Details"
