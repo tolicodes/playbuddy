@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 16,
         marginBottom: 10,
         height: ITEM_HEIGHT - 10,
+        justifyContent: 'center',
     },
     topSection: {
         flexDirection: 'row',

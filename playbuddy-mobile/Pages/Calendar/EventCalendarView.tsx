@@ -173,11 +173,11 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
             {/* Month + Arrows */}
             {!isCalendarExpanded && (
                 <View style={styles.monthHeader}>
-                    <TouchableOpacity onPress={goToPrev} style={styles.monthHeaderButton}>
+                    <TouchableOpacity onPress={goToPrev} style={styles.monthHeaderButtonLeft}>
                         <FAIcon name="chevron-left" size={20} color="#333" />
                     </TouchableOpacity>
                     <Text style={styles.monthText}>{format(currentDate, 'MMMM yyyy')}</Text>
-                    <TouchableOpacity onPress={goToNext} style={styles.monthHeaderButton}>
+                    <TouchableOpacity onPress={goToNext} style={styles.monthHeaderButtonRight}>
                         <FAIcon name="chevron-right" size={20} color="#333" />
                     </TouchableOpacity>
                 </View>
@@ -377,8 +377,13 @@ const styles = StyleSheet.create({
     weekDayNumberSelected: {
         color: '#fff',
     },
-    monthHeaderButton: {
+    monthHeaderButtonLeft: {
         paddingHorizontal: 8,
-    }
+        paddingRight: 16,
+    },
+    monthHeaderButtonRight: {
+        paddingHorizontal: 8,
+        paddingLeft: 16,
+    },
 
 });
