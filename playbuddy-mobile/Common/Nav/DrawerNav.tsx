@@ -14,6 +14,7 @@ import LoginFormScreen from "../../Pages/Auth/screens/LoginFormScreen";
 import { NavStack } from "./NavStackType";
 import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
 import { PromosScreen } from "../../Pages/Auth/screens/Promo/PromosScreen";
+import PlayParties from "../../Pages/PlayParties";
 
 const Drawer = createDrawerNavigator();
 
@@ -89,6 +90,16 @@ export const DrawerNav = () => {
                 options={{
                     drawerIcon: getIcon('campground'),
                     ...headerOptions({ navigation, title: 'Retreats' }),
+
+                }}
+            />
+
+            <Drawer.Screen
+                name="Play Parties"
+                component={PlayParties}
+                options={{
+                    drawerIcon: getIcon('mask'),
+                    ...headerOptions({ navigation, title: 'Play Parties' }),
 
                 }}
             />

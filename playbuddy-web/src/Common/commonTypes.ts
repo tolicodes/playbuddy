@@ -165,7 +165,23 @@ export interface Event extends EventDataSource {
      */
     weekly_pick?: boolean;
 
+    /**
+     * This isn't the full description, we just get the one that shows up on top of
+     * Eventbrite page and then scrape the full description later
+     */
     short_description?: string;
+
+    /**
+     * This is our own description of the event
+     */
+    custom_description?: string;
+
+    /**
+     * Is this event a play party?
+     */
+    play_party?: boolean;
+
+    vetted?: boolean;
 
 }
 
@@ -193,7 +209,7 @@ export interface EventDataSource {
      * The platform the event was scraped from
      * For example, WhatsApp, Eventbrite, Plura, etc
      */
-    source_origination_platform?: "WhatsApp" | "organizer_api" | 'acrofestivals' | 'facebook' | 'lu.ma';
+    source_origination_platform?: "WhatsApp" | "organizer_api" | 'acrofestivals' | 'facebook' | 'lu.ma' | 'csv';
 
     /**
      * The ticketing platform the event is sold on
@@ -579,6 +595,8 @@ export interface Organizer {
      */
     promo_codes?: PromoCode[]
 }
+
+export type CreateOrganizerInput = Omit<Organizer, "id"> | { id: string };
 
 /**
  * Table: promo_code_event

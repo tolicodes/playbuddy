@@ -19,19 +19,18 @@ interface ListItemProps {
     buddiesAttending?: Buddy[];
 }
 
-
 export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
-    const { authUserId } = useUserContext();
-    const { currentDeepLink } = useUserContext();
+    const { authUserId, currentDeepLink } = useUserContext();
 
     const promoCode = getEventPromoCodes(item)?.[0];
-
     const formattedDate = formatDate(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
+    const vetted = item.vetted;
 
-    // Navigate to event details.
+    const [discountModalVisible, setDiscountModalVisible] = useState(false);
+
     const handlePressEvent = () => {
         onPress(item);
         logEvent(UE.EventListItemClicked, {
@@ -42,7 +41,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
         });
     };
 
-    // Toggle wishlist status.
     const handleToggleEventWishlist = () => {
         logEvent(UE.EventListItemWishlistToggled, {
             auth_user_id: authUserId ?? '',
@@ -57,7 +55,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
         });
     };
 
-
     const handleModalCopyPromoCode = () => {
         logEvent(UE.EventListItemPromoModalPromoCopied, {
             auth_user_id: authUserId ?? '',
@@ -66,8 +63,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
             ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
         });
     };
-
-    const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
     return (
         <>
@@ -84,7 +79,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                         ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
                         ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
                     });
-                    // Handle ticket purchase logic, e.g., open ticket URL
                     Linking.openURL(item.ticket_url);
                     setDiscountModalVisible(false);
                 }}
@@ -92,7 +86,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
             />
             <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8} style={styles.wrapper}>
                 <View style={styles.cardWrapper}>
-                    {/* Top Section: Image & Details */}
                     <View style={styles.topSection}>
                         {imageUrl && (
                             <View style={styles.imageContainer}>
@@ -100,36 +93,40 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                             </View>
                         )}
                         <View style={styles.detailsContainer}>
-                            {/* Organizer Row */}
                             <View style={styles.organizerRow}>
                                 <View style={styles.organizerContainer}>
                                     <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
                                     <Text style={styles.organizerName} numberOfLines={1}>
                                         {item.organizer?.name}
                                     </Text>
+                                    {vetted && (
+                                        <View style={styles.vettedBadge}>
+                                            <Text style={styles.vettedText}>Vetted</Text>
+                                        </View>
+                                    )}
                                 </View>
-                                {authUserId && (
-                                    <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
-                                        <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
-                                    </TouchableOpacity>
-                                )}
+                                <View style={styles.rightContainer}>
+                                    {promoCode && (
+                                        <View style={styles.discountBadge}>
+                                            <Text style={styles.discountText}>
+                                                {promoCode.discount_type === 'percent'
+                                                    ? `${promoCode.discount}% off`
+                                                    : `$${promoCode.discount} off`}
+                                            </Text>
+                                        </View>
+                                    )}
+                                    {authUserId && (
+                                        <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
+                                            <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
+                                        </TouchableOpacity>
+                                    )}
+                                </View>
                             </View>
-                            {/* Title Row */}
-                            <View style={styles.titleAndDiscountRow}>
+                            <View style={styles.titleRow}>
                                 <Text style={styles.eventTitle} numberOfLines={2}>
                                     {item.name}
                                 </Text>
-                                {promoCode && (
-                                    <View style={styles.discountBadge}>
-                                        <Text style={styles.discountText}>
-                                            {promoCode.discount_type === 'percent'
-                                                ? `${promoCode.discount}% off`
-                                                : `$${promoCode.discount} off`}
-                                        </Text>
-                                    </View>
-                                )}
                             </View>
-                            {/* Time Row */}
                             <View style={styles.timeRow}>
                                 <Text style={styles.eventTime}>{formattedDate}</Text>
                             </View>
@@ -179,11 +176,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 4,
+        justifyContent: 'space-between',
     },
     organizerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        flex: 1,
     },
     organizerDot: {
         width: 8,
@@ -194,27 +191,28 @@ const styles = StyleSheet.create({
     organizerName: {
         fontSize: 14,
         color: '#000',
+        marginRight: 8,
+    },
+    rightContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     heartContainer: {
         marginLeft: 8,
     },
-    titleAndDiscountRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    titleRow: {
         marginBottom: 4,
     },
     eventTitle: {
         fontSize: 16,
         fontWeight: 'bold',
         color: '#333',
-        flex: 1,
     },
     discountBadge: {
         backgroundColor: '#FFD700',
         borderRadius: 8,
         paddingHorizontal: 8,
         paddingVertical: 2,
-        marginLeft: 8,
     },
     discountText: {
         fontSize: 12,
@@ -246,5 +244,17 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: 14,
         color: '#888',
+    },
+    vettedBadge: {
+        backgroundColor: '#4CAF50',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 8,
+    },
+    vettedText: {
+        fontSize: 12,
+        color: 'white',
+        fontWeight: 'bold',
     },
 });

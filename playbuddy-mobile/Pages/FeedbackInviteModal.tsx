@@ -51,8 +51,13 @@ export function FeedbackInviteModal() {
                     </TouchableOpacity>
                     <Text style={styles.title}>Share Feedback, {'\n'}Next Event On Us!</Text>
                     <Text style={styles.subtitle}>30-min chat about PlayBuddy</Text>
-                    <Text style={styles.bulletPoint}>• Discuss NYC play scene</Text>
-                    <Text style={styles.bulletPoint}>• Share your challenges and desires</Text>
+
+                    <View style={styles.bulletContainer}>
+                        <Text style={styles.bulletPoint}>• Share your experience with the NYC kink/tantra scene</Text>
+                        <Text style={styles.bulletPoint}>• Tell us your desires & pain points</Text>
+                        <Text style={styles.bulletPoint}>• Help us make the PlayBuddy app even better</Text>
+                    </View>
+
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.primaryBtn} onPress={openWhatsapp}>
                             <Text style={styles.primaryText}>Join WhatsApp</Text>
@@ -95,6 +100,11 @@ const styles = StyleSheet.create({
     bulletPoint: {
         fontSize: 14,
         marginBottom: 8,
+    },
+    bulletContainer: {
+        alignItems: 'flex-start',
+        width: '100%',
+        marginTop: 10,
     },
     buttonContainer: {
         alignItems: 'center',
