@@ -99,11 +99,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                                     <Text style={styles.organizerName} numberOfLines={1}>
                                         {item.organizer?.name}
                                     </Text>
-                                    {vetted && (
-                                        <View style={styles.vettedBadge}>
-                                            <Text style={styles.vettedText}>Vetted</Text>
-                                        </View>
-                                    )}
+
                                 </View>
                                 <View style={styles.rightContainer}>
                                     {promoCode && (
@@ -129,6 +125,21 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                             </View>
                             <View style={styles.timeRow}>
                                 <Text style={styles.eventTime}>{formattedDate}</Text>
+
+                            </View>
+                            <View style={styles.badgesRow}>
+                                {vetted && (
+                                    <View style={styles.vettedBadge}>
+                                        <Text style={styles.vettedText}>Vetted</Text>
+                                    </View>
+                                )}
+                                {
+                                    item.play_party && (
+                                        <View style={styles.playPartyBadge}>
+                                            <Text style={styles.playPartyText}>Play Party</Text>
+                                        </View>
+                                    )
+                                }
                             </View>
                         </View>
                     </View>
@@ -222,6 +233,8 @@ const styles = StyleSheet.create({
     },
     timeRow: {
         marginBottom: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     eventTime: {
         fontSize: 14,
@@ -251,9 +264,25 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         paddingHorizontal: 6,
         paddingVertical: 2,
-        marginLeft: 8,
+        marginRight: 8,
     },
     vettedText: {
+        fontSize: 12,
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    badgesRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    playPartyBadge: {
+        backgroundColor: '#8f00ff',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginRight: 8,
+    },
+    playPartyText: {
         fontSize: 12,
         color: 'white',
         fontWeight: 'bold',
