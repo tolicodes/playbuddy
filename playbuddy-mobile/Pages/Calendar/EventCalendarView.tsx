@@ -13,7 +13,7 @@ import { Image } from 'expo-image';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import moment from 'moment-timezone';
-import { format, startOfWeek, addDays, subWeeks, addWeeks } from 'date-fns';
+import { format, startOfWeek, addDays, subWeeks, addWeeks, subDays } from 'date-fns';
 
 import { useCalendarContext } from './hooks/CalendarContext';
 import { useGroupedEvents, SECTION_DATE_FORMAT } from './hooks/useGroupedEvents';
@@ -108,14 +108,27 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
         eventsLocalFiltered.some(event => isSameDayNY(event.start_date, day));
 
     const goToPrev = () => {
-        const prevDate = isCalendarExpanded ? subWeeks(currentDate, 4) : subWeeks(currentDate, 1);
+        let prevDate = isCalendarExpanded
+            ? startOfWeek(subWeeks(currentDate, 4), { weekStartsOn: 0 })
+            : startOfWeek(subWeeks(currentDate, 1), { weekStartsOn: 0 });
+
+        while (!hasEventsOnDay(prevDate) && prevDate >= new Date()) {
+            prevDate = subDays(prevDate, 1);
+        }
 
         setCurrentDate(prevDate);
         setSelectedDate(prevDate);
         scrollToDate(prevDate);
     };
     const goToNext = () => {
-        const nextDate = isCalendarExpanded ? addWeeks(currentDate, 4) : addWeeks(currentDate, 1);
+        let nextDate = isCalendarExpanded
+            ? startOfWeek(addWeeks(currentDate, 4), { weekStartsOn: 0 })
+            : startOfWeek(addWeeks(currentDate, 1), { weekStartsOn: 0 });
+
+        while (!hasEventsOnDay(nextDate)) {
+            nextDate = addDays(nextDate, 1);
+        }
+
         setCurrentDate(nextDate);
         setSelectedDate(nextDate);
         scrollToDate(nextDate);
