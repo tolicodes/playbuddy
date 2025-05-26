@@ -79,27 +79,31 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const filteredEvents = useMemo(() => {
         const filtered = filterEvents(eventsWithMetadata, filters)
-            .filter(event => {
-                const hasValidLocation = selectedLocationAreaId && selectedLocationAreaId !== ALL_LOCATION_AREAS_ID;
-                const hasValidCommunity = selectedCommunityId && selectedCommunityId !== ALL_COMMUNITIES_ID;
-                if (hasValidLocation && hasValidCommunity) {
-                    return event.location_area?.id === selectedLocationAreaId &&
-                        event.communities?.some(community => community.id === selectedCommunityId);
-                } else if (hasValidLocation) {
-                    return event.location_area?.id === selectedLocationAreaId;
-                } else if (hasValidCommunity) {
-                    return event.communities?.some(community => community.id === selectedCommunityId);
-                }
-                return true;
-            });
-        const withoutExplicit = removeExplicitEvents(filtered);
+        // .filter(event => {
+        //     const hasValidLocation = selectedLocationAreaId && selectedLocationAreaId !== ALL_LOCATION_AREAS_ID;
+        //     const hasValidCommunity = selectedCommunityId && selectedCommunityId !== ALL_COMMUNITIES_ID;
+        //     if (hasValidLocation && hasValidCommunity) {
+        //         return event.location_area?.id === selectedLocationAreaId &&
+        //             event.communities?.some(community => community.id === selectedCommunityId);
+        //     } else if (hasValidLocation) {
+        //         return event.location_area?.id === selectedLocationAreaId;
+        //     } else if (hasValidCommunity) {
+        //         return event.communities?.some(community => community.id === selectedCommunityId);
+        //     }
+        //     return true;
+        // });
 
+
+        // const withoutExplicit = removeExplicitEvents(filtered);
+
+
+        // 
         // comment this in if we are releasing to apple
-        return authUserId && authUserId !== APPLE_USER_ID
-            ? filtered
-            : withoutExplicit;
+        // return authUserId && authUserId !== APPLE_USER_ID
+        //     ? filtered
+        //     : withoutExplicit;
 
-        // return filtered;
+        return filtered;
     }, [eventsWithMetadata, filters, authUserId, selectedLocationAreaId, selectedCommunityId]);
 
     const availableCardsToSwipe = useMemo(() => {
