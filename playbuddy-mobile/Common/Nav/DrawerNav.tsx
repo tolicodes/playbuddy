@@ -76,15 +76,6 @@ export const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name={isDefaultsComplete ? "Profile" : "Login"}
-                options={{
-                    drawerIcon: getIcon('user'),
-                    ...headerOptions({ navigation, title: isDefaultsComplete ? "Profile" : "Login" }),
-                }}
-                component={isDefaultsComplete ? ProfileScreen : LoginFormScreen}
-            />
-
-            <Drawer.Screen
                 name="Retreats"
                 component={Retreats}
                 options={{
@@ -102,6 +93,15 @@ export const DrawerNav = () => {
                     ...headerOptions({ navigation, title: 'Play Parties' }),
 
                 }}
+            />
+
+            <Drawer.Screen
+                name={isDefaultsComplete ? "Profile" : "Login"}
+                options={{
+                    drawerIcon: getIcon('user'),
+                    ...headerOptions({ navigation, title: isDefaultsComplete ? "Profile" : "Login" }),
+                }}
+                component={isDefaultsComplete ? ProfileScreen : LoginFormScreen}
             />
 
             <Drawer.Screen
