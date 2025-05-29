@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import EventCalendarView from "./Calendar/EventCalendarView";
+import EventCalendarView from "./Calendar/EventCalendarView/EventCalendarView";
 import { View } from 'react-native';
 import { useCalendarContext } from "./Calendar/hooks/CalendarContext";
 

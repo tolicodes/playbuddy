@@ -1,12 +1,13 @@
 // HeaderOptions.tsx (Refactored Clean Version with Animation and Fixed PromoScreen Back Behavior)
 
 import React, { Suspense, useEffect, useRef } from "react";
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated } from "react-native";
+import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, SafeAreaView } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
 import { NavStack } from "../Nav/NavStackType";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../commonTypes";
+import { LAVENDER_BACKGROUND } from "../../styles";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
@@ -81,12 +82,21 @@ export const HeaderRight = () => {
     );
 };
 
+const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
+    return (
+        <SafeAreaView style={styles.headerContainer}>
+            <View style={styles.headerInnerContainer}>
+                <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={title} backToWelcome={backToWelcome} />
+                <HeaderRight />
+            </View>
+        </SafeAreaView>
+    );
+};
+
 // Smart Header Options (auto Drawer vs Back detection)
 export const headerOptions = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
     return {
-        headerTitle: '',
-        headerLeft: () => <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={title} backToWelcome={backToWelcome} />,
-        headerRight: () => <HeaderRight />,
+        header: () => <Header navigation={navigation} title={title} isRootScreen={isRootScreen} backToWelcome={backToWelcome} />,
         headerShown: true,
     };
 };
@@ -98,6 +108,20 @@ export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack 
 
 // Styles
 const styles = StyleSheet.create({
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 10,
+        backgroundColor: LAVENDER_BACKGROUND,
+    },
+    headerInnerContainer: {
+        flex: 1,
+        paddingRight: 10,
+        paddingBottom: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     rightNavContainer: {
         flexDirection: 'row',
         alignItems: 'center',

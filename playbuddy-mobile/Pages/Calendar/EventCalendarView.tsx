@@ -15,16 +15,16 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import moment from 'moment-timezone';
 import { format, startOfWeek, addDays, subWeeks, addWeeks, subDays } from 'date-fns';
 
-import { useCalendarContext } from './hooks/CalendarContext';
-import { useGroupedEvents, SECTION_DATE_FORMAT } from './hooks/useGroupedEvents';
-import { useUserContext } from '../Auth/hooks/UserContext';
-import EventList from './EventList';
-import WebsiteBanner from '../../Common/WebsiteBanner';
-import { logEvent } from '../../Common/hooks/logger';
-import { MISC_URLS } from '../../config';
+import { useCalendarContext } from '../hooks/CalendarContext';
+import { useGroupedEvents, SECTION_DATE_FORMAT } from '../hooks/useGroupedEvents';
+import { useUserContext } from '../../Auth/hooks/UserContext';
+import EventList from '../EventList';
+import WebsiteBanner from '../../../Common/WebsiteBanner';
+import { logEvent } from '../../../Common/hooks/logger';
+import { MISC_URLS } from '../../../config';
 import { Calendar } from 'react-native-calendars';
-import { EventWithMetadata } from '../../Common/Nav/NavStackType';
-import { FeedbackInviteModal } from '../FeedbackInviteModal';
+import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
+import { FeedbackInviteModal } from '../../FeedbackInviteModal';
 
 const WEEK_HEIGHT = 70;
 const MONTH_HEIGHT = 300;

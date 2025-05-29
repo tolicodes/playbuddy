@@ -1,6 +1,6 @@
 import React from 'react'
 import { useCalendarContext } from "./Calendar/hooks/CalendarContext";
-import EventCalendarView from "./Calendar/EventCalendarView";
+import EventCalendarView from "./Calendar/EventCalendarView/EventCalendarView";
 import { useEffect } from "react";
 import { useUserContext } from "./Auth/hooks/UserContext";
 import { LoginToAccess } from '../Common/LoginToAccess';
@@ -19,7 +19,7 @@ const MyCalendar = () => {
     return (
         (authUserId)
             ? (
-                <EventCalendarView events={wishlistEvents} />
+                <EventCalendarView events={wishlistEvents} showGoogleCalendar={true} />
             )
             : (
                 <LoginToAccess entityToAccess='wishlist' />

@@ -12,6 +12,7 @@ import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPro
 import { Buddy } from '../Buddies/hooks/BuddiesContext';
 import { TicketPromoModal } from './TicketPromoModal';
 import { getEventPromoCodes } from '../Auth/screens/usePromoCode';
+import { BORDER_LAVENDER } from '../../styles';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -149,22 +150,25 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
     );
 };
 
-export const ITEM_HEIGHT = 130;
+export const ITEM_HEIGHT = 135;
 
 const styles = StyleSheet.create({
     wrapper: {
         height: ITEM_HEIGHT,
+        shadowOpacity: 0.1
+
     },
     cardWrapper: {
         backgroundColor: '#fff',
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: BORDER_LAVENDER,
         borderRadius: 12,
         overflow: 'hidden',
         marginHorizontal: 16,
         marginBottom: 10,
         height: ITEM_HEIGHT - 10,
         justifyContent: 'center',
+        shadowOpacity: 0.2
     },
     topSection: {
         flexDirection: 'row',
@@ -177,7 +181,7 @@ const styles = StyleSheet.create({
     eventImage: {
         width: 50,
         height: 50,
-        borderRadius: 8,
+        borderRadius: 50,
         backgroundColor: '#eee',
     },
     detailsContainer: {

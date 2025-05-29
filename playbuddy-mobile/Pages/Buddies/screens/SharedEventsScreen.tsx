@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View } from 'react-native';
-import EventCalendarView from '../../Calendar/EventCalendarView';
+import EventCalendarView from '../../Calendar/EventCalendarView/EventCalendarView';
 import { useBuddiesContext } from '../hooks/BuddiesContext';
 import { useCalendarContext } from '../../Calendar/hooks/CalendarContext';
 

@@ -8,7 +8,7 @@ import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { TouchableOpacity } from "react-native";
 import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
 import { Badge } from "./Badge";
-import EventCalendarView from "../../Pages/Calendar/EventCalendarView";
+import EventCalendarView from "../../Pages/Calendar/EventCalendarView/EventCalendarView";
 import MyCalendar from "../../Pages/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
 import { SwipeMode } from "../../Pages/SwipeMode";

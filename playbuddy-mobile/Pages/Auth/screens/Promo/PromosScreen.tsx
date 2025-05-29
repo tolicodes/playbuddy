@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import EventCalendarView from "../../../Calendar/EventCalendarView";
+import EventCalendarView from "../../../Calendar/EventCalendarView/EventCalendarView";
 import { useCalendarContext } from "../../../Calendar/hooks/CalendarContext";
 import { getEventPromoCodes } from "../usePromoCode";
 import { useFetchDeepLinks } from '../../../../Common/hooks/useDeepLinks';

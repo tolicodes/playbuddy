@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image'
-import EventCalendarView from '../../Calendar/EventCalendarView';
+import EventCalendarView from '../../Calendar/EventCalendarView/EventCalendarView';
 import { useBuddiesContext } from '../hooks/BuddiesContext';
 import { useCalendarContext } from '../../Calendar/hooks/CalendarContext';
 import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';

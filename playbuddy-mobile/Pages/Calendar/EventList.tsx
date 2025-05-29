@@ -18,6 +18,7 @@ import { Event, UE } from "../../commonTypes";
 import { BuddyWishlist, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from "../../Common/hooks/logger";
 import { useUserContext } from "../Auth/hooks/UserContext";
+import { BORDER_LAVENDER, LAVENDER_BACKGROUND } from "../../styles";
 
 const HEADER_HEIGHT = 40;
 
@@ -118,14 +119,13 @@ export default EventList;
 
 const styles = StyleSheet.create({
     sectionHeaderWrapper: {
-        backgroundColor: '#F9F9F9',
+        backgroundColor: LAVENDER_BACKGROUND,
         paddingHorizontal: 20,
         height: HEADER_HEIGHT,
-        paddingBottom: 10,
         justifyContent: 'center',
     },
     sectionHeader: {
-        fontSize: 16,
+        fontSize: 20,
         fontWeight: '600',
         color: '#333',
     },
@@ -140,6 +140,6 @@ const styles = StyleSheet.create({
         color: '#888',
     },
     eventItemWrapper: {
-        backgroundColor: 'white',
+        backgroundColor: LAVENDER_BACKGROUND,
     },
 });
