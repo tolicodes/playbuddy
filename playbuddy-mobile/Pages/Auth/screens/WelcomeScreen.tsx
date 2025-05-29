@@ -1,214 +1,194 @@
 import React, { useEffect } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Alert, Image, Dimensions, Linking } from 'react-native';
-import HeaderLoginButton from '../Buttons/LoginButton';
+import {
+    SafeAreaView,
+    View,
+    Text,
+    Image,
+    Pressable,
+    StyleSheet,
+    Dimensions,
+    Alert,
+    Platform,
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import { getAnalyticsPropsDeepLink, logEvent } from '../../../Common/hooks/logger';
 import { usePromoCode } from './usePromoCode';
-import { PromoCode, UE } from '../../../commonTypes';
-import { formatDiscount } from '../../Calendar/PromoCode';
+import { UE } from '../../../commonTypes';
 import { useUserContext } from '../hooks/UserContext';
-import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../../../Common/Nav/NavStackType';
 
 const { width } = Dimensions.get('window');
 
-// Promo message for featured community discounts
-const PromoBox = ({ promoCode, communityName }: { promoCode: PromoCode; communityName: string }) => (
-    <View style={styles.promoBox}>
-        <Text style={styles.promoText}>
-            🎉 <Text style={styles.promoHighlight}>{formatDiscount(promoCode)}</Text> off <Text style={styles.promoHighlight}>{communityName}</Text>
-        </Text>
-    </View>
-);
-
-// City availability with email fallback
-const CityAvailabilityBox = () => {
-    const onPressEmail = async () => {
-        const url = `mailto:pb@playbuddy.me?subject=I%20want%20to%20become%20a%20PlayBuddy%20City%20Ambassador!&body=Here%20is%20a%20list%20of%20my%20favorite%20organizers%3A`;
-        const canOpen = await Linking.canOpenURL(url);
-        if (canOpen) {
-            Linking.openURL(url);
-        } else {
-            Alert.alert(
-                'Please send your request to pb@playbuddy.me',
-                'Subject: I want to become a PlayBuddy City Ambassador!'
-            );
-        }
-    };
-
-    return (
-        <View style={styles.cityBox}>
-            <Text style={styles.cityHeader}>🗽 NYC Only 🗽</Text>
-            <Text style={styles.cityText}>
-                Launching city by city to ensure every event is <Text style={styles.boldText}>vetted</Text> and top-quality.
-            </Text>
-            <TouchableOpacity style={styles.cityButton} onPress={onPressEmail} activeOpacity={0.7}>
-                <Text style={styles.cityButtonText}>Become a City Ambassador</Text>
-            </TouchableOpacity>
-        </View>
-    );
-};
-
-const WelcomeScreen = () => {
+const WelcomeScreenModern = () => {
+    const navigation = useNavigation<NavStack>();
     const promoCode = usePromoCode();
     const { updateSkippingWelcomeScreen, isSkippingWelcomeScreen } = useUserContext();
-    const navigation = useNavigation<NavStack>();
 
     useEffect(() => {
-        if (isSkippingWelcomeScreen) navigation.replace('Home');
+        if (isSkippingWelcomeScreen) {
+            navigation.replace('Home');
+        }
     }, [isSkippingWelcomeScreen]);
 
     const handleRegister = () => {
-        if (promoCode?.deepLink) logEvent(UE.WelcomeScreenRegisterClicked, getAnalyticsPropsDeepLink(promoCode.deepLink));
-        navigation.navigate('Login Form');
+        if (promoCode?.deepLink) {
+            logEvent(UE.WelcomeScreenRegisterClicked, getAnalyticsPropsDeepLink(promoCode.deepLink));
+        }
+        navigation.navigate('AuthNav', { screen: 'Login Form' });
     };
 
     const handleSkip = () => {
         updateSkippingWelcomeScreen(true);
         Alert.alert(
             'Limited Access',
-            'You can always log in later from the menu to unlock all events.'
+            'Click top right person icon to log in later.'
         );
         navigation.replace('Home');
-        if (promoCode?.deepLink) logEvent(UE.WelcomeScreenSkipped, getAnalyticsPropsDeepLink(promoCode.deepLink));
+        if (promoCode?.deepLink) {
+            logEvent(UE.WelcomeScreenSkipped, getAnalyticsPropsDeepLink(promoCode.deepLink));
+        }
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container} bounces={false}>
-            <Image source={require('../../../assets/logo.png')} style={styles.logo} />
-            <Text style={styles.title}>Welcome to PlayBuddy</Text>
+        <LinearGradient
+            colors={['#AB47BC', '#8E24AA']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradient}
+        >
+            <SafeAreaView style={styles.safe}>
+                <View style={styles.content}>
+                    <Image
+                        source={require('../../../assets/logo.png')}
+                        style={styles.logo}
+                    />
+                    <Text style={styles.title}>Welcome to PlayBuddy</Text>
 
-            {promoCode?.featuredPromoCode && (
-                <PromoBox
-                    promoCode={promoCode.featuredPromoCode}
-                    communityName={promoCode.organizer?.name || ''}
-                />
-            )}
+                    <Text style={styles.subtitle}>
+                        Register to unlock {'\n'}
+                        <Text style={styles.flame}>🔥</Text>
+                        <Text style={styles.highlight}>17+ events</Text>
+                        <Text style={styles.flame}>🔥</Text>{'\n'}
+                        and save favorites
+                    </Text>
+                    <Text style={styles.note}>* as per App Store rules</Text>
 
-            <View style={styles.card}>
-                <Text style={styles.subtitle}>
-                    App Store policy limits
-                    {'\n'}🔥 <Text style={styles.spicy}>Spicy Events</Text> 🔥
-                    {'\n'}
-                    Create an account to unlock all events!
-                </Text>
-                <HeaderLoginButton size={60} showLoginText register onPressButton={handleRegister} />
-                <TouchableOpacity onPress={handleSkip} style={styles.skipButton} activeOpacity={0.7}>
-                    <Text style={styles.skipText}>Skip for now</Text>
-                </TouchableOpacity>
-            </View>
+                    <Pressable
+                        onPress={handleRegister}
+                        style={({ pressed }) => [
+                            styles.primaryButton,
+                            pressed && styles.primaryButtonPressed,
+                        ]}
+                        android_ripple={{ color: '#00000020' }}
+                        hitSlop={8}
+                    >
+                        <Text style={styles.primaryText}>Get started</Text>
+                    </Pressable>
 
-            <CityAvailabilityBox />
-
-        </ScrollView>
+                    <Pressable
+                        onPress={handleSkip}
+                        style={({ pressed }) => [
+                            styles.skipWrap,
+                            pressed && styles.skipPressed,
+                        ]}
+                        hitSlop={8}
+                    >
+                        <Text style={styles.skipText}>Skip for now</Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
+        </LinearGradient>
     );
 };
 
-export default WelcomeScreen;
+export default WelcomeScreenModern;
 
+const BUTTON_HEIGHT = 54;
 const styles = StyleSheet.create({
-    container: {
-        flexGrow: 1,
+    gradient: {
+        flex: 1,
+    },
+    safe: {
+        flex: 1,
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: 24,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 24,
-        backgroundColor: '#FFF',
     },
     logo: {
         width: 80,
         height: 80,
-        marginBottom: 20,
-        borderRadius: 12,
+        marginBottom: 24,
+        borderRadius: 16,
+        backgroundColor: '#fff',
     },
     title: {
-        fontSize: 26,
-        fontWeight: '700',
-        color: '#333',
-        marginBottom: 24,
-        textAlign: 'center',
-    },
-    promoBox: {
-        backgroundColor: '#D8F3DC',
-        paddingVertical: 16,
-        paddingHorizontal: 20,
-        borderRadius: 16,
-        marginBottom: 20,
-        width: width * 0.9,
-        alignItems: 'center',
-    },
-    promoText: {
-        fontSize: 18,
-        color: '#1B4332',
-        textAlign: 'center',
-    },
-    promoHighlight: {
-        fontWeight: '700',
-        color: '#1B9C85',
-    },
-    cityBox: {
-        backgroundColor: '#EEF5FF',
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 24,
-        width: width * 0.9,
-        alignItems: 'center',
-        marginTop: 20,
-    },
-    cityHeader: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#00509D',
-        marginBottom: 6,
-    },
-    cityText: {
-        fontSize: 15,
-        color: '#333',
-        textAlign: 'center',
-        marginBottom: 12,
-    },
-    cityButton: {
-        backgroundColor: '#00509D',
-        borderRadius: 20,
-        paddingVertical: 10,
-        paddingHorizontal: 24,
-    },
-    cityButtonText: {
+        fontSize: 32,
+        fontWeight: '800',
         color: '#FFF',
-        fontSize: 15,
-        fontWeight: '600',
-    },
-    card: {
-        backgroundColor: '#FFF',
-        padding: 24,
-        borderRadius: 20,
-        width: width * 0.9,
-        shadowColor: '#000',
-        shadowOpacity: 0.1,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 8,
-        elevation: 6,
-        alignItems: 'center',
+        textAlign: 'center',
+        marginBottom: 16,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#4C4C4C',
+        fontSize: 18,
+        color: '#F3E5F5',
         textAlign: 'center',
-        marginBottom: 20,
-        lineHeight: 22,
+        lineHeight: 26,
+        marginBottom: 8,
     },
-    spicy: {
+    flame: {
+        fontSize: 20,
+    },
+    highlight: {
         fontWeight: '700',
-        color: '#FF4500',
+        color: '#FFF',
     },
-    skipButton: {
-        marginTop: 16,
-        paddingVertical: 10,
+    note: {
+        fontSize: 12,
+        color: '#E1BEE7',
+        marginBottom: 32,
+    },
+    primaryButton: {
+        width: width * 0.9,
+        height: BUTTON_HEIGHT,
+        borderRadius: BUTTON_HEIGHT / 2,
+        backgroundColor: '#6A1B9A',
+        justifyContent: 'center',
+        alignItems: 'center',
+        // subtle shadow
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOpacity: 0.2,
+                shadowOffset: { width: 0, height: 4 },
+                shadowRadius: 8,
+            },
+            android: {
+                elevation: 4,
+            },
+        }),
+        marginBottom: 16,
+    },
+    primaryButtonPressed: {
+        opacity: 0.85,
+    },
+    primaryText: {
+        color: '#FFF',
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    skipWrap: {
+        paddingVertical: 8,
     },
     skipText: {
-        color: '#666',
+        color: '#E1BEE7',
         fontSize: 16,
-        fontWeight: '500',
+        textDecorationLine: 'underline',
     },
-    boldText: {
-        fontWeight: 'bold',
+    skipPressed: {
+        opacity: 0.6,
     },
 });

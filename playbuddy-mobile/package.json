@@ -9,7 +9,6 @@
     "web": "expo start --web",
     "build": "eas build:version:sync --platform all && eas build --non-interactive --platform all",
     "build-local": "eas build -p ios --profile development --local",
-    "run-local": "eas build:run -p ios --latest",
     "prebuild": "npx expo prebuild --clean",
     "update": "eas update --branch production --message ",
     "postinstall": "patch-package"
