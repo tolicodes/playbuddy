@@ -96,15 +96,6 @@ export const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name={isDefaultsComplete ? "Profile" : "Login"}
-                options={{
-                    drawerIcon: getIcon('user'),
-                    ...headerOptions({ navigation, title: isDefaultsComplete ? "Profile" : "Login" }),
-                }}
-                component={isDefaultsComplete ? ProfileScreen : LoginFormScreen}
-            />
-
-            <Drawer.Screen
                 name="Moar"
                 component={Moar}
                 options={{
