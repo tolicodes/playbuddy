@@ -14,9 +14,9 @@ const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }
 
     return (
         <Tab.Navigator>
-            <Tab.Screen name="My Communities" component={TypedMyCommunitiesSection} />
+            <Tab.Screen name="My Organizers" component={TypedMyCommunitiesSection} />
             <Tab.Screen name="My Events" component={TypedMyEvents} />
-            <Tab.Screen name="Join Community" component={TypedJoinCommunitySection} />
+            <Tab.Screen name="Follow Organizers" component={TypedJoinCommunitySection} />
         </Tab.Navigator>
     );
 };

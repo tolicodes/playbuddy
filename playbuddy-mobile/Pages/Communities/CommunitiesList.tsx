@@ -1,230 +1,307 @@
-import React, { useState, useCallback } from "react";
-import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput, Switch } from "react-native";
-import { Community } from "../../Common/hooks/CommonContext";
+// CommunitiesList.tsx
+
+import React, { useState, useCallback, useMemo } from "react";
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    FlatList,
+    Switch,
+    Dimensions,
+} from "react-native";
+import FAIcon from "react-native-vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
-import { useFetchMyCommunities, useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
-import { NavStack } from "../../Common/Nav/NavStackType";
-import { logEvent } from "../../Common/hooks/logger";
+import {
+    useFetchMyCommunities,
+    useJoinCommunity,
+    useLeaveCommunity,
+} from "../../Common/hooks/useCommunities";
+import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
+import { logEvent } from "../../Common/hooks/logger";
+import type { Community } from "../../Common/hooks/CommonContext";
+import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../commonTypes";
+import { LAVENDER_BACKGROUND } from "../../styles";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 export const CommunitiesList = ({
     title,
     communities,
     showSearch = false,
-    entityType = 'organizer',
+    entityType = "organizer",
 }: {
-    title: string,
-    communities: Community[],
-    showSearch?: boolean,
-    flex?: number,
-    entityType?: 'private_community' | 'organizer',
+    title: string;
+    communities: Community[];
+    showSearch?: boolean;
+    entityType?: "private_community" | "organizer";
 }) => {
     const navigation = useNavigation<NavStack>();
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
     const [showNoEventOrganizers, setShowNoEventOrganizers] = useState(false);
+
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
     const { data: myCommunities = [] } = useFetchMyCommunities();
-
     const { allEvents } = useCalendarContext();
 
-    const handleJoin = useCallback((communityId: string) => {
-        joinCommunity.mutate({ community_id: communityId, type: entityType === 'organizer' ? 'organizer_public_community' : 'private_community' });
-        logEvent('community_list_community_joined', { communityId });
-    }, [joinCommunity]);
+    const handleJoin = useCallback(
+        (communityId: string) => {
+            joinCommunity.mutate({
+                community_id: communityId,
+                type:
+                    entityType === "organizer"
+                        ? "organizer_public_community"
+                        : "private_community",
+            });
+            logEvent("community_list_community_joined", { communityId });
+        },
+        [joinCommunity, entityType]
+    );
 
-    const handleLeave = useCallback((communityId: string) => {
-        leaveCommunity.mutate({ community_id: communityId });
-        logEvent('community_list_community_left', { communityId });
-    }, [leaveCommunity]);
+    const handleLeave = useCallback(
+        (communityId: string) => {
+            leaveCommunity.mutate({ community_id: communityId });
+            logEvent("community_list_community_left", { communityId });
+        },
+        [leaveCommunity]
+    );
 
-    const filteredCommunities = communities
-        .filter(community => community.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        .filter(community => showNoEventOrganizers || allEvents.some(event => event.communities?.some(c => c.id === community.id)))
-        .sort((a, b) => a.name.localeCompare(b.name));
+    // Filter by search and event availability
+    const filteredCommunities = useMemo(() => {
+        return communities
+            .filter((c) =>
+                c.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+            )
+            .filter(
+                (c) =>
+                    showNoEventOrganizers ||
+                    allEvents.some((e) =>
+                        e.communities?.some((cc) => cc.id === c.id)
+                    )
+            )
+            .sort((a, b) => a.name.localeCompare(b.name));
+    }, [communities, searchQuery, showNoEventOrganizers, allEvents]);
 
     if (communities.length === 0) {
         return (
-            <View style={{ flex: 1 }}>
-                <Text style={styles.listTitle}>{title}</Text>
-
+            <View style={styles.emptyContainer}>
                 <View style={styles.centeredView}>
-                    <Text>You're not following any {entityType === 'private_community' ? 'communities' : 'organizers'} yet.</Text>
-                    <Button
-                        title={`${entityType === 'private_community' ? 'Join community' : 'Follow organizer'}`}
+                    <Text style={styles.emptyMessage}>
+                        You’re not following any{" "}
+                        {entityType === "private_community"
+                            ? "communities"
+                            : "organizers"}{" "}
+                        yet.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.ctaButton}
                         onPress={() => {
-                            navigation.navigate('Communities', { screen: 'Join Community' });
-                            logEvent('community_list_navigate_to_join_community_button_pressed');
+                            navigation.navigate("Communities", {
+                                screen: "Join Community",
+                            });
+                            logEvent(
+                                "community_list_navigate_to_join_community_button_pressed"
+                            );
                         }}
-                    />
+                    >
+                        <Text style={styles.ctaButtonText}>
+                            {entityType === "private_community"
+                                ? "Join Community"
+                                : "Follow Organizer"}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         );
     }
 
     return (
-        <View style={[styles.list]}>
+        <View style={styles.container}>
             {showSearch && (
                 <TextInput
                     style={styles.searchInput}
-                    placeholder={`Search ${entityType === 'private_community' ? 'communities' : 'organizers'}...`}
+                    placeholder={`Search ${entityType === "private_community" ? "communities" : "organizers"
+                        }...`}
+                    placeholderTextColor="#999"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                 />
             )}
-            <View style={styles.switchContainer}>
-                <Text>Show organizers with no events</Text>
+
+            <View style={styles.filterRow}>
+                <Text style={styles.filterText}>Show with no events</Text>
                 <Switch
                     value={showNoEventOrganizers}
                     onValueChange={setShowNoEventOrganizers}
                 />
             </View>
+
             <FlatList
                 data={filteredCommunities}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
-                    const isJoined = myCommunities?.some(community => community.id === item.id);
+                    const isJoined = myCommunities.some((c) => c.id === item.id);
+                    const eventCount = allEvents.filter((e) =>
+                        e.communities?.some((cc) => cc.id === item.id)
+                    ).length;
 
-                    const eventCount = allEvents.filter(event => event.communities?.some(community => community.id === item.id)).length;
                     return (
                         <TouchableOpacity
-                            style={[styles.communityItem, {
-                                backgroundColor: eventCount > 0 ? 'white' : 'lightgray',
-                            }]}
+                            style={[
+                                styles.communityItem,
+                                { backgroundColor: eventCount > 0 ? "#fff" : "#F0F0F5" },
+                            ]}
+                            activeOpacity={0.8}
                             onPress={() => {
-                                navigation.navigate(
-                                    'Community Events',
-                                    {
-                                        communityId: item.id
-                                    }
-                                );
-                                logEvent(UE.CommunityListNavigateToCommunityEvents, { communityId: item.id });
+                                navigation.navigate("Community Events", {
+                                    communityId: item.id,
+                                });
+                                logEvent(UE.CommunityListNavigateToCommunityEvents, {
+                                    communityId: item.id,
+                                });
                             }}
                         >
-                            <View style={[styles.communityItemContent]}>
-                                <Text style={styles.communityName}>{item.name}</Text>
-                                <View style={styles.eventCountContainer}>
-                                    <Text style={styles.eventCount}>{eventCount}</Text>
+                            <View style={styles.itemContent}>
+                                {/* Organizer Icon */}
+                                <FAIcon
+                                    name="building"
+                                    size={28}
+                                    color="#666"
+                                    style={styles.organizerIcon}
+                                />
+
+                                <View style={styles.textContainer}>
+                                    <Text style={styles.communityName} numberOfLines={1}>
+                                        {item.name}
+                                    </Text>
+                                    {/* Number of events underneath */}
+                                    <Text style={styles.eventCountText}>
+                                        {eventCount} {eventCount === 1 ? "event" : "events"}
+                                    </Text>
                                 </View>
+
                                 <TouchableOpacity
+                                    style={styles.heartButton}
                                     onPress={(e) => {
                                         e.stopPropagation();
-                                        if (isJoined) {
-                                            handleLeave(item.id);
-                                        } else {
-                                            handleJoin(item.id);
-                                        }
+                                        isJoined ? handleLeave(item.id) : handleJoin(item.id);
                                     }}
-                                    style={isJoined ? styles.unfollowButton : styles.followButton}
                                 >
-                                    <Text style={styles.buttonText}>
-                                        {isJoined ? 'Unfollow' : 'Follow'}
-                                    </Text>
+                                    <FAIcon
+                                        name={isJoined ? "heart" : "heart-o"}
+                                        size={32}
+                                        color={isJoined ? "#FF6B6B" : "#666"}
+                                    />
                                 </TouchableOpacity>
                             </View>
-                        </TouchableOpacity >
+                        </TouchableOpacity>
                     );
                 }}
-                style={{ height: 200 }}
+                contentContainerStyle={{ paddingBottom: 20 }}
+                showsVerticalScrollIndicator={false}
             />
-        </View >
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
-    list: {
-        height: '100%'
+    container: {
+        flex: 1,
+        backgroundColor: LAVENDER_BACKGROUND,
+        paddingTop: 20,
     },
-    listTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginVertical: 10,
-        textAlign: 'center',
-
+    searchInput: {
+        height: 44,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        paddingHorizontal: 12,
+        borderRadius: 10,
+        backgroundColor: "#fff",
+        borderWidth: 1,
+        borderColor: "#DDD",
+        fontSize: 16,
+        color: "#333",
+    },
+    filterRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginHorizontal: 16,
+        marginBottom: 12,
+    },
+    filterText: {
+        fontSize: 14,
+        color: "#555",
     },
     communityItem: {
-        padding: 15,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        margin: 16,
-        marginTop: 0,
+        marginHorizontal: 16,
+        marginBottom: 12,
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 16,
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
+        shadowColor: "#000",
         shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,
     },
-    communityItemContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    itemContent: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    organizerIcon: {
+        marginRight: 12,
+    },
+    textContainer: {
+        flex: 1,
+        justifyContent: "center",
     },
     communityName: {
         fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
-        flex: 1,
-        marginRight: 10,
+        fontWeight: "600",
+        color: "#333",
     },
-    eventCountContainer: {
-        backgroundColor: '#007AFF',
-        borderRadius: 20,
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        minWidth: 40,
-        marginRight: 5,
+    eventCountText: {
+        fontSize: 14,
+        color: "#666",
+        marginTop: 2,
     },
-    eventCount: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: 'white',
-        textAlign: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
+    heartButton: {
+        marginLeft: 16,
+        justifyContent: "center",
+        alignItems: "center",
     },
     centeredView: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        justifyContent: "center",
+        alignItems: "center",
         padding: 20,
     },
-    unfollowButton: {
-        backgroundColor: '#ff3b30',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 5,
-        minWidth: 80,
-        alignItems: 'center',
+    emptyContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 24,
     },
-    followButton: {
-        backgroundColor: '#007AFF',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 5,
-        minWidth: 80,
-        alignItems: 'center',
-    },
-    searchInput: {
-        height: 40,
-        margin: 15,
-        marginTop: 0,
-        padding: 10,
-        borderRadius: 10,
-        backgroundColor: 'white',
-        borderColor: '#e0e0e0',
-        borderWidth: 1,
+    emptyMessage: {
         fontSize: 16,
+        color: "#666",
+        textAlign: "center",
+        marginBottom: 20,
     },
-    switchContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: 15,
-        paddingTop: 0,
+    ctaButton: {
+        backgroundColor: "#007AFF",
+        paddingHorizontal: 16,
+        paddingVertical: 10,
+        borderRadius: 10,
+    },
+    ctaButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "600",
     },
 });
