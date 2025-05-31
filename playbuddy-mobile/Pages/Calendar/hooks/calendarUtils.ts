@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
-import { Event } from '../../../../Common/commonTypes';
 import moment from 'moment';
+import { Event } from '../../../commonTypes';
 
 export type OrganizerFilterOption = {
     id: string

@@ -11,7 +11,7 @@ import { Badge } from "./Badge";
 import EventCalendarView from "../../Pages/Calendar/EventCalendarView/EventCalendarView";
 import MyCalendar from "../../Pages/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
-import { SwipeMode } from "../../Pages/SwipeMode";
+import { DiscoverEvents } from "../../Pages/DiscoverEvents/DiscoverEvents";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useNavigation } from "@react-navigation/native";
 import { headerOptions } from "../Header/Header";
@@ -67,8 +67,8 @@ export const TabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Swipe Mode"
-                component={SwipeMode}
+                name="Discover Events"
+                component={DiscoverEvents}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <View>
@@ -76,7 +76,7 @@ export const TabNavigator = () => {
                             {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />}
                         </View>
                     ),
-                    ...headerOptions({ navigation, title: 'Swipe Mode', isRootScreen: true }),
+                    ...headerOptions({ navigation, title: 'Discover Events', isRootScreen: true }),
                 }}
             />
         </Tab.Navigator>

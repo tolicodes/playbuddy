@@ -13,6 +13,7 @@ import { Buddy } from '../Buddies/hooks/BuddiesContext';
 import { TicketPromoModal } from './TicketPromoModal';
 import { getEventPromoCodes } from '../Auth/screens/usePromoCode';
 import { BORDER_LAVENDER } from '../../styles';
+import { BadgeRow } from '../common/EventBadgesRow';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -128,20 +129,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                                 <Text style={styles.eventTime}>{formattedDate}</Text>
 
                             </View>
-                            <View style={styles.badgesRow}>
-                                {vetted && (
-                                    <View style={styles.vettedBadge}>
-                                        <Text style={styles.vettedText}>Vetted</Text>
-                                    </View>
-                                )}
-                                {
-                                    item.play_party && (
-                                        <View style={styles.playPartyBadge}>
-                                            <Text style={styles.playPartyText}>Play Party</Text>
-                                        </View>
-                                    )
-                                }
-                            </View>
+                            <BadgeRow vetted={vetted} playParty={item.play_party} center={false} />
                         </View>
                     </View>
                 </View>
