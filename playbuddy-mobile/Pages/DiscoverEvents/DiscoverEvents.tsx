@@ -18,12 +18,12 @@ import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
 import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useBadgeNotifications } from '../../Common/Nav/useBadgeNotifications';
-import { LoginToAccess } from '../../Common/LoginToAccess';
 import { logEvent } from '../../Common/hooks/logger';
 import { LAVENDER_BACKGROUND } from '../../styles';
 
-import { DiscoverEventsModal } from './DiscoverEventsModal';
+import { DiscoverEventsTour } from './DiscoverEventsTour';
 import { DiscoverEventsCard } from './DiscoverEventsCard';
+import { useShowDiscoverEventsTour } from './DiscoverEventsTour';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -34,6 +34,8 @@ export const DiscoverEvents: React.FC = () => {
     const { authUserId } = useUserContext();
     const recordSwipe = useRecordSwipeChoice();
     const swiperRef = useRef<Swiper<any> | null>(null);
+
+    const { visible: discoverEventsTourVisible, setVisible: setDiscoverEventsTourVisible } = useShowDiscoverEventsTour();
 
     // Show a badge count for how many cards remain
     useBadgeNotifications({ availableCardsToSwipe });
@@ -123,13 +125,15 @@ export const DiscoverEvents: React.FC = () => {
         }
     }, [swipedHistory, cards, toggleWishlistEvent]);
 
-    if (!authUserId) {
-        return <LoginToAccess entityToAccess="Swipe Mode" />;
+
+
+    if (!authUserId || discoverEventsTourVisible) {
+        return <DiscoverEventsTour onClose={() => setDiscoverEventsTourVisible(false)} />
     }
 
     return (
         <View style={styles.container}>
-            <DiscoverEventsModal />
+            {discoverEventsTourVisible && <DiscoverEventsTour onClose={() => setDiscoverEventsTourVisible(false)} />}
 
             <Swiper
                 ref={(ref) => (swiperRef.current = ref)}
