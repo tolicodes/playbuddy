@@ -18,15 +18,13 @@ import {
     useJoinCommunity,
     useLeaveCommunity,
 } from "../../Common/hooks/useCommunities";
-import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 import { logEvent } from "../../Common/hooks/logger";
 import type { Community } from "../../Common/hooks/CommonContext";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../commonTypes";
 import { LAVENDER_BACKGROUND } from "../../styles";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 
 export const CommunitiesList = ({
     title,
@@ -40,6 +38,7 @@ export const CommunitiesList = ({
     entityType?: "private_community" | "organizer";
 }) => {
     const navigation = useNavigation<NavStack>();
+    const { authUserId } = useUserContext();
     const [searchQuery, setSearchQuery] = useState("");
     const [showNoEventOrganizers, setShowNoEventOrganizers] = useState(false);
 
@@ -50,6 +49,10 @@ export const CommunitiesList = ({
 
     const handleJoin = useCallback(
         (communityId: string) => {
+            if (!authUserId) {
+                alert('Create an account to join a community!')
+                return;
+            }
             joinCommunity.mutate({
                 community_id: communityId,
                 type:
@@ -86,7 +89,7 @@ export const CommunitiesList = ({
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [communities, searchQuery, showNoEventOrganizers, allEvents]);
 
-    if (communities.length === 0) {
+    if (filteredCommunities.length === 0) {
         return (
             <View style={styles.emptyContainer}>
                 <View style={styles.centeredView}>

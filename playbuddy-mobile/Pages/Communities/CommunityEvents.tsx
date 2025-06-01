@@ -5,10 +5,12 @@ import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 
 export const CommunityEvents = ({ route: { params: { communityId } } }: { route: { params: { communityId: string } } }) => {
     const { allEvents } = useCalendarContext();
     const { communities, myCommunities } = useCommonContext();
+    const { authUserId } = useUserContext();
 
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
@@ -20,6 +22,10 @@ export const CommunityEvents = ({ route: { params: { communityId } } }: { route:
     );
 
     const handleJoin = useCallback((communityId: string) => {
+        if (!authUserId) {
+            alert('Create an account to join a community!')
+            return;
+        }
         joinCommunity.mutate({ community_id: communityId, type: 'organizer_public_community' });
         logEvent('community_events_community_joined', { communityId });
     }, [joinCommunity]);

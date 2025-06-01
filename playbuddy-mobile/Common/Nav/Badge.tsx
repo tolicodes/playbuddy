@@ -5,7 +5,7 @@ export const Badge = ({ count }: { count: number }) => (
     <View
         style={{
             position: 'absolute',
-            right: -15,
+            right: -20,
             top: -10,
             backgroundColor: 'red',
             borderRadius: 6,

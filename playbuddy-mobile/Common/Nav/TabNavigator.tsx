@@ -67,16 +67,16 @@ export const TabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Discover Events"
+                name="Discover Game"
                 component={DiscoverEvents}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <View>
-                            <FAIcon name="layer-group" size={size} color={color} />
+                            <FAIcon name="gamepad" size={size} color={color} />
                             {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />}
                         </View>
                     ),
-                    ...headerOptions({ navigation, title: 'Discover Events', isRootScreen: true }),
+                    ...headerOptions({ navigation, title: 'Discover Game', isRootScreen: true }),
                 }}
             />
         </Tab.Navigator>

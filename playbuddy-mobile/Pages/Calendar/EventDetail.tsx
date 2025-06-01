@@ -49,12 +49,10 @@ const EventHeader = ({
     event,
     onEventHeaderPress,
     onToggleWishlist,
-    onGoogleCalendar
 }: {
     event: EventWithMetadata;
     onEventHeaderPress: () => void;
     onToggleWishlist: () => void;
-    onGoogleCalendar: () => void;
 }) => {
     const { isOnWishlist } = useCalendarContext();
     const itemIsOnWishlist = isOnWishlist(event.id);
@@ -72,13 +70,6 @@ const EventHeader = ({
                     name={itemIsOnWishlist ? 'favorite' : 'favorite-border'}
                     size={35}
                     color="red"
-                />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.googleCalendarButton} onPress={onGoogleCalendar}>
-                <Image
-                    source={require('./images/google-calendar.png')}
-                    style={styles.googleCalendarImage}
                 />
             </TouchableOpacity>
         </View>
@@ -286,7 +277,6 @@ export const EventDetail = ({ route }) => {
                         event={selectedEvent}
                         onEventHeaderPress={handleEventHeaderPress}
                         onToggleWishlist={handleToggleWishlist}
-                        onGoogleCalendar={handleGoogleCalendar}
                     />
 
                     <TouchableOpacity onPress={handleOrganizerClick}>
@@ -340,7 +330,7 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     fullViewTitle: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: '700',
         color: '#7F5AF0', // friendly purple
         marginRight: 20,
@@ -382,14 +372,21 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     googleCalendarButton: {
-        padding: 6,
-        backgroundColor: '#ECE6FF',
-        borderRadius: 8,
-        marginLeft: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: '#7F5AF0',
     },
     googleCalendarImage: {
         width: 26,
         height: 26,
+    },
+    googleCalendarText: {
+        fontSize: 16,
+        color: '#5C5C5C',
+        fontWeight: '500',
     },
     ticketButton: {
         backgroundColor: '#7F5AF0',
