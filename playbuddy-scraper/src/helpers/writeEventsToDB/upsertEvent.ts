@@ -1,64 +1,145 @@
-import { CreateEventInput } from "commonTypes.js";
+import { NormalizedEventInput, Organizer } from "commonTypes.js";
 import { supabaseClient } from "../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
-import { upsertLocation } from "./upsertLocation.js";
+import { NYC_LOCATION_ID, upsertLocation } from "./upsertLocation.js";
 import axios from "axios";
 import crypto from "crypto";
-import { supabaseClient as supabase } from '../../connections/supabaseClient.js';
 
-export async function upsertEvent(event: CreateEventInput): Promise<number | undefined> {
+type UpsertEventResult = 'inserted' | 'updated' | 'failed';
+
+// stash originals before overriding
+const originalLog = console.log;
+const originalError = console.error;
+
+const log = (message?: any, ...optionalParams: any[]) => {
+    originalLog(message, ...optionalParams);
+};
+
+const logError = (message: string, error?: Error) => {
+    // print in red, then trace
+    originalError(`\x1b[31mERROR: ${message} ${error?.message}\x1b[0m`);
+    originalError(error?.stack);
+};
+
+export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEventResult> {
+    const { organizer } = event;
+
+    let organizerId = 'id' in organizer ? organizer.id : undefined;
+    const organizerCreateInput = 'name' in organizer ? {
+        name: organizer.name,
+        url: organizer.url,
+        original_id: organizer.original_id,
+    } : undefined;
+
+    console.log(`ORGANIZER: ${organizerCreateInput?.name} ${organizerId}`)
+
+
+    const organizerName = organizerCreateInput?.name || organizerId || 'Unknown';
+    const separator = '-'.repeat(process.stdout.columns);
+
+    log('\n' + separator);
+    log(`UPSERT EVENT: [${organizerName}] ${event.name}`);
+    log(`Ticket URL: ${event.ticket_url || 'N/A'}`);
+    log(separator + '\n');
+
+    if (!organizerCreateInput && !organizerId) {
+        logError(`ORGANIZER: No organizer id or name found`);
+        return 'failed';
+    }
+
+    let organizerCommunityId: string | undefined;
+
     try {
-        if (!event?.organizer) {
-            console.log('No organizer name for event', event);
-            return 0;
+        if (!organizerId) {
+            log(`ORGANIZER: Upserting organizer ${organizerName}`);
+            const { organizerId: organizerIdFromUpsert, communityId: organizerCommunityIdFromUpsert } =
+                await upsertOrganizer(event.organizer as Omit<Organizer, "id">);
+
+            if (!organizerIdFromUpsert || !organizerCommunityIdFromUpsert) {
+                logError(`ORGANIZER: Failed to upsert organizer`);
+                return 'failed';
+            }
+
+            organizerId = organizerIdFromUpsert;
+            organizerCommunityId = organizerCommunityIdFromUpsert;
         }
 
-        const { organizerId, communityId: organizerCommunityId } = await upsertOrganizer(event.organizer);
-        if (!organizerId || !organizerCommunityId) return 0;
-
-        const existingEventId = await checkExistingEvent(event, organizerId);
+        const existingEventId = await checkExistingEvent(
+            event,
+            organizerId
+        );
 
         // check visibility
         // if the new event is public, then we mark it as public, even if it's private
         // if it's private, we don't change the privacy (it's public by default)
         if (existingEventId && event.visibility === 'public') {
             await setVisibility(existingEventId, 'public');
+            log(`VISIBILITY: Changed to public`);
         }
 
-        if (existingEventId) {
-            // attach all custom communities (interest groups)
-            for (const community of event.communities || []) {
-                await attachCommunity(existingEventId, community.id);
+        let locationAreaId;
+
+        // TODO: Tighten
+        // if there is no location area, then NYC
+        // if they provided an id, user that
+        // if they provided a code, upsert that
+        // otherwise it will do nyc
+        if (!event?.location_area) {
+            locationAreaId = NYC_LOCATION_ID;
+        } else {
+            locationAreaId = 'id' in event.location_area
+                ? event.location_area.id
+                : await upsertLocation('code' in event.location_area ? event.location_area.code : '');
+
+            if ('code' in event.location_area) {
+                log(`LOCATION AREA: Upserted location area ${event.location_area?.code}`);
             }
-            return 0;
         }
 
-        // @ts-expect-error Not sure why this is complaining
-        const locationAreaId = await upsertLocation(event.location_area?.code || '');
+        if (!locationAreaId) {
+            logError(`LOCATION AREA: Failed to upsert location area`);
+            return 'failed';
+        }
 
-        const createdEvent = await createEvent(event, organizerId, locationAreaId || '');
+        // Upsert the event in the database
+        const upsertedEvent = await upsertEventInDB(
+            event,
+            organizerId,
+            locationAreaId,
+            existingEventId
+        );
 
-        console.log('Created event', createdEvent);
-        if (!createdEvent) {
-            return 0;
+        if (!upsertedEvent) {
+            logError(`EVENT: Failed to upsert event`);
+            return 'failed';
         }
 
         // attach all custom communities (interest groups)
         for (const community of event.communities || []) {
-            await attachCommunity(createdEvent.id, community.id);
+            // TODO: Allow upsert community
+
+            if (!('id' in community)) {
+                // TODO: Critical error because it has no community id
+                logError(`ATTACH COMMUNITY: Inserting via community name not supported ${community.name}`);
+                return 'failed';
+            }
+
+            await attachCommunity(upsertedEvent.id, community.id);
         }
 
-        await attachCommunity(createdEvent.id, organizerCommunityId);
 
-        console.log(`Event ${event.name} inserted successfully.`);
+        if (organizerCommunityId) {
+            await attachCommunity(upsertedEvent.id, organizerCommunityId);
+        }
 
-        return 1;
+        log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
+        // This is the success
+        return existingEventId ? 'updated' : 'inserted';
 
     } catch (error) {
-        console.error(`Error upserting event ${event.name}:`, error);
+        logError(`EVENT: Failed to upsert event`, error as Error);
+        return 'failed';
     }
-
-    return 0;
 }
 
 const setVisibility = async (eventId: string, visibility: 'public' | 'private') => {
@@ -68,8 +149,7 @@ const setVisibility = async (eventId: string, visibility: 'public' | 'private') 
         .eq("id", eventId);
 
     if (visibilityError) {
-        console.error(`Error setting visibility for event ${eventId}:`, visibilityError);
-        throw visibilityError;
+        throw new Error(`SET VISIBILITY: Error setting visibility for event ${eventId}: ${visibilityError?.message}`);
     }
 }
 
@@ -82,8 +162,7 @@ const attachCommunity = async (eventId: string, communityId: string) => {
         .eq("community_id", communityId);
 
     if (existingCommunityEventError) {
-        console.error(`Error fetching existing community event ${eventId} ${communityId}:`, existingCommunityEventError);
-        throw existingCommunityEventError;
+        throw new Error(`COMMUNITY: Error fetching existing community event ${eventId} ${communityId}: ${existingCommunityEventError?.message}`);
     }
 
     // if we already have a relationship, don't create a new one
@@ -99,45 +178,43 @@ const attachCommunity = async (eventId: string, communityId: string) => {
         });
 
     if (communityError) {
-        console.error(`Error inserting event community ${eventId} ${communityId}:`, communityError);
-        throw communityError;
+        throw new Error(`COMMUNITY: Error inserting event community ${eventId} ${communityId}: ${communityError?.message}`);
     }
 }
 
-const checkExistingEvent = async (event: CreateEventInput, organizerId: string): Promise<null | string> => {
+const checkExistingEvent = async (event: NormalizedEventInput, organizerId: string): Promise<null | string> => {
+    const filterString = `original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`;
+
     // Check for existing event by original_id or by start_date and organizer_id
     const { data: existingEvents, error: fetchError } = await supabaseClient
         .from("events")
         .select("id")
+
         // original_id matches
-        // OR start_date and organizer_id matches and source_ticketing_platform does not match (to avoid false positive multiple events with same start date)
+        // OR start_date and organizer_id matches
         // OR start_date and event name matches 
 
         // original_id.eq.${event.original_id},
         // and(
         //   start_date.eq.${event.start_date},
         //   organizer_id.eq.${organizerId}
-        //   and(source_ticketing_platform.neq."${event.source_ticketing_platform}")
-
         // ),
         // and(
         //   start_date.eq.${event.start_date},
         //   name.eq.${event.name}
         // )
+        .or(filterString)
+    // for some reason it doesn't like when I format it like above
 
-        // for some reason it doesn't like when I format it like above
 
-        .or(`original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}",source_ticketing_platform.neq."${event.source_ticketing_platform}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`)
-
+    // error is not null if it doesn't exist
     if (fetchError && fetchError.code !== "PGRST116") {
-        console.error(`Error fetching existing event ${event.name}:`, fetchError);
-        // we'll assume it doesn't exist
-        return null;
+
+        throw new Error(`CHECK EXISTING EVENT: Error fetching existing event ${fetchError?.message}`);
     }
+    // otherwise it doesn't exist and we continue
 
     if (existingEvents && existingEvents.length > 0) {
-        console.log('existingEvents', existingEvents, event.source_ticketing_platform);
-        console.log(`Event ${event.name} already exists.`);
         return existingEvents[0].id;
     }
 
@@ -149,27 +226,29 @@ const IMAGE_BUCKET_NAME = "event-images";
 
 const downloadImage = async (url: string) => {
     try {
+        let response;
         // Download the image
-        const response = await axios({
-            url,
-            method: 'GET',
-            responseType: 'arraybuffer', // Download image as binary data
-        });
+        try {
+            response = await axios({
+                url,
+                method: 'GET',
+                responseType: 'arraybuffer', // Download image as binary data
+            });
+        } catch (error) {
+            throw new Error(`IMAGE: Error downloading image: ${error}`);
+        }
 
         const imageBuffer = Buffer.from(response.data, 'binary');
 
-        if (!response.headers['content-type'].startsWith('image/')) {
-            throw new Error('The provided URL does not contain an image.');
-        }
-
-        const extension = response.headers['content-type'].split('/')[1]; // Extract the file extension
+        const extension = response.headers['content-type'] ?
+            response.headers['content-type'].split('/')[1] : 'jpg'; // Extract the file extension
 
         // Create a random image name with the appropriate extension
         const randomHash = crypto.randomBytes(16).toString('hex');
         const imageName = `${randomHash}.${extension}`;
 
         // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
+        const { data, error } = await supabaseClient.storage
             .from(IMAGE_BUCKET_NAME)
             .upload(imageName, imageBuffer, {
                 contentType: response.headers['content-type'],
@@ -177,29 +256,32 @@ const downloadImage = async (url: string) => {
             });
 
         if (error) {
-            console.error('Error uploading image:', error);
-            throw error;
+            throw new Error(`IMAGE: Error uploading image: ${error}`);
         }
 
         const imagePath = data.path;
 
         // get public url
-        const { data: publicUrlData } = await supabase.storage.from(IMAGE_BUCKET_NAME).getPublicUrl(imagePath);
+        const { data: publicUrlData } = await supabaseClient.storage.from(IMAGE_BUCKET_NAME).getPublicUrl(imagePath);
 
-        return publicUrlData.publicUrl;
+        if (!publicUrlData) {
+            throw new Error(`IMAGE: Error getting public URL for image`);
+        }
+
+        return publicUrlData?.publicUrl;
 
     } catch (error) {
-        console.error('Error downloading or uploading image:', error);
-        return null;
+        throw new Error(`IMAGE: Error downloading or uploading image: ${error}`);
     }
 }
 
-// Insert new event if it doesn't exist
-const createEvent = async (event: CreateEventInput, organizerId: string, locationAreaId: string) => {
-    const imageUrl = await downloadImage(event.image_url);
-    const { data: createdEvent, error: insertError } = await supabaseClient
+// Upsert event in the database
+const upsertEventInDB = async (event: NormalizedEventInput, organizerId: string, locationAreaId: string, existingEventId: string | null) => {
+    const imageUrl = event.image_url ? await downloadImage(event.image_url) : null;
+    const { data: upsertedEvent, error: upsertError } = await supabaseClient
         .from("events")
-        .insert({
+        .upsert({
+            id: existingEventId || undefined,
             original_id: event.original_id || '',
             organizer_id: organizerId,
             type: event.type || '',
@@ -223,19 +305,18 @@ const createEvent = async (event: CreateEventInput, organizerId: string, locatio
             source_origination_group_id: event.source_origination_group_id || '',
             source_origination_group_name: event.source_origination_group_name || '',
             source_origination_platform: event.source_origination_platform || '',
-            source_ticketing_platform: event.source_ticketing_platform || '',
+            source_ticketing_platform: event.source_origination_platform || '',
             dataset: event.dataset || '',
             visibility: event.visibility || 'public',
 
             location_area_id: locationAreaId
-        })
+        }, { onConflict: 'id' })
         .select()
         .single();
 
-    if (insertError || !createdEvent) {
-        console.error(`Error inserting event ${event.name}:`, insertError);
-        return null;
+    if (upsertError || !upsertedEvent) {
+        throw new Error(`EVENT: Error upserting event ${upsertError?.message}`);
     }
 
-    return createdEvent;
+    return upsertedEvent;
 }

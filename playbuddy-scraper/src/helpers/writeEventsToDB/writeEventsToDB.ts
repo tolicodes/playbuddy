@@ -1,14 +1,24 @@
-import { CreateEventInput } from "../../commonTypes.js";
+import { NormalizedEventInput } from "../../commonTypes.js";
 import { upsertEvent } from "./upsertEvent.js";
 
-export const writeEventsToDB = async (events: CreateEventInput[]): Promise<number> => {
+export const writeEventsToDB = async (events: NormalizedEventInput[]) => {
   let addedCount = 0;
+  let updatedCount = 0;
+  let failedCount = 0;
+
   for (const event of events) {
-    const success = await upsertEvent(event);
-    addedCount += success || 0;
+    const result = await upsertEvent(event);
+    if (result === 'inserted') {
+      addedCount++;
+    } else if (result === 'updated') {
+      updatedCount++;
+    } else {
+      failedCount++;
+    }
   }
 
-  console.log(`Processed ${events.length} events.`);
-  console.log(`Successfully added ${addedCount} events.`);
-  return addedCount;
+  console.log(`Processed ${events.length} events:`);
+  console.log(`  Added: ${addedCount}`);
+  console.log(`  Updated: ${updatedCount}`);
+  console.log(`  Failed: ${failedCount}`);
 };

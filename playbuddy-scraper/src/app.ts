@@ -2,7 +2,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import process from "node:process";
-import { scrapeEvents, scrapeWhatsappEvents } from "./scraper.js";
+import { scrapeEvents } from "./scrapers/scraper.js";
 
 export const app = express();
 
@@ -20,34 +20,13 @@ app.head("/", (req: Request, res: Response): void => {
 });
 
 app.get("/scrape", async (req: Request, res: Response): Promise<void> => {
-  await scrapeEvents({
-    freq: 'hourly'
-  })
+  await scrapeEvents()
     ;
   res.send({
     status: "ok",
   });
 });
 
-// more expensive queries
-app.get("/scrape/daily", async (req: Request, res: Response): Promise<void> => {
-  await scrapeEvents({
-    freq: 'daily'
-  });
-
-  res.send({
-    status: "ok",
-  });
-});
-
-app.get("/scrape/whatsapp", async (req: Request, res: Response): Promise<void> => {
-  const out = await scrapeWhatsappEvents();
-
-  res.send({
-    status: "ok",
-    out,
-  });
-});
 
 let server: Server;
 export async function start(port: number | string): Promise<Server> {
@@ -96,8 +75,17 @@ export async function stop(signal?: string | Error): Promise<void> {
   console.log("Server stopped");
 }
 
-// If this module is the main module, then start the server
 if (import.meta.url.endsWith(process.argv[1]!)) {
   const port = process.env["PORT"] || "8082";
+
+  process.on('uncaughtException', (err) => {
+    console.error('Uncaught Exception:', err);
+  }).on('error', (err) => {
+    console.error('Error:', err);
+
+  }).on('close', () => {
+    console.log('Server closed');
+  });
+
   await start(port);
 }

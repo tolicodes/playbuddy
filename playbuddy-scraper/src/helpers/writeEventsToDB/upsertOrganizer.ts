@@ -1,77 +1,63 @@
-// Function to upsert an organizer and return its ID
 
-import { CreateOrganizerInput } from "commonTypes.js";
+// Import necessary types and clients
+import { Organizer } from "../../commonTypes.js";
 import { supabaseClient } from "../../connections/supabaseClient.js";
 
-// we will check aliases as well
-// @ts-expect-error - TODO: fix this
-export async function upsertOrganizer({ name, url, original_id }: CreateOrganizerInput): Promise<{
-    organizerId?: string,
-    communityId?: string
-}> {
+// Function to upsert an organizer and its associated community
+export async function upsertOrganizer(
+    organizer: Omit<Organizer, 'id'>
+): Promise<{ organizerId?: string, communityId?: string }> {
+    const { name, url, original_id } = organizer;
+    // Check if the organizer name is provided
     if (!name) {
-        console.log('No name for organizer', original_id, url);
-        return {
-            organizerId: undefined,
-            communityId: undefined
-        };
+        throw new Error(`ORGANIZER: No name for organizer ${JSON.stringify(organizer)}`)
     }
 
-    // Check if the organizer exists by name or alias
+    // Attempt to find an existing organizer by name or alias
     const { data: existingOrganizer, error: fetchError } = await supabaseClient
         .from("organizers")
         .select("id, name")
         .or(`name.eq."${name}",aliases.cs.{"${name}"}`)
         .single();
 
-    // Handle error if it's not the no rows error
+    // Handle any errors that occur during the fetch
     if (fetchError && fetchError.code !== "PGRST116") {
         console.error("Error fetching organizer:", fetchError);
         throw fetchError;
     }
 
-    // If an organizer exists with the name or alias, use its name and ID
-    if (existingOrganizer) {
-        const { data: existingCommunity } = await supabaseClient
-            .from('communities')
-            .select("id")
-            .eq("organizer_id", existingOrganizer.id)
+    // Initialize organizerId with the existing organizer's ID if found
+    let organizerId = existingOrganizer?.id;
+
+    // If no existing organizer is found, upsert a new organizer
+    if (!organizerId) {
+        const { data: insertedOrganizer, error: upsertError } = await supabaseClient
+            .from("organizers")
+            .upsert({ name, url, original_id }, { onConflict: "name" })
+            .select("id, name")
             .single();
 
-        return {
-            organizerId: existingOrganizer.id,
-            communityId: existingCommunity?.id
+        // Handle any errors that occur during the upsert
+        if (upsertError) {
+            console.error("Error upserting organizer:", upsertError);
+            throw upsertError;
         }
+
+        // Assign the newly inserted organizer's ID
+        organizerId = insertedOrganizer?.id;
     }
 
-    // Upsert the organizer
-    const { data: insertedOrganizer, error: upsertError } = await supabaseClient
-        .from("organizers")
-        .upsert(
-            { name, url, original_id },
-            { onConflict: "name" }
-        )
-        .select("id, name")
-        .single();
-
-    if (upsertError) {
-        console.error("Error upserting organizer:", upsertError);
-        throw upsertError;
-    }
-
-    const organizerId = insertedOrganizer?.id;
-
-    // we don't need to return it, because it's already linked to the organizer
-    // and transitively the event
+    // Upsert the community associated with the organizer
     const communityId = await upsertCommunityFromOrganizer({
         organizerId: organizerId ?? "",
-        // use organizer name
         organizerName: name
     });
 
+    // Return the organizer and community IDs
     return { organizerId, communityId };
 }
 
+// Function to upsert a community from an organizer
 export const upsertCommunityFromOrganizer = async ({
     organizerId,
     organizerName
@@ -79,20 +65,22 @@ export const upsertCommunityFromOrganizer = async ({
     organizerId: string,
     organizerName: string
 }) => {
-    // Check if the community for this organizer already exists
+    // Check if a community already exists for the organizer
     const { data: existingCommunity } = await supabaseClient
         .from('communities')
         .select("id")
         .eq("organizer_id", organizerId)
         .single();
 
+    // Retrieve the existing community ID if found
     const communityId = existingCommunity?.id;
 
+    // Return the existing community ID if it exists
     if (communityId) {
         return communityId;
     }
 
-    // If no existing community found, insert a new one
+    // If no existing community is found, insert a new one
     const { data: newCommunity, error: communityInsertError } = await supabaseClient
         .from('communities')
         .insert({
@@ -105,10 +93,12 @@ export const upsertCommunityFromOrganizer = async ({
         .select("id")
         .single();
 
+    // Handle any errors that occur during the community insertion
     if (communityInsertError) {
         console.error("Error inserting community:", communityInsertError);
         throw communityInsertError;
     }
 
+    // Return the newly inserted community's ID
     return newCommunity?.id;
 }

@@ -7,11 +7,11 @@ const en = JSON.parse(fs.readFileSync('node_modules/i18n-iso-countries/langs/en.
 
 countries.registerLocale(en); // Load country codes
 
-const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
+export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
 // Looks for country code in locations table, if not found, creates it
 // using i18n-iso-countries lookup. Otherwise, name is the code
-export async function upsertLocation(locationCode: string): Promise<string> {
+export async function upsertLocation(locationCode?: string | null): Promise<string> {
     // Assume it's NYC if no location code is provided
     if (!locationCode) return NYC_LOCATION_ID;
 
