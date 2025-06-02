@@ -1,0 +1,53 @@
+// export type FacebookEventApifyResponse = {
+//     inputUrl: string;
+//     url: string;
+//     id: string;
+//     name: string;
+//     eventFrequency: 'SINGLE' | 'RECURRING';
+//     imageUrl: string;
+//     imageCaption: string;
+//     dateTimeSentence: string;
+//     utcStartDate: string;
+//     utcEndDate?: string;
+//     startTime: string;
+//     duration: string;
+//     description: string;
+//     usersGoing: number;
+//     usersInterested: number;
+//     usersResponded: number;
+//     hasChildEvents: boolean;
+//     location: {
+//         url?: string | null;
+//         id: string;
+//         name: string;
+//         contextualName?: string | null;
+//         placeType: string;
+//         latitude: number;
+//         longitude: number;
+//         countryCode: string;
+//         streetAddress?: string | null;
+//         city?: string | null;
+//     };
+//     ticketsInfo?: string | null;
+//     organizedBy: string;
+//     organizators: {
+//         id: string;
+//         url?: string | null;
+//         name: string;
+//         isVerified: boolean;
+//     }[];
+//     eventType: 'PUBLIC' | 'PRIVATE';
+//     privacyInfo: string;
+//     isPast: boolean;
+//     isOnline: boolean;
+//     paidContent: boolean;
+//     isClassEvent?: boolean | null;
+//     isLiveAudioRoom?: boolean | null;
+//     isRemoteLearningClass?: boolean | null;
+//     isRemoteLearningCourse?: boolean | null;
+//     groupEventPinnedToFeatured: boolean;
+//     hasRecordingAvailable: boolean;
+//     discoveryCategories: string[];
+//     externalLinks: string[];
+//     childEvents: FacebookEventApifyResponse[];
+// }
