@@ -89,7 +89,8 @@ export const CommunitiesList = ({
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [communities, searchQuery, showNoEventOrganizers, allEvents]);
 
-    if (filteredCommunities.length === 0) {
+    // NOT filtered communities otherwise search doesn't show
+    if (communities.length === 0) {
         return (
             <View style={styles.emptyContainer}>
                 <View style={styles.centeredView}>

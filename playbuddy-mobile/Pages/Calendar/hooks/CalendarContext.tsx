@@ -53,7 +53,8 @@ const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterSt
         const eventShortDescription = event.short_description?.toLowerCase() || '';
 
         return (
-            (eventName.includes(searchTerm)
+            (
+                eventName.includes(searchTerm)
                 || organizerName.includes(searchTerm)
                 || eventDescription.includes(searchTerm)
                 || eventShortDescription.includes(searchTerm)
