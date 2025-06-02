@@ -47,13 +47,17 @@ const filterEvents = (eventsWithMetadata: EventWithMetadata[], filters: FilterSt
     const searchTerm = filters.search.toLowerCase();
 
     return eventsWithMetadata.filter(event => {
-        const organizerId = event.organizer?.id || '';
         const eventName = event.name?.toLowerCase() || '';
         const organizerName = event.organizer?.name?.toLowerCase() || '';
+        const eventDescription = event.description?.toLowerCase() || '';
+        const eventShortDescription = event.short_description?.toLowerCase() || '';
 
         return (
-            (!filters.organizers.length || filters.organizers.includes(organizerId)) &&
-            (eventName.includes(searchTerm) || organizerName.includes(searchTerm))
+            (eventName.includes(searchTerm)
+                || organizerName.includes(searchTerm)
+                || eventDescription.includes(searchTerm)
+                || eventShortDescription.includes(searchTerm)
+            )
         );
     });
 };
