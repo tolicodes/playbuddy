@@ -1,7 +1,7 @@
 import axios from "axios";
 import { DateTime } from 'luxon';
 
-import { CreateEventInput } from "../../commonTypes.js";
+import { NormalizedEventInput } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
 
 const API_URL = "https://tantrany.com/api/events-listings.json.php?user=toli";
@@ -39,12 +39,14 @@ interface EventDetails {
   ColorHex: string;
   isPublic: string; // Could also be a boolean in string form like "1" or "0"
   DescShort: string | null; // Optional description
+  EventDataHTMLDescription: string; // long description
   DefaultDuration: string; // Default event duration
   YearMonth: string; // in YYYY-MM format
   Day: string; // Day of the week
   Month: string; // Month name
   CDate: string; // Date of the month
   Year: string; // Year as a string, sometimes empty
+
 }
 
 
@@ -66,14 +68,14 @@ const parseTimeWithAMPM = (date: string, time: string, timeZone = 'America/New_Y
 // Scraper their API
 export const scrapeOrganizerTantraNY = async ({
   url = API_URL,
-  sourceMetadata,
-}: ScraperParams): Promise<CreateEventInput[]> => {
+  eventDefaults,
+}: ScraperParams): Promise<NormalizedEventInput[]> => {
   try {
     // Make a request to the Eventbrite API endpoint
     const data = await axios.get(API_URL);
 
     // Extract relevant event details
-    const events = Object.values(data.data as EventDetails[]).map((event: EventDetails): CreateEventInput => {
+    const events = Object.values(data.data as EventDetails[]).map((event: EventDetails): NormalizedEventInput => {
       const startDate = parseTimeWithAMPM(event.Date, event.StartTime);
 
       const endDate = new Date(startDate);
@@ -82,12 +84,12 @@ export const scrapeOrganizerTantraNY = async ({
       const location = `${event.LocationName} - ${event.Address1} ${event.City}, ${event.State} ${event.Zip}`;
 
       return {
+        ...eventDefaults,
+
         original_id: `organizer-tantra_ny-${event.EventId}`,
         type: 'event',
         recurring: 'none',
         organizer: {
-          // actually filled in by the DB, need to fill it in for ts, fix later
-          id: '',
           name: "The Tantra Institute",
           url: ORGANIZER_PAGE,
         },
@@ -101,14 +103,13 @@ export const scrapeOrganizerTantraNY = async ({
         image_url: event.ImgSrc,
 
         location,
-        price: "0",
+        price: "",
 
-        description: event.DescShort || '',
+        description: event.EventDataHTMLDescription || '',
+        short_description: event.DescShort || '',
+
         tags: ["tantra"],
         source_ticketing_platform: "Eventbrite",
-
-        // includes community
-        ...sourceMetadata,
       };
     });
 

@@ -1,6 +1,6 @@
-import { SourceMetadata } from '../commonTypes.js';
+import { NormalizedEventInput } from '../commonTypes.js';
 export type ScraperParams = {
     url: string;
-    sourceMetadata: SourceMetadata;
+    eventDefaults: Partial<NormalizedEventInput>;
     urlCache?: string[];
 };

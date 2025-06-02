@@ -1,16 +1,16 @@
 import axios from "axios";
-import { Event, SourceMetadata } from "../commonTypes.js";
+import { Event, NormalizedEventInput } from "../commonTypes.js";
 import { fillInEndTime } from "../helpers/partifulDateUtils.js";
 import TurndownService from 'turndown';
 
-const apiUrl = "https://api.joinbloom.community/events?perPage=10000";
+const apiUrl = "https://api.joinbloom.community/events?perPage=1000";
 
 // We skip the params because it's self contained to the site in one json
 export const scrapePluraEvents = async ({
-  sourceMetadata,
+  eventDefaults,
 }: {
-  sourceMetadata: SourceMetadata;
-}): Promise<Event[]> => {
+  eventDefaults: Partial<NormalizedEventInput>;
+}): Promise<NormalizedEventInput[]> => {
   const response = await axios.get(apiUrl);
   const data = response.data;
 
@@ -19,12 +19,13 @@ export const scrapePluraEvents = async ({
 
   // Convert HTML to Markdown
 
-  const events: Event[] = data.hangouts
+  const events: NormalizedEventInput[] = data.hangouts
     .filter((event: any) => event.location?.city === "New York" || event.location?.metroId === "109c15cd-ce60-4f7c-b394-8a6d3d3e5526")
     .map((event: any) => {
       const descriptionsMarkdown = turndownService.turndown(event.details);
 
       return {
+        ...eventDefaults,
         original_id: `plura-${event.id}`,
         organizer: {
           name: event.organization?.name,
@@ -45,7 +46,6 @@ export const scrapePluraEvents = async ({
         description: descriptionsMarkdown,
         tags: [],
         source_ticketing_platform: "Plura",
-        ...sourceMetadata,
       };
     });
   return events;
