@@ -6,7 +6,7 @@ import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
 import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
-import { AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
+import { AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 
 const router = Router();
 
@@ -130,6 +130,39 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     }
 });
 
+router.put("/weekly-picks/:eventId", async (req: AuthenticatedRequest, res: Response) => {
+    const { eventId } = req.params;
+    const { status } = req.body;
+
+    if (!eventId) {
+        return res.status(400).json({ error: "eventId is required in URL" });
+    }
+
+    try {
+        const { data, error } = await supabaseClient
+            .from("events")
+            .update({ weekly_pick: status })
+            .eq("id", parseInt(eventId));
+        if (error) {
+            console.error("Supabase update error:", error);
+            return res.status(500).json({ error: error.message });
+        }
+
+        const { data: updatedEvent, error: updatedEventError } = await supabaseClient
+            .from("events")
+            .select("*")
+            .eq("id", parseInt(eventId))
+            .single();
+
+        const redisClient = await connectRedisClient();
+        await redisClient.del("events"); // Clear cache if flush is requested
+
+        return res.status(200).json({ message: "Event marked as weekly pick", event: updatedEvent });
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        return res.status(500).json({ error: "Internal server error" });
+    }
+});
 
 
 export default router;
