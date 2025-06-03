@@ -20,7 +20,6 @@ import { LAVENDER_BACKGROUND } from '../../styles';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = 180;
 const CARD_HEIGHT = 180;
-const STORAGE_KEY = 'hasSeenDiscoverScreen';
 
 type Stage = 'left' | 'right';
 
@@ -354,6 +353,8 @@ export const styles = StyleSheet.create({
     },
 });
 
+const STORAGE_KEY = 'hasSeenDiscoverScreen';
+
 
 /**
  * Hook: returns { visible, setVisible }.
@@ -362,25 +363,25 @@ export const styles = StyleSheet.create({
  * - setVisible(true) is the inverse (rarely used, but we expose it).
  */
 export const useShowDiscoverEventsTour = () => {
-    const [visible, setVisibleInternal] = useState<boolean>(false);
+    const [visibleInternal, setVisibleInternal] = useState(false);
 
     useEffect(() => {
         AsyncStorage.getItem(STORAGE_KEY).then(val => {
             if (val !== 'true') {
-                setVisibleInternal(true);
+                saveVisible(true);
             }
         });
     }, []);
 
-    const setVisible = async (value: boolean) => {
-        setVisibleInternal(value);
+    const saveVisible = async (value: boolean) => {
         try {
             await AsyncStorage.setItem(STORAGE_KEY, value ? 'true' : 'false');
+            setVisibleInternal(value);
         } catch (e) {
             // swallow or log error
             console.warn('Error writing DiscoverScreen flag', e);
         }
     };
 
-    return { visible, setVisible };
+    return { visible: visibleInternal, saveVisible };
 };

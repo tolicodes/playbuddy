@@ -9,7 +9,8 @@ import {
     View,
     TouchableOpacity,
     StyleSheet,
-    Dimensions
+    Dimensions,
+    Text,
 } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -129,6 +130,12 @@ export const DiscoverEvents: React.FC = () => {
 
     if (!authUserId || discoverEventsTourVisible) {
         return <DiscoverEventsTour onClose={() => setDiscoverEventsTourVisible(false)} />
+    }
+
+    if (cards.length === 0) {
+        return <View style={styles.container}>
+            <Text>You're done swiping! Go outside and play!</Text>
+        </View>
     }
 
     return (
