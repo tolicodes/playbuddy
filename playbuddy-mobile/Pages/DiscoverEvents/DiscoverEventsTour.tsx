@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
+import { LAVENDER_BACKGROUND } from '../../styles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = 180;
@@ -215,7 +216,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: LAVENDER_BACKGROUND,
     },
 
     // ── Top Container ─────────────────────────────────────────────
@@ -225,11 +226,11 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 24,
     },
     header: {
-        fontSize: 28,
-        fontWeight: '700',
         textAlign: 'center',
         marginBottom: 4,
-        color: '#6B46C1',
+        color: "black",
+        fontSize: 24,
+        fontWeight: "600"
     },
 
     subheader: {
@@ -309,7 +310,7 @@ export const styles = StyleSheet.create({
         backgroundColor: '#6B46C1',
     },
     createAccountButton: {
-        backgroundColor: '#FF6B6B',
+        backgroundColor: '#1976d2',
     },
     primaryButtonText: {
         color: '#fff',
@@ -333,7 +334,7 @@ export const styles = StyleSheet.create({
     },
     hintBox: {
         width: 150,
-        backgroundColor: '#EDE7F6', // light lavender
+        backgroundColor: 'lightgray',
         borderRadius: 8,
         paddingVertical: 8,
         paddingHorizontal: 12,
