@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 10,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: '#fff',
     },
     headerInnerContainer: {
         flex: 1,

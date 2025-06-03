@@ -46,6 +46,7 @@ const topBarStyles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: 12,
         paddingBottom: 10,
+        paddingTop: 10,
         backgroundColor: LAVENDER_BACKGROUND,
     },
     searchBubble: {
