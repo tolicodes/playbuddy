@@ -1,7 +1,13 @@
 #!/bin/bash
 
+# Transfer old format into new 
+
 # Define the source files
-SOURCE_FILES=("common/types/commonTypes.ts" "common/types/userEventTypes.ts" "common/config.ts")
+SOURCE_FILES=(
+  "common/src/types/commonTypes.ts" 
+  "common/src/types/userEventTypes.ts" 
+  "common/src/config.ts"
+)
 
 # Define the target directories
 TARGET_DIRECTORIES=(
@@ -10,6 +16,9 @@ TARGET_DIRECTORIES=(
   "playbuddy-api/src"
   "playbuddy-web/src/common"
 )
+
+
+## NEW FORMAT
 
 # Loop through each target directory and copy each source file
 for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do

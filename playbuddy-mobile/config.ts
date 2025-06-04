@@ -32,3 +32,4 @@ export const puppeteerConfig = {
 
 export const APP_STORE_URL = 'https://playbuddy.me/ios';
 export const GOOGLE_PLAY_URL = 'https://playbuddy.me/android';
+export const DEEP_LINK_BASE = 'https://l.playbuddy.me/';

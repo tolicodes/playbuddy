@@ -774,6 +774,10 @@ export interface DeepLink {
     featured_promo_code: PromoCode;
 
     deep_link_events: DeepLinkEvent[]
+
+    campaign_start_date?: string;
+    campaign_end_date?: string;
+    channel?: string;
 }
 
 export { UE };
