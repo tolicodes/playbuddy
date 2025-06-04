@@ -17,9 +17,6 @@ TARGET_DIRECTORIES=(
   "playbuddy-web/src/common"
 )
 
-
-## NEW FORMAT
-
 # Loop through each target directory and copy each source file
 for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
   if [ -d "$TARGET_DIR" ]; then
@@ -27,6 +24,22 @@ for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
       cp "$SOURCE_FILE" "$TARGET_DIR/"
       echo "Copied $SOURCE_FILE to $TARGET_DIR/"
     done
+  else
+    echo "Target directory $TARGET_DIR does not exist. Skipping..."
+  fi
+done
+
+## NEW FORMAT
+SOURCE_DIRECTORY="common/src/"
+
+TARGET_DIRECTORIES=(
+  "playbuddy-admin/src/common"
+)
+
+for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
+  if [ -d "$TARGET_DIR" ]; then
+    cp -r "$SOURCE_DIRECTORY" "$TARGET_DIR"
+    echo "Copied $SOURCE_DIRECTORY to $TARGET_DIR"
   else
     echo "Target directory $TARGET_DIR does not exist. Skipping..."
   fi
