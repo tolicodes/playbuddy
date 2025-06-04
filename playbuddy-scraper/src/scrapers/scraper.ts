@@ -15,8 +15,8 @@ import { readJSON, writeJSON } from '../helpers/fileUtils.js'
  */
 const SCRAPE_TARGETS: Array<"eb" | "plura" | "tantrany"> = [
     "eb",
-    // "plura",
-    // "tantrany",
+    "plura",
+    "tantrany",
 ];
 
 
