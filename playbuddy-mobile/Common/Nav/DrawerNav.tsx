@@ -15,6 +15,7 @@ import { NavStack } from "./NavStackType";
 import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
 import { PromosScreen } from "../../Pages/Auth/screens/Promo/PromosScreen";
 import PlayParties from "../../Pages/PlayParties";
+import { MunchesScreen } from '../../Pages/Munches/MunchesScreen'
 
 const Drawer = createDrawerNavigator();
 
@@ -84,6 +85,17 @@ export const DrawerNav = () => {
 
                 }}
             />
+
+            <Drawer.Screen
+                name="Munches"
+                component={MunchesScreen}
+                options={{
+                    drawerIcon: getIcon('utensils'),
+                    ...headerOptions({ navigation, title: 'Munches' }),
+
+                }}
+            />
+
 
             <Drawer.Screen
                 name="Play Parties"

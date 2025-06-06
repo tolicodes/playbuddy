@@ -41,9 +41,16 @@ export type NavStackProps = {
         buddyId: string;
     };
 
+    'Munches': undefined;
+
+    'Munch Details': {
+        munchId: string;
+    };
+
     // Other Sections
     'Retreats': undefined;
     'Moar': undefined;
+
 }
 
 export type NavStack = StackNavigationProp<NavStackProps>

@@ -5,6 +5,7 @@ import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { TabNavigator } from './TabNavigator';
 import { PromoScreen } from '../../Pages/Auth/screens/Promo/PromoScreen';
 import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
+import { MunchDetails } from '../../Pages/Munches/MunchDetails';
 import EventDetail from '../../Pages/Calendar/EventDetail';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
@@ -127,6 +128,10 @@ export function HomeStackNavigator() {
             <HomeStack.Screen name="Community Events"
                 options={headerOptions({ navigation, title: 'Events' })}
                 component={CommunityEvents} />
+
+            <HomeStack.Screen name="Munch Details"
+                options={headerOptions({ navigation, title: 'Munch Details' })}
+                component={MunchDetails} />
         </HomeStack.Navigator >
     );
 }
