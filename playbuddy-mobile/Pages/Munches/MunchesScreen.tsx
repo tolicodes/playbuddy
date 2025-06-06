@@ -73,15 +73,7 @@ export const MunchesScreen = ({
             </View>
         );
     }
-    if (filteredMunches.length === 0) {
-        return (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyMessage}>
-                    No munches found{searchQuery ? " matching your search." : "."}
-                </Text>
-            </View>
-        );
-    }
+
 
     return (
         <View style={styles.container}>
@@ -95,74 +87,84 @@ export const MunchesScreen = ({
                 />
             )}
 
-            <FlatList
-                data={filteredMunches}
-                keyExtractor={(item) => item.id.toString()}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={styles.card}
-                        activeOpacity={0.8}
-                        onPress={() => {
-                            navigation.navigate("Munch Details", {
-                                munchId: item.id.toString(),
-                            });
-                            logEvent("munches_list_navigate_to_munch_detail", {
-                                munchId: item.id,
-                            });
-                        }}
-                    >
-                        <View style={styles.row}>
-                            <FAIcon
-                                name="cutlery"
-                                size={28}
-                                color="#666"
-                                style={styles.icon}
-                            />
-                            <View style={styles.content}>
-                                {/* Title */}
-                                <Text style={styles.title} numberOfLines={1}>
-                                    {item.title}
-                                </Text>
+            {filteredMunches.length === 0 && (
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyMessage}>
+                        No munches found{searchQuery ? " matching your search." : "."}
+                    </Text>
+                </View>
+            )}
 
-                                {/* Badges: Borough & Audience */}
-                                <View style={styles.badgesRow}>
-                                    {item.location ? (
-                                        <View style={[styles.badge, styles.locationBadge]}>
-                                            <Text
-                                                style={styles.badgeText}
-                                                numberOfLines={1}
-                                                ellipsizeMode="tail"
-                                            >
-                                                {item.location}
-                                            </Text>
-                                        </View>
-                                    ) : null}
-                                    {item.main_audience ? (
-                                        <View style={[styles.badge, styles.audienceBadge]}>
-                                            <Text
-                                                style={styles.badgeText}
-                                                numberOfLines={1}
-                                                ellipsizeMode="tail"
-                                            >
-                                                {item.main_audience}
-                                            </Text>
-                                        </View>
+            {filteredMunches.length > 0 && (
+                <FlatList
+                    data={filteredMunches}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={styles.card}
+                            activeOpacity={0.8}
+                            onPress={() => {
+                                navigation.navigate("Munch Details", {
+                                    munchId: item.id.toString(),
+                                });
+                                logEvent("munches_list_navigate_to_munch_detail", {
+                                    munchId: item.id,
+                                });
+                            }}
+                        >
+                            <View style={styles.row}>
+                                <FAIcon
+                                    name="cutlery"
+                                    size={28}
+                                    color="#666"
+                                    style={styles.icon}
+                                />
+                                <View style={styles.content}>
+                                    {/* Title */}
+                                    <Text style={styles.title} numberOfLines={1}>
+                                        {item.title}
+                                    </Text>
+
+                                    {/* Badges: Borough & Audience */}
+                                    <View style={styles.badgesRow}>
+                                        {item.location ? (
+                                            <View style={[styles.badge, styles.locationBadge]}>
+                                                <Text
+                                                    style={styles.badgeText}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="tail"
+                                                >
+                                                    {item.location}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                        {item.main_audience ? (
+                                            <View style={[styles.badge, styles.audienceBadge]}>
+                                                <Text
+                                                    style={styles.badgeText}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="tail"
+                                                >
+                                                    {item.main_audience}
+                                                </Text>
+                                            </View>
+                                        ) : null}
+                                    </View>
+
+                                    {/* Schedule */}
+                                    {item.schedule_text ? (
+                                        <Text style={styles.schedule} numberOfLines={1}>
+                                            {item.schedule_text}
+                                        </Text>
                                     ) : null}
                                 </View>
-
-                                {/* Schedule */}
-                                {item.schedule_text ? (
-                                    <Text style={styles.schedule} numberOfLines={1}>
-                                        {item.schedule_text}
-                                    </Text>
-                                ) : null}
                             </View>
-                        </View>
-                    </TouchableOpacity>
-                )}
-                contentContainerStyle={styles.listFooter}
-                showsVerticalScrollIndicator={false}
-            />
+                        </TouchableOpacity>
+                    )}
+                    contentContainerStyle={styles.listFooter}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
         </View>
     );
 };

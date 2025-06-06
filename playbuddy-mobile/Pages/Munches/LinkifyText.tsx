@@ -3,6 +3,7 @@ import { Text, Linking, StyleSheet, TextProps } from "react-native";
 
 type LinkifyProps = TextProps & {
     children: string;
+    platform?: "instagram" | "fetlife";
 };
 
 // Regex to match URLs (with or without protocol), including TLDs like .xxx, .io, .co, etc.
@@ -16,6 +17,7 @@ const combinedRegex = new RegExp(`${urlRegex.source}|${handleRegex.source}`, "g"
 export const LinkifyText: React.FC<LinkifyProps> = ({
     children,
     style,
+    platform,
     ...rest
 }) => {
     const text = children;
@@ -41,79 +43,42 @@ export const LinkifyText: React.FC<LinkifyProps> = ({
                 normalizedUrl = "https://" + normalizedUrl;
             }
 
-            // Check if it's an Instagram link with path: instagram.com/username
-            try {
-                const parsed = new URL(normalizedUrl);
-                const host = parsed.host.toLowerCase();
-                // If host ends with "instagram.com" and has a single path segment
-                if (
-                    (host === "instagram.com" || host === "www.instagram.com") &&
-                    parsed.pathname.length > 1
-                ) {
-                    const username = parsed.pathname.replace(/^\/+|\/+$/g, ""); // remove leading/trailing slashes
-                    const handleDisplay = `@${username}`;
-
-                    elements.push(
-                        <Text
-                            key={`ig-${matchStart}`}
-                            style={styles.link}
-                            onPress={() => {
-                                Linking.openURL(`https://instagram.com/${username}`).catch(() =>
-                                    console.warn(
-                                        "Failed to open Instagram URL:",
-                                        `https://instagram.com/${username}`
-                                    )
-                                );
-                            }}
-                        >
-                            {handleDisplay}
-                        </Text>
-                    );
-                } else {
-                    // Regular URL
-                    elements.push(
-                        <Text
-                            key={`url-${matchStart}`}
-                            style={styles.link}
-                            onPress={() => {
-                                Linking.openURL(normalizedUrl).catch(() =>
-                                    console.warn("Failed to open URL:", normalizedUrl)
-                                );
-                            }}
-                        >
-                            {urlText}
-                        </Text>
-                    );
-                }
-            } catch {
-                // Fallback: treat as generic link
-                elements.push(
-                    <Text
-                        key={`url-${matchStart}`}
-                        style={styles.link}
-                        onPress={() => {
-                            Linking.openURL(normalizedUrl).catch(() =>
-                                console.warn("Failed to open URL:", normalizedUrl)
-                            );
-                        }}
-                    >
-                        {urlText}
-                    </Text>
-                );
-            }
+            elements.push(
+                <Text
+                    key={`url-${matchStart}`}
+                    style={styles.link}
+                    onPress={() => {
+                        Linking.openURL(normalizedUrl).catch(() =>
+                            console.warn("Failed to open URL:", normalizedUrl)
+                        );
+                    }}
+                >
+                    {urlText}
+                </Text>
+            );
         }
         // Else if @handle matched (group 2)
         else if (match[2]) {
             const handle = match[0]; // includes "@"
             const username = match[2];
-            const igUrl = `https://instagram.com/${username}`;
+
+            let linkUrl: string;
+            if (platform === "fetlife") {
+                linkUrl = `https://fetlife.com/${username}`;
+            } else if (platform === "instagram") {
+                linkUrl = `https://instagram.com/${username}`;
+            } else {
+                // Fallback: check if any prior URL detection labeled it as Instagram
+                linkUrl = `https://instagram.com/${username}`;
+            }
+
             elements.push(
                 <Text
                     key={`handle-${matchStart}`}
                     style={styles.link}
                     onPress={() => {
-                        Linking.openURL(igUrl).catch(() =>
-                            console.warn("Failed to open Instagram URL:", igUrl)
+                        Linking.openURL(linkUrl).catch(() =>
+                            console.warn(`Failed to open URL:`, linkUrl)
                         );
                     }}
                 >

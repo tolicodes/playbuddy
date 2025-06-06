@@ -10,6 +10,7 @@ import {
     Platform,
     TouchableOpacity,
     Linking,
+    Dimensions,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import FAIcon from "react-native-vector-icons/FontAwesome";
@@ -19,6 +20,8 @@ import type { Munch } from "../../commonTypes";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
 import { LinkifyText } from "./LinkifyText";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 type MunchDetailsRouteProp = RouteProp<
     { MunchDetails: { munchId: string } },
@@ -59,7 +62,6 @@ export const MunchDetails = () => {
     // Join hosts with bullet separators (•)
     const formatHosts = (hosts: string | null) => {
         if (!hosts) return null;
-        // Split on newline or comma and trim whitespace
         const list = hosts
             .split(/\r?\n|,/)
             .map((h) => h.trim())
@@ -71,9 +73,20 @@ export const MunchDetails = () => {
     const renderField = (label: string, value: string | null) => {
         if (!value) return null;
         return (
-            <View style={styles.fieldRow} key={label}>
-                <Text style={styles.fieldLabel}>{label}</Text>
-                <LinkifyText style={styles.fieldValue}>{value}</LinkifyText>
+            <View style={styles.detailFieldRow} key={label}>
+                <Text style={styles.detailFieldLabel}>{label}</Text>
+                <LinkifyText
+                    style={styles.detailFieldValue}
+                    platform={
+                        label === "Hosts' Fetlife"
+                            ? "fetlife"
+                            : label === "Instagram"
+                                ? "instagram"
+                                : undefined
+                    }
+                >
+                    {value}
+                </LinkifyText>
             </View>
         );
     };
@@ -83,7 +96,7 @@ export const MunchDetails = () => {
             {/* Header Card */}
             <View style={styles.headerCard}>
                 <View style={styles.titleRow}>
-                    <FAIcon name="cutlery" size={30} color="#666" style={styles.icon} />
+                    <FAIcon name="cutlery" size={28} color="#666" style={styles.icon} />
                     <Text style={styles.headerTitle}>{munch.title}</Text>
                 </View>
 
@@ -116,27 +129,54 @@ export const MunchDetails = () => {
                 {/* Schedule */}
                 {(munch.schedule_text || munch.cadence) && (
                     <Text style={styles.scheduleText}>
-                        {munch.schedule_text ? munch.schedule_text : ""}
+                        {munch.schedule_text ?? ""}
                         {munch.schedule_text && munch.cadence ? " • " : ""}
-                        {munch.cadence ? munch.cadence : ""}
+                        {munch.cadence ?? ""}
                     </Text>
                 )}
             </View>
 
-            {/* Notes (outside card) */}
+            {/* Description Block (Notes) */}
             {munch.notes ? (
-                <View style={styles.notesContainerTop}>
-                    <LinkifyText style={styles.notesValueTop}>{munch.notes}</LinkifyText>
+                <View style={styles.descriptionCard}>
+                    <Text style={styles.sectionHeader}>Description</Text>
+                    <LinkifyText platform="fetlife" style={styles.descriptionText}>
+                        {munch.notes}
+                    </LinkifyText>
                 </View>
             ) : null}
 
-            {/* Detail Card: other fields */}
-            <View style={styles.detailCard}>
-                {/* Hosts */}
+            {/* How to Go to This Munch Section */}
+            <View style={styles.instructionsCard}>
+                <Text style={styles.sectionHeader}>How to Go to This Munch</Text>
+
+                <View style={styles.numberedContainer}>
+                    <Text style={styles.numberedLine}>
+                        1. <Text style={styles.boldText}>Tap a host’s Fetlife profile</Text>.
+                    </Text>
+                    <Text style={styles.numberedLine}>
+                        2. Scroll all the way to the bottom until you see the{" "}
+                        <Text style={styles.boldText}>"Events Organizing"</Text> section.
+                    </Text>
+                    <Text style={styles.numberedLine}>
+                        3. <Text style={styles.boldText}>View any upcoming munches there</Text>.
+                        If none are listed, there are no upcoming events.
+                    </Text>
+                    <Text style={styles.numberedLine}>
+                        4. You can also <Text style={styles.boldText}>visit their Instagram</Text>{" "}
+                        or <Text style={styles.boldText}>send them a message</Text>.
+                    </Text>
+                </View>
+
+                <View style={styles.horizontalRule} />
+
+                {/* Hosts' Fetlife */}
                 {munch.hosts ? (
-                    <View style={styles.fieldRow} key="Hosts">
-                        <Text style={styles.fieldLabel}>Hosts</Text>
-                        <LinkifyText style={styles.hostsValue}>{formatHosts(munch.hosts)}</LinkifyText>
+                    <View style={styles.fieldRow} key="Hosts' Fetlife">
+                        <Text style={styles.fieldLabel}>Hosts' Fetlife</Text>
+                        <LinkifyText platform="fetlife" style={styles.fieldValue}>
+                            {formatHosts(munch.hosts)}
+                        </LinkifyText>
                     </View>
                 ) : null}
 
@@ -144,34 +184,18 @@ export const MunchDetails = () => {
                 {munch.ig_handle ? (
                     <View style={styles.fieldRow} key="Instagram">
                         <Text style={styles.fieldLabel}>Instagram</Text>
-                        <TouchableOpacity
-                            onPress={() => {
-                                const igHandle = munch.ig_handle!.startsWith("@")
-                                    ? munch.ig_handle!.slice(1)
-                                    : munch.ig_handle!;
-                                const igUrl = `https://instagram.com/${igHandle}`;
-                                Linking.openURL(igUrl).catch(() =>
-                                    console.warn("Failed to open URL:", igUrl)
-                                );
-                            }}
-                        >
-                            <Text style={[styles.fieldValue, styles.linkText]}>
-                                {munch.ig_handle}
-                            </Text>
-                        </TouchableOpacity>
+                        <LinkifyText platform="instagram" style={styles.fieldValue}>
+                            {munch.ig_handle}
+                        </LinkifyText>
                     </View>
                 ) : null}
+            </View>
 
-                {/* Cost of Entry */}
+            {/* Detail Card: other fields */}
+            <View style={styles.detailCard}>
                 {renderField("Cost of Entry", munch.cost_of_entry)}
-
-                {/* Age Restriction */}
                 {renderField("Age Restriction", munch.age_restriction)}
-
-                {/* Open to Everyone */}
                 {renderField("Open to Everyone?", munch.open_to_everyone)}
-
-                {/* Status */}
                 {renderField("Status", munch.status)}
             </View>
         </ScrollView>
@@ -185,6 +209,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 16,
+        paddingBottom: 40, // Add extra bottom padding for safe area
     },
     centeredContainer: {
         flex: 1,
@@ -198,6 +223,8 @@ const styles = StyleSheet.create({
         color: "#E74C3C",
         textAlign: "center",
     },
+
+    // Header Card
     headerCard: {
         backgroundColor: "#FFFFFF",
         borderRadius: 12,
@@ -235,41 +262,114 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     badge: {
-        width: 100,
-        height: 28,
-        borderRadius: 14,
+        maxWidth: SCREEN_WIDTH * 0.45,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        borderRadius: 12,
         justifyContent: "center",
-        alignItems: "center",
+        alignItems: "flex-start",
         marginRight: 8,
         marginBottom: 8,
-        paddingHorizontal: 6,
     },
     locationBadge: {
-        backgroundColor: "#E0F7FA",
+        backgroundColor: "#26C6DA", // vibrant teal
     },
     audienceBadge: {
-        backgroundColor: "#FFF3E0",
+        backgroundColor: "#FFC107", // vibrant amber
     },
     badgeText: {
         fontSize: 12,
         fontWeight: "600",
-        color: "#00796B",
+        color: "#000",
     },
     scheduleText: {
         fontSize: 16,
         color: "#4E342E",
+        marginTop: 8,
     },
-    notesContainerTop: {
-        backgroundColor: "#F7F7F9",
-        borderRadius: 8,
-        padding: 12,
+
+    // Description Card
+    descriptionCard: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 12,
+        padding: 16,
         marginBottom: 20,
+        ...Platform.select({
+            ios: {
+                shadowColor: "#000",
+                shadowOpacity: 0.05,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
     },
-    notesValueTop: {
+    sectionHeader: {
+        fontSize: 18,
+        fontWeight: "600",
+        color: "#333",
+        marginBottom: 8,
+    },
+    descriptionText: {
         fontSize: 16,
         color: "#333",
         lineHeight: 24,
     },
+
+    // Instructions Card
+    instructionsCard: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        ...Platform.select({
+            ios: {
+                shadowColor: "#000",
+                shadowOpacity: 0.05,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
+    },
+    numberedContainer: {
+        marginTop: 8,
+        marginLeft: 4,
+    },
+    numberedLine: {
+        fontSize: 16,
+        color: "#333",
+        lineHeight: 24,
+        marginBottom: 6,
+    },
+    boldText: {
+        fontWeight: "600",
+    },
+    horizontalRule: {
+        height: 1,
+        backgroundColor: "#E0E0E0",
+        marginVertical: 12,
+    },
+    fieldRow: {
+        marginBottom: 12,
+    },
+    fieldLabel: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#555",
+        marginBottom: 4,
+    },
+    fieldValue: {
+        fontSize: 16,
+        color: "#333",
+        lineHeight: 22,
+    },
+
+    // Detail Card: other fields
     detailCard: {
         backgroundColor: "#FFFFFF",
         borderRadius: 12,
@@ -287,21 +387,16 @@ const styles = StyleSheet.create({
             },
         }),
     },
-    fieldRow: {
+    detailFieldRow: {
         marginBottom: 16,
     },
-    fieldLabel: {
+    detailFieldLabel: {
         fontSize: 14,
         fontWeight: "600",
         color: "#555",
         marginBottom: 4,
     },
-    fieldValue: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 22,
-    },
-    hostsValue: {
+    detailFieldValue: {
         fontSize: 16,
         color: "#333",
         lineHeight: 22,
