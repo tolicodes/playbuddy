@@ -30,14 +30,17 @@ export const MunchesScreen = ({
 
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Fetch munches
     const { data: munches = [], isLoading } = useFetchMunches();
 
-    // Filter, sort, and search logic
     const filteredMunches = useMemo(() => {
         const sortedActive = munches
             .filter((m) => m.status === "Active")
             .sort((a, b) => {
+                const aFeatured = Boolean(a.featured);
+                const bFeatured = Boolean(b.featured);
+                if (aFeatured && !bFeatured) return -1;
+                if (!aFeatured && bFeatured) return 1;
+
                 const aHasSchedule = Boolean(a.schedule_text);
                 const bHasSchedule = Boolean(b.schedule_text);
                 if (aHasSchedule && !bHasSchedule) return -1;
@@ -65,7 +68,6 @@ export const MunchesScreen = ({
         );
     }, [munches, searchQuery]);
 
-    // Loading and empty states
     if (isLoading) {
         return (
             <View style={styles.centeredContainer}>
@@ -73,7 +75,6 @@ export const MunchesScreen = ({
             </View>
         );
     }
-
 
     return (
         <View style={styles.container}>
@@ -125,10 +126,23 @@ export const MunchesScreen = ({
                                         {item.title}
                                     </Text>
 
-                                    {/* Badges: Borough & Audience */}
+                                    {/* Badges: Featured, Borough & Audience */}
                                     <View style={styles.badgesRow}>
+                                        {item.featured && (
+                                            <View style={[styles.badge, styles.featuredBadge]}>
+                                                <FAIcon name="check-circle" size={14} color="#FFF" />
+                                                <Text
+                                                    style={styles.badgeText}
+                                                    numberOfLines={1}
+                                                    ellipsizeMode="tail"
+                                                >
+                                                    Featured
+                                                </Text>
+                                            </View>
+                                        )}
                                         {item.location ? (
                                             <View style={[styles.badge, styles.locationBadge]}>
+                                                <FAIcon name="map-marker" size={14} color="#FFF" />
                                                 <Text
                                                     style={styles.badgeText}
                                                     numberOfLines={1}
@@ -140,6 +154,7 @@ export const MunchesScreen = ({
                                         ) : null}
                                         {item.main_audience ? (
                                             <View style={[styles.badge, styles.audienceBadge]}>
+                                                <FAIcon name="users" size={14} color="#FFF" />
                                                 <Text
                                                     style={styles.badgeText}
                                                     numberOfLines={1}
@@ -224,31 +239,36 @@ const styles = StyleSheet.create({
     },
     badgesRow: {
         flexDirection: "row",
-        marginTop: 6,
+        marginTop: 4,
         marginBottom: 6,
         flexWrap: "wrap",
-        alignItems: "flex-start",
+        alignItems: "center",
     },
     badge: {
+        flexDirection: "row",
+        alignItems: "center",
         maxWidth: SCREEN_WIDTH * 0.4,
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 12,
-        justifyContent: "center",
-        alignItems: "flex-start",
         marginRight: 6,
         marginBottom: 6,
+        backgroundColor: "#1976D2", // default badge color
+    },
+    featuredBadge: {
+        backgroundColor: "#1976D2", // deep blue
     },
     locationBadge: {
-        backgroundColor: "#26C6DA", // vibrant teal
+        backgroundColor: "#00796B", // teal
     },
     audienceBadge: {
-        backgroundColor: "#FFC107", // vibrant amber
+        backgroundColor: "#F57C00", // orange
     },
     badgeText: {
         fontSize: 12,
         fontWeight: "600",
-        color: "#000", // high contrast
+        color: "#FFF",
+        marginLeft: 4,
     },
     schedule: {
         fontSize: 14,

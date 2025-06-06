@@ -8,8 +8,6 @@ import {
     StyleSheet,
     ActivityIndicator,
     Platform,
-    TouchableOpacity,
-    Linking,
     Dimensions,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
@@ -163,8 +161,8 @@ export const MunchDetails = () => {
                         If none are listed, there are no upcoming events.
                     </Text>
                     <Text style={styles.numberedLine}>
-                        4. You can also <Text style={styles.boldText}>visit their Instagram</Text>{" "}
-                        or <Text style={styles.boldText}>send them a message</Text>.
+                        4. You can also <Text style={styles.boldText}>visit their Instagram</Text> or{" "}
+                        <Text style={styles.boldText}>send them a message</Text>.
                     </Text>
                 </View>
 
@@ -193,10 +191,39 @@ export const MunchDetails = () => {
 
             {/* Detail Card: other fields */}
             <View style={styles.detailCard}>
+                {/* Featured Badge */}
+                {munch.featured && (
+                    <View style={styles.featuredRow}>
+                        <Text style={styles.featuredLabel}>Featured</Text>
+                        <FAIcon
+                            name="check-circle"
+                            size={20}
+                            color="#007AFF"
+                            style={styles.featuredIcon}
+                        />
+                    </View>
+                )}
+
                 {renderField("Cost of Entry", munch.cost_of_entry)}
                 {renderField("Age Restriction", munch.age_restriction)}
                 {renderField("Open to Everyone?", munch.open_to_everyone)}
                 {renderField("Status", munch.status)}
+            </View>
+
+            {/* Special Thanks Card */}
+            <View style={styles.thanksCard}>
+                <Text style={styles.sectionHeader}>Special Thanks</Text>
+                <Text style={styles.thanksText}>
+                    This list was largely compiled by a long-time community member,{" "}
+                    <Text style={styles.boldText}>Rose</Text>!
+                </Text>
+                <Text style={styles.thanksMessage}>
+                    <Text style={styles.boldText}>Message from Rose: </Text>
+
+                </Text>
+                <Text>Hi, I’m Rose. I hope you find this spreadsheet helpful in your
+                    kink/BDSM journey. Remember to pace yourself as you get to know the
+                    community—it’ll pay off.</Text>
             </View>
         </ScrollView>
     );
@@ -209,7 +236,7 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 16,
-        paddingBottom: 40, // Add extra bottom padding for safe area
+        paddingBottom: 40, // Extra bottom padding for safe area
     },
     centeredContainer: {
         flex: 1,
@@ -387,6 +414,19 @@ const styles = StyleSheet.create({
             },
         }),
     },
+    featuredRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 16,
+    },
+    featuredLabel: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#555",
+    },
+    featuredIcon: {
+        marginLeft: 8,
+    },
     detailFieldRow: {
         marginBottom: 16,
     },
@@ -403,5 +443,35 @@ const styles = StyleSheet.create({
     },
     linkText: {
         color: "#007AFF",
+    },
+
+    // Special Thanks Card
+    thanksCard: {
+        backgroundColor: "#FFFFFF",
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        ...Platform.select({
+            ios: {
+                shadowColor: "#000",
+                shadowOpacity: 0.05,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 3,
+            },
+            android: {
+                elevation: 2,
+            },
+        }),
+    },
+    thanksText: {
+        fontSize: 16,
+        color: "#333",
+        lineHeight: 22,
+        marginBottom: 8,
+    },
+    thanksMessage: {
+        fontSize: 16,
+        color: "#333",
+        lineHeight: 22,
     },
 });
