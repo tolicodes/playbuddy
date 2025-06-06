@@ -1,5 +1,3 @@
-// MunchDetails.tsx
-
 import React, { useEffect, useState } from "react";
 import {
     View,
@@ -57,7 +55,6 @@ export const MunchDetails = () => {
         );
     }
 
-    // Join hosts with bullet separators (•)
     const formatHosts = (hosts: string | null) => {
         if (!hosts) return null;
         const list = hosts
@@ -67,64 +64,49 @@ export const MunchDetails = () => {
         return list.join(" • ");
     };
 
-    // Helper to render a field label + value pair
     const renderField = (label: string, value: string | null) => {
         if (!value) return null;
         return (
-            <View style={styles.detailFieldRow} key={label}>
-                <Text style={styles.detailFieldLabel}>{label}</Text>
-                <LinkifyText
-                    style={styles.detailFieldValue}
-                    platform={
-                        label === "Hosts' Fetlife"
-                            ? "fetlife"
-                            : label === "Instagram"
-                                ? "instagram"
-                                : undefined
-                    }
-                >
-                    {value}
-                </LinkifyText>
+            <View style={styles.fieldRow} key={label}>
+                <Text style={styles.fieldLabel}>{label}</Text>
+                <Text style={styles.fieldValue}>{value}</Text>
             </View>
         );
     };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            {/* Header Card */}
             <View style={styles.headerCard}>
                 <View style={styles.titleRow}>
                     <FAIcon name="cutlery" size={28} color="#666" style={styles.icon} />
                     <Text style={styles.headerTitle}>{munch.title}</Text>
                 </View>
 
-                {/* Badges Row: Borough & Audience */}
                 <View style={styles.badgesRow}>
-                    {munch.location ? (
+                    {munch.verified && (
+                        <View style={[styles.badge, styles.verifiedBadge]}>
+                            <FAIcon name="check-circle" size={14} color="#FFF" />
+                            <Text style={styles.badgeText}>Verified</Text>
+                        </View>
+                    )}
+                    {munch.location && (
                         <View style={[styles.badge, styles.locationBadge]}>
-                            <Text
-                                style={styles.badgeText}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                            >
+                            <FAIcon name="map-marker" size={14} color="#FFF" />
+                            <Text style={styles.badgeText} numberOfLines={1} ellipsizeMode="tail">
                                 {munch.location}
                             </Text>
                         </View>
-                    ) : null}
-                    {munch.main_audience ? (
+                    )}
+                    {munch.main_audience && (
                         <View style={[styles.badge, styles.audienceBadge]}>
-                            <Text
-                                style={styles.badgeText}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                            >
+                            <FAIcon name="users" size={14} color="#FFF" />
+                            <Text style={styles.badgeText} numberOfLines={1} ellipsizeMode="tail">
                                 {munch.main_audience}
                             </Text>
                         </View>
-                    ) : null}
+                    )}
                 </View>
 
-                {/* Schedule */}
                 {(munch.schedule_text || munch.cadence) && (
                     <Text style={styles.scheduleText}>
                         {munch.schedule_text ?? ""}
@@ -134,344 +116,98 @@ export const MunchDetails = () => {
                 )}
             </View>
 
-            {/* Description Block (Notes) */}
-            {munch.notes ? (
+            {munch.notes && (
                 <View style={styles.descriptionCard}>
                     <Text style={styles.sectionHeader}>Description</Text>
                     <LinkifyText platform="fetlife" style={styles.descriptionText}>
                         {munch.notes}
                     </LinkifyText>
                 </View>
-            ) : null}
+            )}
 
-            {/* How to Go to This Munch Section */}
             <View style={styles.instructionsCard}>
                 <Text style={styles.sectionHeader}>How to Go to This Munch</Text>
-
                 <View style={styles.numberedContainer}>
                     <Text style={styles.numberedLine}>
                         1. <Text style={styles.boldText}>Tap a host’s Fetlife profile</Text>.
                     </Text>
                     <Text style={styles.numberedLine}>
-                        2. Scroll all the way to the bottom until you see the{" "}
-                        <Text style={styles.boldText}>"Events Organizing"</Text> section.
+                        2. Scroll to the bottom to find <Text style={styles.boldText}>"Events Organizing"</Text>.
                     </Text>
                     <Text style={styles.numberedLine}>
-                        3. <Text style={styles.boldText}>View any upcoming munches there</Text>.
-                        If none are listed, there are no upcoming events.
+                        3. <Text style={styles.boldText}>View upcoming munches</Text>. If none, none scheduled.
                     </Text>
                     <Text style={styles.numberedLine}>
-                        4. You can also <Text style={styles.boldText}>visit their Instagram</Text> or{" "}
-                        <Text style={styles.boldText}>send them a message</Text>.
+                        4. <Text style={styles.boldText}>Message a host</Text> for details.
                     </Text>
                 </View>
-
                 <View style={styles.horizontalRule} />
 
-                {/* Hosts' Fetlife */}
-                {munch.hosts ? (
-                    <View style={styles.fieldRow} key="Hosts' Fetlife">
+                {munch.hosts && (
+                    <View style={styles.fieldRow} key="Hosts">
                         <Text style={styles.fieldLabel}>Hosts' Fetlife</Text>
                         <LinkifyText platform="fetlife" style={styles.fieldValue}>
                             {formatHosts(munch.hosts)}
                         </LinkifyText>
                     </View>
-                ) : null}
-
-                {/* Instagram */}
-                {munch.ig_handle ? (
-                    <View style={styles.fieldRow} key="Instagram">
-                        <Text style={styles.fieldLabel}>Instagram</Text>
-                        <LinkifyText platform="instagram" style={styles.fieldValue}>
-                            {munch.ig_handle}
-                        </LinkifyText>
-                    </View>
-                ) : null}
+                )}
             </View>
 
-            {/* Detail Card: other fields */}
             <View style={styles.detailCard}>
-                {/* Featured Badge */}
-                {munch.featured && (
-                    <View style={styles.featuredRow}>
-                        <Text style={styles.featuredLabel}>Featured</Text>
-                        <FAIcon
-                            name="check-circle"
-                            size={20}
-                            color="#007AFF"
-                            style={styles.featuredIcon}
-                        />
-                    </View>
-                )}
-
                 {renderField("Cost of Entry", munch.cost_of_entry)}
                 {renderField("Age Restriction", munch.age_restriction)}
                 {renderField("Open to Everyone?", munch.open_to_everyone)}
                 {renderField("Status", munch.status)}
             </View>
 
-            {/* Special Thanks Card */}
             <View style={styles.thanksCard}>
                 <Text style={styles.sectionHeader}>Special Thanks</Text>
                 <Text style={styles.thanksText}>
-                    This list was largely compiled by a long-time community member,{" "}
-                    <Text style={styles.boldText}>Rose</Text>!
+                    This list was compiled by a community member, <Text style={styles.boldText}>Rose</Text>.
                 </Text>
                 <Text style={styles.thanksMessage}>
                     <Text style={styles.boldText}>Message from Rose: </Text>
-
+                    Hi, I’m Rose. I hope this is helpful in your kink/BDSM journey. Pace yourself — it pays off.
                 </Text>
-                <Text>Hi, I’m Rose. I hope you find this spreadsheet helpful in your
-                    kink/BDSM journey. Remember to pace yourself as you get to know the
-                    community—it’ll pay off.</Text>
             </View>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
-    },
-    content: {
-        padding: 16,
-        paddingBottom: 40, // Extra bottom padding for safe area
-    },
-    centeredContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 16,
-        backgroundColor: LAVENDER_BACKGROUND,
-    },
-    errorText: {
-        fontSize: 16,
-        color: "#E74C3C",
-        textAlign: "center",
-    },
+    container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND },
+    content: { padding: 16, paddingBottom: 40 },
+    centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: LAVENDER_BACKGROUND },
+    errorText: { fontSize: 16, color: "#E74C3C", textAlign: "center" },
 
-    // Header Card
-    headerCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOpacity: 0.1,
-                shadowOffset: { width: 0, height: 2 },
-                shadowRadius: 4,
-            },
-            android: {
-                elevation: 3,
-            },
-        }),
-    },
-    titleRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 12,
-    },
-    icon: {
-        marginRight: 12,
-    },
-    headerTitle: {
-        fontSize: 22,
-        fontWeight: "700",
-        color: "#333",
-        flexShrink: 1,
-    },
-    badgesRow: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        marginBottom: 12,
-    },
-    badge: {
-        maxWidth: SCREEN_WIDTH * 0.45,
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 12,
-        justifyContent: "center",
-        alignItems: "flex-start",
-        marginRight: 8,
-        marginBottom: 8,
-    },
-    locationBadge: {
-        backgroundColor: "#26C6DA", // vibrant teal
-    },
-    audienceBadge: {
-        backgroundColor: "#FFC107", // vibrant amber
-    },
-    badgeText: {
-        fontSize: 12,
-        fontWeight: "600",
-        color: "#000",
-    },
-    scheduleText: {
-        fontSize: 16,
-        color: "#4E342E",
-        marginTop: 8,
-    },
+    headerCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 4 }, android: { elevation: 3 } }) },
+    titleRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
+    icon: { marginRight: 12 },
+    headerTitle: { fontSize: 22, fontWeight: "700", color: "#333", flexShrink: 1 },
+    badgesRow: { flexDirection: "row", flexWrap: "wrap", marginBottom: 12, alignItems: "center" },
+    badge: { flexDirection: "row", alignItems: "center", maxWidth: SCREEN_WIDTH * 0.45, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12, marginRight: 8, marginBottom: 8 },
+    verifiedBadge: { backgroundColor: "#1976D2" },
+    locationBadge: { backgroundColor: "#00796B" },
+    audienceBadge: { backgroundColor: "#F57C00" },
+    badgeText: { marginLeft: 4, fontSize: 12, fontWeight: "600", color: "#FFF" },
+    scheduleText: { fontSize: 16, color: "#4E342E", marginTop: 8 },
 
-    // Description Card
-    descriptionCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 1 },
-                shadowRadius: 3,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    sectionHeader: {
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#333",
-        marginBottom: 8,
-    },
-    descriptionText: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 24,
-    },
+    descriptionCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
+    sectionHeader: { fontSize: 18, fontWeight: "600", color: "#333", marginBottom: 8 },
+    descriptionText: { fontSize: 16, color: "#333", lineHeight: 24 },
 
-    // Instructions Card
-    instructionsCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 1 },
-                shadowRadius: 3,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    numberedContainer: {
-        marginTop: 8,
-        marginLeft: 4,
-    },
-    numberedLine: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 24,
-        marginBottom: 6,
-    },
-    boldText: {
-        fontWeight: "600",
-    },
-    horizontalRule: {
-        height: 1,
-        backgroundColor: "#E0E0E0",
-        marginVertical: 12,
-    },
-    fieldRow: {
-        marginBottom: 12,
-    },
-    fieldLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#555",
-        marginBottom: 4,
-    },
-    fieldValue: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 22,
-    },
+    instructionsCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
+    numberedContainer: { marginTop: 8, marginLeft: 4 },
+    numberedLine: { fontSize: 16, color: "#333", lineHeight: 24, marginBottom: 6 },
+    boldText: { fontWeight: "600" },
+    horizontalRule: { height: 1, backgroundColor: "#E0E0E0", marginVertical: 12 },
+    fieldRow: { marginBottom: 12 },
+    fieldLabel: { fontSize: 14, fontWeight: "600", color: "#555", marginBottom: 4 },
+    fieldValue: { fontSize: 16, color: "#333", lineHeight: 22 },
 
-    // Detail Card: other fields
-    detailCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 1 },
-                shadowRadius: 3,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    featuredRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 16,
-    },
-    featuredLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#555",
-    },
-    featuredIcon: {
-        marginLeft: 8,
-    },
-    detailFieldRow: {
-        marginBottom: 16,
-    },
-    detailFieldLabel: {
-        fontSize: 14,
-        fontWeight: "600",
-        color: "#555",
-        marginBottom: 4,
-    },
-    detailFieldValue: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 22,
-    },
-    linkText: {
-        color: "#007AFF",
-    },
+    detailCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
 
-    // Special Thanks Card
-    thanksCard: {
-        backgroundColor: "#FFFFFF",
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-        ...Platform.select({
-            ios: {
-                shadowColor: "#000",
-                shadowOpacity: 0.05,
-                shadowOffset: { width: 0, height: 1 },
-                shadowRadius: 3,
-            },
-            android: {
-                elevation: 2,
-            },
-        }),
-    },
-    thanksText: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 22,
-        marginBottom: 8,
-    },
-    thanksMessage: {
-        fontSize: 16,
-        color: "#333",
-        lineHeight: 22,
-    },
+    thanksCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
+    thanksText: { fontSize: 16, color: "#333", lineHeight: 22, marginBottom: 8 },
+    thanksMessage: { fontSize: 16, color: "#333", lineHeight: 22 }
 });

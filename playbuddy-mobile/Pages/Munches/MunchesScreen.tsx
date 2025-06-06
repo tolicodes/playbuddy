@@ -1,5 +1,3 @@
-// MunchesScreen.tsx
-
 import React, { useState, useMemo } from "react";
 import {
     View,
@@ -34,12 +32,11 @@ export const MunchesScreen = ({
 
     const filteredMunches = useMemo(() => {
         const sortedActive = munches
-            .filter((m) => m.status === "Active")
             .sort((a, b) => {
-                const aFeatured = Boolean(a.featured);
-                const bFeatured = Boolean(b.featured);
-                if (aFeatured && !bFeatured) return -1;
-                if (!aFeatured && bFeatured) return 1;
+                const aVerified = Boolean(a.verified);
+                const bVerified = Boolean(b.verified);
+                if (aVerified && !bVerified) return -1;
+                if (!aVerified && bVerified) return 1;
 
                 const aHasSchedule = Boolean(a.schedule_text);
                 const bHasSchedule = Boolean(b.schedule_text);
@@ -61,7 +58,6 @@ export const MunchesScreen = ({
                 m.schedule_text,
                 m.notes,
                 m.hosts,
-                m.ig_handle,
                 m.cost_of_entry,
                 m.cadence,
             ].some((field) => field?.toLowerCase().includes(lowerQuery))
@@ -126,23 +122,31 @@ export const MunchesScreen = ({
                                         {item.title}
                                     </Text>
 
-                                    {/* Badges: Featured, Borough & Audience */}
+                                    {/* Badges: Verified, Location & Audience */}
                                     <View style={styles.badgesRow}>
-                                        {item.featured && (
-                                            <View style={[styles.badge, styles.featuredBadge]}>
-                                                <FAIcon name="check-circle" size={14} color="#FFF" />
+                                        {item.verified && (
+                                            <View style={[styles.badge, styles.verifiedBadge]}>
+                                                <FAIcon
+                                                    name="check-circle"
+                                                    size={14}
+                                                    color="#FFF"
+                                                />
                                                 <Text
                                                     style={styles.badgeText}
                                                     numberOfLines={1}
                                                     ellipsizeMode="tail"
                                                 >
-                                                    Featured
+                                                    Verified
                                                 </Text>
                                             </View>
                                         )}
-                                        {item.location ? (
+                                        {item.location && (
                                             <View style={[styles.badge, styles.locationBadge]}>
-                                                <FAIcon name="map-marker" size={14} color="#FFF" />
+                                                <FAIcon
+                                                    name="map-marker"
+                                                    size={14}
+                                                    color="#FFF"
+                                                />
                                                 <Text
                                                     style={styles.badgeText}
                                                     numberOfLines={1}
@@ -151,8 +155,8 @@ export const MunchesScreen = ({
                                                     {item.location}
                                                 </Text>
                                             </View>
-                                        ) : null}
-                                        {item.main_audience ? (
+                                        )}
+                                        {item.main_audience && (
                                             <View style={[styles.badge, styles.audienceBadge]}>
                                                 <FAIcon name="users" size={14} color="#FFF" />
                                                 <Text
@@ -163,15 +167,15 @@ export const MunchesScreen = ({
                                                     {item.main_audience}
                                                 </Text>
                                             </View>
-                                        ) : null}
+                                        )}
                                     </View>
 
                                     {/* Schedule */}
-                                    {item.schedule_text ? (
+                                    {item.schedule_text && (
                                         <Text style={styles.schedule} numberOfLines={1}>
                                             {item.schedule_text}
                                         </Text>
-                                    ) : null}
+                                    )}
                                 </View>
                             </View>
                         </TouchableOpacity>
@@ -247,7 +251,7 @@ const styles = StyleSheet.create({
     badge: {
         flexDirection: "row",
         alignItems: "center",
-        maxWidth: SCREEN_WIDTH * 0.4,
+        maxWidth: SCREEN_WIDTH * 0.45,
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 12,
@@ -255,7 +259,7 @@ const styles = StyleSheet.create({
         marginBottom: 6,
         backgroundColor: "#1976D2", // default badge color
     },
-    featuredBadge: {
+    verifiedBadge: {
         backgroundColor: "#1976D2", // deep blue
     },
     locationBadge: {

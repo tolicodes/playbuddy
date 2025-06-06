@@ -795,7 +795,7 @@ export interface Munch {
     main_audience: string;
     status: string;
     notes: string;
-    featured: string;
+    verified: string;
 }
 
 
