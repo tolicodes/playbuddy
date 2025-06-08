@@ -780,4 +780,23 @@ export interface DeepLink {
     channel?: string;
 }
 
+
+export interface Munch {
+    id: number;
+    title: string;
+    location: string;
+    hosts: string;
+    ig_handle: string;
+    cadence: string;
+    schedule_text: string;
+    cost_of_entry: string;
+    age_restriction: string;
+    open_to_everyone: string;
+    main_audience: string;
+    status: string;
+    notes: string;
+    verified: string;
+}
+
+
 export { UE };
