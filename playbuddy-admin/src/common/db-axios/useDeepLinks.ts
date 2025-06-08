@@ -7,7 +7,7 @@ export const useFetchDeepLinks = () => {
     return useQuery({
         queryKey: ['deepLinks'],
         queryFn: async () => {
-            const response = await axios.get(`${API_BASE_URL}/common/deep-links`);
+            const response = await axios.get(`${API_BASE_URL}/deep-links`);
             return response.data as DeepLink[];
         }
     });
