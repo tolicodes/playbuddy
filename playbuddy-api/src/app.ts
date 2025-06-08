@@ -12,9 +12,10 @@ import buddiesRoutes from './routes/buddies.js';
 import profileRoutes from './routes/profile.js';
 import personalizationRoutes from './routes/personalization.js';
 import userEventsRoute from './routes/user_events.js';
-import commonRoute from './routes/common.js';
+import deepLinkRoute from './routes/deep_links.js';
 import organizersRoute from './routes/organizers.js';
 import promoCodesRoute from './routes/promo_codes.js';
+import munchesRoute from './routes/munches.js'
 export const app = express();
 
 // Middleware setup
@@ -36,9 +37,10 @@ app.use('/buddies', buddiesRoutes);
 app.use('/profile', profileRoutes);
 app.use('/personalization', personalizationRoutes);
 app.use('/user_events', userEventsRoute);
-app.use('/common', commonRoute);
+app.use('/deep_links', deepLinkRoute);
 app.use('/organizers', organizersRoute);
 app.use('/promo_codes', promoCodesRoute);
+app.use('/munches', munchesRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -268,7 +268,7 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
     }
 });
 
-// GET /wishlist/code/:share_code - Get user's wishlist by share code
+// GET /wishlist/code/:share_code - Get user's wishlist by promo code
 router.get('/code/:share_code', async (req: Request, res: Response) => {
     const { share_code } = req.params;
 

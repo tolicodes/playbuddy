@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 
 export const router = Router();
 
-router.get('/deep-links', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response) => {
   try {
     // 1) Query: deep_links plus nested relationships
     const { data, error } = await supabaseClient

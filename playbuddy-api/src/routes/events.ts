@@ -6,7 +6,7 @@ import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
 import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
-import { AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
+import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 
 const router = Router();
 
@@ -130,7 +130,7 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     }
 });
 
-router.put("/weekly-picks/:eventId", async (req: AuthenticatedRequest, res: Response) => {
+router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { eventId } = req.params;
     const { status } = req.body;
 
@@ -162,6 +162,15 @@ router.put("/weekly-picks/:eventId", async (req: AuthenticatedRequest, res: Resp
         console.error("Unexpected error:", err);
         return res.status(500).json({ error: "Internal server error" });
     }
+});
+
+router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { event } = req.body;
+    const { data, error } = await supabaseClient.from('events').insert({ event });
+
+    console.error(error);
+
+    res.json(data);
 });
 
 
