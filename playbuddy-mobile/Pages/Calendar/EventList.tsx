@@ -108,7 +108,6 @@ const EventList: React.FC<EventListProps> = ({
                 </View>
             }
             onScrollToIndexFailed={(e) => {
-                console.log('scroll_to_index_failed', e);
                 logEvent('event_list_scroll_to_index_failed');
             }}
         />

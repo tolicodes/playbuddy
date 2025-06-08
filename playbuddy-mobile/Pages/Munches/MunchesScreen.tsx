@@ -16,7 +16,6 @@ import { LAVENDER_BACKGROUND } from "../../styles";
 import { useUserContext } from "../Auth/hooks/UserContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
-import type { Munch } from "../../commonTypes";
 
 export const MunchesScreen = ({
     showSearch = true,
