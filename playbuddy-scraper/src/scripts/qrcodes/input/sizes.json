@@ -1,0 +1,19 @@
+[
+    {
+        "flyer_name": "flyer_v3",
+        "type": "flyer",
+        "qr_width": 170,
+        "qr_height": 170,
+        "qr_x": 410,
+        "qr_y": 20
+    },
+
+    {
+        "flyer_name": "business_card_v2",
+        "type": "business_card",
+        "is_business_card": true,
+        "qr_width": 70,
+        "qr_height": 70,
+        "qr_x": 90,
+        "qr_y": 35
+    }]
