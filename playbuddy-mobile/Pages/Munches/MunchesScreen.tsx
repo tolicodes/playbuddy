@@ -38,13 +38,9 @@ export const MunchesScreen = ({
     const { data: munches = [], isLoading } = useFetchMunches();
 
     const filteredMunches = useMemo(() => {
-        const sortedActive = munches
+        const sortedVerified = munches
+            .filter((m) => Boolean(m.verified))
             .sort((a, b) => {
-                const aVerified = Boolean(a.verified);
-                const bVerified = Boolean(b.verified);
-                if (aVerified && !bVerified) return -1;
-                if (!aVerified && bVerified) return 1;
-
                 const aHasSchedule = Boolean(a.schedule_text);
                 const bHasSchedule = Boolean(b.schedule_text);
                 if (aHasSchedule && !bHasSchedule) return -1;
@@ -52,17 +48,12 @@ export const MunchesScreen = ({
                 return a.title.localeCompare(b.title);
             });
 
-
-        const approved = ['Kinky Klimbers Munch'];
-
-        const approvedMunches = sortedActive.filter((m) => approved.includes(m.title));
-
         if (!searchQuery.trim()) {
-            return approvedMunches;
+            return sortedVerified;
         }
 
         const lowerQuery = searchQuery.toLowerCase().trim();
-        return approvedMunches.filter((m) =>
+        return sortedVerified.filter((m) =>
             [
                 m.title,
                 m.location,
