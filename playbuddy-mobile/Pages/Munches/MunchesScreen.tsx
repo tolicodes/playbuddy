@@ -17,6 +17,14 @@ import { useUserContext } from "../Auth/hooks/UserContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
 
+
+const GettingConsent = () => (
+    <View style={styles.centeredContainer}>
+        <Text style={styles.consentHeader}>Getting consent…</Text>
+        <Text>We take consent very seriously. Which is why we are contacting each organizer individually before listing them publicly. Check back soon to see our favorite munches trickle in!</Text>
+    </View>
+)
+
 export const MunchesScreen = ({
     showSearch = true,
 }: {
@@ -44,12 +52,17 @@ export const MunchesScreen = ({
                 return a.title.localeCompare(b.title);
             });
 
+
+        const approved = ['Kinky Klimbers Munch'];
+
+        const approvedMunches = sortedActive.filter((m) => approved.includes(m.title));
+
         if (!searchQuery.trim()) {
-            return sortedActive;
+            return approvedMunches;
         }
 
         const lowerQuery = searchQuery.toLowerCase().trim();
-        return sortedActive.filter((m) =>
+        return approvedMunches.filter((m) =>
             [
                 m.title,
                 m.location,
@@ -83,6 +96,8 @@ export const MunchesScreen = ({
                 />
             )}
 
+            <GettingConsent />
+
             {filteredMunches.length === 0 && (
                 <View style={styles.emptyContainer}>
                     <Text style={styles.emptyMessage}>
@@ -92,97 +107,100 @@ export const MunchesScreen = ({
             )}
 
             {filteredMunches.length > 0 && (
-                <FlatList
-                    data={filteredMunches}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            style={styles.card}
-                            activeOpacity={0.8}
-                            onPress={() => {
-                                navigation.navigate("Munch Details", {
-                                    munchId: item.id.toString(),
-                                });
-                                logEvent("munches_list_navigate_to_munch_detail", {
-                                    munchId: item.id,
-                                });
-                            }}
-                        >
-                            <View style={styles.row}>
-                                <FAIcon
-                                    name="cutlery"
-                                    size={28}
-                                    color="#666"
-                                    style={styles.icon}
-                                />
-                                <View style={styles.content}>
-                                    {/* Title */}
-                                    <Text style={styles.title} numberOfLines={1}>
-                                        {item.title}
-                                    </Text>
+                <View style={{ flex: 1 }}>
+                    <FlatList
+                        data={filteredMunches}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={styles.card}
+                                activeOpacity={0.8}
+                                onPress={() => {
+                                    navigation.navigate("Munch Details", {
+                                        munchId: item.id.toString(),
+                                    });
+                                    logEvent("munches_list_navigate_to_munch_detail", {
+                                        munchId: item.id,
+                                    });
+                                }}
+                            >
+                                <View style={styles.row}>
+                                    <FAIcon
+                                        name="cutlery"
+                                        size={28}
+                                        color="#666"
+                                        style={styles.icon}
+                                    />
+                                    <View style={styles.content}>
+                                        {/* Title */}
+                                        <Text style={styles.title} numberOfLines={1}>
+                                            {item.title}
+                                        </Text>
 
-                                    {/* Badges: Verified, Location & Audience */}
-                                    <View style={styles.badgesRow}>
-                                        {item.verified && (
-                                            <View style={[styles.badge, styles.verifiedBadge]}>
-                                                <FAIcon
-                                                    name="check-circle"
-                                                    size={14}
-                                                    color="#FFF"
-                                                />
-                                                <Text
-                                                    style={styles.badgeText}
-                                                    numberOfLines={1}
-                                                    ellipsizeMode="tail"
-                                                >
-                                                    Verified
-                                                </Text>
-                                            </View>
-                                        )}
-                                        {item.location && (
-                                            <View style={[styles.badge, styles.locationBadge]}>
-                                                <FAIcon
-                                                    name="map-marker"
-                                                    size={14}
-                                                    color="#FFF"
-                                                />
-                                                <Text
-                                                    style={styles.badgeText}
-                                                    numberOfLines={1}
-                                                    ellipsizeMode="tail"
-                                                >
-                                                    {item.location}
-                                                </Text>
-                                            </View>
-                                        )}
-                                        {item.main_audience && (
-                                            <View style={[styles.badge, styles.audienceBadge]}>
-                                                <FAIcon name="users" size={14} color="#FFF" />
-                                                <Text
-                                                    style={styles.badgeText}
-                                                    numberOfLines={1}
-                                                    ellipsizeMode="tail"
-                                                >
-                                                    {item.main_audience}
-                                                </Text>
-                                            </View>
+                                        {/* Badges: Verified, Location & Audience */}
+                                        <View style={styles.badgesRow}>
+                                            {item.verified && (
+                                                <View style={[styles.badge, styles.verifiedBadge]}>
+                                                    <FAIcon
+                                                        name="check-circle"
+                                                        size={14}
+                                                        color="#FFF"
+                                                    />
+                                                    <Text
+                                                        style={styles.badgeText}
+                                                        numberOfLines={1}
+                                                        ellipsizeMode="tail"
+                                                    >
+                                                        Verified
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            {item.location && (
+                                                <View style={[styles.badge, styles.locationBadge]}>
+                                                    <FAIcon
+                                                        name="map-marker"
+                                                        size={14}
+                                                        color="#FFF"
+                                                    />
+                                                    <Text
+                                                        style={styles.badgeText}
+                                                        numberOfLines={1}
+                                                        ellipsizeMode="tail"
+                                                    >
+                                                        {item.location}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            {item.main_audience && (
+                                                <View style={[styles.badge, styles.audienceBadge]}>
+                                                    <FAIcon name="users" size={14} color="#FFF" />
+                                                    <Text
+                                                        style={styles.badgeText}
+                                                        numberOfLines={1}
+                                                        ellipsizeMode="tail"
+                                                    >
+                                                        {item.main_audience}
+                                                    </Text>
+                                                </View>
+                                            )}
+                                        </View>
+
+                                        {/* Schedule */}
+                                        {item.schedule_text && (
+                                            <Text style={styles.schedule} numberOfLines={1}>
+                                                {item.schedule_text}
+                                            </Text>
                                         )}
                                     </View>
-
-                                    {/* Schedule */}
-                                    {item.schedule_text && (
-                                        <Text style={styles.schedule} numberOfLines={1}>
-                                            {item.schedule_text}
-                                        </Text>
-                                    )}
                                 </View>
-                            </View>
-                        </TouchableOpacity>
-                    )}
-                    contentContainerStyle={styles.listFooter}
-                    showsVerticalScrollIndicator={false}
-                />
+                            </TouchableOpacity>
+                        )}
+                        contentContainerStyle={styles.listFooter}
+                        showsVerticalScrollIndicator={false}
+                    />
+                </View>
             )}
+
         </View>
     );
 };
@@ -278,9 +296,9 @@ const styles = StyleSheet.create({
         color: "#666",
     },
     centeredContainer: {
-        flex: 1,
         justifyContent: "center",
         alignItems: "center",
+        padding: 20,
     },
     loadingText: {
         fontSize: 16,
@@ -299,5 +317,14 @@ const styles = StyleSheet.create({
     },
     listFooter: {
         paddingBottom: 20,
+    },
+    consentHeader: {
+        fontSize: 24,
+        fontWeight: "bold",
+    },
+    centeredText: {
+        fontSize: 16,
+        color: "#666",
+        textAlign: "center",
     },
 });
