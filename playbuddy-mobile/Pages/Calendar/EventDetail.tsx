@@ -7,6 +7,7 @@ import {
     Linking,
     ScrollView,
     Alert,
+    Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -272,33 +273,49 @@ export const EventDetail = ({ route }) => {
                 ) : (
                     <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
                 )}
-                <View style={styles.contentContainer}>
-                    <EventHeader
-                        event={selectedEvent}
-                        onEventHeaderPress={handleEventHeaderPress}
-                        onToggleWishlist={handleToggleWishlist}
-                    />
+                <View style={styles.headerCard}>
+                    <View style={styles.titleRow}>
+                        <MaterialIcons name="event" size={24} color="#fff" style={styles.icon} />
+                        <Text style={styles.headerTitle}>{selectedEvent.name}</Text>
+                        <TouchableOpacity onPress={handleToggleWishlist} style={styles.favoriteIcon}>
+                            <MaterialIcons
+                                name={isOnWishlist(selectedEvent.id) ? 'favorite' : 'favorite-border'}
+                                size={28}
+                                color="#fff"
+                            />
+                        </TouchableOpacity>
+                    </View>
 
-                    <TouchableOpacity onPress={handleOrganizerClick}>
-                        <Text style={styles.eventOrganizer}>
-                            {selectedEvent.organizer?.name}
-                        </Text>
-                    </TouchableOpacity>
+                    <View style={styles.badgesRow}>
+                        {!!selectedEvent.organizer?.name && (
+                            <TouchableOpacity onPress={handleOrganizerClick}>
+                                <View style={[styles.badge, styles.organizerBadge]}>
+                                    <MaterialIcons name="group" size={14} color="#FFF" />
+                                    <Text style={[styles.badgeText, styles.organizerText]}>
+                                        {selectedEvent.organizer.name}
+                                    </Text>
+                                </View>
+                            </TouchableOpacity>
+                        )}
 
-                    <Text style={styles.eventTime}>{formatDate(selectedEvent, true)}</Text>
-
-                    {locationAreaIsAll && (
-                        <Text style={styles.eventLocation}>
-                            {selectedEvent.location_area?.name}
-                        </Text>
-                    )}
-                    {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
+                        <View style={[styles.badge, styles.timeBadge]}>
+                            <MaterialIcons name="schedule" size={14} color="#FFF" />
+                            <Text style={styles.badgeText}>{formatDate(selectedEvent, true)}</Text>
+                        </View>
+                    </View>
 
                     {selectedEvent.ticket_url && (
                         <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
                             {availableSoon ? <Text style={styles.buttonText}>Available Soon!</Text> : <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>}
                         </TouchableOpacity>
                     )}
+                </View>
+                <View style={styles.contentContainer}>
+
+
+                    {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
+
+
 
                     <Markdown>{selectedEvent.description.replace('\n', '\n\n')}</Markdown>
                 </View>
@@ -360,11 +377,7 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         paddingHorizontal: 24,
-        paddingTop: 20,
         backgroundColor: '#ffffff',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        marginTop: -30,
         shadowColor: '#000',
         shadowOpacity: 0.05,
         shadowOffset: { width: 0, height: -3 },
@@ -389,12 +402,11 @@ const styles = StyleSheet.create({
         fontWeight: '500',
     },
     ticketButton: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: 'white',
         paddingVertical: 14,
         paddingHorizontal: 20,
         borderRadius: 12,
         alignItems: 'center',
-        marginVertical: 20,
         shadowColor: '#7F5AF0',
         shadowOpacity: 0.4,
         shadowOffset: { width: 0, height: 5 },
@@ -402,13 +414,70 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     buttonText: {
-        color: '#fff',
+        color: 'black',
         fontSize: 18,
         fontWeight: '600',
     },
     favoriteIcon: {
         padding: 4,
     },
+    headerCard: {
+        backgroundColor: '#7F5AF0',
+        borderTopLeftRadius: 30,
+        borderTopRightRadius: 30,
+        padding: 16,
+        paddingTop: 20,
+        marginTop: -60, // make it flush against the white container
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: -2 },
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    icon: {
+        marginRight: 10,
+    },
+    headerTitle: {
+        flex: 1,
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#FFF',
+    },
+    badgesRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    badge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 12,
+        marginRight: 8,
+        marginBottom: 8,
+    },
+    organizerBadge: {
+        backgroundColor: '#5C4DB1',
+    },
+    timeBadge: {
+        backgroundColor: '#8566F2',
+    },
+    badgeText: {
+        marginLeft: 4,
+        fontSize: 13,
+        fontWeight: '600',
+        color: '#FFF',
+    },
+    organizerText: {
+        textDecorationLine: 'underline',
+    },
+
 });
 
 
