@@ -286,29 +286,22 @@ export const EventDetail = ({ route }) => {
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.badgesRow}>
-                        {!!selectedEvent.organizer?.name && (
-                            <TouchableOpacity onPress={handleOrganizerClick}>
-                                <View style={[styles.badge, styles.organizerBadge]}>
-                                    <MaterialIcons name="group" size={14} color="#FFF" />
-                                    <Text style={[styles.badgeText, styles.organizerText]}>
-                                        {selectedEvent.organizer.name}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        )}
+                    <View style={styles.infoRow}>
+                        <TouchableOpacity onPress={handleOrganizerClick} style={styles.organizerPill}>
+                            <MaterialIcons name="group" size={14} color="#fff" />
+                            <Text style={styles.organizerText}>{selectedEvent.organizer?.name}</Text>
+                        </TouchableOpacity>
 
-                        <View style={[styles.badge, styles.timeBadge]}>
-                            <MaterialIcons name="schedule" size={14} color="#FFF" />
-                            <Text style={styles.badgeText}>{formatDate(selectedEvent, true)}</Text>
+                        <View style={styles.dateRow}>
+                            <MaterialIcons name="schedule" size={14} color="#fff" />
+                            <Text style={styles.dateText}>{formatDate(selectedEvent, true)}</Text>
                         </View>
                     </View>
 
-                    {selectedEvent.ticket_url && (
-                        <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
-                            {availableSoon ? <Text style={styles.buttonText}>Available Soon!</Text> : <Text style={styles.buttonText}>🎟️ Get Tickets 🎟️</Text>}
-                        </TouchableOpacity>
-                    )}
+                    <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
+                        <Text style={styles.ticketText}>🎟️ Get Tickets 🎟️</Text>
+                    </TouchableOpacity>
+
                 </View>
                 <View style={styles.contentContainer}>
 
@@ -401,18 +394,6 @@ const styles = StyleSheet.create({
         color: '#5C5C5C',
         fontWeight: '500',
     },
-    ticketButton: {
-        backgroundColor: 'white',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        borderRadius: 12,
-        alignItems: 'center',
-        shadowColor: '#7F5AF0',
-        shadowOpacity: 0.4,
-        shadowOffset: { width: 0, height: 5 },
-        shadowRadius: 10,
-        elevation: 3,
-    },
     buttonText: {
         color: 'black',
         fontSize: 18,
@@ -474,8 +455,64 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#FFF',
     },
+    infoRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 12,
+        marginBottom: 12,
+        gap: 8,
+        flexWrap: 'wrap',
+    },
+
+    organizerPill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#5C4DB1',
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+    },
     organizerText: {
+        marginLeft: 6,
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '600',
         textDecorationLine: 'underline',
+    },
+
+    dateRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#6B57D0',
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 20,
+    },
+    dateText: {
+        marginLeft: 6,
+        color: '#fff',
+        fontSize: 13,
+        fontWeight: '500',
+    },
+
+    ticketButton: {
+        backgroundColor: '#fff',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 30,
+        alignItems: 'center',
+        marginTop: 8,
+        shadowColor: '#000',
+        shadowOpacity: 0.05,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 5,
+        elevation: 3,
+    },
+    ticketText: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: '#7F5AF0',
     },
 
 });
