@@ -24,6 +24,7 @@ import {
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useFetchEvents } from '../../common/db-axios/useEvents';
 import { EventsManager } from './AddEventToFacilitator';
+import { MediaManager } from '../MediaManager';
 
 // Form values interface
 type FormValues = {
@@ -35,6 +36,7 @@ type FormValues = {
     instagram_handle: string;
     fetlife_handle: string;
     tags?: string[];
+    media?: string[];
 };
 
 // Validation schema
@@ -49,6 +51,7 @@ const schema: Yup.ObjectSchema<FormValues> = Yup.object().shape({
     instagram_handle: Yup.string().required('Instagram handle is required'),
     fetlife_handle: Yup.string().required('FetLife handle is required'),
     tags: Yup.array().of(Yup.string().required('Required')),
+    media: Yup.array().of(Yup.string().required('Required')),
 });
 
 export default function EditFacilitatorScreen() {
@@ -80,7 +83,7 @@ export default function EditFacilitatorScreen() {
         defaultValues: {
             name: '', bio: '', profile_image_url: '',
             location: '', verified: false, instagram_handle: '', fetlife_handle: '',
-            tags: []
+            tags: [], media: []
         },
     });
 
@@ -100,6 +103,7 @@ export default function EditFacilitatorScreen() {
                 setValue('instagram_handle', f.instagram_handle ?? '');
                 setValue('fetlife_handle', f.fetlife_handle ?? '');
                 setValue('tags', f.tags.map((t) => t.name));
+                setValue('media', f.media.map((m) => m.url));
             }
         } else {
             reset();
@@ -291,6 +295,15 @@ export default function EditFacilitatorScreen() {
                                 />
                             )}
                         />
+                    )}
+                />
+
+                <Controller
+                    name="media"
+                    control={control}
+                    defaultValue={[]}
+                    render={({ field: { value, onChange } }) => (
+                        <MediaManager urls={value || []} onUrlsChange={onChange} />
                     )}
                 />
 
