@@ -84,6 +84,9 @@ export const MunchesScreen = ({
                     placeholderTextColor="#999"
                     value={searchQuery}
                     onChangeText={setSearchQuery}
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                    clearButtonMode="while-editing"
                 />
             )}
 

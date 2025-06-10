@@ -24,6 +24,9 @@ export const TopBar = ({ searchQuery, setSearchQuery, onPressToday, onPressGoogl
                 placeholderTextColor="#888"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
+                autoCorrect={false}
+                autoCapitalize="none"
+                clearButtonMode="while-editing"
             />
         </View>
         <View style={topBarStyles.topButtons}>

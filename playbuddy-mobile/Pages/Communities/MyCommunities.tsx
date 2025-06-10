@@ -49,6 +49,9 @@ const CommunityList = ({
                 placeholder="Search communities..."
                 value={searchQuery}
                 onChangeText={setSearchQuery}
+                autoCorrect={false}
+                autoCapitalize="none"
+                clearButtonMode="while-editing"
             />}
             <FlatList
                 data={filteredCommunities}
