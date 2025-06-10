@@ -1,5 +1,3 @@
-// HeaderOptions.tsx (Refactored Clean Version with Animation and Fixed PromoScreen Back Behavior)
-
 import React, { Suspense, useEffect, useRef } from "react";
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, SafeAreaView } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -21,11 +19,9 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
     };
 
     return (
-        <View style={styles.backButtonContainer}>
-            <TouchableOpacity onPress={onPress}>
-                <IonIcon name="chevron-back" size={30} color="#007AFF" />
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={onPress} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Back">
+            <IonIcon name="chevron-back" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
     );
 };
 
@@ -36,11 +32,9 @@ export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => 
         logEvent(UE.HeaderDrawerButtonClicked);
     };
     return (
-        <View style={styles.drawerButtonContainer}>
-            <TouchableOpacity onPress={onPressToggleDrawer}>
-                <IonIcon name="menu" size={30} color="#007AFF" />
-            </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={onPressToggleDrawer} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Menu">
+            <IonIcon name="menu" size={24} color="#FFFFFF" />
+        </TouchableOpacity>
     );
 };
 
@@ -57,49 +51,48 @@ const HeaderTitleText = ({ title }: { title: string }) => {
     }, [title]);
 
     return (
-        <Animated.View style={{ ...styles.titleContainer, opacity: fadeAnim }}>
+        <Animated.View style={{ opacity: fadeAnim }}>
             <Text numberOfLines={1} style={styles.headerTitleText}>{title}</Text>
         </Animated.View>
     );
 };
 
-// Header Left Section (Button + Title)
-const HeaderLeft = ({ navigation, isRootScreen, title, backToWelcome }: { navigation: NavStack, isRootScreen: boolean, title: string, backToWelcome?: boolean }) => (
-    <View style={styles.headerLeftContainer}>
-        {isRootScreen ? <CustomDrawerButton navigation={navigation} /> : <CustomBackButton navigation={navigation} backToWelcome={backToWelcome} />}
-        <HeaderTitleText title={title} />
+// Header Right (Login)
+export const HeaderRight = () => (
+    <View style={styles.rightContainer}>
+        <Suspense fallback={<ActivityIndicator color="#FFFFFF" />}>
+            <HeaderLoginButton headerButton />
+        </Suspense>
     </View>
 );
 
-// Header Right (Login)
-export const HeaderRight = () => {
-    return (
-        <View style={styles.rightNavContainer}>
-            <Suspense fallback={<ActivityIndicator />}>
-                <HeaderLoginButton headerButton />
-            </Suspense>
-        </View>
-    );
-};
-
+// Main Header Component
 const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
     return (
         <SafeAreaView style={styles.headerContainer}>
             <View style={styles.headerInnerContainer}>
-                <HeaderLeft navigation={navigation} isRootScreen={isRootScreen} title={title} backToWelcome={backToWelcome} />
+                <View style={styles.leftContainer}>
+                    {isRootScreen
+                        ? <CustomDrawerButton navigation={navigation} />
+                        : <CustomBackButton navigation={navigation} backToWelcome={backToWelcome} />
+                    }
+                </View>
+
+                <View style={styles.titleWrapper}>
+                    <HeaderTitleText title={title} />
+                </View>
+
                 <HeaderRight />
             </View>
         </SafeAreaView>
     );
 };
 
-// Smart Header Options (auto Drawer vs Back detection)
-export const headerOptions = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
-    return {
-        header: () => <Header navigation={navigation} title={title} isRootScreen={isRootScreen} backToWelcome={backToWelcome} />,
-        headerShown: true,
-    };
-};
+// Header Options for Navigation
+export const headerOptions = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => ({
+    header: () => <Header navigation={navigation} title={title} isRootScreen={isRootScreen} backToWelcome={backToWelcome} />,
+    headerShown: true,
+});
 
 // Simple Header Options for Details Pages
 export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack }) => ({
@@ -109,46 +102,37 @@ export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack 
 // Styles
 const styles = StyleSheet.create({
     headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-        backgroundColor: '#fff',
+        backgroundColor: '#7F5AF0',
     },
     headerInnerContainer: {
-        flex: 1,
-        paddingRight: 10,
-        paddingBottom: 10,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
+        paddingHorizontal: 5,
+        paddingBottom: 5,
     },
-    rightNavContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+    leftContainer: {
+        width: 50,
         justifyContent: 'center',
-        paddingHorizontal: 10,
     },
-    drawerButtonContainer: {
-        marginLeft: 15,
-        flexDirection: 'row',
+    titleWrapper: {
+        flex: 1,
         alignItems: 'center',
     },
-    backButtonContainer: {
-        paddingLeft: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
+    rightContainer: {
+        width: 50,
+        justifyContent: 'center',
+        alignItems: 'flex-end',
     },
-    headerLeftContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexShrink: 1,
-    },
-    titleContainer: {
-        marginLeft: 8,
+    iconButton: {
+        padding: 10,
     },
     headerTitleText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#000',
+        fontSize: 20,
+        fontWeight: '600',
+        color: '#FFFFFF',
+        textAlign: 'center',
     },
 });
+
+export default Header;
