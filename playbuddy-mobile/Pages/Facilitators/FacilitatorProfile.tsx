@@ -20,6 +20,7 @@ import { LAVENDER_BACKGROUND } from '../../styles';
 import { EventListItem } from '../Calendar/EventListItem';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../../Common/Nav/NavStackType';
+import { MediaCarousel } from './MediaCarousel';
 
 
 const { height } = Dimensions.get('window');
@@ -145,17 +146,9 @@ export default function FacilitatorProfile() {
                         ))}
 
                     {tab === 'media' && (
-                        <View style={styles.mediaContainer}>
-                            {!facilitator.media.length ? (
-                                <View>
-                                    <Text>Nothing yet!</Text>
-                                </View>
-                            ) : (
-                                facilitator.media.map((m) => (
-                                    <Text>TBD</Text>
-                                ))
-                            )}
-                        </View>
+                        <ScrollView style={styles.mediaContainer}>
+                            <MediaCarousel urls={facilitator.media.map(m => m.url)} />
+                        </ScrollView>
                     )}
                 </ScrollView>
             </View>
@@ -211,8 +204,21 @@ const styles = StyleSheet.create({
     eventRow: { paddingVertical: 12, borderBottomWidth: 1, borderColor: '#EEE' },
     eventName: { fontSize: 16, fontWeight: '600' },
     eventSub: { fontSize: 12, color: '#8E8E93' },
-    mediaItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
-    mediaText: { marginLeft: 8, fontSize: 16, color: '#7F5AF0' },
+    mediaGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-around',
+    },
+    mediaItem: {
+        width: '33.33%',
+        padding: 8,
+    },
+    mediaThumbnail: {
+        width: '100%',
+        height: 120,
+        borderRadius: 12,
+        resizeMode: 'cover',
+    },
     tag: {
         backgroundColor: '#EAEAFF',
         paddingHorizontal: 8,
