@@ -1,9 +1,9 @@
 // routes/facilitators.ts
 
 import { Router, Request, Response } from 'express';
-import { supabaseClient } from '../connections/supabaseClient';
-import type { Facilitator } from '../common/types/commonTypes';
-import { authenticateAdminRequest, authenticateRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest';
+import { supabaseClient } from '../connections/supabaseClient.js';
+import type { Facilitator } from '../common/types/commonTypes.js';
+import { authenticateAdminRequest, authenticateRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 
 const router = Router();
 
@@ -75,10 +75,10 @@ router.get(
     async (_req: Request, res: Response<Facilitator[] | { error: string }>) => {
         try {
             const result = await fetchFacilitators();
-            res.json(result);
+            return res.json(result);
         } catch (err: any) {
             console.error('Failed to fetch facilitators:', err);
-            res.status(500).json({ error: err.message || 'Internal server error' });
+            return res.status(500).json({ error: err.message || 'Internal server error' });
         }
     }
 );
@@ -94,10 +94,10 @@ router.get(
                 return res.status(401).json({ error: 'Not authenticated' });
             }
             const result = await fetchFacilitators(authUserId);
-            res.json(result);
+            return res.json(result);
         } catch (err: any) {
             console.error('Failed to fetch my facilitators:', err);
-            res.status(500).json({ error: err.message || 'Internal server error' });
+            return res.status(500).json({ error: err.message || 'Internal server error' });
         }
     }
 );
@@ -125,10 +125,10 @@ router.post(
                 .insert([{ facilitator_id, event_id }]);
 
             if (error) throw error;
-            res.status(201).json(data);
+            return res.status(201).json(data);
         } catch (err: any) {
             console.error('Error adding event to facilitator:', err);
-            res.status(500).json({ error: err.message || 'Internal server error' });
+            return res.status(500).json({ error: err.message || 'Internal server error' });
         }
     }
 );
@@ -152,10 +152,10 @@ router.delete(
                 .eq('event_id', Number(event_id));
 
             if (error) throw error;
-            res.status(200).json(data);
+            return res.status(200).json(data);
         } catch (err: any) {
             console.error('Error removing event from facilitator:', err);
-            res.status(500).json({ error: err.message || 'Internal server error' });
+            return res.status(500).json({ error: err.message || 'Internal server error' });
         }
     }
 );
@@ -241,16 +241,19 @@ router.post(
             const { data: fac, error: facErr } = await supabaseClient
                 .from('facilitators')
                 .insert([facFields])
+                .select()
                 .single();
             if (facErr) throw facErr;
 
-            // sync tags
-            await syncTags(fac.id, tags);
+            if (!fac) throw new Error('Facilitator not found');
 
-            res.status(201).json(fac);
-        } catch (err) {
+            // sync tags
+            await syncTags(fac.id!, tags);
+
+            return res.status(201).json(fac);
+        } catch (err: any) {
             console.error(err);
-            res.status(400).json({ error: err.message });
+            return res.status(400).json({ error: err.message });
         }
     }
 );
@@ -273,17 +276,19 @@ router.put(
                 .from('facilitators')
                 .update(facFields)
                 .eq('id', id)
+                .select()
                 .single();
             if (facErr) throw facErr;
 
-            // sync tags
-            await syncTags(id, tags);
+            if (!fac) throw new Error('Facilitator not found');
 
-            res.json(fac);
-        } catch (err) {
+            // sync tags
+            await syncTags(fac.id!, tags);
+
+            return res.json(fac);
+        } catch (err: any) {
             console.error(err);
-            // @ts-ignore
-            res.status(400).json({ error: err.message });
+            return res.status(400).json({ error: err.message });
         }
     }
 );
@@ -297,7 +302,6 @@ router.patch('/:id/media', authenticateAdminRequest, async (req, res) => {
     const { id } = req.params;
     const updates = req.body;
 
-
     try {
         const { data, error } = await supabaseClient
             .from('facilitators')
@@ -310,10 +314,10 @@ router.patch('/:id/media', authenticateAdminRequest, async (req, res) => {
             return res.status(400).json({ error: error.message });
         }
 
-        res.json(data);
-    } catch (err) {
+        return res.json(data);
+    } catch (err: any) {
         console.error('Unexpected error:', err);
-        res.status(500).json({ error: 'Internal server error' });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 });
 

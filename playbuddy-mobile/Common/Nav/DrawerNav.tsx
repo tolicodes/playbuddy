@@ -114,11 +114,7 @@ export const DrawerNav = () => {
                 component={FacilitatorsScreen}
                 options={{
                     ...headerOptions({ navigation, title: 'Facilitators' }),
-                    drawerIcon: ({ size }) => (
-                        <View style={{ flexDirection: 'column', alignItems: 'center', width: size + 5, height: size + 5 }}>
-                            <FAIcon name="user-tie" size={size} color="#FFD700" />
-                        </View>
-                    ),
+                    drawerIcon: getIcon('user-tie'),
                 }}
             />
 

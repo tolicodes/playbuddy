@@ -18,6 +18,9 @@ import { useFetchFacilitators } from '../../Common/db-axios/useFacilitators';
 import { useFetchEvents } from '../Calendar/hooks/useEvents';
 import { LAVENDER_BACKGROUND } from '../../styles';
 import { EventListItem } from '../Calendar/EventListItem';
+import { useNavigation } from '@react-navigation/native';
+import { NavStack } from '../../Common/Nav/NavStackType';
+
 
 const { height } = Dimensions.get('window');
 const CAROUSEL_HEIGHT = height * 0.20;
@@ -26,9 +29,11 @@ export default function FacilitatorProfile() {
     const { params } = useRoute();
     const facilitatorId = params?.facilitatorId;
 
+    const navigation = useNavigation<NavStack>();
     const { data: facilitators, isLoading, error } = useFetchFacilitators();
     const { events } = useFetchEvents();
     const [tab, setTab] = useState<'bio' | 'events' | 'media'>('bio');
+
 
     const facilitator = facilitators?.find((f) => f.id === facilitatorId);
 
@@ -53,51 +58,57 @@ export default function FacilitatorProfile() {
 
             {/* Header area */}
             <View style={[styles.headerPurple]}>
-                <Image
-                    source={{ uri: facilitator.profile_image_url! }}
-                    style={styles.photo}
-                />
-                <View style={styles.infoSection}>
-                    <View style={styles.nameRow}>
-                        <Text style={styles.name}>{facilitator.name}</Text>
-                        {facilitator.verified && (
-                            <MaterialIcons
-                                name="check-circle"
-                                size={18}
-                                color="#4ADE80"
-                                style={{ marginLeft: 6 }}
-                            />
+                <View style={styles.headerTop}>
+                    <Image
+                        source={{ uri: facilitator.profile_image_url! }}
+                        style={styles.photo}
+                    />
+
+                    <View style={styles.infoSection}>
+                        <View style={styles.nameRow}>
+                            <Text style={styles.name}>{facilitator.name}</Text>
+                            {facilitator.verified && (
+                                <MaterialIcons
+                                    name="check-circle"
+                                    size={18}
+                                    color="#4ADE80"
+                                    style={{ marginLeft: 6 }}
+                                />
+                            )}
+                        </View>
+                        <View style={styles.socialRow}>
+                            <TouchableOpacity
+                                style={styles.socialItem}
+                                onPress={() => openLink(`https://www.instagram.com/${facilitator.instagram_handle}`)}
+                            >
+                                <FontAwesome name="instagram" size={30} color="white" />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.socialItem}
+                                onPress={() => openLink(`https://www.fetlife.com/users/${facilitator.fetlife_handle}`)}
+                            >
+                                <Image
+                                    source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png' }}
+                                    style={{ width: 24, height: 24 }}
+                                />
+                            </TouchableOpacity>
+                        </View>
+                        {facilitator.location && (
+                            <Text style={styles.location}>From {facilitator.location}</Text>
                         )}
-                    </View>
-                    <View style={styles.socialRow}>
-                        <TouchableOpacity
-                            style={styles.socialItem}
-                            onPress={() => openLink(`https://www.instagram.com/${facilitator.instagram_handle}`)}
-                        >
-                            <FontAwesome name="instagram" size={30} color="white" />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.socialItem}
-                            onPress={() => openLink(`https://www.fetlife.com/users/${facilitator.fetlife_handle}`)}
-                        >
-                            <Image
-                                source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png' }}
-                                style={{ width: 24, height: 24 }}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                    {facilitator.location && (
-                        <Text style={styles.location}>From {facilitator.location}</Text>
-                    )}
-                    <View style={[styles.tagsRow, { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start' }]}>
-                        {facilitator.tags.slice(0, 6).map((t) => (
-                            <View key={t.id} style={[styles.tag, { margin: 2 }]}>
-                                <Text style={styles.tagText}>{t.name}</Text>
-                            </View>
-                        ))}
+
                     </View>
                 </View>
+                <View style={styles.tagsRow}>
+                    {facilitator.tags.map((tag) => (
+                        <View style={styles.tagContainer} key={tag.id}>
+                            <Text style={styles.tagText}>{tag.name}</Text>
+                        </View>
+                    ))}
+                </View>
             </View>
+
+
 
             {/* Tabs */}
             <View style={styles.tabRow}>
@@ -126,19 +137,23 @@ export default function FacilitatorProfile() {
                     ownEvents.map((e) => (
                         <EventListItem
                             item={e}
-                            onPress={() => openLink(e.event_url)}
+                            onPress={() => {
+                                navigation.navigate('Event Details', { selectedEvent: e });
+                            }}
                         />
                     ))}
 
                 {tab === 'media' && (
                     <View style={styles.mediaContainer}>
-                        <TouchableOpacity
-                            style={styles.mediaItem}
-                            onPress={() => openLink(facilitator.intro_video_url!)}
-                        >
-                            <MaterialIcons name="play-circle-outline" size={32} color="#7F5AF0" />
-                            <Text style={styles.mediaText}>Intro Video</Text>
-                        </TouchableOpacity>
+                        {!facilitator.media.length ? (
+                            <View>
+                                <Text>Nothing yet!</Text>
+                            </View>
+                        ) : (
+                            facilitator.media.map((m) => (
+                                <Text>TBD</Text>
+                            ))
+                        )}
                     </View>
                 )}
             </ScrollView>
@@ -150,17 +165,34 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND },
     carousel: { backgroundColor: '#5E3FFD' },
     headerPurple: {
-        backgroundColor: '#7F5AF0', flexDirection: 'row', padding: 16,
-
-
+        backgroundColor: '#7F5AF0', flexDirection: 'column', padding: 16,
+    },
+    headerTop: {
+        flexDirection: 'row', alignItems: 'center',
+    },
+    headerBottom: {
+        flexDirection: 'row', alignItems: 'center',
     },
     infoSection: { marginLeft: 16, flex: 1 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
     name: { color: '#fff', fontSize: 24, fontWeight: '700' },
     socialRow: { flexDirection: 'row', marginTop: 6 },
     location: { color: '#DDD', fontSize: 12, marginTop: 6 },
-    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
-    tagText: { color: '#7F3FFF', fontSize: 12 },
+    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4 },
+    tagContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        borderRadius: 12,
+        backgroundColor: '#F5F5FF',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        marginRight: 8,
+        marginTop: 6,
+    },
+    tagText: {
+        color: '#5E3FFD',
+        fontSize: 14,
+    },
     tabRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10 },
     tabButton: { paddingVertical: 8 },
     tabText: { color: '#888' },
@@ -168,7 +200,6 @@ const styles = StyleSheet.create({
     content: { paddingHorizontal: 0 },
     bioContainer: { padding: 16 },
     mediaContainer: { padding: 16 },
-    markdown: { body: { color: '#555', fontSize: 14 } },
     eventRow: { paddingVertical: 12, borderBottomWidth: 1, borderColor: '#EEE' },
     eventName: { fontSize: 16, fontWeight: '600' },
     eventSub: { fontSize: 12, color: '#8E8E93' },

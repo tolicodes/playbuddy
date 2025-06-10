@@ -47,4 +47,11 @@ for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
   fi
 done
 
+# Only for playbuddy-api, delete db-axios
+if [ -d "playbuddy-api/src/common/db-axios" ]; then
+  rm -rf "playbuddy-api/src/common/db-axios"
+  echo "Deleted playbuddy-api/src/common/db-axios"
+fi
+
+
 echo "Done!"
