@@ -799,4 +799,60 @@ export interface Munch {
 }
 
 
+// Tag used by facilitators
+export interface Tag {
+    id: string;        // UUID
+    name: string;
+    entity: string;    // e.g. 'facilitator'
+    type?: string;      // e.g. 'specialty'
+}
+
+// A media item (image or video) in the facilitator’s carousel
+export interface FacilitatorMedia {
+    id: string;             // UUID
+    facilitator_id: string; // UUID
+    type: 'image' | 'video';
+    url: string;
+    sort_order: number;
+    created_at: string;     // ISO timestamp
+}
+
+// Main Facilitator record, matching the updated schema
+export interface Facilitator {
+    id: string;                      // UUID
+    name: string;
+    bio: string | null;
+    profile_image_url: string | null;
+    intro_video_url?: string | null;
+    instagram_handle: string | null;
+    fetlife_handle: string | null;
+    location: string | null;
+    verified: boolean;
+    tags: Tag[];
+    media: FacilitatorMedia[];
+    event_ids: number[];
+    follower_ids: string[];
+    created_at: string;              // ISO timestamp
+    updated_at: string;              // ISO timestamp
+    is_following?: boolean;
+}
+
+export type CreateFacilitatorInput = Omit<
+    Facilitator,
+    'id'
+    | 'media'
+    | 'events'
+    | 'follower_count'
+    | 'created_at'
+    | 'updated_at'
+    | 'tags'
+    | 'event_ids'
+    | 'follower_ids'
+>;
+
+export type UpdateFacilitatorInput = CreateFacilitatorInput & {
+    id: string;
+}
+
+
 export { UE };

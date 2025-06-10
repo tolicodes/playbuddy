@@ -11,6 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
 import AuthNav from '../../Pages/Auth/screens/AuthNav';
 import { headerOptions } from '../Header/Header';
+import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile';
 
 const HomeStack = createStackNavigator();
 /**
@@ -132,6 +133,11 @@ export function HomeStackNavigator() {
             <HomeStack.Screen name="Munch Details"
                 options={headerOptions({ navigation, title: 'Munch Details' })}
                 component={MunchDetails} />
+
+
+            <HomeStack.Screen name="Facilitator Profile"
+                options={headerOptions({ navigation, title: 'Facilitator Profile' })}
+                component={FacilitatorProfile} />
         </HomeStack.Navigator >
     );
 }

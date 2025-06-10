@@ -47,6 +47,11 @@ export type NavStackProps = {
         munchId: string;
     };
 
+    'Facilitators': undefined;
+    'FacilitatorProfile': {
+        facilitatorId: string;
+    };
+
     // Other Sections
     'Retreats': undefined;
     'Moar': undefined;

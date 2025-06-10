@@ -33,8 +33,9 @@ done
 SOURCE_DIRECTORY="common/src/"
 
 TARGET_DIRECTORIES=(
-  "playbuddy-admin/src/common",
+  "playbuddy-admin/src/common"
   "playbuddy-mobile/Common"
+  "playbuddy-api/src/common"
 )
 
 for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do

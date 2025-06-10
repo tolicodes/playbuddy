@@ -16,6 +16,8 @@ import deepLinkRoute from './routes/deep_links.js';
 import organizersRoute from './routes/organizers.js';
 import promoCodesRoute from './routes/promo_codes.js';
 import munchesRoute from './routes/munches.js'
+import facilitatorsRoute from './routes/facilitators.js'
+import tagsRoute from './routes/tags.js'
 export const app = express();
 
 // Middleware setup
@@ -41,6 +43,8 @@ app.use('/deep_links', deepLinkRoute);
 app.use('/organizers', organizersRoute);
 app.use('/promo_codes', promoCodesRoute);
 app.use('/munches', munchesRoute);
+app.use('/facilitators', facilitatorsRoute);
+app.use('/tags', tagsRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

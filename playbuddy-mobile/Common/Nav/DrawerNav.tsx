@@ -16,11 +16,11 @@ import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
 import { PromosScreen } from "../../Pages/Auth/screens/Promo/PromosScreen";
 import PlayParties from "../../Pages/PlayParties";
 import { MunchesScreen } from '../../Pages/Munches/MunchesScreen'
+import { FacilitatorsScreen } from "../../Pages/Facilitators/Facilitators";
 
 const Drawer = createDrawerNavigator();
 
 export const DrawerNav = () => {
-    const { isDefaultsComplete } = useUserContext();
     const navigation = useNavigation<NavStack>();
 
     const getIcon = (name: string) => {
@@ -51,6 +51,8 @@ export const DrawerNav = () => {
                     },
                 })}
             />
+
+
 
             <Drawer.Screen
                 name="Promos"
@@ -104,6 +106,19 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('mask'),
                     ...headerOptions({ navigation, title: 'Play Parties' }),
 
+                }}
+            />
+
+            <Drawer.Screen
+                name="Facilitators"
+                component={FacilitatorsScreen}
+                options={{
+                    ...headerOptions({ navigation, title: 'Facilitators' }),
+                    drawerIcon: ({ size }) => (
+                        <View style={{ flexDirection: 'column', alignItems: 'center', width: size + 5, height: size + 5 }}>
+                            <FAIcon name="user-tie" size={size} color="#FFD700" />
+                        </View>
+                    ),
                 }}
             />
 
