@@ -57,7 +57,7 @@ export default function FacilitatorProfile() {
             {/* <View style={[styles.carousel, { height: CAROUSEL_HEIGHT }]} /> */}
 
             {/* Header area */}
-            <View style={[styles.headerPurple]}>
+            <View style={[styles.header]}>
                 <View style={styles.headerTop}>
                     <Image
                         source={{ uri: facilitator.profile_image_url! }}
@@ -71,7 +71,7 @@ export default function FacilitatorProfile() {
                                 <MaterialIcons
                                     name="check-circle"
                                     size={18}
-                                    color="#4ADE80"
+                                    color="white"
                                     style={{ marginLeft: 6 }}
                                 />
                             )}
@@ -166,7 +166,7 @@ export default function FacilitatorProfile() {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#7F5AF0' },
     carousel: { backgroundColor: '#5E3FFD' },
-    headerPurple: {
+    header: {
         backgroundColor: '#7F5AF0', flexDirection: 'column', padding: 16,
     },
     headerTop: {

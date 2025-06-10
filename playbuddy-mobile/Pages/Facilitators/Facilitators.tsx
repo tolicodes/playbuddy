@@ -22,6 +22,7 @@ import { useUserContext } from '../Auth/hooks/UserContext';
 import type { Facilitator } from '../../Common/types/commonTypes';
 import { LAVENDER_BACKGROUND } from '../../styles';
 import { useFetchEvents } from '../Calendar/hooks/useEvents';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 export const FacilitatorsScreen = ({
     showSearch = false
@@ -118,9 +119,20 @@ export const FacilitatorsScreen = ({
                                 }
 
                                 <View style={styles.info}>
-                                    <Text style={styles.name} numberOfLines={1}>
-                                        {item.name}
-                                    </Text>
+                                    <View style={styles.nameContainer}>
+                                        <Text style={styles.name} numberOfLines={1}>
+                                            {item.name}
+                                        </Text>
+                                        {item.verified && (
+                                            <MaterialIcons
+                                                name="check-circle"
+                                                size={18}
+                                                color="#1DA1F2"
+                                                style={{ marginLeft: 6, alignSelf: 'flex-end' }}
+                                            />
+                                        )}
+                                    </View>
+
                                     <View style={styles.tagRow}>
                                         {item.tags.map(t => (
                                             <View key={t.id} style={styles.tag}>
@@ -196,6 +208,10 @@ const styles = StyleSheet.create({
     info: {
         flex: 1,
         justifyContent: 'center'
+    },
+    nameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center'
     },
     name: {
         fontSize: 16,
