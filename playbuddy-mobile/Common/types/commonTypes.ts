@@ -796,6 +796,7 @@ export interface Munch {
     status: string;
     notes: string;
     verified: string;
+    tags: string[];
 }
 
 

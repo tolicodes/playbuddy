@@ -107,6 +107,18 @@ export const MunchDetails = () => {
                     )}
                 </View>
 
+                {munch.tags && (
+                    <View style={styles.badgesRow}>
+                        {munch.tags.map(tag => (
+                            <View style={[styles.badge, styles.tagBadge]} key={tag}>
+                                <Text style={styles.badgeText}>{tag}</Text>
+                            </View>
+                        ))}
+                    </View>
+                )}
+
+
+
                 {(munch.schedule_text || munch.cadence) && (
                     <Text style={styles.scheduleText}>
                         {munch.schedule_text ?? ""}
@@ -186,6 +198,7 @@ const styles = StyleSheet.create({
     headerTitle: { fontSize: 22, fontWeight: "700", color: "#333", flexShrink: 1 },
     badgesRow: { flexDirection: "row", flexWrap: "wrap", marginBottom: 12, alignItems: "center" },
     badge: { flexDirection: "row", alignItems: "center", maxWidth: SCREEN_WIDTH * 0.45, paddingVertical: 4, paddingHorizontal: 8, borderRadius: 12, marginRight: 8, marginBottom: 8 },
+    tagBadge: { backgroundColor: "#455A64" },
     verifiedBadge: { backgroundColor: "#1976D2" },
     locationBadge: { backgroundColor: "#00796B" },
     audienceBadge: { backgroundColor: "#F57C00" },
