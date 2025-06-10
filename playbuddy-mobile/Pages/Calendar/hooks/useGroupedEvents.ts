@@ -2,12 +2,14 @@ import { useMemo } from 'react';
 import moment from 'moment';
 import { Event } from '../../../commonTypes';
 import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
+import { useCalendarContext } from './CalendarContext';
+import { useFetchDeepLinks } from '../../../Common/hooks/useDeepLinks';
 
 export const SECTION_DATE_FORMAT = 'MMM D, YYYY (dddd)';
 
 // Custom hook to group filtered events by date, create sections for rendering, 
 // and generate marked dates with organizer dots for the calendar.
-export const useGroupedEvents = (events: EventWithMetadata[]) => {
+export const useGroupedEvents = (events: EventWithMetadata[], featuredEvents?: EventWithMetadata[]) => {
     // Sections is the list of events grouped by date
     const groupedEvents = useMemo(() => {
         if (!Array.isArray(events)) return {};
@@ -22,7 +24,7 @@ export const useGroupedEvents = (events: EventWithMetadata[]) => {
         }, {});
     }, [events]);
 
-    const sections = useMemo(() => {
+    const sectionsRegular = useMemo(() => {
         return Object.keys(groupedEvents)
             .map(date => ({
                 key: date,
@@ -32,6 +34,20 @@ export const useGroupedEvents = (events: EventWithMetadata[]) => {
             }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date
     }, [groupedEvents]);
+
+    let sections;
+
+    if (featuredEvents) {
+        const featuredSection = {
+            key: 'featured',
+            date: 'Featured',
+            title: 'Featured',
+            data: featuredEvents,
+        }
+        sections = [featuredSection, ...sectionsRegular];
+    } else {
+        sections = sectionsRegular;
+    }
 
     // Create marked dates with dot colors for the calendar
     const markedDates = useMemo(() => {
@@ -53,3 +69,20 @@ export const useGroupedEvents = (events: EventWithMetadata[]) => {
 
     return { groupedEvents, sections, markedDates };
 };
+
+export const useFeaturedEvents = () => {
+    const { allEvents } = useCalendarContext();
+
+    const { data: deepLinks = [] } = useFetchDeepLinks();
+
+    const featuredEvents = deepLinks
+        .filter((dl) => dl.featured_event)
+        .map((dl) => dl.featured_event)
+        .filter((event, index, self) =>
+            index === self.findIndex((e) => e.id === event.id)
+        )
+        .map((event) => allEvents.find(e => e.id === event.id))
+        .filter((event): event is Event => !!event);
+
+    return featuredEvents;
+}

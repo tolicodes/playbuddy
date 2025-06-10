@@ -3,60 +3,16 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import EventCalendarView from "../../../Calendar/EventCalendarView/EventCalendarView";
 import { useCalendarContext } from "../../../Calendar/hooks/CalendarContext";
 import { getEventPromoCodes } from "../usePromoCode";
-import { useFetchDeepLinks } from '../../../../Common/hooks/useDeepLinks';
-import { Event } from '../../../../commonTypes';
-import { MaterialIcons } from '@expo/vector-icons';
+import { useFeaturedEvents } from '../../../Calendar/hooks/useGroupedEvents';
 
 export const PromosScreen = () => {
     const { allEvents } = useCalendarContext();
-    const [promoFilter, setPromoFilter] = useState<'featured' | 'all'>('featured');
-
+    const featuredEvents = useFeaturedEvents();
     const withPromoEvents = allEvents.filter((e) => getEventPromoCodes(e).length > 0);
-    const { data: deepLinks = [] } = useFetchDeepLinks();
-
-    const featuredEvents = deepLinks
-        .filter((dl) => dl.featured_event)
-        .map((dl) => dl.featured_event)
-        .filter((event, index, self) =>
-            index === self.findIndex((e) => e.id === event.id)
-        )
-        .map((event) => allEvents.find(e => e.id === event.id))
-        .filter((event): event is Event => !!event);
-
-    const filteredEvents = promoFilter === 'all' ? withPromoEvents : featuredEvents;
 
     return (
         <View style={{ flex: 1 }}>
-            <View style={styles.filterRow}>
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        promoFilter === 'featured' && styles.activeFilter,
-                    ]}
-                    onPress={() => setPromoFilter('featured')}
-                >
-                    <Text style={promoFilter === 'featured' ? styles.activeFilterText : styles.filterText}>
-                        Featured Events
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        promoFilter === 'all' && styles.activeFilter,
-                    ]}
-                    onPress={() => setPromoFilter('all')}
-                >
-                    <View style={styles.iconRow}>
-                        <MaterialIcons name="list" size={16} color={promoFilter === 'all' ? '#fff' : '#333'} />
-                        <Text style={[styles.tabLabel, promoFilter === 'all' ? styles.activeFilterText : styles.filterText]}>
-                            All Promos
-                        </Text>
-                    </View>
-                </TouchableOpacity>
-            </View>
-
-            <EventCalendarView events={filteredEvents} />
+            <EventCalendarView events={withPromoEvents} featuredEvents={featuredEvents} />
         </View>
     );
 };

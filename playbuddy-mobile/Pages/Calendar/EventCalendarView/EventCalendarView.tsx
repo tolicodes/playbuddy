@@ -32,9 +32,11 @@ interface EventCalendarViewProps {
     isOnWishlist?: boolean;
     events?: EventWithMetadata[];
     showGoogleCalendar?: boolean;
+
+    featuredEvents?: EventWithMetadata[];
 }
 
-const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = false, events, showGoogleCalendar = false }) => {
+const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = false, events, showGoogleCalendar = false, featuredEvents }) => {
     const { filters, setFilters, filteredEvents, wishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
 
@@ -53,7 +55,7 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
         setEventsLocalFiltered(eventsUsed);
     }, [eventsUsed]);
 
-    const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered);
+    const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered, featuredEvents);
 
     const startOfCurrentWeek = useMemo(
         () => startOfWeek(currentDate, { weekStartsOn: 0 }),
