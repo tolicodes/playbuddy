@@ -109,60 +109,62 @@ export default function FacilitatorProfile() {
             </View>
 
 
+            <View style={styles.bottom}>
 
-            {/* Tabs */}
-            <View style={styles.tabRow}>
-                {['bio', 'events', 'media'].map((t) => (
-                    <TouchableOpacity
-                        key={t}
-                        style={[styles.tabButton, tab === t && styles.activeTab]}
-                        onPress={() => setTab(t as any)}
-                    >
-                        <Text style={tab === t ? styles.activeTabText : styles.tabText}>
-                            {t.charAt(0).toUpperCase() + t.slice(1)}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {/* Content based on tab */}
-            <ScrollView style={styles.content}>
-                {tab === 'bio' && (
-                    <View style={styles.bioContainer}>
-                        <Markdown style={styles.markdown}>{facilitator.bio || ''}</Markdown>
-                    </View>
-                )}
-
-                {tab === 'events' &&
-                    ownEvents.map((e) => (
-                        <EventListItem
-                            item={e}
-                            onPress={() => {
-                                navigation.navigate('Event Details', { selectedEvent: e });
-                            }}
-                        />
+                {/* Tabs */}
+                <View style={styles.tabRow}>
+                    {['bio', 'events', 'media'].map((t) => (
+                        <TouchableOpacity
+                            key={t}
+                            style={[styles.tabButton, tab === t && styles.activeTab]}
+                            onPress={() => setTab(t as any)}
+                        >
+                            <Text style={tab === t ? styles.activeTabText : styles.tabText}>
+                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                            </Text>
+                        </TouchableOpacity>
                     ))}
+                </View>
 
-                {tab === 'media' && (
-                    <View style={styles.mediaContainer}>
-                        {!facilitator.media.length ? (
-                            <View>
-                                <Text>Nothing yet!</Text>
-                            </View>
-                        ) : (
-                            facilitator.media.map((m) => (
-                                <Text>TBD</Text>
-                            ))
-                        )}
-                    </View>
-                )}
-            </ScrollView>
+                {/* Content based on tab */}
+                <ScrollView style={styles.content}>
+                    {tab === 'bio' && (
+                        <View style={styles.bioContainer}>
+                            <Markdown style={styles.markdown}>{facilitator.bio || ''}</Markdown>
+                        </View>
+                    )}
+
+                    {tab === 'events' &&
+                        ownEvents.map((e) => (
+                            <EventListItem
+                                item={e}
+                                onPress={() => {
+                                    navigation.navigate('Event Details', { selectedEvent: e });
+                                }}
+                            />
+                        ))}
+
+                    {tab === 'media' && (
+                        <View style={styles.mediaContainer}>
+                            {!facilitator.media.length ? (
+                                <View>
+                                    <Text>Nothing yet!</Text>
+                                </View>
+                            ) : (
+                                facilitator.media.map((m) => (
+                                    <Text>TBD</Text>
+                                ))
+                            )}
+                        </View>
+                    )}
+                </ScrollView>
+            </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND },
+    container: { flex: 1, backgroundColor: '#7F5AF0' },
     carousel: { backgroundColor: '#5E3FFD' },
     headerPurple: {
         backgroundColor: '#7F5AF0', flexDirection: 'column', padding: 16,
@@ -172,6 +174,12 @@ const styles = StyleSheet.create({
     },
     headerBottom: {
         flexDirection: 'row', alignItems: 'center',
+    },
+    bottom: {
+        flex: 1,
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
     },
     infoSection: { marginLeft: 16, flex: 1 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
