@@ -179,7 +179,7 @@ export const MunchDetails = () => {
                 </Text>
                 <Text style={styles.thanksMessage}>
                     <Text style={styles.boldText}>Message from Rose: </Text>
-                    Hi, I’m Rose. I hope this is helpful in your kink/BDSM journey. Pace yourself — it pays off.
+                    <LinkifyText platform="fetlife">Hi, I’m @Rosamaru I hope this is helpful in your kink/BDSM journey. Pace yourself — it pays off.</LinkifyText>
                 </Text>
             </View>
         </ScrollView>
