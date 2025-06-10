@@ -7,6 +7,7 @@ import { fetchAndCacheData } from '../helpers/cacheHelper.js';
 import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
+import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 
 const router = Router();
 
@@ -165,12 +166,12 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
 });
 
 router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { event } = req.body;
-    const { data, error } = await supabaseClient.from('events').insert({ event });
+    const event = req.body;
 
-    console.error(error);
 
-    res.json(data);
+    const eventResult = upsertEvent(event)
+
+    res.json(eventResult);
 });
 
 

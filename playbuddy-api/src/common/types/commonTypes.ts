@@ -578,7 +578,7 @@ export interface Organizer {
     name: string;
 
     /** Organizer URL (required). */
-    url: string;
+    url?: string;
 
     /** Original ID from external source (nullable). */
     original_id?: string | null;
