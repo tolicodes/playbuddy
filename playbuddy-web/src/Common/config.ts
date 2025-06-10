@@ -1,7 +1,7 @@
 // only edit /common/config.ts 
 // These are copied
 
-export const API_BASE_URL_PROD = 'https://api.playbuddy.me'
+export const API_BASE_URL_PROD = 'https://playbuddy-api-929140353915.us-east1.run.app'
 
 export const API_BASE_URL_LOCAL = 'http://localhost:8080'
 export const API_BASE_URL = process.env.NODE_ENV === 'production' ? API_BASE_URL_PROD : API_BASE_URL_LOCAL;
