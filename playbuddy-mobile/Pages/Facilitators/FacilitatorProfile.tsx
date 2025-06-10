@@ -85,7 +85,7 @@ export default function FacilitatorProfile() {
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.socialItem}
-                                onPress={() => openLink(`https://www.fetlife.com/users/${facilitator.fetlife_handle}`)}
+                                onPress={() => openLink(`https://www.fetlife.com/${facilitator.fetlife_handle}`)}
                             >
                                 <Image
                                     source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png' }}
