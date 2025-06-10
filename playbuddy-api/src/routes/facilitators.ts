@@ -214,6 +214,36 @@ async function syncTags(facilitatorId: string, tags = []) {
     }
 }
 
+// helper: sync media for a facilitator
+async function syncMedia(facilitatorId: string, media = []) {
+    try {
+        // clear existing links
+        const { data, error } = await supabaseClient
+            .from('facilitator_media')
+            .delete()
+            .eq('facilitator_id', facilitatorId);
+        if (error) throw error;
+
+        // insert new links
+        if (media.length) {
+            console.log('media', media)
+            const records = media.map(url => ({
+                facilitator_id: facilitatorId,
+                url,
+                type: 'image'
+            }));
+            const { data, error } = await supabaseClient
+                .from('facilitator_media')
+                .insert(records);
+
+            console.log('error', error)
+            if (error) throw error;
+        }
+    } catch (err: any) {
+        console.error('Error syncing media:', err);
+    }
+}
+
 /**
  * Create or update facilitator fields from request
  */
@@ -249,6 +279,8 @@ router.post(
 
             // sync tags
             await syncTags(fac.id!, tags);
+            await syncMedia(fac.id!, req.body.media)
+
 
             return res.status(201).json(fac);
         } catch (err: any) {
@@ -284,6 +316,7 @@ router.put(
 
             // sync tags
             await syncTags(fac.id!, tags);
+            await syncMedia(fac.id!, req.body.media)
 
             return res.json(fac);
         } catch (err: any) {
