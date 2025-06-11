@@ -74,7 +74,7 @@ for (const dir of [PNG_DIR, PDF_DIR]) {
 }
 
 // ─── 0a) Clear old contents of a directory ─────────────────────────────────────────────────────
-function clearDirectory(dirPath) {
+function clearDirectory(dirPath: string) {
     if (!fs.existsSync(dirPath)) return;
     for (const entry of fs.readdirSync(dirPath)) {
         const fullPath = path.join(dirPath, entry);
@@ -92,7 +92,7 @@ clearDirectory(PNG_DIR);
 clearDirectory(PDF_DIR);
 
 // ─── 1) Load sizes.json and select the matching configuration ───────────────────────────────────
-const sizes = JSON.parse(fs.readFileSync(SIZES_JSON_PATH, 'utf-8'));
+const sizes = JSON.parse(fs.readFileSync(SIZES_JSON_PATH, 'utf-8')) as any[];
 const config = sizes.find(item => item.flyer_name === FLYER_NAME);
 
 if (!config) {
@@ -112,7 +112,7 @@ const {
 } = config;
 
 // ─── 2) Utility: generate a 300×300 SVG QR for a given URL ─────────────────────────────────────
-async function generateQrSvg(url, size = 300) {
+async function generateQrSvg(url: string, size = 300) {
     return QRCode.toString(url, {
         type: 'svg',
         width: size,
@@ -122,7 +122,7 @@ async function generateQrSvg(url, size = 300) {
 }
 
 // ─── 3) Utility: build a 300×325 SVG that places [QR] on top (300×300) and [ID, 16px] below ─────────
-function buildCombinedSvgWithIdBelow(qrSvgString, idString) {
+function buildCombinedSvgWithIdBelow(qrSvgString: string, idString: string) {
     const TOTAL_WIDTH = 300;
     const BAND_HEIGHT = 25;
     const TOTAL_HEIGHT = 300 + BAND_HEIGHT;
@@ -165,11 +165,12 @@ let processedRows = 0;
  *   - embed the QR+ID PNG at (qr_x, qr_y, qr_width, qr_height).
  * Saves to output/filled_pdfs/{id}.pdf.
  */
-async function createBackPdf(id, pngBuffer) {
+async function createBackPdf(id: string, pngBuffer: Buffer) {
     const cardPdf = await PDFDocument.create();
     const page = cardPdf.addPage([252, 144]);
 
     // Embed back.png as full-page background
+    // @ts-ignore
     const embeddedBack = await cardPdf.embedPng(backPngBytes);
     page.drawImage(embeddedBack, {
         x: 0,
@@ -179,6 +180,7 @@ async function createBackPdf(id, pngBuffer) {
     });
 
     // Embed the QR+ID PNG on top
+    // @ts-ignore
     const embeddedQr = await cardPdf.embedPng(pngBuffer);
     page.drawImage(embeddedQr, {
         x: qr_x,
@@ -198,7 +200,7 @@ async function createBackPdf(id, pngBuffer) {
  * For non-business-card types, embed QR+ID PNG onto input/input.pdf at (qr_x, qr_y) and size.
  * Saves to output/filled_pdfs/{id}.pdf.
  */
-async function createFlyerPdf(id, pngBuffer) {
+async function createFlyerPdf(id: string, pngBuffer: Buffer) {
     if (!templatePdfBytes) {
         console.error(`❌ Cannot create flyer PDF for "${id}" because input.pdf is missing.`);
         return;
@@ -206,6 +208,7 @@ async function createFlyerPdf(id, pngBuffer) {
     const flyerPdf = await PDFDocument.load(templatePdfBytes);
     const [firstPage] = flyerPdf.getPages();
 
+    // @ts-ignore
     const embeddedQr = await flyerPdf.embedPng(pngBuffer);
     firstPage.drawImage(embeddedQr, {
         x: qr_x,
@@ -227,7 +230,7 @@ async function createFlyerPdf(id, pngBuffer) {
  *  - save to filled_qrs/pngs/{ID}.png,
  *  - then either createBackPdf or createFlyerPdf.
  */
-async function processRow(id, flyerVersion, url) {
+async function processRow(id: string, flyerVersion: string, url: string) {
     // a) Generate 300×300 QR SVG
     const rawQrSvg = await generateQrSvg(url, 300);
 
@@ -240,6 +243,7 @@ async function processRow(id, flyerVersion, url) {
     // d) Save PNG to output/filled_qrs/pngs/{ID}.png
     const pngFileName = `${id}.png`;
     const pngOutputPath = path.join(PNG_DIR, pngFileName);
+    // @ts-ignore
     await fs.promises.writeFile(pngOutputPath, pngBuffer);
     console.log(`  🖼  Generated PNG: filled_qrs/pngs/${pngFileName}`);
 
@@ -331,6 +335,7 @@ async function tileBusinessCards() {
     // 5) TILE FRONT PAGES (no QR, just front.png)
     //    Number of pages needed = ceil(totalCards / 10)
     const pagesNeeded = Math.ceil(totalCards / 10);
+    // @ts-ignore
     const frontEmbedded = await doc.embedPng(frontPngBytes);
 
     for (let p = 0; p < pagesNeeded; p++) {

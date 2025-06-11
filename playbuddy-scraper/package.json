@@ -79,6 +79,7 @@
     "@types/jest": "29.5.10",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.1.0",
+    "@types/qrcode": "^1.5.5",
     "@types/qrcode-terminal": "^0.12.2",
     "@types/supertest": "2.0.16",
     "@types/turndown": "^5.0.5",
