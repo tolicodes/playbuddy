@@ -21,7 +21,8 @@ import { NavStack } from '../../Common/Nav/NavStackType';
 import { EventListItem } from '../Calendar/EventListItem';
 import { MediaCarousel } from './MediaCarousel';
 import { ACCENT_PURPLE, HEADER_PURPLE } from '../../styles';
-import { Facilitator } from '../../../playbuddy-admin/src/common/types/commonTypes';
+import { Facilitator, Event } from '../../Common/types/commonTypes';
+import { LinkifyText } from '../Munches/LinkifyText';
 
 const { height } = Dimensions.get('window');
 
@@ -181,6 +182,48 @@ const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
     </View>
 )
 
+const EventsTab = ({ events, navigation, facilitator }: { events: EventWithMetadata[], navigation: NavStack, facilitator: Facilitator }) => {
+    const facilitatorName = facilitator.name;
+    const facilitatorWebsite = facilitator.website;
+    const facilitatorInstagram = facilitator.instagram_handle;
+    const facilitatorFetlife = facilitator.fetlife_handle;
+
+    let noEventsText = 'No events on PlayBuddy. Check back soon!'
+
+    if (facilitatorWebsite || facilitatorInstagram || facilitatorFetlife) {
+        noEventsText = `No events on PlayBuddy. Check out ${facilitatorName}'s\n`
+
+
+        noEventsText += facilitatorWebsite ? `- Website: ${facilitatorWebsite}\n` : ''
+    }
+    noEventsText += facilitatorInstagram ? `- Instagram: @${facilitatorInstagram}\n` : ''
+    noEventsText += facilitatorFetlife ? `- Fetlife: @${facilitatorFetlife}\n` : ''
+
+    if (events.length === 0) {
+        return (
+            <View style={tabStyles.emptyEventsContainer}>
+                <LinkifyText style={tabStyles.emptyEventsText}>{noEventsText}</LinkifyText>
+            </View>
+        )
+    }
+
+    return (
+        <View>
+            {events.map(e => (
+                <EventListItem
+                    key={e.id}
+                    item={e}
+                    onPress={() =>
+                        navigation.navigate('Event Details', {
+                            selectedEvent: e,
+                        })
+                    }
+                />
+            ))}
+        </View>
+    )
+}
+
 // Main screen
 export default function ProfileScreen() {
     const { params } = useRoute<any>();
@@ -224,18 +267,7 @@ export default function ProfileScreen() {
                 <ScrollView style={tabStyles.content}>
                     {activeTab === 'bio' && <BioTab bio={facilitator.bio || ''} facilitator={facilitator} />}
 
-                    {activeTab === 'events' &&
-                        ownEvents.map(e => (
-                            <EventListItem
-                                key={e.id}
-                                item={e}
-                                onPress={() =>
-                                    navigation.navigate('Event Details', {
-                                        selectedEvent: e,
-                                    })
-                                }
-                            />
-                        ))}
+                    {activeTab === 'events' && <EventsTab events={ownEvents} navigation={navigation} facilitator={facilitator} />}
 
                     {activeTab === 'media' && (
                         <View
@@ -362,4 +394,14 @@ const tabStyles = StyleSheet.create({
     content: { flex: 1 },
     bioContainer: { padding: 16 },
     markdown: { body: { color: '#333', fontSize: 16, lineHeight: 22 } },
+    emptyEventsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    emptyEventsText: {
+        color: 'black',
+        fontSize: 16,
+        textAlign: 'flex-start',
+    },
 });
