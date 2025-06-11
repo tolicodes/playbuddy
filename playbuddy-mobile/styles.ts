@@ -1,6 +1,6 @@
 export const LAVENDER_BACKGROUND = '#F3EBFF';          // Main screen background
 export const ACCENT_PURPLE = '#9C6ADE';                // Primary action & selected states
-export const HEADER_PURPLE = '#7F5AF0';
+export const HEADER_PURPLE = '#7E5BEF';
 export const WHITE = '#FFFFFF';                         // Cards and selected text
 export const DARK_GRAY = '#333333';                     // Primary unselected text
 export const MEDIUM_GRAY = '#888888';                   // Secondary text, empty states

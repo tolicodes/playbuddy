@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        justifyContent: 'space-around',
     },
     thumbContainer: {
         width: '33%',
