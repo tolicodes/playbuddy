@@ -64,7 +64,7 @@ export default function EditFacilitatorScreen() {
     const createFac = useCreateFacilitator();
     const updateFac = useUpdateFacilitator();
     const { data: organizers } = useFetchOrganizers();
-    const { data: events } = useFetchEvents();
+    const { data: events } = useFetchEvents({ includeFacilitatorOnly: true });
 
     // Determine editing ID from URL
     const [editingId, setEditingId] = useState<string | null>(null);
