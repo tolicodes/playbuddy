@@ -182,7 +182,7 @@ const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
     </View>
 )
 
-const EventsTab = ({ events, navigation, facilitator }: { events: EventWithMetadata[], navigation: NavStack, facilitator: Facilitator }) => {
+const EventsTab = ({ events, navigation, facilitator }: { events: Event[], navigation: NavStack, facilitator: Facilitator }) => {
     const facilitatorName = facilitator.name;
     const facilitatorWebsite = facilitator.website;
     const facilitatorInstagram = facilitator.instagram_handle;
@@ -402,6 +402,5 @@ const tabStyles = StyleSheet.create({
     emptyEventsText: {
         color: 'black',
         fontSize: 16,
-        textAlign: 'flex-start',
     },
 });
