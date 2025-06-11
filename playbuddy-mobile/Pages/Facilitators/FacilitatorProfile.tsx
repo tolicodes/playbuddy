@@ -27,14 +27,14 @@ import { LinkifyText } from '../Munches/LinkifyText';
 const { height } = Dimensions.get('window');
 
 // Horizontal separator under tags
-const Separator = () => <View style={tabStyles.separator} />;
+const Separator = () => <View style={styles.separator} />;
 
 // Horizontal list of tag pills
 const TagList = ({ tags }: { tags: { id: string; name: string }[] }) => (
-    <View style={tabStyles.tagsRow}>
+    <View style={styles.tagsRow}>
         {tags.map(t => (
-            <View key={t.id} style={tabStyles.pill}>
-                <Text style={tabStyles.pillText}>{t.name}</Text>
+            <View key={t.id} style={styles.pill}>
+                <Text style={styles.pillText}>{t.name}</Text>
             </View>
         ))}
     </View>
@@ -46,9 +46,12 @@ const BioTab = ({ bio, facilitator }: { bio: string, facilitator: Facilitator })
         <TagsLocation facilitator={facilitator} />
         <Separator />
 
-        <View style={tabStyles.bioContainer}>
-            <Markdown style={tabStyles.markdown}>{bio}</Markdown>
+        <View style={styles.bioContainer}>
+            <Markdown style={styles.markdown}>{bio}</Markdown>
         </View>
+
+        <TagList tags={facilitator.tags} />
+
     </View>
 );
 
@@ -60,18 +63,18 @@ const TabBar = ({
     active: 'bio' | 'events' | 'media';
     onPress: (tab: 'bio' | 'events' | 'media') => void;
 }) => (
-    <View style={tabStyles.tabRow}>
+    <View style={styles.tabRow}>
         {['bio', 'events', 'media'].map(key => (
             <TouchableOpacity
                 key={key}
-                style={[tabStyles.tabButton, active === key && tabStyles.activeTab]}
+                style={[styles.tabButton, active === key && styles.activeTab]}
                 onPress={() => onPress(key as any)}
             >
                 <Text
                     style={
                         active === key
-                            ? tabStyles.activeTabText
-                            : tabStyles.tabText
+                            ? styles.activeTabText
+                            : styles.tabText
                     }
                 >
                     {key.charAt(0).toUpperCase() + key.slice(1)}
@@ -106,17 +109,17 @@ const ProfileHeader = ({
         });
     };
     return (
-        <View style={tabStyles.header}>
-            <View style={tabStyles.headerTop}>
+        <View style={styles.header}>
+            <View style={styles.headerTop}>
                 {photoUrl && (
                     <Image
                         source={{ uri: photoUrl }}
-                        style={tabStyles.photo}
+                        style={styles.photo}
                     />
                 )}
-                <View style={tabStyles.infoSection}>
-                    <View style={tabStyles.nameRow}>
-                        <Text style={tabStyles.name}>{name}</Text>
+                <View style={styles.infoSection}>
+                    <View style={styles.nameRow}>
+                        <Text style={styles.name}>{name}</Text>
                         {verified && (
                             <MaterialIcons
                                 name="check-circle"
@@ -126,12 +129,12 @@ const ProfileHeader = ({
                             />
                         )}
                     </View>
-                    <Text style={tabStyles.title}>{title}</Text>
+                    <Text style={styles.title}>{title}</Text>
 
-                    <View style={tabStyles.socialRow}>
+                    <View style={styles.socialRow}>
                         {instagram && (
                             <TouchableOpacity
-                                style={tabStyles.socialItem}
+                                style={styles.socialItem}
                                 onPress={() => openLink(`https://instagram.com/${instagram}`)}
                             >
                                 <FontAwesome name="instagram" size={24} color="white" />
@@ -139,7 +142,7 @@ const ProfileHeader = ({
                         )}
                         {fetlife && (
                             <TouchableOpacity
-                                style={tabStyles.socialItem}
+                                style={styles.socialItem}
                                 onPress={() => openLink(`https://fetlife.com/${fetlife}`)}
                             >
                                 <Image style={{ width: 24, height: 24 }} source={{ uri: "https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png" }} />
@@ -147,7 +150,7 @@ const ProfileHeader = ({
                         )}
                         {website && (
                             <TouchableOpacity
-                                style={tabStyles.socialItem}
+                                style={styles.socialItem}
                                 onPress={() => openLink(website)}
                             >
                                 <FontAwesome name="globe" size={24} color="white" />
@@ -163,17 +166,15 @@ const ProfileHeader = ({
 
 const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
     <View>
-        <TagList tags={facilitator.tags} />
-
         {
             facilitator.location ? (
-                <View style={tabStyles.locationRowWhite}>
+                <View style={styles.locationRowWhite}>
                     <MaterialIcons
                         name="location-on"
                         size={18}
                         color="#888"
                     />
-                    <Text style={tabStyles.locationWhite}>
+                    <Text style={styles.locationWhite}>
                         From {facilitator.location}
                     </Text>
                 </View>
@@ -201,8 +202,8 @@ const EventsTab = ({ events, navigation, facilitator }: { events: Event[], navig
 
     if (events.length === 0) {
         return (
-            <View style={tabStyles.emptyEventsContainer}>
-                <LinkifyText style={tabStyles.emptyEventsText}>{noEventsText}</LinkifyText>
+            <View style={styles.emptyEventsContainer}>
+                <LinkifyText style={styles.emptyEventsText}>{noEventsText}</LinkifyText>
             </View>
         )
     }
@@ -248,7 +249,7 @@ export default function ProfileScreen() {
         .filter(Boolean) as typeof events;
 
     return (
-        <View style={tabStyles.container}>
+        <View style={styles.container}>
             <ProfileHeader
                 photoUrl={facilitator.profile_image_url}
                 name={facilitator.name}
@@ -259,12 +260,12 @@ export default function ProfileScreen() {
                 website={facilitator.website}
             />
 
-            <View style={tabStyles.bottom}>
+            <View style={styles.bottom}>
                 <TabBar
                     active={activeTab}
                     onPress={setActiveTab}
                 />
-                <ScrollView style={tabStyles.content}>
+                <ScrollView style={styles.content}>
                     {activeTab === 'bio' && <BioTab bio={facilitator.bio || ''} facilitator={facilitator} />}
 
                     {activeTab === 'events' && <EventsTab events={ownEvents} navigation={navigation} facilitator={facilitator} />}
@@ -285,7 +286,7 @@ export default function ProfileScreen() {
 }
 
 // Shared styles
-const tabStyles = StyleSheet.create({
+const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: ACCENT_PURPLE,
@@ -294,7 +295,7 @@ const tabStyles = StyleSheet.create({
         backgroundColor: HEADER_PURPLE,
         paddingHorizontal: 16,
         alignItems: 'flex-start',
-        paddingBottom: 30,
+        paddingBottom: 40,
     },
     headerTop: {
         flexDirection: 'row',
@@ -392,7 +393,7 @@ const tabStyles = StyleSheet.create({
     },
     pillText: { color: '#fff', fontSize: 14 },
     content: { flex: 1 },
-    bioContainer: { padding: 16 },
+    bioContainer: { padding: 16, paddingTop: 0 },
     markdown: { body: { color: '#333', fontSize: 16, lineHeight: 22 } },
     emptyEventsContainer: {
         flex: 1,
