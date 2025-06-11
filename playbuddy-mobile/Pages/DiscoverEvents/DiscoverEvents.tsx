@@ -36,7 +36,7 @@ export const DiscoverEvents: React.FC = () => {
     const recordSwipe = useRecordSwipeChoice();
     const swiperRef = useRef<Swiper<any> | null>(null);
 
-    const { visible: discoverEventsTourVisible, setVisible: setDiscoverEventsTourVisible } = useShowDiscoverEventsTour();
+    const { visible: discoverEventsTourVisible, saveVisible: setDiscoverEventsTourVisible } = useShowDiscoverEventsTour();
 
     // Show a badge count for how many cards remain
     useBadgeNotifications({ availableCardsToSwipe });
