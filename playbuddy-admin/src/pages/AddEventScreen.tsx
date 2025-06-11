@@ -37,6 +37,7 @@ const schema = Yup.object().shape({
     organizer: Yup.number().required('Required'),
     organizer_name: Yup.string().required('Required'),
     play_party: Yup.boolean().required('Required'),
+    facilitator_only: Yup.boolean().required('Required'),
 });
 
 type FormValues = Yup.InferType<typeof schema>
@@ -66,6 +67,7 @@ export default function AddEventPage() {
             organizer: 0,
             organizer_name: '',
             play_party: false,
+            facilitator_only: false,
         },
     });
 
@@ -117,6 +119,7 @@ export default function AddEventPage() {
             end_date: data.end_date.toISOString(),
             image_url: data.image_url,
             play_party: data.play_party,
+            facilitator_only: data.facilitator_only,
         };
 
         createEventMutation.mutate(payload);
@@ -286,6 +289,20 @@ export default function AddEventPage() {
                         <FormControl fullWidth margin="normal">
                             <InputLabel>Play Party</InputLabel>
                             <Select {...field} label="Play Party">
+                                <MenuItem value="true">Yes</MenuItem>
+                                <MenuItem value="false">No</MenuItem>
+                            </Select>
+                        </FormControl>
+                    )}
+                />
+
+                <Controller
+                    name="facilitator_only"
+                    control={control}
+                    render={({ field }) => (
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel>Facilitator Only</InputLabel>
+                            <Select {...field} label="Facilitator Only">
                                 <MenuItem value="true">Yes</MenuItem>
                                 <MenuItem value="false">No</MenuItem>
                             </Select>

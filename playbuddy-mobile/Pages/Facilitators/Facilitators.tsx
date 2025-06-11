@@ -21,7 +21,7 @@ import {
 import { useUserContext } from '../Auth/hooks/UserContext';
 import type { Facilitator } from '../../Common/types/commonTypes';
 import { LAVENDER_BACKGROUND } from '../../styles';
-import { useFetchEvents } from '../Calendar/hooks/useEvents';
+import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 export const FacilitatorsScreen = ({
@@ -32,7 +32,9 @@ export const FacilitatorsScreen = ({
     const navigation = useNavigation();
     const { authUserId } = useUserContext();
     const { data: facilitators = [] } = useFetchFacilitators();
-    const { events } = useFetchEvents();
+    const { data: events } = useFetchEvents({
+        includeFacilitatorOnly: true
+    });
 
     const [searchQuery, setSearchQuery] = useState('');
     const myListQuery = useFetchMyFacilitators();

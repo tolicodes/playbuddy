@@ -132,7 +132,8 @@ export interface Event extends EventDataSource {
      */
     visibility?: 'public' | 'private';
 
-
+    // Only shows in facilitator profile
+    facilitator_only?: boolean
 
     /**
      * DEPENDENCIES

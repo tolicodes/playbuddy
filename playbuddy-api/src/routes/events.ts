@@ -167,8 +167,6 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
 
 router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const event = req.body;
-
-
     const eventResult = upsertEvent(event)
 
     res.json(eventResult);

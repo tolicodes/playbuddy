@@ -6,7 +6,6 @@ import crypto from "crypto";
 
 export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
-
 type UpsertEventResult = 'inserted' | 'updated' | 'failed';
 
 // stash originals before overriding
@@ -292,6 +291,7 @@ const upsertEventInDB = async (event: NormalizedEventInput, organizerId: string,
             source_ticketing_platform: event.source_origination_platform || '',
             dataset: event.dataset || '',
             visibility: event.visibility || 'public',
+            facilitator_only: event.facilitator_only,
 
             location_area_id: locationAreaId
         }, { onConflict: 'id' })

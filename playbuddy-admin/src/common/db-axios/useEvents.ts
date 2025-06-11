@@ -3,11 +3,24 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { Event, NormalizedEventInput } from "../types/commonTypes";
 
-export const useFetchEvents = () => {
+export const useFetchEvents = ({
+    includeFacilitatorOnly = false,
+}: {
+    includeFacilitatorOnly?: boolean;
+} = {
+        includeFacilitatorOnly: false,
+    }) => {
     return useQuery<Event[]>({
         queryKey: ['events'],
         queryFn: async () => {
-            return axios.get<Event[]>(API_BASE_URL + '/events').then(response => response.data);
+            const response = await axios.get<Event[]>(API_BASE_URL + '/events').then(response => {
+                if (includeFacilitatorOnly) {
+                    return response.data;
+                } else {
+                    return response.data.filter(event => !event.facilitator_only);
+                }
+            });
+            return response;
         },
     });
 };

@@ -77,10 +77,14 @@ export const useEvents = (appState?: string) => {
         [organizers]
     );
 
+    const withoutFacilitatorOnly = useMemo(() => (
+        allEvents.filter(event => !event.facilitator_only)
+    ), [allEvents])
+
     // Map metadata to events and apply sorting
     const eventsWithMetadata = useMemo(() =>
-        addEventMetadata({ events: allEvents, organizerColorMap }),
-        [allEvents, organizerColorMap]
+        addEventMetadata({ events: withoutFacilitatorOnly, organizerColorMap }),
+        [withoutFacilitatorOnly, organizerColorMap]
     );
 
     return { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents: isLoadingEvents || isLoadingPrivateEvents };
