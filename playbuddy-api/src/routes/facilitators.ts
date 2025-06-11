@@ -11,10 +11,12 @@ const facilitatorFields = `
   id,
   name,
   bio,
+  title,
   profile_image_url,
   intro_video_url,
   instagram_handle,
   fetlife_handle,
+  website,
   location,
   verified,
   created_at,
@@ -50,10 +52,12 @@ async function fetchFacilitators(authUserId?: string) {
             id: f.id,
             name: f.name,
             bio: f.bio,
+            title: f.title,
             profile_image_url: f.profile_image_url,
             intro_video_url: f.intro_video_url,
             instagram_handle: f.instagram_handle,
             fetlife_handle: f.fetlife_handle,
+            website: f.website,
             location: f.location,
             verified: f.verified,
             created_at: f.created_at,
@@ -165,6 +169,7 @@ router.delete(
 // list of fields we accept on create/update
 const FAC_FIELDS = [
     'name',
+    'title',
     'bio',
     'profile_image_url',
     'intro_video_url',
@@ -172,6 +177,7 @@ const FAC_FIELDS = [
     'verified',
     'ig_handle',
     'fetlife_handle',
+    'website'
 ];
 
 // helper to get or create a tag, returns tag id

@@ -836,6 +836,8 @@ export interface Facilitator {
     created_at: string;              // ISO timestamp
     updated_at: string;              // ISO timestamp
     is_following?: boolean;
+    title: string;
+    website: string;
 }
 
 export type CreateFacilitatorInput = Omit<

@@ -37,21 +37,25 @@ type FormValues = {
     fetlife_handle: string;
     tags?: string[];
     media?: string[];
+    title?: string;
+    website?: string;
 };
 
 // Validation schema
-const schema: Yup.ObjectSchema<FormValues> = Yup.object().shape({
+const schema: Yup.ObjectSchema<FormValues> = Yup.object({
     name: Yup.string().required('Name is required'),
     bio: Yup.string().required('Bio is required'),
     profile_image_url: Yup.string()
         .url('Must be a valid URL')
         .required('Profile image is required'),
     location: Yup.string().required('Location is required'),
-    verified: Yup.boolean().required('Required'),
+    verified: Yup.boolean().required(),
     instagram_handle: Yup.string().required('Instagram handle is required'),
     fetlife_handle: Yup.string().required('FetLife handle is required'),
-    tags: Yup.array().of(Yup.string().required('Required')),
-    media: Yup.array().of(Yup.string().required('Required')),
+    tags: Yup.array().of(Yup.string().required()).optional(),
+    media: Yup.array().of(Yup.string().required()).optional(),
+    title: Yup.string().optional(),
+    website: Yup.string().url('Invalid URL').optional(),
 });
 
 export default function EditFacilitatorScreen() {
@@ -82,8 +86,8 @@ export default function EditFacilitatorScreen() {
         resolver: yupResolver(schema),
         defaultValues: {
             name: '', bio: '', profile_image_url: '',
-            location: '', verified: false, instagram_handle: '', fetlife_handle: '',
-            tags: [], media: []
+            title: '', location: '', verified: false, instagram_handle: '', fetlife_handle: '',
+            website: '', tags: [], media: []
         },
     });
 
@@ -96,12 +100,14 @@ export default function EditFacilitatorScreen() {
             const f = list.find((f) => f.id === editingId);
             if (f) {
                 setValue('name', f.name);
+                setValue('title', f.title);
                 setValue('bio', f.bio ?? '');
                 setValue('profile_image_url', f.profile_image_url ?? '');
                 setValue('location', f.location ?? '');
                 setValue('verified', f.verified);
                 setValue('instagram_handle', f.instagram_handle ?? '');
                 setValue('fetlife_handle', f.fetlife_handle ?? '');
+                setValue('website', f.website ?? '');
                 setValue('tags', f.tags.map((t) => t.name));
                 setValue('media', f.media.map((m) => m.url));
             }
@@ -134,8 +140,10 @@ export default function EditFacilitatorScreen() {
     // Submit handler
     const onSubmit = async (vals: FormValues) => {
         if (editingId) {
+            // @ts-ignore
             await updateFac.mutateAsync({ id: editingId, ...vals });
         } else {
+            // @ts-ignore
             await createFac.mutateAsync(vals);
         }
         refetch();
@@ -160,6 +168,15 @@ export default function EditFacilitatorScreen() {
                     render={({ field }) => (
                         <TextField {...field} label="Name" fullWidth margin="normal"
                             error={!!errors.name} helperText={errors.name?.message} />
+                    )}
+                />
+
+                <Controller
+                    name="title"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField {...field} label="Title" fullWidth margin="normal"
+                            error={!!errors.title} helperText={errors.title?.message} />
                     )}
                 />
 
@@ -264,6 +281,15 @@ export default function EditFacilitatorScreen() {
                     render={({ field }) => (
                         <TextField {...field} label="FetLife Handle" fullWidth margin="normal"
                             error={!!errors.fetlife_handle} helperText={errors.fetlife_handle?.message} />
+                    )}
+                />
+
+                <Controller
+                    name="website"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField {...field} label="Website" fullWidth margin="normal"
+                            error={!!errors.website} helperText={errors.website?.message} />
                     )}
                 />
 

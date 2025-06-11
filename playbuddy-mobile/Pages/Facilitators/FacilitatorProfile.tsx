@@ -1,3 +1,4 @@
+// src/screens/ProfileScreen.tsx
 import React, { useState } from 'react';
 import {
     View,
@@ -13,142 +14,237 @@ import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import Markdown from 'react-native-markdown-display';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import { useFetchFacilitators } from '../../Common/db-axios/useFacilitators';
 import { useFetchEvents } from '../Calendar/hooks/useEvents';
-import { LAVENDER_BACKGROUND } from '../../styles';
-import { EventListItem } from '../Calendar/EventListItem';
-import { useNavigation } from '@react-navigation/native';
 import { NavStack } from '../../Common/Nav/NavStackType';
+import { EventListItem } from '../Calendar/EventListItem';
 import { MediaCarousel } from './MediaCarousel';
-
+import { ACCENT_PURPLE, HEADER_PURPLE } from '../../styles';
+import { Facilitator } from '../../../playbuddy-admin/src/common/types/commonTypes';
 
 const { height } = Dimensions.get('window');
-const CAROUSEL_HEIGHT = height * 0.20;
 
-export default function FacilitatorProfile() {
-    const { params } = useRoute();
-    const facilitatorId = params?.facilitatorId;
+// Horizontal separator under tags
+const Separator = () => <View style={tabStyles.separator} />;
 
-    const navigation = useNavigation<NavStack>();
-    const { data: facilitators, isLoading, error } = useFetchFacilitators();
-    const { events } = useFetchEvents();
-    const [tab, setTab] = useState<'bio' | 'events' | 'media'>('bio');
+// Horizontal list of tag pills
+const TagList = ({ tags }: { tags: { id: string; name: string }[] }) => (
+    <View style={tabStyles.tagsRow}>
+        {tags.map(t => (
+            <View key={t.id} style={tabStyles.pill}>
+                <Text style={tabStyles.pillText}>{t.name}</Text>
+            </View>
+        ))}
+    </View>
+);
 
+// Bio tab content
+const BioTab = ({ bio, facilitator }: { bio: string, facilitator: Facilitator }) => (
+    <View>
+        <TagsLocation facilitator={facilitator} />
+        <Separator />
 
-    const facilitator = facilitators?.find((f) => f.id === facilitatorId);
+        <View style={tabStyles.bioContainer}>
+            <Markdown style={tabStyles.markdown}>{bio}</Markdown>
+        </View>
+    </View>
+);
 
-    if (isLoading) return <Text>Loading facilitators…</Text>;
-    if (error || !facilitator) return <Text>Facilitator not found</Text>;
+// Tab bar component
+const TabBar = ({
+    active,
+    onPress,
+}: {
+    active: 'bio' | 'events' | 'media';
+    onPress: (tab: 'bio' | 'events' | 'media') => void;
+}) => (
+    <View style={tabStyles.tabRow}>
+        {['bio', 'events', 'media'].map(key => (
+            <TouchableOpacity
+                key={key}
+                style={[tabStyles.tabButton, active === key && tabStyles.activeTab]}
+                onPress={() => onPress(key as any)}
+            >
+                <Text
+                    style={
+                        active === key
+                            ? tabStyles.activeTabText
+                            : tabStyles.tabText
+                    }
+                >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                </Text>
+            </TouchableOpacity>
+        ))}
+    </View>
+);
 
+// Header with photo, name, title, and social icons
+const ProfileHeader = ({
+    photoUrl,
+    name,
+    verified,
+    title,
+    instagram,
+    fetlife,
+    website,
+}: {
+    photoUrl?: string;
+    name: string;
+    verified: boolean;
+    title: string;
+    instagram?: string;
+    fetlife?: string;
+    website?: string;
+}) => {
     const openLink = (url: string) => {
-        Linking.canOpenURL(url).then((ok) => {
+        Linking.canOpenURL(url).then(ok => {
             if (ok) Linking.openURL(url);
             else Alert.alert('Cannot open link');
         });
     };
-
-    const ownEvents = facilitator.event_ids
-        .map((id) => events.find((e) => e.id === id))
-        .filter(Boolean);
-
     return (
-        <View style={styles.container}>
-            {/* Carousel area */}
-            {/* <View style={[styles.carousel, { height: CAROUSEL_HEIGHT }]} /> */}
-
-            {/* Header area */}
-            <View style={[styles.header]}>
-                <View style={styles.headerTop}>
+        <View style={tabStyles.header}>
+            <View style={tabStyles.headerTop}>
+                {photoUrl && (
                     <Image
-                        source={{ uri: facilitator.profile_image_url! }}
-                        style={styles.photo}
+                        source={{ uri: photoUrl }}
+                        style={tabStyles.photo}
                     />
-
-                    <View style={styles.infoSection}>
-                        <View style={styles.nameRow}>
-                            <Text style={styles.name}>{facilitator.name}</Text>
-                            {facilitator.verified && (
-                                <MaterialIcons
-                                    name="check-circle"
-                                    size={18}
-                                    color="white"
-                                    style={{ marginLeft: 6 }}
-                                />
-                            )}
-                        </View>
-                        <View style={styles.socialRow}>
-                            <TouchableOpacity
-                                style={styles.socialItem}
-                                onPress={() => openLink(`https://www.instagram.com/${facilitator.instagram_handle}`)}
-                            >
-                                <FontAwesome name="instagram" size={30} color="white" />
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.socialItem}
-                                onPress={() => openLink(`https://www.fetlife.com/${facilitator.fetlife_handle}`)}
-                            >
-                                <Image
-                                    source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png' }}
-                                    style={{ width: 24, height: 24 }}
-                                />
-                            </TouchableOpacity>
-                        </View>
-                        {facilitator.location && (
-                            <Text style={styles.location}>From {facilitator.location}</Text>
+                )}
+                <View style={tabStyles.infoSection}>
+                    <View style={tabStyles.nameRow}>
+                        <Text style={tabStyles.name}>{name}</Text>
+                        {verified && (
+                            <MaterialIcons
+                                name="check-circle"
+                                size={18}
+                                color="white"
+                                style={{ marginLeft: 6 }}
+                            />
                         )}
-
                     </View>
-                </View>
-                <View style={styles.tagsRow}>
-                    {facilitator.tags.map((tag) => (
-                        <View style={styles.tagContainer} key={tag.id}>
-                            <Text style={styles.tagText}>{tag.name}</Text>
-                        </View>
-                    ))}
+                    <Text style={tabStyles.title}>{title}</Text>
+
+                    <View style={tabStyles.socialRow}>
+                        {instagram && (
+                            <TouchableOpacity
+                                style={tabStyles.socialItem}
+                                onPress={() => openLink(`https://instagram.com/${instagram}`)}
+                            >
+                                <FontAwesome name="instagram" size={24} color="white" />
+                            </TouchableOpacity>
+                        )}
+                        {fetlife && (
+                            <TouchableOpacity
+                                style={tabStyles.socialItem}
+                                onPress={() => openLink(`https://fetlife.com/${fetlife}`)}
+                            >
+                                <Image style={{ width: 24, height: 24 }} source={{ uri: "https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png" }} />
+                            </TouchableOpacity>
+                        )}
+                        {website && (
+                            <TouchableOpacity
+                                style={tabStyles.socialItem}
+                                onPress={() => openLink(website)}
+                            >
+                                <FontAwesome name="globe" size={24} color="white" />
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </View>
             </View>
 
+        </View>
+    );
+};
 
-            <View style={styles.bottom}>
+const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
+    <View>
+        <TagList tags={facilitator.tags} />
 
-                {/* Tabs */}
-                <View style={styles.tabRow}>
-                    {['bio', 'events', 'media'].map((t) => (
-                        <TouchableOpacity
-                            key={t}
-                            style={[styles.tabButton, tab === t && styles.activeTab]}
-                            onPress={() => setTab(t as any)}
-                        >
-                            <Text style={tab === t ? styles.activeTabText : styles.tabText}>
-                                {t.charAt(0).toUpperCase() + t.slice(1)}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+        {
+            facilitator.location ? (
+                <View style={tabStyles.locationRowWhite}>
+                    <MaterialIcons
+                        name="location-on"
+                        size={18}
+                        color="#888"
+                    />
+                    <Text style={tabStyles.locationWhite}>
+                        From {facilitator.location}
+                    </Text>
                 </View>
+            ) : null
+        }
+    </View>
+)
 
-                {/* Content based on tab */}
-                <ScrollView style={styles.content}>
-                    {tab === 'bio' && (
-                        <View style={styles.bioContainer}>
-                            <Markdown style={styles.markdown}>{facilitator.bio || ''}</Markdown>
-                        </View>
-                    )}
+// Main screen
+export default function ProfileScreen() {
+    const { params } = useRoute<any>();
+    const facilitatorId = params?.facilitatorId;
+    const navigation = useNavigation<NavStack>();
+    const { data: facilitators, isLoading, error } = useFetchFacilitators();
+    const { events } = useFetchEvents();
+    const [activeTab, setActiveTab] = useState<
+        'bio' | 'events' | 'media'
+    >('bio');
 
-                    {tab === 'events' &&
-                        ownEvents.map((e) => (
+    if (isLoading) return <Text>Loading…</Text>;
+    if (error) return <Text>Profile not found</Text>;
+
+    const facilitator = facilitators?.find(
+        f => f.id === facilitatorId
+    );
+    if (!facilitator) return <Text>Profile not found</Text>;
+
+    const ownEvents = facilitator.event_ids
+        .map(id => events.find(e => e.id === id))
+        .filter(Boolean) as typeof events;
+
+    return (
+        <View style={tabStyles.container}>
+            <ProfileHeader
+                photoUrl={facilitator.profile_image_url}
+                name={facilitator.name}
+                verified={facilitator.verified}
+                title={facilitator.title}
+                instagram={facilitator.instagram_handle}
+                fetlife={facilitator.fetlife_handle}
+                website={facilitator.website}
+            />
+
+            <View style={tabStyles.bottom}>
+                <TabBar
+                    active={activeTab}
+                    onPress={setActiveTab}
+                />
+                <ScrollView style={tabStyles.content}>
+                    {activeTab === 'bio' && <BioTab bio={facilitator.bio || ''} facilitator={facilitator} />}
+
+                    {activeTab === 'events' &&
+                        ownEvents.map(e => (
                             <EventListItem
+                                key={e.id}
                                 item={e}
-                                onPress={() => {
-                                    navigation.navigate('Event Details', { selectedEvent: e });
-                                }}
+                                onPress={() =>
+                                    navigation.navigate('Event Details', {
+                                        selectedEvent: e,
+                                    })
+                                }
                             />
                         ))}
 
-                    {tab === 'media' && (
-                        <ScrollView style={styles.mediaContainer}>
-                            <MediaCarousel urls={facilitator.media.map(m => m.url)} />
-                        </ScrollView>
+                    {activeTab === 'media' && (
+                        <View
+                            style={{ height: height * 0.3 }}
+                        >
+                            <MediaCarousel
+                                urls={facilitator.media.map(m => m.url)}
+                            />
+                        </View>
                     )}
                 </ScrollView>
             </View>
@@ -156,94 +252,114 @@ export default function FacilitatorProfile() {
     );
 }
 
-const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#7F5AF0' },
-    carousel: { backgroundColor: '#5E3FFD' },
+// Shared styles
+const tabStyles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: ACCENT_PURPLE,
+    },
     header: {
-        backgroundColor: '#7F5AF0', flexDirection: 'column', padding: 16,
+        backgroundColor: HEADER_PURPLE,
+        paddingHorizontal: 16,
+        alignItems: 'flex-start',
+        paddingBottom: 30,
     },
     headerTop: {
-        flexDirection: 'row', alignItems: 'center',
+        flexDirection: 'row',
+        alignItems: 'flex-start',
     },
-    headerBottom: {
-        flexDirection: 'row', alignItems: 'center',
+    photo: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        borderWidth: 2,
+        borderColor: '#fff',
+    },
+    infoSection: { marginLeft: 16, flex: 1 },
+    nameRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    name: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: '700',
+    },
+    title: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        marginTop: 4,
+    },
+    socialRow: {
+        flexDirection: 'row',
+        marginTop: 12,
+        marginBottom: 8,
+        justifyContent: 'flex-start',
+        alignContent: 'flex-start',
+    },
+    socialItem: {
+        marginRight: 10,
+        alignItems: 'flex-end'
     },
     bottom: {
         flex: 1,
         backgroundColor: '#fff',
         borderTopLeftRadius: 24,
         borderTopRightRadius: 24,
+        marginTop: -24,
+        overflow: 'hidden',
     },
-    infoSection: { marginLeft: 16, flex: 1 },
-    nameRow: { flexDirection: 'row', alignItems: 'center' },
-    name: { color: '#fff', fontSize: 24, fontWeight: '700' },
-    socialRow: { flexDirection: 'row', marginTop: 6 },
-    location: { color: '#DDD', fontSize: 12, marginTop: 6 },
-    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4 },
-    tagContainer: {
+    tabRow: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        borderRadius: 12,
-        backgroundColor: '#F5F5FF',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        marginRight: 8,
-        marginTop: 6,
+        justifyContent: 'space-around',
+        paddingVertical: 12,
+        backgroundColor: '#fff',
     },
-    tagText: {
-        color: '#5E3FFD',
-        fontSize: 14,
-    },
-    tabRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10 },
     tabButton: { paddingVertical: 8 },
     tabText: { color: '#888' },
-    activeTabText: { color: '#7F5AF0', fontWeight: '600' },
-    content: { paddingHorizontal: 0 },
-    bioContainer: { padding: 16 },
-    mediaContainer: { padding: 16 },
-    eventRow: { paddingVertical: 12, borderBottomWidth: 1, borderColor: '#EEE' },
-    eventName: { fontSize: 16, fontWeight: '600' },
-    eventSub: { fontSize: 12, color: '#8E8E93' },
-    mediaGrid: {
+    activeTab: { borderBottomWidth: 3, borderColor: ACCENT_PURPLE },
+    activeTabText: { color: ACCENT_PURPLE, fontWeight: '600' },
+    locationRowWhite: {
         flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+    },
+    locationWhite: { color: '#555', marginLeft: 6 },
+    tagsRow: {
+        flexDirection: 'row',
+        paddingHorizontal: 16,
+        paddingBottom: 8,
         flexWrap: 'wrap',
-        justifyContent: 'space-around',
     },
-    mediaItem: {
-        width: '33.33%',
-        padding: 8,
+    separator: {
+        height: 1,
+        backgroundColor: '#EEE',
+        marginHorizontal: 16,
     },
-    mediaThumbnail: {
-        width: '100%',
-        height: 120,
-        borderRadius: 12,
-        resizeMode: 'cover',
-    },
-    tag: {
-        backgroundColor: '#EAEAFF',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 10,
+    pill: {
+        backgroundColor: HEADER_PURPLE,
+        borderRadius: 16,
+        height: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 12,
         marginRight: 8,
-        marginTop: 6,
-    },
-    photo: {
-        width: 80,
-        height: 80,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: '#fff',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-    },
-    socialItem: {
-        marginRight: 12,
-    },
-    activeTab: {
-        borderBottomWidth: 3,
-        borderColor: '#6C3DD9',
-    },
+        marginBottom: 4,
 
+    },
+    addPill: {
+        backgroundColor: ACCENT_PURPLE,
+        borderRadius: 16,
+        width: 32,
+        height: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 8,
+    },
+    pillText: { color: '#fff', fontSize: 14 },
+    content: { flex: 1 },
+    bioContainer: { padding: 16 },
+    markdown: { body: { color: '#333', fontSize: 16, lineHeight: 22 } },
 });
