@@ -163,6 +163,16 @@ export const MunchDetails = () => {
                         </LinkifyText>
                     </View>
                 )}
+                {
+                    munch.website && (
+                        <View style={styles.fieldRow} key="Website">
+                            <Text style={styles.fieldLabel}>Website</Text>
+                            <LinkifyText style={styles.fieldValue}>
+                                {munch.website}
+                            </LinkifyText>
+                        </View>
+                    )
+                }
             </View>
 
             <View style={styles.detailCard}>

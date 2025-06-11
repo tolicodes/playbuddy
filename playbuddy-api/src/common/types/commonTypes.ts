@@ -798,6 +798,7 @@ export interface Munch {
     notes: string;
     verified: string;
     tags: string[];
+    website: string;
 }
 
 
