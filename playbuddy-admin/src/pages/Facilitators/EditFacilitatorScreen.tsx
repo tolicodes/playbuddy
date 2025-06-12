@@ -25,18 +25,19 @@ import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useFetchEvents } from '../../common/db-axios/useEvents';
 import { EventsManager } from './AddEventToFacilitator';
 import { MediaManager } from '../MediaManager';
+import { Media } from '../../common/types/commonTypes';
 
 // Form values interface
 type FormValues = {
     name: string;
-    bio: string;
-    profile_image_url: string;
-    location: string;
-    verified: boolean;
-    instagram_handle: string;
-    fetlife_handle: string;
+    bio?: string;
+    profile_image_url?: string;
+    location?: string;
+    verified?: boolean;
+    instagram_handle?: string;
+    fetlife_handle?: string;
     tags?: string[];
-    media?: string[];
+    media?: Partial<Media>[];
     title?: string;
     website?: string;
 };
@@ -44,16 +45,24 @@ type FormValues = {
 // Validation schema
 const schema: Yup.ObjectSchema<FormValues> = Yup.object({
     name: Yup.string().required('Name is required'),
-    bio: Yup.string().required('Bio is required'),
+    bio: Yup.string().optional(),
     profile_image_url: Yup.string()
         .url('Must be a valid URL')
-        .required('Profile image is required'),
-    location: Yup.string().required('Location is required'),
-    verified: Yup.boolean().required(),
-    instagram_handle: Yup.string().required('Instagram handle is required'),
-    fetlife_handle: Yup.string().required('FetLife handle is required'),
+        .optional(),
+    location: Yup.string().optional(),
+    verified: Yup.boolean().optional(),
+    instagram_handle: Yup.string().optional(),
+    fetlife_handle: Yup.string().optional(),
     tags: Yup.array().of(Yup.string().required()).optional(),
-    media: Yup.array().of(Yup.string().required()).optional(),
+    media: Yup.array()
+        .of(
+            Yup.object().shape({
+                id: Yup.string().optional(),
+                storage_path: Yup.string().optional(),
+                thumbnail_url: Yup.string().optional(),
+            })
+        )
+        .optional(),
     title: Yup.string().optional(),
     website: Yup.string().url('Invalid URL').optional(),
 });
@@ -85,9 +94,17 @@ export default function EditFacilitatorScreen() {
     } = useForm<FormValues>({
         resolver: yupResolver(schema),
         defaultValues: {
-            name: '', bio: '', profile_image_url: '',
-            title: '', location: '', verified: false, instagram_handle: '', fetlife_handle: '',
-            website: '', tags: [], media: []
+            name: '',
+            bio: '',
+            profile_image_url: '',
+            title: '',
+            location: '',
+            verified: false,
+            instagram_handle: '',
+            fetlife_handle: '',
+            website: '',
+            tags: [],
+            media: [],
         },
     });
 
@@ -104,12 +121,16 @@ export default function EditFacilitatorScreen() {
                 setValue('bio', f.bio ?? '');
                 setValue('profile_image_url', f.profile_image_url ?? '');
                 setValue('location', f.location ?? '');
-                setValue('verified', f.verified);
+                setValue('verified', f.verified ?? false);
                 setValue('instagram_handle', f.instagram_handle ?? '');
                 setValue('fetlife_handle', f.fetlife_handle ?? '');
                 setValue('website', f.website ?? '');
-                setValue('tags', f.tags.map((t) => t.name));
-                setValue('media', f.media.map((m) => m.url));
+                setValue(
+                    'tags',
+                    f.tags ? f.tags.map((t) => t.name) : []
+                );
+                // Now set media objects directly
+                setValue('media', f.media ?? []);
             }
         } else {
             reset();
@@ -117,38 +138,39 @@ export default function EditFacilitatorScreen() {
     }, [editingId, list, reset, setValue]);
 
     // Dropzone for profile image
-    const onDrop = useCallback(async (files: File[]) => {
-        const file = files[0];
-        const ext = file.name.split('.').pop();
-        const fileName = `fac-${Date.now()}.${ext}`;
-        const { data, error: uploadError } = await supabaseClient
-            .storage
-            .from('general')
-            .upload(fileName, file);
-        if (uploadError) {
-            console.error(uploadError.message);
-            return;
-        }
-        const { data: { publicUrl } } = supabaseClient
-            .storage
-            .from('general')
-            .getPublicUrl(data.path);
-        setValue('profile_image_url', publicUrl);
-    }, [setValue]);
+    const onDrop = useCallback(
+        async (files: File[]) => {
+            const file = files[0];
+            const ext = file.name.split('.').pop();
+            const fileName = `fac-${Date.now()}.${ext}`;
+            const { data, error: uploadError } = await supabaseClient
+                .storage
+                .from('general')
+                .upload(fileName, file);
+            if (uploadError) {
+                console.error(uploadError.message);
+                return;
+            }
+            const { data: { publicUrl } } = supabaseClient
+                .storage
+                .from('general')
+                .getPublicUrl(data.path);
+            setValue('profile_image_url', publicUrl);
+        },
+        [setValue]
+    );
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] } });
 
     // Submit handler
     const onSubmit = async (vals: FormValues) => {
         if (editingId) {
-            // @ts-ignore
+            console.log('Editing facilitator', editingId, vals)
             await updateFac.mutateAsync({ id: editingId, ...vals });
         } else {
-            // @ts-ignore
             await createFac.mutateAsync(vals);
         }
         refetch();
         reset();
-        // setEditingId(null);
     };
 
     if (isLoading) return <CircularProgress />;
@@ -160,27 +182,42 @@ export default function EditFacilitatorScreen() {
                 {editingId ? 'Edit Facilitator' : 'Add Facilitator'}
             </Typography>
 
-            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <Box component="form" onSubmit={handleSubmit(onSubmit, (errs) => {
+                console.error('Validation failed:', errs);
+            })} noValidate>
                 {/* Name */}
                 <Controller
                     name="name"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Name" fullWidth margin="normal"
-                            error={!!errors.name} helperText={errors.name?.message} />
+                        <TextField
+                            {...field}
+                            label="Name"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.name}
+                            helperText={errors.name?.message}
+                        />
                     )}
                 />
 
+                {/* Title */}
                 <Controller
                     name="title"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Title" fullWidth margin="normal"
-                            error={!!errors.title} helperText={errors.title?.message} />
+                        <TextField
+                            {...field}
+                            label="Title"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.title}
+                            helperText={errors.title?.message}
+                        />
                     )}
                 />
 
-                {/* Dropzone for photo */}
+                {/* Profile Photo Dropzone & Preview */}
                 <Box
                     {...getRootProps()}
                     sx={{
@@ -193,7 +230,6 @@ export default function EditFacilitatorScreen() {
                         {isDragActive ? 'Drop photo here...' : 'Drag & drop photo, or click to select'}
                     </Typography>
                 </Box>
-                {/* Preview uploaded image */}
                 {profileImageUrl && (
                     <Box
                         component="img"
@@ -208,38 +244,32 @@ export default function EditFacilitatorScreen() {
                     name="profile_image_url"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Photo URL" fullWidth margin="normal"
-                            error={!!errors.profile_image_url} helperText={errors.profile_image_url?.message} />
+                        <TextField
+                            {...field}
+                            label="Photo URL"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.profile_image_url}
+                            helperText={errors.profile_image_url?.message}
+                        />
                     )}
                 />
-
-                {/* Intro Video URL */}
-                {/* <Controller
-                    name="intro_video_url"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField {...field} label="Intro Video URL" fullWidth margin="normal"
-                            error={!!errors.intro_video_url} helperText={errors.intro_video_url?.message} />
-                    )}
-                /> */}
-                {/* Preview uploaded video */}
-                {/* {introVideoUrl && (
-                    <Box sx={{ mt: 2, mb: 2 }}>
-                        <video
-                            src={introVideoUrl}
-                            controls
-                            style={{ width: '100%', maxHeight: 240, display: 'block', margin: '0 auto' }}
-                        />
-                    </Box>
-                )} */}
 
                 {/* Bio */}
                 <Controller
                     name="bio"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Bio" fullWidth margin="normal" multiline rows={3}
-                            error={!!errors.bio} helperText={errors.bio?.message} />
+                        <TextField
+                            {...field}
+                            label="Bio"
+                            fullWidth
+                            margin="normal"
+                            multiline
+                            rows={3}
+                            error={!!errors.bio}
+                            helperText={errors.bio?.message}
+                        />
                     )}
                 />
 
@@ -248,8 +278,14 @@ export default function EditFacilitatorScreen() {
                     name="location"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Location" fullWidth margin="normal"
-                            error={!!errors.location} helperText={errors.location?.message} />
+                        <TextField
+                            {...field}
+                            label="Location"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.location}
+                            helperText={errors.location?.message}
+                        />
                     )}
                 />
 
@@ -260,17 +296,25 @@ export default function EditFacilitatorScreen() {
                     render={({ field: { value, onChange } }) => (
                         <FormControlLabel
                             control={<Checkbox checked={value} onChange={e => onChange(e.target.checked)} />}
-                            label="Verified" />
+                            label="Verified"
+                        />
                     )}
                 />
 
+                {/* Social Handles and Website   ... */}
                 {/* Instagram Handle */}
                 <Controller
                     name="instagram_handle"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Instagram Handle" fullWidth margin="normal"
-                            error={!!errors.instagram_handle} helperText={errors.instagram_handle?.message} />
+                        <TextField
+                            {...field}
+                            label="Instagram Handle"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.instagram_handle}
+                            helperText={errors.instagram_handle?.message}
+                        />
                     )}
                 />
 
@@ -279,37 +323,47 @@ export default function EditFacilitatorScreen() {
                     name="fetlife_handle"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="FetLife Handle" fullWidth margin="normal"
-                            error={!!errors.fetlife_handle} helperText={errors.fetlife_handle?.message} />
+                        <TextField
+                            {...field}
+                            label="FetLife Handle"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.fetlife_handle}
+                            helperText={errors.fetlife_handle?.message}
+                        />
                     )}
                 />
 
+                {/* Website */}
                 <Controller
                     name="website"
                     control={control}
                     render={({ field }) => (
-                        <TextField {...field} label="Website" fullWidth margin="normal"
-                            error={!!errors.website} helperText={errors.website?.message} />
+                        <TextField
+                            {...field}
+                            label="Website"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.website}
+                            helperText={errors.website?.message}
+                        />
                     )}
                 />
 
+                {/* Tags */}
                 <Controller
                     name="tags"
                     control={control}
-                    defaultValue={[]}
                     render={({ field: { value, onChange } }) => (
                         <Autocomplete
                             multiple
                             freeSolo
-                            options={[]}            // you can preload common tags here
+                            options={[]}
                             value={value}
                             onChange={(_, newTags) => onChange(newTags)}
                             renderTags={(tagValues, getTagProps) =>
                                 tagValues.map((tag, idx) => (
-                                    <Chip
-                                        label={tag}
-                                        {...getTagProps({ index: idx })}
-                                    />
+                                    <Chip label={tag} {...getTagProps({ index: idx })} />
                                 ))
                             }
                             renderInput={(params) => (
@@ -324,15 +378,14 @@ export default function EditFacilitatorScreen() {
                     )}
                 />
 
+                {/* Media Manager */}
                 <Controller
                     name="media"
                     control={control}
-                    defaultValue={[]}
                     render={({ field: { value, onChange } }) => (
-                        <MediaManager urls={value || []} onUrlsChange={onChange} />
+                        <MediaManager media={value || []} onMediaChange={onChange} />
                     )}
                 />
-
 
                 {/* Submit Button */}
                 <Box sx={{ mt: 3, textAlign: 'right' }}>

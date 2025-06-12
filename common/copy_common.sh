@@ -36,6 +36,7 @@ TARGET_DIRECTORIES=(
   "playbuddy-admin/src/common"
   "playbuddy-mobile/Common"
   "playbuddy-api/src/common"
+  "playbuddy-scraper/src/common"
 )
 
 for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
@@ -47,11 +48,13 @@ for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
   fi
 done
 
-# Only for playbuddy-api, delete db-axios
-if [ -d "playbuddy-api/src/common/db-axios" ]; then
-  rm -rf "playbuddy-api/src/common/db-axios"
-  echo "Deleted playbuddy-api/src/common/db-axios"
-fi
+# Only for playbuddy-api and playbuddy-scraper, delete db-axios
+for TARGET_DIR in "playbuddy-api" "playbuddy-scraper"; do
+  if [ -d "$TARGET_DIR/src/common/db-axios" ]; then
+    rm -rf "$TARGET_DIR/src/common/db-axios"
+    echo "Deleted db-axios from $TARGET_DIR"
+  fi
+done
 
 
-echo "Done!"
+echo "Done!!"

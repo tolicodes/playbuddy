@@ -2,8 +2,10 @@
 
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
-import type { Facilitator } from '../common/types/commonTypes.js';
+import type { Facilitator, Media } from '../common/types/commonTypes.js';
 import { authenticateAdminRequest, authenticateRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
+import { createMedia } from './media.js';
+
 
 const router = Router();
 
@@ -26,7 +28,8 @@ const facilitatorFields = `
     tag:tags ( id, name, entity, type )
   ),
   facilitator_media (
-    id, type, url, sort_order, created_at
+    id, sort_order, created_at,
+    media: media ( * )
   ),
   facilitator_events ( event_id ),
   facilitator_followers ( auth_user_id )
@@ -48,6 +51,7 @@ async function fetchFacilitators(authUserId?: string) {
     return (data || []).map((f: any) => {
         const event_ids = (f.facilitator_events ?? []).map((fe: any) => fe.event_id);
         const follower_ids = (f.facilitator_followers ?? []).map((ff: any) => ff.auth_user_id);
+
         return {
             id: f.id,
             name: f.name,
@@ -64,7 +68,19 @@ async function fetchFacilitators(authUserId?: string) {
             updated_at: f.updated_at,
 
             tags: (f.facilitator_tags ?? []).map((ft: any) => ft.tag),
-            media: f.facilitator_media ?? [],
+            media: (f.facilitator_media ?? []).map((fm: any) => {
+                return {
+                    storage_path: fm.media.storage_path,
+                    sort_order: fm.sort_order,
+                    title: fm.media.title,
+                    description: fm.media.description,
+                    is_explicit: fm.media.is_explicit,
+                    is_public: fm.media.is_public,
+                    type: fm.media.type,
+                    auth_user_id: fm.media.auth_user_id,
+                    thumbnail_url: fm.media.thumbnail_url || '',
+                }
+            }),
 
             event_ids,
             follower_ids,
@@ -87,6 +103,7 @@ router.get(
     }
 );
 
+
 // GET /api/facilitators/my
 router.get(
     '/my',
@@ -98,6 +115,7 @@ router.get(
                 return res.status(401).json({ error: 'Not authenticated' });
             }
             const result = await fetchFacilitators(authUserId);
+
             return res.json(result);
         } catch (err: any) {
             console.error('Failed to fetch my facilitators:', err);
@@ -220,33 +238,86 @@ async function syncTags(facilitatorId: string, tags = []) {
     }
 }
 
-// helper: sync media for a facilitator
-async function syncMedia(facilitatorId: string, media = []) {
+type SyncMediaInput = {
+    id?: string;
+    storage_path: string;
+    title?: string;
+    description?: string;
+    is_explicit?: boolean;
+    is_public?: boolean
+}[];
+
+export async function syncFacilitatorMedia({
+    facilitatorId,
+    media,
+    authUserId
+}: {
+    facilitatorId: string;
+    media: SyncMediaInput;
+    authUserId: string;
+}) {
+    let existingFacilitatorMediaRecords: any[] = [];
     try {
-        // clear existing links
-        const { data, error } = await supabaseClient
+        let { data } = await supabaseClient
+            .from('facilitator_media')
+            .select()
+            .eq('facilitator_id', facilitatorId);
+
+        existingFacilitatorMediaRecords = data || [];
+
+        // 1. Delete existing links
+        const { error: deleteError } = await supabaseClient
             .from('facilitator_media')
             .delete()
             .eq('facilitator_id', facilitatorId);
-        if (error) throw error;
+        if (deleteError) throw deleteError;
 
-        // insert new links
+        // 2. Insert new media + links
         if (media.length) {
-            console.log('media', media)
-            const records = media.map(url => ({
-                facilitator_id: facilitatorId,
-                url,
-                type: 'image'
-            }));
-            const { data, error } = await supabaseClient
-                .from('facilitator_media')
-                .insert(records);
+            const mediaRecords = [];
 
-            console.log('error', error)
-            if (error) throw error;
+            for (let i = 0; i < media.length; i++) {
+                const item = media[i];
+
+                // existing records
+                if (item.id) {
+                    mediaRecords.push({
+                        facilitator_id: facilitatorId,
+                        media_id: item.id,
+                        sort_order: i,
+                    });
+                    continue;
+                }
+
+                const mediaRecord = await createMedia({
+                    storage_path: item.storage_path,
+                    title: item.title,
+                    description: item.description,
+                    is_explicit: item.is_explicit || false,
+                    authUserId: authUserId,
+                    is_public: item.is_public || true,
+                });
+                mediaRecords.push({
+                    facilitator_id: facilitatorId,
+                    media_id: mediaRecord.id,
+                    sort_order: i,
+                });
+            }
+
+            const { error: insertError } = await supabaseClient
+                .from('facilitator_media')
+                .insert(mediaRecords);
+
         }
     } catch (err: any) {
-        console.error('Error syncing media:', err);
+        // rollback
+        await supabaseClient
+            .from('facilitator_media')
+            .insert(existingFacilitatorMediaRecords)
+            .eq('facilitator_id', facilitatorId);
+        console.error('Error syncing facilitator media:', err.message || err);
+
+        throw err;
     }
 }
 
@@ -268,9 +339,9 @@ function buildFacilitatorPayload(body: any) {
 router.post(
     '/',
     authenticateAdminRequest,
-    async (req, res) => {
+    async (req: AuthenticatedRequest, res: Response) => {
         try {
-            const { tags = [] } = req.body;
+            const { tags = [], media = [] } = req.body;
             const facFields = buildFacilitatorPayload(req.body);
 
             // insert facilitator
@@ -285,7 +356,20 @@ router.post(
 
             // sync tags
             await syncTags(fac.id!, tags);
-            await syncMedia(fac.id!, req.body.media)
+            await syncFacilitatorMedia({
+                facilitatorId: fac.id!,
+                media: media.map((med: Media) => {
+                    return {
+                        storage_path: med.storage_path,
+                        title: med.title,
+                        description: med.description,
+                        is_explicit: med.is_explicit,
+                        is_public: med.is_public,
+                        authUserId: req.authUserId!,
+                    };
+                }),
+                authUserId: req.authUserId!,
+            });
 
 
             return res.status(201).json(fac);
@@ -303,10 +387,10 @@ router.post(
 router.put(
     '/:id',
     authenticateAdminRequest,
-    async (req, res) => {
+    async (req: AuthenticatedRequest, res: Response) => {
         try {
             const { id } = req.params;
-            const { tags = [] } = req.body;
+            const { tags = [], media = [] } = req.body;
             const facFields = buildFacilitatorPayload(req.body);
 
             // update facilitator
@@ -322,7 +406,20 @@ router.put(
 
             // sync tags
             await syncTags(fac.id!, tags);
-            await syncMedia(fac.id!, req.body.media)
+            await syncFacilitatorMedia({
+                facilitatorId: fac.id!,
+                media: media.map((med: Media) => {
+                    return {
+                        storage_path: med.storage_path,
+                        title: med.title,
+                        description: med.description,
+                        is_explicit: med.is_explicit,
+                        is_public: med.is_public,
+                        authUserId: req.authUserId!,
+                    };
+                }),
+                authUserId: req.authUserId!,
+            });
 
             return res.json(fac);
         } catch (err: any) {

@@ -19,7 +19,7 @@ import { useFetchFacilitators } from '../../Common/db-axios/useFacilitators';
 import { useFetchEvents } from '../Calendar/hooks/useEvents';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { EventListItem } from '../Calendar/EventListItem';
-import { MediaCarousel } from './MediaCarousel';
+import { MediaCarousel } from '../../components/MediaCarousel';
 import { ACCENT_PURPLE, HEADER_PURPLE } from '../../styles';
 import { Facilitator, Event } from '../../Common/types/commonTypes';
 import { LinkifyText } from '../Munches/LinkifyText';
@@ -275,7 +275,7 @@ export default function ProfileScreen() {
                             style={{ height: height * 0.3 }}
                         >
                             <MediaCarousel
-                                urls={facilitator.media.map(m => m.url)}
+                                medias={facilitator.media}
                             />
                         </View>
                     )}

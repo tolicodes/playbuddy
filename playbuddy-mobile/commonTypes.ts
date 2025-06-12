@@ -801,6 +801,19 @@ export interface Munch {
     website: string;
 }
 
+export interface Media {
+    id: string; // UUID
+    auth_user_id: string; // UUID, FK to users.user_id
+    title: string | null;
+    description: string | null;
+    type: 'video' | 'image';
+    storage_path: string;
+    is_explicit: boolean;
+    is_public: boolean;
+    created_at: string; // ISO timestamp
+    thumbnail_url?: string;
+}
+
 
 // Tag used by facilitators
 export interface Tag {
@@ -811,11 +824,9 @@ export interface Tag {
 }
 
 // A media item (image or video) in the facilitator’s carousel
-export interface FacilitatorMedia {
+export interface FacilitatorMedia extends Media {
     id: string;             // UUID
     facilitator_id: string; // UUID
-    type: 'image' | 'video';
-    url: string;
     sort_order: number;
     created_at: string;     // ISO timestamp
 }
@@ -824,22 +835,22 @@ export interface FacilitatorMedia {
 export interface Facilitator {
     id: string;                      // UUID
     name: string;
-    bio: string | null;
-    profile_image_url: string | null;
+    bio?: string | null;
+    profile_image_url?: string | null;
     intro_video_url?: string | null;
-    instagram_handle: string | null;
-    fetlife_handle: string | null;
-    location: string | null;
-    verified: boolean;
-    tags: Tag[];
-    media: FacilitatorMedia[];
+    instagram_handle?: string | null;
+    fetlife_handle?: string | null;
+    location?: string | null;
+    verified?: boolean;
+    tags?: Tag[];
+    media?: FacilitatorMedia[];
     event_ids: number[];
     follower_ids: string[];
     created_at: string;              // ISO timestamp
     updated_at: string;              // ISO timestamp
     is_following?: boolean;
-    title: string;
-    website: string;
+    title?: string;
+    website?: string;
 }
 
 export type CreateFacilitatorInput = Omit<
