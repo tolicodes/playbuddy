@@ -70,6 +70,7 @@ async function fetchFacilitators(authUserId?: string) {
             tags: (f.facilitator_tags ?? []).map((ft: any) => ft.tag),
             media: (f.facilitator_media ?? []).map((fm: any) => {
                 return {
+                    id: fm.media.id,
                     storage_path: fm.media.storage_path,
                     sort_order: fm.sort_order,
                     title: fm.media.title,
@@ -308,6 +309,7 @@ export async function syncFacilitatorMedia({
                 .from('facilitator_media')
                 .insert(mediaRecords);
 
+            if (insertError) throw insertError;
         }
     } catch (err: any) {
         // rollback
@@ -360,6 +362,7 @@ router.post(
                 facilitatorId: fac.id!,
                 media: media.map((med: Media) => {
                     return {
+                        id: med.id,
                         storage_path: med.storage_path,
                         title: med.title,
                         description: med.description,
@@ -410,6 +413,7 @@ router.put(
                 facilitatorId: fac.id!,
                 media: media.map((med: Media) => {
                     return {
+                        id: med.id,
                         storage_path: med.storage_path,
                         title: med.title,
                         description: med.description,
