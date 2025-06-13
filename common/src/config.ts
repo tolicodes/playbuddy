@@ -6,11 +6,14 @@ export const API_BASE_URL_PROD = 'https://playbuddy-api-929140353915.us-east1.ru
 export const API_BASE_URL_LOCAL = 'http://localhost:8080'
 export const API_BASE_URL = process.env.NODE_ENV === 'production' ? API_BASE_URL_PROD : API_BASE_URL_LOCAL;
 
+
+const API_BASE_URL_PROD_HTTP = API_BASE_URL_PROD.replace('https://', 'http://')
+
 export const API_URL = {
     events: `${API_BASE_URL}/events`,
     // has to be http:// for google calendar to work
-    eventsIcal: `http://api.playbuddy.me/events?format=ical`,
-    wishlistEventsIcal: `http://api.playbuddy.me/events?format=ical&wishlist=true`,
+    eventsIcal: `${API_BASE_URL_PROD_HTTP}/events?format=ical`,
+    wishlistEventsIcal: `${API_BASE_URL_PROD_HTTP}/events?format=ical&wishlist=true`,
     kinks: `${API_BASE_URL}/kinks`,
 }
 
