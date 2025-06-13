@@ -5,10 +5,12 @@ import {
     Text,
     TouchableOpacity,
     ScrollView,
+    FlatList,
     StyleSheet,
     Linking,
     Alert,
     Dimensions,
+    Button,
 } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -21,15 +23,22 @@ import { NavStack } from '../../Common/Nav/NavStackType';
 import { EventListItem } from '../Calendar/EventListItem';
 import { MediaCarousel } from '../../components/MediaCarousel';
 import { ACCENT_PURPLE, HEADER_PURPLE } from '../../styles';
-import { Facilitator, Event } from '../../Common/types/commonTypes';
+import type { Facilitator, Event } from '../../Common/types/commonTypes';
 import { LinkifyText } from '../Munches/LinkifyText';
 
 const { height } = Dimensions.get('window');
 
-// Horizontal separator under tags
 const Separator = () => <View style={styles.separator} />;
 
-// Horizontal list of tag pills
+const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
+    facilitator.location ? (
+        <View style={styles.locationRowWhite}>
+            <MaterialIcons name="location-on" size={18} color="#888" />
+            <Text style={styles.locationWhite}>From {facilitator.location}</Text>
+        </View>
+    ) : null
+);
+
 const TagList = ({ tags }: { tags: { id: string; name: string }[] }) => (
     <View style={styles.tagsRow}>
         {tags.map(t => (
@@ -40,22 +49,62 @@ const TagList = ({ tags }: { tags: { id: string; name: string }[] }) => (
     </View>
 );
 
-// Bio tab content
-const BioTab = ({ bio, facilitator }: { bio: string, facilitator: Facilitator }) => (
+const BioTab = ({ bio, facilitator }: { bio: string; facilitator: Facilitator }) => (
     <View>
         <TagsLocation facilitator={facilitator} />
         <Separator />
-
         <View style={styles.bioContainer}>
             <Markdown style={styles.markdown}>{bio}</Markdown>
         </View>
-
         <TagList tags={facilitator.tags} />
-
     </View>
 );
 
-// Tab bar component
+const EventsTab = ({
+    events,
+    navigation,
+    facilitator,
+}: {
+    events: Event[];
+    navigation: NavStack;
+    facilitator: Facilitator;
+}) => {
+    const noEventsText = events.length
+        ? null
+        : (() => {
+            let txt = `No events on PlayBuddy.\n`;
+            if (facilitator.website) txt += `- Website: ${facilitator.website}\n`;
+            if (facilitator.instagram_handle) txt += `- Instagram: @${facilitator.instagram_handle}\n`;
+            if (facilitator.fetlife_handle) txt += `- FetLife: @${facilitator.fetlife_handle}\n`;
+            return txt;
+        })();
+
+    if (noEventsText) {
+        return (
+            <View style={styles.emptyEventsContainer}>
+                <LinkifyText style={styles.emptyEventsText}>{noEventsText}</LinkifyText>
+            </View>
+        );
+    }
+
+    return (
+        <FlatList
+            data={events}
+            keyExtractor={e => e.id}
+            renderItem={({ item }) => (
+                <EventListItem
+                    item={item}
+                    onPress={() =>
+                        navigation.navigate('Event Details', { selectedEvent: item })
+                    }
+                />
+            )}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+        />
+    );
+};
+
 const TabBar = ({
     active,
     onPress,
@@ -64,19 +113,13 @@ const TabBar = ({
     onPress: (tab: 'bio' | 'events' | 'media') => void;
 }) => (
     <View style={styles.tabRow}>
-        {['bio', 'events', 'media'].map(key => (
+        {(['bio', 'events', 'media'] as const).map(key => (
             <TouchableOpacity
                 key={key}
                 style={[styles.tabButton, active === key && styles.activeTab]}
-                onPress={() => onPress(key as any)}
+                onPress={() => onPress(key)}
             >
-                <Text
-                    style={
-                        active === key
-                            ? styles.activeTabText
-                            : styles.tabText
-                    }
-                >
+                <Text style={active === key ? styles.activeTabText : styles.tabText}>
                     {key.charAt(0).toUpperCase() + key.slice(1)}
                 </Text>
             </TouchableOpacity>
@@ -84,7 +127,6 @@ const TabBar = ({
     </View>
 );
 
-// Header with photo, name, title, and social icons
 const ProfileHeader = ({
     photoUrl,
     name,
@@ -93,6 +135,7 @@ const ProfileHeader = ({
     instagram,
     fetlife,
     website,
+    email,
 }: {
     photoUrl?: string;
     name: string;
@@ -101,42 +144,23 @@ const ProfileHeader = ({
     instagram?: string;
     fetlife?: string;
     website?: string;
+    email?: string;
 }) => {
-    const openLink = (url: string) => {
-        Linking.canOpenURL(url).then(ok => {
-            if (ok) Linking.openURL(url);
-            else Alert.alert('Cannot open link');
-        });
-    };
+    const openLink = (url: string) =>
+        Linking.canOpenURL(url).then(ok => (ok ? Linking.openURL(url) : Alert.alert('Cannot open link')));
     return (
         <View style={styles.header}>
             <View style={styles.headerTop}>
-                {photoUrl && (
-                    <Image
-                        source={{ uri: photoUrl }}
-                        style={styles.photo}
-                    />
-                )}
+                {photoUrl && <Image source={{ uri: photoUrl }} style={styles.photo} />}
                 <View style={styles.infoSection}>
                     <View style={styles.nameRow}>
                         <Text style={styles.name}>{name}</Text>
-                        {verified && (
-                            <MaterialIcons
-                                name="check-circle"
-                                size={18}
-                                color="white"
-                                style={{ marginLeft: 6 }}
-                            />
-                        )}
+                        {verified && <MaterialIcons name="check-circle" size={18} color="white" style={{ marginLeft: 6 }} />}
                     </View>
                     <Text style={styles.title}>{title}</Text>
-
                     <View style={styles.socialRow}>
                         {instagram && (
-                            <TouchableOpacity
-                                style={styles.socialItem}
-                                onPress={() => openLink(`https://instagram.com/${instagram}`)}
-                            >
+                            <TouchableOpacity style={styles.socialItem} onPress={() => openLink(`https://instagram.com/${instagram}`)}>
                                 <FontAwesome name="instagram" size={24} color="white" />
                             </TouchableOpacity>
                         )}
@@ -145,108 +169,55 @@ const ProfileHeader = ({
                                 style={styles.socialItem}
                                 onPress={() => openLink(`https://fetlife.com/${fetlife}`)}
                             >
-                                <Image style={{ width: 24, height: 24 }} source={{ uri: "https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png" }} />
+                                <Image
+                                    style={{ width: 24, height: 24 }}
+                                    source={{
+                                        uri:
+                                            'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png',
+                                    }}
+                                />
                             </TouchableOpacity>
                         )}
                         {website && (
-                            <TouchableOpacity
-                                style={styles.socialItem}
-                                onPress={() => openLink(website)}
-                            >
+                            <TouchableOpacity style={styles.socialItem} onPress={() => openLink(website)}>
                                 <FontAwesome name="globe" size={24} color="white" />
                             </TouchableOpacity>
+                        )}
+                        {email && (
+                            <TouchableOpacity style={styles.socialItem} onPress={() => openLink(`mailto:${email}`)}>
+                                <FontAwesome name="envelope" size={24} color="white" />
+                            </TouchableOpacity>
+                        )}
+                        {email && (
+                            <Button
+                                title="Book Private"
+                                onPress={() => Linking.openURL(`mailto:${email}?subject=Book%20Private%20Session`)}
+                            />
                         )}
                     </View>
                 </View>
             </View>
-
         </View>
     );
 };
 
-const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
-    <View>
-        {
-            facilitator.location ? (
-                <View style={styles.locationRowWhite}>
-                    <MaterialIcons
-                        name="location-on"
-                        size={18}
-                        color="#888"
-                    />
-                    <Text style={styles.locationWhite}>
-                        From {facilitator.location}
-                    </Text>
-                </View>
-            ) : null
-        }
-    </View>
-)
-
-const EventsTab = ({ events, navigation, facilitator }: { events: Event[], navigation: NavStack, facilitator: Facilitator }) => {
-    const facilitatorName = facilitator.name;
-    const facilitatorWebsite = facilitator.website;
-    const facilitatorInstagram = facilitator.instagram_handle;
-    const facilitatorFetlife = facilitator.fetlife_handle;
-
-    let noEventsText = 'No events on PlayBuddy. Check back soon!'
-
-    if (facilitatorWebsite || facilitatorInstagram || facilitatorFetlife) {
-        noEventsText = `No events on PlayBuddy. Check out ${facilitatorName}'s\n`
-
-
-        noEventsText += facilitatorWebsite ? `- Website: ${facilitatorWebsite}\n` : ''
-    }
-    noEventsText += facilitatorInstagram ? `- Instagram: @${facilitatorInstagram}\n` : ''
-    noEventsText += facilitatorFetlife ? `- Fetlife: @${facilitatorFetlife}\n` : ''
-
-    if (events.length === 0) {
-        return (
-            <View style={styles.emptyEventsContainer}>
-                <LinkifyText style={styles.emptyEventsText}>{noEventsText}</LinkifyText>
-            </View>
-        )
-    }
-
-    return (
-        <View>
-            {events.map(e => (
-                <EventListItem
-                    key={e.id}
-                    item={e}
-                    onPress={() =>
-                        navigation.navigate('Event Details', {
-                            selectedEvent: e,
-                        })
-                    }
-                />
-            ))}
-        </View>
-    )
-}
-
-// Main screen
 export default function ProfileScreen() {
     const { params } = useRoute<any>();
     const facilitatorId = params?.facilitatorId;
     const navigation = useNavigation<NavStack>();
     const { data: facilitators, isLoading, error } = useFetchFacilitators();
     const { events } = useFetchEvents();
-    const [activeTab, setActiveTab] = useState<
-        'bio' | 'events' | 'media'
-    >('bio');
+    const [activeTab, setActiveTab] = useState<'bio' | 'events' | 'media'>('bio');
 
     if (isLoading) return <Text>Loading…</Text>;
     if (error) return <Text>Profile not found</Text>;
 
-    const facilitator = facilitators?.find(
-        f => f.id === facilitatorId
-    );
+    const facilitator = facilitators?.find(f => f.id === facilitatorId);
     if (!facilitator) return <Text>Profile not found</Text>;
 
     const ownEvents = facilitator.event_ids
         .map(id => events.find(e => e.id === id))
-        .filter(Boolean) as typeof events;
+        .filter(Boolean) as Event[];
 
     return (
         <View style={styles.container}>
@@ -258,83 +229,44 @@ export default function ProfileScreen() {
                 instagram={facilitator.instagram_handle}
                 fetlife={facilitator.fetlife_handle}
                 website={facilitator.website}
+                email={facilitator.email}
             />
 
             <View style={styles.bottom}>
-                <TabBar
-                    active={activeTab}
-                    onPress={setActiveTab}
-                />
-                <ScrollView style={styles.content}>
-                    {activeTab === 'bio' && <BioTab bio={facilitator.bio || ''} facilitator={facilitator} />}
+                <TabBar active={activeTab} onPress={setActiveTab} />
 
-                    {activeTab === 'events' && <EventsTab events={ownEvents} navigation={navigation} facilitator={facilitator} />}
+                {/* Render one tab’s content at a time */}
+                {activeTab === 'bio' && (
+                    <ScrollView style={styles.scroll}>
+                        <BioTab bio={facilitator.bio || ''} facilitator={facilitator} />
+                    </ScrollView>
+                )}
 
-                    {activeTab === 'media' && (
-                        <View
-                            style={{ height: height * 0.3 }}
-                        >
-                            <MediaCarousel
-                                medias={facilitator.media}
-                            />
-                        </View>
-                    )}
-                </ScrollView>
+                {activeTab === 'events' && (
+                    <EventsTab events={ownEvents} navigation={navigation} facilitator={facilitator} />
+                )}
+
+                {activeTab === 'media' && <MediaCarousel medias={facilitator.media} />}
             </View>
         </View>
     );
 }
 
-// Shared styles
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: ACCENT_PURPLE,
-    },
+    container: { flex: 1, backgroundColor: ACCENT_PURPLE },
     header: {
         backgroundColor: HEADER_PURPLE,
         paddingHorizontal: 16,
-        alignItems: 'flex-start',
         paddingBottom: 40,
     },
-    headerTop: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-    },
-    photo: {
-        width: 80,
-        height: 80,
-        borderRadius: 40,
-        borderWidth: 2,
-        borderColor: '#fff',
-    },
+    headerTop: { flexDirection: 'row', alignItems: 'flex-start' },
+    photo: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#fff' },
     infoSection: { marginLeft: 16, flex: 1 },
-    nameRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    name: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: '700',
-    },
-    title: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-        marginTop: 4,
-    },
-    socialRow: {
-        flexDirection: 'row',
-        marginTop: 12,
-        marginBottom: 8,
-        justifyContent: 'flex-start',
-        alignContent: 'flex-start',
-    },
-    socialItem: {
-        marginRight: 10,
-        alignItems: 'flex-end'
-    },
+    nameRow: { flexDirection: 'row', alignItems: 'center' },
+    name: { color: '#fff', fontSize: 24, fontWeight: '700' },
+    title: { color: '#fff', fontSize: 16, fontWeight: '600', marginTop: 4 },
+    socialRow: { flexDirection: 'row', marginTop: 12 },
+    socialItem: { marginRight: 10 },
     bottom: {
         flex: 1,
         backgroundColor: '#fff',
@@ -343,65 +275,25 @@ const styles = StyleSheet.create({
         marginTop: -24,
         overflow: 'hidden',
     },
-    tabRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 12,
-        backgroundColor: '#fff',
-    },
+    tabRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 12 },
     tabButton: { paddingVertical: 8 },
     tabText: { color: '#888' },
     activeTab: { borderBottomWidth: 3, borderColor: ACCENT_PURPLE },
     activeTabText: { color: ACCENT_PURPLE, fontWeight: '600' },
-    locationRowWhite: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-    },
-    locationWhite: { color: '#555', marginLeft: 6 },
-    tagsRow: {
-        flexDirection: 'row',
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        flexWrap: 'wrap',
-    },
-    separator: {
-        height: 1,
-        backgroundColor: '#EEE',
-        marginHorizontal: 16,
-    },
-    pill: {
-        backgroundColor: HEADER_PURPLE,
-        borderRadius: 16,
-        height: 32,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 12,
-        marginRight: 8,
-        marginBottom: 4,
 
-    },
-    addPill: {
-        backgroundColor: ACCENT_PURPLE,
-        borderRadius: 16,
-        width: 32,
-        height: 32,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 8,
-    },
+    scroll: { flex: 1, paddingTop: 8 },
+    list: { paddingHorizontal: 16, paddingTop: 8 },
+
+    separator: { height: 1, backgroundColor: '#EEE', marginVertical: 8 },
+    locationRowWhite: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8 },
+    locationWhite: { color: '#555', marginLeft: 6 },
+    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, paddingBottom: 8 },
+    pill: { backgroundColor: HEADER_PURPLE, borderRadius: 16, paddingHorizontal: 12, margin: 4, height: 32, justifyContent: 'center' },
     pillText: { color: '#fff', fontSize: 14 },
-    content: { flex: 1 },
-    bioContainer: { padding: 16, paddingTop: 0 },
+
+    bioContainer: { padding: 16 },
     markdown: { body: { color: '#333', fontSize: 16, lineHeight: 22 } },
-    emptyEventsContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    emptyEventsText: {
-        color: 'black',
-        fontSize: 16,
-    },
+
+    emptyEventsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    emptyEventsText: { color: '#000', fontSize: 16 },
 });
