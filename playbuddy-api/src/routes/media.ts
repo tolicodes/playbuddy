@@ -1,9 +1,9 @@
 import { extname } from 'path';
 import express, { Request, Response } from 'express';
-import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest';
-import { supabaseClient } from 'connections/supabaseClient';
-import { Media } from 'commonTypes';
-import { uploadSupabaseVideoToCloudflareViaCopy } from './helpers/uploadToCloudflareStream';
+import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js';
+import { supabaseClient } from '../connections/supabaseClient.js';
+import { Media } from '../common/types/commonTypes.js';
+import { uploadSupabaseVideoToCloudflareViaCopy } from './helpers/uploadToCloudflareStream.js';
 
 const router = express.Router();
 
@@ -44,8 +44,6 @@ export const createMedia = async ({
     }
 
     const storagePath = cloudflareVideoInfo?.hlsUrl || storage_path;
-
-    console.log
 
     const { data, error } = await supabaseClient
         .from('media')
