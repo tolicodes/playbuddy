@@ -1,157 +1,158 @@
 import React, { useRef, useState } from 'react';
 import {
     View,
+    ScrollView,
+    Image,
+    Text,
+    Dimensions,
+    StyleSheet,
     Modal,
     TouchableOpacity,
-    StyleSheet,
-    Dimensions,
 } from 'react-native';
-import Carousel, { Pagination } from '@tuya-oh/react-native-snap-carousel';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { Image as ExpoImage } from 'expo-image';
-import { VideoPlayer } from './VideoPlayer';
-import { Media } from '../Common/types/commonTypes';
+import Video from 'react-native-video';  // ← react-native-video
+import type { Media } from '../common/types/commonTypes.js';
 
 const { width, height } = Dimensions.get('window');
-const SLIDER_WIDTH = width;
-const ITEM_WIDTH = width * 0.8;
-const ITEM_HEIGHT = height * 0.7;
+const ITEM_WIDTH = width * 0.9;
+const ITEM_HEIGHT = height * 0.6;
+const DOT_SIZE = 8;
+const DOT_SPACING = 8;
 
-interface MediaCarouselProps {
-    medias: Media[];
-}
-
-export const MediaCarousel: React.FC<MediaCarouselProps> = ({ medias }) => {
-    const carouselRef = useRef<Carousel<string>>(null);
-    const [visible, setVisible] = useState(false);
+export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
+    const [modalVisible, setModalVisible] = useState(false);
+    const [startIndex, setStartIndex] = useState(0);
     const [activeIndex, setActiveIndex] = useState(0);
-    const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+    const scrollRef = useRef<ScrollView>(null);
 
-    const renderItem = ({ item: media }: { item: Media }) => (
-        <ExpoImage
-            source={media.thumbnail_url}
-            cachePolicy="memory-disk"
-            contentFit="contain"
-            style={styles.slideImage}
-        />
-    );
-
-    const openCarousel = () => {
-        setVisible(true);
-        setShowVideoPlayer(false);
+    const openAt = (idx: number) => {
+        setStartIndex(idx);
+        setActiveIndex(idx);
+        setModalVisible(true);
     };
 
-    const openVideoPlayer = () => {
-        setVisible(true);
-        setShowVideoPlayer(true);
-    };
-
-    const close = () => {
-        setVisible(false);
-        setShowVideoPlayer(false);
+    const onScrollEnd = (e: any) => {
+        const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+        setActiveIndex(idx);
     };
 
     return (
         <>
-            {/* Thumbnail grid */}
+            {/* Thumbnails */}
             <View style={styles.grid}>
-                {medias.map((media, idx) => (
+                {medias.map((m, i) => (
                     <TouchableOpacity
-                        key={idx}
+                        key={i}
                         style={styles.thumbContainer}
-                        onPress={() => {
-                            setActiveIndex(idx);
-                            if (media.type === 'video') {
-                                openVideoPlayer();
-                            } else {
-                                openCarousel();
-                            }
-                        }}
+                        onPress={() => openAt(i)}
                     >
-                        <ExpoImage
-                            source={media.thumbnail_url || media.storage_path}
-                            cachePolicy="memory-disk"
-                            contentFit="cover"
-                            transition={200}
+                        <Image
+                            source={{ uri: m.thumbnail_url || m.storage_path }}
                             style={styles.thumb}
                         />
-
                     </TouchableOpacity>
                 ))}
             </View>
 
-            {/* Fullscreen swipeable carousel */}
-            {visible && !showVideoPlayer && (
-                <Modal visible transparent onRequestClose={close}>
-                    <GestureHandlerRootView style={styles.modal}>
-                        <Carousel
-                            layout="default"
-                            ref={carouselRef}
-                            data={medias}
-                            renderItem={renderItem}
-                            sliderWidth={SLIDER_WIDTH}
-                            itemWidth={ITEM_WIDTH}
-                            firstItem={activeIndex}
-                            onSnapToItem={(index) => setActiveIndex(index)}
-                            enableMomentum
-                            swipeThreshold={20}
-                            lockScrollWhileSnapping
-                        />
+            {/* Fullscreen carousel */}
+            <Modal
+                visible={modalVisible}
+                animationType="slide"
+                onRequestClose={() => setModalVisible(false)}
+            >
+                <View style={styles.modal}>
+                    <ScrollView
+                        ref={scrollRef}
+                        horizontal
+                        pagingEnabled
+                        showsHorizontalScrollIndicator={false}
+                        contentOffset={{ x: startIndex * width, y: 0 }}
+                        onMomentumScrollEnd={onScrollEnd}
+                    >
+                        {medias.map((m, i) => (
+                            <View style={styles.slide} key={i}>
+                                {m.type === 'video' ? (
+                                    <Video
+                                        source={{ uri: m.storage_path }}
+                                        style={styles.media}
+                                        resizeMode="contain"
+                                        repeat
+                                        paused={i !== activeIndex}      // only play the active slide
+                                    />
+                                ) : (
+                                    <Image
+                                        source={{ uri: m.storage_path }}
+                                        style={styles.media}
+                                        resizeMode="contain"
+                                    />
+                                )}
+                            </View>
+                        ))}
+                    </ScrollView>
 
-                        <Pagination
-                            dotsLength={medias.length}
-                            activeDotIndex={activeIndex}
-                            carouselRef={carouselRef}
-                            tappableDots
-                            containerStyle={styles.pagination}
-                        />
+                    {/* Dots */}
+                    <View style={styles.pagination}>
+                        {medias.map((_, i) => (
+                            <View
+                                key={i}
+                                style={[
+                                    styles.dot,
+                                    activeIndex === i && styles.activeDot,
+                                ]}
+                            />
+                        ))}
+                    </View>
 
-                        {/* Tap outside to close */}
-                        <TouchableOpacity
-                            style={StyleSheet.absoluteFill}
-                            onPress={close}
-                        />
-                    </GestureHandlerRootView>
-                </Modal>
-            )}
-
-            {/* Video player */}
-            {visible && showVideoPlayer && (
-                <Modal visible transparent onRequestClose={close}>
-                    <VideoPlayer mediaUrl={medias[activeIndex].storage_path} onClose={close} />
-                </Modal>
-            )}
+                    {/* Close */}
+                    <TouchableOpacity
+                        style={styles.closeButton}
+                        onPress={() => setModalVisible(false)}
+                    >
+                        <Text style={styles.closeText}>✕</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         </>
     );
 };
 
 const styles = StyleSheet.create({
-    grid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-    },
+    grid: { flexDirection: 'row', flexWrap: 'wrap' },
     thumbContainer: {
-        width: '33%',
-        padding: 4,
+        width: width / 3 - 8,
+        margin: 4,
     },
-    thumb: {
-        width: '100%',
-        aspectRatio: 1,
-        borderRadius: 8,
-    },
-    modal: {
-        flex: 1,
-        backgroundColor: 'black',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    slideImage: {
+    thumb: { width: '100%', aspectRatio: 1, borderRadius: 8 },
+
+    modal: { flex: 1, backgroundColor: 'black' },
+    slide: { width, justifyContent: 'center', alignItems: 'center' },
+    media: {
         width: ITEM_WIDTH,
         height: ITEM_HEIGHT,
-        resizeMode: 'contain',
+        borderRadius: 8,
     },
+
     pagination: {
         position: 'absolute',
-        bottom: 40,
+        bottom: 20,
+        left: 0,
+        width,
+        flexDirection: 'row',
+        justifyContent: 'center',
     },
+    dot: {
+        width: DOT_SIZE,
+        height: DOT_SIZE,
+        borderRadius: DOT_SIZE / 2,
+        backgroundColor: 'gray',
+        marginHorizontal: DOT_SPACING / 2,
+    },
+    activeDot: {
+        backgroundColor: 'white',
+        width: DOT_SIZE * 1.5,
+        height: DOT_SIZE * 1.5,
+        borderRadius: (DOT_SIZE * 1.5) / 2,
+    },
+
+    closeButton: { position: 'absolute', top: 40, right: 20, padding: 8 },
+    closeText: { color: 'white', fontSize: 24 },
 });
