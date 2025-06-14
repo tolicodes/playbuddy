@@ -34,8 +34,8 @@ const schema = Yup.object().shape({
     image_url: Yup.string().required('Required'),
     description: Yup.string().required('Required'),
     type: Yup.string().oneOf(['event', 'retreat']).required('Required'),
-    organizer: Yup.number().required('Required'),
-    organizer_name: Yup.string().required('Required'),
+    organizer: Yup.number().optional(),
+    organizer_name: Yup.string().optional(),
     play_party: Yup.boolean().required('Required'),
     facilitator_only: Yup.boolean().required('Required'),
 });
@@ -97,14 +97,22 @@ export default function AddEventPage() {
     const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
     const onSubmit = (data: FormValues) => {
+        console.log('yo')
         const organizerId = data.organizer?.toString();
         const organizerName = data.organizer_name?.toString() || '';
+
+        if (!organizerId && !organizerName) {
+            alert('Organizer is required');
+            return;
+        }
 
         const organizer = organizerId && organizerId !== '0' ? {
             id: organizerId,
         } : {
             name: organizerName
         }
+
+        console.log('submitting', data)
 
         const payload = {
             ...data,
@@ -130,6 +138,7 @@ export default function AddEventPage() {
             <Typography variant="h5" mb={2}>
                 Add New Event
             </Typography>
+            {/* @ts-ignore */}
             <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
                 <Controller
                     name="name"
@@ -174,7 +183,7 @@ export default function AddEventPage() {
                     control={control}
                     render={({ field }) => (
                         <FormControl fullWidth margin="normal" error={!!errors.organizer}>
-                            <InputLabel>Organizer</InputLabel>
+                            <InputLabel>Organizers</InputLabel>
                             <Select {...field} label="Organizer">
                                 <MenuItem value="0">Create an organizer</MenuItem>
                                 {organizers?.map((o: any) => (
