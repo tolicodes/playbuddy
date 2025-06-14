@@ -11,7 +11,7 @@ import {
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import FAIcon from "react-native-vector-icons/FontAwesome";
 import type { NavStack } from "../../Common/Nav/NavStackType";
-import { LAVENDER_BACKGROUND } from "../../styles";
+import { LAVENDER_BACKGROUND } from "../../components/styles";
 import type { Munch } from "../../commonTypes";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";

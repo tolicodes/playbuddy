@@ -1,6 +1,6 @@
 import React, { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import moment from "moment-timezone";
-import { LAVENDER_BACKGROUND } from '../../../styles';
+import { LAVENDER_BACKGROUND } from '../../../components/styles';
 // Week Strip Component
 export const WeekStrip = ({ weekDays, selectedDate, onSelectDay, hasEventsOnDay }: any) => (
     <View style={weekStripStyles.weekStrip}>

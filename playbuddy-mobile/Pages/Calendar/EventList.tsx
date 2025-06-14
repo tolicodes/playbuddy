@@ -18,7 +18,7 @@ import { Event, UE } from "../../commonTypes";
 import { BuddyWishlist, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from "../../Common/hooks/logger";
 import { useUserContext } from "../Auth/hooks/UserContext";
-import { BORDER_LAVENDER, LAVENDER_BACKGROUND } from "../../styles";
+import { BORDER_LAVENDER, LAVENDER_BACKGROUND } from "../../components/styles";
 
 const HEADER_HEIGHT = 40;
 

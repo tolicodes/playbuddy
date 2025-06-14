@@ -12,7 +12,7 @@ import {
 import FAIcon from "react-native-vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 import type { NavStack } from "../../Common/Nav/NavStackType";
-import { LAVENDER_BACKGROUND } from "../../styles";
+import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { useUserContext } from "../Auth/hooks/UserContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";

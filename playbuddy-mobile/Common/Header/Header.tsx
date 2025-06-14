@@ -5,7 +5,7 @@ import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
 import { NavStack } from "../Nav/NavStackType";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../commonTypes";
-import { LAVENDER_BACKGROUND } from "../../styles";
+import { LAVENDER_BACKGROUND } from "../../components/styles";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {

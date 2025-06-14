@@ -16,7 +16,7 @@ import { CommunitiesList } from './CommunitiesList';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
-import { LAVENDER_BACKGROUND } from '../../styles';
+import { LAVENDER_BACKGROUND } from '../../components/styles';
 
 export const JoinCommunitySection = ({
     type = 'private',

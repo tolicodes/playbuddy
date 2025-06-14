@@ -20,7 +20,7 @@ import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useBadgeNotifications } from '../../Common/Nav/useBadgeNotifications';
 import { logEvent } from '../../Common/hooks/logger';
-import { LAVENDER_BACKGROUND } from '../../styles';
+import { LAVENDER_BACKGROUND } from '../../components/styles';
 
 import { DiscoverEventsTour } from './DiscoverEventsTour';
 import { DiscoverEventsCard } from './DiscoverEventsCard';

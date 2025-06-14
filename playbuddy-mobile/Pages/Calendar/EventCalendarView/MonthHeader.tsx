@@ -1,7 +1,7 @@
 import { format } from 'date-fns';
 import React, { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { LAVENDER_BACKGROUND } from '../../../styles';
+import { LAVENDER_BACKGROUND } from '../../../components/styles';
 // Month Header Component
 export const MonthHeader = ({ currentDate, goToPrev, goToNext }) => (
     <View style={monthHeaderStyles.monthHeader}>

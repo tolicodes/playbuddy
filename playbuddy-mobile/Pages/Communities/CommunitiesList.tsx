@@ -23,7 +23,7 @@ import { logEvent } from "../../Common/hooks/logger";
 import type { Community } from "../../Common/hooks/CommonContext";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../commonTypes";
-import { LAVENDER_BACKGROUND } from "../../styles";
+import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 
 export const CommunitiesList = ({

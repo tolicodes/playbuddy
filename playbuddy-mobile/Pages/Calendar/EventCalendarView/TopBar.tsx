@@ -1,7 +1,7 @@
 import React, { View, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { LAVENDER_BACKGROUND } from '../../../styles';
+import { LAVENDER_BACKGROUND } from '../../../components/styles';
 
 // Top Bar Component
 export interface TopBarProps {

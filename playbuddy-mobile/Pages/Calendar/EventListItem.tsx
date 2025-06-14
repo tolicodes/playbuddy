@@ -12,7 +12,7 @@ import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPro
 import { Buddy } from '../Buddies/hooks/BuddiesContext';
 import { TicketPromoModal } from './TicketPromoModal';
 import { getEventPromoCodes } from '../Auth/screens/usePromoCode';
-import { BORDER_LAVENDER } from '../../styles';
+import { BORDER_LAVENDER } from '../../components/styles';
 import { BadgeRow } from '../common/EventBadgesRow';
 
 interface ListItemProps {
