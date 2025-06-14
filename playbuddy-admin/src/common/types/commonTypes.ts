@@ -840,6 +840,7 @@ export interface Facilitator {
     intro_video_url?: string | null;
     instagram_handle?: string | null;
     fetlife_handle?: string | null;
+    email?: string | null;
     location?: string | null;
     verified?: boolean;
     tags?: Tag[];
