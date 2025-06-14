@@ -17,13 +17,18 @@ const { width, height } = Dimensions.get('window');
 const DOT_SIZE = 8;
 const DOT_SPACING = 8;
 
-export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
+export const MediaCarousel = ({
+    medias,
+    facilitatorName,
+}: {
+    medias: Media[];
+    facilitatorName: string;
+}) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [startIndex, setStartIndex] = useState(0);
     const [activeIndex, setActiveIndex] = useState(0);
-
-    // track which items have finished loading
     const [loadedMap, setLoadedMap] = useState<Record<number, boolean>>({});
+    const [audioMutedMap, setAudioMutedMap] = useState<Record<number, boolean>>({});
 
     const gridRef = useRef<FlatList>(null);
     const carouselRef = useRef<FlatList>(null);
@@ -31,8 +36,8 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
     const openAt = (idx: number) => {
         setStartIndex(idx);
         setActiveIndex(idx);
-        // reset loader for *this* index only
         setLoadedMap(m => ({ ...m, [idx]: false }));
+        setAudioMutedMap(m => ({ ...m, [idx]: true })); // start muted
         setModalVisible(true);
     };
 
@@ -46,17 +51,22 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
         setLoadedMap(m => ({ ...m, [index]: true }));
     };
 
+    const toggleMute = (index: number) => {
+        setAudioMutedMap(m => ({ ...m, [index]: !m[index] }));
+    };
+
     const renderThumbnail = ({ item: m, index }: { item: Media; index: number }) => (
         <TouchableOpacity style={styles.thumbContainer} onPress={() => openAt(index)}>
-            <Image
-                source={{ uri: m.thumbnail_url || m.storage_path }}
-                style={styles.thumb}
-            />
+            <Image source={{ uri: m.thumbnail_url || m.storage_path }} style={styles.thumb} />
         </TouchableOpacity>
     );
 
     const renderSlide = ({ item: m, index }: { item: Media; index: number }) => {
         const isLoaded = loadedMap[index] === true;
+        const isMuted = audioMutedMap[index] !== false;
+        const buttonLabel = isMuted
+            ? `🔊 Hear ${facilitatorName} speak`
+            : '🔇 Mute audio';
 
         return (
             <View style={styles.slide} key={index}>
@@ -66,14 +76,22 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
                     </View>
                 )}
 
+                {m.type === 'video' && (
+                    <TouchableOpacity style={styles.audioButton} onPress={() => toggleMute(index)}>
+                        <Text style={styles.audioButtonText}>{buttonLabel}</Text>
+                    </TouchableOpacity>
+                )}
+
                 {m.type === 'video' ? (
                     <Video
                         source={{ uri: m.storage_path }}
                         style={styles.media}
                         resizeMode="contain"
                         repeat
+                        muted={isMuted}
                         paused={activeIndex !== index}
-                        onReadyForDisplay={() => onLoadEnd(index)}    // fires when first frame is ready
+                        onReadyForDisplay={() => onLoadEnd(index)}
+                        ignoreSilentSwitch="ignore" // allow audio even on silent mode (iOS)
                     />
                 ) : (
                     <Image
@@ -89,7 +107,7 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
 
     return (
         <>
-            {/* 1) Scrollable thumbnail grid */}
+            {/* thumbnail grid */}
             <FlatList
                 ref={gridRef}
                 data={medias}
@@ -101,12 +119,8 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
                 renderItem={renderThumbnail}
             />
 
-            {/* 2) Fullscreen carousel */}
-            <Modal
-                visible={modalVisible}
-                animationType="slide"
-                onRequestClose={() => setModalVisible(false)}
-            >
+            {/* full-screen carousel */}
+            <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
                 <View style={styles.modal}>
                     <FlatList
                         ref={carouselRef}
@@ -115,34 +129,23 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
                         horizontal
                         pagingEnabled
                         initialScrollIndex={startIndex}
-                        getItemLayout={(_, idx) => ({
-                            length: width,
-                            offset: width * idx,
-                            index: idx,
-                        })}
+                        getItemLayout={(_, idx) => ({ length: width, offset: width * idx, index: idx })}
                         showsHorizontalScrollIndicator={false}
                         onMomentumScrollEnd={e => {
                             const idx = Math.round(e.nativeEvent.contentOffset.x / width);
                             setActiveIndex(idx);
-                            // no resetting here—once loaded, we keep it true
                         }}
                         renderItem={renderSlide}
-                        extraData={loadedMap}
+                        extraData={[loadedMap, audioMutedMap]}
                     />
 
                     <View style={styles.pagination}>
                         {medias.map((_, i) => (
-                            <View
-                                key={i}
-                                style={[styles.dot, activeIndex === i && styles.activeDot]}
-                            />
+                            <View key={i} style={[styles.dot, activeIndex === i && styles.activeDot]} />
                         ))}
                     </View>
 
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => setModalVisible(false)}
-                    >
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
                         <Text style={styles.closeText}>✕</Text>
                     </TouchableOpacity>
                 </View>
@@ -154,31 +157,12 @@ export const MediaCarousel = ({ medias }: { medias: Media[] }) => {
 const styles = StyleSheet.create({
     gridList: { flex: 1 },
     grid: { padding: 4 },
-    thumbContainer: {
-        width: width / 3 - 8,
-        margin: 4,
-    },
-    thumb: {
-        width: '100%',
-        aspectRatio: 1,
-        borderRadius: 8,
-    },
+    thumbContainer: { width: width / 3 - 8, margin: 4 },
+    thumb: { width: '100%', aspectRatio: 1, borderRadius: 8 },
 
-    modal: {
-        flex: 1,
-        backgroundColor: 'black',
-        justifyContent: 'center',
-    },
-    slide: {
-        width,
-        height,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    media: {
-        width,
-        height,
-    },
+    modal: { flex: 1, backgroundColor: 'black' },
+    slide: { width, height, justifyContent: 'center', alignItems: 'center' },
+    media: { width, height },
     loaderContainer: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: 'rgba(0,0,0,0.5)',
@@ -186,6 +170,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         zIndex: 1,
     },
+
+    audioButton: {
+        position: 'absolute',
+        bottom: 80,
+        right: 20,
+        backgroundColor: '#6200EE', // purple accent
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 24,
+        zIndex: 2,
+    },
+    audioButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
 
     pagination: {
         position: 'absolute',
@@ -195,28 +191,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'center',
     },
-    dot: {
-        width: DOT_SIZE,
-        height: DOT_SIZE,
-        borderRadius: DOT_SIZE / 2,
-        backgroundColor: 'gray',
-        marginHorizontal: DOT_SPACING / 2,
-    },
-    activeDot: {
-        backgroundColor: 'white',
-        width: DOT_SIZE * 1.5,
-        height: DOT_SIZE * 1.5,
-        borderRadius: (DOT_SIZE * 1.5) / 2,
-    },
+    dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, backgroundColor: 'gray', marginHorizontal: DOT_SPACING / 2 },
+    activeDot: { backgroundColor: 'white', width: DOT_SIZE * 1.5, height: DOT_SIZE * 1.5, borderRadius: (DOT_SIZE * 1.5) / 2 },
 
-    closeButton: {
-        position: 'absolute',
-        top: 40,
-        right: 20,
-        padding: 8,
-    },
-    closeText: {
-        color: 'white',
-        fontSize: 24,
-    },
+    closeButton: { position: 'absolute', top: 40, right: 20, padding: 8 },
+    closeText: { color: 'white', fontSize: 24 },
 });

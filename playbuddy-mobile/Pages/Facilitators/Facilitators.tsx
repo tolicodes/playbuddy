@@ -20,9 +20,11 @@ import {
 } from '../../Common/db-axios/useFacilitators';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import type { Facilitator } from '../../Common/types/commonTypes';
-import { LAVENDER_BACKGROUND } from '../../styles';
+import { LAVENDER_BACKGROUND } from '../../components/styles';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
+const ADMIN_EMAIL = 'toli@toli.me';
 
 export const FacilitatorsScreen = ({
     showSearch = false
@@ -30,7 +32,7 @@ export const FacilitatorsScreen = ({
     showSearch?: boolean;
 }) => {
     const navigation = useNavigation();
-    const { authUserId } = useUserContext();
+    const { authUserId, userProfile } = useUserContext();
     const { data: facilitators = [] } = useFetchFacilitators();
     const { data: events } = useFetchEvents({
         includeFacilitatorOnly: true
@@ -43,6 +45,8 @@ export const FacilitatorsScreen = ({
     const unfollow = useUnfollowFacilitator();
 
     const myFacilitators = myListQuery.data ?? [];
+
+    const isAdmin = userProfile?.email === ADMIN_EMAIL;
 
     const handleFollow = useCallback((id: number) => {
         if (!authUserId) {
@@ -64,10 +68,15 @@ export const FacilitatorsScreen = ({
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [facilitators, searchQuery]);
 
-    const fullFacilitators = filtered.map(f => {
+    const verifiedOnly = useMemo(() => {
+        if (isAdmin) return filtered;
+        return filtered.filter(f => f.verified);
+    }, [filtered, isAdmin]);
+
+    const fullFacilitators = verifiedOnly.map(f => {
         return {
             ...f,
-            events: f.event_ids.map(e => events.find(ev => ev.id === e))
+            events: f.event_ids.map(e => events?.find(ev => ev.id === e))
         }
     })
 

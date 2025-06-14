@@ -11,7 +11,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
 import AuthNav from '../../Pages/Auth/screens/AuthNav';
 import { headerOptions } from '../Header/Header';
-import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile';
+import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile';
 
 const HomeStack = createStackNavigator();
 /**
