@@ -18,6 +18,8 @@ import promoCodesRoute from './routes/promo_codes.js';
 import munchesRoute from './routes/munches.js'
 import facilitatorsRoute from './routes/facilitators.js'
 import tagsRoute from './routes/tags.js'
+import mediaRoute from './routes/media.js'
+import marketingRoute from './routes/marketing.js'
 export const app = express();
 
 // Middleware setup
@@ -45,6 +47,8 @@ app.use('/promo_codes', promoCodesRoute);
 app.use('/munches', munchesRoute);
 app.use('/facilitators', facilitatorsRoute);
 app.use('/tags', tagsRoute);
+app.use('/media', mediaRoute);
+app.use('/marketing', marketingRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -1,0 +1,323 @@
+// import React, { useState, useMemo } from 'react'
+// import { DEEP_LINK_BASE } from '../lib/config'
+// import { useFetchDeepLinks } from '@playbuddy/common/dist/db-axios/useDeepLinks'
+
+// export default function DeepLinksForm() {
+//     // ─── 1) Data fetching hook ──────────────────────────────────────────────────
+//     const { data: deepLinks = [], isLoading, error } = useFetchDeepLinks()
+
+//     // ─── 2) Filter state hooks ─────────────────────────────────────────────────
+//     const [campaignFilter, setCampaignFilter] = useState<string>('')
+//     const [slugFilter, setSlugFilter] = useState<string>('')
+//     const [typeFilter, setTypeFilter] = useState<string>('')
+//     const [organizerFilter, setOrganizerFilter] = useState<string>('')
+//     const [eventFilter, setEventFilter] = useState<string>('')
+//     const [promoFilter, setPromoFilter] = useState<string>('')
+//     const [discountFilter, setDiscountFilter] = useState<string>('')
+
+//     // ─── 3) Helper to format discount strings ────────────────────────────────────
+//     const formatDiscount = (discount?: number, type?: string) => {
+//         if (discount == null || !type) return '—'
+//         return type === 'percent' ? `${discount}%` : `$${discount.toFixed(2)}`
+//     }
+
+//     // ─── 4) Gather unique filter options from `deepLinks` ────────────────────────
+//     const {
+//         campaigns,
+//         slugs,
+//         types,
+//         organizers,
+//         events,
+//         promos,
+//         discounts,
+//     } = useMemo(() => {
+//         const cSet = new Set<string>()
+//         const sSet = new Set<string>()
+//         const tSet = new Set<string>()
+//         const oSet = new Set<string>()
+//         const eSet = new Set<string>()
+//         const pSet = new Set<string>()
+//         const dSet = new Set<string>()
+
+//         deepLinks.forEach((dl) => {
+//             cSet.add(dl.campaign || '—')
+//             sSet.add(dl.slug!)
+//             tSet.add(dl.type || '—')
+//             oSet.add(dl.organizer?.name || '—')
+//             eSet.add(dl.featured_event?.name || '—')
+//             pSet.add(dl.featured_promo_code?.promo_code || '—')
+//             dSet.add(formatDiscount(dl.featured_promo_code?.discount, dl.featured_promo_code?.discount_type))
+//         })
+
+//         return {
+//             campaigns: Array.from(cSet).sort(),
+//             slugs: Array.from(sSet).sort(),
+//             types: Array.from(tSet).sort(),
+//             organizers: Array.from(oSet).sort(),
+//             events: Array.from(eSet).sort(),
+//             promos: Array.from(pSet).sort(),
+//             discounts: Array.from(dSet).sort(),
+//         }
+//     }, [deepLinks])
+
+//     // ─── 5) Filter `deepLinks` based on all dropdowns ─────────────────────────────
+//     const filteredDeepLinks = useMemo(() => {
+//         return deepLinks.filter((dl) => {
+//             const cVal = dl.campaign || '—'
+//             const sVal = dl.slug
+//             const tVal = dl.type || '—'
+//             const oVal = dl.organizer?.name || '—'
+//             const eVal = dl.featured_event?.name || '—'
+//             const pVal = dl.featured_promo_code?.promo_code || '—'
+//             const dVal = formatDiscount(dl.featured_promo_code?.discount, dl.featured_promo_code?.discount_type)
+
+//             if (campaignFilter && cVal !== campaignFilter) return false
+//             if (slugFilter && sVal !== slugFilter) return false
+//             if (typeFilter && tVal !== typeFilter) return false
+//             if (organizerFilter && oVal !== organizerFilter) return false
+//             if (eventFilter && eVal !== eventFilter) return false
+//             if (promoFilter && pVal !== promoFilter) return false
+//             if (discountFilter && dVal !== discountFilter) return false
+
+//             return true
+//         })
+//     }, [
+//         deepLinks,
+//         campaignFilter,
+//         slugFilter,
+//         typeFilter,
+//         organizerFilter,
+//         eventFilter,
+//         promoFilter,
+//         discountFilter,
+//     ])
+
+//     // ─── 6) Early returns for loading / error (hooks already ran above) ───────────
+//     if (isLoading) return <p>Loading deep links...</p>
+//     if (error) return <p>Error loading deep links.</p>
+
+//     // ─── 7) Final JSX ────────────────────────────────────────────────────────────
+//     return (
+//         <div style={{ padding: '2rem' }}>
+//             <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Deep Links</h2>
+//             <div style={{ overflowX: 'auto' }}>
+//                 <table
+//                     style={{
+//                         width: '100%',
+//                         borderCollapse: 'separate',
+//                         borderSpacing: 0,
+//                         borderRadius: '8px',
+//                         overflow: 'hidden',
+//                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+//                         fontSize: '0.95rem',
+//                     }}
+//                 >
+//                     <thead style={{ backgroundColor: '#f4f4f4', textAlign: 'left' }}>
+//                         <tr>
+//                             {['Campaign', 'Deep Link', 'Type', 'Organizer', 'Event', 'Promo Code', 'Discount'].map(
+//                                 (header) => (
+//                                     <th
+//                                         key={header}
+//                                         style={{
+//                                             padding: '12px 16px',
+//                                             borderBottom: '1px solid #ddd',
+//                                             fontWeight: '600',
+//                                             whiteSpace: 'nowrap',
+//                                         }}
+//                                     >
+//                                         {header}
+//                                     </th>
+//                                 )
+//                             )}
+//                         </tr>
+
+//                         {/* ─── Filter Row ──────────────────────────────────────────────────────────── */}
+//                         <tr style={{ backgroundColor: '#fafafa' }}>
+//                             {/* Campaign */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={campaignFilter}
+//                                     onChange={(e) => setCampaignFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {campaigns.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+
+//                             {/* Deep Link (slug) */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={slugFilter}
+//                                     onChange={(e) => setSlugFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {slugs.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+
+//                             {/* Type */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={typeFilter}
+//                                     onChange={(e) => setTypeFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {types.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+
+//                             {/* Organizer */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={organizerFilter}
+//                                     onChange={(e) => setOrganizerFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {organizers.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+
+//                             {/* Event */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={eventFilter}
+//                                     onChange={(e) => setEventFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {events.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+
+//                             {/* Promo Code */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={promoFilter}
+//                                     onChange={(e) => setPromoFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {promos.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+
+//                             {/* Discount */}
+//                             <th style={{ padding: '8px 16px' }}>
+//                                 <select
+//                                     value={discountFilter}
+//                                     onChange={(e) => setDiscountFilter(e.target.value)}
+//                                     style={{ width: '100%', padding: '4px' }}
+//                                 >
+//                                     <option value="">All</option>
+//                                     {discounts.map((val) => (
+//                                         <option key={val} value={val}>
+//                                             {val}
+//                                         </option>
+//                                     ))}
+//                                 </select>
+//                             </th>
+//                         </tr>
+//                     </thead>
+
+//                     {/* ─── Table Body ─────────────────────────────────────────────────────────── */}
+//                     <tbody>
+//                         {filteredDeepLinks.map((dl, idx) => (
+//                             <tr
+//                                 key={dl.id}
+//                                 style={{
+//                                     backgroundColor: idx % 2 === 0 ? '#fff' : '#fafafa',
+//                                     transition: 'background 0.2s ease',
+//                                 }}
+//                             >
+//                                 <td style={{ padding: '12px 16px' }}>{dl.campaign || '—'}</td>
+
+//                                 <td style={{ padding: '12px 16px' }}>
+//                                     <a
+//                                         href={`${DEEP_LINK_BASE}${dl.slug}`}
+//                                         target="_blank"
+//                                         rel="noopener noreferrer"
+//                                         style={{ color: '#3b82f6', textDecoration: 'none' }}
+//                                     >
+//                                         {dl.slug}
+//                                     </a>
+//                                 </td>
+
+//                                 <td style={{ padding: '12px 16px' }}>{dl.type || '—'}</td>
+
+//                                 <td style={{ padding: '12px 16px' }}>{dl.organizer?.name || '—'}</td>
+
+//                                 <td style={{ padding: '12px 16px' }}>
+//                                     {dl.featured_event?.ticket_url ? (
+//                                         <a
+//                                             href={dl.featured_event.ticket_url}
+//                                             target="_blank"
+//                                             rel="noopener noreferrer"
+//                                             style={{ color: '#3b82f6', textDecoration: 'none' }}
+//                                         >
+//                                             {dl.featured_event.name}
+//                                         </a>
+//                                     ) : (
+//                                         dl.featured_event?.name || '—'
+//                                     )}
+//                                 </td>
+
+//                                 <td style={{ padding: '12px 16px' }}>{dl.featured_promo_code?.promo_code || '—'}</td>
+
+//                                 <td style={{ padding: '12px 16px' }}>
+//                                     {formatDiscount(
+//                                         dl.featured_promo_code?.discount,
+//                                         dl.featured_promo_code?.discount_type
+//                                     )}
+//                                 </td>
+//                             </tr>
+//                         ))}
+
+//                         {filteredDeepLinks.length === 0 && (
+//                             <tr>
+//                                 <td
+//                                     colSpan={7}
+//                                     style={{
+//                                         padding: '16px',
+//                                         textAlign: 'center',
+//                                         color: '#666',
+//                                         fontStyle: 'italic',
+//                                     }}
+//                                 >
+//                                     No matching results
+//                                 </td>
+//                             </tr>
+//                         )}
+//                     </tbody>
+//                 </table>
+//             </div>
+//         </div>
+//     )
+// }

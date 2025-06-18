@@ -9,20 +9,26 @@ import { createMedia } from './media.js';
 
 const router = Router();
 
+// list of fields we accept on create/update
+const FAC_FIELDS = [
+    'name',
+    'title',
+    'bio',
+    'profile_image_url',
+    'intro_video_url',
+    'location',
+    'verified',
+    'instagram_handle',
+    'fetlife_handle',
+    'website',
+    'email',
+    'event_ids',
+    'follower_ids',
+    'is_following'
+];
+
 const facilitatorFields = `
-  id,
-  name,
-  bio,
-  title,
-  profile_image_url,
-  intro_video_url,
-  instagram_handle,
-  fetlife_handle,
-  website,
-  location,
-  verified,
-  created_at,
-  updated_at,
+  *,
 
   facilitator_tags (
     tag:tags ( id, name, entity, type )
@@ -52,20 +58,11 @@ async function fetchFacilitators(authUserId?: string) {
         const event_ids = (f.facilitator_events ?? []).map((fe: any) => fe.event_id);
         const follower_ids = (f.facilitator_followers ?? []).map((ff: any) => ff.auth_user_id);
 
+        const facFields = buildFacilitatorPayload(f);
+
         return {
             id: f.id,
-            name: f.name,
-            bio: f.bio,
-            title: f.title,
-            profile_image_url: f.profile_image_url,
-            intro_video_url: f.intro_video_url,
-            instagram_handle: f.instagram_handle,
-            fetlife_handle: f.fetlife_handle,
-            website: f.website,
-            location: f.location,
-            verified: f.verified,
-            created_at: f.created_at,
-            updated_at: f.updated_at,
+            ...facFields,
 
             tags: (f.facilitator_tags ?? []).map((ft: any) => ft.tag),
             media: (f.facilitator_media ?? []).map((fm: any) => {
@@ -185,19 +182,7 @@ router.delete(
 
 // admin
 
-// list of fields we accept on create/update
-const FAC_FIELDS = [
-    'name',
-    'title',
-    'bio',
-    'profile_image_url',
-    'intro_video_url',
-    'location',
-    'verified',
-    'ig_handle',
-    'fetlife_handle',
-    'website'
-];
+
 
 // helper to get or create a tag, returns tag id
 async function findOrCreateTag(name: string) {

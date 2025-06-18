@@ -61,39 +61,37 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
 
     return (
         <Box>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} mb={2}>
-                <Autocomplete
-                    options={organizers || []}
-                    getOptionLabel={(o) => o.name}
-                    value={selectedOrganizer}
-                    onChange={(_, val) => { setSelectedOrganizer(val); setSelectedEvent(null); }}
-                    renderInput={(params) => <TextField {...params} label="Organizer" />} />
+            <Autocomplete
+                options={organizers || []}
+                getOptionLabel={(o) => o.name}
+                value={selectedOrganizer}
+                onChange={(_, val) => { setSelectedOrganizer(val); setSelectedEvent(null); }}
+                renderInput={(params) => <TextField {...params} label="Organizer" />} />
 
-                <Autocomplete
-                    options={availableEvents || []}
-                    getOptionLabel={(e) => e.name}
-                    value={selectedEvent}
-                    onChange={(_, val) => setSelectedEvent(val)}
-                    disabled={!selectedOrganizer}
-                    // disable and check already-added events
-                    getOptionDisabled={(option) => facilitatorEvents.some(ev => ev.id === option.id)}
-                    renderOption={(props, option) => {
-                        const isAdded = facilitatorEvents.some(ev => ev.id === option.id);
-                        return (
-                            <li {...props}>
-                                {isAdded && <CheckIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />}
-                                {option.start_date && <span style={{ marginRight: 8 }}>{new Date(option.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}</span>}
+            <Autocomplete
+                options={availableEvents || []}
+                getOptionLabel={(e) => e.name}
+                value={selectedEvent}
+                onChange={(_, val) => setSelectedEvent(val)}
+                disabled={!selectedOrganizer}
+                // disable and check already-added events
+                getOptionDisabled={(option) => facilitatorEvents.some(ev => ev.id === option.id)}
+                renderOption={(props, option) => {
+                    const isAdded = facilitatorEvents.some(ev => ev.id === option.id);
+                    return (
+                        <li {...props}>
+                            {isAdded && <CheckIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />}
+                            {option.start_date && <span style={{ marginRight: 8 }}>{new Date(option.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}</span>}
 
-                                {option.name}
-                            </li>
-                        );
-                    }}
-                    renderInput={(params) => <TextField {...params} label="Event" />} />
+                            {option.name}
+                        </li>
+                    );
+                }}
+                renderInput={(params) => <TextField {...params} label="Event" />} />
 
-                <Button variant="outlined" onClick={handleAdd} disabled={!selectedEvent}>
-                    Add
-                </Button>
-            </Stack>
+            <Button variant="outlined" onClick={handleAdd} disabled={!selectedEvent}>
+                Add
+            </Button>
 
             <Box sx={{ overflowX: 'auto' }}>
                 <Table>

@@ -9,6 +9,7 @@ import EditFacilitatorScreen from "./pages/Facilitators/EditFacilitatorScreen";
 // import Organizers from "./pages/OrganizersScreen";
 import LoginScreen from "./pages/LoginScreen";
 import axios from 'axios'
+import PrintRuns from "./pages/PrintRuns/PrintRunsAdmin";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -39,7 +40,8 @@ export default function App() {
     "/facilitators": 2,
     "/facilitators/:id": 3,
     "/facilitators/new": 4,
-    "/login": 5
+    "/login": 5,
+    "/print-runs": 6
   };
 
   const tabIndex = tabIndexes[pathname as keyof typeof tabIndexes];
@@ -54,6 +56,7 @@ export default function App() {
             <Tab label="Weekly Picks" component={RouterLink} to="/weekly-picks" />
             <Tab label="Events" component={RouterLink} to="/events/add" />
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
+            <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
           </Tabs>
         </Toolbar>
       </AppBar>
@@ -67,6 +70,7 @@ export default function App() {
         <Route path="/facilitators/new" element={<EditFacilitatorScreen />} />
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />
         <Route path="/login" element={<LoginScreen />} />
+        <Route path="/print-runs" element={<PrintRuns />} />
       </Routes>
     </Box>
   );

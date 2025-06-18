@@ -40,6 +40,8 @@ type FormValues = {
     media?: Partial<Media>[];
     title?: string;
     website?: string;
+    intro_video_url?: string;
+    email?: string;
 };
 
 // Validation schema
@@ -52,6 +54,9 @@ const schema: Yup.ObjectSchema<FormValues> = Yup.object({
     location: Yup.string().optional(),
     verified: Yup.boolean().optional(),
     instagram_handle: Yup.string().optional(),
+    email: Yup.string().optional(),
+    website: Yup.string().url('Must be a valid URL').optional(),
+    intro_video_url: Yup.string().url('Must be a valid URL').optional(),
     fetlife_handle: Yup.string().optional(),
     tags: Yup.array().of(Yup.string().required()).optional(),
     media: Yup.array()
@@ -64,7 +69,6 @@ const schema: Yup.ObjectSchema<FormValues> = Yup.object({
         )
         .optional(),
     title: Yup.string().optional(),
-    website: Yup.string().url('Invalid URL').optional(),
 });
 
 export default function EditFacilitatorScreen() {
@@ -103,6 +107,8 @@ export default function EditFacilitatorScreen() {
             instagram_handle: '',
             fetlife_handle: '',
             website: '',
+            intro_video_url: '',
+            email: '',
             tags: [],
             media: [],
         },
@@ -125,6 +131,8 @@ export default function EditFacilitatorScreen() {
                 setValue('instagram_handle', f.instagram_handle ?? '');
                 setValue('fetlife_handle', f.fetlife_handle ?? '');
                 setValue('website', f.website ?? '');
+                setValue('intro_video_url', f.intro_video_url ?? '');
+                setValue('email', f.email ?? '');
                 setValue(
                     'tags',
                     f.tags ? f.tags.map((t) => t.name) : []
@@ -266,7 +274,6 @@ export default function EditFacilitatorScreen() {
                             fullWidth
                             margin="normal"
                             multiline
-                            rows={3}
                             error={!!errors.bio}
                             helperText={errors.bio?.message}
                         />
