@@ -184,6 +184,8 @@ export interface Event extends EventDataSource {
 
     vetted?: boolean;
 
+    non_ny?: boolean;
+
 }
 
 /**
@@ -779,6 +781,34 @@ export interface DeepLink {
     campaign_start_date?: string;
     campaign_end_date?: string;
     channel?: string;
+
+    printRunId?: number;           // from print_run_id
+    marketingAssigneeId?: number;  // from marketing_assignee_id
+    facilitatorId?: number;        // from facilitator_id
+
+    printRunAssetNumber?: number;  // from print_run_asset_number
+}
+
+export interface MarketingAssignee {
+    id: number;
+    name: string | null;
+    role: string | null;
+    createdAt: string;
+}
+
+export interface PrintRun {
+    id: number;
+    marketingAssigneeId: number | null;
+    startNumber: number | null;
+    count: number | null;
+    mediaType: 'business_card' | null;
+    version: string | null;
+    qrX: number | null;
+    qrY: number | null;
+    qrWidth: number | null;
+    qrHeight: number | null;
+    createdAt: string;
+    updatedAt: string | null;
 }
 
 
