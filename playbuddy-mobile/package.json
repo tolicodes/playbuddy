@@ -13,7 +13,8 @@
     "submit": "eas submit --platform all",
     "prebuild": "npx expo prebuild --clean",
     "update": "eas update --branch production --message ",
-    "postinstall": "patch-package"
+    "postinstall": "patch-package",
+    "launch-deeplink": "sh -c 'npx uri-scheme open --ios \"playbuddy://https://l.playbuddy.me/$1\"' --"
   },
   "dependencies": {
     "@amplitude/analytics-react-native": "^1.4.10",
