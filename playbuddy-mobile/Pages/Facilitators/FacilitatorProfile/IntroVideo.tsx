@@ -3,9 +3,10 @@ import Video from 'react-native-video';
 import { useRef, useState } from 'react';
 
 export const IntroVideo = ({ url, name, onAspectRatio }: { url: string; name: string; onAspectRatio: (aspectRatio: 'portrait' | 'landscape') => void; }) => {
-    const video = useRef(null);
+    const videoRef = useRef(null);
     const [isModalVisible, setModalVisible] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
+    const [isInitialVideoMuted, setIsInitialVideoMuted] = useState(false);
+    const [isFullscreenVideoMuted, setIsFullscreenVideoMuted] = useState(true);
 
     const onLoad = (data: { naturalSize: { width: number; height: number } }) => {
         if (data.naturalSize.width > data.naturalSize.height) {
@@ -15,33 +16,34 @@ export const IntroVideo = ({ url, name, onAspectRatio }: { url: string; name: st
         }
     };
 
+    const handlePress = () => {
+        setModalVisible(true);
+        setIsInitialVideoMuted(true);
+        setIsFullscreenVideoMuted(false);
+    };
+
+    const handleModalClose = () => {
+        setModalVisible(false);
+        setIsFullscreenVideoMuted(true);
+    };
+
     return (
         <View style={styles.wrapper}>
             {/* Inline Video with Overlay */}
-            <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <TouchableOpacity onPress={handlePress}>
                 <Video
-                    ref={video}
+                    ref={videoRef}
                     source={{ uri: url }}
                     style={styles.video}
                     resizeMode="cover"
                     repeat
                     paused={false}
-                    muted={isMuted}
+                    muted={isInitialVideoMuted}
                     onLoad={onLoad}
                     ignoreSilentSwitch="ignore" // allow audio even on silent mode (iOS)
-
                 />
                 <View style={styles.overlay}>
                     <Text style={styles.playText}>▶ Full Screen {name}</Text>
-                </View>
-                <View style={styles.muteButtonContainer}>
-                    <TouchableOpacity onPress={() => setIsMuted(!isMuted)}>
-                        {isMuted ? (
-                            <Text style={styles.muteButton}>🔇</Text>
-                        ) : (
-                            <Text style={styles.muteButton}>🔊</Text>
-                        )}
-                    </TouchableOpacity>
                 </View>
             </TouchableOpacity>
 
@@ -49,10 +51,10 @@ export const IntroVideo = ({ url, name, onAspectRatio }: { url: string; name: st
             <Modal
                 visible={isModalVisible}
                 animationType="slide"
-                onRequestClose={() => { setModalVisible(false); setIsMuted(true); }}
+                onRequestClose={handleModalClose}
                 supportedOrientations={['portrait', 'landscape']}
             >
-                <TouchableOpacity style={styles.fullscreenContainer} onPress={() => setModalVisible(false)}>
+                <TouchableOpacity style={styles.fullscreenContainer} onPress={handleModalClose}>
                     <Video
                         source={{ uri: url }}
                         style={styles.fullscreenVideo}
@@ -60,7 +62,7 @@ export const IntroVideo = ({ url, name, onAspectRatio }: { url: string; name: st
                         controls
                         fullscreen
                         paused={false}
-                        muted={isMuted}
+                        muted={isFullscreenVideoMuted}
                         ignoreSilentSwitch="ignore" // allow audio even on silent mode (iOS)
                     />
                 </TouchableOpacity>
@@ -92,15 +94,6 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderRadius: 8,
         marginRight: 16,
-    },
-    muteButtonContainer: {
-        position: 'absolute',
-        right: 16,
-        bottom: 16,
-    },
-    muteButton: {
-        fontSize: 32,
-        color: 'white',
     },
     fullscreenContainer: {
         flex: 1,

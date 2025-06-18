@@ -53,6 +53,8 @@ export default function ProfileScreen() {
     const { data: facilitators, isLoading, error } = useFetchFacilitators();
     const { data: events } = useFetchEvents();
     const [activeTab, setActiveTab] = useState<'bio' | 'events' | 'media'>('bio');
+    const [introVideoAspectRatio, setIntroVideoAspectRatio] = useState<'portrait' | 'landscape'>('landscape');
+
     const scrollY = useState(new Animated.Value(0))[0];
 
     const facilitator = facilitators?.find(f => f.id === facilitatorId);
@@ -76,7 +78,6 @@ export default function ProfileScreen() {
 
     const hasIntroVideo = !!facilitator.intro_video_url;
     const showAnimatedHeader = activeTab === 'bio' && hasIntroVideo;
-    const [introVideoAspectRatio, setIntroVideoAspectRatio] = useState<'portrait' | 'landscape'>('landscape');
 
     const INTRO_VIDEO_HEIGHT = introVideoAspectRatio === 'portrait' ? (
         // leave a little sliver of bio
