@@ -388,42 +388,36 @@ async function tileBusinessCards() {
 (async () => {
     console.log('\nStarting flyer generation…\n');
 
+    const rows: any = [];
+
     fs.createReadStream(INPUT_CSV_PATH)
         .pipe(csv())
-        .on('data', async (row) => {
-            console.log('row', row)
-            totalRows += 1;
+        .on('data', (row) => rows.push(row))
+        .on('end', async () => {
+            console.log(`\n📥 Loaded ${rows.length} rows from CSV. Starting sequential processing...\n`);
 
-            try {
-                const idRaw = String(row['ID'] || '').trim();
-                const code = String(row['URL'] || '').trim();
-                const url = `https://l.playbuddy.me/${code}`;
+            for (const row of rows) {
+                try {
+                    const idRaw = String(row['ID'] || '').trim();
+                    const code = String(row['URL'] || '').trim();
+                    const url = `https://l.playbuddy.me/${code}`;
 
-                if (!idRaw || !url) {
-                    console.warn(`  ⚠️ Skipping invalid row: ${JSON.stringify(row)}`);
-                    processedRows += 1;
-                    if (processedRows === totalRows) {
-                        await mergeAllPdfs();
-                        await tileBusinessCards();
+                    if (!idRaw || !url) {
+                        console.warn(`  ⚠️ Skipping invalid row: ${JSON.stringify(row)}`);
+                        continue;
                     }
-                    return;
-                }
 
-                await processRow(idRaw, url);
-            } catch (err) {
-                console.error(`  ✖️ Error processing row ${JSON.stringify(row)}:\n`, err);
-            } finally {
-                processedRows += 1;
-                if (processedRows === totalRows) {
-                    await mergeAllPdfs();
-                    await tileBusinessCards();
+                    await processRow(idRaw, url);
+                } catch (err) {
+                    console.error(`  ✖️ Error processing row ${JSON.stringify(row)}:\n`, err);
                 }
             }
-        })
-        .on('end', () => {
-            console.log('\nAll CSV rows have been queued. Waiting for completion…\n');
+
+            await mergeAllPdfs();
+            await tileBusinessCards();
         })
         .on('error', (err) => {
             console.error('❌ Failed reading CSV:', err);
         });
+
 })();
