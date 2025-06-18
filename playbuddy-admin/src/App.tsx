@@ -10,6 +10,7 @@ import EditFacilitatorScreen from "./pages/Facilitators/EditFacilitatorScreen";
 import LoginScreen from "./pages/LoginScreen";
 import axios from 'axios'
 import PrintRuns from "./pages/PrintRuns/PrintRunsAdmin";
+import { PromoCodeEventManager } from "./pages/PromoCodes/PromoCodeEventManager";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -34,17 +35,8 @@ export default function App() {
 
   useAuth();
 
-  const tabIndexes = {
-    "/weekly-picks": 0,
-    "/events/add": 1,
-    "/facilitators": 2,
-    "/facilitators/:id": 3,
-    "/facilitators/new": 4,
-    "/login": 5,
-    "/print-runs": 6
-  };
-
-  const tabIndex = tabIndexes[pathname as keyof typeof tabIndexes];
+  // Determine the active tab index based on the current path
+  const tabIndex = ['/login', '/weekly-picks', '/events/add', '/facilitators', '/facilitators/new', '/facilitators/:id', '/print-runs', '/promo-codes'].indexOf(pathname);
 
   return (
     <Box>
@@ -57,6 +49,7 @@ export default function App() {
             <Tab label="Events" component={RouterLink} to="/events/add" />
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
             <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
+            <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
           </Tabs>
         </Toolbar>
       </AppBar>
@@ -71,6 +64,7 @@ export default function App() {
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/print-runs" element={<PrintRuns />} />
+        <Route path="/promo-codes" element={<PromoCodeEventManager />} />
       </Routes>
     </Box>
   );

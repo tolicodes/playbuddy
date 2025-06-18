@@ -1,6 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
+import { connectRedisClient } from '../connections/redisClient.js';
+import { flushEvents } from 'helpers/flushCache.js';
 
 const router = Router();
 
@@ -37,6 +39,55 @@ router.delete('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest
     const { id } = req.params;
     const { data, error } = await supabaseClient.from('promo_codes').delete().eq('id', id);
     res.json(data);
+});
+
+
+// POST /promo_codes/events
+// Adds a promo code to an event
+
+router.post('/events', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { promo_code_id, event_id } = req.body;
+
+    if (!promo_code_id || !event_id) {
+        return res.status(400).json({ error: 'Missing promo_code_id or event_id' });
+    }
+
+    const { data, error, status, statusText } = await supabaseClient
+        .from('promo_code_event')
+        .insert({ promo_code_id, event_id })
+
+    flushEvents();
+
+    if (error) {
+        return res.status(status).json({ error: error });
+    }
+
+    return res.status(200).json(data);
+});
+
+// Removes a promo code from an event
+
+router.delete('/events', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { promo_code_id, event_id } = req.body;
+
+    if (!promo_code_id || !event_id) {
+        return res.status(400).json({ error: 'Missing promo_code_id or event_id' });
+    }
+
+    const { error } = await supabaseClient
+        .from('promo_code_event')
+        .delete()
+        .eq('promo_code_id', promo_code_id)
+        .eq('event_id', event_id);
+
+    flushEvents();
+
+    if (error) {
+        console.log(error)
+        return res.status(500).json({ error: error });
+    }
+
+    return res.status(200).json({ success: true });
 });
 
 export default router;
