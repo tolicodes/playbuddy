@@ -49,16 +49,22 @@ export const WeeklyPicks = () => {
                 const eventDate = new Date(e.start_date);
                 return eventDate >= startDate && eventDate <= endDate;
             })
-            .map((e) => ({
-                dateKey: format(new Date(e.start_date), 'yyyy-MM-dd'),
-                dayOfWeek: format(new Date(e.start_date), 'EEE'),
-                title: e.name,
-                organizer: e.organizer.name,
-                description: e.short_description,
-                image: e.image_url,
-                promoCodeDiscount: e.promo_codes?.[0] ? `${e.promo_codes[0].discount}% off` : null,
-                eventId: e.id,
-            }))
+            .map((e) => {
+                const organizerPromoCode = e.organizer?.promo_codes?.find(code => code.scope === 'organizer');
+                const eventPromoCode = e.promo_codes?.find(code => code.scope === 'event');
+                const promoCodeDiscount = eventPromoCode || organizerPromoCode;
+
+                return ({
+                    dateKey: format(new Date(e.start_date), 'yyyy-MM-dd'),
+                    dayOfWeek: format(new Date(e.start_date), 'EEE'),
+                    title: e.name,
+                    organizer: e.organizer.name,
+                    description: e.short_description,
+                    image: e.image_url,
+                    promoCodeDiscount: promoCodeDiscount ? `${promoCodeDiscount.discount}% off` : null,
+                    eventId: e.id,
+                })
+            })
             .sort((a, b) => new Date(a.dateKey).getTime() - new Date(b.dateKey).getTime());
     };
 
