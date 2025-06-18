@@ -3,8 +3,6 @@ import { QueryClient } from "@tanstack/react-query";
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Refetch every 30 seconds
-            refetchInterval: 30000,
             // Refetch on window focus
             refetchOnWindowFocus: true,
             // Retry failed queries up to 3 times
