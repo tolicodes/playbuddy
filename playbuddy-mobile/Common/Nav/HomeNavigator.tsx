@@ -71,6 +71,11 @@ export function HomeStackNavigator() {
                 navigation.navigate('Weekly Picks');
                 return;
             }
+
+            if (currentDeepLink.type === 'facilitator_profile') {
+                navigation.navigate('Facilitator Profile', { facilitatorId: currentDeepLink.facilitator_id });
+                return;
+            }
         }
 
         // If the user has a profile but it's incomplete, navigate to ProfileDetails
