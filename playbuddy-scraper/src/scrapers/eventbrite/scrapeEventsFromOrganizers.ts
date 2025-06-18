@@ -13,17 +13,26 @@ const filterByRegion = (event: EventbriteEvent, region: string) => {
   return event.venue?.address?.region === region;
 }
 
+const isRetreat = (event: EventbriteEvent) => {
+  return new Date(event.end.utc).getTime() - new Date(event.start.utc).getTime() > 24 * 60 * 60 * 1000;
+
+}
+
 const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], eventDefaults: Partial<NormalizedEventInput>): NormalizedEventInput[] => {
   const nyEvents = eventbriteEvents.filter(event => filterByRegion(event, 'NY'));
+  const nonNyEvents = eventbriteEvents.filter(event => !filterByRegion(event, 'NY'));
   console.log('FILTER: NY Events: ', eventbriteEvents.length, 'to', nyEvents.length);
+  console.log('FILTER: Non NY Events: ', nonNyEvents.length);
 
-  return nyEvents.map((event) => {
+  return eventbriteEvents.map((event) => {
     const start_date = event.start.utc;
     const end_date = event.end.utc;
 
+    const isRetreatEvent = isRetreat(event);
+    const isNonNyEvent = !filterByRegion(event, 'NY');
+
     return {
       ...eventDefaults,
-      type: 'event',
       recurring: 'none',
       original_id: `eventbrite-${event.id}`,
       organizer: {
@@ -47,7 +56,10 @@ const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], eventDef
       tags: event.category ? [event.category.name] : [], // Using category as a tag since tags are not present in the new structure
 
       source_ticketing_platform: "Eventbrite",
-      communities: eventDefaults.communities || []
+      communities: eventDefaults.communities || [],
+
+      non_ny: isNonNyEvent,
+      type: isRetreatEvent ? 'retreat' : 'event',
     };
   });
 }

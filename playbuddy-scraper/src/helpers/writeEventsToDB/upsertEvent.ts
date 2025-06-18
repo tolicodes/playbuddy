@@ -301,6 +301,9 @@ const upsertEventInDB = async (event: NormalizedEventInput, organizerId: string,
             description: event.description || '',
             tags: event.tags || [],
 
+            short_description: event.short_description || '',
+            non_ny: event.non_ny || false,
+
             timestamp_scraped: event.timestamp_scraped || new Date(),
             source_origination_group_id: event.source_origination_group_id || '',
             source_origination_group_name: event.source_origination_group_name || '',
