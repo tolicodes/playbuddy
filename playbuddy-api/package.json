@@ -25,7 +25,8 @@
     "deploy": "source .env && gcloud run deploy $SERVICE --region=$REGION --platform managed --allow-unauthenticated --set-env-vars NODE_ENV=production,SUPABASE_ADMIN_KEY=$SUPABASE_ADMIN_KEY,REDIS_PASSWORD=$REDIS_PASSWORD,SUPABASE_HOST=$SUPABASE_HOST --source .",
     "logs": " gcloud beta run services logs read $SERVICE --project=$PROJECT --region=[REGION] --limit=10",
     "logs:tail": "gcloud beta run services logs tail $SERVICE --project=$PROJECT --region=$REGION",
-    "script:importMunches": "source .env && npx tsx src/scripts/importMunches.ts"
+    "script:importMunches": "source .env && npx tsx src/scripts/importMunches.ts",
+    "script:qrcodes": "source .env && npx tsx src/scripts/qrcodes/index.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -60,6 +61,9 @@
     "ical-generator": "^7.2.0",
     "ioredis": "^5.4.1",
     "moment-timezone": "^0.5.45",
-    "redis": "^4.7.0"
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "redis": "^4.7.0",
+    "sharp": "^0.34.2"
   }
 }
