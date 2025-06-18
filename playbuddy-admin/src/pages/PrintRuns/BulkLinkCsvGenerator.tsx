@@ -7,15 +7,18 @@ interface BulkLinkCsvGeneratorProps {
     assignee: string,
     startNumber: number,
     setStartNumber: (startNumber: number) => void
+    count: number,
+    setCount: (count: number) => void
 }
 
 export default function BulkLinkCsvGenerator({
     campaignName,
     assignee,
     startNumber,
-    setStartNumber
+    setStartNumber,
+    count,
+    setCount
 }: BulkLinkCsvGeneratorProps) {
-    const [count, setCount] = useState<number>(1)
     const [disabled, setDisabled] = useState<boolean>(true)
 
     // only enable download when all fields are valid

@@ -11,6 +11,7 @@ interface BranchExtractorProps {
     assignee: string
     version: string
     startNumber: number             // only extract numbers >= this
+    count: number                   // extract this many numbers
     onExtract: (mappings: Mapping[]) => void
 }
 
@@ -21,6 +22,7 @@ export default function BranchExtractor({
     assignee,
     version,
     startNumber,
+    count,
     onExtract
 }: BranchExtractorProps) {
     const [file, setFile] = useState<File | null>(null)
@@ -65,18 +67,21 @@ export default function BranchExtractor({
 
                 // 3) parse subsequent rows
                 const out: Mapping[] = []
+                const re = new RegExp(`\\[(\\d+)-(\\d+)\\]\s+${escapeRegExp(assignee)}\s+`)
                 for (let i = hdrIdx + 1; i < rows.length; i++) {
                     const row = rows[i]
                     const title = (row[titleIdx] || '').trim()
                     const url = (row[urlIdx] || '').trim()
-                    const m = title.match(new RegExp(
-                        `^\\[(\\d+)\\]\\s+${escapeRegExp(assignee)} Business Card \\(${escapeRegExp(version)}\\)$`
-                    ))
-                    if (m && url) {
-                        const n = parseInt(m[1], 10)
-                        if (n >= startNumber) {
-                            const code = url.split('/').pop() || ''
-                            if (code) out.push({ printRunAssetNumber: n, code })
+
+                    const m = title.match(re)
+                    if (m) {
+                        const start = parseInt(m[1], 10)
+                        const end = parseInt(m[2], 10)
+                        for (let n = start; n <= end; n++) {
+                            if (n >= startNumber && out.length < count) {
+                                const code = url.split('/').pop() || ''
+                                if (code) out.push({ printRunAssetNumber: n, code })
+                            }
                         }
                     }
                 }

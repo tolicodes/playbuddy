@@ -15,14 +15,14 @@ export default function PrintRunsAdmin() {
   const [type, setType] = useState<string>('')
   const [facilitatorId, setFacilitatorId] = useState<string>('')
 
-
   const [startNumber, setStartNumber] = useState<number>(201)
+  const [count, setCount] = useState<number>(1)
+
   const [mappings, setMappings] = useState<Mapping[]>([])
   const [frontUrl, setFrontUrl] = useState<string>("")
   const [backUrl, setBackUrl] = useState<string>("")
   const [qr, setQr] = useState<RectCoords | null>(null)
 
-  console.log(mappings)
   return (
     <div>
       <h1>Print Runs Admin</h1>
@@ -41,6 +41,8 @@ export default function PrintRunsAdmin() {
       <BulkLinkCsvGenerator
         campaignName={campaignName}
         startNumber={startNumber}
+        setCount={setCount}
+        count={count}
         setStartNumber={setStartNumber}
         assignee={assigneeName}
       />
@@ -49,6 +51,7 @@ export default function PrintRunsAdmin() {
         assignee={assigneeName}
         version={version}
         startNumber={startNumber}
+        count={count}
         onExtract={setMappings}
       />
 
