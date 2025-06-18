@@ -24,7 +24,8 @@ const FAC_FIELDS = [
     'email',
     'event_ids',
     'follower_ids',
-    'is_following'
+    'is_following',
+    'organizer_id'
 ];
 
 const facilitatorFields = `
@@ -83,6 +84,7 @@ async function fetchFacilitators(authUserId?: string) {
             event_ids,
             follower_ids,
             is_following: authUserId ? follower_ids.includes(authUserId) : false,
+            organizer_id: f.organizer_id,
         } as Facilitator;
     });
 }

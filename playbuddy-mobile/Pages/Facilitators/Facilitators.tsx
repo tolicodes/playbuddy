@@ -74,9 +74,11 @@ export const FacilitatorsScreen = ({
     }, [filtered, isAdmin]);
 
     const fullFacilitators = verifiedOnly.map(f => {
+        const organizerEvents = events?.filter(e => e.organizer.id === f.organizer_id) || [];
+        const ownEvents = f.event_ids?.map(e => events?.find(ev => ev.id === e)) || [];
         return {
             ...f,
-            events: f.event_ids.map(e => events?.find(ev => ev.id === e))
+            events: [...organizerEvents, ...ownEvents].filter(Boolean)
         }
     })
 

@@ -882,6 +882,7 @@ export interface Facilitator {
     is_following?: boolean;
     title?: string;
     website?: string;
+    organizer_id?: number;
 }
 
 export type CreateFacilitatorInput = Omit<

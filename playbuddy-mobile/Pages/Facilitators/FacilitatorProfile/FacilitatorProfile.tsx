@@ -18,6 +18,7 @@ import { EventsTab } from './EventsTab';
 import { BioTab } from './BioTab';
 import { ProfileHeader } from './ProfileHeader';
 import { IntroVideo } from './IntroVideo';
+import { HEADER_PURPLE } from '../../../components/styles';
 
 const STATIC_HEADER_HEIGHT = 140;
 
@@ -51,7 +52,9 @@ export default function ProfileScreen() {
     const facilitatorId = params?.facilitatorId;
     const navigation = useNavigation<NavStack>();
     const { data: facilitators, isLoading, error } = useFetchFacilitators();
-    const { data: events } = useFetchEvents();
+    const { data: events } = useFetchEvents({
+        includeFacilitatorOnly: true
+    });
     const [activeTab, setActiveTab] = useState<'bio' | 'events' | 'media'>('bio');
     const [introVideoAspectRatio, setIntroVideoAspectRatio] = useState<'portrait' | 'landscape'>('landscape');
 
@@ -64,6 +67,15 @@ export default function ProfileScreen() {
     const ownEvents = facilitator.event_ids
         ?.map(id => events?.find(e => e.id === id))
         .filter(Boolean) as Event[];
+
+
+    const organizerEvents = events?.filter(e => e.organizer.id === facilitator.organizer_id);
+
+    const combinedEvents = Array.from(
+        new Set(
+            [...ownEvents, ...(organizerEvents || [])].map(event => event.id),
+        ),
+    ).map(id => events?.find(event => event.id === id)).filter(Boolean) as Event[];
 
     const headerProps = {
         photoUrl: facilitator.profile_image_url,
@@ -131,7 +143,7 @@ export default function ProfileScreen() {
             ) : (
                 <View style={styles.bottom}>
                     {activeTab === 'events' && (
-                        <EventsTab events={ownEvents} navigation={navigation} facilitator={facilitator} />
+                        <EventsTab events={combinedEvents} navigation={navigation} facilitator={facilitator} />
                     )}
                     {activeTab === 'media' && <MediaCarousel medias={facilitator.media || []} facilitatorName={facilitator.name} />}
                 </View>
@@ -163,7 +175,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     tabContainer: {
-        backgroundColor: '#6e48aa',
+        backgroundColor: HEADER_PURPLE
     },
     tabRow: {
         flexDirection: 'row',
