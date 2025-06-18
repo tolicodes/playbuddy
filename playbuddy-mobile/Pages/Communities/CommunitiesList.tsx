@@ -18,13 +18,13 @@ import {
     useJoinCommunity,
     useLeaveCommunity,
 } from "../../Common/hooks/useCommunities";
-import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 import { logEvent } from "../../Common/hooks/logger";
 import type { Community } from "../../Common/hooks/CommonContext";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../commonTypes";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
 export const CommunitiesList = ({
     title,
@@ -45,7 +45,7 @@ export const CommunitiesList = ({
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
     const { data: myCommunities = [] } = useFetchMyCommunities();
-    const { allEvents } = useCalendarContext();
+    const { data: allEvents = [] } = useFetchEvents();
 
     const handleJoin = useCallback(
         (communityId: string) => {

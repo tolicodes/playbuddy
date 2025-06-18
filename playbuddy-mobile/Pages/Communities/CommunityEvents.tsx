@@ -1,16 +1,17 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import EventCalendarView from "../Calendar/EventCalendarView/EventCalendarView";
-import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
 export const CommunityEvents = ({ route: { params: { communityId } } }: { route: { params: { communityId: string } } }) => {
-    const { allEvents } = useCalendarContext();
+    const { data: allEvents = [] } = useFetchEvents();
     const { communities, myCommunities } = useCommonContext();
     const { authUserId } = useUserContext();
+
 
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
@@ -50,6 +51,7 @@ export const CommunityEvents = ({ route: { params: { communityId } } }: { route:
                     <Text style={styles.buttonText}>{isJoined ? 'Unfollow' : 'Follow'}</Text>
                 </TouchableOpacity>
             </View>
+
             <EventCalendarView events={communityEvents} />
         </View>
     );

@@ -79,6 +79,7 @@ export const useEvents = (appState?: string) => {
 
     const withoutFacilitatorOnly = useMemo(() => (
         allEvents.filter(event => !event.facilitator_only)
+            .filter(event => !event.non_ny)
     ), [allEvents])
 
     // Map metadata to events and apply sorting

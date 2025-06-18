@@ -20,7 +20,6 @@ import { formatDate } from '../../../Calendar/hooks/calendarUtils';
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, logEvent } from '../../../../Common/hooks/logger';
 import { UE } from '../../../../commonTypes';
 import { useUserContext } from '../../hooks/UserContext';
-import { WeeklyPromoList } from './WeeklyPicks';
 
 export const PromoScreen = ({
     onPromoScreenViewed,
