@@ -32,3 +32,13 @@ export const useCreateEvent = () => {
         },
     });
 };
+
+export const useUpdateEvent = () => {
+    return useMutation({
+        mutationFn: async (updatedEvent: any) => {
+            const { id, ...rest } = updatedEvent;
+            const response = await axios.put(`${API_BASE_URL}/events/${id}`, { ...rest, id });
+            return response.data;
+        }
+    });
+};

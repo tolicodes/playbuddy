@@ -8,6 +8,7 @@ import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
+import { flushEvents } from 'helpers/flushCache.js';
 
 const router = Router();
 
@@ -168,9 +169,18 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
 router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const event = req.body;
     const eventResult = upsertEvent(event)
+    await flushEvents();
 
     res.json(eventResult);
 });
 
+router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const event = req.body;
+    const eventResult = upsertEvent(event)
+    await flushEvents();
+
+    res.json(eventResult);
+});
 
 export default router;

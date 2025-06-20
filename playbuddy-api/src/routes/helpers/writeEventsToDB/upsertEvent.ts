@@ -1,8 +1,9 @@
-import { NormalizedEventInput, Organizer } from "commonTypes.js";
+import { NormalizedEventInput } from "commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import axios from "axios";
 import crypto from "crypto";
+import { EVENT_FIELDS } from "./eventFields.js";
 
 export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
@@ -22,100 +23,113 @@ const logError = (message: string, error?: Error) => {
     originalError(error?.stack);
 };
 
-export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEventResult> {
+function prepareOrganizer(event: NormalizedEventInput) {
     const { organizer } = event;
 
-    let organizerId = 'id' in organizer ? organizer.id : undefined;
-    const organizerCreateInput = 'name' in organizer ? {
-        name: organizer.name,
-        url: organizer.url,
-        original_id: organizer.original_id,
-    } : undefined;
+    let organizerId: string | undefined;
+    let organizerCreateInput: { id?: string; name?: string; url?: string; original_id?: string } | undefined;
 
-    console.log(`ORGANIZER: ${organizerCreateInput?.name} ${organizerId}`)
+    if ('id' in organizer) {
+        organizerId = organizer.id;
+        organizerCreateInput = { id: organizer.id };
+    } else if ('name' in organizer) {
+        organizerCreateInput = {
+            name: organizer.name,
+            url: organizer.url,
+            original_id: organizer.original_id || undefined,
+        };
+    }
+
+    const logName = organizerCreateInput?.name || organizerId || 'Unknown';
+    log(`ORGANIZER: ${organizerCreateInput?.name} ${organizerId}`);
+
+    if (!organizerCreateInput && !organizerId) {
+        logError(`ORGANIZER: No organizer id or name found`);
+        return null;
+    }
+
+    return { logName, organizerCreateInput, organizerId };
+}
 
 
-    const organizerName = organizerCreateInput?.name || organizerId || 'Unknown';
+function logEventHeader(organizerName: string, event: NormalizedEventInput) {
     const separator = '-'.repeat(process.stdout.columns);
-
     log('\n' + separator);
     log(`UPSERT EVENT: [${organizerName}] ${event.name}`);
     log(`Ticket URL: ${event.ticket_url || 'N/A'}`);
     log(separator + '\n');
+}
 
-    if (!organizerCreateInput && !organizerId) {
-        logError(`ORGANIZER: No organizer id or name found`);
-        return 'failed';
+async function tryUpsertOrganizer(organizer: { id?: string; name?: string }) {
+    log(`ORGANIZER: Upserting organizer`);
+
+    const result = await upsertOrganizer(organizer as { name: string } | { id: string });
+
+    if (!result.organizerId || !result.communityId) {
+        logError(`ORGANIZER: Failed to upsert organizer`);
+        return null;
     }
 
-    let organizerCommunityId: string | undefined;
+    return {
+        organizerId: result.organizerId,
+        organizerCommunityId: result.communityId,
+    };
+}
 
-    try {
-        log(`ORGANIZER: Upserting organizer ${organizerName}`);
-        const { organizerId: organizerIdFromUpsert, communityId: organizerCommunityIdFromUpsert } =
-            await upsertOrganizer(event.organizer as { name: string } | { id: string });
+async function resolveExistingEventId(event: NormalizedEventInput, organizerId: string) {
+    return event.id?.toString() || await checkExistingEvent(event, organizerId);
+}
 
-        if (!organizerIdFromUpsert || !organizerCommunityIdFromUpsert) {
-            logError(`ORGANIZER: Failed to upsert organizer`);
-            return 'failed';
+async function attachCommunities(eventId: string, communities: any[], organizerCommunityId?: string) {
+    for (const community of communities) {
+        if (!('id' in community)) {
+            logError(`ATTACH COMMUNITY: Inserting via community name not supported ${community.name}`);
+            return false;
         }
 
-        organizerId = organizerIdFromUpsert;
-        organizerCommunityId = organizerCommunityIdFromUpsert;
+        await attachCommunity(eventId, community.id);
+    }
 
-        const existingEventId = await checkExistingEvent(
-            event,
-            organizerId
-        );
+    if (organizerCommunityId) {
+        await attachCommunity(eventId, organizerCommunityId);
+    }
 
-        // check visibility
-        // if the new event is public, then we mark it as public, even if it's private
-        // if it's private, we don't change the privacy (it's public by default)
+    return true;
+}
+
+
+export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEventResult> {
+    const organizerInfo = prepareOrganizer(event);
+    if (!organizerInfo) return 'failed';
+
+    logEventHeader(organizerInfo.logName, event);
+
+    try {
+        const upsertedOrganizer = await tryUpsertOrganizer(event.organizer);
+        if (!upsertedOrganizer) return 'failed';
+
+        const { organizerId, organizerCommunityId } = upsertedOrganizer;
+
+        const existingEventId = await resolveExistingEventId(event, organizerId);
+
         if (existingEventId && event.visibility === 'public') {
             await setVisibility(existingEventId, 'public');
             log(`VISIBILITY: Changed to public`);
         }
 
-        let locationAreaId = NYC_LOCATION_ID;
-
-        if (!locationAreaId) {
-            logError(`LOCATION AREA: Failed to upsert location area`);
-            return 'failed';
-        }
-
-        // Upsert the event in the database
-        const upsertedEvent = await upsertEventInDB(
-            event,
-            organizerId,
-            locationAreaId,
-            existingEventId
-        );
+        const locationAreaId = NYC_LOCATION_ID; // TODO: Replace with real location
+        const upsertedEvent = await upsertEventInDB(event, organizerId, locationAreaId, existingEventId);
 
         if (!upsertedEvent) {
             logError(`EVENT: Failed to upsert event`);
             return 'failed';
         }
 
-        // attach all custom communities (interest groups)
-        for (const community of event.communities || []) {
-            // TODO: Allow upsert community
-
-            if (!('id' in community)) {
-                // TODO: Critical error because it has no community id
-                logError(`ATTACH COMMUNITY: Inserting via community name not supported ${community.name}`);
-                return 'failed';
-            }
-
-            await attachCommunity(upsertedEvent.id, community.id);
-        }
-
-
-        if (organizerCommunityId) {
-            await attachCommunity(upsertedEvent.id, organizerCommunityId);
-        }
+        const communities = event.communities || [];
+        const attached = await attachCommunities(upsertedEvent.id, communities, organizerCommunityId);
+        if (!attached) return 'failed';
 
         log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
-        // This is the success
         return existingEventId ? 'updated' : 'inserted';
 
     } catch (error) {
@@ -123,6 +137,7 @@ export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEv
         return 'failed';
     }
 }
+
 
 const setVisibility = async (eventId: string, visibility: 'public' | 'private') => {
     const { error: visibilityError } = await supabaseClient
@@ -165,42 +180,36 @@ const attachCommunity = async (eventId: string, communityId: string) => {
 }
 
 const checkExistingEvent = async (event: NormalizedEventInput, organizerId: string): Promise<null | string> => {
-    const filterString = `original_id.eq."${event.original_id}",and(start_date.eq."${event.start_date}",organizer_id.eq."${(organizerId)}"),and(start_date.eq."${(event.start_date)}",name.eq."${(event.name)}")`;
+    const filters: string[] = [];
+
+    if (event.original_id) {
+        filters.push(`original_id.eq.${event.original_id}`);
+    }
+
+    // start_date and organizer_id matches
+    filters.push(`and(start_date.eq.${event.start_date},organizer_id.eq.${organizerId})`);
+
+    // start_date and event name matches
+    filters.push(`and(start_date.eq.${event.start_date},name.eq.${event.name})`);
 
     // Check for existing event by original_id or by start_date and organizer_id
     const { data: existingEvents, error: fetchError } = await supabaseClient
         .from("events")
         .select("id")
-
-        // original_id matches
-        // OR start_date and organizer_id matches
-        // OR start_date and event name matches 
-
-        // original_id.eq.${event.original_id},
-        // and(
-        //   start_date.eq.${event.start_date},
-        //   organizer_id.eq.${organizerId}
-        // ),
-        // and(
-        //   start_date.eq.${event.start_date},
-        //   name.eq.${event.name}
-        // )
-        .or(filterString)
-    // for some reason it doesn't like when I format it like above
+        .or(filters.join(','));
 
 
     // error is not null if it doesn't exist
     if (fetchError && fetchError.code !== "PGRST116") {
-
         throw new Error(`CHECK EXISTING EVENT: Error fetching existing event ${fetchError?.message}`);
     }
-    // otherwise it doesn't exist and we continue
 
     if (existingEvents && existingEvents.length > 0) {
+        console.log(`CHECK EXISTING EVENT: Found existing event ${existingEvents[0].id}`);
         return existingEvents[0].id;
     }
 
-    // otherwise it doesn't exist
+    console.log(`CHECK EXISTING EVENT: No existing event found`);
     return null;
 }
 
@@ -217,8 +226,10 @@ const downloadImage = async (url: string) => {
                 responseType: 'arraybuffer', // Download image as binary data
             });
         } catch (error) {
-            throw new Error(`IMAGE: Error downloading image: ${error}`);
+            console.error(`IMAGE: Error downloading image: ${error}`);
+            return url;
         }
+
 
         const imageBuffer = Buffer.from(response.data, 'binary');
 
@@ -257,43 +268,39 @@ const downloadImage = async (url: string) => {
     }
 }
 
+
+const buildUpsertPayload = (
+    event: NormalizedEventInput,
+    overrides: Record<string, any> = {}
+) => {
+    const payload: Record<string, any> = {};
+
+    for (const field of EVENT_FIELDS) {
+        if (overrides[field] !== undefined) {
+            payload[field] = overrides[field];
+        } else if (event[field] !== undefined) {
+            payload[field] = event[field];
+        }
+    }
+
+    return payload;
+};
+
 // Upsert event in the database
 const upsertEventInDB = async (event: NormalizedEventInput, organizerId: string, locationAreaId: string, existingEventId: string | null) => {
     const imageUrl = event.image_url ? await downloadImage(event.image_url) : null;
+
     const { data: upsertedEvent, error: upsertError } = await supabaseClient
         .from("events")
         .upsert({
+            ...buildUpsertPayload(event),
             id: existingEventId || undefined,
-            original_id: event.original_id || '',
             organizer_id: organizerId,
-            type: event.type || '',
-            recurring: event.recurring || '',
-
-            name: event.name || '',
-            start_date: event.start_date || '',
-            end_date: event.end_date || '',
-
-            ticket_url: event.ticket_url || '',
-            event_url: event.event_url || '',
             image_url: imageUrl || '',
-
-            location: event.location || '',
-            price: event.price || '',
-
-            description: event.description || '',
-            tags: event.tags || [],
-            play_party: event.play_party || false,
-
             timestamp_scraped: event.timestamp_scraped || new Date(),
-            source_origination_group_id: event.source_origination_group_id || '',
-            source_origination_group_name: event.source_origination_group_name || '',
-            source_origination_platform: event.source_origination_platform || '',
-            source_ticketing_platform: event.source_origination_platform || '',
-            dataset: event.dataset || '',
+            // TODO: Do we need?
             visibility: event.visibility || 'public',
-            facilitator_only: event.facilitator_only,
-
-            location_area_id: locationAreaId
+            location_area_id: locationAreaId,
         }, { onConflict: 'id' })
         .select()
         .single();

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
@@ -18,11 +18,10 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { useDropzone } from 'react-dropzone';
-import { useFetchOrganizers } from '../common/db-axios/useOrganizers';
-import { useCreateEvent } from '../common/db-axios/useEvents';
-import { supabaseClient } from '../lib/supabaseClient';
-
-
+import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
+import { useCreateEvent, useFetchEvents } from '../../common/db-axios/useEvents';
+import { supabaseClient } from '../../lib/supabaseClient';
+import { useUpdateEvent } from '../../common/db-axios/useEvents';
 
 const schema = Yup.object().shape({
     name: Yup.string().required('Required'),
@@ -33,27 +32,45 @@ const schema = Yup.object().shape({
     ticket_url: Yup.string().url('Invalid URL').required('Required'),
     image_url: Yup.string().required('Required'),
     description: Yup.string().required('Required'),
-    type: Yup.string().oneOf(['event', 'retreat']).required('Required'),
+    type: Yup.string().optional(),
     organizer: Yup.number().optional(),
     organizer_name: Yup.string().optional(),
-    play_party: Yup.boolean().required('Required'),
-    facilitator_only: Yup.boolean().required('Required'),
+    play_party: Yup.boolean().optional().nullable(),
+    facilitator_only: Yup.boolean().optional().nullable(),
+    play_party_instructions: Yup.string().optional(),
+    vetted: Yup.boolean().optional().nullable(),
+    vetting_url: Yup.string().optional(),
+    location: Yup.string().optional(),
 });
 
 type FormValues = Yup.InferType<typeof schema>
 
 
-export default function AddEventPage() {
+export default function EditEventPage() {
     const { data: organizers, isLoading: organizersLoading } = useFetchOrganizers();
     const createEventMutation = useCreateEvent()
 
-    const {
-        control,
-        handleSubmit,
-        formState: { errors, isSubmitting },
-        setValue,
-        watch,
-    } = useForm<FormValues>({
+    const [editingId, setEditingId] = useState<string | null>(null);
+
+    useEffect(() => {
+        const pathSegments = window.location.pathname.split('/');
+        const lastSegment = pathSegments[pathSegments.length - 1];
+
+        if (lastSegment && lastSegment !== 'new' && /^[a-zA-Z0-9\-]+$/.test(lastSegment)) {
+            setEditingId(lastSegment);
+        } else {
+            setEditingId(null);
+        }
+    }, []);
+
+    const updateEventMutation = useUpdateEvent();
+
+    const { data: events = [], isLoading: loadingEvents } = useFetchEvents();
+
+    const eventToEdit = events.find((e: any) => e.id + '' === editingId);
+
+
+    const form = useForm<FormValues>({
         // @ts-ignore
         resolver: yupResolver(schema),
         defaultValues: {
@@ -68,8 +85,28 @@ export default function AddEventPage() {
             organizer_name: '',
             play_party: false,
             facilitator_only: false,
+            vetted: false,
+            vetting_url: '',
+            location: '',
         },
     });
+    const { control, handleSubmit, setValue, reset, watch, formState: { errors, isSubmitting } } = form;
+
+    useEffect(() => {
+        if (eventToEdit) {
+            reset({
+                ...eventToEdit,
+                start_date: new Date(eventToEdit.start_date),
+                end_date: new Date(eventToEdit.end_date),
+                organizer: eventToEdit.organizer?.id || 0,
+                organizer_name: eventToEdit.organizer?.name || '',
+                vetted: eventToEdit.vetted || false,
+                vetting_url: eventToEdit.vetting_url || '',
+                location: eventToEdit.location || '',
+            });
+        }
+    }, [eventToEdit, reset]);
+
 
     const imageUrl = watch('image_url');
 
@@ -97,7 +134,6 @@ export default function AddEventPage() {
     const { getRootProps, getInputProps } = useDropzone({ onDrop });
 
     const onSubmit = (data: FormValues) => {
-        console.log('yo')
         const organizerId = data.organizer?.toString();
         const organizerName = data.organizer_name?.toString() || '';
 
@@ -106,31 +142,27 @@ export default function AddEventPage() {
             return;
         }
 
-        const organizer = organizerId && organizerId !== '0' ? {
-            id: organizerId,
-        } : {
-            name: organizerName
-        }
-
-        console.log('submitting', data)
+        const organizer = organizerId && organizerId !== '0'
+            ? { id: organizerId }
+            : { name: organizerName };
 
         const payload = {
             ...data,
-            event_url: data.ticket_url,
-            ticket_url: data.ticket_url,
-            location: '',
-            price: '0',
-            tags: [],
-            recurring: 'none' as 'none' | 'weekly' | 'monthly',
             organizer,
+            event_url: data.ticket_url,
             start_date: data.start_date.toISOString(),
             end_date: data.end_date.toISOString(),
-            image_url: data.image_url,
-            play_party: data.play_party,
-            facilitator_only: data.facilitator_only,
+            price: '0',
+            tags: [],
+            recurring: 'none',
         };
 
-        createEventMutation.mutate(payload);
+        if (editingId) {
+            updateEventMutation.mutate({ id: editingId, ...payload });
+        } else {
+            // @ts-ignore
+            createEventMutation.mutate(payload);
+        }
     };
 
     return (
@@ -139,7 +171,9 @@ export default function AddEventPage() {
                 Add New Event
             </Typography>
             {/* @ts-ignore */}
-            <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <form onSubmit={handleSubmit(onSubmit, (err) => {
+                alert('Validation failed: ' + JSON.stringify(err));
+            })}>
                 <Controller
                     name="name"
                     control={control}
@@ -278,6 +312,15 @@ export default function AddEventPage() {
                 />
 
                 <Controller
+                    name="location"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField {...field} label="Location" fullWidth margin="normal"
+                            error={!!errors.location} helperText={errors.location?.message} />
+                    )}
+                />
+
+                <Controller
                     name="type"
                     control={control}
                     render={({ field }) => (
@@ -319,14 +362,50 @@ export default function AddEventPage() {
                     )}
                 />
 
+                <Controller
+                    name="vetted"
+                    control={control}
+                    render={({ field }) => (
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel>Vetted</InputLabel>
+                            <Select {...field} label="Vetted">
+                                <MenuItem value="true">Yes</MenuItem>
+                                <MenuItem value="false">No</MenuItem>
+                            </Select>
+                        </FormControl>
+                    )}
+                />
+
+                <Controller
+                    name="vetting_url"
+                    control={control}
+                    render={({ field }) => (
+                        <TextField
+                            {...field}
+                            label="Vetting URL"
+                            fullWidth
+                            margin="normal"
+                            error={!!errors.vetting_url}
+                            helperText={errors.vetting_url?.message}
+                        />
+                    )}
+                />
+
                 <Button
                     variant="contained"
                     type="submit"
-                    disabled={isSubmitting || createEventMutation.isPending}
+                    disabled={isSubmitting || createEventMutation.isPending || updateEventMutation.isPending}
                 >
-                    {createEventMutation.isPending ? 'Submitting...' : 'Add Event'}
+                    {editingId
+                        ? updateEventMutation.isPending
+                            ? 'Updating...'
+                            : 'Update Event'
+                        : createEventMutation.isPending
+                            ? 'Submitting...'
+                            : 'Add Event'}
                 </Button>
-            </Box>
-        </Paper>
+
+            </form>
+        </Paper >
     );
 }
