@@ -183,9 +183,10 @@ export interface Event extends EventDataSource {
     play_party?: boolean;
 
     vetted?: boolean;
+    vetting_url?: string;
+
 
     non_ny?: boolean;
-
 }
 
 /**
@@ -237,6 +238,7 @@ export interface EventDataSource {
   * before community/location dependencies are resolved.
   */
 export interface NormalizedEventInput extends Omit<Event, 'id' | 'organizer' | 'location_area' | 'communities' | 'promo_codes'> {
+    id?: number;
     organizer: Omit<Organizer, 'id'> | { id: string };
     /**
      * The location area the event belongs to (joined on location_area_id)
@@ -646,7 +648,7 @@ export interface PromoCode {
      * Scope of this code (organizer or event).
      * Constrained by promo_codes_scope_check.
      */
-    scope: string;
+    scope?: string;
 
     /** Creation timestamp (defaults to now). */
     created_at: string | null;
@@ -656,6 +658,53 @@ export interface PromoCode {
 
     /** Product type (nullable). */
     product_type: string | null;
+}
+
+export interface CreatePromoCodeInput {
+    /** References organizers.id (nullable). */
+    organizer_id: number;
+    /** Actual promo code string (required). */
+    promo_code: string;
+
+    /** Discount value (numeric(6,2), must be >= 0). */
+    discount: number;
+
+    /**
+     * Discount type (percent or fixed).
+     * Constrained by promo_codes_discount_type_check.
+     */
+    discount_type: string;
+
+    /**
+     * Scope of this code (organizer or event).
+     * Constrained by promo_codes_scope_check.
+     */
+    scope?: string;
+}
+
+export interface UpdatePromoCodeInput {
+
+    id: string;
+
+    organizer_id: number;
+
+    /** Actual promo code string (required). */
+    promo_code: string;
+
+    /** Discount value (numeric(6,2), must be >= 0). */
+    discount: number;
+
+    /**
+     * Discount type (percent or fixed).
+     * Constrained by promo_codes_discount_type_check.
+     */
+    discount_type: string;
+
+    /**
+     * Scope of this code (organizer or event).
+     * Constrained by promo_codes_scope_check.
+     */
+    scope?: string;
 }
 
 /**

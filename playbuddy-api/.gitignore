@@ -4,3 +4,5 @@ node_modules/
 cloudconfig
 .env
 dist
+
+src/scripts/qrcodes/input

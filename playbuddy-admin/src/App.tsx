@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, Link as RouterLink } from "react-router-dom";
 import { AppBar, Toolbar, Tabs, Tab, Box } from "@mui/material";
 import WeeklyPicks from "./pages/WeeklyPicksScreen";
-import AddEventScreen from "./pages/AddEventScreen";
+import AddEventScreen from "./pages/Events/EditEventScreen";
 import FacilitatorsListScreen from "./pages/Facilitators/FacilitatorsListScreen";
 import EditFacilitatorScreen from "./pages/Facilitators/EditFacilitatorScreen";
 // import Organizers from "./pages/OrganizersScreen";
@@ -11,6 +11,7 @@ import LoginScreen from "./pages/LoginScreen";
 import axios from 'axios'
 import PrintRuns from "./pages/PrintRuns/PrintRunsAdmin";
 import { PromoCodeEventManager } from "./pages/PromoCodes/PromoCodeEventManager";
+import EventsListScreen from "./pages/Events/EventsListScreen";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -36,7 +37,15 @@ export default function App() {
   useAuth();
 
   // Determine the active tab index based on the current path
-  const tabIndex = ['/login', '/weekly-picks', '/events/add', '/facilitators', '/facilitators/new', '/facilitators/:id', '/print-runs', '/promo-codes'].indexOf(pathname);
+  const tabIndex = [
+    '/',
+    '/weekly-picks',
+    '/events/add',
+    '/facilitators',
+    '/facilitators/new',
+    '/facilitators/:id',
+    '/print-runs',
+    '/promo-codes'].indexOf(pathname);
 
   return (
     <Box>
@@ -44,9 +53,9 @@ export default function App() {
       <AppBar position="sticky" color="primary">
         <Toolbar variant="dense">
           <Tabs value={tabIndex} textColor="inherit" indicatorColor="secondary">
-            <Tab label="Login" component={RouterLink} to="/login" />
+            <Tab label="Login" component={RouterLink} to="/" />
             <Tab label="Weekly Picks" component={RouterLink} to="/weekly-picks" />
-            <Tab label="Events" component={RouterLink} to="/events/add" />
+            <Tab label="Events" component={RouterLink} to="/events" />
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
             <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
@@ -57,12 +66,14 @@ export default function App() {
       {/* Route definitions */}
       <Routes>
         {/* <Route path="/organizers" element={<Organizers />} /> */}
+        <Route path="/" element={<LoginScreen />} />
         <Route path="/weekly-picks" element={<WeeklyPicks />} />
+        <Route path="/events" element={<EventsListScreen />} />
         <Route path="/events/add" element={<AddEventScreen />} />
+        <Route path="/events/:id" element={<AddEventScreen />} />
         <Route path="/facilitators" element={<FacilitatorsListScreen />} />
         <Route path="/facilitators/new" element={<EditFacilitatorScreen />} />
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />
-        <Route path="/login" element={<LoginScreen />} />
         <Route path="/print-runs" element={<PrintRuns />} />
         <Route path="/promo-codes" element={<PromoCodeEventManager />} />
       </Routes>

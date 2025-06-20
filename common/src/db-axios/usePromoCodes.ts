@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "../config";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { PromoCode } from "../types/commonTypes";
+import { CreatePromoCodeInput, UpdatePromoCodeInput, PromoCode } from "../types/commonTypes";
 
 export const useFetchPromoCodes = () => {
     return useQuery({
@@ -16,7 +16,7 @@ export const useFetchPromoCodes = () => {
 export const useCreatePromoCode = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (promoCode: PromoCode) => {
+        mutationFn: async (promoCode: CreatePromoCodeInput) => {
             const response = await axios.post(`${API_BASE_URL}/promo_codes`, promoCode);
             queryClient.invalidateQueries({ queryKey: ['promoCodes'] });
             return response.data as PromoCode;
@@ -27,7 +27,7 @@ export const useCreatePromoCode = () => {
 export const useUpdatePromoCode = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async (promoCode: PromoCode) => {
+        mutationFn: async (promoCode: UpdatePromoCodeInput) => {
             const response = await axios.put(`${API_BASE_URL}/promo_codes/${promoCode.id}`, promoCode);
             queryClient.invalidateQueries({ queryKey: ['promoCodes'] });
             return response.data as PromoCode;

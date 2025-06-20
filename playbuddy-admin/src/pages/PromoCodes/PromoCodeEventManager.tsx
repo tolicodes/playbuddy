@@ -6,6 +6,7 @@ import {
     useDeletePromoCodeFromEvent,
     useFetchPromoCodes,
 } from '../../common/db-axios/usePromoCodes';
+import { CreatePromoCode } from './CreatePromoCode';
 
 export function PromoCodeEventManager() {
     const [selectedOrganizerId, setSelectedOrganizerId] = useState('');
@@ -77,6 +78,8 @@ export function PromoCodeEventManager() {
 
             {selectedOrganizerId && (
                 <div style={{ marginTop: '30px' }}>
+                    <CreatePromoCode organizerId={selectedOrganizerId} />
+
                     <h3>Events</h3>
                     {filteredEvents.map(event => {
                         const attached = event.promo_codes?.[0];
