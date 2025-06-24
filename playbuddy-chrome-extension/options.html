@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Playbuddy FetLife Scraper</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        max-width: 600px;
+      }
+
+      h1 {
+        font-size: 1.5em;
+      }
+
+      #log {
+        margin-top: 20px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background: #f9f9f9;
+        height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+
+      input,
+      button {
+        margin-top: 10px;
+        padding: 8px;
+        font-size: 1em;
+      }
+
+      input {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>FetLife Scraper</h1>
+    <button id="start">Start Scrape</button>
+
+    <div id="log"></div>
+
+    <script src="src/options.js"></script>
+  </body>
+</html>

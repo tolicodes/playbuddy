@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Playbuddy Scraper Extension",
+  "version": "1.0",
+  "description": "Scrapes event data from FetLife organizer pages.",
+  "permissions": [
+    "tabs",
+    "scripting",
+    "downloads",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://fetlife.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "options_page": "options.html"
+}
