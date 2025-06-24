@@ -5,9 +5,10 @@ interface BadgeRowProps {
     vetted?: boolean;
     playParty?: boolean;
     center?: boolean;
+    munch?: boolean;
 }
 
-export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center }) => (
+export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, munch }) => (
     <View style={[
         styles.badgesRow,
         { justifyContent: center ? 'center' : 'flex-start' }
@@ -20,6 +21,11 @@ export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center })
         {playParty && (
             <View style={styles.playPartyBadge}>
                 <Text style={styles.playPartyText}>Play Party</Text>
+            </View>
+        )}
+        {munch && (
+            <View style={styles.munchBadge}>
+                <Text style={styles.munchText}>Munch</Text>
             </View>
         )}
     </View>
@@ -50,6 +56,18 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     playPartyText: {
+        fontSize: 12,
+        color: 'white',
+        fontWeight: 'bold',
+    },
+    munchBadge: {
+        backgroundColor: '#FFC107',
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginRight: 8,
+    },
+    munchText: {
         fontSize: 12,
         color: 'white',
         fontWeight: 'bold',

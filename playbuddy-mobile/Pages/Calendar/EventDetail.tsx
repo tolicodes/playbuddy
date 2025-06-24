@@ -246,8 +246,11 @@ export const EventDetail = ({ route }) => {
         });
     };
 
+    const noImageOrVideo = !selectedEvent.image_url && !selectedEvent.video_url;
+    console.log('noImageOrVideo', noImageOrVideo);
     return (
         <>
+
             <TicketPromoModal
                 visible={discountModalVisible}
                 promoCode={promoCode?.promo_code || 'N/A'}
@@ -270,10 +273,10 @@ export const EventDetail = ({ route }) => {
             <ScrollView style={styles.scrollView}>
                 {selectedEvent.video_url ? (
                     <VideoPlayer uri={selectedEvent.video_url} />
-                ) : (
-                    <Image source={{ uri: imageUrl }} style={styles.fullViewImage} />
-                )}
-                <View style={styles.headerCard}>
+                ) : selectedEvent.image_url ? (
+                    <Image source={{ uri: selectedEvent.image_url }} style={styles.fullViewImage} />
+                ) : null}
+                <View style={[styles.headerCard, noImageOrVideo && styles.headerCardNoImage]}>
                     <View style={styles.titleRow}>
                         <MaterialIcons name="event" size={24} color="#fff" style={styles.icon} />
                         <Text style={styles.headerTitle}>{selectedEvent.name}</Text>
@@ -304,13 +307,48 @@ export const EventDetail = ({ route }) => {
 
                 </View>
                 <View style={styles.contentContainer}>
-
-
                     {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
+                    {selectedEvent.vetted && (
+                        <View style={styles.vettedInfo}>
+                            <Text style={styles.vettedInfoText}>
+                                This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
+                                {selectedEvent.vetting_url && <Text style={{ color: '#4a6ee0', fontWeight: 'bold' }}>
+                                    <Text onPress={() => Linking.openURL(selectedEvent.vetting_url || '')}>here</Text>
+                                </Text>}
+                            </Text>
+                        </View>
+                    )}
+                    {selectedEvent.munch_id && (
+                        <View style={styles.infoCardMunch}>
+                            <Text style={styles.infoCardText}>
+                                🍽️ This event is a <Text style={{ fontWeight: 'bold' }}>munch</Text>. Learn more on the Munch page:
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() =>
+                                    navigation.navigate('Munch Details', { munchId: selectedEvent.munch_id })
+                                }
+                                style={styles.infoCardButton}
+                            >
+                                <Text style={styles.infoCardButtonText}>Go to Munch</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
+                    {selectedEvent.ticket_url?.includes('fetlife') && (
+                        <View style={styles.infoCardFetlife}>
+                            <Text style={styles.infoCardText}>
+                                🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
+                            </Text>
+                            <TouchableOpacity
+                                onPress={() => Linking.openURL(selectedEvent.ticket_url)}
+                                style={styles.infoCardButton}
+                            >
+                                <Text style={styles.infoCardButtonText}>Open in FetLife</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
-
-                    <Markdown>{selectedEvent.description.replace('\n', '\n\n')}</Markdown>
+                    <Markdown style={markdownStyles}>{selectedEvent.description.replace('\n', '\n\n')}</Markdown>
                 </View>
             </ScrollView>
         </>
@@ -415,6 +453,11 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 5,
     },
+    headerCardNoImage: {
+        marginTop: 0,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
+    },
     titleRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -514,8 +557,86 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#7F5AF0',
     },
+    // Replace your existing styles for these:
+    vettedInfo: {
+        backgroundColor: '#E8F5E9',
+        borderLeftWidth: 5,
+        borderLeftColor: '#4CAF50',
+        padding: 12,
+        marginBottom: 16,
+        borderRadius: 12,
+    },
+
+    vettedInfoText: {
+        fontSize: 14,
+        color: '#2E7D32',
+        fontWeight: '500',
+    },
+
+    infoCardMunch: {
+        backgroundColor: '#FFF3E0',
+        borderLeftWidth: 5,
+        borderLeftColor: '#FFA000',
+        padding: 14,
+        borderRadius: 12,
+        marginVertical: 12,
+    },
+
+    infoCardFetlife: {
+        backgroundColor: '#E1F5FE',
+        borderLeftWidth: 5,
+        borderLeftColor: '#039BE5',
+        padding: 14,
+        borderRadius: 12,
+        marginVertical: 12,
+    },
+
+    infoCardText: {
+        fontSize: 14,
+        color: '#333',
+        lineHeight: 20,
+        marginBottom: 8,
+    },
+
+    infoCardButton: {
+        backgroundColor: '#7F5AF0',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 24,
+        alignSelf: 'flex-start',
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 5,
+        elevation: 2,
+    },
+
+    infoCardButtonText: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#fff',
+    },
+
 
 });
+
+const markdownStyles = {
+    heading1: {
+        marginTop: 20,
+    },
+    heading2: {
+        marginTop: 20,
+    },
+    bullet_list: {
+        marginTop: 8,
+    },
+    list_item: {
+        marginBottom: 12,
+    },
+    paragraph: {
+        marginBottom: 12,
+    },
+};
 
 
 export default EventDetail;

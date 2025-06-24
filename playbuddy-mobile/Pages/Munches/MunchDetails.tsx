@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+// Final merged file — MunchDetails screen
+
+import React, { useEffect, useMemo, useState } from "react";
 import {
     View,
     Text,
@@ -7,6 +9,7 @@ import {
     ActivityIndicator,
     Platform,
     Dimensions,
+    TouchableOpacity,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import FAIcon from "react-native-vector-icons/FontAwesome";
@@ -15,7 +18,11 @@ import { LAVENDER_BACKGROUND } from "../../components/styles";
 import type { Munch } from "../../commonTypes";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 import { LinkifyText } from "./LinkifyText";
+import { EventListItem } from "../Calendar/EventListItem";
+import { MunchDetailsEventsTab } from "./MunchDetailsEventsTab";
+import { MunchDetailsMainTab } from "./MunchDetailsMainTab";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -30,7 +37,14 @@ export const MunchDetails = () => {
     const { munchId } = route.params;
 
     const { data: munches = [], isLoading } = useFetchMunches();
+    const { data: events = [] } = useFetchEvents({ includeFacilitatorOnly: true });
+
+    const munchEvents = useMemo(() => {
+        return events.filter(e => e.munch_id === parseInt(munchId, 10));
+    }, [events, munchId]);
+
     const [munch, setMunch] = useState<Munch | null>(null);
+    const [activeTab, setActiveTab] = useState<'details' | 'events'>('details');
 
     useEffect(() => {
         navigation.setOptions({ title: "Munch Details" });
@@ -58,7 +72,7 @@ export const MunchDetails = () => {
     const formatHosts = (hosts: string | null) => {
         if (!hosts) return null;
         const list = hosts
-            .split(/\r?\n|,/)
+            .split(/\r?\n|,/) // handle newline or comma
             .map((h) => h.trim())
             .filter((h) => h.length > 0);
         return list.join(" • ");
@@ -76,132 +90,38 @@ export const MunchDetails = () => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.headerCard}>
-                <View style={styles.titleRow}>
-                    <FAIcon name="cutlery" size={28} color="#666" style={styles.icon} />
-                    <Text style={styles.headerTitle}>{munch.title}</Text>
-                </View>
-
-                <View style={styles.badgesRow}>
-                    {munch.verified && (
-                        <View style={[styles.badge, styles.verifiedBadge]}>
-                            <FAIcon name="check-circle" size={14} color="#FFF" />
-                            <Text style={styles.badgeText}>Verified</Text>
-                        </View>
-                    )}
-                    {munch.location && (
-                        <View style={[styles.badge, styles.locationBadge]}>
-                            <FAIcon name="map-marker" size={14} color="#FFF" />
-                            <Text style={styles.badgeText} numberOfLines={1} ellipsizeMode="tail">
-                                {munch.location}
+            <View style={styles.tabContainer}>
+                <View style={styles.tabRow}>
+                    {(['details', 'events'] as const).map(key => (
+                        <TouchableOpacity
+                            key={key}
+                            style={[styles.tabButton, activeTab === key && styles.activeTab]}
+                            onPress={() => setActiveTab(key)}
+                        >
+                            <Text style={activeTab === key ? styles.activeTabText : styles.tabText}>
+                                {key === 'details' ? 'Munch Details' : 'Munch Events'}
                             </Text>
-                        </View>
-                    )}
-                    {munch.main_audience && (
-                        <View style={[styles.badge, styles.audienceBadge]}>
-                            <FAIcon name="users" size={14} color="#FFF" />
-                            <Text style={styles.badgeText} numberOfLines={1} ellipsizeMode="tail">
-                                {munch.main_audience}
-                            </Text>
-                        </View>
-                    )}
+                        </TouchableOpacity>
+                    ))}
                 </View>
-
-                {munch.tags && (
-                    <View style={styles.badgesRow}>
-                        {munch.tags.map(tag => (
-                            <View style={[styles.badge, styles.tagBadge]} key={tag}>
-                                <Text style={styles.badgeText}>{tag}</Text>
-                            </View>
-                        ))}
-                    </View>
-                )}
-
-
-
-                {(munch.schedule_text || munch.cadence) && (
-                    <Text style={styles.scheduleText}>
-                        {munch.schedule_text ?? ""}
-                        {munch.schedule_text && munch.cadence ? " • " : ""}
-                        {munch.cadence ?? ""}
-                    </Text>
-                )}
             </View>
 
-            {munch.notes && (
-                <View style={styles.descriptionCard}>
-                    <Text style={styles.sectionHeader}>Description</Text>
-                    <LinkifyText platform="fetlife" style={styles.descriptionText}>
-                        {munch.notes}
-                    </LinkifyText>
-                </View>
+
+
+            {activeTab === 'details' ? (
+                <MunchDetailsMainTab munch={munch} />
+            ) : (
+                <MunchDetailsEventsTab munch={munch} events={munchEvents} />
             )}
-
-            <View style={styles.instructionsCard}>
-                <Text style={styles.sectionHeader}>How to Go to This Munch</Text>
-                <View style={styles.numberedContainer}>
-                    <Text style={styles.numberedLine}>
-                        1. <Text style={styles.boldText}>Tap a host’s Fetlife profile</Text>.
-                    </Text>
-                    <Text style={styles.numberedLine}>
-                        2. Scroll to the bottom to find <Text style={styles.boldText}>"Events Organizing"</Text>.
-                    </Text>
-                    <Text style={styles.numberedLine}>
-                        3. <Text style={styles.boldText}>View upcoming munches</Text>. If none, none scheduled.
-                    </Text>
-                    <Text style={styles.numberedLine}>
-                        4. <Text style={styles.boldText}>Message a host</Text> for details.
-                    </Text>
-                </View>
-                <View style={styles.horizontalRule} />
-
-                {munch.hosts && (
-                    <View style={styles.fieldRow} key="Hosts">
-                        <Text style={styles.fieldLabel}>Hosts' Fetlife</Text>
-                        <LinkifyText platform="fetlife" style={styles.fieldValue}>
-                            {formatHosts(munch.hosts)}
-                        </LinkifyText>
-                    </View>
-                )}
-                {
-                    munch.website && (
-                        <View style={styles.fieldRow} key="Website">
-                            <Text style={styles.fieldLabel}>Website</Text>
-                            <LinkifyText style={styles.fieldValue}>
-                                {munch.website}
-                            </LinkifyText>
-                        </View>
-                    )
-                }
-            </View>
-
-            <View style={styles.detailCard}>
-                {renderField("Cost of Entry", munch.cost_of_entry)}
-                {renderField("Age Restriction", munch.age_restriction)}
-                {renderField("Open to Everyone?", munch.open_to_everyone)}
-                {renderField("Status", munch.status)}
-            </View>
-
-            <View style={styles.thanksCard}>
-                <Text style={styles.sectionHeader}>Special Thanks</Text>
-                <Text style={styles.thanksText}>
-                    This list was compiled by a community member, <Text style={styles.boldText}>Rose</Text>.
-                </Text>
-                <Text style={styles.thanksMessage}>
-                    <Text style={styles.boldText}>Message from Rose: </Text>
-                    <LinkifyText platform="fetlife">Hi, I’m @Rosamaru I hope this is helpful in your kink/BDSM journey. Pace yourself — it pays off.</LinkifyText>
-                </Text>
-            </View>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND },
-    content: { padding: 16, paddingBottom: 40 },
+    content: { paddingBottom: 40 },
     centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: LAVENDER_BACKGROUND },
     errorText: { fontSize: 16, color: "#E74C3C", textAlign: "center" },
-
     headerCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 4 }, android: { elevation: 3 } }) },
     titleRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
     icon: { marginRight: 12 },
@@ -214,11 +134,9 @@ const styles = StyleSheet.create({
     audienceBadge: { backgroundColor: "#F57C00" },
     badgeText: { marginLeft: 4, fontSize: 12, fontWeight: "600", color: "#FFF" },
     scheduleText: { fontSize: 16, color: "#4E342E", marginTop: 8 },
-
     descriptionCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
     sectionHeader: { fontSize: 18, fontWeight: "600", color: "#333", marginBottom: 8 },
     descriptionText: { fontSize: 16, color: "#333", lineHeight: 24 },
-
     instructionsCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
     numberedContainer: { marginTop: 8, marginLeft: 4 },
     numberedLine: { fontSize: 16, color: "#333", lineHeight: 24, marginBottom: 6 },
@@ -227,10 +145,14 @@ const styles = StyleSheet.create({
     fieldRow: { marginBottom: 12 },
     fieldLabel: { fontSize: 14, fontWeight: "600", color: "#555", marginBottom: 4 },
     fieldValue: { fontSize: 16, color: "#333", lineHeight: 22 },
-
     detailCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
-
     thanksCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
     thanksText: { fontSize: 16, color: "#333", lineHeight: 22, marginBottom: 8 },
-    thanksMessage: { fontSize: 16, color: "#333", lineHeight: 22 }
+    thanksMessage: { fontSize: 16, color: "#333", lineHeight: 22 },
+    tabContainer: { backgroundColor: '#fff', marginBottom: 10, borderRadius: 12 },
+    tabRow: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 5, backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, marginBottom: 10 },
+    tabButton: { paddingVertical: 8 },
+    tabText: { color: '#888' },
+    activeTab: { borderBottomWidth: 3, borderBottomColor: '#7F5AF0' },
+    activeTabText: { color: '#7F5AF0', fontWeight: '600' },
 });

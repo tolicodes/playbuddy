@@ -12,6 +12,7 @@ import axios from 'axios'
 import PrintRuns from "./pages/PrintRuns/PrintRunsAdmin";
 import { PromoCodeEventManager } from "./pages/PromoCodes/PromoCodeEventManager";
 import EventsListScreen from "./pages/Events/EventsListScreen";
+import ImportFetlifeScreen from "./pages/Events/ImportFetlifeScreen";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -19,15 +20,11 @@ function setAxiosAuthHeader(sessionToken: string) {
 }
 
 const useAuth = () => {
-  const [sessionToken, setSessionToken] = useState<string>(
-    localStorage.getItem('supabase.auth.token') || ''
-  )
+  const sessionToken = localStorage.getItem('supabase.auth.token') || ''
 
-  useEffect(() => {
-    if (sessionToken) {
-      setAxiosAuthHeader(sessionToken)
-    }
-  }, [sessionToken])
+  if (sessionToken) {
+    setAxiosAuthHeader(sessionToken)
+  }
 }
 
 export default function App() {
@@ -45,7 +42,9 @@ export default function App() {
     '/facilitators/new',
     '/facilitators/:id',
     '/print-runs',
-    '/promo-codes'].indexOf(pathname);
+    '/promo-codes',
+    '/events/import-fetlife'
+  ].indexOf(pathname);
 
   return (
     <Box>
@@ -71,6 +70,7 @@ export default function App() {
         <Route path="/events" element={<EventsListScreen />} />
         <Route path="/events/add" element={<AddEventScreen />} />
         <Route path="/events/:id" element={<AddEventScreen />} />
+        <Route path="/events/import-fetlife" element={<ImportFetlifeScreen />} />
         <Route path="/facilitators" element={<FacilitatorsListScreen />} />
         <Route path="/facilitators/new" element={<EditFacilitatorScreen />} />
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />

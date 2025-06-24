@@ -19,14 +19,16 @@ interface ListItemProps {
     item: EventWithMetadata;
     onPress: (event: Event) => void;
     buddiesAttending?: Buddy[];
+    noPadding?: boolean;
+    fullDate?: boolean;
 }
 
-export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
+export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId, currentDeepLink } = useUserContext();
 
     const promoCode = getEventPromoCodes(item)?.[0];
-    const formattedDate = formatDate(item);
+    const formattedDate = formatDate(item, fullDate);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
     const vetted = item.vetted;
@@ -66,6 +68,12 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
         });
     };
 
+    const placeHolderImage = item.munch_id ?
+        <FAIcon name="cutlery" size={50} color="#666" style={styles.icon} />
+        :
+        <FAIcon name="calendar" size={50} color="#666" style={styles.icon} />
+
+
     return (
         <>
             <TicketPromoModal
@@ -87,11 +95,15 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                 onCopy={handleModalCopyPromoCode}
             />
             <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8} style={styles.wrapper}>
-                <View style={styles.cardWrapper}>
+                <View style={[styles.cardWrapper, noPadding && styles.noPadding]}>
                     <View style={styles.topSection}>
-                        {imageUrl && (
+                        {imageUrl ? (
                             <View style={styles.imageContainer}>
                                 <Image source={{ uri: imageUrl }} style={styles.eventImage} />
+                            </View>
+                        ) : (
+                            <View style={styles.imageContainer}>
+                                {placeHolderImage}
                             </View>
                         )}
                         <View style={styles.detailsContainer}>
@@ -129,7 +141,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress }) => {
                                 <Text style={styles.eventTime}>{formattedDate}</Text>
 
                             </View>
-                            <BadgeRow vetted={vetted} playParty={item.play_party} center={false} />
+                            <BadgeRow vetted={vetted} playParty={item.play_party} center={false} munch={item.munch_id} />
                         </View>
                     </View>
                 </View>
@@ -143,7 +155,6 @@ export const ITEM_HEIGHT = 140;
 const styles = StyleSheet.create({
     wrapper: {
         height: ITEM_HEIGHT,
-        shadowOpacity: 0.1
 
     },
     cardWrapper: {
@@ -158,6 +169,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         shadowOpacity: 0.2
     },
+
+    noPadding: {
+        marginHorizontal: 0,
+    },
+
     topSection: {
         flexDirection: 'row',
         padding: 12,
@@ -165,12 +181,18 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         marginRight: 12,
+        alignItems: 'center',
     },
     eventImage: {
         width: 50,
         height: 50,
         borderRadius: 50,
         backgroundColor: '#eee',
+    },
+    icon: {
+        width: 50,
+        height: 50,
+        borderRadius: 50,
     },
     detailsContainer: {
         flex: 1,

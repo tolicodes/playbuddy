@@ -33,6 +33,7 @@ export const EVENT_FIELDS = [
     'weekly_pick',
     'custom_description',
     'facilitator_only',
+    'munch_id'
 ] as const;
 
 // we supply

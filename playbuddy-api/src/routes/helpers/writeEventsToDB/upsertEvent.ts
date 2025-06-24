@@ -183,14 +183,17 @@ const checkExistingEvent = async (event: NormalizedEventInput, organizerId: stri
     const filters: string[] = [];
 
     if (event.original_id) {
-        filters.push(`original_id.eq.${event.original_id}`);
+        filters.push(`original_id.eq."${event.original_id}"`);
     }
 
-    // start_date and organizer_id matches
-    filters.push(`and(start_date.eq.${event.start_date},organizer_id.eq.${organizerId})`);
+    filters.push(
+        `and(start_date.eq."${event.start_date}",organizer_id.eq."${organizerId}")`
+    );
 
-    // start_date and event name matches
-    filters.push(`and(start_date.eq.${event.start_date},name.eq.${event.name})`);
+    filters.push(
+        `and(start_date.eq."${event.start_date}",name.eq."${event.name}")`
+    );
+
 
     // Check for existing event by original_id or by start_date and organizer_id
     const { data: existingEvents, error: fetchError } = await supabaseClient

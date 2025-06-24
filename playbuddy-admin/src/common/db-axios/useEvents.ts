@@ -33,6 +33,14 @@ export const useCreateEvent = () => {
     });
 };
 
+export const useCreateEventBulk = () => {
+    return useMutation<Event[], unknown, NormalizedEventInput[]>({
+        mutationFn: async (events: NormalizedEventInput[]) => {
+            return axios.post<Event[]>(API_BASE_URL + '/events/bulk', events).then(response => response.data);
+        },
+    });
+};
+
 export const useUpdateEvent = () => {
     return useMutation({
         mutationFn: async (updatedEvent: any) => {

@@ -13,44 +13,46 @@ import FAIcon from "react-native-vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
-import { useUserContext } from "../Auth/hooks/UserContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
-
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
 const GettingConsent = () => (
     <View style={styles.centeredContainer}>
         <Text style={styles.consentHeader}>Getting consent…</Text>
-        <Text>We take consent very seriously. Which is why we are contacting each organizer individually before listing them publicly. Check back soon to see our favorite munches trickle in!</Text>
+        <Text>
+            We take consent very seriously. Which is why we are contacting each organizer
+            individually before listing them publicly. Check back soon to see our favorite munches trickle in!
+        </Text>
     </View>
-)
+);
 
-export const MunchesScreen = ({
-    showSearch = true,
-}: {
-    showSearch?: boolean;
-}) => {
+export const MunchesScreen = ({ showSearch = true }: { showSearch?: boolean }) => {
     const navigation = useNavigation<NavStack>();
-    const { authUserId } = useUserContext();
-
     const [searchQuery, setSearchQuery] = useState("");
 
     const { data: munches = [], isLoading } = useFetchMunches();
+    const { data: events = [] } = useFetchEvents({ includeFacilitatorOnly: true });
+
+    const munchesWithEvents = useMemo(() => {
+        return munches.map((m) => {
+            const eventsForMunch = events.filter((e) => e.munch_id === m.id);
+            return { ...m, events: eventsForMunch };
+        });
+    }, [munches, events]);
 
     const filteredMunches = useMemo(() => {
-        const sortedVerified = munches
+        const sortedVerified = munchesWithEvents
             .filter((m) => Boolean(m.verified))
             .sort((a, b) => {
-                const aHasSchedule = Boolean(a.schedule_text);
-                const bHasSchedule = Boolean(b.schedule_text);
-                if (aHasSchedule && !bHasSchedule) return -1;
-                if (!aHasSchedule && bHasSchedule) return 1;
+                const aHasEvents = a.events.length > 0;
+                const bHasEvents = b.events.length > 0;
+                if (aHasEvents && !bHasEvents) return -1;
+                if (!aHasEvents && bHasEvents) return 1;
                 return a.title.localeCompare(b.title);
             });
 
-        if (!searchQuery.trim()) {
-            return sortedVerified;
-        }
+        if (!searchQuery.trim()) return sortedVerified;
 
         const lowerQuery = searchQuery.toLowerCase().trim();
         return sortedVerified.filter((m) =>
@@ -65,7 +67,7 @@ export const MunchesScreen = ({
                 m.cadence,
             ].some((field) => field?.toLowerCase().includes(lowerQuery))
         );
-    }, [munches, searchQuery]);
+    }, [munchesWithEvents, searchQuery]);
 
     if (isLoading) {
         return (
@@ -101,100 +103,54 @@ export const MunchesScreen = ({
             )}
 
             {filteredMunches.length > 0 && (
-                <View style={{ flex: 1 }}>
-                    <FlatList
-                        data={filteredMunches}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.card}
-                                activeOpacity={0.8}
-                                onPress={() => {
-                                    navigation.navigate("Munch Details", {
-                                        munchId: item.id.toString(),
-                                    });
-                                    logEvent("munches_list_navigate_to_munch_detail", {
-                                        munchId: item.id,
-                                    });
-                                }}
-                            >
-                                <View style={styles.row}>
-                                    <FAIcon
-                                        name="cutlery"
-                                        size={28}
-                                        color="#666"
-                                        style={styles.icon}
-                                    />
-                                    <View style={styles.content}>
-                                        {/* Title */}
-                                        <Text style={styles.title} numberOfLines={1}>
-                                            {item.title}
-                                        </Text>
-
-                                        {/* Badges: Verified, Location & Audience */}
-                                        <View style={styles.badgesRow}>
-                                            {item.verified && (
-                                                <View style={[styles.badge, styles.verifiedBadge]}>
-                                                    <FAIcon
-                                                        name="check-circle"
-                                                        size={14}
-                                                        color="#FFF"
-                                                    />
-                                                    <Text
-                                                        style={styles.badgeText}
-                                                        numberOfLines={1}
-                                                        ellipsizeMode="tail"
-                                                    >
-                                                        Verified
-                                                    </Text>
-                                                </View>
-                                            )}
-                                            {item.location && (
-                                                <View style={[styles.badge, styles.locationBadge]}>
-                                                    <FAIcon
-                                                        name="map-marker"
-                                                        size={14}
-                                                        color="#FFF"
-                                                    />
-                                                    <Text
-                                                        style={styles.badgeText}
-                                                        numberOfLines={1}
-                                                        ellipsizeMode="tail"
-                                                    >
-                                                        {item.location}
-                                                    </Text>
-                                                </View>
-                                            )}
-                                            {item.main_audience && (
-                                                <View style={[styles.badge, styles.audienceBadge]}>
-                                                    <FAIcon name="users" size={14} color="#FFF" />
-                                                    <Text
-                                                        style={styles.badgeText}
-                                                        numberOfLines={1}
-                                                        ellipsizeMode="tail"
-                                                    >
-                                                        {item.main_audience}
-                                                    </Text>
-                                                </View>
-                                            )}
-                                        </View>
-
-                                        {/* Schedule */}
-                                        {item.schedule_text && (
-                                            <Text style={styles.schedule} numberOfLines={1}>
-                                                {item.schedule_text}
-                                            </Text>
+                <FlatList
+                    data={filteredMunches}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            style={styles.card}
+                            activeOpacity={0.8}
+                            onPress={() => {
+                                navigation.navigate("Munch Details", { munchId: item.id.toString() });
+                                logEvent("munches_list_navigate_to_munch_detail", { munchId: item.id });
+                            }}
+                        >
+                            <View style={styles.row}>
+                                <FAIcon name="cutlery" size={28} color="#666" style={styles.icon} />
+                                <View style={styles.content}>
+                                    <View style={styles.titleRow}>
+                                        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+                                        {item.events.length > 0 && (
+                                            <View style={styles.eventCountBadge}>
+                                                <Text style={styles.eventCountText}>{item.events.length} Events</Text>
+                                            </View>
                                         )}
                                     </View>
+                                    <View style={styles.badgesRow}>
+                                        {item.location && (
+                                            <View style={[styles.badge, styles.locationBadge]}>
+                                                <FAIcon name="map-marker" size={14} color="#FFF" />
+                                                <Text style={styles.badgeText}>{item.location}</Text>
+                                            </View>
+                                        )}
+                                        {item.main_audience && (
+                                            <View style={[styles.badge, styles.audienceBadge]}>
+                                                <FAIcon name="users" size={14} color="#FFF" />
+                                                <Text style={styles.badgeText}>{item.main_audience}</Text>
+                                            </View>
+                                        )}
+                                    </View>
+                                    {item.schedule_text && (
+                                        <Text style={styles.schedule} numberOfLines={1}>{item.schedule_text}</Text>
+                                    )}
                                 </View>
-                            </TouchableOpacity>
-                        )}
-                        contentContainerStyle={styles.listFooter}
-                        showsVerticalScrollIndicator={false}
-                    />
-                </View>
+                            </View>
+                        </TouchableOpacity>
+                    )}
+                    contentContainerStyle={styles.listFooter}
+                    showsVerticalScrollIndicator={false}
+                />
             )}
-
         </View>
     );
 };
@@ -202,11 +158,7 @@ export const MunchesScreen = ({
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
-        paddingTop: 20,
-    },
+    container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND, paddingTop: 20 },
     searchInput: {
         height: 44,
         marginHorizontal: 16,
@@ -232,25 +184,30 @@ const styles = StyleSheet.create({
                 shadowOffset: { width: 0, height: 2 },
                 shadowRadius: 4,
             },
-            android: {
-                elevation: 3,
-            },
+            android: { elevation: 3 },
         }),
     },
-    row: {
-        flexDirection: "row",
-        alignItems: "center",
+    row: { flexDirection: "row", alignItems: "center" },
+    icon: { marginRight: 12 },
+    content: { flex: 1 },
+    titleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: 2,
     },
-    icon: {
-        marginRight: 12,
+    title: { fontSize: 18, fontWeight: "600", color: "#333", flex: 1 },
+    eventCountBadge: {
+        backgroundColor: '#7F5AF0',
+        borderRadius: 12,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        marginLeft: 8,
     },
-    content: {
-        flex: 1,
-    },
-    title: {
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#333",
+    eventCountText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
     },
     badgesRow: {
         flexDirection: "row",
@@ -262,63 +219,31 @@ const styles = StyleSheet.create({
     badge: {
         flexDirection: "row",
         alignItems: "center",
-        maxWidth: SCREEN_WIDTH * 0.45,
+        maxWidth: 150,
         paddingVertical: 4,
         paddingHorizontal: 8,
         borderRadius: 12,
         marginRight: 6,
         marginBottom: 6,
-        backgroundColor: "#1976D2", // default badge color
+        backgroundColor: "#1976D2",
+        overflow: 'hidden',
+        maxHeight: 22,
     },
-    verifiedBadge: {
-        backgroundColor: "#1976D2", // deep blue
-    },
-    locationBadge: {
-        backgroundColor: "#00796B", // teal
-    },
-    audienceBadge: {
-        backgroundColor: "#F57C00", // orange
-    },
+    verifiedBadge: { backgroundColor: "#1976D2" },
+    locationBadge: { backgroundColor: "#00796B" },
+    audienceBadge: { backgroundColor: "#F57C00" },
     badgeText: {
         fontSize: 12,
         fontWeight: "600",
         color: "#FFF",
         marginLeft: 4,
     },
-    schedule: {
-        fontSize: 14,
-        color: "#666",
-    },
-    centeredContainer: {
-        justifyContent: "center",
-        alignItems: "center",
-        padding: 20,
-    },
-    loadingText: {
-        fontSize: 16,
-        color: "#666",
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-        paddingHorizontal: 24,
-    },
-    emptyMessage: {
-        fontSize: 16,
-        color: "#666",
-        textAlign: "center",
-    },
-    listFooter: {
-        paddingBottom: 20,
-    },
-    consentHeader: {
-        fontSize: 24,
-        fontWeight: "bold",
-    },
-    centeredText: {
-        fontSize: 16,
-        color: "#666",
-        textAlign: "center",
-    },
+    schedule: { fontSize: 14, color: "#666" },
+    centeredContainer: { justifyContent: "center", alignItems: "center", padding: 20 },
+    loadingText: { fontSize: 16, color: "#666" },
+    emptyContainer: { flex: 1, justifyContent: "center", alignItems: "center", paddingHorizontal: 24 },
+    emptyMessage: { fontSize: 16, color: "#666", textAlign: "center" },
+    listFooter: { paddingBottom: 20 },
+    consentHeader: { fontSize: 24, fontWeight: "bold" },
+    centeredText: { fontSize: 16, color: "#666", textAlign: "center" },
 });

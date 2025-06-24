@@ -174,6 +174,19 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
     res.json(eventResult);
 });
 
+router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const events = req.body;
+
+    const eventResults = [];
+    for (const event of events) {
+        const eventResult = await upsertEvent(event);
+        eventResults.push(eventResult);
+    }
+    await flushEvents();
+
+    res.json(eventResults);
+});
+
 router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const event = req.body;

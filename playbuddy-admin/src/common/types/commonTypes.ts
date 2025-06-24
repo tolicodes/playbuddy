@@ -71,7 +71,7 @@ export interface Event extends EventDataSource {
     /**
      * The url of the image/thumbnail/cover image
      */
-    image_url: string;
+    image_url?: string;
     /**
      * The url of the video (if any)
      */
@@ -79,7 +79,7 @@ export interface Event extends EventDataSource {
     /**
      * The url of the event (usually same as the ticket_url)
      */
-    event_url: string;
+    event_url?: string;
     /**
      * The location/address of the event
      */
@@ -99,7 +99,7 @@ export interface Event extends EventDataSource {
     /**
      * The price of the event (freeform text)
      */
-    price: string;
+    price?: string;
     /**
      * The description of the event, markdown formatted
      */
@@ -107,15 +107,15 @@ export interface Event extends EventDataSource {
     /**
      * The tags of the event
      */
-    tags: string[];
+    tags?: string[];
     /**
      * The type of the event (event or retreat)
      */
-    type: 'event' | 'retreat'
+    type: 'event' | 'retreat' | 'munch'
     /**
      * The recurring type of the event (none, weekly, monthly)
      */
-    recurring: 'none' | 'weekly' | 'monthly'
+    recurring?: 'none' | 'weekly' | 'monthly'
 
     /**
      * The latitude of the event
@@ -185,8 +185,10 @@ export interface Event extends EventDataSource {
     vetted?: boolean;
     vetting_url?: string;
 
-
     non_ny?: boolean;
+
+    is_munch?: boolean;
+    munch_id?: number;
 }
 
 /**
@@ -239,7 +241,7 @@ export interface EventDataSource {
   */
 export interface NormalizedEventInput extends Omit<Event, 'id' | 'organizer' | 'location_area' | 'communities' | 'promo_codes'> {
     id?: number;
-    organizer: Omit<Organizer, 'id'> | { id: string };
+    organizer: CreateOrganizerInput;
     /**
      * The location area the event belongs to (joined on location_area_id)
      * A location area is a city, region, country, etc
@@ -601,7 +603,14 @@ export interface Organizer {
     promo_codes?: PromoCode[]
 }
 
-export type CreateOrganizerInput = Omit<Organizer, "id"> | { id: string };
+export type CreateOrganizerInput = {
+    id?: number;
+    name?: string;
+    url?: string;
+    original_id?: string;
+    aliases?: string[];
+    hidden?: boolean;
+}
 
 /**
  * Table: promo_code_event
@@ -878,6 +887,8 @@ export interface Munch {
     verified: string;
     tags: string[];
     website: string;
+    fetlife_handle: string;
+    organizer_id: number
 }
 
 export interface Media {

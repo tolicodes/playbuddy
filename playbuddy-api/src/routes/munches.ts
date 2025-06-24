@@ -2,6 +2,7 @@
 
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust path if needed
+import { authenticateAdminRequest, authenticateAdminRequest, AuthenticatedRequest } from 'middleware/authenticateRequest.js';
 
 const router = Router();
 
@@ -26,5 +27,23 @@ router.get('/', async (req: Request, res: Response) => {
         }
     }
 });
+
+// PUT /api/munches/:id
+router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const { data, error } = await supabaseClient
+        .from('munches')
+        .update(req.body)
+        .eq('id', id)
+        .single();
+
+    if (error) {
+        console.error(`Error updating munch with id ${id}:`, error);
+        return res.status(400).json({ error: error.message });
+    }
+
+    return res.json(data);
+});
+
 
 export default router;

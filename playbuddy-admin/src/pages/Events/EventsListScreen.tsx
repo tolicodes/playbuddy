@@ -52,6 +52,13 @@ export default function EventsListScreen() {
                     Add Event
                 </Button>
 
+                <Button
+                    variant="contained"
+                    onClick={() => navigate('/events/import-fetlife')}
+                >
+                    Import from Fetlife
+                </Button>
+
                 <TextField
                     fullWidth
                     label="Search Organizer"
