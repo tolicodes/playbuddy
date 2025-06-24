@@ -55,7 +55,7 @@ const __dirname = dirname(__filename);
 const FLYER_NAME = 'business_card';
 
 // ** Paths **
-const INPUT_DIR = path.join(__dirname, 'input');
+const INPUT_DIR = path.join(__dirname, 'inputs');
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const PNG_DIR = path.join(OUTPUT_DIR, 'filled_qrs', 'pngs');
 const PDF_DIR = path.join(OUTPUT_DIR, 'filled_pdfs');

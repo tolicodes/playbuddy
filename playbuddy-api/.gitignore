@@ -5,4 +5,5 @@ cloudconfig
 .env
 dist
 
-src/scripts/qrcodes/input
+src/scripts/qrcodes/inputs/*
+src/scripts/qrcodes/output/*
