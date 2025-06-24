@@ -5,7 +5,6 @@ import {
     Text,
     StyleSheet,
     ActivityIndicator,
-    PixelRatio,
     SectionListRenderItemInfo,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -15,17 +14,11 @@ import { EventWithMetadata } from "../../Common/Nav/NavStackType";
 import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { Event, UE } from "../../commonTypes";
-import { BuddyWishlist, useBuddiesContext } from "../Buddies/hooks/BuddiesContext";
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from "../../Common/hooks/logger";
 import { useUserContext } from "../Auth/hooks/UserContext";
-import { BORDER_LAVENDER, LAVENDER_BACKGROUND } from "../../components/styles";
+import { LAVENDER_BACKGROUND } from "../../components/styles";
 
 const HEADER_HEIGHT = 40;
-
-const getBuddiesAttending = (buddiesWishlists: BuddyWishlist[], eventId: string) => {
-    const buddiesWishlist = buddiesWishlists.filter(bw => bw.events.includes(eventId));
-    return buddiesWishlist.map(({ user_id, name, avatar_url }) => ({ user_id, name, avatar_url }));
-};
 
 type SectionType = {
     title: string;              // e.g., "Apr 13, 2025"
@@ -35,18 +28,15 @@ type SectionType = {
 interface EventListProps {
     sections: SectionType[];
     sectionListRef?: React.RefObject<SectionList<Event>>;
-    reloadEvents?: () => void;
     isLoadingEvents?: boolean;
 }
 
 const EventList: React.FC<EventListProps> = ({
     sections,
     sectionListRef,
-    reloadEvents,
     isLoadingEvents,
 }) => {
     const navigation = useNavigation<NavStack>();
-    const { buddiesWishlists } = useBuddiesContext();
     const { authUserId, currentDeepLink } = useUserContext();
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
@@ -57,7 +47,6 @@ const EventList: React.FC<EventListProps> = ({
     }, [selectedEvent]);
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
-        const buddiesAttending = getBuddiesAttending(buddiesWishlists.data || [], event.id);
 
         const promoCode = event.promo_codes ? event.promo_codes[0] : null;
 
