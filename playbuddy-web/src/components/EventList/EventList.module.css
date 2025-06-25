@@ -1,8 +1,8 @@
 .eventList {
   padding: 20px;
-  max-width: 900px;
-  margin: 0 auto;
   background-color: #f3ebff;
+  width: 100vw;
+  height: 100vh;
 }
 
 .emptyList {

@@ -12,7 +12,7 @@ import moment from 'moment-timezone';
 import { startOfWeek, addDays, subWeeks, addWeeks, subDays } from 'date-fns';
 
 import { useCalendarContext } from '../hooks/CalendarContext';
-import { useGroupedEvents, SECTION_DATE_FORMAT } from '../hooks/useGroupedEvents';
+import { useGroupedEvents } from '../hooks/useGroupedEvents';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import EventList from '../EventList';
 import WebsiteBanner from '../../../Common/WebsiteBanner';

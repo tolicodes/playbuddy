@@ -1,11 +1,11 @@
 import React from "react";
 import styles from './EventListItem.module.css'
-import { getEventPromoCodes } from "./util/getEventPromoCodes";
+import { getBestPromoCode } from "@mobile/utils/getBestPromoCode";
 import type { Event } from "@common/types/commonTypes";
 import { formatDate } from "@mobile/utils/formatDate";
 
 export const EventListItem = ({ item, onPress }: { item: Event, onPress: (event: Event) => void }) => {
-    const promoCode = getEventPromoCodes(item)?.[0];
+    const promoCode = getBestPromoCode(item)?.[0];
     const imageUrl = item.image_url;
     const formattedDate = formatDate(item);
 

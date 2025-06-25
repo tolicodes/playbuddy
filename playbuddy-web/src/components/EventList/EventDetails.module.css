@@ -1,11 +1,11 @@
 .eventDetail {
-  max-width: 420px;
-  margin: 0 auto;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   border-radius: 1rem;
   overflow: hidden;
-  background: white;
+  background: #f3ebff;
   padding: 1rem;
+  width: 100vw;
+  height: 100vh;
 }
 
 .eventHeaderImage,
