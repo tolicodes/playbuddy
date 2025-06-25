@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 
 interface BadgeRowProps {
     vetted?: boolean;
@@ -9,10 +9,12 @@ interface BadgeRowProps {
 }
 
 export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, munch }) => (
-    <View style={[
-        styles.badgesRow,
-        { justifyContent: center ? 'center' : 'flex-start' }
-    ]}>
+    <View
+        style={[
+            styles.badgesRow,
+            { justifyContent: center ? 'center' : 'flex-start' },
+        ]}
+    >
         {vetted && (
             <View style={styles.vettedBadge}>
                 <Text style={styles.vettedText}>Vetted</Text>
@@ -31,45 +33,43 @@ export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, m
     </View>
 );
 
+const baseBadge: ViewStyle = {
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: 8,
+};
+
+const baseText: TextStyle = {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: 'bold',
+};
+
 const styles = StyleSheet.create({
     badgesRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     vettedBadge: {
+        ...baseBadge,
         backgroundColor: '#4CAF50',
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginRight: 8,
     },
     vettedText: {
-        fontSize: 12,
-        color: 'white',
-        fontWeight: 'bold',
+        ...baseText,
     },
     playPartyBadge: {
+        ...baseBadge,
         backgroundColor: '#8F00FF',
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginRight: 8,
     },
     playPartyText: {
-        fontSize: 12,
-        color: 'white',
-        fontWeight: 'bold',
+        ...baseText,
     },
     munchBadge: {
+        ...baseBadge,
         backgroundColor: '#FFC107',
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginRight: 8,
     },
     munchText: {
-        fontSize: 12,
-        color: 'white',
-        fontWeight: 'bold',
+        ...baseText,
     },
 });

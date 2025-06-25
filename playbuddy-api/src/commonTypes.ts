@@ -962,5 +962,15 @@ export type UpdateFacilitatorInput = CreateFacilitatorInput & {
     id: string;
 }
 
+export type Attendee = {
+    id: string;
+    name: string;
+    avatar_url: string;
+}
+
+export type EventAttendees = {
+    event_id: number;
+    attendees: Attendee[];
+}
 
 export { UE };

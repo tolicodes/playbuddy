@@ -20,6 +20,8 @@ import facilitatorsRoute from './routes/facilitators.js'
 import tagsRoute from './routes/tags.js'
 import mediaRoute from './routes/media.js'
 import marketingRoute from './routes/marketing.js'
+import attendeesRoute from './routes/attendees.js'
+
 export const app = express();
 
 // Middleware setup
@@ -49,6 +51,7 @@ app.use('/facilitators', facilitatorsRoute);
 app.use('/tags', tagsRoute);
 app.use('/media', mediaRoute);
 app.use('/marketing', marketingRoute);
+app.use('/attendees', attendeesRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

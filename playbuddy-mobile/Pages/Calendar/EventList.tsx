@@ -17,6 +17,7 @@ import { Event, UE } from "../../commonTypes";
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from "../../Common/hooks/logger";
 import { useUserContext } from "../Auth/hooks/UserContext";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
+import { useFetchAttendees } from "../../Common/db-axios/useAttendees";
 
 const HEADER_HEIGHT = 40;
 
@@ -39,6 +40,7 @@ const EventList: React.FC<EventListProps> = ({
     const navigation = useNavigation<NavStack>();
     const { authUserId, currentDeepLink } = useUserContext();
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+    const { data: attendees } = useFetchAttendees();
 
     useEffect(() => {
         if (selectedEvent) {
@@ -47,8 +49,8 @@ const EventList: React.FC<EventListProps> = ({
     }, [selectedEvent]);
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
-
         const promoCode = event.promo_codes ? event.promo_codes[0] : null;
+        const attendeesForEvent = attendees?.find((a) => a.event_id === event.id)?.attendees || [];
 
         return (
             <View style={styles.eventItemWrapper}>
@@ -64,6 +66,7 @@ const EventList: React.FC<EventListProps> = ({
                             ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
                         });
                     }}
+                    attendees={attendeesForEvent}
                 />
             </View>
         );

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Share, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Share, Linking, ScrollView } from 'react-native';
 import { Image } from 'expo-image';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
-import { Event, UE } from '../../commonTypes';
+import { Attendee, Event, UE } from '../../commonTypes';
 import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import { useCalendarContext } from './hooks/CalendarContext';
 import { useUserContext } from '../Auth/hooks/UserContext';
@@ -14,16 +14,17 @@ import { TicketPromoModal } from './TicketPromoModal';
 import { getEventPromoCodes } from '../Auth/screens/usePromoCode';
 import { BORDER_LAVENDER } from '../../components/styles';
 import { BadgeRow } from '../common/EventBadgesRow';
+import { AttendeeCarousel } from './AttendeeCarousel';
 
 interface ListItemProps {
     item: EventWithMetadata;
     onPress: (event: Event) => void;
-    buddiesAttending?: Buddy[];
     noPadding?: boolean;
     fullDate?: boolean;
+    attendees?: Attendee[];
 }
 
-export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate }) => {
+export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId, currentDeepLink } = useUserContext();
 
@@ -73,7 +74,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
         :
         <FAIcon name="calendar" size={50} color="#666" style={styles.icon} />
 
-
     return (
         <>
             <TicketPromoModal
@@ -110,7 +110,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                             <View style={styles.organizerRow}>
                                 <View style={styles.organizerContainer}>
                                     <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
-                                    <Text style={styles.organizerName} numberOfLines={1}>
+                                    <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">
                                         {item.organizer?.name}
                                     </Text>
 
@@ -133,7 +133,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                 </View>
                             </View>
                             <View style={styles.titleRow}>
-                                <Text style={styles.eventTitle} numberOfLines={2}>
+                                <Text style={styles.eventTitle} numberOfLines={1}>
                                     {item.name}
                                 </Text>
                             </View>
@@ -141,7 +141,17 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                 <Text style={styles.eventTime}>{formattedDate}</Text>
 
                             </View>
-                            <BadgeRow vetted={vetted} playParty={item.play_party} center={false} munch={item.munch_id} />
+
+                            <ScrollView
+                                horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}
+                            >
+                                <BadgeRow vetted={vetted} playParty={item.play_party} center={false} munch={item.munch_id} />
+
+                                <AttendeeCarousel attendees={attendees!} />
+
+                            </ScrollView>
+
+
                         </View>
                     </View>
                 </View>
@@ -207,6 +217,9 @@ const styles = StyleSheet.create({
     organizerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexShrink: 1,
+        flexGrow: 1,
+        marginRight: 8,
     },
     organizerDot: {
         width: 8,
@@ -216,12 +229,14 @@ const styles = StyleSheet.create({
     },
     organizerName: {
         fontSize: 14,
-        color: '#000',
-        marginRight: 8,
+        color: '#333',
+        flexShrink: 1,
     },
     rightContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        flexShrink: 0,
+        flexGrow: 0,
     },
     heartContainer: {
         marginLeft: 8,

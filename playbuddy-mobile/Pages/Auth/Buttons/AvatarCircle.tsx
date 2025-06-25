@@ -3,8 +3,9 @@ import { View, StyleSheet, Text } from "react-native"
 import { Image } from "expo-image"
 import { getSmallAvatarUrl } from "../../../Common/hooks/imageUtils";
 import { Buddy } from "../../Buddies/hooks/BuddiesContext";
+import { Attendee } from "../../../Common/types/commonTypes";
 
-export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfile: Buddy, size?: number, name?: string }) => {
+export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfile: Buddy | Attendee, size?: number, name?: string }) => {
     const styles = useMemo(() => StyleSheet.create({
         avatarContainer: {
             width: size,
