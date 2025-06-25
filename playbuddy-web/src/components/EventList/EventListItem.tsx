@@ -1,11 +1,10 @@
-import React from "react";
 import styles from './EventListItem.module.css'
-import { getBestPromoCode } from "@mobile/utils/getBestPromoCode";
-import type { Event } from "@common/types/commonTypes";
-import { formatDate } from "@mobile/utils/formatDate";
+import { getBestPromoCode } from "../../../../playbuddy-mobile/utils/getBestPromoCode";
+import type { Event } from "../../../../common/src/types/commonTypes";
+import { formatDate } from "../../../../playbuddy-mobile/utils/formatDate";
 
 export const EventListItem = ({ item, onPress }: { item: Event, onPress: (event: Event) => void }) => {
-    const promoCode = getBestPromoCode(item)?.[0];
+    const promoCode = getBestPromoCode(item)
     const imageUrl = item.image_url;
     const formattedDate = formatDate(item);
 
@@ -24,7 +23,7 @@ export const EventListItem = ({ item, onPress }: { item: Event, onPress: (event:
                         <div className={styles.organizerInfo}>
                             <div
                                 className={styles.organizerDot}
-                                style={{ backgroundColor: item.organizerColor || '#ccc' }}
+                                style={{ backgroundColor: '#ccc' }}
                             />
                             <span className={styles.organizerName}>{item.organizer?.name}</span>
                         </div>

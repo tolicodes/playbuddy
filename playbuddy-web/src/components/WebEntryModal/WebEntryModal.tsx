@@ -1,7 +1,5 @@
-// WebEntryPage.tsx
-import React from 'react';
 import styles from './WebEntryModal.module.css';
-import { APP_STORE_URL, GOOGLE_PLAY_URL } from '@common/config';
+import { APP_STORE_URL, GOOGLE_PLAY_URL } from '../../../../common/src/config';
 
 import googlePlayIcon from '../../assets/google-app-icon.jpg';
 

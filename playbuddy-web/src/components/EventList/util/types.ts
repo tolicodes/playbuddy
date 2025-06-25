@@ -1,4 +1,4 @@
-import { Event } from "@common/types/commonTypes";
+import type { Event } from "../../../../../common/src/types/commonTypes";
 
 export type EventWithMetadata = Event & {
     organizerColor?: string;

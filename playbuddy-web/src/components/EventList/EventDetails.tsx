@@ -1,23 +1,23 @@
-import React from "react";
 import styles from './EventDetails.module.css';
 import { useParams } from "react-router-dom";
-import { useFetchEvents } from "@mobile/common/db-axios/useEvents";
-import type { Event } from "@mobile/common/types/commonTypes";
-import { getBestPromoCode } from "@mobile/utils/getBestPromoCode";
+import { useFetchEvents } from "../../../../common/src/db-axios/useEvents";
+import type { Event } from "../../../../common/src/types/commonTypes";
+import { getBestPromoCode } from "../../../../playbuddy-mobile/utils/getBestPromoCode";
 import ReactMarkdown from "react-markdown";
+import { formatDate } from '../../../../playbuddy-mobile/utils/formatDate';
 
 export const EventDetails = () => {
     const { eventId } = useParams();
     const { data: events } = useFetchEvents({
-        includeFacilitators: true
+        includeFacilitatorOnly: true
     });
 
     const event = events?.find((event: Event) => event.id === parseInt(eventId!));
     if (!event) return null;
 
-    const promoCode = getBestPromoCode(event)?.[0];
+    const promoCode = getBestPromoCode(event);
     const imageUrl = event.image_url;
-    const formattedDate = event.start_time;
+    const formattedDate = formatDate(event);
     const isFetlife = event.ticket_url?.includes('fetlife');
     const availableSoon = !event.ticket_url?.includes('https');
 

@@ -1,7 +1,7 @@
 // only edit /common/commonTypes.ts 
 // These are copied
 
-import { UE, UserEventInput } from "./userEventTypes";
+import type { UE, UserEventInput } from "./userEventTypes";
 
 
 /**
@@ -973,4 +973,4 @@ export type EventAttendees = {
     attendees: Attendee[];
 }
 
-export { UE };
+export type { UE };

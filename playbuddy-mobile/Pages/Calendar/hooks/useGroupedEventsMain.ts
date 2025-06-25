@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import moment from 'moment';
-import { Event } from '../../../commonTypes';
-import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
+import type { Event } from '../../../commonTypes';
+import type { EventWithMetadata } from '../../../Common/Nav/NavStackType';
 
 export const SECTION_DATE_FORMAT = 'MMM D, YYYY (dddd)';
 

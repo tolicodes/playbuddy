@@ -1,5 +1,5 @@
-import { StackNavigationProp } from '@react-navigation/stack';
-import { Event } from '../../commonTypes';
+import type { StackNavigationProp } from '@react-navigation/stack';
+import type { Event } from '../../commonTypes';
 
 export type EventWithMetadata = Event & {
     organizerColor?: string;

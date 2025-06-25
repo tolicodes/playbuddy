@@ -13,104 +13,107 @@
 /**
  * 1) Single source of truth for all event names
  */
-export const enum UE {
+export const UE = {
     // Account Details
-    AccountDetailsPressAddBuddy = 'account_details_press_add_buddy',
-    AccountDetailsPressDeleteAccount = 'account_details_press_delete_account',
-    AccountDetailsPressHome = 'account_details_press_home',
-    AccountDetailsPressShareCode = 'account_details_press_share_code',
-    AccountDetailsPressSignOut = 'account_details_press_sign_out',
+    AccountDetailsPressAddBuddy: 'account_details_press_add_buddy',
+    AccountDetailsPressDeleteAccount: 'account_details_press_delete_account',
+    AccountDetailsPressHome: 'account_details_press_home',
+    AccountDetailsPressShareCode: 'account_details_press_share_code',
+    AccountDetailsPressSignOut: 'account_details_press_sign_out',
 
     // Auth Flow
-    LoginBannerClicked = 'login_banner_clicked',
-    LoginButtonClicked = 'login_button_clicked',
+    LoginBannerClicked: 'login_banner_clicked',
+    LoginButtonClicked: 'login_button_clicked',
 
     // Avatar
-    AvatarPressPickImage = 'avatar_press_pick_image',
-    AvatarUploadCompleted = 'avatar_upload_completed',
-    AvatarUploadFailed = 'avatar_upload_failed',
-    AvatarUploadStarted = 'avatar_upload_started',
+    AvatarPressPickImage: 'avatar_press_pick_image',
+    AvatarUploadCompleted: 'avatar_upload_completed',
+    AvatarUploadFailed: 'avatar_upload_failed',
+    AvatarUploadStarted: 'avatar_upload_started',
 
     // Buddy / Calendar
-    BuddyAvatarCarouselPress = 'buddy_avatar_carousel_press',
-    CalendarDayClicked = 'calendar_day_clicked',
+    BuddyAvatarCarouselPress: 'buddy_avatar_carousel_press',
+    CalendarDayClicked: 'calendar_day_clicked',
 
     // Community Events / Lists
-    CommunityEventsCommunityJoined = 'community_events_community_joined',
-    CommunityListCommunityJoined = 'community_list_community_joined',
-    CommunityListCommunityLeft = 'community_list_community_left',
-    CommunityListNavigateToCommunityEvents = 'community_list_navigate_to_community_events',
-    CommunityListNavigateToJoinCommunityButtonPressed = 'community_list_navigate_to_join_community_button_pressed',
+    CommunityEventsCommunityJoined: 'community_events_community_joined',
+    CommunityListCommunityJoined: 'community_list_community_joined',
+    CommunityListCommunityLeft: 'community_list_community_left',
+    CommunityListNavigateToCommunityEvents: 'community_list_navigate_to_community_events',
+    CommunityListNavigateToJoinCommunityButtonPressed: 'community_list_navigate_to_join_community_button_pressed',
 
     // Deep-Link Lifecycle
-    DeepLinkAttributed = 'deep_link_attributed',
-    DeepLinkDetected = 'deep_link_detected',
+    DeepLinkAttributed: 'deep_link_attributed',
+    DeepLinkDetected: 'deep_link_detected',
 
     // Defaults-Menu
-    DefaultsMenuCommunityItemSelected = 'defaults_menu_community_item_selected',
-    DefaultsMenuLocationItemSelected = 'defaults_menu_location_item_selected',
+    DefaultsMenuCommunityItemSelected: 'defaults_menu_community_item_selected',
+    DefaultsMenuLocationItemSelected: 'defaults_menu_location_item_selected',
 
     // Event-Detail & Tickets Flow
-    EventDetailDeepLinkPromoCodeSeen = 'event_detail_deep_link_promo_code_seen',
-    EventDetailDiscountModalOpened = 'event_detail_discount_modal_opened',
-    EventDetailGetTicketsClicked = 'event_detail_get_tickets_clicked',
-    EventDetailGoogleCalendarClicked = 'event_detail_google_calendar_clicked',
-    EventDetailLinkClicked = 'event_detail_link_clicked',
-    EventDetailModalTicketPressed = 'event_detail_modal_ticket_pressed',
-    EventDetailOrganizerClicked = 'event_detail_organizer_clicked',
-    EventDetailPromoCodeCopied = 'event_detail_promo_code_copied',
-    EventDetailPromoCodeSeen = 'event_detail_promo_code_seen',
-    EventDetailTicketPressed = 'event_detail_ticket_pressed',
-    EventDetailWishlistToggled = 'event_detail_wishlist_toggled',
-    EventDetailTicketPromoModalPromoCopied = 'event_detail_ticket_promo_modal_promo_code_copied',
-    EventDetailHeaderTitleClicked = 'event_detail_header_title_clicked',
+    EventDetailDeepLinkPromoCodeSeen: 'event_detail_deep_link_promo_code_seen',
+    EventDetailDiscountModalOpened: 'event_detail_discount_modal_opened',
+    EventDetailGetTicketsClicked: 'event_detail_get_tickets_clicked',
+    EventDetailGoogleCalendarClicked: 'event_detail_google_calendar_clicked',
+    EventDetailLinkClicked: 'event_detail_link_clicked',
+    EventDetailModalTicketPressed: 'event_detail_modal_ticket_pressed',
+    EventDetailOrganizerClicked: 'event_detail_organizer_clicked',
+    EventDetailPromoCodeCopied: 'event_detail_promo_code_copied',
+    EventDetailPromoCodeSeen: 'event_detail_promo_code_seen',
+    EventDetailTicketPressed: 'event_detail_ticket_pressed',
+    EventDetailWishlistToggled: 'event_detail_wishlist_toggled',
+    EventDetailTicketPromoModalPromoCopied: 'event_detail_ticket_promo_modal_promo_code_copied',
+    EventDetailHeaderTitleClicked: 'event_detail_header_title_clicked',
 
     // Event-List
-    EventListItemClicked = 'event_list_item_clicked',
-    EventListItemDiscountModalOpened = 'event_list_item_discount_modal_opened',
-    EventListItemTicketPressed = 'event_list_item_ticket_pressed',
-    EventListItemWishlistToggled = 'event_list_item_wishlist_toggled',
-    EventListItemSharePressed = 'event_list_item_share_pressed',
-    EventListItemPromoModalTicketPressed = 'event_list_item_promo_modal_ticket_pressed',
-    EventListItemPromoModalPromoCopied = 'event_list_item_promo_modal_promo_code_copied',
+    EventListItemClicked: 'event_list_item_clicked',
+    EventListItemDiscountModalOpened: 'event_list_item_discount_modal_opened',
+    EventListItemTicketPressed: 'event_list_item_ticket_pressed',
+    EventListItemWishlistToggled: 'event_list_item_wishlist_toggled',
+    EventListItemSharePressed: 'event_list_item_share_pressed',
+    EventListItemPromoModalTicketPressed: 'event_list_item_promo_modal_ticket_pressed',
+    EventListItemPromoModalPromoCopied: 'event_list_item_promo_modal_promo_code_copied',
     // Filters & Header
-    FilterDoneButtonClicked = 'filter_done_button_clicked',
-    FilterOrganizers = 'filter_organizers',
-    FilterResetButtonClicked = 'filter_reset_button_clicked',
-    HeaderBackButtonClicked = 'header_back_button_clicked',
-    HeaderDrawerButtonClicked = 'header_drawer_button_clicked',
-    HeaderFilterButtonClicked = 'header_filter_button_clicked',
+    FilterDoneButtonClicked: 'filter_done_button_clicked',
+    FilterOrganizers: 'filter_organizers',
+    FilterResetButtonClicked: 'filter_reset_button_clicked',
+    HeaderBackButtonClicked: 'header_back_button_clicked',
+    HeaderDrawerButtonClicked: 'header_drawer_button_clicked',
+    HeaderFilterButtonClicked: 'header_filter_button_clicked',
 
     // Moar
-    MoarGetAddYourEventsLink = 'moar_get_add_your_events_link',
-    MoarGetGoogleCalLink = 'moar_get_google_cal_link',
-    MoarGetInTouchClickEmail = 'moar_get_in_touch_click_email',
-    MoarLinkClicked = 'moar_link_clicked',
+    MoarGetAddYourEventsLink: 'moar_get_add_your_events_link',
+    MoarGetGoogleCalLink: 'moar_get_google_cal_link',
+    MoarGetInTouchClickEmail: 'moar_get_in_touch_click_email',
+    MoarLinkClicked: 'moar_link_clicked',
 
     // My Calendar
-    MyCalendarShareWishlistClick = 'my_calendar_share_wishlist_click',
-    PersonalizationModalConfirmed = 'personalization_modal_confirmed',
+    MyCalendarShareWishlistClick: 'my_calendar_share_wishlist_click',
+    PersonalizationModalConfirmed: 'personalization_modal_confirmed',
 
     // Onboarding & Misc
-    ProfileInitialDeepLinkAssigned = 'profile_initial_deep_link_assigned',
+    ProfileInitialDeepLinkAssigned: 'profile_initial_deep_link_assigned',
 
-    ProfileDetailsPressSave = 'profile_details_press_save',
-    WelcomeScreenRegisterClicked = 'welcome_screen_register_clicked',
-    WelcomeScreenSkipped = 'welcome_screen_skipped',
+    ProfileDetailsPressSave: 'profile_details_press_save',
+    WelcomeScreenRegisterClicked: 'welcome_screen_register_clicked',
+    WelcomeScreenSkipped: 'welcome_screen_skipped',
 
     // Promo Screen
-    PromoScreenViewed = 'promo_screen_viewed',
-    PromoScreenPromoCodeCopied = 'promo_screen_promo_code_copied',
-    PromoScreenExploreClicked = 'promo_screen_explore_clicked',
-    PromoScreenEventDetailsClicked = 'promo_screen_event_details_clicked',
+    PromoScreenViewed: 'promo_screen_viewed',
+    PromoScreenPromoCodeCopied: 'promo_screen_promo_code_copied',
+    PromoScreenExploreClicked: 'promo_screen_explore_clicked',
+    PromoScreenEventDetailsClicked: 'promo_screen_event_details_clicked',
 
     // Swipe Mode
-    SwipeModeMoreInfoClick = 'swipe_mode_more_info_click',
-    SwipeModeSwipeLeft = 'swipe_mode_swipe_left',
-    SwipeModeSwipeRight = 'swipe_mode_swipe_right',
+    SwipeModeMoreInfoClick: 'swipe_mode_more_info_click',
+    SwipeModeSwipeLeft: 'swipe_mode_swipe_left',
+    SwipeModeSwipeRight: 'swipe_mode_swipe_right',
 
     // Ticket-Promo Modal
 }
+
+export type UE = (typeof UE)[keyof typeof UE];
+
 
 type EventDetailsProps = {
     auth_user_id: string | null;
@@ -288,8 +291,8 @@ export type UERecord<K extends UE> = {
  * 4) Union of all events with correct name & props
  */
 export type UserEventInput = {
-    [K in keyof EventPayloadMap]: UERecord<K>;
-}[keyof EventPayloadMap];
+    [K in Extract<keyof EventPayloadMap, string>]: UERecord<K>;
+}[Extract<keyof EventPayloadMap, string>];
 
 // Also include events not in the map (null props)
 export type UserEventInputNulls = UERecord<Exclude<UE, keyof EventPayloadMap>>;

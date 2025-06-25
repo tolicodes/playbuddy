@@ -7,8 +7,8 @@
         "build": "tsc -b tsconfig.json"
     },
     "dependencies": {
-        "@tanstack/react-query": "^5.80.2",
-        "axios": "^1.4.0"
+        "@tanstack/react-query": "^5.81.2",
+        "axios": "^1.10.0"
     },
     "devDependencies": {
         "@types/node": "^22.15.29",

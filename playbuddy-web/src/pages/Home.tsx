@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
 import { EventList } from '../components/EventList/EventList';
-import type { SectionType } from '../components/EventList/EventList';
-import { useFetchEvents } from '@common/db-axios/useEvents';
-import WebEntryModal from '../components/WebEntryModal/WebEntryModal';
+import { useFetchEvents } from '../../../common/src/db-axios/useEvents';
 
 export const Home = () => {
-    const { data: events = [], isLoading, error } = useFetchEvents();
+    const { data: events = [], isLoading } = useFetchEvents();
 
     return (
         <div>
