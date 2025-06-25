@@ -8,3 +8,9 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+
+[build]
+command = "cd ../common && npm i && cd ../playbuddy-web && npm i && npx tsc -b && npx vite build"
+base = "playbuddy-web"
+publish = "playbuddy-web/dist"
