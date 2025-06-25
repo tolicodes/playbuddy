@@ -1,0 +1,68 @@
+.eventList {
+  padding: 20px;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #f3ebff;
+}
+
+.emptyList {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  text-align: center;
+  color: #999;
+}
+
+.emptyText {
+  font-size: 16px;
+  color: #888;
+}
+
+.loaderOverlay {
+  position: fixed; /* sit on top of everything */
+  top: 0;
+  left: 0;
+  width: 100vw; /* full viewport width */
+  height: 100vh; /* full viewport height */
+  display: flex; /* center contents */
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.85); /* semi‐opaque backdrop */
+  z-index: 9999; /* high above other elements */
+}
+
+/* your existing spinner */
+.spinner {
+  width: 48px; /* bump up size if you like */
+  height: 48px;
+  border: 6px solid #eee;
+  border-top: 6px solid #7f5af0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.eventSection {
+  margin-bottom: 30px;
+}
+
+.sectionHeader {
+  font-size: 22px;
+  font-weight: 700;
+  color: black;
+  margin: 24px 0 8px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 4px;
+}
+
+.eventItemWrapper {
+}

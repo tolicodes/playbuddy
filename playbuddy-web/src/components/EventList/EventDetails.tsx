@@ -1,0 +1,84 @@
+import React from "react";
+import styles from './EventDetails.module.css';
+import { useParams } from "react-router-dom";
+import { useFetchEvents } from "@mobile/common/db-axios/useEvents";
+import type { Event } from "@mobile/common/types/commonTypes";
+import { getBestPromoCode } from "@mobile/utils/getBestPromoCode";
+import ReactMarkdown from "react-markdown";
+
+export const EventDetails = () => {
+    const { eventId } = useParams();
+    const { data: events } = useFetchEvents({
+        includeFacilitators: true
+    });
+
+    const event = events?.find((event: Event) => event.id === parseInt(eventId!));
+    if (!event) return null;
+
+    const promoCode = getBestPromoCode(event)?.[0];
+    const imageUrl = event.image_url;
+    const formattedDate = event.start_time;
+    const isFetlife = event.ticket_url?.includes('fetlife');
+    const availableSoon = !event.ticket_url?.includes('https');
+
+    return (
+        <div className={styles.eventDetail}>
+            {event.video_url ? (
+                <iframe
+                    className={styles.eventVideo}
+                    src={event.video_url}
+                    title="event video"
+                    allow="fullscreen"
+                />
+            ) : imageUrl ? (
+                <img src={imageUrl} alt="event" className={styles.eventHeaderImage} />
+            ) : null}
+
+            <div className={styles.eventHeaderCard}>
+                <h1 className={styles.eventTitle}>{event.name}</h1>
+                <div className={styles.eventOrganizer}>Organized by {event.organizer?.name}</div>
+                <div className={styles.eventDate}>{formattedDate}</div>
+
+                <button
+                    className={styles.ticketButton}
+                    disabled={availableSoon}
+                    onClick={() => window.open(event.ticket_url, '_blank')}
+                >
+                    🎟️ Get Tickets 🎟️
+                </button>
+
+                {promoCode && (
+                    <div className={styles.promoBox}>
+                        Use promo code <strong>{promoCode.promo_code}</strong> for {promoCode.discount}{promoCode.discount_type === 'percent' ? '%' : '$'} off
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.eventDescription}>
+                {event.vetted && (
+                    <div className={`${styles.eventCallout} ${styles.vetted}`}>
+                        <strong>Vetted Event:</strong> You must apply to attend. {event.vetting_url && <a href={event.vetting_url} target="_blank">Apply here</a>}
+                    </div>
+                )}
+
+                {event.munch_id && (
+                    <div className={`${styles.eventCallout} ${styles.munch}`}>
+                        <strong>Munch:</strong> Casual social event. Learn more on the <a href="#">Munch Page</a>.
+                    </div>
+                )}
+
+                {isFetlife && (
+                    <div className={`${styles.eventCallout} ${styles.fetlife}`}>
+                        🔗 Imported from FetLife with organizer's permission. Requires a FetLife account.
+                        <br />
+                        <a href={event.ticket_url} target="_blank">Open in FetLife</a>
+                    </div>
+                )}
+
+                <div className={styles.eventMarkdown}>
+                    <ReactMarkdown>{event.description}</ReactMarkdown>
+                </div>
+            </div>
+        </div>
+    );
+};

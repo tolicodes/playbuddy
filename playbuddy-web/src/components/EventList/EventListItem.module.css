@@ -1,0 +1,107 @@
+.eventCard {
+  background-color: #fff;
+  border: 1px solid #e2d9ff;
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 0 0 10px;
+  padding: 12px;
+  display: flex;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease;
+
+  border: 1px solid #333;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.eventCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.noPadding {
+  margin: 0;
+}
+
+.eventTopSection {
+  display: flex;
+  align-items: center;
+}
+
+.eventImage {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #eee;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+}
+
+.eventImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.placeholderIcon {
+  font-size: 24px;
+  color: #666;
+}
+
+.eventDetails {
+  flex: 1;
+}
+
+.organizerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.organizerInfo {
+  display: flex;
+  align-items: center;
+}
+
+.organizerDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.organizerName {
+  font-size: 14px;
+  color: #000;
+}
+
+.rightInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.discountBadge {
+  background-color: #ffd700;
+  border-radius: 8px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  color: black;
+}
+
+.eventTitle {
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.eventTime {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 4px;
+}

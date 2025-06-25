@@ -1,0 +1,28 @@
+[[redirects]]
+  from = "/ios"
+  to = "https://apps.apple.com/app/playbuddy/id6642655157"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/android"
+  to = "https://play.google.com/store/apps/details?id=com.tolicodes1.kinkbuddyios"
+  status = 301
+  force = true
+  
+[[redirects]]
+  from = "https://kinks.toli.love"
+  to = "https://playbuddy.me/kinks"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://kinkbuddy.org"
+  to = "https://playbuddy.me"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

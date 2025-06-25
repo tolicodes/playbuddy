@@ -21,7 +21,7 @@ import { generateGoogleCalendarUrl } from './hooks/generateGoogleCalendarUrl';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { TicketPromoModal } from './TicketPromoModal';
 import { UE } from '../../userEventTypes';
-import { getBestPromoCode } from '../../utils/getPromoCode';
+import { getBestPromoCode } from '../../utils/getBestPromoCode';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import PromoCodeSection from './PromoCodeSection';
 import { useCalendarContext } from './hooks/CalendarContext';

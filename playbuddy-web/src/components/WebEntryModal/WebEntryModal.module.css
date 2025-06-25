@@ -1,0 +1,139 @@
+/* WebEntryPage.module.css */
+
+.pageWrapper {
+  background: linear-gradient(to bottom, #ede9fe, #f3e8ff);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.card {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.header {
+  text-align: center;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #555;
+  margin-top: 0.5rem;
+}
+
+.buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buttons img {
+  height: 40px;
+  transition: transform 0.2s ease;
+}
+
+.buttons img:hover {
+  transform: scale(1.05);
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.emoji {
+  font-size: 1.5rem;
+  width: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+
+.featureTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111;
+  margin-bottom: 0.25rem;
+}
+
+.feature p {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.tribe {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #8b5cf6;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ctaButton {
+  background: #a78bfa;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
+}
+
+.ctaButton:hover {
+  background: #7c3aed;
+}
+
+@media (max-width: 480px) {
+  .card {
+    border-radius: 0;
+    max-width: none;
+    padding: 1.5rem 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .tribe {
+    font-size: 1.125rem;
+  }
+}
