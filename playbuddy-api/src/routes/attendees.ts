@@ -1,7 +1,6 @@
-import { Router, Request, Response } from 'express';
-import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
-import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
-import { fetchAllRows } from 'helpers/fetchAllRows.js';
+import { Router, Response } from 'express';
+import { AuthenticatedRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 
 const router = Router();
@@ -17,7 +16,7 @@ type AttendeeRow = {
 
 router.get('/', async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const allRows = await fetchAllRows<AttendeeRow>({
+        const allRows = await fetchAllRows({
             from: 'event_wishlist',
             select: `event_id,
                 users:user_id (
@@ -49,6 +48,7 @@ router.get('/', async (req: AuthenticatedRequest, res: Response) => {
         res.json(grouped);
     } catch (e) {
         console.error(`Error fetching attendees`, e)
+        // @ts-ignore
         res.status(500).json({ error: `Error fetching attendees: ${e.message}` });
     }
 })

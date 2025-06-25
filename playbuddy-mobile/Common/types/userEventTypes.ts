@@ -112,6 +112,13 @@ export const enum UE {
     // Ticket-Promo Modal
 }
 
+type EventDetailsProps = {
+    auth_user_id: string | null;
+    event_id: number;
+    promo_code_id?: string;
+    deep_link_id?: string;
+}
+
 /**
  * 2) Map event names to their payload shapes (or null for no props)
  */
@@ -149,25 +156,18 @@ export interface EventPayloadMap {
     [UE.DeepLinkAttributed]: {
         auth_user_id: string | null;
         deep_link_id: string;
-        deep_link_slug: string;
-        deep_link_type: string;
         organizer_id?: string;
         community_id?: string;
     };
     [UE.DeepLinkDetected]: {
         auth_user_id: string | null;
         deep_link_id: string;
-        deep_link_slug: string;
-        deep_link_type: string;
-        organizer_id?: string;
-        community_id?: string;
         url: string;
         source: 'branch' | 'clipboard' | 'cold_start';
     };
     [UE.ProfileInitialDeepLinkAssigned]: {
         auth_user_id: string | null;
         initial_deep_link_id: string;
-        initial_deep_link_slug: string;
         organizer_id?: string;
         community_id?: string;
     };
@@ -177,161 +177,39 @@ export interface EventPayloadMap {
     [UE.DefaultsMenuLocationItemSelected]: { itemId: string; itemName: string };
 
     // Event-Detail & Tickets Flow
-    [UE.EventDetailDeepLinkPromoCodeSeen]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        deep_link_id: string;
-        deep_link_slug: string;
-        featured_promo_code_code?: string;
-        featured_promo_code_id?: string;
-    };
-    [UE.EventDetailDiscountModalOpened]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventDetailHeaderTitleClicked]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        organizer_name?: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventDetailGetTicketsClicked]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        organizer_name?: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventDetailGoogleCalendarClicked]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-    };
-    [UE.EventDetailLinkClicked]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        event_url: string;
-    };
-    [UE.EventDetailModalTicketPressed]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-    };
-    [UE.EventDetailOrganizerClicked]: {
-        auth_user_id: string | null;
-        organizer_id: string;
-        organizer_name: string;
-        event_id: string;
-        event_name: string;
-    };
-    [UE.EventDetailPromoCodeCopied]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id: string;
-        promo_code_code: string;
-    };
-    [UE.EventDetailPromoCodeSeen]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id: string;
-        promo_code_code: string;
-    };
-    [UE.EventDetailTicketPressed]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-    };
-    [UE.EventDetailWishlistToggled]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
+    [UE.EventDetailDeepLinkPromoCodeSeen]: EventDetailsProps;
+    [UE.EventDetailDiscountModalOpened]: EventDetailsProps;
+    [UE.EventDetailHeaderTitleClicked]: EventDetailsProps;
+    [UE.EventDetailGetTicketsClicked]: EventDetailsProps;
+    [UE.EventDetailGoogleCalendarClicked]: EventDetailsProps;
+    [UE.EventDetailLinkClicked]: EventDetailsProps;
+    [UE.EventDetailModalTicketPressed]: EventDetailsProps;
+    [UE.EventDetailOrganizerClicked]: EventDetailsProps;
+    [UE.EventDetailPromoCodeCopied]: EventDetailsProps;
+    [UE.EventDetailPromoCodeSeen]: EventDetailsProps;
+    [UE.EventDetailTicketPressed]: EventDetailsProps;
+    [UE.EventDetailWishlistToggled]: EventDetailsProps & {
         is_on_wishlist: boolean;
     };
 
-    [UE.EventDetailTicketPromoModalPromoCopied]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id: string;
-        promo_code_code: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
+    [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
 
     // Event-List
-    [UE.EventListItemClicked]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventListItemDiscountModalOpened]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventListItemTicketPressed]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
+    [UE.EventListItemClicked]: EventDetailsProps
+    [UE.EventListItemDiscountModalOpened]: EventDetailsProps
+    [UE.EventListItemTicketPressed]: EventDetailsProps
+    [UE.EventListItemWishlistToggled]: EventDetailsProps
+    [UE.EventListItemPromoModalTicketPressed]: EventDetailsProps
+    [UE.EventListItemPromoModalPromoCopied]: EventDetailsProps
+    [UE.EventListItemSharePressed]: EventDetailsProps
 
-    [UE.EventListItemPromoModalTicketPressed]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventListItemPromoModalPromoCopied]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
-    [UE.EventListItemWishlistToggled]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        is_on_wishlist: boolean;
-    };
-    [UE.EventListItemSharePressed]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-        promo_code_id?: string;
-        promo_code_code?: string;
-    };
+    [UE.EventListItemPromoModalTicketPressed]: EventDetailsProps
+    [UE.EventListItemPromoModalPromoCopied]: EventDetailsProps
+    [UE.EventListItemWishlistToggled]: EventDetailsProps
+    [UE.EventListItemSharePressed]: EventDetailsProps
+
+    [UE.EventListItemWishlistToggled]: EventDetailsProps
+    [UE.EventListItemSharePressed]: EventDetailsProps
 
     // Filters & Header
     [UE.FilterDoneButtonClicked]: null;
@@ -353,54 +231,40 @@ export interface EventPayloadMap {
 
     // Onboarding & Misc
     [UE.WelcomeScreenRegisterClicked]: {
-        promo_code_code?: string;
-        organizer_name?: string;
+        promo_code_id: string;
         organizer_id?: string;
         deep_link_id?: string;
-        deep_link_slug?: string;
-        deep_link_type?: string;
     };
     [UE.WelcomeScreenSkipped]: {
-        promo_code_code?: string;
-        organizer_name?: string;
+        promo_code_id?: string;
         organizer_id?: string;
         deep_link_id?: string;
-        deep_link_slug?: string;
-        deep_link_type?: string;
     };
 
     // Promo Screen
     [UE.PromoScreenViewed]: {
         auth_user_id: string | null;
         deep_link_id: string;
-        deep_link_slug: string;
         promo_code_id: string;
-        promo_code_code: string;
         has_promo: boolean;
     };
 
     [UE.PromoScreenPromoCodeCopied]: {
         auth_user_id: string | null;
         deep_link_id: string;
-        deep_link_slug: string;
         promo_code_id: string;
-        promo_code_code: string;
     };
 
     [UE.PromoScreenExploreClicked]: {
         auth_user_id: string | null;
         deep_link_id: string;
-        deep_link_slug: string;
         promo_code_id: string;
-        promo_code_code: string;
     };
 
     [UE.PromoScreenEventDetailsClicked]: {
         auth_user_id: string | null;
         deep_link_id: string;
-        deep_link_slug: string;
         promo_code_id: string;
-        promo_code_code: string;
     };
 
     // Swipe Mode
@@ -409,15 +273,7 @@ export interface EventPayloadMap {
     [UE.SwipeModeSwipeRight]: null;
 
     // Ticket-Promo Modal
-    [UE.EventDetailTicketPromoModalPromoCopied]: {
-        auth_user_id: string | null;
-        event_id: string;
-        event_name: string;
-        promo_code_id: string;
-        promo_code_code: string;
-        deep_link_id?: string;
-        deep_link_slug?: string;
-    };
+    [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
 }
 
 /**

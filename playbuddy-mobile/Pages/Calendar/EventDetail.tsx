@@ -7,7 +7,6 @@ import {
     Linking,
     ScrollView,
     Alert,
-    Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
@@ -16,16 +15,16 @@ import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 
 import { formatDate } from './hooks/calendarUtils';
-import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
-import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from '../../Common/hooks/logger';
+import { logEvent } from '../../Common/hooks/logger';
 import { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
 import { generateGoogleCalendarUrl } from './hooks/generateGoogleCalendarUrl';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { ALL_LOCATION_AREAS_ID } from '../../Common/hooks/CommonContext';
-import { useCalendarContext } from './hooks/CalendarContext';
-import PromoCodeSection from './PromoCodeSection';
 import { TicketPromoModal } from './TicketPromoModal';
 import { UE } from '../../userEventTypes';
+import { getBestPromoCode } from '../../utils/getPromoCode';
+import { useFetchEvents } from '../../Common/db-axios/useEvents';
+import PromoCodeSection from './PromoCodeSection';
+import { useCalendarContext } from './hooks/CalendarContext';
 
 /* 
  * VideoPlayer
@@ -41,105 +40,45 @@ const VideoPlayer = ({ uri }: { uri: string }) => (
     />
 );
 
-/*
- * EventHeader
- * Renders the event title with a touchable link, the wishlist icon,
- * and a Google Calendar button.
- */
-const EventHeader = ({
-    event,
-    onEventHeaderPress,
-    onToggleWishlist,
-}: {
-    event: EventWithMetadata;
-    onEventHeaderPress: () => void;
-    onToggleWishlist: () => void;
-}) => {
-    const { isOnWishlist } = useCalendarContext();
-    const itemIsOnWishlist = isOnWishlist(event.id);
-
-    return (
-        <View style={styles.headerContainer}>
-            <TouchableOpacity onPress={onEventHeaderPress} style={styles.flexOne}>
-                <Text style={styles.fullViewTitle} numberOfLines={2}>
-                    {event.name}
-                </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={onToggleWishlist} style={styles.favoriteIcon}>
-                <MaterialIcons
-                    name={itemIsOnWishlist ? 'favorite' : 'favorite-border'}
-                    size={35}
-                    color="red"
-                />
-            </TouchableOpacity>
-        </View>
-    );
-};
-
-/*
- * EventDetail
- * Main component that renders an event’s full details including image/video,
- * description, organizer info, ticket purchase logic, and promo code handling.
- */
-export const EventDetail = ({ route }) => {
-    const navigation = useNavigation<NavStack>();
-    const { selectedEvent }: { selectedEvent: EventWithMetadata } = route.params || {};
-    const { selectedLocationAreaId, currentDeepLink, authUserId } = useUserContext();
+const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) => {
+    const { currentDeepLink, authUserId } = useUserContext();
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
-    const { allEvents } = useCalendarContext();
+    const { data: allEvents } = useFetchEvents()
+    const navigation = useNavigation<NavStack>();
 
-    // If no event is provided, render nothing.
-    if (!selectedEvent) return null;
+    const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
-    // Format and retrieve event data.
-    const imageUrl = selectedEvent.image_url ? getSmallAvatarUrl(selectedEvent.image_url) : null;
+    const fullEvent = allEvents?.find(event => event.id === selectedEvent.id);
 
-    // Determine the promo code to use: initial deep link > event > organizer.
-    const eventPromoCode = selectedEvent.promo_codes?.find(code => code.scope === 'event');
-    const organizerPromoCode = selectedEvent.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const featuredPromoCode = currentDeepLink?.featured_event?.id === selectedEvent?.id ? currentDeepLink?.featured_promo_code : null;
+    const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
+    const noImageOrVideo = !selectedEvent.image_url && !selectedEvent.video_url;
 
-    const featuredPromoCodeFromWeeklyPromo = currentDeepLink?.deep_link_events?.find(event => event.event.id === selectedEvent.id)?.featured_promo_code;
-    const promoCode = featuredPromoCode || featuredPromoCodeFromWeeklyPromo || eventPromoCode || organizerPromoCode;
+    if (!fullEvent || !selectedEvent) return null;
 
-    useEffect(() => {
-        // This is just for all promo codes
-        if (promoCode) {
-            logEvent(UE.EventDetailPromoCodeSeen, {
-                auth_user_id: authUserId ?? '',
-                ...getAnalyticsPropsEvent(selectedEvent),
-                ...getAnalyticsPropsPromoCode(promoCode),
-                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            });
-        }
-    }, [promoCode, featuredPromoCode, currentDeepLink]);
+    const commonAnalyticsProps = {
+        auth_user_id: authUserId,
+        event_id: selectedEvent.id,
+        deep_link_id: currentDeepLink?.id,
+        promo_code_id: promoCode?.id,
+    }
 
     // Opens the event
     const handleEventHeaderPress = () => {
         const eventUrl = selectedEvent.event_url
-        logEvent(UE.EventDetailHeaderTitleClicked, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-        });
+        logEvent(UE.EventDetailHeaderTitleClicked, commonAnalyticsProps);
 
-        logEvent(UE.EventDetailTicketPressed, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-        });
-        Linking.openURL(eventUrl);
+        logEvent(UE.EventDetailTicketPressed, commonAnalyticsProps);
+
+        if (eventUrl) {
+            Linking.openURL(eventUrl);
+        }
     };
 
     // Toggles the wishlist status for the event.
     const handleToggleWishlist = () => {
         const currentStatus = isOnWishlist(selectedEvent.id);
         logEvent(UE.EventDetailWishlistToggled, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
+            ...commonAnalyticsProps,
             is_on_wishlist: !currentStatus,
         });
         toggleWishlistEvent.mutate({ eventId: selectedEvent.id, isOnWishlist: !currentStatus });
@@ -147,16 +86,7 @@ export const EventDetail = ({ route }) => {
 
     // Navigates to the organizer’s community events page.
     const handleOrganizerClick = () => {
-        logEvent(UE.EventDetailOrganizerClicked, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-        });
-
-        const fullEvent = allEvents.find(event => event.id === selectedEvent.id);
-
-        if (!fullEvent) return;
+        logEvent(UE.EventDetailOrganizerClicked, commonAnalyticsProps);
 
         // from the allEvents array, find the community that the organizer is in
         const community = fullEvent.communities?.find(
@@ -170,14 +100,35 @@ export const EventDetail = ({ route }) => {
         }
     };
 
+    // Handle "Get Tickets" button press.
+    const handleGetTickets = () => {
+
+        // hack for invalid links (presale for TTI)
+        const availableSoon = !selectedEvent.ticket_url?.includes('https');
+
+        if (availableSoon) {
+            return;
+        }
+
+        logEvent(UE.EventDetailGetTicketsClicked, commonAnalyticsProps);
+
+        if (!promoCode) {
+            Linking.openURL(selectedEvent.ticket_url);
+            logEvent(UE.EventDetailTicketPressed, commonAnalyticsProps);
+        } else {
+            setDiscountModalVisible(true);
+            logEvent(UE.EventDetailDiscountModalOpened, commonAnalyticsProps);
+        }
+    };
+
+    const handleModalCopyPromoCode = () => {
+        if (!promoCode) return;
+        logEvent(UE.EventDetailTicketPromoModalPromoCopied, commonAnalyticsProps);
+    };
+
     // Opens the Google Calendar URL.
     const handleGoogleCalendar = () => {
-        logEvent(UE.EventDetailGoogleCalendarClicked, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-        });
+        logEvent(UE.EventDetailGoogleCalendarClicked, commonAnalyticsProps);
         const calendarUrl = generateGoogleCalendarUrl({
             title: selectedEvent.name,
             startDate: selectedEvent.start_date,
@@ -191,66 +142,8 @@ export const EventDetail = ({ route }) => {
         });
     };
 
-    // Determine if the location area is "All".
-    const locationAreaIsAll = selectedLocationAreaId === ALL_LOCATION_AREAS_ID;
-    const [discountModalVisible, setDiscountModalVisible] = useState(false);
-
-    // hack for invalid links (presale for TTI)
-    const availableSoon = !selectedEvent.ticket_url?.includes('https');
-
-    // Handle "Get Tickets" button press.
-    const handleGetTickets = () => {
-        if (availableSoon) {
-            return;
-        }
-
-        logEvent(UE.EventDetailGetTicketsClicked, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {})
-        });
-
-        if (!promoCode) {
-            Linking.openURL(selectedEvent.ticket_url);
-            logEvent(UE.EventDetailTicketPressed, {
-                auth_user_id: authUserId ?? '',
-                ...getAnalyticsPropsEvent(selectedEvent),
-            });
-        } else {
-            setDiscountModalVisible(true);
-            logEvent(UE.EventDetailDiscountModalOpened, {
-                auth_user_id: authUserId ?? '',
-                ...getAnalyticsPropsEvent(selectedEvent),
-                ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-                ...getAnalyticsPropsPromoCode(promoCode),
-            });
-        }
-    };
-
-    const handleCopyPromoCode = () => {
-        if (!promoCode) return;
-        logEvent(UE.EventDetailPromoCodeCopied, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...getAnalyticsPropsPromoCode(promoCode),
-        });
-    };
-
-    const handleModalCopyPromoCode = () => {
-        if (!promoCode) return;
-        logEvent(UE.EventDetailTicketPromoModalPromoCopied, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(selectedEvent),
-            ...getAnalyticsPropsPromoCode(promoCode),
-        });
-    };
-
-    const noImageOrVideo = !selectedEvent.image_url && !selectedEvent.video_url;
-    console.log('noImageOrVideo', noImageOrVideo);
     return (
         <>
-
             <TicketPromoModal
                 visible={discountModalVisible}
                 promoCode={promoCode?.promo_code || 'N/A'}
@@ -258,54 +151,94 @@ export const EventDetail = ({ route }) => {
                     }`}
                 onClose={() => setDiscountModalVisible(false)}
                 onBuyTicket={() => {
-                    logEvent(UE.EventDetailModalTicketPressed, {
-                        auth_user_id: authUserId ?? '',
-                        ...getAnalyticsPropsEvent(selectedEvent),
-                        ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-                        ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-                    });
+                    logEvent(UE.EventDetailModalTicketPressed, commonAnalyticsProps);
                     Linking.openURL(selectedEvent.ticket_url);
                     setDiscountModalVisible(false);
                 }}
                 organizerName={selectedEvent.organizer?.name}
                 onCopy={handleModalCopyPromoCode}
             />
-            <ScrollView style={styles.scrollView}>
-                {selectedEvent.video_url ? (
+            {
+                selectedEvent.video_url ? (
                     <VideoPlayer uri={selectedEvent.video_url} />
                 ) : selectedEvent.image_url ? (
                     <Image source={{ uri: selectedEvent.image_url }} style={styles.fullViewImage} />
-                ) : null}
-                <View style={[styles.headerCard, noImageOrVideo && styles.headerCardNoImage]}>
-                    <View style={styles.titleRow}>
-                        <MaterialIcons name="event" size={24} color="#fff" style={styles.icon} />
-                        <Text style={styles.headerTitle}>{selectedEvent.name}</Text>
-                        <TouchableOpacity onPress={handleToggleWishlist} style={styles.favoriteIcon}>
-                            <MaterialIcons
-                                name={isOnWishlist(selectedEvent.id) ? 'favorite' : 'favorite-border'}
-                                size={28}
-                                color="#fff"
-                            />
-                        </TouchableOpacity>
-                    </View>
+                ) : null
+            }
+            <View style={[styles.headerCard, noImageOrVideo && styles.headerCardNoImage]}>
+                <View style={styles.titleRow}>
+                    <MaterialIcons name="event" size={24} color="#fff" style={styles.icon} />
+                    <Text style={styles.headerTitle}>{selectedEvent.name}</Text>
+                    <TouchableOpacity onPress={handleToggleWishlist} style={styles.favoriteIcon}>
+                        <MaterialIcons
+                            name={isOnWishlist(selectedEvent.id) ? 'favorite' : 'favorite-border'}
+                            size={28}
+                            color="#fff"
+                        />
+                    </TouchableOpacity>
+                </View>
 
-                    <View style={styles.infoRow}>
-                        <TouchableOpacity onPress={handleOrganizerClick} style={styles.organizerPill}>
-                            <MaterialIcons name="group" size={14} color="#fff" />
-                            <Text style={styles.organizerText}>{selectedEvent.organizer?.name}</Text>
-                        </TouchableOpacity>
-
-                        <View style={styles.dateRow}>
-                            <MaterialIcons name="schedule" size={14} color="#fff" />
-                            <Text style={styles.dateText}>{formatDate(selectedEvent, true)}</Text>
-                        </View>
-                    </View>
-
-                    <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
-                        <Text style={styles.ticketText}>🎟️ Get Tickets 🎟️</Text>
+                <View style={styles.infoRow}>
+                    <TouchableOpacity onPress={handleOrganizerClick} style={styles.organizerPill}>
+                        <MaterialIcons name="group" size={14} color="#fff" />
+                        <Text style={styles.organizerText}>{selectedEvent.organizer?.name}</Text>
                     </TouchableOpacity>
 
+                    <View style={styles.dateRow}>
+                        <MaterialIcons name="schedule" size={14} color="#fff" />
+                        <Text style={styles.dateText}>{formatDate(selectedEvent, true)}</Text>
+                    </View>
                 </View>
+
+                <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
+                    <Text style={styles.ticketText}>🎟️ Get Tickets 🎟️</Text>
+                </TouchableOpacity>
+
+            </View>
+        </>
+    )
+}
+
+/*
+ * EventDetail
+ * Main component that renders an event’s full details including image/video,
+ * description, organizer info, ticket purchase logic, and promo code handling.
+ */
+export const EventDetail = ({ route }) => {
+
+    const navigation = useNavigation<NavStack>();
+    const { selectedEvent }: { selectedEvent: EventWithMetadata } = route.params || {};
+    const { selectedLocationAreaId, currentDeepLink, authUserId } = useUserContext();
+    const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
+
+    // If no event is provided, render nothing.
+    if (!selectedEvent) return null;
+
+    const commonAnalyticsProps = {
+        auth_user_id: authUserId,
+        event_id: selectedEvent.id,
+        deep_link_id: currentDeepLink?.id,
+        promo_code_id: promoCode?.id,
+    }
+
+    useEffect(() => {
+        // This is just for all promo codes
+        if (promoCode) {
+            logEvent(UE.EventDetailPromoCodeSeen, commonAnalyticsProps);
+        }
+    }, [promoCode, currentDeepLink]);
+
+    const handleCopyPromoCode = () => {
+        if (!promoCode) return;
+        logEvent(UE.EventDetailPromoCodeCopied, commonAnalyticsProps);
+    };
+
+    return (
+        <>
+            <ScrollView style={styles.scrollView}>
+
+                <EventHeader selectedEvent={selectedEvent} />
+
                 <View style={styles.contentContainer}>
                     {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
                     {selectedEvent.vetted && (
