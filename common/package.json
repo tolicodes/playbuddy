@@ -7,8 +7,11 @@
         "build": "tsc -b tsconfig.json"
     },
     "dependencies": {
+        "@react-navigation/stack": "^7.4.2",
         "@tanstack/react-query": "^5.81.2",
-        "axios": "^1.10.0"
+        "axios": "^1.10.0",
+        "moment": "^2.30.1",
+        "react": "^19.1.0"
     },
     "devDependencies": {
         "@types/node": "^22.15.29",
