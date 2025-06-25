@@ -4,7 +4,7 @@ import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { authenticateRequest } from '../middleware/authenticateRequest.js';
-import { Community } from 'commonTypes.js';
+import { Community } from '../commonTypes.js';
 
 const router = Router();
 

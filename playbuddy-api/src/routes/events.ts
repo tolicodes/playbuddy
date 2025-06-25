@@ -8,7 +8,7 @@ import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
-import { flushEvents } from 'helpers/flushCache.js';
+import { flushEvents } from '../helpers/flushCache.js';
 
 const router = Router();
 

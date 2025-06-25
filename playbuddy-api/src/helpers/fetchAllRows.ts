@@ -1,6 +1,6 @@
-import { supabaseClient } from "connections/supabaseClient";
+import { supabaseClient } from "../connections/supabaseClient.js";
 
-type FetchAllRowsParams<T> = {
+type FetchAllRowsParams = {
     from: string;
     select: string;
     pageSize?: number;
@@ -10,13 +10,13 @@ type FetchAllRowsParams<T> = {
     };
 };
 
-export async function fetchAllRows<T = string>({
+export async function fetchAllRows({
     from,
     select,
     pageSize = 1000,
     options = {},
-}: FetchAllRowsParams<T>): Promise<T[]> {
-    let allRows: T[] = [];
+}: FetchAllRowsParams): Promise<any[]> {
+    let allRows: any[] = [];
     let offset = 0;
 
     while (true) {

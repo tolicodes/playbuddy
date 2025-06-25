@@ -26,7 +26,7 @@ export const authenticateRequest = async (req: AuthenticatedRequest, res: Respon
     try {
         const user = await getAuthUser(token);
         if (!user) {
-            throw new Error('No user found');
+            return res.status(401).json({ error: 'No user found' });
         }
 
         // Attach the user ID to the request object for use in the route handler

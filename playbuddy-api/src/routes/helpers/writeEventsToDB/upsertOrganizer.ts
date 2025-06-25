@@ -1,6 +1,6 @@
 
 // Import necessary types and clients
-import { Organizer } from "../../../common/types/commonTypes";
+import { Organizer } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 
 // Function to upsert an organizer and its associated community

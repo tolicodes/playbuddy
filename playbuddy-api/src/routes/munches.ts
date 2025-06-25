@@ -2,7 +2,7 @@
 
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust path if needed
-import { authenticateAdminRequest, authenticateAdminRequest, AuthenticatedRequest } from 'middleware/authenticateRequest.js';
+import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 
 const router = Router();
 

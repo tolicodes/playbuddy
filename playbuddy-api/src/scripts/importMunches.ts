@@ -25,7 +25,7 @@ import csv from "csv-parser";
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-import { supabaseClient } from "connections/supabaseClient";
+import { supabaseClient } from "../connections/supabaseClient.js";
 
 // ─── ESM __dirname / __filename shim ─────────────────────────────────────────────────────
 const __filename = fileURLToPath(import.meta.url);

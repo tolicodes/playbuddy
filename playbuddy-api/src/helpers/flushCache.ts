@@ -1,4 +1,4 @@
-import { connectRedisClient } from "../connections/redisClient";
+import { connectRedisClient } from "../connections/redisClient.js";
 
 export const flushEvents = async () => {
     const redisClient = await connectRedisClient();

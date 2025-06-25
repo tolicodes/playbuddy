@@ -1,4 +1,4 @@
-import { NormalizedEventInput } from "commonTypes.js";
+import { NormalizedEventInput } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import axios from "axios";
@@ -30,8 +30,8 @@ function prepareOrganizer(event: NormalizedEventInput) {
     let organizerCreateInput: { id?: string; name?: string; url?: string; original_id?: string } | undefined;
 
     if ('id' in organizer) {
-        organizerId = organizer.id;
-        organizerCreateInput = { id: organizer.id };
+        organizerId = organizer.id!.toString();
+        organizerCreateInput = { id: organizer.id!.toString() };
     } else if ('name' in organizer) {
         organizerCreateInput = {
             name: organizer.name,
@@ -105,7 +105,7 @@ export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEv
     logEventHeader(organizerInfo.logName, event);
 
     try {
-        const upsertedOrganizer = await tryUpsertOrganizer(event.organizer);
+        const upsertedOrganizer = await tryUpsertOrganizer(event.organizer as { id: string } | { name: string });
         if (!upsertedOrganizer) return 'failed';
 
         const { organizerId, organizerCommunityId } = upsertedOrganizer;

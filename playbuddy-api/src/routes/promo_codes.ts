@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
-import { connectRedisClient } from '../connections/redisClient.js';
-import { flushEvents } from 'helpers/flushCache.js';
+import { flushEvents } from '../helpers/flushCache.js';
 
 const router = Router();
 
