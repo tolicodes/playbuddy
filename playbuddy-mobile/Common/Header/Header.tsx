@@ -28,6 +28,7 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
 // Custom Drawer Button
 export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
     const onPressToggleDrawer = () => {
+        // @ts-expect-error It does exist
         navigation.toggleDrawer();
         logEvent(UE.HeaderDrawerButtonClicked);
     };
