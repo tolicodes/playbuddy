@@ -4,7 +4,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
 import { NavStack } from "../Nav/NavStackType";
 import { logEvent } from "../hooks/logger";
-import { UE } from "../../commonTypes";
+import { UE } from "../../userEventTypes";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
 
 // Custom Back Button

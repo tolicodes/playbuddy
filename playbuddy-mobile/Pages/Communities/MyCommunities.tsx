@@ -6,7 +6,7 @@ import { UseMutationResult } from "@tanstack/react-query";
 import { logEvent } from "../../Common/hooks/logger";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { useLeaveCommunity } from "../../Common/hooks/useCommunities";
-import { UE } from "../../commonTypes";
+import { UE } from "../../userEventTypes";
 
 const CommunityList = ({
     title,

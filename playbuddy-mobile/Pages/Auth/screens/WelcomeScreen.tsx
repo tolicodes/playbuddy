@@ -14,7 +14,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { getAnalyticsPropsDeepLink, logEvent } from '../../../Common/hooks/logger';
 import { usePromoCode } from './usePromoCode';
-import { UE } from '../../../commonTypes';
+import { UE } from '../../../userEventTypes';
 import { useUserContext } from '../hooks/UserContext';
 import { NavStack } from '../../../Common/Nav/NavStackType';
 

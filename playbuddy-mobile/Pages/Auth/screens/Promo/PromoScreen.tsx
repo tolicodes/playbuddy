@@ -18,7 +18,7 @@ import { NavStack } from '../../../../Common/Nav/NavStackType';
 import { usePromoCode } from '../usePromoCode';
 import { formatDate } from '../../../Calendar/hooks/calendarUtils';
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, logEvent } from '../../../../Common/hooks/logger';
-import { UE } from '../../../../commonTypes';
+import { UE } from '../../../../userEventTypes';
 import { useUserContext } from '../../hooks/UserContext';
 
 export const PromoScreen = ({

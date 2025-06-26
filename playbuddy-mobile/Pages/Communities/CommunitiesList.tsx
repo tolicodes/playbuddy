@@ -21,7 +21,7 @@ import {
 import { logEvent } from "../../Common/hooks/logger";
 import type { Community } from "../../Common/hooks/CommonContext";
 import type { NavStack } from "../../Common/Nav/NavStackType";
-import { UE } from "../../commonTypes";
+import { UE } from "../../userEventTypes";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
