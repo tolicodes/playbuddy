@@ -13,4 +13,4 @@
 [build]
 command = "cd ../common && npm i && cd ../playbuddy-web && npm i && npx tsc -b && npx vite build"
 base = "playbuddy-web"
-publish = "playbuddy-web/dist"
+publish = "dist"

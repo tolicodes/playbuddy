@@ -9,6 +9,7 @@ export default defineConfig({
       '@common': path.resolve(__dirname, '../common/src'),
       '@mobile': path.resolve(__dirname, '../playbuddy-mobile'),
     },
+    dedupe: ['react', 'react-dom', '@tanstack/react-query'],
   },
   optimizeDeps: {
     include: ['@tanstack/react-query', 'axios'],

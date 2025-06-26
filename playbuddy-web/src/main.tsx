@@ -10,6 +10,8 @@ import WebEntryModal from './components/WebEntryModal/WebEntryModal';
 
 const queryClient = new QueryClient();
 
+
+
 const App = () => {
   const [showModal, setShowModal] = useState(true);
 
@@ -32,5 +34,9 @@ const App = () => {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <App />
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </React.StrictMode>
 );
