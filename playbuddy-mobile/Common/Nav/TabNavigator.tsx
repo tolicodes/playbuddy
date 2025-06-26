@@ -11,10 +11,11 @@ import { Badge } from "./Badge";
 import EventCalendarView from "../../Pages/Calendar/EventCalendarView/EventCalendarView";
 import MyCalendar from "../../Pages/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
-import { DiscoverEvents } from "../../Pages/DiscoverEvents/DiscoverEvents";
+import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useNavigation } from "@react-navigation/native";
 import { headerOptions } from "../Header/Header";
+import { DiscoverPage } from "../../Pages/Discover/DiscoverPage";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
@@ -67,16 +68,16 @@ export const TabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Discover Game"
-                component={DiscoverEvents}
+                name="Discover"
+                component={DiscoverPage}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <View>
-                            <FAIcon name="gamepad" size={size} color={color} />
-                            {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />}
+                            <FAIcon name="search" size={size} color={color} />
+                            {/* {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />} */}
                         </View>
                     ),
-                    ...headerOptions({ navigation, title: 'Discover Game', isRootScreen: true }),
+                    ...headerOptions({ navigation, title: 'Discover', isRootScreen: true }),
                 }}
             />
         </Tab.Navigator>

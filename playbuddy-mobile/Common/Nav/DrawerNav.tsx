@@ -17,6 +17,7 @@ import { PromosScreen } from "../../Pages/Auth/screens/Promo/PromosScreen";
 import PlayParties from "../../Pages/PlayParties";
 import { MunchesScreen } from '../../Pages/Munches/MunchesScreen'
 import { FacilitatorsScreen } from "../../Pages/Facilitators/Facilitators";
+import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
 
 const Drawer = createDrawerNavigator();
 
@@ -52,7 +53,14 @@ export const DrawerNav = () => {
                 })}
             />
 
-
+            <Drawer.Screen
+                name="Facilitators"
+                component={FacilitatorsScreen}
+                options={{
+                    ...headerOptions({ navigation, title: 'Facilitators' }),
+                    drawerIcon: getIcon('user-tie'),
+                }}
+            />
 
             <Drawer.Screen
                 name="Promos"
@@ -110,11 +118,12 @@ export const DrawerNav = () => {
             />
 
             <Drawer.Screen
-                name="Facilitators"
-                component={FacilitatorsScreen}
+                name="Discover Game"
+                component={DiscoverGame}
                 options={{
-                    ...headerOptions({ navigation, title: 'Facilitators' }),
-                    drawerIcon: getIcon('user-tie'),
+                    drawerIcon: getIcon('gamepad'),
+                    ...headerOptions({ navigation, title: 'Discover Game' }),
+
                 }}
             />
 
@@ -127,6 +136,8 @@ export const DrawerNav = () => {
 
                 }}
             />
+
+
         </Drawer.Navigator>
     );
 };

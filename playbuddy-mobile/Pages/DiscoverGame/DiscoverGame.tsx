@@ -30,7 +30,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 type SwipeDirection = 'left' | 'right';
 
-export const DiscoverEvents: React.FC = () => {
+export const DiscoverGame: React.FC = () => {
     const { availableCardsToSwipe, toggleWishlistEvent } = useCalendarContext();
     const { authUserId } = useUserContext();
     const recordSwipe = useRecordSwipeChoice();
