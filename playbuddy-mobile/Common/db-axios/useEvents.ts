@@ -1,4 +1,4 @@
-import type { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import type { Event, NormalizedEventInput } from "../types/commonTypes";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
