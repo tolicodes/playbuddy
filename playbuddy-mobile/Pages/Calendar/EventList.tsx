@@ -13,11 +13,12 @@ import sectionListGetItemLayout from 'react-native-section-list-get-item-layout'
 import { EventWithMetadata } from "../../Common/Nav/NavStackType";
 import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
 import { NavStack } from "../../Common/Nav/NavStackType";
-import { Event, UE } from "../../commonTypes";
+import { Event } from "../../commonTypes";
 import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from "../../Common/hooks/logger";
 import { useUserContext } from "../Auth/hooks/UserContext";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { useFetchAttendees } from "../../Common/db-axios/useAttendees";
+import { UE } from "../../Common/types/userEventTypes";
 
 const HEADER_HEIGHT = 40;
 

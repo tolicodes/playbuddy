@@ -109,7 +109,7 @@ export const UE = {
     SwipeModeSwipeLeft: 'swipe_mode_swipe_left',
     SwipeModeSwipeRight: 'swipe_mode_swipe_right',
 
-    // Ticket-Promo Modal
+    AttendeeAvatarCarouselPress: 'attendee_avatar_carousel_press',
 }
 
 export type UE = (typeof UE)[keyof typeof UE];
@@ -277,6 +277,11 @@ export interface EventPayloadMap {
 
     // Ticket-Promo Modal
     [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
+
+    [UE.AttendeeAvatarCarouselPress]: {
+        auth_user_id: string | null;
+        attendee_user_id: string;
+    }
 }
 
 /**

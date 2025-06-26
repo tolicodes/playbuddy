@@ -9,7 +9,9 @@ import {
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { AvatarCircle } from '../Auth/Buttons/AvatarCircle';
 import { logEvent } from '../../Common/hooks/logger';
-import { Attendee, UE } from '../../commonTypes';
+import { Attendee } from '../../commonTypes';
+import { UE } from '../../Common/types/userEventTypes';
+import { useUserContext } from '../Auth/hooks/UserContext';
 
 interface AttendeeCarouselProps {
     attendees: Attendee[];
@@ -17,6 +19,7 @@ interface AttendeeCarouselProps {
 
 export const AttendeeCarousel: React.FC<AttendeeCarouselProps> = ({ attendees }) => {
     const navigation = useNavigation<NavStack>();
+    const { authUserId } = useUserContext();
 
     const attendeesDeduped = useMemo(() => {
         const seen = new Set<string>();
@@ -30,7 +33,8 @@ export const AttendeeCarousel: React.FC<AttendeeCarouselProps> = ({ attendees })
 
     const handlePress = (attendee: Attendee) => {
         logEvent(UE.AttendeeAvatarCarouselPress, {
-            attendeeUserId: attendee.id,
+            auth_user_id: authUserId,
+            attendee_user_id: attendee.id,
         });
         // navigation.navigate('Buddy Events', { buddyAuthUserId: attendee.user_id });
     };
