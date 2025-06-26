@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "6.0.0",
+    "version": "6.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -23,7 +23,9 @@
       "associatedDomains": [
         "applinks:playbuddy.me",
         "applinks:playbuddy.onelink.me",
-        "applinks:l.playbuddy.me"
+        "applinks:l.playbuddy.me",
+        "applinks:playbuddy.deeplinknow.com",
+        "applinks:b.playbuddy.me"
       ],
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
       "infoPlist": {
@@ -59,6 +61,28 @@
         "android.permission.RECEIVE_BOOT_COMPLETED"
       ],
       "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "playbuddy.deeplinknow.com"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "d.playbuddy.me"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
         {
           "action": "VIEW",
           "data": [
@@ -140,6 +164,6 @@
       }]
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.16.1"
+    "runtimeVersion": "6.1.0"
   }
 }
