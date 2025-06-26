@@ -24,6 +24,7 @@ import { TopBar } from './TopBar';
 import { MonthHeader } from './MonthHeader';
 import { WeekStrip } from './WeekStrip';
 import { FullCalendar } from './FullCalendar';
+import { SECTION_DATE_FORMAT } from '../hooks/useGroupedEventsMain';
 
 const WEEK_HEIGHT = 55;
 const MONTH_HEIGHT = 300;
