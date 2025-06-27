@@ -20,18 +20,18 @@ const links: LinkItem[] = [
         url: 'https://www.notion.so/bcc0be4e78bf47b0a593988fa5a4ec6f?v=ed152f9629a2457bbabb58bbaae42155&pvs=4',
         icon: 'list-ul',
     },
-    {
-        id: '2',
-        title: 'Kinky Ideas (List of Kinks)',
-        url: 'https://playbuddy.me/kinks',
-        icon: 'lightbulb-o',
-    },
-    {
-        id: '3',
-        title: 'Kinky Game',
-        url: 'https://playbuddy.me/game',
-        icon: 'gamepad',
-    },
+    // {
+    //     id: '2',
+    //     title: 'Kinky Ideas (List of Kinks)',
+    //     url: 'https://playbuddy.me/kinks',
+    //     icon: 'lightbulb-o',
+    // },
+    // {
+    //     id: '3',
+    //     title: 'Kinky Game',
+    //     url: 'https://playbuddy.me/game',
+    //     icon: 'gamepad',
+    // },
     {
         id: '4',
         title: 'The Exhibitionist Bible',
