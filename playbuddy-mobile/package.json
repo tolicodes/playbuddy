@@ -12,6 +12,7 @@
     "build:simulator:ios": "eas build --platform ios --profile development-simulator",
     "submit": "eas submit --platform all",
     "prebuild": "npx expo prebuild --clean",
+    "run:simulator": "eas build:run -p ios --latest",
     "update": "eas update --branch production --message ",
     "postinstall": "patch-package",
     "launch-deeplink": "sh -c 'npx uri-scheme open --ios \"playbuddy://https://l.playbuddy.me/$1\"' --"
