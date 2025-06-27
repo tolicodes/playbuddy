@@ -22,7 +22,7 @@ const menuGroups = [
         { title: 'Play Parties', icon: 'mask', route: 'Play Parties' },
     ],
     [
-        { title: 'Discover Game', icon: 'gamepad', route: 'DiscoverGame' },
+        { title: 'Discover Game', icon: 'gamepad', route: 'Discover Game' },
     ],
     [
         { title: 'Moar', icon: 'ellipsis-h', route: 'Moar' },
