@@ -21,7 +21,7 @@ interface ListItemProps {
     onPress: (event: Event) => void;
     noPadding?: boolean;
     fullDate?: boolean;
-    attendees?: Attendee[];
+    attendees: Attendee[];
 }
 
 export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees }) => {

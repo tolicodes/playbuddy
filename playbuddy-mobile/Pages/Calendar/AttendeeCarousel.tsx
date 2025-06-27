@@ -23,7 +23,7 @@ export const AttendeeCarousel: React.FC<AttendeeCarouselProps> = ({ attendees })
 
     const attendeesDeduped = useMemo(() => {
         const seen = new Set<string>();
-        return attendees.filter((attendee) => {
+        return attendees?.filter((attendee) => {
             const key = attendee.id;
             if (seen.has(key)) return false;
             seen.add(key);

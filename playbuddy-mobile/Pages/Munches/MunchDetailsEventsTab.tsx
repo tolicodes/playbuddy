@@ -5,6 +5,7 @@ import { LAVENDER_BACKGROUND } from '../../components/styles';
 import type { Event, Munch } from '../../commonTypes';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
 
 interface Props {
     munch: Munch;
@@ -15,6 +16,7 @@ export const MunchDetailsEventsTab = ({ munch, events }: Props) => {
     const filteredEvents = events.filter(e => e.munch_id === munch.id);
 
     const navigation = useNavigation<NavStack>();
+    const { data: attendees } = useFetchAttendees();
 
     return (
         <FlatList
@@ -30,6 +32,7 @@ export const MunchDetailsEventsTab = ({ munch, events }: Props) => {
                     onPress={() =>
                         navigation.navigate('Event Details', { selectedEvent: item })
                     }
+                    attendees={attendees?.find(a => a.event_id === item.id)?.attendees || []}
                 />
             )}
             ListEmptyComponent={

@@ -4,6 +4,7 @@ import { LinkifyText } from "../../Munches/LinkifyText";
 import type { Event, Facilitator } from "../../../Common/types/commonTypes";
 import { FlatList } from "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
+import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
 
 export const EventsTab = ({
     events,
@@ -14,6 +15,7 @@ export const EventsTab = ({
     navigation: NavStack;
     facilitator: Facilitator;
 }) => {
+    const { data: attendees } = useFetchAttendees();
     // console.log('events', events);
     const noEventsText = events.length
         ? null
@@ -43,6 +45,7 @@ export const EventsTab = ({
                     onPress={() =>
                         navigation.navigate('Event Details', { selectedEvent: item })
                     }
+                    attendees={attendees?.find(a => a.event_id === item.id)?.attendees || []}
                 />
             )}
             contentContainerStyle={styles.list}
