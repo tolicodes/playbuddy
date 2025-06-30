@@ -4,7 +4,8 @@ import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import type { Facilitator, Media } from '../common/types/commonTypes.js';
 import { authenticateAdminRequest, authenticateRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
-import { createMedia } from './media.js';
+import { transformMedia } from './helpers/transformMedia.js';
+import { syncEntityMedia } from './helpers/syncMedia.js';
 
 
 const router = Router();
@@ -66,20 +67,7 @@ async function fetchFacilitators(authUserId?: string) {
             ...facFields,
 
             tags: (f.facilitator_tags ?? []).map((ft: any) => ft.tag),
-            media: (f.facilitator_media ?? []).map((fm: any) => {
-                return {
-                    id: fm.media.id,
-                    storage_path: fm.media.storage_path,
-                    sort_order: fm.sort_order,
-                    title: fm.media.title,
-                    description: fm.media.description,
-                    is_explicit: fm.media.is_explicit,
-                    is_public: fm.media.is_public,
-                    type: fm.media.type,
-                    auth_user_id: fm.media.auth_user_id,
-                    thumbnail_url: fm.media.thumbnail_url || '',
-                }
-            }),
+            media: transformMedia(f.facilitator_media),
 
             event_ids,
             follower_ids,
@@ -226,90 +214,6 @@ async function syncTags(facilitatorId: string, tags = []) {
     }
 }
 
-type SyncMediaInput = {
-    id?: string;
-    storage_path: string;
-    title?: string;
-    description?: string;
-    is_explicit?: boolean;
-    is_public?: boolean
-}[];
-
-export async function syncFacilitatorMedia({
-    facilitatorId,
-    media,
-    authUserId
-}: {
-    facilitatorId: string;
-    media: SyncMediaInput;
-    authUserId: string;
-}) {
-    let existingFacilitatorMediaRecords: any[] = [];
-    try {
-        let { data } = await supabaseClient
-            .from('facilitator_media')
-            .select()
-            .eq('facilitator_id', facilitatorId);
-
-        existingFacilitatorMediaRecords = data || [];
-
-        // 1. Delete existing links
-        const { error: deleteError } = await supabaseClient
-            .from('facilitator_media')
-            .delete()
-            .eq('facilitator_id', facilitatorId);
-        if (deleteError) throw deleteError;
-
-        // 2. Insert new media + links
-        if (media.length) {
-            const mediaRecords = [];
-
-            for (let i = 0; i < media.length; i++) {
-                const item = media[i];
-
-                // existing records
-                if (item.id) {
-                    mediaRecords.push({
-                        facilitator_id: facilitatorId,
-                        media_id: item.id,
-                        sort_order: i,
-                    });
-                    continue;
-                }
-
-                const mediaRecord = await createMedia({
-                    storage_path: item.storage_path,
-                    title: item.title,
-                    description: item.description,
-                    is_explicit: item.is_explicit || false,
-                    authUserId: authUserId,
-                    is_public: item.is_public || true,
-                });
-                mediaRecords.push({
-                    facilitator_id: facilitatorId,
-                    media_id: mediaRecord.id,
-                    sort_order: i,
-                });
-            }
-
-            const { error: insertError } = await supabaseClient
-                .from('facilitator_media')
-                .insert(mediaRecords);
-
-            if (insertError) throw insertError;
-        }
-    } catch (err: any) {
-        // rollback
-        await supabaseClient
-            .from('facilitator_media')
-            .insert(existingFacilitatorMediaRecords)
-            .eq('facilitator_id', facilitatorId);
-        console.error('Error syncing facilitator media:', err.message || err);
-
-        throw err;
-    }
-}
-
 /**
  * Create or update facilitator fields from request
  */
@@ -345,8 +249,10 @@ router.post(
 
             // sync tags
             await syncTags(fac.id!, tags);
-            await syncFacilitatorMedia({
-                facilitatorId: fac.id!,
+            await syncEntityMedia({
+                entityId: fac.id!,
+                entityKey: 'facilitator_id',
+                joinTable: 'facilitator_media',
                 media: media.map((med: Media) => {
                     return {
                         id: med.id,
@@ -396,8 +302,10 @@ router.put(
 
             // sync tags
             await syncTags(fac.id!, tags);
-            await syncFacilitatorMedia({
-                facilitatorId: fac.id!,
+            await syncEntityMedia({
+                entityId: fac.id!,
+                entityKey: 'facilitator_id',
+                joinTable: 'facilitator_media',
                 media: media.map((med: Media) => {
                     return {
                         id: med.id,

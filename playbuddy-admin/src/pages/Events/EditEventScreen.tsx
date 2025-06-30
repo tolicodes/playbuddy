@@ -22,6 +22,7 @@ import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useCreateEvent, useFetchEvents } from '../../common/db-axios/useEvents';
 import { supabaseClient } from '../../lib/supabaseClient';
 import { useUpdateEvent } from '../../common/db-axios/useEvents';
+import { MediaManager } from '../MediaManager';
 
 const schema = Yup.object().shape({
     name: Yup.string().required('Required'),
@@ -41,6 +42,15 @@ const schema = Yup.object().shape({
     vetted: Yup.boolean().optional().nullable(),
     vetting_url: Yup.string().optional(),
     location: Yup.string().optional(),
+    media: Yup.array()
+        .of(
+            Yup.object().shape({
+                id: Yup.string().optional(),
+                storage_path: Yup.string().optional(),
+                thumbnail_url: Yup.string().optional().nullable(),
+            })
+        )
+        .optional(),
 });
 
 type FormValues = Yup.InferType<typeof schema>
@@ -88,6 +98,7 @@ export default function EditEventPage() {
             vetted: false,
             vetting_url: '',
             location: '',
+            media: [],
         },
     });
     const { control, handleSubmit, setValue, reset, watch, formState: { errors, isSubmitting } } = form;
@@ -103,6 +114,7 @@ export default function EditEventPage() {
                 vetted: eventToEdit.vetted || false,
                 vetting_url: eventToEdit.vetting_url || '',
                 location: eventToEdit.location || '',
+                media: eventToEdit.media || [],
             });
         }
     }, [eventToEdit, reset]);
@@ -388,6 +400,15 @@ export default function EditEventPage() {
                             error={!!errors.vetting_url}
                             helperText={errors.vetting_url?.message}
                         />
+                    )}
+                />
+
+                {/* Media Manager */}
+                <Controller
+                    name="media"
+                    control={control}
+                    render={({ field: { value, onChange } }) => (
+                        <MediaManager media={value || []} onMediaChange={onChange} />
                     )}
                 />
 

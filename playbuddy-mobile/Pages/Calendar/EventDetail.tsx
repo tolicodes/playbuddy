@@ -25,6 +25,9 @@ import { getBestPromoCode } from '../../utils/getBestPromoCode';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import PromoCodeSection from './PromoCodeSection';
 import { useCalendarContext } from './hooks/CalendarContext';
+import { useFetchOrganizers } from '../../Common/db-axios/useOrganizers';
+import TabBar from '../../components/TabBar';
+import { MediaCarousel } from '../../components/MediaCarousel';
 
 /* 
  * VideoPlayer
@@ -44,11 +47,13 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
     const { currentDeepLink, authUserId } = useUserContext();
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { data: allEvents } = useFetchEvents()
+    const { data: allOrganizers } = useFetchOrganizers()
     const navigation = useNavigation<NavStack>();
 
     const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
     const fullEvent = allEvents?.find(event => event.id === selectedEvent.id);
+    const fullOrganizer = allOrganizers?.find(organizer => organizer.id === selectedEvent.organizer.id);
 
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
     const noImageOrVideo = !selectedEvent.image_url && !selectedEvent.video_url;
@@ -199,6 +204,73 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
     )
 }
 
+const MediaTab = ({ event }: { event: EventWithMetadata }) => {
+    return (
+        <MediaCarousel
+            medias={event.media || []}
+        />
+    )
+}
+
+const TABS = [
+    { name: 'Details', value: 'details' },
+    { name: 'Organizer', value: 'organizer' },
+    { name: 'Media', value: 'media' },
+]
+
+const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, handleCopyPromoCode: () => void }) => {
+    const { currentDeepLink } = useUserContext();
+    const promoCode = getBestPromoCode(event, currentDeepLink);
+    const navigation = useNavigation<NavStack>();
+
+    return (
+        <View style={styles.contentContainer}>
+            {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
+            {event.vetted && (
+                <View style={styles.vettedInfo}>
+                    <Text style={styles.vettedInfoText}>
+                        This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
+                        {event.vetting_url && <Text style={{ color: '#4a6ee0', fontWeight: 'bold' }}>
+                            <Text onPress={() => Linking.openURL(event.vetting_url || '')}>here</Text>
+                        </Text>}
+                    </Text>
+                </View>
+            )}
+            {event.munch_id && (
+                <View style={styles.infoCardMunch}>
+                    <Text style={styles.infoCardText}>
+                        🍽️ This event is a <Text style={{ fontWeight: 'bold' }}>munch</Text>. Learn more on the Munch page:
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() =>
+                            navigation.navigate('Munch Details', { munchId: event.munch_id })
+                        }
+                        style={styles.infoCardButton}
+                    >
+                        <Text style={styles.infoCardButtonText}>Go to Munch</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            {event.ticket_url?.includes('fetlife') && (
+                <View style={styles.infoCardFetlife}>
+                    <Text style={styles.infoCardText}>
+                        🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
+                    </Text>
+                    <TouchableOpacity
+                        onPress={() => Linking.openURL(event.ticket_url)}
+                        style={styles.infoCardButton}
+                    >
+                        <Text style={styles.infoCardButtonText}>Open in FetLife</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+
+            <Markdown style={markdownStyles}>{event.description.replace('\n', '\n\n')}</Markdown>
+        </View>
+    )
+}
+
 /*
  * EventDetail
  * Main component that renders an event’s full details including image/video,
@@ -206,10 +278,10 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
  */
 export const EventDetail = ({ route }) => {
 
-    const navigation = useNavigation<NavStack>();
     const { selectedEvent }: { selectedEvent: EventWithMetadata } = route.params || {};
-    const { selectedLocationAreaId, currentDeepLink, authUserId } = useUserContext();
+    const { currentDeepLink, authUserId } = useUserContext();
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
+    const [activeTab, setActiveTab] = useState<string>('details');
 
     // If no event is provided, render nothing.
     if (!selectedEvent) return null;
@@ -233,57 +305,29 @@ export const EventDetail = ({ route }) => {
         logEvent(UE.EventDetailPromoCodeCopied, commonAnalyticsProps);
     };
 
+    const hasMedia = (selectedEvent.media?.length || 0) > 1;
+
+    const enabledTabs = [
+        { name: 'Details', value: 'details' },
+        ...(hasMedia ? [{ name: 'Media', value: 'media' }] : []),
+    ]
+
     return (
         <>
             <ScrollView style={styles.scrollView}>
 
                 <EventHeader selectedEvent={selectedEvent} />
 
-                <View style={styles.contentContainer}>
-                    {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
-                    {selectedEvent.vetted && (
-                        <View style={styles.vettedInfo}>
-                            <Text style={styles.vettedInfoText}>
-                                This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
-                                {selectedEvent.vetting_url && <Text style={{ color: '#4a6ee0', fontWeight: 'bold' }}>
-                                    <Text onPress={() => Linking.openURL(selectedEvent.vetting_url || '')}>here</Text>
-                                </Text>}
-                            </Text>
-                        </View>
-                    )}
-                    {selectedEvent.munch_id && (
-                        <View style={styles.infoCardMunch}>
-                            <Text style={styles.infoCardText}>
-                                🍽️ This event is a <Text style={{ fontWeight: 'bold' }}>munch</Text>. Learn more on the Munch page:
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() =>
-                                    navigation.navigate('Munch Details', { munchId: selectedEvent.munch_id })
-                                }
-                                style={styles.infoCardButton}
-                            >
-                                <Text style={styles.infoCardButtonText}>Go to Munch</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
+                {enabledTabs.length > 1 && <TabBar tabs={enabledTabs} active={activeTab} onPress={setActiveTab} />}
 
-                    {selectedEvent.ticket_url?.includes('fetlife') && (
-                        <View style={styles.infoCardFetlife}>
-                            <Text style={styles.infoCardText}>
-                                🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => Linking.openURL(selectedEvent.ticket_url)}
-                                style={styles.infoCardButton}
-                            >
-                                <Text style={styles.infoCardButtonText}>Open in FetLife</Text>
-                            </TouchableOpacity>
-                        </View>
-                    )}
+                {activeTab === 'details' && (
+                    <DetailsTab event={selectedEvent} handleCopyPromoCode={handleCopyPromoCode} />
+                )}
 
-                    <Markdown style={markdownStyles}>{selectedEvent.description.replace('\n', '\n\n')}</Markdown>
-                </View>
+                {hasMedia && <MediaTab event={selectedEvent} />}
+
             </ScrollView>
+
         </>
     );
 };

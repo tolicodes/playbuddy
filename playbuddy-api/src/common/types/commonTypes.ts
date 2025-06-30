@@ -1,7 +1,7 @@
 // only edit /common/commonTypes.ts 
 // These are copied
 
-import type { UE, UserEventInput } from "./userEventTypes";
+import type { UE, UserEventInput } from "./userEventTypes.js";
 
 
 /**
@@ -189,6 +189,9 @@ export interface Event extends EventDataSource {
 
     is_munch?: boolean;
     munch_id?: number;
+
+    media?: EventMedia[]
+    bio?: string;
 }
 
 /**
@@ -901,7 +904,7 @@ export interface Media {
     is_explicit: boolean;
     is_public: boolean;
     created_at: string; // ISO timestamp
-    thumbnail_url?: string;
+    thumbnail_url?: string | null;
 }
 
 
@@ -920,6 +923,16 @@ export interface FacilitatorMedia extends Media {
     sort_order: number;
     created_at: string;     // ISO timestamp
 }
+
+
+export interface EventMedia extends Media {
+    id: string; // UUID
+    sort_order: number;
+    event_id: number;
+    created_at: string;     // ISO timestamp
+
+};
+
 
 // Main Facilitator record, matching the updated schema
 export interface Facilitator {
@@ -972,5 +985,6 @@ export type EventAttendees = {
     event_id: number;
     attendees: Attendee[];
 }
+
 
 export type { UE };

@@ -22,7 +22,7 @@ export const MediaCarousel = ({
     facilitatorName,
 }: {
     medias: Media[];
-    facilitatorName: string;
+    facilitatorName?: string;
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [startIndex, setStartIndex] = useState(0);

@@ -1,9 +1,10 @@
-import { NormalizedEventInput } from "../../../common/types/commonTypes.js";
+import { Media, NormalizedEventInput } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import axios from "axios";
 import crypto from "crypto";
 import { EVENT_FIELDS } from "./eventFields.js";
+import { syncEntityMedia } from "../syncMedia.js";
 
 export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
@@ -98,7 +99,7 @@ async function attachCommunities(eventId: string, communities: any[], organizerC
 }
 
 
-export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEventResult> {
+export async function upsertEvent(event: NormalizedEventInput, authUserId?: string): Promise<UpsertEventResult> {
     const organizerInfo = prepareOrganizer(event);
     if (!organizerInfo) return 'failed';
 
@@ -128,6 +129,28 @@ export async function upsertEvent(event: NormalizedEventInput): Promise<UpsertEv
         const communities = event.communities || [];
         const attached = await attachCommunities(upsertedEvent.id, communities, organizerCommunityId);
         if (!attached) return 'failed';
+
+        if (event.media && event.media.length > 0) {
+            await syncEntityMedia({
+                entityId: upsertedEvent.id,
+                entityKey: 'event_id',
+                joinTable: 'event_media',
+                media: event.media?.map((med: Media) => {
+                    return {
+                        id: med.id,
+                        storage_path: med.storage_path,
+                        title: med.title!,
+                        description: med.description!,
+                        is_explicit: med.is_explicit,
+                        is_public: med.is_public,
+                        authUserId: authUserId!,
+                    };
+                }),
+                authUserId: authUserId!,
+            });
+
+            log(`EVENT MEDIA: Synced ${event.media?.length} media`);
+        }
 
         log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
         return existingEventId ? 'updated' : 'inserted';

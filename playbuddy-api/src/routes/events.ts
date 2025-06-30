@@ -4,11 +4,12 @@ import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
-import { Event } from '../commonTypes.js';
+import { Event, EventMedia, FacilitatorMedia } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 import { flushEvents } from '../helpers/flushCache.js';
+import { transformMedia } from './helpers/transformMedia.js';
 
 const router = Router();
 
@@ -40,6 +41,10 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
           location_area:location_areas(id, name),
           promo_code_event(
               promo_codes(*)
+          ),
+          event_media (
+            id, sort_order, created_at,
+            media: media ( * )
           )
         `)
                 .gte("start_date", nycMidnightUTC),
@@ -61,6 +66,11 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 return newResponseItem;
             })
         }
+
+        response.map((eventResponse: any) => {
+            eventResponse.media = transformMedia(eventResponse.event_media);
+            return eventResponse;
+        })
 
         response = transformPromoCodes(response);
 
@@ -132,6 +142,36 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     }
 });
 
+router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const event = req.body;
+    const eventResult = upsertEvent(event, req.authUserId)
+    await flushEvents();
+
+    res.json(eventResult);
+});
+
+router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const events = req.body;
+
+    const eventResults = [];
+    for (const event of events) {
+        const eventResult = await upsertEvent(event, req.authUserId);
+        eventResults.push(eventResult);
+    }
+    await flushEvents();
+
+    res.json(eventResults);
+});
+
+router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const event = req.body;
+    const eventResult = upsertEvent(event, req.authUserId)
+    await flushEvents();
+
+    res.json(eventResult);
+});
+
 router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { eventId } = req.params;
     const { status } = req.body;
@@ -166,34 +206,7 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
     }
 });
 
-router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const event = req.body;
-    const eventResult = upsertEvent(event)
-    await flushEvents();
 
-    res.json(eventResult);
-});
 
-router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const events = req.body;
-
-    const eventResults = [];
-    for (const event of events) {
-        const eventResult = await upsertEvent(event);
-        eventResults.push(eventResult);
-    }
-    await flushEvents();
-
-    res.json(eventResults);
-});
-
-router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
-    const event = req.body;
-    const eventResult = upsertEvent(event)
-    await flushEvents();
-
-    res.json(eventResult);
-});
 
 export default router;
