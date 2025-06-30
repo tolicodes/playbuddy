@@ -16,6 +16,8 @@ import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';
 import { useFetchFacilitators, useAddFacilitatorEvent, useRemoveFacilitatorEvent } from '../../common/db-axios/useFacilitators';
 import { Event, Facilitator as Fac } from '../../common/types/commonTypes';
+import { createFilterOptions } from '@mui/material/Autocomplete';
+
 
 interface EventsManagerProps {
     facilitatorId: string;
@@ -59,6 +61,12 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
         refetch();
     };
 
+    const filterEvents = createFilterOptions<Event>({
+        matchFrom: 'any', // or 'start' if you want only prefix matches
+        stringify: (option) => option.name,
+        trim: true,
+    });
+
     return (
         <Box>
             <Autocomplete
@@ -70,6 +78,7 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
 
             <Autocomplete
                 options={availableEvents || []}
+
                 getOptionLabel={(e) => e.name}
                 value={selectedEvent}
                 onChange={(_, val) => setSelectedEvent(val)}
@@ -87,6 +96,7 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
                         </li>
                     );
                 }}
+                filterOptions={filterEvents}
                 renderInput={(params) => <TextField {...params} label="Event" />} />
 
             <Button variant="outlined" onClick={handleAdd} disabled={!selectedEvent}>
