@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "clean": "rimraf dist types",
-    "dev": "NODE_ENV=development tsx watch src/app.ts",
+    "dev": "NODE_ENV=development source .env && tsx watch src/app.ts",
     "start": "NODE_ENV=production node ./dist/app.js",
     "script:qr": "tsx src/scripts/qrcodes/index.ts",
     "prebuild": "npm run clean",
@@ -30,7 +30,7 @@
     "test:smoke": "npm test -- ./test/smoke.test.ts",
     "test:coverage": "npm test -- --coverage",
     "test:serial": "npm test -- --runInBand",
-    "deploy": "npm run build && source .env && gcloud run deploy --set-env-vars SUPABASE_ADMIN_KEY=$SUPABASE_ADMIN_KEY,REDIS_PASSWORD=$REDIS_PASSWORD,SUPABASE_HOST=$SUPABASE_HOST,REDIS_HOST=$REDIS_HOST,SUPABASE_S3_ACCESS_KEY_ID=$SUPABASE_S3_ACCESS_KEY_ID,SUPABASE_S3_SECRET_ACCESS_KEY=$SUPABASE_S3_SECRET_ACCESS_KEY,SUPABASE_S3_BUCKET_NAME=$SUPABASE_S3_BUCKET_NAME,SUPABASE_S3_ENDPOINT=$SUPABASE_S3_ENDPOINT --source . --memory 2G",
+    "deploy": "npm run build && source .env.production && gcloud run deploy --set-env-vars SUPABASE_ADMIN_KEY=$SUPABASE_ADMIN_KEY,REDIS_PASSWORD=$REDIS_PASSWORD,SUPABASE_HOST=$SUPABASE_HOST,REDIS_HOST=$REDIS_HOST,SUPABASE_S3_ACCESS_KEY_ID=$SUPABASE_S3_ACCESS_KEY_ID,SUPABASE_S3_SECRET_ACCESS_KEY=$SUPABASE_S3_SECRET_ACCESS_KEY,SUPABASE_S3_BUCKET_NAME=$SUPABASE_S3_BUCKET_NAME,SUPABASE_S3_ENDPOINT=$SUPABASE_S3_ENDPOINT --source . --memory 2G",
     "logs": " gcloud beta run services logs read $SERVICE --project=$PROJECT --region=[REGION] --limit=10",
     "logs:tail": "gcloud beta run services logs tail $SERVICE --project=$PROJECT --region=$REGION"
   },

@@ -1,5 +1,7 @@
 import { NormalizedEventInput } from "../../commonTypes.js";
-import { upsertEvent } from "./upsertEvent.js";
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 
 export const writeEventsToDB = async (events: NormalizedEventInput[]) => {
   let addedCount = 0;
@@ -7,10 +9,15 @@ export const writeEventsToDB = async (events: NormalizedEventInput[]) => {
   let failedCount = 0;
 
   for (const event of events) {
-    const result = await upsertEvent(event);
-    if (result === 'inserted') {
+    const result = await axios.post(process.env.PLAYBUDDY_API_URL + '/events', event, {
+      headers: {
+        'Authorization': `Bearer ${process.env.PLAYBUDDY_API_SERVICE_KEY}`
+      }
+    });
+    console.log(`Event ${event.name}: ${result.data}`)
+    if (result.data === 'inserted') {
       addedCount++;
-    } else if (result === 'updated') {
+    } else if (result.data === 'updated') {
       updatedCount++;
     } else {
       failedCount++;

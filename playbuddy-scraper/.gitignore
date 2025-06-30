@@ -5,6 +5,7 @@ gmail_credentials.json
 openai_token.json
 openai_key.json
 .env
+.env.production
 types/
 dist/
 data/outputs

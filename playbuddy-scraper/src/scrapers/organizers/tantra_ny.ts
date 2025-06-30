@@ -3,9 +3,11 @@ import { DateTime } from 'luxon';
 
 import { NormalizedEventInput } from "../../commonTypes.js";
 import { ScraperParams } from "../types.js";
+import TurndownService from "turndown";
 
 const API_URL = "https://tantrany.com/api/events-listings.json.php?user=toli";
 const ORGANIZER_PAGE = "https://tantrany.com";
+const VETTING_URL = "https://www.tantrany.com/desire/#apply"
 
 interface EventDetails {
   EventId: string;
@@ -83,6 +85,19 @@ export const scrapeOrganizerTantraNY = async ({
 
       const location = `${event.LocationName} - ${event.Address1} ${event.City}, ${event.State} ${event.Zip}`;
 
+      const turndownService = new TurndownService();
+
+      // not sure why we have to do it twice?
+      const description =
+        turndownService.turndown(
+          turndownService.turndown(event.EventDataHTMLDescription || '')
+        );
+
+      const vetted = [4, 11].includes(parseInt(event.ProductId));
+      const play_party = event.ProductId === '4';
+
+      console.log('vetted', event.ProductId, vetted)
+
       return {
         ...eventDefaults,
 
@@ -105,13 +120,17 @@ export const scrapeOrganizerTantraNY = async ({
         location,
         price: "",
 
-        description: event.EventDataHTMLDescription || '',
+        description,
         short_description: event.DescShort || '',
 
         tags: ["tantra"],
         source_ticketing_platform: "Eventbrite",
+        vetted,
+        vetting_url: vetted ? VETTING_URL : '',
+        play_party,
       };
     });
+
 
     return events;
   } catch (error) {

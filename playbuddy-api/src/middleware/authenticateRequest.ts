@@ -69,6 +69,11 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
         return res.status(401).json({ error: 'No token provided' });
     }
 
+    // service key for scraper
+    if (process.env.PLAYBUDDY_API_SERVICE_KEY === token) {
+        return next();
+    }
+
     try {
         const user = await getAuthUser(token);
         if (!user) {

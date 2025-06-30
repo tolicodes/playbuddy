@@ -129,7 +129,7 @@ const scrapeOrganizerPage = async ({
 
     for (const event of events) {
       console.log(`SCRAPE ORGANIZER: Scraping description from event page: ${event.name}`)
-      event.description = await scrapeDescriptionFromEventPage(event.event_url);
+      event.description = await scrapeDescriptionFromEventPage(event.event_url!);
       await waitBetweenRequests(); // Pause between scrapes
     }
 
