@@ -104,8 +104,8 @@ export const CommunitiesList = ({
                     <TouchableOpacity
                         style={styles.ctaButton}
                         onPress={() => {
-                            navigation.navigate("Communities", {
-                                screen: "Join Community",
+                            navigation.navigate("Organizers", {
+                                screen: "Follow Organizers",
                             });
                             logEvent(
                                 "community_list_navigate_to_join_community_button_pressed"
@@ -114,8 +114,8 @@ export const CommunitiesList = ({
                     >
                         <Text style={styles.ctaButtonText}>
                             {entityType === "private_community"
-                                ? "Join Community"
-                                : "Follow Organizer"}
+                                ? "Join a Community"
+                                : "Follow an Organizer"}
                         </Text>
                     </TouchableOpacity>
                 </View>

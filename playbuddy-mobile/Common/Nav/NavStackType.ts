@@ -17,7 +17,7 @@ export type NavStackProps = {
 
     // Organization & Community
     'Organizers': {
-        screen: 'My Communities' | 'My Events' | 'Join Community';
+        screen: 'My Organizers' | 'My Events' | 'Follow Organizers';
     };
     'Community Events': {
         communityId: string;
