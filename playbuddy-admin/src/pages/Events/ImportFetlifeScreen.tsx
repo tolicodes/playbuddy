@@ -35,7 +35,6 @@ export default function ImportFetlifeScreen() {
   const [excluded, setExcluded] = useState<Record<string, boolean>>({});
   const [isMunchOverride, setIsMunchOverride] = useState<Record<string, boolean>>({});
   const [isPlayParty, setIsPlayParty] = useState<Record<string, boolean>>({});
-  const [unmatchedHandles, setUnmatchedHandles] = useState<ImportedEvent[]>([]);
 
   const munchMap = useMemo(() => {
     const map: Record<string, Munch> = {};
@@ -52,22 +51,13 @@ export default function ImportFetlifeScreen() {
     importedEvents.forEach((event) => {
       const handle = event.fetlife_handle?.toLowerCase();
       const munch = munchMap[handle];
-      if (munch) {
-        if (!grouped[handle]) grouped[handle] = [];
-        grouped[handle].push({ ...event, munch });
-      }
-    });
-    return grouped;
-  }, [importedEvents, munchMap]);
+      if (!grouped[handle]) grouped[handle] = [];
+      grouped[handle].push({ ...event, munch });
 
-  useEffect(() => {
-    const unmatched: ImportedEvent[] = [];
-    importedEvents.forEach((event) => {
-      const handle = event.fetlife_handle?.toLowerCase();
-      const munch = munchMap[handle];
-      if (!munch) unmatched.push(event);
     });
-    setUnmatchedHandles(unmatched);
+
+    console.log('grouped', grouped)
+    return grouped;
   }, [importedEvents, munchMap]);
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,13 +231,6 @@ export default function ImportFetlifeScreen() {
           </Table>
         </Box>
       ))}
-
-      <Box mt={4}>
-        <Typography variant="h6">Couldn't find munch for:</Typography>
-        {unmatchedHandles.map((event, idx) => (
-          <Typography key={idx}>{event.fetlife_handle || 'Unknown'} — {event.name}</Typography>
-        ))}
-      </Box>
 
       <Box mt={4}>
         <Button variant="contained" onClick={handleCreateAll}>Create Events</Button>
