@@ -8,3 +8,5 @@ playbuddy-mobile/Common/.uxCam.ts.swp
 playbuddy-api/.DS_Store
 .DS_Store
 .DS_Store
+**/*.d.ts
+**/*.d.ts.map
