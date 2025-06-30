@@ -41,11 +41,6 @@ export default function FacilitatorsListScreen() {
                 <TableHead>
                     <TableRow>
                         <TableCell>Name</TableCell>
-                        <TableCell>Verified</TableCell>
-                        <TableCell>Location</TableCell>
-                        <TableCell>Instagram</TableCell>
-                        <TableCell>FetLife</TableCell>
-                        <TableCell>Created At</TableCell>
                         <TableCell>Edit</TableCell>
                     </TableRow>
                 </TableHead>
@@ -53,19 +48,7 @@ export default function FacilitatorsListScreen() {
                     {list?.map((f) => (
                         <TableRow key={f.id}>
                             <TableCell>{f.name}</TableCell>
-                            <TableCell>{f.verified ? 'Yes' : 'No'}</TableCell>
-                            <TableCell>{f.location || '—'}</TableCell>
-                            <TableCell>
-                                {f.instagram_handle
-                                    ? <a href={f.instagram_handle} target="_blank" rel="noopener">Link</a>
-                                    : '—'}
-                            </TableCell>
-                            <TableCell>
-                                {f.fetlife_handle
-                                    ? <a href={f.fetlife_handle} target="_blank" rel="noopener">Link</a>
-                                    : '—'}
-                            </TableCell>
-                            <TableCell>{new Date(f.created_at).toLocaleDateString()}</TableCell>
+
                             <TableCell>
                                 <IconButton onClick={() => navigate(`/facilitators/${f.id}`)}>
                                     <Edit />

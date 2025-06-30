@@ -64,7 +64,7 @@ const schema: Yup.ObjectSchema<FormValues> = Yup.object({
             Yup.object().shape({
                 id: Yup.string().optional(),
                 storage_path: Yup.string().optional(),
-                thumbnail_url: Yup.string().optional(),
+                thumbnail_url: Yup.string().optional().nullable(),
             })
         )
         .optional(),
