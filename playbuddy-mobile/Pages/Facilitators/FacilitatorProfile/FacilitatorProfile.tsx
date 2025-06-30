@@ -110,7 +110,8 @@ export default function ProfileScreen() {
                         tabs={TABS}
                         active={activeTab}
                         onPress={setActiveTab}
-                    />                </View>
+                    />                
+                </View>
             )}
 
             {activeTab === 'bio' ? (
