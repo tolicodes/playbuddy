@@ -4,6 +4,10 @@ import { APP_STORE_URL, GOOGLE_PLAY_URL } from '../../../../common/src/config';
 import googlePlayIcon from '../../assets/google-app-icon.jpg';
 
 const WebEntryModal = ({ onClose }: { onClose: () => void }) => {
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const neither = !isIOS && !isAndroid;
+
     return (
         <div className={styles.pageWrapper}>
             <div className={styles.card}>
@@ -17,21 +21,20 @@ const WebEntryModal = ({ onClose }: { onClose: () => void }) => {
 
                 {/* Download Buttons */}
                 <div className={styles.buttons}>
-                    <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+                    {isIOS || neither && <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
                         <img
                             src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&releaseDate=1311120000&h=5b3127492d87ec2af62ff4d2a7492b70"
                             alt="Download on the App Store"
                             height="40"
                         />
-                    </a>
-
-                    <a href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+                    </a>}
+                    {isAndroid || neither && <a href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
                         <img
                             src={googlePlayIcon}
                             alt="Download on Google Play"
                             height="40"
                         />
-                    </a>
+                    </a>}
                 </div>
 
                 {/* Feature List */}
