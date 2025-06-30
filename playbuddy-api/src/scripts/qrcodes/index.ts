@@ -41,7 +41,7 @@ import path from 'path';
 import csv from 'csv-parser';
 import QRCode from 'qrcode';
 import sharp from 'sharp';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -300,6 +300,29 @@ async function mergeAllPdfs() {
 async function tileBusinessCards() {
     if (type !== 'business_card') return;
 
+    function drawTrimLines(page, x, y) {
+        const trimLength = 12;
+        const trimWidth = 0.5;
+        const color = rgb(0.6, 0.6, 0.6);
+    
+        // Bottom-left corner
+        page.drawLine({ start: { x, y }, end: { x: x + trimLength, y }, thickness: trimWidth, color });
+        page.drawLine({ start: { x, y }, end: { x, y: y + trimLength }, thickness: trimWidth, color });
+    
+        // Bottom-right
+        page.drawLine({ start: { x: x + SAFE_W, y }, end: { x: x + SAFE_W - trimLength, y }, thickness: trimWidth, color });
+        page.drawLine({ start: { x: x + SAFE_W, y }, end: { x: x + SAFE_W, y: y + trimLength }, thickness: trimWidth, color });
+    
+        // Top-left
+        page.drawLine({ start: { x, y: y + SAFE_H }, end: { x: x + trimLength, y: y + SAFE_H }, thickness: trimWidth, color });
+        page.drawLine({ start: { x, y: y + SAFE_H }, end: { x, y: y + SAFE_H - trimLength }, thickness: trimWidth, color });
+    
+        // Top-right
+        page.drawLine({ start: { x: x + SAFE_W, y: y + SAFE_H }, end: { x: x + SAFE_W - trimLength, y: y + SAFE_H }, thickness: trimWidth, color });
+        page.drawLine({ start: { x: x + SAFE_W, y: y + SAFE_H }, end: { x: x + SAFE_W, y: y + SAFE_H - trimLength }, thickness: trimWidth, color });
+    }
+    
+
     console.log('\nTiling business cards into combined_cards_8x11.pdf…');
 
     // 1) Count total cards (equal to number of rows in CSV, or number of PDFs)
@@ -356,7 +379,9 @@ async function tileBusinessCards() {
                 width: SAFE_W,
                 height: SAFE_H,
             });
+            drawTrimLines(frontPage, x, y)
         }
+
         console.log(`  📄 Added front side page ${p + 1} with ${cardsInPage} card(s).`);
 
         // ─ Back page
@@ -373,7 +398,10 @@ async function tileBusinessCards() {
                 width: SAFE_W,
                 height: SAFE_H,
             });
+            drawTrimLines(backPage, x, y)
+
         }
+
         console.log(`  📄 Added back side page ${p + 1} with ${cardsInPage} card(s).`);
     }
 
