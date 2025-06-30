@@ -28,6 +28,7 @@ const MUNCH_FETLIFE_HANDLES = [
     'TallGoddessNY',
     'Sir-airose',
     'Kink-Collective',
+    'Miss__Scorpio'
 ];
 
 const maxEventsPerHour = 60;
