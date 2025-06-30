@@ -1,6 +1,7 @@
 import { supabaseClient } from "../connections/supabaseClient.js"
 import { Router } from "express";
 import { Request, Response } from "express";
+import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 
 export const router = Router();
 
@@ -53,8 +54,7 @@ router.get('/', async (req: Request, res: Response) => {
       const promoCodes = dpc.map((item: any) => item.promo_codes);
 
       // For each promo code with scope = 'event', gather its attached events
-      let eventIds: number[] = [];
-      let eventObjects: any[] = []; // if you want actual event objects, you'd do a separate fetch or store them differently
+      const eventIds: number[] = [];
 
       promoCodes.forEach((pc: any) => {
         if (pc?.scope === 'event' && pc?.promo_code_event) {
@@ -80,6 +80,34 @@ router.get('/', async (req: Request, res: Response) => {
     console.error(err);
     return res.status(500).json({ error: (err as Error).message });
   }
+});
+
+router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+  const { campaign, slug, type, organizer_id, featured_event_id, featured_promo_code_id, facilitator_id, campaign_start_date, campaign_end_date, channel } = req.body;
+
+  const { data, error } = await supabaseClient
+    .from('deep_links')
+    .insert([
+      {
+        campaign,
+        slug,
+        type,
+        featured_event_id: featured_event_id ? featured_event_id : null,
+        featured_promo_code_id: featured_promo_code_id ? featured_promo_code_id : null,
+        facilitator_id: facilitator_id ? facilitator_id : null,
+        organizer_id: organizer_id ? organizer_id : null,
+        channel,
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  return res.json({ data });
 });
 
 export default router;  

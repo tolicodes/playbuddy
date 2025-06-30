@@ -839,15 +839,32 @@ export interface DeepLink {
 
     deep_link_events: DeepLinkEvent[]
 
+    facilitatorId?: string;        // from facilitator_id
+
     campaign_start_date?: string;
     campaign_end_date?: string;
     channel?: string;
 
     printRunId?: number;           // from print_run_id
     marketingAssigneeId?: number;  // from marketing_assignee_id
-    facilitatorId?: number;        // from facilitator_id
 
     printRunAssetNumber?: number;  // from print_run_asset_number
+}
+
+export interface DeepLinkInput {
+    id?: string;
+    campaign?: string;
+    slug?: string;
+    type?: string;
+    featured_event?: Event;
+    featured_promo_code?: string;
+    facilitator_id?: string;
+    campaign_start_date?: string;
+    campaign_end_date?: string;
+    channel?: string;
+    print_run_id?: number;
+    marketing_assignee_id?: number;
+    print_run_asset_number?: number;
 }
 
 export interface MarketingAssignee {

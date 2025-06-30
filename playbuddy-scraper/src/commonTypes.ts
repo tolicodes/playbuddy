@@ -1,7 +1,7 @@
 // only edit /common/commonTypes.ts 
 // These are copied
 
-import type { UE, UserEventInput } from "./userEventTypes";
+import type { UE, UserEventInput } from "./userEventTypes.js";
 
 
 /**
@@ -189,6 +189,9 @@ export interface Event extends EventDataSource {
 
     is_munch?: boolean;
     munch_id?: number;
+
+    media?: EventMedia[]
+    bio?: string;
 }
 
 /**
@@ -836,15 +839,32 @@ export interface DeepLink {
 
     deep_link_events: DeepLinkEvent[]
 
+    facilitatorId?: string;        // from facilitator_id
+
     campaign_start_date?: string;
     campaign_end_date?: string;
     channel?: string;
 
     printRunId?: number;           // from print_run_id
     marketingAssigneeId?: number;  // from marketing_assignee_id
-    facilitatorId?: number;        // from facilitator_id
 
     printRunAssetNumber?: number;  // from print_run_asset_number
+}
+
+export interface DeepLinkInput {
+    id?: string;
+    campaign?: string;
+    slug?: string;
+    type?: string;
+    featured_event?: Event;
+    featured_promo_code?: string;
+    facilitator_id?: string;
+    campaign_start_date?: string;
+    campaign_end_date?: string;
+    channel?: string;
+    print_run_id?: number;
+    marketing_assignee_id?: number;
+    print_run_asset_number?: number;
 }
 
 export interface MarketingAssignee {
@@ -901,7 +921,7 @@ export interface Media {
     is_explicit: boolean;
     is_public: boolean;
     created_at: string; // ISO timestamp
-    thumbnail_url?: string;
+    thumbnail_url?: string | null;
 }
 
 
@@ -920,6 +940,16 @@ export interface FacilitatorMedia extends Media {
     sort_order: number;
     created_at: string;     // ISO timestamp
 }
+
+
+export interface EventMedia extends Media {
+    id: string; // UUID
+    sort_order: number;
+    event_id: number;
+    created_at: string;     // ISO timestamp
+
+};
+
 
 // Main Facilitator record, matching the updated schema
 export interface Facilitator {
@@ -972,5 +1002,6 @@ export type EventAttendees = {
     event_id: number;
     attendees: Attendee[];
 }
+
 
 export type { UE };

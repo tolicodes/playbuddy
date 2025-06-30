@@ -13,6 +13,8 @@ import PrintRuns from "./pages/PrintRuns/PrintRunsAdmin";
 import { PromoCodeEventManager } from "./pages/PromoCodes/PromoCodeEventManager";
 import EventsListScreen from "./pages/Events/EventsListScreen";
 import ImportFetlifeScreen from "./pages/Events/ImportFetlifeScreen";
+import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
+import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -43,7 +45,10 @@ export default function App() {
     '/facilitators/:id',
     '/print-runs',
     '/promo-codes',
-    '/events/import-fetlife'
+    '/events/import-fetlife',
+    '/deep-links',
+    '/deep-links/new',
+    '/deep-links/:id'
   ].indexOf(pathname);
 
   return (
@@ -58,6 +63,7 @@ export default function App() {
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
             <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
+            <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
           </Tabs>
         </Toolbar>
       </AppBar>
@@ -76,6 +82,9 @@ export default function App() {
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />
         <Route path="/print-runs" element={<PrintRuns />} />
         <Route path="/promo-codes" element={<PromoCodeEventManager />} />
+        <Route path="/deep-links" element={<DeepLinksListScreen />} />
+        <Route path="/deep-links/new" element={<EditDeepLinkScreen />} />
+        <Route path="/deep-links/:id" element={<EditDeepLinkScreen />} />
       </Routes>
     </Box>
   );
