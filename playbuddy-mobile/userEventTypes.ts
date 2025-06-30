@@ -110,7 +110,7 @@ export const UE = {
     SwipeModeSwipeRight: 'swipe_mode_swipe_right',
 
     AttendeeAvatarCarouselPress: 'attendee_avatar_carousel_press',
-}
+} as const;
 
 export type UE = (typeof UE)[keyof typeof UE];
 
@@ -204,14 +204,6 @@ export interface EventPayloadMap {
     [UE.EventListItemWishlistToggled]: EventDetailsProps
     [UE.EventListItemPromoModalTicketPressed]: EventDetailsProps
     [UE.EventListItemPromoModalPromoCopied]: EventDetailsProps
-    [UE.EventListItemSharePressed]: EventDetailsProps
-
-    [UE.EventListItemPromoModalTicketPressed]: EventDetailsProps
-    [UE.EventListItemPromoModalPromoCopied]: EventDetailsProps
-    [UE.EventListItemWishlistToggled]: EventDetailsProps
-    [UE.EventListItemSharePressed]: EventDetailsProps
-
-    [UE.EventListItemWishlistToggled]: EventDetailsProps
     [UE.EventListItemSharePressed]: EventDetailsProps
 
     // Filters & Header
