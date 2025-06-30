@@ -10,8 +10,8 @@ export interface Mapping {
 interface BranchExtractorProps {
     assignee: string
     version: string
-    startNumber: number             // only extract numbers >= this
-    count: number                   // extract this many numbers
+    startNumber: number
+    count: number
     onExtract: (mappings: Mapping[]) => void
 }
 
@@ -33,6 +33,7 @@ export default function BranchExtractor({
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
+
         setFile(file)
         setLoading(true)
         setError(null)
@@ -43,18 +44,18 @@ export default function BranchExtractor({
             complete: (res) => {
                 const rows = res.data
 
-                // 1) find the header row index by looking for the columns
+                // Find the header row
                 const hdrIdx = rows.findIndex(r =>
                     r.some(c => c.toLowerCase().includes('marketing title')) &&
                     r.some(c => c.toLowerCase().includes('short url'))
                 )
+
                 if (hdrIdx < 0) {
                     setError('Could not find header row containing “marketing title” and “short url”.')
                     setLoading(false)
                     return
                 }
 
-                // 2) determine the indices for title & URL columns
                 const header = rows[hdrIdx].map(c => c.toLowerCase())
                 const titleIdx = header.findIndex(c => c.includes('marketing title'))
                 const urlIdx = header.findIndex(c => c.includes('short url'))
@@ -65,30 +66,31 @@ export default function BranchExtractor({
                     return
                 }
 
-                // 3) parse subsequent rows
+                // Match entries like: [300] Peanutbutter ...
+                const re = new RegExp(`\\[(\\d+)\\]\\s*${escapeRegExp(assignee)}`, 'i')
                 const out: Mapping[] = []
-                const re = new RegExp(`\\[(\\d+)-(\\d+)\\]\s+${escapeRegExp(assignee)}\s+`)
+
                 for (let i = hdrIdx + 1; i < rows.length; i++) {
                     const row = rows[i]
                     const title = (row[titleIdx] || '').trim()
                     const url = (row[urlIdx] || '').trim()
 
                     const m = title.match(re)
-                    if (m) {
-                        const start = parseInt(m[1], 10)
-                        const end = parseInt(m[2], 10)
-                        for (let n = start; n <= end; n++) {
-                            if (n >= startNumber && out.length < count) {
-                                const code = url.split('/').pop() || ''
-                                if (code) out.push({ printRunAssetNumber: n, code })
-                            }
+                    if (!m) continue
+
+                    const n = parseInt(m[1], 10)
+                    if (n >= startNumber && n < startNumber + count) {
+                        const code = url.split('/').pop() || ''
+                        if (code) {
+                            out.push({ printRunAssetNumber: n, code })
                         }
                     }
                 }
 
                 if (out.length === 0) {
-                    setError(`No rows with number ≥ ${startNumber} matched the format.`)
+                    setError(`No rows found for numbers starting at ${startNumber}.`)
                 }
+
                 setMappings(out)
                 onExtract(out)
                 setLoading(false)
