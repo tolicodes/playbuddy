@@ -23,50 +23,9 @@ import { UE } from '../../userEventTypes';
 import type { DeepLink } from '../../commonTypes';
 
 
-import DeepLinkNow from "@deeplinknow/react-native";
-
 const CLIPBOARD_CHECK_KEY = 'hasCheckedDeepLinkClipboard';
 
-const DEEP_LINK_NOW_KEY = process.env.DEEP_LINK_NOW_KEY;
-
-const checkDeferredDeepLink = async () => {
-    const matchResponse = await DeepLinkNow.findDeferredUser();
-
-    if (matchResponse && matchResponse.matches.length > 0) {
-        // Sort matches by confidence score (highest first) if needed
-        const bestMatch = matchResponse.matches[0];
-
-        console.log(` Confidence score: ${bestMatch.confidence_score}`);
-
-        // Check if there's a deep link to handle
-        if (bestMatch.deeplink) {
-            console.log(`Target URL: ${bestMatch.deeplink.target_url}`);
-            console.log("Metadata:", bestMatch.deeplink.metadata);
-
-            console.log(`DeepLinkNow found deferred deep link: ${bestMatch.deeplink.target_url}`);
-            // Route user to the appropriate screen based on the deep link
-        }
-
-        // You can also check match details to see what parameters matched
-        console.log("Match details: ", bestMatch.match_details);
-    } else {
-        console.log("No deferred deep links found");
-    }
-};
-
-
-const deepLinkNowInit = async () => {
-    await DeepLinkNow.initialize(DEEP_LINK_NOW_KEY, {
-        enableLogs: true, // Optional: Enable detailed logging for debugging
-    });
-
-    checkDeferredDeepLink();
-}
-
 export default function DeepLinkHandler() {
-    useEffect(() => {
-        deepLinkNowInit();
-    }, []);
 
     const { data: deepLinks = [], isLoading: loadingLinks } = useFetchDeepLinks();
     const addDeepLink = useAddDeepLinkToUser();
@@ -75,7 +34,13 @@ export default function DeepLinkHandler() {
 
     const matchDeepLink = useCallback(
         (url: string): DeepLink | undefined => {
-            const slug = new URLParse(url).pathname.split('/').pop();
+            const parsed = new URLParse(url)
+            const urlPath = parsed.pathname;
+            const searchParams = parsed.query;
+
+            // alert('urlPath: ' + JSON.stringify(searchParams))
+
+            const slug = urlPath.split('/').pop();
             return deepLinks.find(d => d.slug === slug);
         },
         [deepLinks],
