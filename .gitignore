@@ -10,3 +10,4 @@ playbuddy-api/.DS_Store
 .DS_Store
 **/*.d.ts
 **/*.d.ts.map
+*.map
