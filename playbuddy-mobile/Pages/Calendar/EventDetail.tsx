@@ -189,9 +189,14 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         <Text style={styles.organizerText}>{selectedEvent.organizer?.name}</Text>
                     </TouchableOpacity>
 
-                    <View style={styles.dateRow}>
+                    <View style={styles.infoRowPill}>
                         <MaterialIcons name="schedule" size={14} color="#fff" />
-                        <Text style={styles.dateText}>{formatDate(selectedEvent, true)}</Text>
+                        <Text style={styles.infoText}>{formatDate(selectedEvent, true)}</Text>
+                    </View>
+
+                    <View style={styles.infoRowPill}>
+                        <MaterialIcons name="location-pin" size={14} color="#fff" />
+                        <Text style={styles.infoText}>{selectedEvent.location}</Text>
                     </View>
                 </View>
 
@@ -501,7 +506,7 @@ const styles = StyleSheet.create({
         textDecorationLine: 'underline',
     },
 
-    dateRow: {
+    infoRowPill: {
         flexDirection: 'row',
         alignItems: 'center',
         backgroundColor: '#6B57D0',
@@ -509,7 +514,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 20,
     },
-    dateText: {
+    infoText: {
         marginLeft: 6,
         color: '#fff',
         fontSize: 13,
