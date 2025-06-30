@@ -19,32 +19,15 @@ import { BioTab } from './BioTab';
 import { ProfileHeader } from './ProfileHeader';
 import { IntroVideo } from './IntroVideo';
 import { HEADER_PURPLE } from '../../../components/styles';
+import TabBar from '../../../components/TabBar';
 
 const STATIC_HEADER_HEIGHT = 140;
 
-const TabBar = ({
-    active,
-    onPress,
-}: {
-    active: 'bio' | 'events' | 'media';
-    onPress: (tab: 'bio' | 'events' | 'media') => void;
-}) => (
-    <View style={styles.tabContainer}>
-        <View style={styles.tabRow}>
-            {(['bio', 'events', 'media'] as const).map(key => (
-                <TouchableOpacity
-                    key={key}
-                    style={[styles.tabButton, active === key && styles.activeTab]}
-                    onPress={() => onPress(key)}
-                >
-                    <Text style={active === key ? styles.activeTabText : styles.tabText}>
-                        {key.charAt(0).toUpperCase() + key.slice(1)}
-                    </Text>
-                </TouchableOpacity>
-            ))}
-        </View>
-    </View>
-);
+const TABS = [
+    { name: 'Bio', value: 'bio' },
+    { name: 'Events', value: 'events' },
+    { name: 'Media', value: 'media' },
+]
 
 export default function ProfileScreen() {
     const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -55,7 +38,7 @@ export default function ProfileScreen() {
     const { data: events } = useFetchEvents({
         includeFacilitatorOnly: true
     });
-    const [activeTab, setActiveTab] = useState<'bio' | 'events' | 'media'>('bio');
+    const [activeTab, setActiveTab] = useState<string>('bio');
     const [introVideoAspectRatio, setIntroVideoAspectRatio] = useState<'portrait' | 'landscape'>('landscape');
 
     const scrollY = useState(new Animated.Value(0))[0];
@@ -117,14 +100,17 @@ export default function ProfileScreen() {
                     </View>
                     <View style={styles.staticHeaderContent}>
                         <ProfileHeader {...headerProps} />
-                        <TabBar active={activeTab} onPress={setActiveTab} />
+                        <TabBar tabs={TABS} active={activeTab} onPress={setActiveTab} />
                     </View>
                 </Animated.View>
             ) : (
                 <View style={styles.staticHeaderContent}>
                     <ProfileHeader {...headerProps} />
-                    <TabBar active={activeTab} onPress={setActiveTab} />
-                </View>
+                    <TabBar
+                        tabs={TABS}
+                        active={activeTab}
+                        onPress={setActiveTab}
+                    />                </View>
             )}
 
             {activeTab === 'bio' ? (
@@ -174,19 +160,4 @@ const styles = StyleSheet.create({
     bottom: {
         flex: 1,
     },
-    tabContainer: {
-        backgroundColor: HEADER_PURPLE
-    },
-    tabRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingTop: 5,
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-    },
-    tabButton: { paddingVertical: 8 },
-    tabText: { color: '#888' },
-    activeTab: { borderBottomWidth: 3 },
-    activeTabText: { color: '#888', fontWeight: '600' },
 });
