@@ -147,6 +147,22 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         });
     };
 
+    const ticketUrlWithPromo = (() => {
+        if (!promoCode) return selectedEvent.ticket_url;
+
+        try {
+            const url = new URL(selectedEvent.ticket_url);
+            url.searchParams.set('discount', promoCode.promo_code);
+            return url.toString();
+        } catch (e) {
+            // Fallback in case the URL is relative or invalid
+            const separator = selectedEvent.ticket_url.includes('?') ? '&' : '?';
+            return `${selectedEvent.ticket_url}${separator}discount=${promoCode.promo_code}`;
+        }
+    })();
+
+    console.log('ticketUrlWithPromo', ticketUrlWithPromo);
+
     return (
         <>
             <TicketPromoModal
@@ -157,7 +173,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                 onClose={() => setDiscountModalVisible(false)}
                 onBuyTicket={() => {
                     logEvent(UE.EventDetailModalTicketPressed, commonAnalyticsProps);
-                    Linking.openURL(selectedEvent.ticket_url);
+                    Linking.openURL(ticketUrlWithPromo);
                     setDiscountModalVisible(false);
                 }}
                 organizerName={selectedEvent.organizer?.name}
