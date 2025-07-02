@@ -161,7 +161,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         }
     })();
 
-    console.log('ticketUrlWithPromo', ticketUrlWithPromo);
+    const isAvailableSoon = !selectedEvent.ticket_url?.includes('https');
 
     return (
         <>
@@ -217,7 +217,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                 </View>
 
                 <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
-                    <Text style={styles.ticketText}>🎟️ Get Tickets 🎟️</Text>
+                    <Text style={styles.ticketText}>{isAvailableSoon ? 'Available Soon' : '🎟️ Get Tickets 🎟️'}</Text>
                 </TouchableOpacity>
 
             </View>
@@ -243,6 +243,12 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
     const { currentDeepLink } = useUserContext();
     const promoCode = getBestPromoCode(event, currentDeepLink);
     const navigation = useNavigation<NavStack>();
+
+    const isAvailableSoon = !event.ticket_url?.includes('https');
+
+    const description = (isAvailableSoon && !event.description) ?
+        'This event is available soon. Please check back later.'
+        : event.description.replace('\n', '\n\n');
 
     return (
         <View style={styles.contentContainer}>
@@ -287,7 +293,7 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                 </View>
             )}
 
-            <Markdown style={markdownStyles}>{event.description.replace('\n', '\n\n')}</Markdown>
+            <Markdown style={markdownStyles}>{description}</Markdown>
         </View>
     )
 }
