@@ -9,6 +9,9 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { LAVENDER_BACKGROUND } from '../../components/styles';
+import { useBadgeNotifications } from '../../Common/Nav/useBadgeNotifications';
+import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { Badge } from 'react-native-paper';
 
 const menuGroups = [
     [
@@ -22,7 +25,7 @@ const menuGroups = [
         { title: 'Play Parties', icon: 'mask', route: 'Play Parties' },
     ],
     [
-        { title: 'Discover Game', icon: 'gamepad', route: 'Discover Game' },
+        { title: 'Discover Game', icon: 'gamepad', route: 'Discover Game', badge: true },
     ],
     [
         { title: 'Moar', icon: 'ellipsis-h', route: 'Moar' },
@@ -31,6 +34,9 @@ const menuGroups = [
 
 export const DiscoverPage = () => {
     const navigation = useNavigation<NavStack>();
+    const { availableCardsToSwipe } = useCalendarContext();
+
+    useBadgeNotifications({ availableCardsToSwipe });
 
     return (
         <View style={styles.container}>
@@ -56,7 +62,14 @@ export const DiscoverPage = () => {
                                     <View style={styles.iconWrap}>
                                         <FAIcon name={item.icon} size={20} color="#555" />
                                     </View>
-                                    <Text style={styles.menuText}>{item.title}</Text>
+                                    <View style={styles.textBadgeRow}>
+                                        <Text style={styles.menuText}>{item.title}</Text>
+                                        {item.badge && (
+                                            <Badge style={styles.badge}>
+                                                {availableCardsToSwipe.length}
+                                            </Badge>
+                                        )}
+                                    </View>
                                 </TouchableOpacity>
                             );
                         })}
@@ -115,4 +128,14 @@ const styles = StyleSheet.create({
         color: '#333',
         fontWeight: '500',
     },
+    textBadgeRow: {
+        flex: 1,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    badge: {
+        alignSelf: 'flex-end',
+    },
+
 });
