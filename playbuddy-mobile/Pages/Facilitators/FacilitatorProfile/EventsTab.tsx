@@ -9,15 +9,11 @@ import EventCalendarView from "../../Calendar/EventCalendarView/EventCalendarVie
 
 export const EventsTab = ({
     events,
-    navigation,
     facilitator,
 }: {
     events: Event[];
-    navigation: NavStack;
     facilitator: Facilitator;
 }) => {
-    const { data: attendees } = useFetchAttendees();
-    // console.log('events', events);
     const noEventsText = events.length
         ? null
         : (() => {
