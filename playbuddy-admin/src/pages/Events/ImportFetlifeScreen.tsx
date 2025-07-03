@@ -165,7 +165,7 @@ export default function ImportFetlifeScreen() {
 
       {Object.entries(groupedEvents).map(([handle, munchEvents]) => (
         <Box key={handle} mt={4}>
-          <Typography variant="h6">Group: {handle}</Typography>
+          <Typography variant="h6">Group: <a href={`https://fetlife.com/${handle}`}>{handle}</a></Typography>
           <Table>
             <TableHead>
               <TableRow>
