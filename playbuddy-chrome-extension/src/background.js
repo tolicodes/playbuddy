@@ -3,9 +3,7 @@ importScripts(
     'libs/moment-tz.js'
 );
 
-const MUNCH_FETLIFE_HANDLES = [
-
-
+const FETLIFE_HANDLES = [
     // 'Queens_Kinksters',
     // 'TES-NYC', // no promo
     // 'JinkyKews',
@@ -413,7 +411,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ pong: true });
     } else if (msg.action === 'startScrape') {
         sendResponse({ ok: true });
-        scrapeAll(MUNCH_FETLIFE_HANDLES);
+        scrapeAll(FETLIFE_HANDLES);
         return true;
     } else if (msg.action === 'scrapeNonPartyEvents') {
         sendResponse({ ok: true });
