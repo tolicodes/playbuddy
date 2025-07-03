@@ -30,15 +30,14 @@ const WEEK_HEIGHT = 55;
 const MONTH_HEIGHT = 300;
 
 interface EventCalendarViewProps {
-    isOnWishlist?: boolean;
     events?: EventWithMetadata[];
     showGoogleCalendar?: boolean;
 
     featuredEvents?: EventWithMetadata[];
 }
 
-const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = false, events, showGoogleCalendar = false, featuredEvents }) => {
-    const { filters, setFilters, filteredEvents, wishlistEvents, reloadEvents, isLoadingEvents } = useCalendarContext();
+const EventCalendarView: React.FC<EventCalendarViewProps> = ({ events, showGoogleCalendar = false, featuredEvents }) => {
+    const { isLoadingEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
 
     const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
@@ -49,14 +48,18 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
     const sectionListRef = useRef<SectionList>(null);
     const animatedHeight = useRef(new Animated.Value(WEEK_HEIGHT)).current;
 
-    const eventsUsed = events ?? (isOnWishlist ? wishlistEvents : filteredEvents);
-    const [eventsLocalFiltered, setEventsLocalFiltered] = useState<EventWithMetadata[]>(eventsUsed);
+    const filteredEvents = useMemo(() => {
+        if (!events) return [];
+        return !searchQuery ? events : events.filter(event =>
+            event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            event.organizer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            event.description.toLowerCase().includes(searchQuery.toLowerCase())
+            || (event.short_description && event.short_description.toLowerCase().includes(searchQuery.toLowerCase()))
+            || (event.tags && event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
+        );
+    }, [events, searchQuery]);
 
-    useEffect(() => {
-        setEventsLocalFiltered(eventsUsed);
-    }, [eventsUsed]);
-
-    const { sections, markedDates } = useGroupedEvents(eventsLocalFiltered, featuredEvents);
+    const { sections, markedDates } = useGroupedEvents(filteredEvents, featuredEvents);
 
     const startOfCurrentWeek = useMemo(
         () => startOfWeek(currentDate, { weekStartsOn: 0 }),
@@ -106,8 +109,13 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
         moment(d1).tz('America/New_York').isSame(moment(d2).tz('America/New_York'), 'day');
 
     const hasEventsOnDay = (day: Date | string) =>
-        eventsLocalFiltered.some(event => isSameDayNY(event.start_date, day));
+        filteredEvents.some(event => isSameDayNY(event.start_date, day));
 
+    const setAndScrollToDate = (date: Date) => {
+        setCurrentDate(date);
+        setSelectedDate(date);
+        scrollToDate(date);
+    };
     const goToPrev = () => {
         let prevDate = isCalendarExpanded
             ? startOfWeek(subWeeks(currentDate, 4), { weekStartsOn: 0 })
@@ -117,9 +125,7 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
             prevDate = subDays(prevDate, 1);
         }
 
-        setCurrentDate(prevDate);
-        setSelectedDate(prevDate);
-        scrollToDate(prevDate);
+        setAndScrollToDate(prevDate);
     };
     const goToNext = () => {
         let nextDate = isCalendarExpanded
@@ -130,29 +136,8 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
             nextDate = addDays(nextDate, 1);
         }
 
-        setCurrentDate(nextDate);
-        setSelectedDate(nextDate);
-        scrollToDate(nextDate);
+        setAndScrollToDate(nextDate);
     };
-
-    const debounce = (func: (query: string) => void, delay: number) => {
-        let timeout: NodeJS.Timeout;
-        return (query: string) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func(query), delay);
-        };
-    };
-
-    const debouncedSetFilters = useCallback(
-        debounce(query => {
-            setFilters({ ...filters, search: query });
-        }, 200),
-        [filters]
-    );
-
-    useEffect(() => {
-        debouncedSetFilters(searchQuery);
-    }, [searchQuery]);
 
     return (
         <View style={styles.container}>
@@ -194,7 +179,6 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ isOnWishlist = fa
                 <EventList
                     sections={sections}
                     sectionListRef={sectionListRef}
-                    reloadEvents={reloadEvents}
                     isLoadingEvents={isLoadingEvents}
                 />
             </View>

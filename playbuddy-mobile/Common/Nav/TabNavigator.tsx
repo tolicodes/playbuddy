@@ -16,12 +16,17 @@ import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useNavigation } from "@react-navigation/native";
 import { headerOptions } from "../Header/Header";
 import { DiscoverPage } from "../../Pages/Discover/DiscoverPage";
+import { NavStack } from "./NavStackType";
+import { useFetchEvents } from "../db-axios/useEvents";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
-    const { availableCardsToSwipe } = useCalendarContext();
-    const { authUserId } = useUserContext();
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavStack>();
+    const { data: events } = useFetchEvents();
+
+    const WrappedEventCalendarView = () => {
+        return <EventCalendarView events={events || []} />
+    }
 
     return (
         <Tab.Navigator
@@ -39,7 +44,7 @@ export const TabNavigator = () => {
         >
             <Tab.Screen
                 name="Calendar"
-                component={EventCalendarView}
+                component={WrappedEventCalendarView}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <FAIcon name="calendar" size={size} color={color} />
