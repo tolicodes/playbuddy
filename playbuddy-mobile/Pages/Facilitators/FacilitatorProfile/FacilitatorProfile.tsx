@@ -87,31 +87,35 @@ export default function ProfileScreen() {
         extrapolate: 'clamp',
     });
 
+    const header = showAnimatedHeader ? (
+        <Animated.View style={[styles.headerContainer, { transform: [{ translateY }] }]}>
+            <View style={[styles.videoContainer, { height: INTRO_VIDEO_HEIGHT }]}>
+                <IntroVideo
+                    url={facilitator.intro_video_url!}
+                    name={facilitator.name}
+                    onAspectRatio={setIntroVideoAspectRatio}
+                />
+            </View>
+            <View style={styles.staticHeaderContent}>
+                <ProfileHeader {...headerProps} paddingTop={true} />
+                <TabBar tabs={TABS} active={activeTab} onPress={setActiveTab} />
+            </View>
+        </Animated.View>
+    ) : (
+        <View style={styles.staticHeaderContent}>
+            <ProfileHeader {...headerProps} />
+            <TabBar
+                tabs={TABS}
+                active={activeTab}
+                onPress={setActiveTab}
+            />
+        </View>
+    )
+
     return (
         <View style={styles.container}>
-            {showAnimatedHeader ? (
-                <Animated.View style={[styles.headerContainer, { transform: [{ translateY }] }]}>
-                    <View style={[styles.videoContainer, { height: INTRO_VIDEO_HEIGHT }]}>
-                        <IntroVideo
-                            url={facilitator.intro_video_url!}
-                            name={facilitator.name}
-                            onAspectRatio={setIntroVideoAspectRatio}
-                        />
-                    </View>
-                    <View style={styles.staticHeaderContent}>
-                        <ProfileHeader {...headerProps} />
-                        <TabBar tabs={TABS} active={activeTab} onPress={setActiveTab} />
-                    </View>
-                </Animated.View>
-            ) : (
-                <View style={styles.staticHeaderContent}>
-                    <ProfileHeader {...headerProps} />
-                    <TabBar
-                        tabs={TABS}
-                        active={activeTab}
-                        onPress={setActiveTab}
-                    />                
-                </View>
+            {activeTab === 'bio' ? header : (
+                <TabBar tabs={TABS} active={activeTab} onPress={setActiveTab} />
             )}
 
             {activeTab === 'bio' ? (

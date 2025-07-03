@@ -13,6 +13,7 @@ export const ProfileHeader = ({
     fetlife,
     website,
     email,
+    paddingTop,
 }: {
     photoUrl?: string;
     name: string;
@@ -22,11 +23,12 @@ export const ProfileHeader = ({
     fetlife?: string;
     website?: string;
     email?: string;
+    paddingTop?: boolean;
 }) => {
     const openLink = (url: string) =>
         Linking.canOpenURL(url).then(ok => (ok ? Linking.openURL(url) : Alert.alert('Cannot open link')));
     return (
-        <View style={styles.header}>
+        <View style={[styles.header, paddingTop ? { paddingTop: 24 } : undefined]}>
             <View style={styles.headerTop}>
                 {photoUrl && <Image source={{ uri: photoUrl }} style={styles.photo} />}
                 <View style={styles.infoSection}>
@@ -84,7 +86,7 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: HEADER_PURPLE,
         paddingHorizontal: 16,
-        paddingVertical: 24,
+        paddingBottom: 24,
         zIndex: 1,
     },
     headerTop: { flexDirection: 'row', alignItems: 'flex-start' },
