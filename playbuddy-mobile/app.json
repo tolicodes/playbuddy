@@ -70,7 +70,10 @@
               "host": "playbuddy.deeplinknow.com"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
@@ -81,27 +84,36 @@
               "host": "d.playbuddy.me"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
           "data": [
             {
               "scheme": "https",
-              "host": "applinks:playbuddy.onelink.me", 
-              "pathPrefix": "/RWsB" 
+              "host": "applinks:playbuddy.onelink.me",
+              "pathPrefix": "/RWsB"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
           "data": [
             {
-              "scheme": "playbuddy" 
+              "scheme": "playbuddy"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -158,10 +170,13 @@
         }
       ],
       "expo-apple-authentication",
-      ["@config-plugins/react-native-branch", {
-        "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
-        "iosAppDomain": "l.playbuddy.me"
-      }]
+      [
+        "@config-plugins/react-native-branch",
+        {
+          "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
+          "iosAppDomain": "l.playbuddy.me"
+        }
+      ]
     ],
     "owner": "tolicodes1",
     "runtimeVersion": "4.16.1"
