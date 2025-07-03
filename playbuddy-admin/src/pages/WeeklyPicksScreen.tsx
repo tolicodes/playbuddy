@@ -3,6 +3,9 @@
 import React from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { API_BASE_URL } from "../common/config";
+import { useFetchWishlistByCode, useToggleWishlistEvent } from "../common/db-axios/useWishlist";
+import { useFetchEvents } from "../common/db-axios/useEvents";
 
 // Define the shape of an Event returned by the PlayBuddy API
 interface EventItem {
@@ -13,29 +16,14 @@ interface EventItem {
     };
     image_url?: string | null;
     start_date: string; // ISO string
-    weekly_pick: boolean; // indicates if this event is currently a weekly pick
+    weekly_pick?: boolean; // indicates if this event is currently a weekly pick
 }
 
 // Define the shape of a wishlist entry (assuming it returns event IDs)
 type WishlistItem = number;
 
 // Base URLs
-const API_BASE_URL = "http://localhost:8080";
 const PB_SHARE_CODE = "DCK9PD";
-
-// Fetch all events from PlayBuddy and sort so earliest start_date first
-async function fetchEvents(): Promise<EventItem[]> {
-    const res = await axios.get(`${API_BASE_URL}/events`);
-    return (res.data as EventItem[]).sort(
-        (a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
-    );
-}
-
-// Fetch wishlist entries for the given share code
-async function fetchWishlist(): Promise<WishlistItem[]> {
-    const res = await axios.get(`${API_BASE_URL}/wishlist/code/${PB_SHARE_CODE}`);
-    return res.data as WishlistItem[];
-}
 
 // Utility: Given a Date, return the Date of the Sunday at the start of that week
 function getWeekStart(date: Date): Date {
@@ -61,27 +49,10 @@ function formatWeekRange(weekStart: Date): string {
 export default function WeeklyPicksScreen() {
     const queryClient = useQueryClient();
 
-    // Query: events
-    const {
-        data: events,
-        isLoading: eventsLoading,
-        error: eventsError,
-    } = useQuery<EventItem[], Error>({
-        queryKey: ["events"],
-        queryFn: fetchEvents,
-    });
+    const { data: wishlist, isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
+    const { data: events, isLoading: eventsLoading, error: eventsError } = useFetchEvents();
+    const { mutate: toggleWishlistEvent, isPending: toggleWishlistEventLoading, error: toggleWishlistEventError } = useToggleWishlistEvent();
 
-    // Query: wishlist
-    const {
-        data: wishlist,
-        isLoading: wishlistLoading,
-        error: wishlistError,
-    } = useQuery<WishlistItem[], Error>({
-        queryKey: ["wishlist", PB_SHARE_CODE],
-        queryFn: fetchWishlist,
-    });
-
-    console.log('wishlist', wishlist);
 
     // Build a Set of event IDs in wishlist for quick lookup
     const wishlistSet = React.useMemo(() => {
@@ -90,18 +61,6 @@ export default function WeeklyPicksScreen() {
         return set;
     }, [wishlist]);
 
-    // Toggle weekly_pick status via backend, then invalidate cache
-    const togglePick = async (evt: EventItem) => {
-        try {
-            await axios.put(`${API_BASE_URL}/events/weekly-picks/${evt.id}`, {
-                status: !evt.weekly_pick,
-            });
-            // Invalidate the "events" query to refetch updated data
-            queryClient.invalidateQueries({ queryKey: ["events"] });
-        } catch (err) {
-            console.error("Failed to update weekly pick status", err);
-        }
-    };
 
     if (eventsLoading || wishlistLoading) {
         return (
@@ -207,7 +166,7 @@ export default function WeeklyPicksScreen() {
                                                     <input
                                                         type="checkbox"
                                                         checked={isPicked}
-                                                        onChange={() => togglePick(evt)}
+                                                        onChange={() => toggleWishlistEvent({ eventId: evt.id, isOnWishlist: wishlistSet.has(evt.id) })}
                                                         style={styles.checkbox}
                                                     />
                                                     {/* Read-only Wishlist Checkbox */}
