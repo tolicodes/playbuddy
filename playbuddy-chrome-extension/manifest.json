@@ -15,5 +15,11 @@
   "background": {
     "service_worker": "src/background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/libs/moment.js", "src/libs/moment-tz.js"],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "options_page": "options.html"
 }
