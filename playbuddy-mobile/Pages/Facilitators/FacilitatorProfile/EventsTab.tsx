@@ -5,6 +5,7 @@ import type { Event, Facilitator } from "../../../Common/types/commonTypes";
 import { FlatList } from "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
 import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
+import EventCalendarView from "../../Calendar/EventCalendarView/EventCalendarView";
 
 export const EventsTab = ({
     events,
@@ -36,21 +37,7 @@ export const EventsTab = ({
     }
 
     return (
-        <FlatList
-            data={events}
-            keyExtractor={e => e.id}
-            renderItem={({ item }) => (
-                <EventListItem
-                    item={item}
-                    onPress={() =>
-                        navigation.navigate('Event Details', { selectedEvent: item })
-                    }
-                    attendees={attendees?.find(a => a.event_id === item.id)?.attendees || []}
-                />
-            )}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-        />
+        <EventCalendarView events={events} />
     );
 };
 
