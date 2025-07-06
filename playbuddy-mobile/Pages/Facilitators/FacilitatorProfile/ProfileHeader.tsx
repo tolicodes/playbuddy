@@ -3,8 +3,12 @@ import { Image } from 'expo-image';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { Linking, Alert } from 'react-native';
 import { HEADER_PURPLE } from '../../../components/styles';
+import { useUserContext } from '../../Auth/hooks/UserContext';
+import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useFollows';
+import { FollowButton } from './FollowButton';
 
 export const ProfileHeader = ({
+    facilitatorId,
     photoUrl,
     name,
     verified,
@@ -15,6 +19,7 @@ export const ProfileHeader = ({
     email,
     paddingTop,
 }: {
+    facilitatorId: string;
     photoUrl?: string;
     name: string;
     verified: boolean;
@@ -27,6 +32,7 @@ export const ProfileHeader = ({
 }) => {
     const openLink = (url: string) =>
         Linking.canOpenURL(url).then(ok => (ok ? Linking.openURL(url) : Alert.alert('Cannot open link')));
+
     return (
         <View style={[styles.header, paddingTop ? { paddingTop: 24 } : undefined]}>
             <View style={styles.headerTop}>
@@ -38,9 +44,11 @@ export const ProfileHeader = ({
                     </View>
                     <Text style={styles.title}>{title}</Text>
                     <View style={styles.socialRow}>
+                        <FollowButton followeeId={facilitatorId} followeeType="facilitator" />
+
                         {instagram && (
                             <TouchableOpacity style={styles.socialItem} onPress={() => openLink(`https://instagram.com/${instagram}`)}>
-                                <FontAwesome name="instagram" size={24} color="white" />
+                                <FontAwesome name="instagram" size={SOCIAL_ITEM_HEIGHT} color="white" />
                             </TouchableOpacity>
                         )}
                         {fetlife && (
@@ -49,7 +57,7 @@ export const ProfileHeader = ({
                                 onPress={() => openLink(`https://fetlife.com/${fetlife}`)}
                             >
                                 <Image
-                                    style={{ width: 24, height: 24 }}
+                                    style={{ width: SOCIAL_ITEM_HEIGHT, height: SOCIAL_ITEM_HEIGHT }}
                                     source={{
                                         uri:
                                             'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png',
@@ -59,12 +67,12 @@ export const ProfileHeader = ({
                         )}
                         {website && (
                             <TouchableOpacity style={styles.socialItem} onPress={() => openLink(website)}>
-                                <FontAwesome name="globe" size={24} color="white" />
+                                <FontAwesome name="globe" size={SOCIAL_ITEM_HEIGHT} color="white" />
                             </TouchableOpacity>
                         )}
                         {email && (
                             <TouchableOpacity style={styles.socialItem} onPress={() => openLink(`mailto:${email}`)}>
-                                <FontAwesome name="envelope" size={24} color="white" />
+                                <FontAwesome name="envelope" size={SOCIAL_ITEM_HEIGHT} color="white" />
                             </TouchableOpacity>
                         )}
                         {email && (
@@ -82,6 +90,8 @@ export const ProfileHeader = ({
     );
 };
 
+const SOCIAL_ITEM_HEIGHT = 30;
+
 const styles = StyleSheet.create({
     header: {
         backgroundColor: HEADER_PURPLE,
@@ -95,10 +105,16 @@ const styles = StyleSheet.create({
     nameRow: { flexDirection: 'row', alignItems: 'center' },
     name: { color: '#fff', fontSize: 24, fontWeight: '700' },
     title: { color: '#fff', fontSize: 16, fontWeight: '600', marginTop: 4 },
-    socialRow: { flexDirection: 'row', marginTop: 12 },
-    socialItem: { marginRight: 10 },
+    socialRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        gap: 8,
+        marginTop: 12,
+    },
+    socialItem: { marginRight: 4 },
     bookButton: {
-        paddingVertical: 4,
+        paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 20,
         alignSelf: 'flex-start',
@@ -112,5 +128,39 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontSize: 14,
     },
+
+    // FOLLOW BUTTON
+    followButton: {
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 18,
+        borderWidth: 1,
+        alignSelf: 'flex-start',
+        marginRight: 4,
+    },
+
+    followButtonActive: {
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+    },
+
+    unfollowButton: {
+        backgroundColor: 'transparent',
+        borderColor: '#fff',
+    },
+
+    followButtonText: {
+        fontWeight: '600',
+        fontSize: 14,
+    },
+
+    followText: {
+        color: HEADER_PURPLE,
+    },
+
+    unfollowText: {
+        color: '#fff',
+    },
+
 
 });

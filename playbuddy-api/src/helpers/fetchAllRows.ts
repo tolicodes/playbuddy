@@ -4,6 +4,7 @@ type FetchAllRowsParams = {
     from: string;
     select: string;
     pageSize?: number;
+    where?: string; // Example: "status.eq.published"
     options?: {
         count?: 'exact' | 'planned' | 'estimated';
         head?: boolean;
@@ -13,6 +14,7 @@ type FetchAllRowsParams = {
 export async function fetchAllRows({
     from,
     select,
+    where,
     pageSize = 1000,
     options = {},
 }: FetchAllRowsParams): Promise<any[]> {
@@ -20,16 +22,26 @@ export async function fetchAllRows({
     let offset = 0;
 
     while (true) {
-        const { data, error } = await supabaseClient
+        let query = supabaseClient
             // @ts-ignore
-            .from<T, string>(from)
+            .from(from)
             .select(select, options)
-            .range(offset, offset + pageSize - 1);
+            .range(offset, offset + pageSize - 1)
+
+        // Apply where filter if provided
+        if (where) {
+            const [column, operator, value] = where.split('.');
+            if (!column || !operator || value === undefined) {
+                throw new Error(`Invalid where clause format: ${where}`);
+            }
+            query = query.filter(column, operator, value);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
         if (!data || data.length === 0) break;
 
-        // @ts-ignore
         allRows = allRows.concat(data);
         if (data.length < pageSize) break;
 

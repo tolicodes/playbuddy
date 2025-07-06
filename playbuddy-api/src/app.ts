@@ -21,6 +21,7 @@ import tagsRoute from './routes/tags.js'
 import mediaRoute from './routes/media.js'
 import marketingRoute from './routes/marketing.js'
 import attendeesRoute from './routes/attendees.js'
+import followsRoute from './routes/follows.js'
 
 export const app = express();
 
@@ -52,6 +53,7 @@ app.use('/tags', tagsRoute);
 app.use('/media', mediaRoute);
 app.use('/marketing', marketingRoute);
 app.use('/attendees', attendeesRoute);
+app.use('/follows', followsRoute);
 
 // Error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -14,15 +14,13 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import {
     useFetchFacilitators,
-    useFetchMyFacilitators,
-    useFollowFacilitator,
-    useUnfollowFacilitator
 } from '../../Common/db-axios/useFacilitators';
+import { useFetchFollows, useFollow, useUnfollow } from '../../Common/db-axios/useFollows';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import type { Facilitator } from '../../Common/types/commonTypes';
 import { LAVENDER_BACKGROUND } from '../../components/styles';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { NavStack } from '../../Common/Nav/NavStackType';
 
 const ADMIN_EMAIL = 'toli@toli.me';
 
@@ -31,7 +29,7 @@ export const FacilitatorsScreen = ({
 }: {
     showSearch?: boolean;
 }) => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<NavStack>();
     const { authUserId, userProfile } = useUserContext();
     const { data: facilitators = [] } = useFetchFacilitators();
     const { data: events } = useFetchEvents({
@@ -39,25 +37,22 @@ export const FacilitatorsScreen = ({
     });
 
     const [searchQuery, setSearchQuery] = useState('');
-    const myListQuery = useFetchMyFacilitators();
-
-    const follow = useFollowFacilitator();
-    const unfollow = useUnfollowFacilitator();
-
-    const myFacilitators = myListQuery.data ?? [];
+    const { data: follows } = useFetchFollows(authUserId || undefined);
+    const { mutate: follow } = useFollow(authUserId || undefined);
+    const { mutate: unfollow } = useUnfollow(authUserId || undefined);
 
     const isAdmin = userProfile?.email === ADMIN_EMAIL;
 
-    const handleFollow = useCallback((id: number) => {
+    const handleFollow = useCallback((id: string) => {
         if (!authUserId) {
             alert('Create an account to follow a facilitator!');
             return;
         }
-        follow.mutate({ facilitatorId: id.toString() });
+        follow({ followee_type: 'facilitator', followee_id: id });
     }, [authUserId, follow]);
 
-    const handleUnfollow = useCallback((id: number) => {
-        unfollow.mutate({ facilitatorId: id.toString() });
+    const handleUnfollow = useCallback((id: string) => {
+        unfollow({ followee_type: 'facilitator', followee_id: id });
     }, [unfollow]);
 
     const filtered = useMemo(() => {
@@ -110,9 +105,9 @@ export const FacilitatorsScreen = ({
 
             <FlatList
                 data={fullFacilitators}
-                keyExtractor={item => item.id.toString()}
+                keyExtractor={item => item.id}
                 renderItem={({ item }) => {
-                    const isFollowing = myListQuery.data?.some(f => f.id === item.id);
+                    const isFollowing = follows?.facilitator?.some(f => f === item.id);
                     const upcomingCount = item.events.filter(e =>
                         e && new Date(e.start_date) > new Date()
                     ).length;
@@ -150,7 +145,7 @@ export const FacilitatorsScreen = ({
                                     </View>
 
                                     <View style={styles.tagRow}>
-                                        {item.tags.map(t => (
+                                        {item.tags?.map(t => (
                                             <View key={t.id} style={styles.tag}>
                                                 <Text style={styles.tagText}>{t.name}</Text>
                                             </View>
@@ -162,7 +157,7 @@ export const FacilitatorsScreen = ({
                                 </View>
 
                                 <TouchableOpacity
-                                    onPress={() => isFollowing ? handleUnfollow(Number(item.id)) : handleFollow(Number(item.id))}
+                                    onPress={() => isFollowing ? handleUnfollow(item.id) : handleFollow(item.id)}
                                     style={styles.heartBtn}
                                 >
                                     <FAIcon

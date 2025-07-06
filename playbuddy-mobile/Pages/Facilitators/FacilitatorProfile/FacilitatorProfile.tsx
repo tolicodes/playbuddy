@@ -20,6 +20,9 @@ import { ProfileHeader } from './ProfileHeader';
 import { IntroVideo } from './IntroVideo';
 import { HEADER_PURPLE } from '../../../components/styles';
 import TabBar from '../../../components/TabBar';
+import { useCommonContext } from '../../../Common/hooks/CommonContext';
+import { useUserContext } from '../../Auth/hooks/UserContext';
+import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useMarketing';
 
 const STATIC_HEADER_HEIGHT = 140;
 
@@ -38,6 +41,7 @@ export default function ProfileScreen() {
     const { data: events } = useFetchEvents({
         includeFacilitatorOnly: true
     });
+
     const [activeTab, setActiveTab] = useState<string>('bio');
     const [introVideoAspectRatio, setIntroVideoAspectRatio] = useState<'portrait' | 'landscape'>('landscape');
 
@@ -61,6 +65,7 @@ export default function ProfileScreen() {
     ).map(id => events?.find(event => event.id === id)).filter(Boolean) as Event[];
 
     const headerProps = {
+        facilitatorId: facilitator.id,
         photoUrl: facilitator.profile_image_url,
         name: facilitator.name,
         verified: facilitator.verified,

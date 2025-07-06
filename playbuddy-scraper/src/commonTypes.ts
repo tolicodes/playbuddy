@@ -1003,5 +1003,26 @@ export type EventAttendees = {
     attendees: Attendee[];
 }
 
+export const FOLLOWEE_TYPES = ['organizer', 'facilitator', 'event', 'munch'] as const;
+export type FolloweeType = (typeof FOLLOWEE_TYPES)[number];
+
+export type FollowDBRow = {
+    id: string;
+    auth_user_id: string;
+    followee_type: FolloweeType
+    followee_id: string;
+    created_at: string;
+}
+
+export type Follow = {
+    followee_type: FolloweeType
+    followee_id: string;
+}
+
+export interface FollowPayload {
+    followee_type: FolloweeType;
+    followee_id: string;
+}
+
 
 export type { UE };

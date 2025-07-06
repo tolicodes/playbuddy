@@ -2,17 +2,7 @@ import { Router, Response } from 'express';
 import { AuthenticatedRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
 import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
-
 const router = Router();
-
-type AttendeeRow = {
-    event_id: number;
-    users: {
-        user_id: string;
-        name: string;
-        avatar_url: string;
-    };
-};
 
 router.get('/', async (req: AuthenticatedRequest, res: Response) => {
     try {
