@@ -16,8 +16,9 @@ import { WeeklyPicks } from "../../Pages/Auth/screens/Promo/WeeklyPicks";
 import { PromosScreen } from "../../Pages/Auth/screens/Promo/PromosScreen";
 import PlayParties from "../../Pages/PlayParties";
 import { MunchesScreen } from '../../Pages/Munches/MunchesScreen'
-import { FacilitatorsScreen } from "../../Pages/Facilitators/Facilitators";
+import { FacilitatorsList } from "../../Pages/Facilitators/FacilitatorsList";
 import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
+import { Facilitators } from "../../Pages/Facilitators/Facilitators";
 
 const Drawer = createDrawerNavigator();
 
@@ -55,7 +56,7 @@ export const DrawerNav = () => {
 
             <Drawer.Screen
                 name="Facilitators"
-                component={FacilitatorsScreen}
+                component={Facilitators}
                 options={{
                     ...headerOptions({ navigation, title: 'Facilitators' }),
                     drawerIcon: getIcon('user-tie'),
