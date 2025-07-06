@@ -4,23 +4,25 @@ importScripts(
 );
 
 const FETLIFE_HANDLES = [
-    // 'Queens_Kinksters',
-    // 'TES-NYC', // no promo
-    // 'JinkyKews',
-    // 'Geekaholic',
-    // 'KinkyCannaMunch',
-    // 'Black-bleu',
-    // 'MistressBuffyNYC',
-    // 'KinkyKlimbers',
-    // 'TallGoddessNY',
-    // 'Sir-airose',
-    // 'Kink-Collective', // no promo
-    // 'Miss__Scorpio',
+    'Queens_Kinksters',
+    'TES-NYC', // no promo
+    'JinkyKews',
+    'Geekaholic',
+    'KinkyCannaMunch',
+    'Black-bleu',
+    'MistressBuffyNYC',
+    'KinkyKlimbers',
+    'TallGoddessNY',
+    'Sir-airose',
+    'Kink-Collective', // no promo
+    'Miss__Scorpio',
     'thetaillorgroup', // ask promo
-    // 'JJWatchEvents', // munch only
-    // 'shemagickevents',
-    // 'queertakeover'
-    // 'missbloomsexed',
+    'JJWatchEvents', // munch only
+    'shemagickevents',
+    'queertakeover',
+    'missbloomsexed',
+    'masterdanteamor',
+
 
 
     // ask
@@ -35,7 +37,7 @@ const FETLIFE_HANDLES = [
     // _i- - M
     // knotasha - M
     // ethero - M
-    // natashaxdress - M
+    // natashaxdress - not kink
     // mastcliftonnj - M
     // 
     // nyclittlescouts
@@ -43,7 +45,6 @@ const FETLIFE_HANDLES = [
     // apollodelfino
     // dommenationnyc
     // malswitch
-    // masterdanteamor - ghosted
     // knotty_chris
     // bossy_switcher
     // ropeboi

@@ -54,7 +54,7 @@ async function classifyBatch(eventsBatch: any[]): Promise<any[]> {
 
                 if (run.status === 'completed') {
                     const messages = await openAIClient.beta.threads.messages.list(run.thread_id);
-                    const message = messages.data.reverse()[0];;
+                    const message = messages.data.reverse()[0];
                     // @ts-ignore
                     const val = message.content[0].text.value;
                     let output;
@@ -190,6 +190,3 @@ async function classifyEventsInBatches() {
         console.error('Error classifying events:', error);
     }
 }
-
-// Run the classifyEventsInBatches function
-classifyEventsInBatches();

@@ -4,7 +4,7 @@ import 'ag-grid-community/styles/ag-grid.css'; // Core grid CSS
 import 'ag-grid-community/styles/ag-theme-alpine.css'; // Theme
 import { Kink, Level, Status } from '../Common/types';
 import MultiSelectEditor from './MultiSelectEditor';
-import { EventClassifications, getClassificationDetails } from '../../../playbuddy-scraper/src/event-classifier/event_classifications';
+import { EventClassifications, getClassificationDetails } from '../../../playbuddy-api/src/scripts/event-classifier/event_classifications';
 
 
 const multiSelectProps = {
