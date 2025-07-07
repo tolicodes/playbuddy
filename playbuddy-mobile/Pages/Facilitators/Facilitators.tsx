@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import TabBar from '../../components/TabBar';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { useFetchFollows, useFollow, useUnfollow } from '../../Common/db-axios/useFollows';
+import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { useFetchFacilitators } from '../../Common/db-axios/useFacilitators';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { FacilitatorsList } from './FacilitatorsList'; // You’ll need to extract your FlatList item rendering here
@@ -20,7 +20,7 @@ export const Facilitators = () => {
     const followedIds = new Set(follows?.facilitator || []);
 
     const fullFacilitators = useMemo(() => {
-        return facilitators.map(f => {
+        return facilitators?.map(f => {
             const organizerEvents = events.filter(e => e.organizer.id === f.organizer_id);
             const ownEvents = f.event_ids?.map(id => events.find(e => e.id === id)).filter(Boolean) || [];
             return {
