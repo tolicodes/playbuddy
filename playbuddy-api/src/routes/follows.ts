@@ -55,10 +55,10 @@ router.post('/', authenticateRequest, async (req: AuthenticatedRequest, res: Res
 
         if (error) throw error;
 
-        res.status(201).json({ message: 'Followed successfully' });
+        return res.status(201).json({ message: 'Followed successfully' });
     } catch (err) {
         console.error('Error in POST /follows:', err);
-        res.status(500).json({ error: 'Failed to follow' });
+        return res.status(500).json({ error: 'Failed to follow' });
     }
 });
 
@@ -85,10 +85,10 @@ router.delete('/', authenticateRequest, async (req: AuthenticatedRequest, res: R
 
         if (error) throw error;
 
-        res.status(200).json({ message: 'Unfollowed successfully' });
+        return res.status(200).json({ message: 'Unfollowed successfully' });
     } catch (err) {
         console.error('Error in DELETE /follows:', err);
-        res.status(500).json({ error: 'Failed to unfollow' });
+        return res.status(500).json({ error: 'Failed to unfollow' });
     }
 });
 

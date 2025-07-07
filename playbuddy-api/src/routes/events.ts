@@ -45,7 +45,13 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
           event_media (
             id, sort_order, created_at,
             media: media ( * )
-          )
+          ),
+           classification:classifications(
+                event_themes,
+                comfort_level,
+                experience_level,
+                interactivity_level
+            )
         `)
                 .gte("start_date", nycMidnightUTC),
             flushCache

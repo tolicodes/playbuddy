@@ -155,6 +155,8 @@ export interface Event extends EventDataSource {
      */
     communities?: Community[];
 
+    classification?: Classification;
+
     /**
      * The promo codes for the event
      * May be event specific or organizer specific
@@ -382,43 +384,12 @@ export interface Classification {
     /** References events.id (unique, required). */
     event_id: number;
 
-    /** Event type label (nullable). */
-    event_type: string | null;
+    event_themes: string[];
+    comfort_level: string;
+    experience_level: string;
+    interactivity_level: string;
 
-    /** Comfort level (nullable). */
-    comfort_level: string | null;
-
-    /** Experience level (nullable). */
-    experience_level: string | null;
-
-    /** Inclusivity info (nullable). */
-    inclusivity: string | null;
-
-    /** Consent/safety policies (array of text, nullable). */
-    consent_and_safety_policies: string[] | null;
-
-    /** Alcohol/substance policies (array of text, nullable). */
-    alcohol_and_substance_policies: string[] | null;
-
-    /** Venue type (nullable). */
-    venue_type: string | null;
-
-    /** How interactive the event is (nullable). */
-    interactivity_level: string | null;
-
-    /** Dress codes (array of text, nullable). */
-    dress_code: string[] | null;
-
-    /** Accessibility features (array of text, nullable). */
-    accessibility: string[] | null;
-
-    /** Themes (array of text, nullable). */
-    event_themes: string[] | null;
-
-    /** Creation timestamp (defaults to now). */
     created_at: string | null;
-
-    /** Last update timestamp (defaults to now, auto-updated via trigger). */
     updated_at: string | null;
 }
 

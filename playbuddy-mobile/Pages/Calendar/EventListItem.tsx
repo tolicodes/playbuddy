@@ -145,7 +145,13 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                             <ScrollView
                                 horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}
                             >
-                                <BadgeRow vetted={vetted} playParty={item.play_party} center={false} munch={item.munch_id} />
+                                <BadgeRow
+                                    vetted={vetted}
+                                    playParty={item.play_party}
+                                    center={false}
+                                    munch={item.munch_id}
+                                    classification={item.classification}
+                                />
 
                                 <AttendeeCarousel attendees={attendees!} />
 

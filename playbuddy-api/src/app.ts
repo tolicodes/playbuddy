@@ -22,6 +22,7 @@ import mediaRoute from './routes/media.js'
 import marketingRoute from './routes/marketing.js'
 import attendeesRoute from './routes/attendees.js'
 import followsRoute from './routes/follows.js'
+import classificationsRoute from './routes/classifications.js'
 
 export const app = express();
 
@@ -54,9 +55,10 @@ app.use('/media', mediaRoute);
 app.use('/marketing', marketingRoute);
 app.use('/attendees', attendeesRoute);
 app.use('/follows', followsRoute);
+app.use('/classifications', classificationsRoute);
 
 // Error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response) => {
   console.error(err);
   res.status(500).json({ success: false, message: 'Internal Server Error' });
 });

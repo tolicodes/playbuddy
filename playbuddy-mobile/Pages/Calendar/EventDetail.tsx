@@ -13,6 +13,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
+
 
 import { formatDate } from './hooks/calendarUtils';
 import { logEvent } from '../../Common/hooks/logger';
@@ -233,6 +235,12 @@ const MediaTab = ({ event }: { event: EventWithMetadata }) => {
     )
 }
 
+const CLASSIFICATION_ICONS = [
+    'hands', // interactivity
+    'spa', // comfort
+    'school', // experience
+]
+
 const TABS = [
     { name: 'Details', value: 'details' },
     { name: 'Organizer', value: 'organizer' },
@@ -293,8 +301,69 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                 </View>
             )}
 
+            {event.classification && (
+                <>
+                    {event.classification && (
+                        <View style={{ marginTop: 16, marginBottom: 10, gap: 10 }}>
+                            {/* Row 1: Themes */}
+                            {event.classification.event_themes?.length > 0 && (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                >
+                                    {event.classification.event_themes.map((theme, i) => (
+                                        <View key={`theme-${i}`} style={styles.tagPill}>
+                                            <FAIcon
+                                                name={'tag'}
+                                                size={12}
+                                                color="#4B2ABF"
+                                                style={{ marginRight: 6 }}
+                                                solid
+                                            />
+                                            <Text style={styles.tagText}>{theme}</Text>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            )}
+
+                            {/* Row 2: Tags + Classification fields */}
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                            >
+                                {[
+                                    event.classification.interactivity_level,
+                                    event.classification.comfort_level,
+                                    event.classification.experience_level
+                                ]
+                                    .filter(Boolean)
+                                    .map((tag, i) => {
+                                        const icon = CLASSIFICATION_ICONS[i];
+                                        return (
+                                            <View key={`tag-${i}`} style={[styles.tagPill, styles.tagPillSecondary]}>
+                                                <FAIcon
+                                                    name={icon}
+                                                    size={12}
+                                                    color="#4B2ABF"
+                                                    style={{ marginRight: 6 }}
+                                                    solid
+                                                />
+                                                <Text style={styles.tagText}>{tag}</Text>
+                                            </View>
+                                        );
+                                    })}
+
+                            </ScrollView>
+                        </View>
+                    )}
+
+
+                </>
+            )
+            }
+
             <Markdown style={markdownStyles}>{description}</Markdown>
-        </View>
+        </View >
     )
 }
 
@@ -343,7 +412,7 @@ export const EventDetail = ({ route }) => {
         <>
             <ScrollView style={styles.scrollView}>
 
-                <EventHeader selectedEvent={selectedEvent} />
+                <EventHeader selectedEvent={selectedEvent} classification={selectedEvent.classification} />
 
                 {enabledTabs.length > 1 && <TabBar tabs={enabledTabs} active={activeTab} onPress={setActiveTab} />}
 
@@ -479,7 +548,7 @@ const styles = StyleSheet.create({
     badgesRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+
     },
     badge: {
         flexDirection: 'row',
@@ -621,6 +690,38 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
 
+    tagContainer: {
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        backgroundColor: '#F8F3FF',
+        borderRadius: 14,
+    },
+
+    tagRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+
+    tagPill: {
+        flexDirection: 'row', // ← make icon and text inline
+        alignItems: 'center',
+        backgroundColor: '#E2D9FF',
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        borderRadius: 999,
+        marginRight: 6,
+    },
+
+
+    tagPillSecondary: {
+        backgroundColor: '#E8EAF0',
+    },
+
+    tagText: {
+        fontSize: 12,
+        fontWeight: '500',
+        color: '#4B2ABF',
+    },
 
 });
 

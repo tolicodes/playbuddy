@@ -1,192 +1,100 @@
-import { supabaseClient } from 'connections/supabaseClient.js';
 import OpenAI from 'openai';
-import * as dotenv from 'dotenv';
-import * as fs from 'fs'; // Import fs for file writing
+import dotenv from 'dotenv';
+import fs from 'fs/promises';
 import { systemPrompt } from './systemPrompt.js';
-import { EventClassifications } from './event_classifications.js';
+import { supabaseClient } from '../../connections/supabaseClient.js';
+import { Classification } from '../../commonTypes.js';
 
 dotenv.config();
 
-// OpenAI API configuration
-const openAIClient = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-});
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Fetch all events marked for classification
 async function fetchQueuedEvents(): Promise<any[]> {
-    const { data: events, error } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from('events')
         .select('*')
+        .is('classification_status', null)
+        .gte('start_date', new Date().toISOString());
 
     if (error) {
-        console.error('Error fetching events from Supabase:', error);
+        console.error('Error fetching events:', error);
         return [];
     }
-    return events || [];
+    return data ?? [];
 }
 
-// Classify a batch of events using OpenAI and poll for the results
-async function classifyBatch(eventsBatch: any[]): Promise<any[]> {
-    try {
-        const assistant = await openAIClient.beta.assistants.create({
-            name: "playbuddy-event-classifier",
-            instructions: 'Classify a list of kinky events based on specific categories.',
-            response_format: { type: "json_object" },
-            model: "gpt-4o",
-        });
-
-        const thread = await openAIClient.beta.threads.create();
-        const run = await openAIClient.beta.threads.runs.createAndPoll(
-            thread.id,
-            {
-                assistant_id: assistant.id,
-                response_format: { type: "json_object" },
-                instructions: `${systemPrompt} Please classify using JSON scheme above:\n\n${JSON.stringify(eventsBatch, null, 2)}`,
-                max_completion_tokens: 200000,
-                temperature: 0,
-            }
-        );
-
-        let elapsedTime = 0;
-        return new Promise((resolve, reject) => {
-            const interval = setInterval(async () => {
-                elapsedTime += 1;
-
-                if (run.status === 'completed') {
-                    const messages = await openAIClient.beta.threads.messages.list(run.thread_id);
-                    const message = messages.data.reverse()[0];
-                    // @ts-ignore
-                    const val = message.content[0].text.value;
-                    let output;
-                    try {
-                        const events = JSON.parse(val).events;
-                        output = events;
-                    } catch (e) {
-                        console.error('Error parsing message:', val);
-                    }
-                    console.log('Classification completed.', elapsedTime, 'seconds elapsed.');
-                    clearInterval(interval);
-                    resolve(output); // Return classification results
-                } else {
-                    console.log(run.status);
-                    if (run.last_error) console.log(run.last_error);
-                }
-
-                if (elapsedTime >= 30) {
-                    console.log('Timeout reached');
-                    clearInterval(interval);
-                    reject('Timeout reached');
-                }
-            }, 1000);
-        });
-    } catch (error) {
-        console.error('Error classifying events batch:', error);
-        throw error;
-    }
-}
-
-// Update Supabase and write output to file
 async function updateSupabaseAndWriteToFile(
-    eventsBatch: any[],
-    classificationResults: any[],
-    fileName: string
+    classifications: Classification[],
+    outputPath: string
 ) {
-    console.log({
-        classificationResults
-    })
-    if (eventsBatch.length !== classificationResults.length) {
-        console.error('Mismatch between events and classifications.');
-        return;
-    }
+    for (let i = 0; i < classifications.length; i++) {
+        const c = classifications[i];
+        const event_id = c.event_id;
 
-    const fileContent: string[] = [];
+        const { error: upsertError } = await supabaseClient
+            .from('classifications')
+            .upsert({
+                event_id,
+                event_themes: c.event_themes,
+                comfort_level: c.comfort_level,
+                experience_level: c.experience_level,
+                interactivity_level: c.interactivity_level,
+            });
 
-    for (let i = 0; i < classificationResults.length; i++) {
-        const classifications: EventClassifications = classificationResults[i];
-
-        try {
-            const event_id = classifications.event_id;
-
-
-
-            // Upsert classifications into "classifications" table using event_id
-            const { data: classificationData, error: classificationError } = await supabaseClient
-                .from('classifications')
-                .upsert({
-                    event_id: event_id,
-                    event_themes: classifications.event_themes,
-                    comfort_level: classifications.comfort_level,
-                    experience_level: classifications.experience_level,
-                    inclusivity: classifications.inclusivity,
-                    interactivity_level: classifications.interactivity_level,
-
-                    // consent_and_safety_policies: classifications.consent_and_safety_policies,
-                    // alcohol_and_substance_policies: classifications.alcohol_and_substance_policies,
-                    // venue_type: classifications.venue_type,
-                    // dress_code: classifications.dress_code,
-                    // accessibility: classifications.accessibility,
-                });
-
-            // Update the event in the "events" table using event_id
-            const { data: eventData, error: eventError } = await supabaseClient
-                .from('events')
-                .update({
-                    classification_status: 'auto_classified',
-                })
-                .eq('id', event_id);
-
-            if (eventError) {
-                console.error(`Error updating event ${event_id}:`, eventError);
-            } else {
-                console.log(`Event ${event_id} classified and updated.`);
-            }
-
-            if (classificationError) {
-                console.error(`Error inserting/updating classification for event ${event_id}:`, classificationError);
-            } else {
-                console.log(`Classification for event ${event_id} saved.`);
-            }
-
-            // Write to file
-            fileContent.push(`Event ID: ${event_id}\nClassifications: ${JSON.stringify(classifications, null, 2)}\n`);
-        } catch (error) {
-            console.error(`Error processing event ${classifications.event_id}:`, error);
+        if (upsertError) {
+            console.error(`Upsert error for ${event_id}:`, upsertError);
+            continue;
         }
+
+        const { error: updateError } = await supabaseClient
+            .from('events')
+            .update({ classification_status: 'auto_classified' })
+            .eq('id', event_id);
+
+        if (updateError) {
+            console.error(`Update error for ${event_id}:`, updateError);
+            continue;
+        }
+
     }
 
-    // Write classifications to file
-    fs.writeFileSync(fileName, fileContent.join('\n'), { flag: 'a' });
-    console.log(`Output saved to ${fileName}`);
+    await fs.writeFile(outputPath, JSON.stringify(classifications, null, 2));
+    console.log(`Wrote batch to ${outputPath}`);
 }
 
-// Main function to classify events in batches and write results to both DB and file
-async function classifyEventsInBatches() {
-    const outputFileName = 'classified_events_output.txt';
+function chunkArray(array: any[], chunkSize: number) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += chunkSize)
+        chunks.push(array.slice(i, i + chunkSize));
+    return chunks;
+}
 
-    try {
-        const events = await fetchQueuedEvents();
+export async function classifyEventsInBatches(batchSize = 10) {
+    const events = await fetchQueuedEvents();
+    const results = [];
 
-        if (events.length === 0) {
-            console.log('No events with classification_status = queued');
-            return;
-        }
+    const batches = chunkArray(events.slice(0, Infinity), batchSize);
 
-        console.log(`Found ${events.length} events to classify.`);
+    for (const batch of batches) {
+        const userPrompt = batch.map(event => {
+            return `ID: ${event.id}\nTitle: ${event.title}\nDescription: ${event.description || ''}`;
+        }).join('\n\n');
 
-        // Process events in batches of 5
-        const batchSize = 5;
-        for (let i = 0; i < events.length; i += batchSize) {
-            const batch = events.slice(i, i + batchSize);
-            console.log(`Processing batch ${i / batchSize + 1}`);
+        const response = await openai.chat.completions.create({
+            model: 'gpt-4o',
+            response_format: { type: 'json_object' },
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ]
+        });
 
-            try {
-                const classificationResults = await classifyBatch(batch);
-                await updateSupabaseAndWriteToFile(batch, classificationResults, outputFileName);
-            } catch (error) {
-                console.error('Error during batch classification:', error);
-            }
-        }
-    } catch (error) {
-        console.error('Error classifying events:', error);
+        const classifications = JSON.parse(response.choices[0].message.content!).events;
+        results.push(...classifications);
+        console.log('Classified', classifications);
     }
+
+    updateSupabaseAndWriteToFile(results, 'classifications.json');
+
+    return results;
 }
