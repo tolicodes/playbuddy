@@ -300,28 +300,28 @@ async function mergeAllPdfs() {
 async function tileBusinessCards() {
     if (type !== 'business_card') return;
 
-    function drawTrimLines(page, x, y) {
+    function drawTrimLines(page: any, x: number, y: number) {
         const trimLength = 12;
         const trimWidth = 0.5;
         const color = rgb(0.6, 0.6, 0.6);
-    
+
         // Bottom-left corner
         page.drawLine({ start: { x, y }, end: { x: x + trimLength, y }, thickness: trimWidth, color });
         page.drawLine({ start: { x, y }, end: { x, y: y + trimLength }, thickness: trimWidth, color });
-    
+
         // Bottom-right
         page.drawLine({ start: { x: x + SAFE_W, y }, end: { x: x + SAFE_W - trimLength, y }, thickness: trimWidth, color });
         page.drawLine({ start: { x: x + SAFE_W, y }, end: { x: x + SAFE_W, y: y + trimLength }, thickness: trimWidth, color });
-    
+
         // Top-left
         page.drawLine({ start: { x, y: y + SAFE_H }, end: { x: x + trimLength, y: y + SAFE_H }, thickness: trimWidth, color });
         page.drawLine({ start: { x, y: y + SAFE_H }, end: { x, y: y + SAFE_H - trimLength }, thickness: trimWidth, color });
-    
+
         // Top-right
         page.drawLine({ start: { x: x + SAFE_W, y: y + SAFE_H }, end: { x: x + SAFE_W - trimLength, y: y + SAFE_H }, thickness: trimWidth, color });
         page.drawLine({ start: { x: x + SAFE_W, y: y + SAFE_H }, end: { x: x + SAFE_W, y: y + SAFE_H - trimLength }, thickness: trimWidth, color });
     }
-    
+
 
     console.log('\nTiling business cards into combined_cards_8x11.pdf…');
 
