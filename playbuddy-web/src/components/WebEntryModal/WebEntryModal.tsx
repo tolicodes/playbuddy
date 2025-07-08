@@ -1,83 +1,60 @@
 import styles from './WebEntryModal.module.css';
-import { APP_STORE_URL, GOOGLE_PLAY_URL } from '../../../../common/src/config';
 
-import googlePlayIcon from '../../assets/google-app-icon.jpg';
+const STORE_URL = 'https://l.playbuddy.me/ehjZ9IHqQUb'
 
 const WebEntryModal = ({ onClose }: { onClose: () => void }) => {
     const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
     const isAndroid = /Android/i.test(navigator.userAgent);
     const neither = !isIOS && !isAndroid;
 
+
     return (
-        <div className={styles.pageWrapper}>
-            <div className={styles.card}>
-                {/* Header */}
-                <div className={styles.header}>
-                    <h1 className={styles.title}>Web’s a tease… 😉</h1>
-                    <p className={styles.subtitle}>
-                        The full experience lives in our iOS & Android apps.
-                    </p>
-                </div>
+        <div className={styles.wrapper}>
+            <div className={styles.logo} />
 
-                {/* Download Buttons */}
-                <div className={styles.buttons}>
-                    {isIOS || neither && <a href={APP_STORE_URL} target="_blank" rel="noopener noreferrer">
+            <div className={styles.title}>Download the PlayBuddy App</div>
+
+            <div className={styles.storeButtons}>
+                {(isIOS || neither) && (
+                    <a href={STORE_URL} target="_blank" rel="noopener noreferrer">
                         <img
-                            src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83&releaseDate=1311120000&h=5b3127492d87ec2af62ff4d2a7492b70"
+                            className={styles.storeImage}
+                            src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83"
                             alt="Download on the App Store"
-                            height="40"
                         />
-                    </a>}
-                    {isAndroid || neither && <a href={GOOGLE_PLAY_URL} target="_blank" rel="noopener noreferrer">
+                    </a>
+                )}
+                {(isAndroid || neither) && (
+                    <a href={STORE_URL} target="_blank" rel="noopener noreferrer">
                         <img
-                            src={googlePlayIcon}
-                            alt="Download on Google Play"
-                            height="40"
+                            style={{ marginLeft: 10, height: 65, width: 160 }}
+                            className={styles.storeImage}
+                            src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png"
+                            alt="Get it on Google Play"
                         />
-                    </a>}
-                </div>
-
-                {/* Feature List */}
-                <div className={styles.features}>
-                    <div className={styles.feature}>
-                        <span className={styles.emoji}>❤️</span>
-                        <div>
-                            <h3 className={styles.featureTitle}>Wishlist & Google Calendar Sync</h3>
-                            <p>Plan your week. Save what excites you. Sync to your calendar.</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.feature}>
-                        <span className={styles.emoji}>🧑</span>
-                        <div>
-                            <h3 className={styles.featureTitle}>Follow Organizers & Facilitators</h3>
-                            <p>All your fav events, all in one place.</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.feature}>
-                        <span className={styles.emoji}>📅</span>
-                        <div>
-                            <h3 className={styles.featureTitle}>Munches, Festivals & Play Parties</h3>
-                            <p>From warm hangouts to wild nights.</p>
-                        </div>
-                    </div>
-
-                    <div className={styles.feature}>
-                        <span className={styles.emoji}>🏷️</span>
-                        <div>
-                            <h3 className={styles.featureTitle}>Exclusive Promos</h3>
-                            <p>Special discounts & private invites.</p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Footer CTA */}
-                <div className={styles.footer}>
-                    <h2 className={styles.tribe}>🌈 Welcome to our tribe.</h2>
-                    <button className={styles.ctaButton} onClick={onClose}>Continue with limited web version</button>
-                </div>
+                    </a>
+                )}
             </div>
+
+            <div>
+                <a className={styles.webLink} onClick={onClose}>Proceed to Web (Limited)</a>
+            </div>
+
+            <div className={styles.note}>
+                <div className={styles.important}>Only In App</div>
+                <div>❤️ Wishlist sync</div>
+                <div>🧑 Follow organizers</div>
+                <div>📅 RSVP to play parties</div>
+                <div>🏷️ Unlock promo codes</div>
+            </div>
+
+            <div className={styles.important}>📋 Heads Up: Allow Paste</div>
+
+            <div className={styles.promoInstruction}>
+                When prompted, tap <strong>“Allow Paste”</strong> to instantly unlock your promo code.
+            </div>
+
+
         </div>
     );
 };

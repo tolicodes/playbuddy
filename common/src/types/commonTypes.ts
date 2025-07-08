@@ -111,7 +111,17 @@ export interface Event extends EventDataSource {
     /**
      * The type of the event (event or retreat)
      */
-    type: 'event' | 'retreat' | 'munch'
+    type: 'event' |
+    'retreat' |
+    'munch' |
+
+    'Play Party' |
+    'Munch' |
+    'Retreat' |
+    'Festival' |
+    'Workshop' |
+    'Performance' |
+    'Discussion'
     /**
      * The recurring type of the event (none, weekly, monthly)
      */
@@ -194,6 +204,8 @@ export interface Event extends EventDataSource {
 
     media?: EventMedia[]
     bio?: string;
+
+    hosts?: string[];
 }
 
 /**
@@ -384,11 +396,11 @@ export interface Classification {
     /** References events.id (unique, required). */
     event_id: number;
 
-    event_themes: string[];
-    comfort_level: string;
+    tags: string[];
     experience_level: string;
     interactivity_level: string;
 
+    inclusivity: string[]; // queer, bipoc, etc
     created_at: string | null;
     updated_at: string | null;
 }
