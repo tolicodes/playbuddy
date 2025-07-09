@@ -21,10 +21,7 @@ export async function scrapeInstagram(usernames: string[]): Promise<EventResult[
             await throttleHourly();
             await getRandomDelay();
 
-            console.log('b4 tab')
-
             const tab = await openTab(url);
-            console.log('after open tab')
             await sleep(3000);
 
             // @ts-ignore
