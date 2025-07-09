@@ -36,7 +36,7 @@ const columnDefs = [
 
     },
     {
-        field: 'event_themes',
+        field: 'tags',
         headerName: 'Event Themes',
         ...multiSelectProps,
     },
@@ -70,7 +70,7 @@ const columnDefs = [
 ];
 
 const DEFAULT_ROW_DATA: Partial<EventClassifications> = {
-    event_themes: [],
+    tags: [],
 
     tags: [],
 

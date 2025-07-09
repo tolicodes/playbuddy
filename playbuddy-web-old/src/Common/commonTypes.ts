@@ -410,7 +410,7 @@ export interface Classification {
     accessibility: string[] | null;
 
     /** Themes (array of text, nullable). */
-    event_themes: string[] | null;
+    tags: string[] | null;
 
     /** Creation timestamp (defaults to now). */
     created_at: string | null;

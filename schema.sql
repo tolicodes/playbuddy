@@ -205,7 +205,7 @@ CREATE TABLE IF NOT EXISTS "public"."classifications" (
     "interactivity_level" "text",
     "dress_code" "text"[],
     "accessibility" "text"[],
-    "event_themes" "text"[],
+    "tags" "text"[],
     "created_at" timestamp without time zone DEFAULT "now"(),
     "updated_at" timestamp without time zone DEFAULT "now"()
 );
