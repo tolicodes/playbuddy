@@ -5,6 +5,11 @@ import { NavStack } from '../../../../Common/Nav/NavStackType';
 import { useCalendarContext } from '../../../Calendar/hooks/CalendarContext';
 import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { toZonedTime } from 'date-fns-tz';
+import { format as formatTz } from 'date-fns-tz';
+
+const NY_TIMEZONE = 'America/New_York';
+
 
 export const WeeklyPicks = () => {
     const { allEvents } = useCalendarContext();
@@ -17,7 +22,8 @@ export const WeeklyPicks = () => {
         const generateWeekDates = () => {
             const dates = [];
             for (let i = 0; i < 3; i++) {
-                const start = startOfWeek(addWeeks(new Date(), i), { weekStartsOn: 1 });
+                const nyNow = toZonedTime(new Date(), NY_TIMEZONE);
+                const start = startOfWeek(addWeeks(nyNow, i), { weekStartsOn: 1 });
                 const end = endOfWeek(start, { weekStartsOn: 1 });
                 dates.push(`${format(start, 'MMM d')} - ${format(end, 'MMM d')}${i === 0 ? ' (this week)' : ''}`);
             }
@@ -40,7 +46,9 @@ export const WeeklyPicks = () => {
     }, [weekDates, allEvents]);
 
     const getWeeklyPicks = (weekOffset: number) => {
-        const startDate = startOfWeek(addWeeks(new Date(), weekOffset), { weekStartsOn: 1 });
+        const nyNow = toZonedTime(new Date(), NY_TIMEZONE);
+
+        const startDate = startOfWeek(addWeeks(nyNow, weekOffset), { weekStartsOn: 1 });
         const endDate = endOfWeek(startDate, { weekStartsOn: 1 });
 
         return allEvents
@@ -55,8 +63,8 @@ export const WeeklyPicks = () => {
                 const promoCodeDiscount = eventPromoCode || organizerPromoCode;
 
                 return ({
-                    dateKey: format(new Date(e.start_date), 'yyyy-MM-dd'),
-                    dayOfWeek: format(new Date(e.start_date), 'EEE'),
+                    dateKey: formatTz(new Date(e.start_date), 'yyyy-MM-dd', { timeZone: NY_TIMEZONE }),
+                    dayOfWeek: formatTz(new Date(e.start_date), 'EEE', { timeZone: NY_TIMEZONE }),
                     title: e.name,
                     organizer: e.organizer.name,
                     description: e.short_description,
