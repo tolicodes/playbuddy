@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import {
     View,
     StyleSheet,
-    TouchableOpacity,
-    Text,
     Animated,
     SectionList,
     Linking
@@ -14,6 +12,7 @@ import { startOfWeek, addDays, subWeeks, addWeeks, subDays } from 'date-fns';
 import { useCalendarContext } from '../hooks/CalendarContext';
 import { useGroupedEvents } from '../hooks/useGroupedEvents';
 import { useUserContext } from '../../Auth/hooks/UserContext';
+import { FiltersSheet, FilterState } from '../Filters/FiltersSheet';
 import EventList from '../EventList';
 import WebsiteBanner from '../../../Common/WebsiteBanner';
 import { logEvent } from '../../../Common/hooks/logger';
@@ -25,6 +24,7 @@ import { MonthHeader } from './MonthHeader';
 import { WeekStrip } from './WeekStrip';
 import { FullCalendar } from './FullCalendar';
 import { SECTION_DATE_FORMAT } from '../hooks/useGroupedEventsMain';
+import { getAllClassificationsFromEvents } from '../../../utils/getAllClassificationsFromEvents';
 
 const WEEK_HEIGHT = 55;
 const MONTH_HEIGHT = 300;
@@ -44,20 +44,74 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ events, showGoogl
     const [searchQuery, setSearchQuery] = useState('');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const [filtersVisible, setFiltersVisible] = useState(false);
+    const [filters, setFilters] = useState<FilterState>({
+        tags: [],
+        event_types: [],
+        experience_levels: [],
+        interactivity_levels: [],
+    });
+
+
+    const allClassifications = useMemo(() => {
+        if (!events) return {
+            tags: [],
+            experience_levels: [],
+            interactivity_levels: [],
+            event_types: []
+        }
+        return getAllClassificationsFromEvents(events);
+    }, [events]);
+
 
     const sectionListRef = useRef<SectionList>(null);
     const animatedHeight = useRef(new Animated.Value(WEEK_HEIGHT)).current;
 
     const filteredEvents = useMemo(() => {
         if (!events) return [];
-        return !searchQuery ? events : events.filter(event =>
-            event.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            event.organizer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            event.description.toLowerCase().includes(searchQuery.toLowerCase())
-            || (event.short_description && event.short_description.toLowerCase().includes(searchQuery.toLowerCase()))
-            || (event.tags && event.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())))
-        );
-    }, [events, searchQuery]);
+
+        const normalize = (str?: string) => str?.toLowerCase().replace(/ /g, '_');
+
+        if (searchQuery.trim().length > 0) {
+            const lower = searchQuery.toLowerCase();
+            return events.filter(event =>
+                event.name.toLowerCase().includes(lower) ||
+                event.organizer.name.toLowerCase().includes(lower) ||
+                event.description?.toLowerCase().includes(lower) ||
+                event.short_description?.toLowerCase().includes(lower) ||
+                event.tags?.some(tag => tag.toLowerCase().includes(lower))
+            );
+        }
+
+        return events.filter(event => {
+            // Tags: match directly, no normalization
+            const eventTags = event.classification?.tags || [];
+            const matchesTags =
+                filters.tags.length === 0 ||
+                filters.tags.some(tag => eventTags.includes(tag));
+
+            // Experience level: normalize event value only
+            const experience_level = normalize(event.classification?.experience_level);
+            const matchesExperience =
+                filters.experience_levels.length === 0 ||
+                filters.experience_levels.includes(experience_level || '');
+
+            // Interactivity level: normalize event value only
+            const interactivity_level = normalize(event.classification?.interactivity_level);
+            const matchesInteractivity =
+                filters.interactivity_levels.length === 0 ||
+                filters.interactivity_levels.includes(interactivity_level || '');
+
+            const matchesEventType =
+                filters.event_types.length === 0 ||
+                filters.event_types.includes('events') ||
+                filters.event_types.includes((event.type));
+
+            return matchesTags && matchesExperience && matchesInteractivity && matchesEventType;
+        });
+    }, [events, searchQuery, filters]);
+
+
 
     const { sections, markedDates } = useGroupedEvents(filteredEvents, featuredEvents);
 
@@ -139,19 +193,51 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ events, showGoogl
         setAndScrollToDate(nextDate);
     };
 
+    const onPressFilters = () => {
+        if (filtersEnabled) {
+            setFilters({
+                tags: [],
+                event_types: [],
+                experience_levels: [],
+                interactivity_levels: [],
+            });
+            return;
+        }
+        setFiltersVisible(true);
+    };
+
+
+    console.log('filters', filters)
+
+    const filtersEnabled = useMemo(() => Object.values(filters).some(arr => arr.length > 0), [filters]);
+
     return (
         <View style={styles.container}>
             {!authUserId && <WebsiteBanner />}
             <FeedbackInviteModal />
 
+            <FiltersSheet
+                onApply={(filters: FilterState) => {
+                    setFilters(filters);
+                    setFiltersVisible(false);
+                }}
+                initialFilters={filters}
+                visible={filtersVisible}
+                onClose={() => setFiltersVisible(false)}
+                filterOptions={allClassifications}
+            />
+
+
             <TopBar
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
+                onPressFilters={onPressFilters}
                 onPressToday={onPressToday}
                 onPressGoogleCalendar={onPressGoogleCalendar}
                 onPressExpand={onPressExpand}
                 isCalendarExpanded={isCalendarExpanded}
                 showGoogleCalendar={showGoogleCalendar}
+                filtersEnabled={filtersEnabled}
             />
 
             {!isCalendarExpanded && (

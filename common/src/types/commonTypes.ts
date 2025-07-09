@@ -111,17 +111,7 @@ export interface Event extends EventDataSource {
     /**
      * The type of the event (event or retreat)
      */
-    type: 'event' |
-    'retreat' |
-    'munch' |
-
-    'Play Party' |
-    'Munch' |
-    'Retreat' |
-    'Festival' |
-    'Workshop' |
-    'Performance' |
-    'Discussion'
+    type: EventTypes;
     /**
      * The recurring type of the event (none, weekly, monthly)
      */
@@ -194,13 +184,14 @@ export interface Event extends EventDataSource {
      */
     play_party?: boolean;
 
+
+    is_munch?: boolean;
+    munch_id?: number;
+
     vetted?: boolean;
     vetting_url?: string;
 
     non_ny?: boolean;
-
-    is_munch?: boolean;
-    munch_id?: number;
 
     media?: EventMedia[]
     bio?: string;
@@ -384,6 +375,15 @@ export type Community = {
     join_code?: string | null;
 }
 
+type EventTypes =
+    'event' |
+    'play_party' |
+    'munch' |
+    'retreat' |
+    'festival' |
+    'workshop' |
+    'performance' |
+    'discussion'
 
 /**
  * Table: classifications
@@ -396,11 +396,27 @@ export interface Classification {
     /** References events.id (unique, required). */
     event_id: number;
 
+    short_description?: string;
+
+    type: EventTypes;
+
     tags: string[];
     experience_level: string;
     interactivity_level: string;
 
     inclusivity: string[]; // queer, bipoc, etc
+
+
+    non_ny: boolean;
+    location: string;
+
+    hosts: string[];
+    price: string;
+
+    vetted: boolean;
+    vetting_url?: string;
+
+
     created_at: string | null;
     updated_at: string | null;
 }

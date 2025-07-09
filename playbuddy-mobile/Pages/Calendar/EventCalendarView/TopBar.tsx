@@ -7,6 +7,8 @@ import { LAVENDER_BACKGROUND } from '../../../components/styles';
 export interface TopBarProps {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
+    filtersEnabled: boolean;
+    onPressFilters: () => void;
     onPressToday: () => void;
     onPressGoogleCalendar: () => void;
     onPressExpand: () => void;
@@ -14,13 +16,13 @@ export interface TopBarProps {
     showGoogleCalendar: boolean;
 }
 
-export const TopBar = ({ searchQuery, setSearchQuery, onPressToday, onPressGoogleCalendar, onPressExpand, isCalendarExpanded, showGoogleCalendar }: TopBarProps) => (
+export const TopBar = ({ searchQuery, setSearchQuery, filtersEnabled, onPressFilters, onPressToday, onPressGoogleCalendar, onPressExpand, isCalendarExpanded, showGoogleCalendar }: TopBarProps) => (
     <View style={topBarStyles.topBar}>
         <View style={topBarStyles.searchBubble}>
             <Ionicons name="search" size={20} color="#888" style={topBarStyles.searchIcon} />
             <TextInput
                 style={topBarStyles.searchInput}
-                placeholder="Search events"
+                placeholder="Search or filter (right)"
                 placeholderTextColor="#888"
                 value={searchQuery}
                 onChangeText={setSearchQuery}
@@ -30,12 +32,12 @@ export const TopBar = ({ searchQuery, setSearchQuery, onPressToday, onPressGoogl
             />
         </View>
         <View style={topBarStyles.topButtons}>
-            {/* <TouchableOpacity style={topBarStyles.topButton} onPress={onPressToday}>
-                <Ionicons name="today-outline" size={24} color="#888" />
-            </TouchableOpacity> */}
             {showGoogleCalendar && <TouchableOpacity style={topBarStyles.topButton} onPress={onPressGoogleCalendar}>
                 <Image source={require('../images/google-calendar.png')} style={topBarStyles.googleCalendarImage} />
             </TouchableOpacity>}
+            <TouchableOpacity style={topBarStyles.topButton} onPress={onPressFilters}>
+                <FAIcon name={filtersEnabled ? 'times-circle' : 'filter'} size={24} color="#888" />
+            </TouchableOpacity>
             <TouchableOpacity style={topBarStyles.topButton} onPress={onPressExpand}>
                 <FAIcon name={isCalendarExpanded ? 'angle-double-up' : 'angle-double-down'} size={24} color="#888" />
             </TouchableOpacity>

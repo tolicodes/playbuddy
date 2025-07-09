@@ -17,7 +17,7 @@ export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, m
             { justifyContent: center ? 'center' : 'flex-start' },
         ]}
     >
-        {classification?.event_themes?.length > 0 && (
+        {classification?.tags?.length > 0 && (
             <View style={styles.tagPill} >
                 <FAIcon
                     name={'tag'}
@@ -26,7 +26,7 @@ export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, m
                     style={{ marginRight: 6 }}
                     solid
                 />
-                <Text style={styles.tagText} numberOfLines={1}>{classification.event_themes[0]}</Text>
+                <Text style={styles.tagText} numberOfLines={1}>{classification.tags[0]}</Text>
             </View>
         )}
         {vetted && (

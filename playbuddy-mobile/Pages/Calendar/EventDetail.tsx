@@ -306,12 +306,12 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                     {event.classification && (
                         <View style={{ marginTop: 16, marginBottom: 10, gap: 10 }}>
                             {/* Row 1: Themes */}
-                            {event.classification.event_themes?.length > 0 && (
+                            {event.classification.tags?.length > 0 && (
                                 <ScrollView
                                     horizontal
                                     showsHorizontalScrollIndicator={false}
                                 >
-                                    {event.classification.event_themes.map((theme, i) => (
+                                    {event.classification.tags.map((theme, i) => (
                                         <View key={`theme-${i}`} style={styles.tagPill}>
                                             <FAIcon
                                                 name={'tag'}

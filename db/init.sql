@@ -86,7 +86,7 @@ CREATE TABLE classifications (
     interactivity_level TEXT,
     dress_code TEXT[],
     accessibility TEXT[],
-    event_themes TEXT[],
+    tags TEXT[],
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE

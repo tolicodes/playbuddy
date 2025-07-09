@@ -1,0 +1,4986 @@
+[
+  {
+    "event_id": "10187",
+    "event_name": "Queer Kiss & Cuddles - A Bi/Pansexual+ Experience!",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "Experience the warmth of queer community in a relaxed and connective environment through gentle touch and guided demos on flirtation and kissing.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided in your confirmation email",
+    "non_ny": false,
+    "hosts": [
+      "Alana"
+    ],
+    "tags": [
+      "Flirting",
+      "Cuddle",
+      "Consent",
+      "Kissing",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10260",
+    "event_name": "Sex Trivia @ Kava Social",
+    "organizer_name": "Bloom Sex-Positive Social: NYC",
+    "type": "munch",
+    "short_description": "Join us for a night of sex trivia led by an experienced sex educator with prizes and drink samples included.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Kava Social",
+    "non_ny": false,
+    "hosts": [
+      "Niki Davis-Fainbloom"
+    ],
+    "tags": [
+      "Dating",
+      "Education",
+      "Fun",
+      "Laughs",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10244",
+    "event_name": "The Knot Spot – Rigger Showcase & Rope Skill Share",
+    "organizer_name": "Pagans Paradise",
+    "type": "play_party",
+    "short_description": "Experience a rope performance followed by an open jam and skill share featuring guided learning and tying opportunities.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided in confirmation email",
+    "non_ny": false,
+    "hosts": [
+      "Rorpheus",
+      "Indigo Dove",
+      "Thomas",
+      "Nick"
+    ],
+    "tags": [
+      "Rope",
+      "Community",
+      "Learning",
+      "Safety",
+      "Connection"
+    ],
+    "price": "$25-$60"
+  },
+  {
+    "event_id": "10216",
+    "event_name": "Kinksters Klimbing in LIC July 9th",
+    "organizer_name": "KinkyKlimbers",
+    "type": "munch",
+    "short_description": "Join fellow kinksters for a rock climbing gathering aimed at socializing and fun while accommodating all skill levels.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "LIC",
+    "non_ny": false,
+    "hosts": [
+      "Zgirlie"
+    ],
+    "tags": [
+      "Fitness",
+      "Community",
+      "Networking",
+      "Fun",
+      "Inclusivity"
+    ],
+    "price": "$15"
+  },
+  {
+    "event_id": "10152",
+    "event_name": "HMU Academy: K!nky Knives - An Intro to Knife Play",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Beginner-friendly class focused on safely and confidently incorporating knife play into kinky scenes.",
+    "experience_level": "beginner",
+    "interactivity_level": "observational",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "King Leo"
+    ],
+    "tags": [
+      "Knife Play",
+      "Education",
+      "Safety",
+      "Community",
+      "Learning"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10257",
+    "event_name": "Tantric Latihan: Open Practice",
+    "organizer_name": "Youtopia DreamSpace",
+    "type": "retreat",
+    "short_description": "Open practice of Tantric Latihan with live soundscapes, focusing on deepening somatic body connection.",
+    "experience_level": "advanced",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "",
+    "non_ny": true,
+    "hosts": [
+      "Khotomeh"
+    ],
+    "tags": [
+      "Tantra",
+      "Somatic",
+      "Energy",
+      "Meditation",
+      "Connection"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9905",
+    "event_name": "Poly Connections: Karaoke",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "Karaoke night for the poly community, enjoy music, laughter, and connection in a welcoming environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Polyamory",
+      "Community",
+      "Karaoke",
+      "Fun",
+      "Music"
+    ],
+    "price": "$10-$20"
+  },
+  {
+    "event_id": "10113",
+    "event_name": "Boundaries & Consent: The Shadow of Yes, No & Maybe + Jam!",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Workshop on boundaries and consent, featuring a jam session to practice and connect with others.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Union Square NYC",
+    "non_ny": false,
+    "hosts": [
+      "Danny Panzella-Velez",
+      "Vanessa Panzella-Velez"
+    ],
+    "tags": [
+      "Consent",
+      "Boundaries",
+      "Workshop",
+      "Learning",
+      "Trauma-Informed"
+    ],
+    "price": "$40-$72"
+  },
+  {
+    "event_id": "10302",
+    "event_name": "poly poly oxen free",
+    "organizer_name": "poly poly oxen free",
+    "type": "performance",
+    "short_description": "Live polyamorous dating show featuring challenges and performances aimed at celebrating polyamorous relationships.",
+    "experience_level": "intermediate",
+    "interactivity_level": "performance",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "",
+    "non_ny": true,
+    "hosts": [
+      "Rose Oser"
+    ],
+    "tags": [
+      "Polyamory",
+      "Dating",
+      "Performance",
+      "Community",
+      "Fun"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10303",
+    "event_name": "Queens Poly Mixer",
+    "organizer_name": "Queens Poly Community",
+    "type": "munch",
+    "short_description": "A social event for creating community among Poly/ENM folks in Queens.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Solid State, Woodside, Queens",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Polyamory",
+      "ENM",
+      "Community",
+      "Socializing",
+      "Networking"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10153",
+    "event_name": "HMU Academy: Embrace Your K*nky Self",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "A 101 or 102 class exploring kinks and fetishes, understanding biases, and embodying them in daily life.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://www.hitmeupnyc.com/consent",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "Knotasha"
+    ],
+    "tags": [
+      "Education",
+      "D/S",
+      "Consent",
+      "Fetish",
+      "Community"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10336",
+    "event_name": "Tie & Bust",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "A BDSM workshop focusing on CBT, ballbusting, and ties.",
+    "experience_level": "advanced",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Bondage",
+      "Impact",
+      "Consent",
+      "Fetish",
+      "Community"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "9887",
+    "event_name": "Daddy Dom Daycare",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Workshop exploring power exchange relationships with a focus on caregiving dynamics.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square",
+    "non_ny": false,
+    "hosts": [
+      "Goddess Gem"
+    ],
+    "tags": [
+      "D/S",
+      "Caregiving",
+      "Relationships",
+      "Mental Health",
+      "Community"
+    ],
+    "price": "$30-$40"
+  },
+  {
+    "event_id": "10134",
+    "event_name": "KINKY KARAOKE: 50 SHADES OF SLAY",
+    "organizer_name": "Pagans Paradise",
+    "type": "performance",
+    "short_description": "A fun karaoke night with a kinky twist, featuring singing and light kink play.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "14th Street",
+    "non_ny": false,
+    "hosts": [
+      "Danny",
+      "Vanessa"
+    ],
+    "tags": [
+      "Exhibitionism",
+      "Consent",
+      "Music",
+      "Fetish",
+      "Community"
+    ],
+    "price": "$20-$40"
+  },
+  {
+    "event_id": "10337",
+    "event_name": "Bonded: Bondage Workshop With No Ropes",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "A workshop on bondage without ropes, covering cuffs, mummification, and more.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Bondage",
+      "FemmeDom",
+      "Fetish",
+      "Consent",
+      "Community"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10338",
+    "event_name": "Shutter — a Taillor Photoshoot Event (NEW DATE!)",
+    "organizer_name": "thetaillorgroup",
+    "type": "performance",
+    "short_description": "A photo event for kinksters, dommes, and photographers. Capture bold, unapologetic images.",
+    "experience_level": "intermediate",
+    "interactivity_level": "observational",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Art",
+      "FemmeDom",
+      "Photography",
+      "Consent",
+      "Community"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10339",
+    "event_name": "Taillor Happy Hour Mixer - Sapphic Mixer Edition",
+    "organizer_name": "thetaillorgroup",
+    "type": "munch",
+    "short_description": "A happy hour mixer for dommes and kink enthusiasts, with opportunities to network and socialize.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Networking",
+      "Community",
+      "FemmeDom",
+      "Social",
+      "Celebration"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10304",
+    "event_name": "Coffee and Conversation",
+    "organizer_name": "Long Island Poly/Ethical Non-Monogamy",
+    "type": "munch",
+    "short_description": "Meet and catch up with non-monogamous folk in a casual coffeehouse setting.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Long Island",
+    "non_ny": true,
+    "hosts": [
+      "Mike",
+      "Tina",
+      "Alex"
+    ],
+    "tags": [
+      "Polyamory",
+      "ENM",
+      "Community",
+      "Social",
+      "Networking"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10224",
+    "event_name": "East Harlem BDSM Play Party",
+    "organizer_name": "Kink-Collective",
+    "type": "play_party",
+    "short_description": "An exclusive BDSM event with uniquely equipped stations, fostering community and intentional play.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://ssdce-events.zohobackstage.com/EastHarlemBDSMPlayParty6",
+    "location": "East Harlem",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "BDSM",
+      "D/S",
+      "Community",
+      "Consent",
+      "Exploration"
+    ],
+    "price": "$30-$60"
+  },
+  {
+    "event_id": "10340",
+    "event_name": "Femdom Token Party—Bondage Edition",
+    "organizer_name": "thetaillorgroup",
+    "type": "play_party",
+    "short_description": "A femdom play party featuring rope bondage stations for various levels of experience.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Prospect Lefferts Garden, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Bondage",
+      "FemmeDom",
+      "Consent",
+      "Community",
+      "Rope"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "6188",
+    "event_name": "Riding 4 Rookies: Kansas City (Couples Class)",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Join us for a fun and interactive couples class blending yoga with sensual and playful partner exercises. Focus on intimacy improvement and connection.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Address provided via email",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Dance",
+      "Flirting",
+      "Tantra",
+      "Consent",
+      "Sensual"
+    ],
+    "price": "$69 per couple"
+  },
+  {
+    "event_id": "10241",
+    "event_name": "Lip Service: pansexual kissing and cocktails party",
+    "organizer_name": "House of Scorpio",
+    "type": "performance",
+    "short_description": "Pansexual makeout party with cocktails at Gemini & Scorpio Loft with sexy games and mingling opportunities.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "http://www.houseofscorpio.com/membership.html",
+    "location": "Gemini & Scorpio Loft, Brooklyn, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Exhibitionism",
+      "Flirting",
+      "Consent",
+      "Tantra",
+      "Dance"
+    ],
+    "price": "$0-25 based on membership"
+  },
+  {
+    "event_id": "10188",
+    "event_name": "Naked Yoga New York",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Join in a naturist yoga class to explore body acceptance and self-love in a welcoming environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided in confirmation email",
+    "non_ny": false,
+    "hosts": [
+      "Goddess Shakti"
+    ],
+    "tags": [
+      "Yoga",
+      "Consent",
+      "Energy",
+      "Sensation",
+      "Healing"
+    ],
+    "price": "$20-35"
+  },
+  {
+    "event_id": "9891",
+    "event_name": "Cuddle Puddle: a platonic intimacy experience",
+    "organizer_name": "versicolor coaching",
+    "type": "workshop",
+    "short_description": "Explore platonic intimacy, boundaries, and consent through interactive exercises and discussion in a nurturing space.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "",
+    "non_ny": false,
+    "hosts": [
+      "Jessica Langley"
+    ],
+    "tags": [
+      "Consent",
+      "Healing",
+      "Communication",
+      "Cuddle",
+      "Touch"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "8261",
+    "event_name": "Riding 4 Rookies- Raleigh (Ladies Only)",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Ladies learn bedroom techniques and confidence-boosting moves with a twist.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided via email",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Dance",
+      "Flirting",
+      "Sensual",
+      "Empowerment",
+      "Body Awareness"
+    ],
+    "price": "$69"
+  },
+  {
+    "event_id": "10212",
+    "event_name": "The Kinky CannaMunch: Pier Pressure",
+    "organizer_name": "KinkyCannaMunch",
+    "type": "munch",
+    "short_description": "Munch gathering at City Island with a focus on cannabis and social interaction by the water.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "City Island, Bronx, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Cannabis",
+      "Social",
+      "Food",
+      "Seaside",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "7037",
+    "event_name": "Tantra Speed Date® - New York! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "Join others in guided speed dating exercises to make meaningful connections or find a potential partner.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [
+      "Rafael Martinez"
+    ],
+    "tags": [
+      "Dating",
+      "Tantra",
+      "Connection",
+      "Games",
+      "Consent"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10247",
+    "event_name": "Kinky Date Night",
+    "organizer_name": "Clara Rose 🌹",
+    "type": "workshop",
+    "short_description": "Participate in rituals, consent talks, and hands-on kink practices with your partner in a sacred space.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Greenpoint, NY",
+    "non_ny": false,
+    "hosts": [
+      "Clara Rose",
+      "Corey Pugliese"
+    ],
+    "tags": [
+      "D/S",
+      "Ritual",
+      "Consent",
+      "Intimacy",
+      "Relationship Building"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9822",
+    "event_name": "(Canceled) Awakening Touch: Rope, Tantra, and Sacred Play",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Explore connections with rope, sacred breathwork, and shamanic practices to enhance personal-experiences.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, NY",
+    "non_ny": false,
+    "hosts": [
+      "Snarfox"
+    ],
+    "tags": [
+      "Rope",
+      "Tantra",
+      "Shamanic Practices",
+      "Consent",
+      "Breathwork"
+    ],
+    "price": "$40 - $75"
+  },
+  {
+    "event_id": "10114",
+    "event_name": "Obsidian Playground: Cyberfest",
+    "organizer_name": "Pagans Paradise",
+    "type": "festival",
+    "short_description": "A BIPOC-centered celebration of afrofuturism mixed with kink, style, and science fiction.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [
+      "bipoc"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Private studio near Union Square, NY",
+    "non_ny": false,
+    "hosts": [
+      "Lord Erebus",
+      "Pagans Paradise Crew"
+    ],
+    "tags": [
+      "Sci-Fi",
+      "Fetish",
+      "Community",
+      "Cultural",
+      "Art"
+    ],
+    "price": "$40 - $80"
+  },
+  {
+    "event_id": "10272",
+    "event_name": "Riding 4 Rookies: Charlotte",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Learn basic riding techniques to enhance your bedroom experience.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Address provided to registered guests",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Flirting",
+      "Sensation",
+      "Confidence"
+    ],
+    "price": "$69"
+  },
+  {
+    "event_id": "10341",
+    "event_name": "Trans Femme Pleasure - How to love a Trans Woman",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Learn sensual, gender-affirming techniques to please trans feminine bodies.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "The Crown, Prospect Lefferts Gardens, Brooklyn",
+    "non_ny": false,
+    "hosts": [
+      "Mistress Dahlia Damoiselle",
+      "Violet Bordeaux"
+    ],
+    "tags": [
+      "Femdom",
+      "D/S",
+      "Consent"
+    ],
+    "price": "Varies by ticket type"
+  },
+  {
+    "event_id": "10242",
+    "event_name": "Sinema Club: sex-pos & LGBTQ+ film club: Love Lies Bleeding (2024)",
+    "organizer_name": "House of Scorpio",
+    "type": "performance",
+    "short_description": "Watch and discuss LGBTQ+ themed films in a social setting.",
+    "experience_level": "beginner",
+    "interactivity_level": "observational",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Gemini & Scorpio Loft, Brooklyn",
+    "non_ny": false,
+    "hosts": [
+      "Phil Guie-Ng"
+    ],
+    "tags": [
+      "Exhibitionism",
+      "Art",
+      "Film"
+    ],
+    "price": "$0-10 for members, $10 + $2 fee for non-members"
+  },
+  {
+    "event_id": "10261",
+    "event_name": "Sexual Confidence Workshop and Social",
+    "organizer_name": "Bloom Sex-Positive Social: NYC",
+    "type": "workshop",
+    "short_description": "Build your sexual confidence through playful activities.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided after registration",
+    "non_ny": false,
+    "hosts": [
+      "Miss Bloom"
+    ],
+    "tags": [
+      "Confidence",
+      "Communication",
+      "Flirting"
+    ],
+    "price": "Contact for pricing"
+  },
+  {
+    "event_id": "10342",
+    "event_name": "Arts & Cuffs",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "A racy figure drawing class for artists and exhibitionists.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Prospect Lefferts Gardens, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Art",
+      "Exhibitionism",
+      "Kink"
+    ],
+    "price": "Varies by ticket type"
+  },
+  {
+    "event_id": "10256",
+    "event_name": "S-x Positive Community for the Conscious Monogamist",
+    "organizer_name": "Hacienda",
+    "type": "workshop",
+    "short_description": "A workshop on developing fulfilling monogamous relationships within a sex-positive framework.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Brooklyn, NY",
+    "non_ny": false,
+    "hosts": [
+      "Dakota Ramppen"
+    ],
+    "tags": [
+      "Communication",
+      "Consent",
+      "Monogamy"
+    ],
+    "price": "Contact for pricing"
+  },
+  {
+    "event_id": "10069",
+    "event_name": "Knot Me Up: Unraveled – The Art of Untying",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Explore the art of rope untying with a focus on sensation and communication.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided in confirmation email",
+    "non_ny": false,
+    "hosts": [
+      "Rorpheus"
+    ],
+    "tags": [
+      "Rope",
+      "Sensation",
+      "Communication"
+    ],
+    "price": "Workshop Only: $30-40, Jam Only: $30-40, Combo: $55-75"
+  },
+  {
+    "event_id": "10085",
+    "event_name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "Connect with other singles through engaging activities and games.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online - Zoom",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Dating",
+      "Connection"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10264",
+    "event_name": "Past Life Hypnosis Workshop (July 2025)",
+    "organizer_name": "LifeArtsFriends",
+    "type": "workshop",
+    "short_description": "Explore past life memories through group hypnosis.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Bushwick, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Hypnosis",
+      "Healing",
+      "Spiritual"
+    ],
+    "price": "Contact for pricing"
+  },
+  {
+    "event_id": "10154",
+    "event_name": "Hit Me Up: Tie Me Down Rope Jam",
+    "organizer_name": "Hit Me Up",
+    "type": "play_party",
+    "short_description": "A rope jam for rope enthusiasts of all levels.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan, NY",
+    "non_ny": false,
+    "hosts": [
+      "Trixie LaPointe",
+      "Sydona Rogue"
+    ],
+    "tags": [
+      "Rope",
+      "Community",
+      "D/S"
+    ],
+    "price": "Contact for pricing"
+  },
+  {
+    "event_id": "10189",
+    "event_name": "Queer Massage Magic - A Tantric Bi/Pansexual+ Experience!",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Experience a night of relaxation, connection, and sensory exploration within a queer community.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Location provided upon confirmation email",
+    "non_ny": false,
+    "hosts": [
+      "Alana"
+    ],
+    "tags": [
+      "Consent",
+      "Sensation",
+      "Tantra",
+      "Massage",
+      "Energy"
+    ],
+    "price": "$30 - $40"
+  },
+  {
+    "event_id": "10217",
+    "event_name": "Kinksters Klimbing in LIC July 16th",
+    "organizer_name": "KinkyKlimbers",
+    "type": "munch",
+    "short_description": "Join a rock climbing munch where kinksters of all skill levels can climb and socialize.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Long Island City, New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Fitness",
+      "Networking",
+      "Community",
+      "Social",
+      "Climbing"
+    ],
+    "price": "$15"
+  },
+  {
+    "event_id": "10291",
+    "event_name": "Femme Dom Game Night",
+    "organizer_name": "SheMagick Events",
+    "type": "munch",
+    "short_description": "An inclusive Femdom-themed game night with mingling and focus on queer and BIPOC attendees.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer",
+      "bipoc"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Private area bar in Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Femdom",
+      "Games",
+      "Community",
+      "Social",
+      "Queer"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9603",
+    "event_name": "Poly Connections: Game Night",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "Create authentic connections and explore polyamorous relationships at this casual game night.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, New York City",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Polyamory",
+      "Community",
+      "Board Games",
+      "Networking",
+      "Relationships"
+    ],
+    "price": "$10 - $20"
+  },
+  {
+    "event_id": "9609",
+    "event_name": "HMU Academy: No Frills Guide to Domination",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Learn techniques and soft skills in domination to confidently explore your desires safely.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan, New York",
+    "non_ny": false,
+    "hosts": [
+      "Lola Jean"
+    ],
+    "tags": [
+      "D/S",
+      "Education",
+      "Training",
+      "Consent",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9703",
+    "event_name": "HMU Academy: No Frills Guide to Domination",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "A beginner-friendly class in domination, exploring styles and personas.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan, New York",
+    "non_ny": false,
+    "hosts": [
+      "Lola Jean"
+    ],
+    "tags": [
+      "D/S",
+      "Education",
+      "Training",
+      "Consent",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10204",
+    "event_name": "Oy Vey, Let’s Slay: July’s Jinky Kews Femmes, Thems, and Fabulous Manhattan Munch Hour!!!",
+    "organizer_name": "JinkyKews",
+    "type": "munch",
+    "short_description": "Femme and queer supportive munch hour with snacks, conversation, and community.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Manhattan, New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Queer",
+      "Community",
+      "Social",
+      "BIPOC",
+      "Networking"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10205",
+    "event_name": "Schvitz Me Baby One More Time: July Jinky Kews Manhattan Munch! It's Gonna Be A Hot One!!",
+    "organizer_name": "JinkyKews",
+    "type": "munch",
+    "short_description": "Jewish and kink community gather for a casual munch in a welcoming environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "The Hugh Food Hall, NYC",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Community",
+      "Judaism",
+      "Social",
+      "Networking",
+      "Queer"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10293",
+    "event_name": "The Naked Comedy Show: Stand-up Comedy without the Clothes",
+    "organizer_name": "Ditto Bing Productions",
+    "type": "performance",
+    "short_description": "Stand-up comedy show featuring naked comics in a secret location in Bushwick.",
+    "experience_level": "beginner",
+    "interactivity_level": "performance",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Secret location in Bushwick",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Comedy",
+      "Exhibitionism",
+      "Entertainment",
+      "Performance",
+      "Stand-up"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10343",
+    "event_name": "Finding Prostate",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Workshop on finding and stimulating the prostate gland with different participation levels.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Undisclosed",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Prostate",
+      "Education",
+      "Workshop",
+      "Sexual Exploration",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10199",
+    "event_name": "Queens Kinksters Munch",
+    "organizer_name": "Queens_Kinksters",
+    "type": "munch",
+    "short_description": "A no-play gathering for kinksters to meet and socialize outside of the play scene, allowing networking and making familiar faces.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Queens, New York",
+    "non_ny": false,
+    "hosts": [
+      "Little Leah",
+      "Beachplease"
+    ],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "10305",
+    "event_name": "A Little Date: Ageplay Dating & Friending",
+    "organizer_name": "SheMagick Events",
+    "type": "munch",
+    "short_description": "Safe space for mixing, mingling, dating, and friending among Bigs, Littles/Middles, & ABDLs through activities.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [
+      "queer",
+      "bipoc"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location not specified",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Age Play",
+      "Polyamory",
+      "Dating"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10237",
+    "event_name": "Tantric Edge: Communal Energetic Release!",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Solo Tantric Edging workshop using breath techniques and energy work for extended self-practice.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Manhattan, New York",
+    "non_ny": false,
+    "hosts": [
+      "Dominus Eros"
+    ],
+    "tags": [
+      "Tantra",
+      "Breathwork",
+      "Energy",
+      "Healing"
+    ],
+    "price": "$30 - $40"
+  },
+  {
+    "event_id": "10178",
+    "event_name": "HMU Academy: Navigating Play Parties Solo",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Workshop offering skills for solo attendees at play parties, focusing on confidence and social navigation.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan, New York",
+    "non_ny": false,
+    "hosts": [
+      "Nikita Fernandes"
+    ],
+    "tags": [
+      "Consent",
+      "Polyamory",
+      "Dating"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10344",
+    "event_name": "PEG FEST!",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Pegging workshop involving experienced dommes and subs with practice opportunities.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location not specified",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Pegging",
+      "Femdom",
+      "D/S"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10345",
+    "event_name": "Drawminatrix – BDSM & Fetish Figure Drawing",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "A kink-themed figure drawing class featuring BDSM elements and live models.",
+    "experience_level": "beginner",
+    "interactivity_level": "performance",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan, New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Art",
+      "Exhibitionism",
+      "Femdom"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10346",
+    "event_name": "Kinky Knives",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Class on safe knife play exploring techniques, etiquette, and risk mitigation.",
+    "experience_level": "intermediate",
+    "interactivity_level": "extreme",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location not specified",
+    "non_ny": false,
+    "hosts": [
+      "King Leo"
+    ],
+    "tags": [
+      "Knife Play",
+      "Edge Play"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10306",
+    "event_name": "Upper Manhattan Non-Monogamy Mixer",
+    "organizer_name": "Like Fine Wine",
+    "type": "munch",
+    "short_description": "Monthly meet and greet focused on non-monogamous lifestyles for older individuals.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Upper Manhattan, New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Polyamory",
+      "Relationships"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10347",
+    "event_name": "Taillor Happy Hour Mixer",
+    "organizer_name": "thetaillorgroup",
+    "type": "munch",
+    "short_description": "A social mixer in Manhattan for dommes and community members to connect over drinks.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan, New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "10307",
+    "event_name": "Black Girls Munch",
+    "organizer_name": "Blue Counseling & Wellness Center",
+    "type": "munch",
+    "short_description": "Annual munch focused on exploration and connection within the Black femme community.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [
+      "bipoc"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location not specified",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "10179",
+    "event_name": "BEYOND JEALOUSY: Shadow Work for Ethical Non-Monogamy + Jam!",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Explore shadow work and somatic practices to transform jealousy into empowerment in an ethical non-monogamy and kink context.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Herald Square NYC",
+    "non_ny": false,
+    "hosts": [
+      "Danny Panzella-Velez",
+      "Vanessa Panzella-Velez"
+    ],
+    "tags": [
+      "Jealousy",
+      "Shadow Work",
+      "Somatic",
+      "ENM",
+      "Consent"
+    ],
+    "price": "$40-$72"
+  },
+  {
+    "event_id": "10243",
+    "event_name": "Two flirting parties in one: FemFlirt + MeetMarket - singles welcome!",
+    "organizer_name": "House of Scorpio",
+    "type": "social",
+    "short_description": "Two-part flirting event with FemFlirt for femmes and non-binary folks, and MeetMarket for all-orientation flirting in a welcoming space.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "http://www.houseofscorpio.com/membership.html",
+    "location": "Gemini & Scorpio Loft, 267 Douglass St, Brooklyn",
+    "non_ny": false,
+    "hosts": [
+      "Vonka"
+    ],
+    "tags": [
+      "Flirting",
+      "Mixer",
+      "Queer",
+      "Social",
+      "Dancing"
+    ],
+    "price": "$0-$20"
+  },
+  {
+    "event_id": "10226",
+    "event_name": "Kink Collective Members-Only Play Party",
+    "organizer_name": "Kink-Collective",
+    "type": "play_party",
+    "short_description": "An exclusive play party for members at The Sanctuary of East Harlem with facilitated conversations and various play stations.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "The Sanctuary of East Harlem, 113 E 125th St, New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Members Only",
+      "BDSM",
+      "Intentional Play",
+      "Vetted",
+      "Station Play"
+    ],
+    "price": "$30-$40"
+  },
+  {
+    "event_id": "10348",
+    "event_name": "Taillor Token Femdom BDSM Play Party",
+    "organizer_name": "thetaillorgroup",
+    "type": "play_party",
+    "short_description": "A femdom play party featuring domme stations where tokens can be used for kink experiences in a safe environment.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://tokens.eventbrite.com",
+    "location": "Prospect Lefferts Garden, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Femdom",
+      "Tokens",
+      "Kinky Experiences",
+      "Safe Space",
+      "BYOB"
+    ],
+    "price": "Variable"
+  },
+  {
+    "event_id": "10070",
+    "event_name": "CVLTVS: A Fetish Event by The Winters",
+    "organizer_name": "CVLTVS",
+    "type": "performance",
+    "short_description": "A kink-inspired event with live performances and a fully equipped dungeon to explore pleasure and community.",
+    "experience_level": "advanced",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Unknown, Contact Organizer",
+    "non_ny": false,
+    "hosts": [
+      "Hex Winter",
+      "X Winter"
+    ],
+    "tags": [
+      "Performance Art",
+      "Live Acts",
+      "Play Furniture",
+      "Intense Experience",
+      "Community"
+    ],
+    "price": "Not Listed"
+  },
+  {
+    "event_id": "10190",
+    "event_name": "Naked Yoga New York",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "A naturist yoga class focusing on self-acceptance and connection through nude practice led by Goddess Shakti.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Provided upon confirmation",
+    "non_ny": false,
+    "hosts": [
+      "Goddess Shakti"
+    ],
+    "tags": [
+      "Yoga",
+      "Body Acceptance",
+      "Nude Practice",
+      "Mind-Body Connection",
+      "Self-Love"
+    ],
+    "price": "$20-$40"
+  },
+  {
+    "event_id": "7945",
+    "event_name": "Riding 4 Rookies: Atlanta",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "A lesson in Riding techniques for women looking to enhance their bedroom experience.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Atlanta, GA (exact address emailed)",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Riding Techniques",
+      "Bedroom Skills",
+      "Women's Workshop",
+      "Confidence Building",
+      "Fitness"
+    ],
+    "price": "Contact Organizer"
+  },
+  {
+    "event_id": "10308",
+    "event_name": "Bi Bi Baby! A Night of Bisexual Play",
+    "organizer_name": "SheMagick Events",
+    "type": "play_party",
+    "short_description": "An intimate bi play party encouraging exploration of bisexual desires in a safe, consent-focused environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "sexual",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Contact Organizer for Details",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Bisexual Play",
+      "Consent Focused",
+      "Safe Environment",
+      "Gender Inclusive",
+      "Exploration"
+    ],
+    "price": "Contact Organizer"
+  },
+  {
+    "event_id": "10138",
+    "event_name": "Naughty Neon Nights...A Kinky Blacklight Play Party!",
+    "organizer_name": "Pagans Paradise",
+    "type": "play_party",
+    "short_description": "A blacklight play party featuring immersive zones and themed play spaces in a neon, futuristic setting.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Union Square",
+    "non_ny": false,
+    "hosts": [
+      "Dominus Eros"
+    ],
+    "tags": [
+      "Blacklight",
+      "Neon",
+      "Dungeon",
+      "Interactive Elements",
+      "Themed Party"
+    ],
+    "price": "$40-$80"
+  },
+  {
+    "event_id": "10071",
+    "event_name": "V's PlayHouse",
+    "organizer_name": "Sinfully_Social",
+    "type": "play_party",
+    "short_description": "A BDSM play party focusing on exploration and community within a consent-first environment at V's Playhouse.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided upon ticket purchase",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "BDSM",
+      "Exploration",
+      "Consent Environment",
+      "Community Building",
+      "Kinky Demos"
+    ],
+    "price": "Contact Organizer"
+  },
+  {
+    "event_id": "10281",
+    "event_name": "Freedom Begins in the Body Free Zoom Call w/ Monique Darling & Shawn Roop",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "A 60-minute nervous system rewiring experience for facilitators and conscious leaders.",
+    "experience_level": "intermediate",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Shawn Roop"
+    ],
+    "tags": [
+      "Tantra",
+      "Energy",
+      "Consent",
+      "Ceremony",
+      "Healing"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10309",
+    "event_name": "Fun in the Sun! Field Day",
+    "organizer_name": "SheMagick Events",
+    "type": "munch",
+    "short_description": "Enjoy silly games and socialize in Prospect Park with food and drinks.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Prospect Park, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Exhibitionism",
+      "Dance",
+      "Flirting",
+      "Social",
+      "Cuddle"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10158",
+    "event_name": "HMU Academy: Tantric Intimacy - Touch, Massage, & Sensation",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Tantric intimacy series teaching Neo-Tantra and touch techniques.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "Bear",
+      "Fifi"
+    ],
+    "tags": [
+      "Tantra",
+      "Massage",
+      "Healing",
+      "Consent",
+      "Sensation"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "6234",
+    "event_name": "Riding 4 Rookies: Cleveland, OH",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Learn new 'D Riding' techniques, perfect for all women.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Cleveland, OH",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Flirting",
+      "Consent",
+      "Roleplay",
+      "Dance",
+      "Healing"
+    ],
+    "price": "$30/transfer fee"
+  },
+  {
+    "event_id": "10258",
+    "event_name": "Liquid Love: Workshop",
+    "organizer_name": "Youtopia DreamSpace",
+    "type": "workshop",
+    "short_description": "A collective journey using coconut oil to enhance somatic awareness.",
+    "experience_level": "advanced",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location Provided Upon Registration",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Sensation",
+      "Consent",
+      "Energy",
+      "Ceremony",
+      "Tantra"
+    ],
+    "price": "Donation-based ($50-$125)"
+  },
+  {
+    "event_id": "8622",
+    "event_name": "Shamanic Kink Immersion: Midsummer Mysteries",
+    "organizer_name": "iCreative Collective",
+    "type": "retreat",
+    "short_description": "A 7-day immersive journey exploring BDSM as a transformative healing and ritual practice.",
+    "experience_level": "advanced",
+    "interactivity_level": "extreme",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "D/S",
+      "Ceremony",
+      "Consent",
+      "Healing",
+      "Energy"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10072",
+    "event_name": "Fetish Figure Drawing: Live Model Drawing with a Kinky Twist!",
+    "organizer_name": "SHAG a sexy shop",
+    "type": "workshop",
+    "short_description": "A unique blend of art, kink, and libations in an erotic drink-and-draw setting.",
+    "experience_level": "beginner",
+    "interactivity_level": "observational",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Moxy Williamsburg, Brooklyn",
+    "non_ny": false,
+    "hosts": [
+      "Angel",
+      "Steve"
+    ],
+    "tags": [
+      "Art",
+      "Exhibitionism",
+      "Roleplay",
+      "Flirting",
+      "Consent"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10349",
+    "event_name": "Taillor Rope Share",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Join a supportive space to practice and connect over rope bondage.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Prospect Lefferts Garden, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Rope",
+      "D/S",
+      "Consent",
+      "Safety",
+      "Community"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10310",
+    "event_name": "All Hands On D*ck! - An Erotic Voyage! Joint w/MAN group!",
+    "organizer_name": "Daddy Retreat",
+    "type": "social",
+    "short_description": "An erotic multi-handed massage experience for male identified participants.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Address in Email Confirmation",
+    "non_ny": false,
+    "hosts": [
+      "Dominus Eros"
+    ],
+    "tags": [
+      "Massage",
+      "Sensation",
+      "Flirting",
+      "Consent",
+      "Community"
+    ],
+    "price": "$30 - $45"
+  },
+  {
+    "event_id": "10235",
+    "event_name": "Hit Me Up: Tie Me Down Ropes 101 - Intro to Rope Tying",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Learn the basics of rope tying in a supportive environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "Mistress Trixie LaPointe"
+    ],
+    "tags": [
+      "Rope",
+      "Safety",
+      "Consent",
+      "Community",
+      "D/S"
+    ],
+    "price": "Variable"
+  },
+  {
+    "event_id": "10086",
+    "event_name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "A social event for singles to connect through games, meditation, and discussions, while learning tantric principles.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Meditation",
+      "Dating",
+      "Connection",
+      "Games"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10350",
+    "event_name": "Smothering 101",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "A workshop focused on smothering techniques and breath play including safety and scene incorporation.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Breath Play",
+      "Domination",
+      "Safety",
+      "Kink Education",
+      "Hands-On Practice"
+    ],
+    "price": "$30"
+  },
+  {
+    "event_id": "10191",
+    "event_name": "Queer Kiss & Cuddles - A Bi/Pansexual+ Experience!",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A queer-focused social gathering with emphasis on community connection through guided meditation and gentle touch demos.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Alana"
+    ],
+    "tags": [
+      "Consent",
+      "Flirting",
+      "Community",
+      "Gentle Touch",
+      "Meditation"
+    ],
+    "price": "$25"
+  },
+  {
+    "event_id": "10175",
+    "event_name": "The Intimacy Hour - Dating 'State Of The Union'",
+    "organizer_name": "The Tantra Institute",
+    "type": "discussion",
+    "short_description": "An interactive talk and Q&A on love, sex, and relationships, with a relaxed and educational atmosphere.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [
+      "Guy Shahar"
+    ],
+    "tags": [
+      "Love",
+      "Relationships",
+      "Tantra",
+      "Education",
+      "Connection"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10218",
+    "event_name": "Kinksters Klimbing in LIC July 23rd",
+    "organizer_name": "KinkyKlimbers",
+    "type": "munch",
+    "short_description": "A climbing social for kinksters of all skill levels to meet and climb together.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Long Island City, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Climbing",
+      "Socializing",
+      "Physical Activity",
+      "Community",
+      "Bonding"
+    ],
+    "price": "$15"
+  },
+  {
+    "event_id": "7038",
+    "event_name": "Poly Tantra Speed Date® - New York! (Poly/ENM) Poly/ENM Speed Dating",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "A speed dating event for polyamorous and ethically non-monogamous individuals to explore conscious connections.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "polyamory"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Marshall Graeber"
+    ],
+    "tags": [
+      "Dating",
+      "Connection",
+      "Mindfulness",
+      "Tantra",
+      "Polyamory"
+    ],
+    "price": "$35"
+  },
+  {
+    "event_id": "9696",
+    "event_name": "Tantric Latihan - Move in the Mystery",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "A blindfolded group meditation focusing on authentic connection through body awareness and movement.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Jay Lamar House",
+      "Nicolás Ganghadara Zulowski"
+    ],
+    "tags": [
+      "Meditation",
+      "Movement",
+      "Authenticity",
+      "Connection",
+      "Body Awareness"
+    ],
+    "price": "$25"
+  },
+  {
+    "event_id": "10236",
+    "event_name": "HMU Academy: Nervous System Literacy for Better Play",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Exploring polyvagal theory and the nervous system in relation to sex, kink, and consent. Open to all.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan, NY",
+    "non_ny": false,
+    "hosts": [
+      "Belle"
+    ],
+    "tags": [
+      "Nervous System",
+      "Connection",
+      "Consent",
+      "Education",
+      "Trauma"
+    ],
+    "price": "Varied"
+  },
+  {
+    "event_id": "10238",
+    "event_name": "Kinky Speed Dating & Friending",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A social and speed dating event with a kinky twist, focused on forming connections within the kinky community.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Dominus Eros",
+      "Erebus"
+    ],
+    "tags": [
+      "Kink",
+      "Speed Dating",
+      "Flirting",
+      "Connection",
+      "Community"
+    ],
+    "price": "$30"
+  },
+  {
+    "event_id": "10087",
+    "event_name": "Cuddle Party! - A Warm Evening of Connection, Cuddles, and Consent!",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "A workshop on consent and communication, coupled with a platonic cuddling session to practice new skills.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Tribeca, NY",
+    "non_ny": false,
+    "hosts": [
+      "Maya Kova"
+    ],
+    "tags": [
+      "Consent",
+      "Touch",
+      "Connection",
+      "Cuddling",
+      "Body Awareness"
+    ],
+    "price": "Varied"
+  },
+  {
+    "event_id": "10248",
+    "event_name": "Awaken with Impact",
+    "organizer_name": "Clara Rose 🌹",
+    "type": "workshop",
+    "short_description": "An intimate, ceremonial space where impact play is explored with cacao and somatic ritual.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Dreamspace, 128 Jefferson Ave, 11216",
+    "non_ny": false,
+    "hosts": [
+      "Clara Rose"
+    ],
+    "tags": [
+      "Impact",
+      "Breathwork",
+      "Ceremony",
+      "Consent",
+      "Sensation"
+    ],
+    "price": "N/A"
+  },
+  {
+    "event_id": "10073",
+    "event_name": "Speed Flirting at Oceane Winery",
+    "organizer_name": "Alaya Rose Healing & Intimacy",
+    "type": "munch",
+    "short_description": "A unique speed dating experience for singles 35-55, focusing on connection and community.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Oceane Winery, Chester, NY",
+    "non_ny": true,
+    "hosts": [
+      "Amanda Rue"
+    ],
+    "tags": [
+      "Dating",
+      "Flirting"
+    ],
+    "price": "$20"
+  },
+  {
+    "event_id": "10088",
+    "event_name": "Desire Lab NYC (A Sensual Evening of Consensual Exploration)",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "A transformative evening exploring sensual and erotic connections with guided practices.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Private space in Tribeca, NY",
+    "non_ny": false,
+    "hosts": [
+      "Maya Kova"
+    ],
+    "tags": [
+      "Consent",
+      "Sensation",
+      "Cuddle",
+      "Dance",
+      "Tantra"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10311",
+    "event_name": "Never Surrender “Three Hole Circus” Queer Play Party",
+    "organizer_name": "Eutopia Rising",
+    "type": "play_party",
+    "short_description": "A queer-centered night of daring debauchery with a circus theme and audience participation.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "https://airtable.com/shr7RtHo2x8n0mNP3",
+    "location": "Chinatown, Manhattan, NY",
+    "non_ny": false,
+    "hosts": [
+      "Humanette"
+    ],
+    "tags": [
+      "Exhibitionism",
+      "Roleplay",
+      "Consent",
+      "Fetish",
+      "Queer"
+    ],
+    "price": "N/A"
+  },
+  {
+    "event_id": "10351",
+    "event_name": "Asstrology: A Queer Play Party by the Taillors",
+    "organizer_name": "thetaillorgroup",
+    "type": "play_party",
+    "short_description": "A queer-centered kinky play party open to LGBTQIA2S+ community with activities and mini-sessions.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "N/A",
+    "location": "N/A",
+    "non_ny": false,
+    "hosts": [
+      "The Taillors"
+    ],
+    "tags": [
+      "Femdom",
+      "Consent",
+      "Queer",
+      "Roleplay",
+      "Exhibitionism"
+    ],
+    "price": "N/A"
+  },
+  {
+    "event_id": "10192",
+    "event_name": "Naked Yoga New York",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "A class offering naked yoga to enhance body acceptance and mind-body connection.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided in confirmation email",
+    "non_ny": false,
+    "hosts": [
+      "Goddess Shakti"
+    ],
+    "tags": [
+      "Yoga",
+      "Body Acceptance",
+      "Nudity",
+      "Mindfulness",
+      "Healing"
+    ],
+    "price": "$20-$40"
+  },
+  {
+    "event_id": "10292",
+    "event_name": "I Want Her: 40+ Sapphic Dating",
+    "organizer_name": "SheMagick Events",
+    "type": "munch",
+    "short_description": "A day of connection and love for queer women over 40, with games and activities.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Brooklyn, Outdoor Venue",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Dating",
+      "Flirting",
+      "Queer",
+      "Connection",
+      "Games"
+    ],
+    "price": "$20-$30"
+  },
+  {
+    "event_id": "10193",
+    "event_name": "Yogi Bare Dance & Creative Mind-Body Celebration (Yoga Tantra Party)",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "A creative yoga dance party with body painting and partner yoga.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "14th Street Location",
+    "non_ny": false,
+    "hosts": [
+      "Goddess Shakti"
+    ],
+    "tags": [
+      "Dance",
+      "Yoga",
+      "Body Paint",
+      "Mindfulness",
+      "Creative Expression"
+    ],
+    "price": "$45-$80"
+  },
+  {
+    "event_id": "10210",
+    "event_name": "Kinky Cannamunch: High Tea",
+    "organizer_name": "KinkyCannaMunch",
+    "type": "munch",
+    "short_description": "A high tea style munch with THC infused snacks and a focus on socializing.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "To be announced",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Cannabis",
+      "Tea",
+      "Social",
+      "Connection",
+      "Relaxation"
+    ],
+    "price": "N/A"
+  },
+  {
+    "event_id": "10207",
+    "event_name": "Geekaholic: July 26th Board Game Munch w/ Icebreakers & Post-Event Drinks [NYC]",
+    "organizer_name": "Geekaholic",
+    "type": "munch",
+    "short_description": "A board game munch with icebreakers and post-event drinks for geeks and kinksters.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "424 West 54th Street, NYC",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Board Games",
+      "Social",
+      "Geek",
+      "Cuddles",
+      "Kink Culture"
+    ],
+    "price": "Donation-Based"
+  },
+  {
+    "event_id": "9695",
+    "event_name": "SACRED",
+    "organizer_name": "The Tantra Institute",
+    "type": "retreat",
+    "short_description": "A deeper version of the Desire event, focusing on intimacy and advanced practices with live demos.",
+    "experience_level": "advanced",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "mailto:desire@tantrany.com",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Consent",
+      "D/S",
+      "Ceremony",
+      "Energy",
+      "Breathwork"
+    ],
+    "price": "Not specified"
+  },
+  {
+    "event_id": "10225",
+    "event_name": "Resonance",
+    "organizer_name": "Kink-Collective",
+    "type": "workshop",
+    "short_description": "A BDSM:101 tasting event offering guidance and exploration with professional practitioners.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "The Sanctuary of East Harlem, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Consent",
+      "Impact",
+      "Sensation",
+      "Exhibitionism",
+      "Rope"
+    ],
+    "price": "$20-$40"
+  },
+  {
+    "event_id": "10233",
+    "event_name": "Connection: Simplified Online",
+    "organizer_name": "Kink-Collective",
+    "type": "workshop",
+    "short_description": "Online course on developing meaningful relationships through guided discussions.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Consent",
+      "Communication",
+      "Relationships",
+      "Healing",
+      "Mindfuck"
+    ],
+    "price": "$10"
+  },
+  {
+    "event_id": "8504",
+    "event_name": "(Cancelled) Cuddle Party",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "A communication workshop disguised as a pajama party, promoting non-sexual snuggling.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Manhattan, NY",
+    "non_ny": false,
+    "hosts": [
+      "Amanda Ananda"
+    ],
+    "tags": [
+      "Cuddle",
+      "Consent",
+      "Communication",
+      "Healing",
+      "Intimacy"
+    ],
+    "price": "$30-$60"
+  },
+  {
+    "event_id": "10280",
+    "event_name": "The Pleasure Circle",
+    "organizer_name": "Madaam Yvonne",
+    "type": "workshop",
+    "short_description": "A sacred space guiding women to reclaim their sexuality and body through embodiment practices.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Not specified",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Energy",
+      "Ceremony",
+      "Healing",
+      "Breathwork",
+      "Intimacy"
+    ],
+    "price": "Not specified"
+  },
+  {
+    "event_id": "10213",
+    "event_name": "Bushwick Munch & Rope Jam",
+    "organizer_name": "Black-bleu",
+    "type": "munch",
+    "short_description": "Social gathering for kinksters with a rope jam and educational opportunities.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Bushwick, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Rope",
+      "Bondage",
+      "Social",
+      "Knot Tying",
+      "Suspension"
+    ],
+    "price": "Free for Munch, $10 for classes"
+  },
+  {
+    "event_id": "10089",
+    "event_name": "CTE Practice Night - Sacred Spot and Healing Session",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "Private practice night for Certified Tantra Educators focusing on breathwork and energy flow.",
+    "experience_level": "advanced",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Tribeca, NY",
+    "non_ny": false,
+    "hosts": [
+      "Guy"
+    ],
+    "tags": [
+      "Tantra",
+      "Breathwork",
+      "Healing",
+      "Energy",
+      "Intimacy"
+    ],
+    "price": "Donation-based"
+  },
+  {
+    "event_id": "8254",
+    "event_name": "Riding 4 Rookies: Dallas, TX",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "An event for women to learn D Riding techniques and bedroom tips.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Dallas, TX",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Dance",
+      "Sensual",
+      "Yoga",
+      "Movement",
+      "Fitness"
+    ],
+    "price": "Not specified"
+  },
+  {
+    "event_id": "10352",
+    "event_name": "PEG FEST!",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Event focusing on pegging with workshops and participation opportunities.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Not specified",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Pegging",
+      "Femdom",
+      "Power Play",
+      "Roleplay",
+      "D/S"
+    ],
+    "price": "Not specified"
+  },
+  {
+    "event_id": "10273",
+    "event_name": "Riding 4 Rookies: Dallas/FTW (Couples Class)",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Interactive event for couples to enhance intimacy and learn new moves.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Dallas/FTW, TX",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Dance",
+      "Yoga",
+      "Sensual",
+      "Couples",
+      "Movement"
+    ],
+    "price": "Not specified"
+  },
+  {
+    "event_id": "10312",
+    "event_name": "Drip - A Wax Play Workshop",
+    "organizer_name": "The Domme Kat",
+    "type": "workshop",
+    "short_description": "A workshop exploring the sensual and fun elements of wax play in BDSM.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "The Crown, Prospect Lefferts Gardens, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Wax Play",
+      "Sensation",
+      "D/S",
+      "Erotic",
+      "Fetish"
+    ],
+    "price": "$15 - $80"
+  },
+  {
+    "event_id": "10313",
+    "event_name": "The Meat Rack! M4M Daddy Retreat experience!",
+    "organizer_name": "Daddy Retreat",
+    "type": "retreat",
+    "short_description": "An erotic group touch event for men involving consensual exploration and vulnerability.",
+    "experience_level": "intermediate",
+    "interactivity_level": "erotic",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Exact location provided upon RSVP",
+    "non_ny": true,
+    "hosts": [
+      "Dominus Eros"
+    ],
+    "tags": [
+      "Exhibitionism",
+      "Consent",
+      "Power Play",
+      "Sensual",
+      "Group Dynamics"
+    ],
+    "price": "$30 - $45"
+  },
+  {
+    "event_id": "10090",
+    "event_name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "A social gathering designed to facilitate authentic connections among singles using tantric principles.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online via Zoom",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Connection",
+      "Dating",
+      "Tantra",
+      "Energy",
+      "Flirting"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10315",
+    "event_name": "Touch to Tingle: Partnered Erotic Massage",
+    "organizer_name": "Night Owls",
+    "type": "workshop",
+    "short_description": "An interactive workshop focusing on sensual massage techniques for couples.",
+    "experience_level": "intermediate",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://nightowlsmeet.com/",
+    "location": "Provided upon membership approval",
+    "non_ny": false,
+    "hosts": [
+      "David"
+    ],
+    "tags": [
+      "Massage",
+      "Sensual",
+      "Consent",
+      "Hands-On",
+      "Trust"
+    ],
+    "price": "N/A"
+  },
+  {
+    "event_id": "10314",
+    "event_name": "Trivia & Kinky Games Social",
+    "organizer_name": "Bloom Sex-Positive Social: NYC",
+    "type": "munch",
+    "short_description": "An evening of sex trivia and kinky games led by a sex educator.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "Niki Davis-Fainbloom"
+    ],
+    "tags": [
+      "Games",
+      "Trivia",
+      "Exhibitionism",
+      "Education",
+      "Fun"
+    ],
+    "price": "N/A"
+  },
+  {
+    "event_id": "10194",
+    "event_name": "Queer Massage Magic - A Tantric Bi/Pansexual+ Experience!",
+    "organizer_name": "Pagans Paradise",
+    "type": "discussion",
+    "short_description": "A queer-centered event featuring guided massage and tantric practices.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Location provided upon confirmation",
+    "non_ny": false,
+    "hosts": [
+      "Dominus Eros"
+    ],
+    "tags": [
+      "Massage",
+      "Queer Magic",
+      "Tantra",
+      "Breathwork",
+      "Sacred Space"
+    ],
+    "price": "$30 - $40"
+  },
+  {
+    "event_id": "10254",
+    "event_name": "HMU Academy: Everything Butt -Basics to Adventurous Play",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "Learn techniques to make anal play more enjoyable for all experience levels, featuring live demos and expert tips.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "Knotasha"
+    ],
+    "tags": [
+      "D/S",
+      "Consent",
+      "Ritual",
+      "Anal Play",
+      "Safety"
+    ],
+    "price": "Check website"
+  },
+  {
+    "event_id": "10200",
+    "event_name": "Queens Kinksters Munch",
+    "organizer_name": "Queens_Kinksters",
+    "type": "munch",
+    "short_description": "Meet and socialize with fellow kinksters outside of the play scene.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Queens",
+    "non_ny": false,
+    "hosts": [
+      "Little Leah",
+      "Beachplease"
+    ],
+    "tags": [
+      "Networking",
+      "Community",
+      "Safe Space",
+      "Casual"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10227",
+    "event_name": "KINKY SHADOW WORK 101: BDSM & Kink as a Path of Deep Transformation + Jam!",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "Explore kink as a spiritual tool for transformation, including a workshop and a jam.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Herald Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Danny Panzella",
+      "Vanessa Panzella-Velez"
+    ],
+    "tags": [
+      "BDSM",
+      "Tantra",
+      "Shadow Work",
+      "Non-Monogamy",
+      "Spiritual"
+    ],
+    "price": "Workshop & Jam $72, Workshop Only $40"
+  },
+  {
+    "event_id": "8250",
+    "event_name": "Riding 4 Rookies: DMV (DC/MD/VA)",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Learn 'D Riding' techniques from basic to semi-advanced in a supportive environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "DMV Area",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Sensual",
+      "Confidence Building",
+      "Riding Techniques",
+      "Supportive Environment"
+    ],
+    "price": "Check website"
+  },
+  {
+    "event_id": "5180",
+    "event_name": "Soulful Seas Croatia 7 day Luxury Yacht Retreat w/Monique and Peter",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "A luxury yacht retreat exploring Tantra, connection, and exploration along the Croatian coast.",
+    "experience_level": "advanced",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Croatia",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen"
+    ],
+    "tags": [
+      "Tantra",
+      "Ceremony",
+      "Adventure",
+      "Luxury",
+      "Connection"
+    ],
+    "price": "$3800"
+  },
+  {
+    "event_id": "10161",
+    "event_name": "Getting Conscious With K!nk w/ Seani Wild Love",
+    "organizer_name": "Magiya",
+    "type": "workshop",
+    "short_description": "A weekend workshop on conscious kink, focusing on consent, boundaries, and empowerment.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Seani Wild Love"
+    ],
+    "tags": [
+      "Consent",
+      "BDSM",
+      "Power Exchange",
+      "Ritual",
+      "Empowerment"
+    ],
+    "price": "$400, Early bird $350"
+  },
+  {
+    "event_id": "10317",
+    "event_name": "Cartoons & Conversation Club: NYC (Aug '25)",
+    "organizer_name": "Spicy Test Kitchen",
+    "type": "performance",
+    "short_description": "A comfy, cozy community gathering to watch cartoons and have discussions.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "East Harlem",
+    "non_ny": false,
+    "hosts": [
+      "Kyla the Creatrix Of Chaos"
+    ],
+    "tags": [
+      "Comfort",
+      "Community",
+      "Cartoons",
+      "Cozy",
+      "Fun"
+    ],
+    "price": "Check website"
+  },
+  {
+    "event_id": "10294",
+    "event_name": "The Naked Comedy Show: Best Stand-up Comedy in Philadelphia without Pants",
+    "organizer_name": "Ditto Bing Productions",
+    "type": "performance",
+    "short_description": "Philadelphia comedians perform stand-up comedy without pants.",
+    "experience_level": "beginner",
+    "interactivity_level": "performance",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Philadelphia",
+    "non_ny": true,
+    "hosts": [
+      "Billy Procida"
+    ],
+    "tags": [
+      "Comedy",
+      "Exhibitionism",
+      "Fun",
+      "Nudity",
+      "Entertainment"
+    ],
+    "price": "Check website"
+  },
+  {
+    "event_id": "9643",
+    "event_name": "Sapphic Sirens - Corporate Affairs",
+    "organizer_name": "Pagans Paradise",
+    "type": "play_party",
+    "short_description": "A sapphic-themed night of play and exploration, away from the patriarchy.",
+    "experience_level": "beginner",
+    "interactivity_level": "sexual",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Union Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Sirenatrix Nix"
+    ],
+    "tags": [
+      "Sapphic",
+      "Roleplay",
+      "Fantasy",
+      "Community",
+      "Exploration"
+    ],
+    "price": "Check website"
+  },
+  {
+    "event_id": "10318",
+    "event_name": "May i Have Another",
+    "organizer_name": "SheMagick Events",
+    "type": "play_party",
+    "short_description": "A day of play under the sun focusing on impact and various playful activities.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "",
+    "location": "Check website",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Impact",
+      "Rope",
+      "Electro",
+      "Daytime",
+      "Play"
+    ],
+    "price": "Check website"
+  },
+  {
+    "event_id": "8251",
+    "event_name": "Riding For Rookies: Toronto, Canada",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "A workshop for women to learn 'D Riding' techniques from basics to semi-advanced maneuvers.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Toronto, Canada",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Confidence",
+      "Skill Building",
+      "Female Empowerment",
+      "Techniques",
+      "Community"
+    ],
+    "price": "$30/transfer fee"
+  },
+  {
+    "event_id": "10263",
+    "event_name": "Body Paint Dance Party Ft Jackson and the Janks",
+    "organizer_name": "Bloom Sex-Positive Social: NYC",
+    "type": "performance",
+    "short_description": "A night of music, dancing, and body paint with live painting and funky tunes.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Dance",
+      "Art",
+      "Exhibitionism",
+      "Music",
+      "Consent"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10091",
+    "event_name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "A unique way for singles to meet others through games, meditation, and insights with a tantric twist.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Dating",
+      "Mindfulness",
+      "Connection",
+      "Games"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10234",
+    "event_name": "Leather Unveiled: Ceremony and Ritual x Honor",
+    "organizer_name": "Kink-Collective",
+    "type": "discussion",
+    "short_description": "A virtual gathering exploring the values and rituals of the Leather community with active participation.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Ceremony",
+      "Leather",
+      "Honor",
+      "Community",
+      "Tradition"
+    ],
+    "price": "Drop-in $150; Full Year $1,350"
+  },
+  {
+    "event_id": "10201",
+    "event_name": "Queens Kinksters Munch",
+    "organizer_name": "Queens_Kinksters",
+    "type": "munch",
+    "short_description": "A social gathering for kinksters to meet and network outside the play scene.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Queens, NY",
+    "non_ny": false,
+    "hosts": [
+      "Little Leah01",
+      "Beachplease101"
+    ],
+    "tags": [
+      "Networking",
+      "Community",
+      "Kink",
+      "BDSM",
+      "Social"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10149",
+    "event_name": "Kink Pet Play Workshop + Jam",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "A workshop and jam to explore the playful and primal aspects of pet play with activities and demonstrations.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Union Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Dominus Eros",
+      "Alana"
+    ],
+    "tags": [
+      "Pet Play",
+      "Primal",
+      "Roleplay",
+      "Bonding",
+      "Sensory"
+    ],
+    "price": "Workshop - $40; Jam - $40; Full Experience - $72"
+  },
+  {
+    "event_id": "9697",
+    "event_name": "DESIRE Summer Pool Party Weekend!",
+    "organizer_name": "The Tantra Institute",
+    "type": "festival",
+    "short_description": "",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "10274",
+    "event_name": "Riding 4 Rookies-Columbia, SC",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Learn basic 'riding' techniques to enhance bedroom experiences with a focus on confidence and skill development.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Columbia, SC",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Confidence",
+      "Skill Building",
+      "Female Empowerment",
+      "Techniques",
+      "Community"
+    ],
+    "price": "$69/ryder"
+  },
+  {
+    "event_id": "10255",
+    "event_name": "Temple Night NYC - (Ceremonial Tantra Play Party)",
+    "organizer_name": "Pagans Paradise",
+    "type": "play_party",
+    "short_description": "A tantric play party with elements of education and performance, focusing on sacred sexuality and divine masculinity.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Ceremony",
+      "Sacred Sexuality",
+      "Community",
+      "Exploration"
+    ],
+    "price": "Solo: $99-138; Paired: $159-199"
+  },
+  {
+    "event_id": "7039",
+    "event_name": "Tantra Speed Date® - New York! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "An interaction-focused speed dating event using tantric exercises to enhance connections.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [
+      "Rafael Martinez"
+    ],
+    "tags": [
+      "Dating",
+      "Connection",
+      "Relationship Skills",
+      "Engagement",
+      "Socializing"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10092",
+    "event_name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "Connect with other singles through games and meditations for genuine connections and dating support.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Dating",
+      "Connection Games",
+      "Guided Meditation",
+      "Somatic Exercises",
+      "Q&A"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10093",
+    "event_name": "DESIRE Community Call - Connect with Sexy Family!",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "Connect and play with a soulful community through games and sharing experiences.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Connection Games",
+      "Community",
+      "Sharing Experiences",
+      "Self-Care",
+      "Connection"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10355",
+    "event_name": "\"DIVINE REBELLION\" New England Tantra Festival",
+    "organizer_name": "Amanda Ananda",
+    "type": "festival",
+    "short_description": "Explore conscious sexuality, creativity, and community through immersive workshops and performances.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New England",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Conscious Sexuality",
+      "Creativity",
+      "Community",
+      "Immersive Workshops",
+      "Performances"
+    ],
+    "price": "Early Bird Tickets Available"
+  },
+  {
+    "event_id": "10275",
+    "event_name": "Riding 4 Rookies: Detroit",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Learn basic ‘riding’ techniques to enhance bedroom experiences.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Detroit",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Riding Techniques",
+      "Bedroom Skills",
+      "Confidence Building",
+      "Coaching"
+    ],
+    "price": "$69/per rider"
+  },
+  {
+    "event_id": "10094",
+    "event_name": "Cuddles & Connection! - New York",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "Join for a cuddly and connecting experience in New York.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Cuddling",
+      "Connection",
+      "Community",
+      "Intimacy"
+    ],
+    "price": "TBA"
+  },
+  {
+    "event_id": "10209",
+    "event_name": "Geekaholic: August 16th Board Game Munch w/ Icebreakers & Post-Event Drinks [NYC]",
+    "organizer_name": "Geekaholic",
+    "type": "munch",
+    "short_description": "Enjoy board games, icebreakers, and drinks with a welcoming kink community in NYC.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "424 West 54th Street, NYC",
+    "non_ny": false,
+    "hosts": [
+      "PLAN Gaming"
+    ],
+    "tags": [
+      "Board Games",
+      "Icebreakers",
+      "Community",
+      "Kink Discussions",
+      "Socializing"
+    ],
+    "price": "Pay What You Can"
+  },
+  {
+    "event_id": "9610",
+    "event_name": "Poly Connections: Game Night",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A social gathering for the ethically non-monogamous community to connect and play games.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "polyamory"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Dating",
+      "Consent",
+      "Games",
+      "Relationship Dynamics",
+      "Communication"
+    ],
+    "price": "$10-$20"
+  },
+  {
+    "event_id": "9698",
+    "event_name": "Tantric Latihan - Journey Into the Unknown",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "A blindfolded, group moving meditation to connect more authentically with yourself and others.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Jay Lamar House",
+      "Nicolás Ganghadara Zulowski"
+    ],
+    "tags": [
+      "Tantra",
+      "Meditation",
+      "Energy",
+      "Breathwork",
+      "Connection"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10202",
+    "event_name": "Queens Kinksters Munch",
+    "organizer_name": "Queens_Kinksters",
+    "type": "munch",
+    "short_description": "A no-play gathering for kinksters to meet and socialize outside the play scene.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Queens, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Little Leah01",
+      "Beachplease101"
+    ],
+    "tags": [
+      "BDSM",
+      "Networking",
+      "Community",
+      "Socializing",
+      "Safety"
+    ],
+    "price": "Pay for own expenses"
+  },
+  {
+    "event_id": "10015",
+    "event_name": "HMU Academy: F!st Me Baby One More Time - F!sting 101",
+    "organizer_name": "Hit Me Up",
+    "type": "workshop",
+    "short_description": "A class for newcomers and those looking to enhance their f!sting techniques.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": true,
+    "vetting_url": "https://www.hitmeupnyc.com/join",
+    "location": "Lower Manhattan",
+    "non_ny": false,
+    "hosts": [
+      "Jamie Joy"
+    ],
+    "tags": [
+      "Consent",
+      "BDSM",
+      "F!sting",
+      "Queer",
+      "Education"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10319",
+    "event_name": "Sacred Intimacy: Rituals for Deeper Connection + Jam!",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "An interactive workshop for couples to deepen their bond through tantric and relational practices.",
+    "experience_level": "intermediate",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Herald Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Danny Panzella-Velez",
+      "Vanessa Panzella-Velez"
+    ],
+    "tags": [
+      "Tantra",
+      "Intimacy",
+      "Connection",
+      "Rituals",
+      "Neuroscience"
+    ],
+    "price": "$40-$72"
+  },
+  {
+    "event_id": "10115",
+    "event_name": "Climactic Dance - Reggaeton Edition",
+    "organizer_name": "Pagans Paradise",
+    "type": "performance",
+    "short_description": "A dance party inspired by Tantra with reggaeton music and social activities.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Union Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Drago",
+      "Nix"
+    ],
+    "tags": [
+      "Dance",
+      "Tantra",
+      "Music",
+      "Socializing",
+      "Performance"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "7040",
+    "event_name": "Tantra Speed Date® - New York! (Brooklyn) Meet Singles Speed Dating",
+    "organizer_name": "The Tantra Institute",
+    "type": "dating",
+    "short_description": "A speed dating event with a focus on conscious connection using tantric principles.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Brooklyn, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Guy Shahar"
+    ],
+    "tags": [
+      "Dating",
+      "Tantra",
+      "Connection",
+      "Mindfulness",
+      "Socializing"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "10276",
+    "event_name": "Riding 4 Rookies: Couples Nasty Class IE (Inland Empire, CA)",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "A couples yoga class with a twist for enhancing intimacy and connection.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Inland Empire, CA",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Yoga",
+      "Intimacy",
+      "Couples",
+      "Connection",
+      "Play"
+    ],
+    "price": "Varies"
+  },
+  {
+    "event_id": "7762",
+    "event_name": "Riding 4 Rookies: San Diego",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "A workshop teaching 'riding' techniques to enhance bedroom experience.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "San Diego, CA",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Sexual Skills",
+      "Confidence",
+      "Bedroom Techniques",
+      "Play",
+      "Connection"
+    ],
+    "price": "$69"
+  },
+  {
+    "event_id": "10320",
+    "event_name": "Drip - A Wax Play Workshop",
+    "organizer_name": "The Domme Kat",
+    "type": "workshop",
+    "short_description": "An educational event focused on the art and safety of wax play.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Prospect Lefferts Gardens, Brooklyn, NYC",
+    "non_ny": false,
+    "hosts": [
+      "The Domme Kat"
+    ],
+    "tags": [
+      "Wax Play",
+      "BDSM",
+      "Sensation",
+      "Safety",
+      "Education"
+    ],
+    "price": "$15-$80"
+  },
+  {
+    "event_id": "10353",
+    "event_name": "PEG FEST!",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "The Taillors teach pegging with dommes guiding newbies on Taillor subs.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Pegging",
+      "Femdom",
+      "D/S",
+      "Roleplay",
+      "Power Play"
+    ],
+    "price": "varies by ticket type"
+  },
+  {
+    "event_id": "10096",
+    "event_name": "Tantra Singles Happy Hour! - Meeting singles in a unique new way",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "A fresh approach to meet singles using Tantra principles with guided activities.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online (Zoom)",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Dating",
+      "Consent",
+      "Energy",
+      "Breathwork"
+    ],
+    "price": "free"
+  },
+  {
+    "event_id": "10176",
+    "event_name": "The Intimacy Hour - Conversations on Love, Sex, and Relationships",
+    "organizer_name": "The Tantra Institute",
+    "type": "discussion",
+    "short_description": "Interactive talk and Q&A on topics sourced from participants about intimacy.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online (Zoom)",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Consent",
+      "Communication",
+      "Love",
+      "Relationship Dynamics"
+    ],
+    "price": "free"
+  },
+  {
+    "event_id": "8252",
+    "event_name": "Riding 4 Rookies- North Jersey (Newark/Hoboken)",
+    "organizer_name": "Fantasy Fitness",
+    "type": "workshop",
+    "short_description": "Learn basic riding techniques for bedroom confidence.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands-on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Newark/Hoboken, NJ",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Flirting",
+      "Sensation",
+      "Roleplay",
+      "Confidence",
+      "Self-Improvement"
+    ],
+    "price": "$69 per rider"
+  },
+  {
+    "event_id": "10321",
+    "event_name": "Bi-curious / Bi-furious PARTY",
+    "organizer_name": "Pagans Paradise",
+    "type": "play_party",
+    "short_description": "A party for bi-curious and bi-furious individuals with workshops and connection circles.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Union Square, NYC",
+    "non_ny": false,
+    "hosts": [
+      "Nix"
+    ],
+    "tags": [
+      "Exhibitionism",
+      "Flirting",
+      "Consent",
+      "Polyamory",
+      "Sensual"
+    ],
+    "price": "$65 - $80"
+  },
+  {
+    "event_id": "10164",
+    "event_name": "The Sovereign Body with Monique Darling and Shawn Roop",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "A 2-day live online workshop focused on leadership, maintaining energy, and establishing healthy boundaries as a facilitator.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online (Zoom)",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Shawn Roop"
+    ],
+    "tags": [
+      "Energy",
+      "Ceremony",
+      "Consent",
+      "Healing",
+      "Integration"
+    ],
+    "price": "$59.99"
+  },
+  {
+    "event_id": "9906",
+    "event_name": "Poly Connections: Karaoke",
+    "organizer_name": "Pagans Paradise",
+    "type": "performance",
+    "short_description": "A karaoke night designed for the ethically non-monogamous community to connect and enjoy in a playful setting.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, NY",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Exhibitionism",
+      "Flirting",
+      "Polyamory",
+      "Community",
+      "Relationship Dynamics"
+    ],
+    "price": "$10-$20"
+  },
+  {
+    "event_id": "7041",
+    "event_name": "Tantra Speed Date® - New York! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "dating",
+    "short_description": "A speed dating event using interactive exercises to foster authentic connections among singles.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [
+      "Rafael Martinez"
+    ],
+    "tags": [
+      "Tantra",
+      "Connection",
+      "Consent",
+      "Flirting",
+      "Communication"
+    ],
+    "price": "varied"
+  },
+  {
+    "event_id": "10075",
+    "event_name": "Torture Garden New York",
+    "organizer_name": "Faustian Society",
+    "type": "play_party",
+    "short_description": "An international fetish club night with fashion shows, kink performances, and a strict dress code.",
+    "experience_level": "intermediate",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Exhibitionism",
+      "Fetish",
+      "Performance",
+      "Consent",
+      "Fashion"
+    ],
+    "price": "variable"
+  },
+  {
+    "event_id": "9611",
+    "event_name": "Poly Connections: Game Night",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "An event focused on connection and play within the ethically non-monogamous community through various games.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, NY",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Polyamory",
+      "Games",
+      "Community",
+      "Relationship Dynamics",
+      "Fun"
+    ],
+    "price": "$10-$20"
+  },
+  {
+    "event_id": "10283",
+    "event_name": "Bay Area Tantric Massage Secrets for Everyone w/ Monique and Peter",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "Learn the basics of Thai massage and enhance intimacy through this hands-on workshop. Open to all genders and experience levels.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Beautiful private residence, Bay Area",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen"
+    ],
+    "tags": [
+      "Tantra",
+      "Massage",
+      "Consent",
+      "Healing",
+      "Energy"
+    ],
+    "price": "$119 each or $199 per couple"
+  },
+  {
+    "event_id": "10284",
+    "event_name": "Bay Area Temple Party Plus Monique's Birthday Celebration",
+    "organizer_name": "Everyday Tantra",
+    "type": "play_party",
+    "short_description": "Celebrate Monique's birthday with a temple party, featuring spiritual healing, positive touch, and connection.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Enki's mansion space, Bay Area",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Consent",
+      "Healing",
+      "Touch",
+      "Spiritual",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10323",
+    "event_name": "Drip - A Wax Play Workshop",
+    "organizer_name": "The Domme Kat",
+    "type": "workshop",
+    "short_description": "Explore the art of wax play and sensation play in a guided, educational setting.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://dripping.eventbrite.com",
+    "location": "The Crown, Prospect Lefferts Gardens, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Wax Play",
+      "Sensation",
+      "BDSM",
+      "Femme",
+      "R.A.C.K."
+    ],
+    "price": "$15 - $80"
+  },
+  {
+    "event_id": "10354",
+    "event_name": "PEG FEST!",
+    "organizer_name": "thetaillorgroup",
+    "type": "workshop",
+    "short_description": "Learn and participate in pegging workshops conducted by experienced Dommes.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://pegging.eventbrite.com",
+    "location": "Brooklyn, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Pegging",
+      "Femdom",
+      "BDSM",
+      "Training",
+      "Education"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "7042",
+    "event_name": "Tantra Speed Date® - Jersey City! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "dating",
+    "short_description": "Participate in a unique speed dating event using fun, interactive exercises to foster genuine connections.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://www.tantrany.com/speed-dating/jersey-city/",
+    "location": "Jersey City",
+    "non_ny": true,
+    "hosts": [
+      "Marshall Graeber"
+    ],
+    "tags": [
+      "Dating",
+      "Speed Dating",
+      "Tantra",
+      "Connection",
+      "Social"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10285",
+    "event_name": "Awaken as Love Stage 1 (San Diego) w/Anna, Cathleen, & Peter",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "Embark on a 7-day journey to catalyze transformation through Tantra, Shamanism, and embodiment practices.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Private Villa, San Diego, CA",
+    "non_ny": true,
+    "hosts": [
+      "Anna Ceniceros",
+      "Cathleene Cienfuegos",
+      "Peter Arthur Petersen"
+    ],
+    "tags": [
+      "Tantra",
+      "Healing",
+      "Embodiment",
+      "Transformation",
+      "Shamanism"
+    ],
+    "price": "$1497 - $1997"
+  },
+  {
+    "event_id": "10286",
+    "event_name": "DC Thai Tantra Massage Secrets for everyone w/ Yaw and Monique",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "Unlock tantric touch and learn Thai massage techniques to relax and enhance intimacy.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [
+      "queer"
+    ],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Beautiful private residence, DC",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Yaw Tutu"
+    ],
+    "tags": [
+      "Tantra",
+      "Massage",
+      "Energy",
+      "Intimacy",
+      "Touch"
+    ],
+    "price": "$119 each or $199 per couple"
+  },
+  {
+    "event_id": "10287",
+    "event_name": "DC Temple Party w/ Major, Lea, and Monique",
+    "organizer_name": "Everyday Tantra",
+    "type": "play_party",
+    "short_description": "Participate in spiritual healing and positive touch within a safe environment.",
+    "experience_level": "beginner",
+    "interactivity_level": "erotic",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "DC",
+    "non_ny": true,
+    "hosts": [
+      "Major",
+      "Lea",
+      "Monique"
+    ],
+    "tags": [
+      "Consent",
+      "Healing",
+      "Touch",
+      "Spiritual",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10288",
+    "event_name": "DC Tantra Kink Immersion Afternoon Delight w/ Major and Monique",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "Explore how Tantra and Kink intersect in this experiential workshop.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Private residence, DC",
+    "non_ny": true,
+    "hosts": [
+      "Major",
+      "Monique Darling"
+    ],
+    "tags": [
+      "Tantra",
+      "BDSM",
+      "Consent",
+      "Sensual",
+      "Erotic"
+    ],
+    "price": "$89 per person or $150 per couple"
+  },
+  {
+    "event_id": "10289",
+    "event_name": "DC Flow State Connection through Movement and Dance w/ Lea and Major",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "An ecstatic dance experience to connect through guided and spontaneous movement.",
+    "experience_level": "beginner",
+    "interactivity_level": "sensual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "DC area",
+    "non_ny": true,
+    "hosts": [
+      "Lea",
+      "Major"
+    ],
+    "tags": [
+      "Dance",
+      "Connection",
+      "Movement",
+      "Ecstatic Dance",
+      "Tantra"
+    ],
+    "price": "$35 per person or $40 at the door"
+  },
+  {
+    "event_id": "10290",
+    "event_name": "DC Cuddles and Cacao with Lea, Monique, and Major",
+    "organizer_name": "Everyday Tantra",
+    "type": "workshop",
+    "short_description": "A cuddle party with a focus on consent and communication, enhanced with ceremonial cacao.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "DC area",
+    "non_ny": true,
+    "hosts": [
+      "Lea",
+      "Monique Darling",
+      "Major"
+    ],
+    "tags": [
+      "Cuddle",
+      "Consent",
+      "Communication",
+      "Healing",
+      "Ceremony"
+    ],
+    "price": "$49 via Eventbrite / $60 at the door"
+  },
+  {
+    "event_id": "7043",
+    "event_name": "Tantra Speed Date® - New York! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "",
+    "short_description": "",
+    "experience_level": "",
+    "interactivity_level": "",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "9621",
+    "event_name": "Poly Connections: Game Night",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A fun night of connection and games for the ENM community.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, New York",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Polyamory",
+      "Games",
+      "ENM",
+      "Social",
+      "Connection"
+    ],
+    "price": "Tier 1: $10, Tier 2: $20, On the Door: $20"
+  },
+  {
+    "event_id": "10165",
+    "event_name": "Portland Tantric Puja by Monique Darling & Peter Petersen",
+    "organizer_name": "Everyday Tantra",
+    "type": "ceremony",
+    "short_description": "An authentic Tantric Puja to experience adoration and presence.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Awakenings Wellness Center, Portland, OR",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen"
+    ],
+    "tags": [
+      "Tantra",
+      "Ceremony",
+      "Presence",
+      "Connection",
+      "Healing"
+    ],
+    "price": "$79 per person"
+  },
+  {
+    "event_id": "10100",
+    "event_name": "Cuddle Party! - New York",
+    "organizer_name": "The Tantra Institute",
+    "type": "",
+    "short_description": "",
+    "experience_level": "",
+    "interactivity_level": "",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "10166",
+    "event_name": "Portland Taboo Temple Party with Monique and Peter organized by Susan Cohn",
+    "organizer_name": "Everyday Tantra",
+    "type": "play_party",
+    "short_description": "Explore your desires and taboos in this sensual and sacred temple party.",
+    "experience_level": "beginner",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Private Location, Portland, OR",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen"
+    ],
+    "tags": [
+      "Taboo",
+      "Play",
+      "Consent",
+      "Sacred",
+      "Exploration"
+    ],
+    "price": "$89 for Single Tickets, $150 for paired tickets"
+  },
+  {
+    "event_id": "10101",
+    "event_name": "Snuggle Party! - New York",
+    "organizer_name": "The Tantra Institute",
+    "type": "",
+    "short_description": "",
+    "experience_level": "",
+    "interactivity_level": "",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [],
+    "price": ""
+  },
+  {
+    "event_id": "10167",
+    "event_name": "Portland's Largest Cuddle Party ever: With Monique Darling, Peter Petersen",
+    "organizer_name": "Everyday Tantra",
+    "type": "munch",
+    "short_description": "A large cuddle party emphasizing consent and non-erotic touch.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Portland, OR",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen"
+    ],
+    "tags": [
+      "Cuddle",
+      "Touch",
+      "Consent",
+      "Community",
+      "Healing"
+    ],
+    "price": "$35 solo Pre sale, $40 @ door, $60 per pair"
+  },
+  {
+    "event_id": "10102",
+    "event_name": "DESIRE - Sacred Play!",
+    "organizer_name": "The Tantra Institute",
+    "type": "play_party",
+    "short_description": "A sacred play party integrating desire and sacred sexual experiences.",
+    "experience_level": "beginner",
+    "interactivity_level": "sexual",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Sensual",
+      "Sacred Sexuality",
+      "Energy",
+      "Healing"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "7044",
+    "event_name": "Tantra Speed Date® - New York! (Brooklyn) Meet Singles Speed Dating",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "Speed dating event for singles to connect through Tantra.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Brooklyn, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Dating",
+      "Flirting",
+      "Connection",
+      "Singles"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "8505",
+    "event_name": "(Cancelled) Cuddle Party",
+    "organizer_name": "Pagans Paradise",
+    "type": "workshop",
+    "short_description": "A non-sexual, pajamas-required Cuddle Party for enhancing connection and communication.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Manhattan, NY",
+    "non_ny": false,
+    "hosts": [
+      "Amanda Ananda"
+    ],
+    "tags": [
+      "Cuddle",
+      "Consent",
+      "Communication",
+      "Touch",
+      "Relationships"
+    ],
+    "price": "$30 - $60"
+  },
+  {
+    "event_id": "10324",
+    "event_name": "Drip - A Wax Play Workshop",
+    "organizer_name": "The Domme Kat",
+    "type": "workshop",
+    "short_description": "A hands-on wax play workshop exploring the art and sensation of dripping wax.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "https://dripping.eventbrite.com",
+    "location": "Brooklyn, NY",
+    "non_ny": false,
+    "hosts": [
+      "The Taillor Group"
+    ],
+    "tags": [
+      "Wax Play",
+      "Sensation",
+      "BDSM",
+      "Femme Dommes",
+      "Play"
+    ],
+    "price": "$15 - $80"
+  },
+  {
+    "event_id": "10168",
+    "event_name": "Healer, Heal Thyself: Rewired from Burnout to Balance",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "A week-long retreat in Cabo for practitioners to heal and recharge through various wellness practices.",
+    "experience_level": "intermediate",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Cabo San Lucas, Mexico",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen",
+      "James Stevenson",
+      "Taina Ixchel"
+    ],
+    "tags": [
+      "Healing",
+      "Breathwork",
+      "Energy",
+      "Self-Care",
+      "Wellness"
+    ],
+    "price": "$2497 - $2997"
+  },
+  {
+    "event_id": "9594",
+    "event_name": "The 11th Annual Transformational Intensive for Extraordinary Facilitators",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "An initiation workshop for facilitators to undergo transformational skill-building.",
+    "experience_level": "advanced",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Natural setting",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Facilitation",
+      "Leadership",
+      "Transformation",
+      "Training",
+      "Intensive"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10103",
+    "event_name": "Desire Community Call",
+    "organizer_name": "The Tantra Institute",
+    "type": "discussion",
+    "short_description": "Community call discussing desire and community building.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Online",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Community",
+      "Discussion",
+      "Connection",
+      "Support",
+      "Desire"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9596",
+    "event_name": "Cabo Awaken as Energy with James, Monique, Lawrence and Peter",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "A multi-day immersion in Cabo focused on energy mastery and personal transformation.",
+    "experience_level": "advanced",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Cabo San Lucas, Mexico",
+    "non_ny": true,
+    "hosts": [
+      "James Stevenson",
+      "Lawrence Lanoff",
+      "Monique Darling",
+      "Peter Petersen"
+    ],
+    "tags": [
+      "Energy",
+      "Tantra",
+      "Transformation",
+      "Connection",
+      "Mastery"
+    ],
+    "price": "$1750 - $1950"
+  },
+  {
+    "event_id": "9907",
+    "event_name": "Poly Connections: Karaoke",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A karaoke event celebrating ethical non-monogamy with song and community building.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, NY",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Karaoke",
+      "Polyamory",
+      "Community",
+      "Networking",
+      "Fun"
+    ],
+    "price": "$10 - $20"
+  },
+  {
+    "event_id": "10104",
+    "event_name": "Cuddle Party! - New York",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "A non-sexual, pajamas-required cuddle event for enhancing communication and connection.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Cuddle",
+      "Communication",
+      "Connection",
+      "Intimacy",
+      "Touch"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10105",
+    "event_name": "Snuggle Party! - New York",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "Experience a nurturing environment of connection and healing through snuggling.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Cuddle",
+      "Consent",
+      "Touch",
+      "Community"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10197",
+    "event_name": "Shadow Tantrika | With Seani Love",
+    "organizer_name": "East Coast Retreats",
+    "type": "retreat",
+    "short_description": "Explore your hidden aspects through shadow work, rituals, and sacred sexuality over a weekend.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Seani Love",
+      "Alara Magdalena",
+      "Jay Phoenix"
+    ],
+    "tags": [
+      "Shadow Work",
+      "Sacred Sexuality",
+      "Ritual",
+      "Trauma Awareness",
+      "Roleplay"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "7045",
+    "event_name": "Tantra Speed Date® - New York! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "munch",
+    "short_description": "Speed dating with conscious connection practices to enhance relationship skills.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://www.tantrany.com/speed-dating/new-york/",
+    "location": "New York",
+    "non_ny": false,
+    "hosts": [
+      "Rafael Martinez"
+    ],
+    "tags": [
+      "Dating",
+      "Tantra",
+      "Connection",
+      "Social Skills"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9598",
+    "event_name": "Priestess Illumination Embody Your Power Through Ritual, Tantra, & Pleasure",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "A 6-day transformational retreat to awaken and embody your inner Priestess.",
+    "experience_level": "beginner",
+    "interactivity_level": "intimate",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Cabo San Lucas, Mexico",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Taina Ixchel",
+      "Lauren Harkness"
+    ],
+    "tags": [
+      "Tantra",
+      "Sacred Sexuality",
+      "Ritual",
+      "Energy Work",
+      "Empowerment"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "10196",
+    "event_name": "ISTA Level 1 – Cabarete, Dominican Republic",
+    "organizer_name": "ISTA",
+    "type": "retreat",
+    "short_description": "A week-long transformative training in conscious sexuality and personal sovereignty.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Cabarete, Dominican Republic",
+    "non_ny": true,
+    "hosts": [],
+    "tags": [
+      "Embodiment",
+      "Emotional Clearing",
+      "Conscious Sexuality",
+      "Spirituality",
+      "Consent"
+    ],
+    "price": ""
+  },
+  {
+    "event_id": "9622",
+    "event_name": "Poly Connections: Game Night",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A social game night for the ethically non-monogamous community to connect and explore.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, New York",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Polyamory",
+      "Games",
+      "Community",
+      "Non-Monogamy",
+      "Connection"
+    ],
+    "price": "$10 - $20"
+  },
+  {
+    "event_id": "10325",
+    "event_name": "Drip - A Wax Play Workshop",
+    "organizer_name": "The Domme Kat",
+    "type": "workshop",
+    "short_description": "Explore sensation play through wax in a safe, guided workshop setting.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "https://dripping.eventbrite.com",
+    "location": "Prospect Lefferts Gardens, Brooklyn",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Wax Play",
+      "BDSM",
+      "Sensation",
+      "Consent",
+      "RACK"
+    ],
+    "price": "$15 - $80"
+  },
+  {
+    "event_id": "10169",
+    "event_name": "Sacred Healing Arts Practitioner Immersive 4 Day Taster",
+    "organizer_name": "Everyday Tantra",
+    "type": "retreat",
+    "short_description": "Join us for a 4-day immersive experience in Tantric Healing Arts in a sacred space.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Zen's Mystical Temple, Alexandria, VA",
+    "non_ny": true,
+    "hosts": [
+      "Monique Darling",
+      "Peter Petersen",
+      "Cathleene"
+    ],
+    "tags": [
+      "Tantra",
+      "Consent",
+      "Healing",
+      "Energy",
+      "Massage"
+    ],
+    "price": "Super Early Bird: $399, Early Bird: $499, General Admission: $555"
+  },
+  {
+    "event_id": "7047",
+    "event_name": "Tantra Speed Date® - New York! (Meet Singles Speed Dating)",
+    "organizer_name": "The Tantra Institute",
+    "type": "social",
+    "short_description": "Join a speed dating event with interactive exercises to create genuine connections.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "New York, NY",
+    "non_ny": false,
+    "hosts": [
+      "Rafael Martinez"
+    ],
+    "tags": [
+      "Dating",
+      "Consent",
+      "Flirting",
+      "Tantra",
+      "Polyamory"
+    ],
+    "price": "See website for details"
+  },
+  {
+    "event_id": "9623",
+    "event_name": "Poly Connections: Game Night",
+    "organizer_name": "Pagans Paradise",
+    "type": "munch",
+    "short_description": "A social gathering for the ethically non-monogamous community with games and connection building.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Near Herald Square, New York, NY",
+    "non_ny": false,
+    "hosts": [
+      "Erebus"
+    ],
+    "tags": [
+      "Polyamory",
+      "Consent",
+      "Games",
+      "Community",
+      "ENM"
+    ],
+    "price": "Tier 1: $10, Tier 2: $20, Door: $20"
+  },
+  {
+    "event_id": "10326",
+    "event_name": "Drip - A Wax Play Workshop",
+    "organizer_name": "The Domme Kat",
+    "type": "workshop",
+    "short_description": "Explore wax play with experienced Dommes in a playful and educational setting.",
+    "experience_level": "beginner",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Prospect Lefferts Gardens, Brooklyn, NY",
+    "non_ny": false,
+    "hosts": [
+      "The Taillor Group"
+    ],
+    "tags": [
+      "Wax Play",
+      "Sensation",
+      "BDSM",
+      "Consent",
+      "Femdom"
+    ],
+    "price": "Participating Sub: $80, Femme Dom: $15, Voyeur: $30"
+  },
+  {
+    "event_id": "7048",
+    "event_name": "Tantra Speed Date® - New York! (Brooklyn) Meet Singles Speed Dating",
+    "organizer_name": "The Tantra Institute",
+    "type": "social",
+    "short_description": "Meet singles through guided speed dates with mindful exercises.",
+    "experience_level": "beginner",
+    "interactivity_level": "social",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "Brooklyn, New York, NY",
+    "non_ny": false,
+    "hosts": [
+      "Guy Shahar"
+    ],
+    "tags": [
+      "Dating",
+      "Consent",
+      "Flirting",
+      "Tantra",
+      "Polyamory"
+    ],
+    "price": "See website for details"
+  },
+  {
+    "event_id": "10252",
+    "event_name": "The 90-Day Relationship Experiment™ - Free Info Call",
+    "organizer_name": "The Tantra Institute",
+    "type": "discussion",
+    "short_description": "A free informational call about the 90-Day Relationship Experiment.",
+    "experience_level": "beginner",
+    "interactivity_level": "discussion",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "Relationships",
+      "Communication",
+      "Education",
+      "Self-Care"
+    ],
+    "price": "Free"
+  },
+  {
+    "event_id": "10253",
+    "event_name": "The 90-Day Relationship Experiment S12",
+    "organizer_name": "The Tantra Institute",
+    "type": "workshop",
+    "short_description": "A seasonal 90-day immersive relationship workshop.",
+    "experience_level": "intermediate",
+    "interactivity_level": "hands_on",
+    "inclusivity": [],
+    "vetted": false,
+    "vetting_url": "",
+    "location": "",
+    "non_ny": false,
+    "hosts": [],
+    "tags": [
+      "Tantra",
+      "D/S",
+      "Self-Care",
+      "Communication",
+      "Relationships"
+    ],
+    "price": "Paid"
+  },
+  {
+    "event_id": "8628",
+    "event_name": "The Edge - K!nky Immersive Theatre Party",
+    "organizer_name": "Pagans Paradise",
+    "type": "play_party",
+    "short_description": "An immersive theatre party exploring kinks through performance and interaction.",
+    "experience_level": "advanced",
+    "interactivity_level": "erotic",
+    "inclusivity": [],
+    "vetted": true,
+    "vetting_url": "pagansparadisenyc@gmail.com",
+    "location": "Near Union Square",
+    "non_ny": false,
+    "hosts": [
+      "Pagans Paradise",
+      "Phoenix Events"
+    ],
+    "tags": [
+      "Edge Play",
+      "Sensory",
+      "Performance",
+      "Exhibitionism",
+      "Impact"
+    ],
+    "price": "Paid"
+  }
+]
