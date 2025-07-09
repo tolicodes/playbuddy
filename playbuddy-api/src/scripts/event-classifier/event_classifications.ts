@@ -1,4 +1,4 @@
-import event_themes from "./event_themes.js"
+import tags from "./tags.js"
 
 
 export const getClassificationDetails = (classification: string) => {
@@ -7,129 +7,201 @@ export const getClassificationDetails = (classification: string) => {
 
 export const event_classifications = [
     {
-        "classification": "event_themes",
-        "name": "Event Themes",
-        "description": "5 specific themes or topics that the event focuses on",
-        // TODO: Don't pick this category if munches, retreats etc but mark them
-        "options": event_themes
-    },
-    {
-        "classification": "comfort_level",
-        "name": "Comfort Level",
-        "description": "The level of intimacy or intensity expected at the event.",
-        "options": [
+        classification: "type",
+        name: "Event Type",
+        description: "The primary format or nature of the event.",
+        options: [
             {
-                "id": "no_touch",
-                "name": "No Touch",
-                "description": "Events where no physical contact is expected or allowed between participants.",
-                "related": ["social", "discussion_based"]
+                name: "play_party",
+                description: "Type of event is play party, temple night, kink party, dungeon.",
+                examples: ["Play Party", "Temple Night", "Kink Party", "Dungeon"]
             },
             {
-                "id": "intimate",
-                "name": "Intimate",
-                "description": "Events involving close interactions without overt sensuality, suitable for those comfortable with proximity but not necessarily touch.",
-                "related": ["workshop", "hands_on_participation"]
+                name: "munch",
+                description: "Munch, social, meetup, brunch, happy hour.",
+                examples: ["Munch", "Social", "Meetup", "Brunch", "Happy Hour"]
             },
             {
-                "id": "sensual",
-                "name": "Sensual",
-                "description": "Events that engage the senses and may involve touch, focusing on sensual experiences without explicit sexual activity.",
-                "related": ["sensual_massage", "tantra", "sensual_dance"]
+                name: "retreat",
+                description: "Retreat, immersion, residency, multi-day.",
+                examples: ["Retreat", "Immersion", "Residency", "Multi-Day"]
             },
             {
-                "id": "erotic",
-                "name": "Erotic",
-                "description": "Events with sexually suggestive elements, possibly involving partial nudity or erotic performances.",
-                "related": ["burlesque", "erotic_readings", "strip_tease_workshops"]
+                name: "festival",
+                description: "Festival, conference, convention, summit.",
+                examples: ["Festival", "Conference", "Convention", "Summit"]
             },
             {
-                "id": "sexual",
-                "name": "Sexual",
-                "description": "Events where sexual activities may occur, requiring a high level of comfort with sexual expression.",
-                "related": ["play_party", "fetish_conventions", "swinger_events"]
+                name: "workshop",
+                description: "Workshop, class, skills training, demo.",
+                examples: ["Workshop", "Class", "Skills Training", "Demo"]
             },
             {
-                "id": "extreme",
-                "name": "Extreme",
-                "description": "Events involving intense activities that push boundaries, suitable for experienced participants.",
-                "related": ["edge_play", "consent_and_safety_policies", "advanced_techniques"]
+                name: "performance",
+                description: "Performance, show, burlesque, drag, live act.",
+                examples: ["Performance", "Burlesque", "Drag", "Live Show", "Karaoke", "Film"]
+            },
+            {
+                name: "discussion",
+                description: "Discussion, panel, Q&A, talk, roundtable.",
+                examples: ["Panel", "Discussion", "Roundtable", "Q&A"]
             }
         ]
     },
+
+    {
+        "classification": "short_description",
+        "name": "Short Description",
+        "description": `
+         - short description of the event
+         - let them now simply what they in for without fancy marketing speak (ex: fire play)
+         - should be 1-2 sentences`,
+    },
+
+    {
+        "classification": "tags",
+        "name": "Event Themes",
+        "description": `
+         - avoid making new tags
+        - don't use tags that are already covered in category (ex: munch/social, play party)
+         - specific themes or topics that the event focuses on
+         - match more specific matches (ex: fire play will match before edge play)
+         - low priority like Tantra will match after more specific matches.
+         - should have 2-5 tags, only high confidence matches`,
+        "options": tags
+    },
+
     {
         "classification": "experience_level",
         "name": "Experience Level",
         "description": "The level of prior knowledge or experience recommended for participants.",
         "options": [
             {
-                "id": "beginner_friendly",
-                "name": "Beginner Friendly",
+                "name": "Beginner",
                 "description": "Suitable for those new to the topic or practice.",
                 "related": ["education", "introductory_workshops"]
             },
             {
-                "id": "intermediate",
                 "name": "Intermediate",
                 "description": "Participants should have some prior experience or knowledge.",
                 "related": ["skill_building", "hands_on_participation"]
             },
             {
-                "id": "advanced",
                 "name": "Advanced",
                 "description": "Designed for experienced individuals looking to deepen their expertise.",
                 "related": ["advanced_techniques", "expert_discussions"]
             },
-            {
-                "id": "all_levels",
-                "name": "All Levels",
-                "description": "Open to participants of any experience level.",
-                "related": ["inclusive", "community_building"]
-            }
         ]
     },
     {
-        "classification": "interactivity_level",
-        "name": "Interactivity Level",
-        "description": "The expected level of participant engagement during the event.",
-        "options": [
+        classification: "interactivity_level",
+        name: "Interactivity Level",
+        description: "The level of interaction expected at the event.",
+        options: [
             {
-                "id": "hands_on_participation",
-                "name": "Hands-On Participation",
-                "description": "Participants actively engage in activities or exercises.",
-                "related": ["workshops", "skill_building"]
+                name: "Social",
+                description: "Casual mingling and open-ended conversation. Prioritize over no touch",
+                examples: ["Munch", "Mixer", "Happy Hour", "Meet & Greet", "Game Night"]
             },
             {
-                "id": "discussion_based",
-                "name": "Discussion-Based",
-                "description": "Focused on group discussions and sharing ideas.",
-                "related": ["support_groups", "panel_discussion"]
+                name: "Discussion",
+                description: "Conversation-driven events and peer exchange. Unlike social there is a topic",
+                examples: ["Kink 101 Circle", "Polyamory Q&A", "Panel Discussion"]
             },
             {
-                "id": "socializing",
-                "name": "Socializing",
-                "description": "Emphasis on casual interaction and networking.",
-                "related": ["social_mixer", "community_building"]
+                name: "Intimate",
+                description: "Close interactions without overt sensuality.",
+                examples: ["Partner Yoga", "Cuddle Party", "Intimacy Building"]
             },
             {
-                "id": "observational",
-                "name": "Observational",
-                "description": "Participants observe rather than engage directly.",
-                "related": ["performance_show", "film_screening"]
+                name: "Sensual",
+                description: "Engaging the senses, often with touch, but not explicitly sexual.",
+                examples: ["Sensual Massage", "Tantra", "Sensual Dance", "Guided Touch"]
             },
             {
-                "id": "performance",
-                "name": "Performance",
-                "description": "Attendees watch performances by others.",
-                "related": ["burlesque", "drag_performances"]
+                name: "Erotic",
+                description: "Sexually suggestive content or performance.",
+                examples: ["Burlesque", "Erotic Readings", "Strip Tease Workshop", "Exhibition Performance"]
             },
             {
-                "id": "interactive_workshops",
-                "name": "Interactive Workshops",
-                "description": "Combination of instruction and participant interaction.",
-                "related": ["education", "hands_on_participation"]
-            }
-        ]
+                name: "Sexual",
+                description: "Explicit sexual content and/or opportunities for play.",
+                examples: ["Play Party", "Swinger Event", "Fetish Convention", "Group Scene"]
+            },
+            {
+                name: "Extreme",
+                description: "Intense physical or psychological engagement; edge territory.",
+                examples: ["Edge Play Demo", "Needle Scene", "Fire Play Ritual", "Mindfuck Workshop"]
+            },
+            {
+                name: "Hands-On",
+                description: "Active participation in guided activities. Catch all for not sensual or erotic etc",
+                examples: ["Bondage Lab", "Impact Workshop", "Tantric Breathwork", "Rope Jam"]
+            },
+            {
+                name: "Performance",
+                description: "Theatrical or artistic acts witnessed by attendees.",
+                examples: ["Burlesque", "Drag Show", "Fetish Cabaret", "Erotic Theater"]
+            },
+            {
+                name: "Observational",
+                description: "Primarily watch-based events.  Catch ",
+                examples: ["Performance Show", "Live Scene Viewing", "Film Screening", "Rope Exhibition"]
+            },
+        ],
     },
+    {
+        "classification": "inclusivity",
+        "name": "Inclusivity",
+        "description": `
+        Only match with high confidence if it's only for those groups. That means ONLY queers or BIPOC allowed
+        This is an array of strings
+        `,
+        options: [{
+            name: "Queer",
+            description: "is this event queer specific?",
+            examples: ["LGBTQ+", "Sapphic", "Pansexual"]
+        },
+        {
+            name: "BIPOC",
+            description: "BIPOC specific",
+            examples: ["Black", "Latino", "Asian", "Obsidian"]
+        }]
+
+    },
+    {
+        "classification": "vetted",
+        "name": "Vetted",
+        "description": `is this event vetted?`,
+    },
+
+    {
+        "classification": "vetting_url",
+        "name": "Vetting URL",
+        "description": `the url to the vetting page`,
+    },
+
+    {
+        "classification": "location",
+        "name": "Location",
+        "description": `address or some kind of indicator (Bushwick)`,
+    },
+
+    {
+        "classification": "non_ny",
+        "name": "Non NY",
+        "description": `is this event not in New York?`,
+    },
+
+    {
+        "classification": "hosts",
+        "name": "Hosts",
+        "description": `
+            Output:
+            string[] // try to find the event hosts. the organizer (ex: Pagan's Paradise) is NOT the host but rather the organizer. take out any titles (ex: Erebus the Coach -> Erebus)
+        `,
+    },
+
     // {
     //     "classification": "inclusivity",
     //     "name": "Inclusivity",

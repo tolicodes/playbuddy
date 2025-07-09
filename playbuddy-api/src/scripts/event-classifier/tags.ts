@@ -42,7 +42,22 @@ export default [
     {
         "name": "Exhibitionism",
         "description": "",
-        "related": ["Voyeurism", "Public Play", "Performance"]
+        "related": ["Voyeurism", "Public Play", "Performance", "Karaoke"]
+    },
+    {
+        "name": "Knife Play",
+        "description": "Prioritize over edge play.",
+        "related": ["Edge Play", "Sharps", "Tools"]
+    },
+    {
+        "name": "Flirting",
+        "description": "Includes kissing.",
+        "related": ["Kissing", "Touching", "Sensual"]
+    },
+    {
+        "name": "Needle Play",
+        "description": "Prioritize over edge play and medical.",
+        "related": ["Edge Play", "Sharps", "Tools"]
     },
     {
         "name": "Medical",
@@ -124,55 +139,48 @@ export default [
         "description": "Rules, rituals, and structure.",
         "related": ["Service", "Training", "Discipline"]
     },
+
     {
-        "name": "Play Party",
-        "description": "Space for consensual play.",
-        "related": ["Dungeon", "Scenes", "Observers"]
+        "name": "Pegging",
+        "description": "Higher priority than femdom.",
+        "related": ["Femdom"]
     },
+
     {
-        "name": "Intimacy",
-        "description": "Deepening connection.",
-        "related": ["Cuddle", "Massage", "Tantra", "Breathwork"]
+        "name": "Yoga",
+        "description": "",
+        "related": ["Breathwork"]
+    },
+
+    {
+        "name": "Cuddle",
+        "description": "",
+        "related": ["Massage"]
+    },
+
+    {
+        "name": "Massage",
+        "description": "Prioritize over cuddle",
+        "related": ["Cuddle"]
+    },
+
+    {
+        "name": "Femdom",
+        "description": "Where females are the dominants.",
+        "related": ["Pegging", "Dominatrix", "Service"]
     },
     {
         "name": "Polyamory",
         "description": "Non-monogamous relationships.",
-        "related": ["Relationships", "Communication", "Love"]
+        "related": ["ENM", "Relationships", "Communication", "Love"]
     },
-    {
-        "name": "Education",
-        "description": "Learning skills and safety.",
-        "related": ["Consent", "BDSM Basics", "Safety"]
-    },
-    {
-        "name": "Tantra",
-        "description": "Spiritual and sensual practice.",
-        "related": ["Sacred Sexuality", "Energy Work", "Tantric Massage"]
-    },
-    {
-        "name": "Social",
-        "description": "Community connection.",
-        "related": ["Munch", "Mixer", "Networking"]
-    },
+
+
+
     {
         "name": "Consent",
         "description": "Communication and boundaries.",
         "related": ["Communication", "Ethics", "Safety"]
-    },
-    {
-        "name": "Performance",
-        "description": "Erotic or artistic acts.",
-        "related": ["Burlesque", "Drag", "Fetish Shows"]
-    },
-    {
-        "name": "Queer",
-        "description": "Centering LGBTQ+ people.",
-        "related": ["Pride", "Inclusivity"]
-    },
-    {
-        "name": "Photography",
-        "description": "Fetish and artistic imagery.",
-        "related": ["Exhibition", "Expression", "Portraits"]
     },
     {
         "name": "Dating",
@@ -180,13 +188,15 @@ export default [
         "related": ["Speed Dating", "Kink Dating", "Mixer"]
     },
     {
-        "name": "Healing",
-        "description": "Care and integration.",
-        "related": ["Aftercare", "Somatic", "Emotional Support"]
+        "name": "Tantra",
+        "description": "Spiritual and sensual practice.",
+        "related": ["Sacred Sexuality", "Energy Work", "Tantric Massage"],
+        low_priority: true
     },
     {
-        "name": "Community",
-        "description": "Shared values and support.",
-        "related": ["Belonging", "Support", "Inclusivity"]
-    }
+        "name": "Healing",
+        "description": "Care and integration.",
+        "related": ["Aftercare", "Somatic", "Emotional Support"],
+        low_priority: true
+    },
 ]

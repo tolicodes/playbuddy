@@ -47,10 +47,10 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
             media: media ( * )
           ),
            classification:classifications(
-                event_themes,
-                comfort_level,
+                tags,
                 experience_level,
-                interactivity_level
+                interactivity_level,
+                inclusivity
             )
         `)
                 .gte("start_date", nycMidnightUTC),

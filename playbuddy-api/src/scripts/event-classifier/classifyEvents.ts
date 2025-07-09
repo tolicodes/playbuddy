@@ -12,7 +12,11 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 async function fetchQueuedEvents(): Promise<any[]> {
     const { data, error } = await supabaseClient
         .from('events')
-        .select('*')
+        .select(`*,
+            organizer:organizers(
+                name
+            )
+        `)
         .is('classification_status', null)
         .gte('start_date', new Date().toISOString());
 
@@ -33,25 +37,45 @@ async function updateSupabaseAndWriteToFile(
 
         const { error: upsertError } = await supabaseClient
             .from('classifications')
-            .upsert({
-                event_id,
-                event_themes: c.event_themes,
-                comfort_level: c.comfort_level,
-                experience_level: c.experience_level,
-                interactivity_level: c.interactivity_level,
-            });
+            .upsert(
+                [{
+                    event_id,
+                    tags: c.tags,
+                    experience_level: c.experience_level,
+                    interactivity_level: c.interactivity_level,
+                    inclusivity: c.inclusivity,
+                }],
+                { onConflict: 'event_id' }
+            );
 
-        if (upsertError) {
-            console.error(`Upsert error for ${event_id}:`, upsertError);
+
+        const { error: updateError } = await supabaseClient
+            .from('events')
+            .update({
+                type: c.type,
+                short_description: c.short_description,
+                vetted: c.vetted,
+                vetting_url: c.vetting_url,
+                location: c.location,
+                non_ny: c.non_ny,
+                hosts: c.hosts,
+                is_munch: c.type === 'Munch',
+                play_party: c.type === 'Play Party',
+                price: c.price,
+            })
+            .eq('id', event_id);
+
+        if (upsertError || updateError) {
+            console.error(`Upsert error for ${event_id}:`, upsertError || updateError);
             continue;
         }
 
-        const { error: updateError } = await supabaseClient
+        const { error: classificationUpdateError } = await supabaseClient
             .from('events')
             .update({ classification_status: 'auto_classified' })
             .eq('id', event_id);
 
-        if (updateError) {
+        if (classificationUpdateError) {
             console.error(`Update error for ${event_id}:`, updateError);
             continue;
         }
@@ -69,15 +93,23 @@ function chunkArray(array: any[], chunkSize: number) {
     return chunks;
 }
 
+const MAX_EVENTS = Infinity;
+
 export async function classifyEventsInBatches(batchSize = 10) {
     const events = await fetchQueuedEvents();
+
     const results = [];
 
-    const batches = chunkArray(events.slice(0, Infinity), batchSize);
+    const batches = chunkArray(events.slice(0, MAX_EVENTS), batchSize);
 
     for (const batch of batches) {
+
         const userPrompt = batch.map(event => {
-            return `ID: ${event.id}\nTitle: ${event.title}\nDescription: ${event.description || ''}`;
+            return `
+                ID: ${event.id}
+                Title: ${event.name}
+                Organizer: ${event.organizer.name}
+                Description: ${event.description || ''}`;
         }).join('\n\n');
 
         const response = await openai.chat.completions.create({
