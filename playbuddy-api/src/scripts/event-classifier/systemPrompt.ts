@@ -1,4 +1,4 @@
-import { event_classifications } from './event_classifications.js';
+import { event_classifications } from './eventClassificationsList.js';
 
 const intro = `I need your assistance in classifying a list of kinky events based on specific categories. For each event, please identify and assign values to the following attributes:`;
 
