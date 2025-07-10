@@ -4,6 +4,7 @@ import fs from 'fs/promises';
 import { systemPrompt } from './systemPrompt.js';
 import { supabaseClient } from '../../connections/supabaseClient.js';
 import { Classification } from '../../commonTypes.js';
+import { matchEventsToFacilitators } from './matchEventsToFacilitators.js';
 
 dotenv.config();
 
@@ -59,8 +60,8 @@ async function updateSupabaseAndWriteToFile(
                 location: c.location,
                 non_ny: c.non_ny,
                 hosts: c.hosts,
-                is_munch: c.type === 'Munch',
-                play_party: c.type === 'Play Party',
+                is_munch: c.type === 'munch',
+                play_party: c.type === 'play_party',
                 price: c.price,
             })
             .eq('id', event_id);
@@ -103,6 +104,8 @@ export async function classifyEventsInBatches(batchSize = 10) {
     const batches = chunkArray(events.slice(0, MAX_EVENTS), batchSize);
 
     for (const batch of batches) {
+        const batchIndex = batches.indexOf(batch);
+        console.log(`Classifying batch ${batchIndex + 1} of ${batches.length}`);
 
         const userPrompt = batch.map(event => {
             return `
@@ -125,6 +128,10 @@ export async function classifyEventsInBatches(batchSize = 10) {
         results.push(...classifications);
         console.log('Classified', classifications);
     }
+
+    // now do facilitator matching
+    // const facilitatorResults = await matchEventsToFacilitators(results, events);
+    // console.log('Facilitator results', facilitatorResults);
 
     updateSupabaseAndWriteToFile(results, 'classifications.json');
 
