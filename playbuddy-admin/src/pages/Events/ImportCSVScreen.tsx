@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Box,
   Checkbox,
@@ -10,7 +10,10 @@ import {
   Typography,
   Button,
 } from '@mui/material';
-import { useCreateEvent, useCreateEventBulk } from '../../common/db-axios/useEvents';
+import TurndownService from 'turndown';
+
+
+import { useCreateEventBulk } from '../../common/db-axios/useEvents';
 import { useUpdateMunch } from '../../common/db-axios/useMunches';
 import { useFetchMunches } from '../../common/db-axios/useMunches';
 import { Munch, Event } from '../../common/types/commonTypes';
@@ -20,13 +23,16 @@ const FETLIFE_URL = 'https://fetlife.com';
 interface ImportedEvent extends Event {
   fetlife_handle: string;
   category: string;
+  instagram_handle: string;
+  description_html: string;
+  image_url: string;
 }
 
 interface MappedEvent extends ImportedEvent {
   munch: Munch;
 }
 
-export default function ImportFetlifeScreen() {
+export default function ImportCSVScreen() {
   const { data: munches = [] } = useFetchMunches();
   const createEventBulk = useCreateEventBulk();
   const updateMunch = useUpdateMunch();
@@ -35,6 +41,8 @@ export default function ImportFetlifeScreen() {
   const [excluded, setExcluded] = useState<Record<string, boolean>>({});
   const [isMunchOverride, setIsMunchOverride] = useState<Record<string, boolean>>({});
   const [isPlayParty, setIsPlayParty] = useState<Record<string, boolean>>({});
+
+  const turndownService = new TurndownService();
 
   const munchMap = useMemo(() => {
     const map: Record<string, Munch> = {};
@@ -49,7 +57,7 @@ export default function ImportFetlifeScreen() {
   const groupedEvents = useMemo(() => {
     const grouped: Record<string, MappedEvent[]> = {};
     importedEvents.forEach((event) => {
-      const handle = event.fetlife_handle?.toLowerCase();
+      const handle = event.fetlife_handle?.toLowerCase() || event.instagram_handle?.toLowerCase();
       const munch = munchMap[handle];
       if (!grouped[handle]) grouped[handle] = [];
       grouped[handle].push({ ...event, munch });
@@ -67,13 +75,21 @@ export default function ImportFetlifeScreen() {
     reader.onload = (e) => {
       try {
         const parsed: ImportedEvent[] = JSON.parse(e?.target?.result as string);
-        setImportedEvents(parsed);
+
+        const normalized = parsed.map((event) => {
+          return {
+            ...event,
+            description: turndownService.turndown(event.description_html || ''),
+          }
+        })
+
+        setImportedEvents(normalized);
 
         // Auto-check boxes
         const newPlayParty: Record<string, boolean> = {};
         const newIsMunch: Record<string, boolean> = {};
 
-        parsed.forEach((event) => {
+        normalized.forEach((event) => {
           const key = `${event.name}_${event.start_date}`;
           if (event.name.toLowerCase().includes('play party')) {
             newPlayParty[key] = true;
@@ -86,7 +102,8 @@ export default function ImportFetlifeScreen() {
         setIsPlayParty(newPlayParty);
         setIsMunchOverride(newIsMunch);
       } catch (err) {
-        alert('Invalid JSON');
+        // @ts-ignore
+        alert('Invalid JSON' + err.message);
       }
     };
 
@@ -118,6 +135,8 @@ export default function ImportFetlifeScreen() {
         const munch = isMunch ? event.munch : undefined;
         const organizerId = munch?.organizer_id;
 
+        const sourceType = event.fetlife_handle ? 'fetlife' : 'instagram';
+
         const commonProps = {
           name: event.name,
           start_date: event.start_date,
@@ -130,20 +149,27 @@ export default function ImportFetlifeScreen() {
           ...(isMunch && { munch_id: munch?.id }),
           is_munch: isMunch,
           is_play_party: !!isPlayParty[key],
+          image_url: event.image_url,
 
           // @ts-ignore
           organizer: {
             ...(organizerId ? {
               id: organizerId,
             } : {
-              name: event.fetlife_handle,
-              url: `${FETLIFE_URL}/${event.fetlife_handle}`,
+              ...(sourceType === 'fetlife' ? {
+                fetlife_handle: event.fetlife_handle,
+              } : {
+                instagram_handle: event.instagram_handle,
+              }),
+              url: sourceType === 'fetlife' ? `${FETLIFE_URL}/${event.fetlife_handle}` : `https://instagram.com/${event.instagram_handle}`,
             })
           },
         };
 
         createEventsInput.push(commonProps);
       }
+
+      console.log('createEventsInput', createEventsInput);
 
       const res = await createEventBulk.mutateAsync(createEventsInput);
 
@@ -160,12 +186,28 @@ export default function ImportFetlifeScreen() {
 
   return (
     <Box p={4}>
-      <Typography variant="h4" gutterBottom>Fetlife Importer</Typography>
+      <Typography variant="h4" gutterBottom>CSV Importer</Typography>
       <input type="file" accept=".json" onChange={handleJsonUpload} />
 
       {Object.entries(groupedEvents).map(([handle, munchEvents]) => (
         <Box key={handle} mt={4}>
-          <Typography variant="h6">Group: <a href={`https://fetlife.com/${handle}`}>{handle}</a></Typography>
+
+          <Typography variant="h6">
+            Group:&nbsp;
+            {(() => {
+              const firstEvent = munchEvents[0];
+              const sourceType = firstEvent.fetlife_handle ? 'fetlife' : 'instagram';
+              const url = sourceType === 'fetlife'
+                ? `https://fetlife.com/${firstEvent.fetlife_handle}`
+                : `https://instagram.com/${firstEvent.instagram_handle}`;
+              const name = sourceType === 'fetlife'
+                ? firstEvent.fetlife_handle
+                : firstEvent.instagram_handle;
+
+              return <a href={url} target="_blank" rel="noopener noreferrer">{name}</a>;
+            })()}
+          </Typography>
+
           <Table>
             <TableHead>
               <TableRow>

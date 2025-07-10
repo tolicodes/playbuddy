@@ -12,6 +12,7 @@ export default defineConfig({
                 background: 'src/background.ts',
                 options: 'src/options.html'
             }
-        }
+        },
+        minify: false,
     }
 });

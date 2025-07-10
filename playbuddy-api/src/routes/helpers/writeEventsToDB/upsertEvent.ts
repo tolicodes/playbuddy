@@ -1,4 +1,4 @@
-import { Media, NormalizedEventInput } from "../../../common/types/commonTypes.js";
+import { CreateOrganizerInput, Media, NormalizedEventInput } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import axios from "axios";
@@ -28,28 +28,16 @@ function prepareOrganizer(event: NormalizedEventInput) {
     const { organizer } = event;
 
     let organizerId: string | undefined;
-    let organizerCreateInput: { id?: string; name?: string; url?: string; original_id?: string } | undefined;
 
-    if ('id' in organizer) {
-        organizerId = organizer.id!.toString();
-        organizerCreateInput = { id: organizer.id!.toString() };
-    } else if ('name' in organizer) {
-        organizerCreateInput = {
-            name: organizer.name,
-            url: organizer.url,
-            original_id: organizer.original_id || undefined,
-        };
-    }
+    const logName = organizer?.name || organizerId || organizer?.instagram_handle || organizer?.fetlife_handle || 'Unknown';
+    log(`ORGANIZER: ${logName}`);
 
-    const logName = organizerCreateInput?.name || organizerId || 'Unknown';
-    log(`ORGANIZER: ${organizerCreateInput?.name} ${organizerId}`);
-
-    if (!organizerCreateInput && !organizerId) {
+    if (!organizer && !organizerId) {
         logError(`ORGANIZER: No organizer id or name found`);
         return null;
     }
 
-    return { logName, organizerCreateInput, organizerId };
+    return { logName, organizerCreateInput: organizer, organizerId };
 }
 
 
@@ -61,10 +49,10 @@ function logEventHeader(organizerName: string, event: NormalizedEventInput) {
     log(separator + '\n');
 }
 
-async function tryUpsertOrganizer(organizer: { id?: string; name?: string }) {
+async function tryUpsertOrganizer(organizer: CreateOrganizerInput) {
     log(`ORGANIZER: Upserting organizer`);
 
-    const result = await upsertOrganizer(organizer as { name: string } | { id: string });
+    const result = await upsertOrganizer(organizer);
 
     if (!result.organizerId || !result.communityId) {
         logError(`ORGANIZER: Failed to upsert organizer`);
@@ -106,7 +94,7 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
     logEventHeader(organizerInfo.logName, event);
 
     try {
-        const upsertedOrganizer = await tryUpsertOrganizer(event.organizer as { id: string } | { name: string });
+        const upsertedOrganizer = await tryUpsertOrganizer(event.organizer!);
         if (!upsertedOrganizer) return 'failed';
 
         const { organizerId, organizerCommunityId } = upsertedOrganizer;

@@ -1,24 +1,24 @@
 
 // Import necessary types and clients
-import { Organizer } from "../../../common/types/commonTypes.js";
+import { CreateOrganizerInput } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 
 // Function to upsert an organizer and its associated community
 export async function upsertOrganizer(
-    organizer: Omit<Organizer, 'id'> | { id: string }
+    organizer: CreateOrganizerInput
 ): Promise<{ organizerId?: string, communityId?: string }> {
-    // @ts-ignore
     const { name, url, original_id } = organizer;
-    // @ts-ignore
     const id = organizer.id;
 
     const orIDClause = id ? `,id.eq.${id}` : '';
+    const orInstagramClause = organizer.instagram_handle ? `,instagram_handle.eq.${organizer.instagram_handle}` : '';
+    const orFetlifeClause = organizer.fetlife_handle ? `,fetlife_handle.eq.${organizer.fetlife_handle}` : '';
 
     // Attempt to find an existing organizer by name or alias
     const { data: existingOrganizer, error: fetchError } = await supabaseClient
         .from("organizers")
         .select("id, name")
-        .or(`name.eq."${name}",aliases.cs.{"${name}"}${orIDClause}`)
+        .or(`name.eq."${name}",aliases.cs.{"${name}"}${orIDClause}${orInstagramClause}${orFetlifeClause}`)
         .single();
 
     // Handle any errors that occur during the fetch
@@ -29,6 +29,10 @@ export async function upsertOrganizer(
 
     // Initialize organizerId with the existing organizer's ID if found
     let organizerId = existingOrganizer?.id;
+
+    if (existingOrganizer) {
+        console.log(`ORGANIZER: Found existing organizer ${existingOrganizer.name}`)
+    }
 
     // If no existing organizer is found, upsert a new organizer
     if (!organizerId) {
@@ -51,7 +55,7 @@ export async function upsertOrganizer(
     // Upsert the community associated with the organizer
     const communityId = await upsertCommunityFromOrganizer({
         organizerId: organizerId ?? "",
-        organizerName: name
+        organizerName: existingOrganizer?.name ?? name
     });
 
     // Return the organizer and community IDs

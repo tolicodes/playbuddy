@@ -1,17 +1,12 @@
 import { scrapeTicketSite as scrapeFromTicketSites } from '../ticketSiteMapper.js';
-import type { EventResult } from '../types.js';
+import type { EventResult, InstagramLink } from '../types.js';
 import { sleep, getRandomDelay, openTab, postStatus, throttleHourly } from '../utils.js';
-
-interface InstagramLink {
-    url: string;
-    title: string;
-}
 
 export async function scrapeInstagram(usernames: string[]): Promise<EventResult[]> {
     const results: EventResult[] = [];
     const errors: any[] = [];
 
-    const allLinks: string[] = [];
+    const allLinks: InstagramLink[] = [];
 
     for (const username of usernames) {
         const url = `https://www.instagram.com/${username}/`;
@@ -27,7 +22,8 @@ export async function scrapeInstagram(usernames: string[]): Promise<EventResult[
             // @ts-ignore
             const [injectionResult]: { result: InstagramLink[] }[] = await chrome.scripting.executeScript({
                 target: { tabId: tab.id! },
-                func: () => {
+                args: [username],
+                func: (username: string) => {
                     function clickLinkIcon() {
                         const linkIcon = document.querySelector('svg[aria-label="Link icon"]');
                         const clickableSpan = linkIcon?.closest('button, span')?.parentElement;
@@ -66,7 +62,8 @@ export async function scrapeInstagram(usernames: string[]): Promise<EventResult[
 
                             results.push({
                                 url: `https://${rawLinkText}`,
-                                title: otherText || rawLinkText,
+                                name: otherText || rawLinkText,
+                                handle: username,
                             });
                         }
 
@@ -77,12 +74,14 @@ export async function scrapeInstagram(usernames: string[]): Promise<EventResult[
             const links = injectionResult?.result ?? [];
 
             for (const link of links) {
-                allLinks.push(link.url);
-                results.push({ instagram_username: username, ...link });
+                allLinks.push(link);
+                results.push({ instagram_handle: username, ...link });
             }
+
+            console.log('links', links);
         } catch (err: any) {
             postStatus(`   ❌ Failed to scrape @${username}: ${err.message}`);
-            errors.push({ instagram_username: username, error: err.message });
+            errors.push({ instagram_handle: username, error: err.message });
         }
     }
 

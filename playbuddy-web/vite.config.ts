@@ -4,6 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  assetsInclude: ['**/*.md'],
   resolve: {
     alias: {
       '@common': path.resolve(__dirname, '../common/src'),

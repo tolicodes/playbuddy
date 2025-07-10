@@ -54,9 +54,9 @@ export default function EventsListScreen() {
 
                 <Button
                     variant="contained"
-                    onClick={() => navigate('/events/import-fetlife')}
+                    onClick={() => navigate('/events/import-csv')}
                 >
-                    Import from Fetlife
+                    Import from CSV
                 </Button>
 
                 <TextField

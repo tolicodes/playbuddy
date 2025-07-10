@@ -64,7 +64,7 @@ export async function scrapeEvents(urls: string[]): Promise<EventResult[]> {
                     name: event.name,
                     location: event.location,
                     description_html: event.description_html,
-                    image: event.image,
+                    image_url: event.image,
                     start_date: start.toISOString(),
                     end_date: end.toISOString(),
                     ticket_url: url,

@@ -598,11 +598,14 @@ export interface Organizer {
     /** Whether hidden from listings (default false). */
     hidden?: boolean | null;
 
-    /**
+    /** 
      * The promo codes for the event
      * May be event specific or organizer specific
      */
     promo_codes?: PromoCode[]
+
+    instagram_handle?: string;
+    fetlife_handle?: string;
 }
 
 export type CreateOrganizerInput = {
@@ -612,6 +615,8 @@ export type CreateOrganizerInput = {
     original_id?: string;
     aliases?: string[];
     hidden?: boolean;
+    fetlife_handle?: string;
+    instagram_handle?: string;
 }
 
 /**

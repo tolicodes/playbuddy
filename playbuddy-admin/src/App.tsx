@@ -12,7 +12,7 @@ import axios from 'axios'
 import PrintRuns from "./pages/PrintRuns/PrintRunsAdmin";
 import { PromoCodeEventManager } from "./pages/PromoCodes/PromoCodeEventManager";
 import EventsListScreen from "./pages/Events/EventsListScreen";
-import ImportFetlifeScreen from "./pages/Events/ImportFetlifeScreen";
+import ImportCSVScreen from "./pages/Events/ImportCSVScreen";
 import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
 import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 
@@ -76,7 +76,7 @@ export default function App() {
         <Route path="/events" element={<EventsListScreen />} />
         <Route path="/events/add" element={<AddEventScreen />} />
         <Route path="/events/:id" element={<AddEventScreen />} />
-        <Route path="/events/import-fetlife" element={<ImportFetlifeScreen />} />
+        <Route path="/events/import-csv" element={<ImportCSVScreen />} />
         <Route path="/facilitators" element={<FacilitatorsListScreen />} />
         <Route path="/facilitators/new" element={<EditFacilitatorScreen />} />
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />

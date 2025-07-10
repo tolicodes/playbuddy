@@ -1,18 +1,21 @@
 import styles from './EventDetails.module.css';
 import { useParams } from "react-router-dom";
 import { Helmet } from 'react-helmet';
-
+import { useState } from "react";
 import { useFetchEvents } from "../../../../common/src/db-axios/useEvents";
 import type { Event } from "../../../../common/src/types/commonTypes";
 import { getBestPromoCode } from "../../../../playbuddy-mobile/utils/getBestPromoCode";
 import ReactMarkdown from "react-markdown";
 import { formatDate } from '../../../../playbuddy-mobile/utils/formatDate';
+import WebEntryModal from '../WebEntryModal/WebEntryModal';
 
 export const EventDetails = () => {
     const { eventId } = useParams();
     const { data: events } = useFetchEvents({
         includeFacilitatorOnly: true
     });
+
+    const [showModal, setShowModal] = useState(true);
 
     const event = events?.find((event: Event) => event.id === parseInt(eventId!));
     if (!event) return null;
@@ -22,6 +25,10 @@ export const EventDetails = () => {
     const formattedDate = formatDate(event);
     const isFetlife = event.ticket_url?.includes('fetlife');
     const availableSoon = !event.ticket_url?.includes('https');
+
+    if (showModal) {
+        return <WebEntryModal onClose={() => setShowModal(false)} />
+    }
 
     return (
         <>
