@@ -69,20 +69,13 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         promo_code_id: promoCode?.id,
     }
 
-    // Opens the event
-    const handleEventHeaderPress = () => {
-        const eventUrl = selectedEvent.event_url
-        logEvent(UE.EventDetailHeaderTitleClicked, commonAnalyticsProps);
-
-        logEvent(UE.EventDetailTicketPressed, commonAnalyticsProps);
-
-        if (eventUrl) {
-            Linking.openURL(eventUrl);
-        }
-    };
-
     // Toggles the wishlist status for the event.
     const handleToggleWishlist = () => {
+        if (!authUserId) {
+            alert('You need an account to add events to your calendar');
+            return;
+        }
+
         const currentStatus = isOnWishlist(selectedEvent.id);
         logEvent(UE.EventDetailWishlistToggled, {
             ...commonAnalyticsProps,

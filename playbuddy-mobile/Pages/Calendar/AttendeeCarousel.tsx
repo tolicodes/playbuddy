@@ -18,7 +18,6 @@ interface AttendeeCarouselProps {
 }
 
 export const AttendeeCarousel: React.FC<AttendeeCarouselProps> = ({ attendees }) => {
-    const navigation = useNavigation<NavStack>();
     const { authUserId } = useUserContext();
 
     const attendeesDeduped = useMemo(() => {

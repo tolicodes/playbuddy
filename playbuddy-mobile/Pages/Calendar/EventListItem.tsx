@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Share, Linking, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 import { Image } from 'expo-image';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { Attendee, Event } from '../../commonTypes';
@@ -9,12 +11,12 @@ import { useCalendarContext } from './hooks/CalendarContext';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { formatDate } from './hooks/calendarUtils';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
-import { getAnalyticsPropsDeepLink, getAnalyticsPropsEvent, getAnalyticsPropsPromoCode, logEvent } from '../../Common/hooks/logger';
-import { TicketPromoModal } from './TicketPromoModal';
+import { logEvent } from '../../Common/hooks/logger';
 import { getEventPromoCodes } from '../Auth/screens/usePromoCode';
 import { BORDER_LAVENDER } from '../../components/styles';
 import { BadgeRow } from '../common/EventBadgesRow';
 import { AttendeeCarousel } from './AttendeeCarousel';
+import { Pressable } from 'react-native';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -27,6 +29,7 @@ interface ListItemProps {
 export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId, currentDeepLink } = useUserContext();
+    const [scrolling, setScrolling] = useState(false);
 
     const promoCode = getEventPromoCodes(item)?.[0];
     const formattedDate = formatDate(item, fullDate);
@@ -34,86 +37,57 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
     const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
     const vetted = item.vetted;
 
-    const [discountModalVisible, setDiscountModalVisible] = useState(false);
+    const commonAnalyticsProps = {
+        auth_user_id: authUserId ?? '',
+        event_id: item.id,
+        deep_link_id: currentDeepLink?.id,
+        promo_code_id: promoCode?.id,
+    };
 
     const handlePressEvent = () => {
-        onPress(item);
-        logEvent(UE.EventListItemClicked, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(item),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-        });
+        if (!scrolling) {
+            onPress(item);
+            logEvent(UE.EventListItemClicked, commonAnalyticsProps);
+        }
     };
 
     const handleToggleEventWishlist = () => {
-        logEvent(UE.EventListItemWishlistToggled, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(item),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-            is_on_wishlist: !itemIsOnWishlist,
-        });
+        if (!authUserId) {
+            alert('You need an account to add events to your calendar');
+            return;
+        }
+
         toggleWishlistEvent.mutate({
             eventId: item.id,
             isOnWishlist: !itemIsOnWishlist,
         });
     };
 
-    const handleModalCopyPromoCode = () => {
-        logEvent(UE.EventListItemPromoModalPromoCopied, {
-            auth_user_id: authUserId ?? '',
-            ...getAnalyticsPropsEvent(item),
-            ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-            ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-        });
-    };
-
-    const placeHolderImage = item.munch_id ?
+    const placeHolderImage = item.munch_id ? (
         <FAIcon name="cutlery" size={50} color="#666" style={styles.icon} />
-        :
+    ) : (
         <FAIcon name="calendar" size={50} color="#666" style={styles.icon} />
+    );
 
     return (
-        <>
-            <TicketPromoModal
-                visible={discountModalVisible}
-                promoCode={promoCode?.promo_code || 'N/A'}
-                discount={promoCode?.discount + (promoCode?.discount_type === 'percent' ? '%' : '$')}
-                onClose={() => setDiscountModalVisible(false)}
-                organizerName={item.organizer?.name || ''}
-                onBuyTicket={() => {
-                    logEvent(UE.EventListItemPromoModalTicketPressed, {
-                        auth_user_id: authUserId,
-                        ...getAnalyticsPropsEvent(item),
-                        ...(currentDeepLink ? getAnalyticsPropsDeepLink(currentDeepLink) : {}),
-                        ...(promoCode ? getAnalyticsPropsPromoCode(promoCode) : {}),
-                    });
-                    Linking.openURL(item.ticket_url);
-                    setDiscountModalVisible(false);
-                }}
-                onCopy={handleModalCopyPromoCode}
-            />
-            <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8} style={styles.wrapper}>
-                <View style={[styles.cardWrapper, noPadding && styles.noPadding]}>
+        <View style={styles.wrapper}>
+            <View style={[styles.cardWrapper, noPadding && styles.noPadding]}>
+                <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8}>
                     <View style={styles.topSection}>
-                        {imageUrl ? (
-                            <View style={styles.imageContainer}>
+                        <View style={styles.imageContainer}>
+                            {imageUrl ? (
                                 <Image source={{ uri: imageUrl }} style={styles.eventImage} />
-                            </View>
-                        ) : (
-                            <View style={styles.imageContainer}>
-                                {placeHolderImage}
-                            </View>
-                        )}
+                            ) : (
+                                placeHolderImage
+                            )}
+                        </View>
                         <View style={styles.detailsContainer}>
                             <View style={styles.organizerRow}>
                                 <View style={styles.organizerContainer}>
                                     <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
-                                    <Text style={styles.organizerName} numberOfLines={1} ellipsizeMode="tail">
+                                    <Text style={styles.organizerName} numberOfLines={1}>
                                         {item.organizer?.name}
                                     </Text>
-
                                 </View>
                                 <View style={styles.rightContainer}>
                                     {promoCode && (
@@ -125,53 +99,51 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                             </Text>
                                         </View>
                                     )}
-                                    {authUserId && (
-                                        <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
-                                            <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
-                                        </TouchableOpacity>
-                                    )}
+                                    <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
+                                        <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
+                                    </TouchableOpacity>
                                 </View>
                             </View>
-                            <View style={styles.titleRow}>
-                                <Text style={styles.eventTitle} numberOfLines={1}>
-                                    {item.name}
-                                </Text>
-                            </View>
-                            <View style={styles.timeRow}>
-                                <Text style={styles.eventTime}>{formattedDate}</Text>
 
-                            </View>
+                            <Text style={styles.eventTitle} numberOfLines={1}>
+                                {item.name}
+                            </Text>
 
-                            <ScrollView
-                                horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}
-                            >
-                                <BadgeRow
-                                    vetted={vetted}
-                                    playParty={item.play_party}
-                                    center={false}
-                                    munch={item.munch_id}
-                                    classification={item.classification}
-                                />
-
-                                <AttendeeCarousel attendees={attendees!} />
-
-                            </ScrollView>
-
-
+                            <Text style={styles.eventTime}>{formattedDate}</Text>
                         </View>
                     </View>
-                </View>
-            </TouchableOpacity>
-        </>
+                </TouchableOpacity>
+
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.scrollContainer}
+                    style={styles.scrollView}
+                    onScrollBeginDrag={() => setScrolling(true)}
+                    onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
+                >
+                    <BadgeRow
+                        vetted={vetted}
+                        playParty={item.play_party}
+                        center={false}
+                        munch={item.munch_id}
+                        classification={item.classification}
+                    />
+                    <AttendeeCarousel attendees={attendees!} />
+                </ScrollView>
+            </View>
+        </View>
     );
 };
 
+
 export const ITEM_HEIGHT = 140;
+const LEFT_PADDING = 75;
 
 const styles = StyleSheet.create({
+    // Container
     wrapper: {
         height: ITEM_HEIGHT,
-
     },
     cardWrapper: {
         backgroundColor: '#fff',
@@ -183,16 +155,17 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         height: ITEM_HEIGHT - 10,
         justifyContent: 'center',
-        shadowOpacity: 0.2
+        shadowOpacity: 0.2,
     },
-
     noPadding: {
         marginHorizontal: 0,
     },
 
+    // Header layout
     topSection: {
         flexDirection: 'row',
         padding: 12,
+        paddingBottom: 0,
         alignItems: 'center',
     },
     imageContainer: {
@@ -210,10 +183,25 @@ const styles = StyleSheet.create({
         height: 50,
         borderRadius: 50,
     },
+
+    // Text block
     detailsContainer: {
         flex: 1,
         justifyContent: 'center',
     },
+    eventTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#333',
+        marginBottom: 4,
+    },
+    eventTime: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 4,
+    },
+
+    // Organizer row
     organizerRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -238,22 +226,13 @@ const styles = StyleSheet.create({
         color: '#333',
         flexShrink: 1,
     },
+
+    // Promo badge and heart icon
     rightContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         flexShrink: 0,
         flexGrow: 0,
-    },
-    heartContainer: {
-        marginLeft: 8,
-    },
-    titleRow: {
-        marginBottom: 4,
-    },
-    eventTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
     },
     discountBadge: {
         backgroundColor: '#FFD700',
@@ -266,60 +245,20 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: 'black',
     },
-    timeRow: {
-        marginBottom: 4,
+    heartContainer: {
+        marginLeft: 8,
+    },
+
+    // Scroll row (badges + attendees)
+    scrollContainer: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+        marginLeft: LEFT_PADDING,
     },
-    eventTime: {
-        fontSize: 14,
-        color: '#666',
-    },
-    buttonRow: {
-        flexDirection: 'row',
-        borderTopWidth: 1,
-        borderTopColor: '#ccc',
-    },
-    button: {
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingVertical: 10,
-    },
-    buttonIcon: {
-        marginRight: 4,
-    },
-    buttonText: {
-        fontSize: 14,
-        color: '#888',
-    },
-    vettedBadge: {
-        backgroundColor: '#4CAF50',
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginRight: 8,
-    },
-    vettedText: {
-        fontSize: 12,
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    badgesRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    playPartyBadge: {
-        backgroundColor: '#8f00ff',
-        borderRadius: 4,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginRight: 8,
-    },
-    playPartyText: {
-        fontSize: 12,
-        color: 'white',
-        fontWeight: 'bold',
+    scrollView: {
+        maxHeight: 36,
+        flexGrow: 0,
     },
 });
