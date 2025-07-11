@@ -36,10 +36,16 @@ export const TopBar = ({ searchQuery, setSearchQuery, filtersEnabled, onPressFil
                 <Image source={require('../images/google-calendar.png')} style={topBarStyles.googleCalendarImage} />
             </TouchableOpacity>}
             <TouchableOpacity style={topBarStyles.topButton} onPress={onPressFilters}>
-                <FAIcon name={filtersEnabled ? 'times-circle' : 'filter'} size={24} color="#888" />
+                <FAIcon name={filtersEnabled ? 'times-circle' : 'filter'}
+                    size={24}
+                    color={filtersEnabled ? "red" : "#888"}
+                    accessibilityLabel={filtersEnabled ? 'Clear filters' : 'Filter'} />
             </TouchableOpacity>
             <TouchableOpacity style={topBarStyles.topButton} onPress={onPressExpand}>
-                <FAIcon name={isCalendarExpanded ? 'angle-double-up' : 'angle-double-down'} size={24} color="#888" />
+                <FAIcon name={isCalendarExpanded ? 'angle-double-up' : 'angle-double-down'}
+                    size={24}
+                    color="#888"
+                    accessibilityLabel={isCalendarExpanded ? 'Collapse calendar' : 'Expand calendar'} />
             </TouchableOpacity>
         </View>
     </View>

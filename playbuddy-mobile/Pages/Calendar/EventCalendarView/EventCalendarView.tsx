@@ -206,9 +206,6 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({ events, showGoogl
         setFiltersVisible(true);
     };
 
-
-    console.log('filters', filters)
-
     const filtersEnabled = useMemo(() => Object.values(filters).some(arr => arr.length > 0), [filters]);
 
     return (
