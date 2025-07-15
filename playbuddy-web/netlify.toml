@@ -9,6 +9,10 @@
   to = "/index.html"
   status = 200
 
+[[redirects]]
+  from = "creators"
+  to = "https://tolicodes.notion.site/PlayBuddy-Creator-Portal-2310cb54c85380888888cf78b16b868f?source=copy_link"
+  status = 200
 
 [build]
 command = "cd ../common && npm i && cd ../playbuddy-web && npm i && npx tsc -b && npx vite build"
