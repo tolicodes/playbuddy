@@ -82,41 +82,6 @@ export default function AccountDetails() {
                             } />
                             <InfoItem label="Display Name" value={userProfile?.name || fullNameFromOAuthedUser || ''} />
 
-                            <Text style={styles.sectionHeader}>Wishlist Share Code</Text>
-                            <Text style={styles.shareCodeInstruction}>
-                                To add you as a buddy, your friend can either enter your share code or scan your QR code:
-                            </Text>
-
-                            <View style={styles.qrCodeWrapper}>
-                                <QRCodeStyled data={authUserId} width={150} height={150} />
-                            </View>
-
-                            <Text style={styles.shareCodeInstruction}>Or enter your share code:</Text>
-
-                            <View style={styles.shareCodeContainer}>
-                                <Text style={styles.shareCode}>{userProfile?.share_code}</Text>
-                                <TouchableOpacity
-                                    style={styles.shareIconButton}
-                                    onPress={() => {
-                                        logEvent('account_details_press_share_code');
-                                        Share.share({
-                                            message: `Add me as a buddy using the code ${userProfile?.share_code}`,
-                                        });
-                                    }}
-                                >
-                                    <Icon name="share-outline" size={24} color="#007AFF" />
-                                </TouchableOpacity>
-                            </View>
-
-                            <TouchableOpacity
-                                style={styles.button}
-                                onPress={() => {
-                                    logEvent('account_details_press_add_buddy');
-                                    navigate('Buddies', { screen: 'Add Buddy' });
-                                }}
-                            >
-                                <Text style={styles.buttonText}>Add a Buddy</Text>
-                            </TouchableOpacity>
                         </View>
                     </>
 
