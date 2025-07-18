@@ -91,54 +91,59 @@ const waitBetweenRequests = () => {
   });
 };
 
-// Gets the events from the /showmore/ endpoint
 const scrapeOrganizerPage = async ({
   url,
   eventDefaults
 }: ScraperParams): Promise<NormalizedEventInput[]> => {
-
   const separator = '-'.repeat(process.stdout.columns);
-
   console.log('\n' + separator);
   console.log(`SCRAPE ORGANIZER: [${url}`);
   console.log(separator + '\n');
 
+  const allEvents: NormalizedEventInput[] = [];
+
   try {
     // Extract organizer ID from the URL
     const organizerId = url.split('/').pop()?.split('-').pop();
-
     if (!organizerId) {
-      console.error(`SCRAPE ORGANIZER: Extract organizer ID from URL: ${url}`);
+      console.error(`SCRAPE ORGANIZER: Could not extract organizer ID from URL: ${url}`);
       return [];
     }
 
-    // Construct the endpoint URL
-    const endpointUrl = `https://www.eventbrite.com/org/${organizerId}/showmore/?page_size=1000&type=future&page=1`;
+    let page = 1;
+    while (true) {
+      const endpointUrl = `https://www.eventbrite.com/org/${organizerId}/showmore/?page_size=1000&type=future&page=${page}`;
+      console.log(`Fetching page ${page}: ${endpointUrl}`);
 
-    // Fetch data from the endpoint
-    const response = await axios.get(endpointUrl);
+      const response = await axios.get(endpointUrl);
+      if (response.status !== 200) {
+        console.error(`SCRAPE ORGANIZER: Failed to fetch page ${page}`);
+        break;
+      }
 
-    if (response.status !== 200) {
-      console.error(`SCRAPE ORGANIZER: Failed to fetch data from endpoint: ${endpointUrl}`);
-      return [];
+      const rawEvents = response.data.data.events;
+      if (!rawEvents || rawEvents.length === 0) {
+        console.log(`No more events found on page ${page}.`);
+        break;
+      }
+
+      const events = mapEventbriteEventToEvent(rawEvents, eventDefaults);
+      for (const event of events) {
+        console.log(`SCRAPE ORGANIZER: Scraping description from event page: ${event.name}`);
+        event.description = await scrapeDescriptionFromEventPage(event.event_url!);
+        await waitBetweenRequests();
+      }
+
+      allEvents.push(...events);
+      page++;
     }
-
-    const events = mapEventbriteEventToEvent(response.data.data.events, eventDefaults);
-
-    console.log(`SCRAPE ORGANIZER: Scraping ${events.length} events from organizer page: ${url}`);
-
-    for (const event of events) {
-      console.log(`SCRAPE ORGANIZER: Scraping description from event page: ${event.name}`)
-      event.description = await scrapeDescriptionFromEventPage(event.event_url!);
-      await waitBetweenRequests(); // Pause between scrapes
-    }
-
-    return events;
   } catch (error) {
     console.error(`SCRAPE ORGANIZER: Error scraping Eventbrite events from organizer page`, error);
-    return [];
   }
+
+  return allEvents;
 };
+
 
 // MAIN FUNCTION
 export const scrapeEventsFromOrganizers = async ({
