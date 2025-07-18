@@ -4,6 +4,7 @@ import { scrapeEventsFromOrganizers } from "./eventbrite/scrapeEventsFromOrganiz
 import { scrapeOrganizerTantraNY } from "./organizers/tantra_ny.js";
 import { writeEventsToDB } from "../helpers/writeEventsToDB/writeEventsToDB.js";
 import { readJSON, writeJSON } from '../helpers/fileUtils.js'
+import axios from "axios";
 
 /**
  * Specify which scrapers to run this cycle.
@@ -122,6 +123,10 @@ const SCRAPERS: Record<
  */
 const FILTERED_EVENTS_FILE = "./data/outputs/filtered_events.json";
 
+const runClassify = () => {
+    axios.get(process.env.PLAYBUDDY_API_URL + '/classifications/classify');
+}
+
 /**
  * Master function to run selected scrapers, merge outputs, filter,
  * and push new events to DB. Always writes each scraper's raw output to disk.
@@ -146,6 +151,8 @@ export const scrapeEvents = async (): Promise<NormalizedEventInput[]> => {
     // 4) Persist filtered list to disk and write to DB
     writeJSON(FILTERED_EVENTS_FILE, filtered);
     await writeEventsToDB(filtered);
+
+    await runClassify();
 
     return filtered;
 };  
