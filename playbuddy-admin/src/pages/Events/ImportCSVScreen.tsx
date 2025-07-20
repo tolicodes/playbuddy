@@ -79,7 +79,7 @@ export default function ImportCSVScreen() {
         const normalized = parsed.map((event) => {
           return {
             ...event,
-            description: turndownService.turndown(event.description_html || ''),
+            description: turndownService.turndown(event.description_html || event.description),
           }
         })
 
