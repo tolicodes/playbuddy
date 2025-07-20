@@ -20,3 +20,9 @@ export interface InstagramLink {
     name: string;
     handle: string;
 }
+
+export interface Link {
+    url: string;
+    name: string;
+    handle: string;
+}

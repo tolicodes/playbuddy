@@ -1,10 +1,12 @@
 import * as ticketTailor from './providers/ticketTailor';
+import * as linktree from './providers/linkTree';
 import type { EventResult, InstagramLink } from './types';
 import { postStatus } from './utils';
 
 export const ticketSiteScraperMapper: Record<string, (urls: string[]) => Promise<any>> = {
     'buytickets.at': ticketTailor.scrapeEvents,
     'tickettailor.com': ticketTailor.scrapeEvents,
+    'linktr.ee': linktree.scrapeLinktree,
 };
 
 export const scrapeTicketSite = async (urls: InstagramLink[]): Promise<EventResult[]> => {

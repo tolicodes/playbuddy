@@ -9,7 +9,7 @@ export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'instagram';
 type ScrapeFn = () => Promise<EventResult[]>;
 
 const fetlifeHandles = TEST_MODE ? ['Queens_Kinksters'] : FETLIFE_HANDLES;
-const instagramHandles = TEST_MODE ? ['nightowlsig'] : INSTAGRAM_HANDLES;
+const instagramHandles = TEST_MODE ? ['trixielapointe'] : INSTAGRAM_HANDLES;
 
 const router: Record<ScrapeSource, ScrapeFn> = {
     fetlife: () => fetlife.scrapeEvents(fetlifeHandles),
