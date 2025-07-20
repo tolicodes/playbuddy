@@ -1,7 +1,8 @@
 import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
-import { fetchPaginatedRecords } from '../helpers/fetchPaginatedRecords.js';
+import { fetchPaginatedEventRecords } from '../helpers/fetchPaginatedRecords.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 const router = Router();
 
@@ -87,7 +88,7 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
 router.get('/swipe_mode_choices', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
     try {
         if (!req.authUserId) throw new Error('Unauthorized')
-        const data = await fetchPaginatedRecords('swipe_mode_choices', req.authUserId);
+        const data = await fetchPaginatedEventRecords('swipe_mode_choices', req.authUserId);
 
         const swipeModeChosenWishlist = data
             .filter((choice) => choice.choice === 'wishlist')
@@ -132,20 +133,24 @@ const addEventToWishlist = async (req: AuthenticatedRequest, res: Response) => {
         return res.status(400).json({ error: 'Event ID is required' });
     }
 
-    const { error } = await supabaseClient
+    const { error, data } = await supabaseClient
         .from('event_wishlist')
-        .insert([{ user_id: req.authUserId, event_id: eventId }]);
+        .insert([{ user_id: req.authUserId, event_id: eventId }])
+        .select()
+        .single()
+        ;
+
+    console.log('added', { eventId, userId: req.authUserId });
 
     if (error) {
         throw new Error(`Error saving event to wishlist: ${error.message}`);
     }
 
-    return res.status(201).json({ message: 'Event added to wishlist' });
+    return res.status(201).json(data);
 }
 
 // Phase this out
 router.post('/:eventId', authenticateRequest, addEventToWishlist);
-
 
 router.post('/add/:eventId', authenticateRequest, addEventToWishlist);
 
@@ -282,19 +287,22 @@ router.get('/code/:share_code', async (req: Request, res: Response) => {
         throw new Error(`Error fetching user: ${userError.message}`);
     }
 
-    const { data, error } = await supabaseClient
-        .from('event_wishlist')
-        .select('event_id')
-        .eq('user_id', user.user_id)
+    try {
+        const data = await fetchAllRows({
+            from: 'event_wishlist',
+            select: 'event_id',
+            where: `user_id.eq.${user.user_id}`
+        });
 
-    if (error) {
+        // console.log('wish', data)
+
+        const eventIds = data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
+
+        return res.status(200).json(eventIds);
+    } catch (error) {
         console.error(`Error fetching calendar: ${error.message}`);
         return res.status(500).json({ error: 'Failed to fetch calendar' });
     }
-
-    const eventIds = data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
-
-    return res.status(200).json(eventIds);
 });
 
 export default router;

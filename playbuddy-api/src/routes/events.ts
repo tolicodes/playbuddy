@@ -10,6 +10,7 @@ import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, op
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
+import scrapeURLs from '../scrapers/scrapeURLs.js';
 
 const router = Router();
 
@@ -178,6 +179,22 @@ router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, r
     res.json(eventResult);
 });
 
+router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const urls = req.body;
+
+    const scrapedEvents = await scrapeURLs(urls);
+
+    const eventResults = [];
+    for (const event of scrapedEvents) {
+        const eventResult = await upsertEvent(event, req.authUserId);
+        eventResults.push(eventResult);
+    }
+
+    await flushEvents();
+
+    res.json(eventResults);
+});
+
 router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { eventId } = req.params;
     const { status } = req.body;
@@ -190,29 +207,22 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
         const { data, error } = await supabaseClient
             .from("events")
             .update({ weekly_pick: status })
-            .eq("id", parseInt(eventId));
+            .eq("id", parseInt(eventId))
+            .select()
+            .single();
+
         if (error) {
             console.error("Supabase update error:", error);
             return res.status(500).json({ error: error.message });
         }
 
-        const { data: updatedEvent, error: updatedEventError } = await supabaseClient
-            .from("events")
-            .select("*")
-            .eq("id", parseInt(eventId))
-            .single();
+        await flushEvents();
 
-        const redisClient = await connectRedisClient();
-        await redisClient.del("events"); // Clear cache if flush is requested
-
-        return res.status(200).json({ message: "Event marked as weekly pick", event: updatedEvent });
+        return res.status(200).json({ message: "Event marked as weekly pick", event: data });
     } catch (err) {
         console.error("Unexpected error:", err);
         return res.status(500).json({ error: "Internal server error" });
     }
 });
-
-
-
 
 export default router;
