@@ -7,18 +7,19 @@ import { supabaseClient } from "../../../connections/supabaseClient.js";
 export async function upsertOrganizer(
     organizer: CreateOrganizerInput
 ): Promise<{ organizerId?: string, communityId?: string }> {
-    const { name, url, original_id } = organizer;
+    const { name, url, original_id, instagram_handle, fetlife_handle } = organizer;
     const id = organizer.id;
 
     const orIDClause = id ? `,id.eq.${id}` : '';
     const orInstagramClause = organizer.instagram_handle ? `,instagram_handle.eq.${organizer.instagram_handle}` : '';
     const orFetlifeClause = organizer.fetlife_handle ? `,fetlife_handle.eq.${organizer.fetlife_handle}` : '';
+    const orClause = `name.eq."${name}",aliases.cs.{"${name}"}${orIDClause}${orInstagramClause}${orFetlifeClause}`;
 
     // Attempt to find an existing organizer by name or alias
     const { data: existingOrganizer, error: fetchError } = await supabaseClient
         .from("organizers")
         .select("id, name")
-        .or(`name.eq."${name}",aliases.cs.{"${name}"}${orIDClause}${orInstagramClause}${orFetlifeClause}`)
+        .or(orClause)
         .single();
 
     // Handle any errors that occur during the fetch
@@ -34,11 +35,14 @@ export async function upsertOrganizer(
         console.log(`ORGANIZER: Found existing organizer ${existingOrganizer.name}`)
     }
 
+    // If we don't have an organizer name default to their fet or insta
+    const resolvedName = name || instagram_handle || fetlife_handle;
+
     // If no existing organizer is found, upsert a new organizer
     if (!organizerId) {
         const { data: insertedOrganizer, error: upsertError } = await supabaseClient
             .from("organizers")
-            .upsert({ name, url, original_id }, { onConflict: "name" })
+            .upsert({ name: resolvedName, url, original_id, instagram_handle, fetlife_handle }, { onConflict: "name" })
             .select("id, name")
             .single();
 
@@ -55,7 +59,7 @@ export async function upsertOrganizer(
     // Upsert the community associated with the organizer
     const communityId = await upsertCommunityFromOrganizer({
         organizerId: organizerId ?? "",
-        organizerName: existingOrganizer?.name ?? name
+        organizerName: existingOrganizer?.name ?? resolvedName
     });
 
     // Return the organizer and community IDs

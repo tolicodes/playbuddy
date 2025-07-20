@@ -20,9 +20,7 @@ const isRetreat = (event: EventbriteEvent) => {
 
 const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], eventDefaults: Partial<NormalizedEventInput>): NormalizedEventInput[] => {
   const nyEvents = eventbriteEvents.filter(event => filterByRegion(event, 'NY'));
-  const nonNyEvents = eventbriteEvents.filter(event => !filterByRegion(event, 'NY'));
   console.log('FILTER: NY Events: ', eventbriteEvents.length, 'to', nyEvents.length);
-  console.log('FILTER: Non NY Events: ', nonNyEvents.length);
 
   return eventbriteEvents.map((event) => {
     const start_date = event.start.utc;
@@ -93,17 +91,16 @@ const waitBetweenRequests = () => {
 
 const scrapeOrganizerPage = async ({
   url,
-  eventDefaults
+  eventDefaults,
 }: ScraperParams): Promise<NormalizedEventInput[]> => {
   const separator = '-'.repeat(process.stdout.columns);
   console.log('\n' + separator);
-  console.log(`SCRAPE ORGANIZER: [${url}`);
+  console.log(`SCRAPE ORGANIZER: [${url}]`);
   console.log(separator + '\n');
 
   const allEvents: NormalizedEventInput[] = [];
 
   try {
-    // Extract organizer ID from the URL
     const organizerId = url.split('/').pop()?.split('-').pop();
     if (!organizerId) {
       console.error(`SCRAPE ORGANIZER: Could not extract organizer ID from URL: ${url}`);
@@ -111,38 +108,40 @@ const scrapeOrganizerPage = async ({
     }
 
     let page = 1;
-    while (true) {
-      const endpointUrl = `https://www.eventbrite.com/org/${organizerId}/showmore/?page_size=1000&type=future&page=${page}`;
-      console.log(`Fetching page ${page}: ${endpointUrl}`);
+    const pageSize = 50;
 
-      const response = await axios.get(endpointUrl);
-      if (response.status !== 200) {
-        console.error(`SCRAPE ORGANIZER: Failed to fetch page ${page}`);
-        break;
-      }
+    const apiUrl = `https://www.eventbrite.com/api/v3/organizers/${organizerId}/events/?expand=ticket_availability,organizer&status=live&only_public=true`
 
-      const rawEvents = response.data.data.events;
-      if (!rawEvents || rawEvents.length === 0) {
-        console.log(`No more events found on page ${page}.`);
-        break;
-      }
+    // old endpoint
+    // const endpointUrl = `https://www.eventbrite.com/org/${organizerId}/showmore/?page_size=1000&type=future&page=${page}`;
 
-      const events = mapEventbriteEventToEvent(rawEvents, eventDefaults);
-      for (const event of events) {
-        console.log(`SCRAPE ORGANIZER: Scraping description from event page: ${event.name}`);
-        event.description = await scrapeDescriptionFromEventPage(event.event_url!);
-        await waitBetweenRequests();
-      }
+    console.log(`Fetching API page ${page}: ${apiUrl}`);
 
-      allEvents.push(...events);
-      page++;
+    const response = await axios.get(apiUrl);
+
+    const rawEvents = response.data.events;
+    if (!rawEvents || rawEvents.length === 0) {
+      console.log(`No more events found on page ${page}.`);
     }
+
+    const filteredEvents = rawEvents.filter((event: EventbriteEvent) => !event.is_series_parent);
+
+    const events = mapEventbriteEventToEvent(filteredEvents, eventDefaults);
+    for (const event of events) {
+      console.log(`Scraping description for: ${event.name}`);
+      event.description = await scrapeDescriptionFromEventPage(event.event_url!);
+      await waitBetweenRequests();
+    }
+
+    allEvents.push(...events);
+    // if (!response.data.pagination?.has_more_items) break;
   } catch (error) {
-    console.error(`SCRAPE ORGANIZER: Error scraping Eventbrite events from organizer page`, error);
+    console.error(`Error scraping Eventbrite API`, error);
   }
 
   return allEvents;
 };
+
 
 
 // MAIN FUNCTION
