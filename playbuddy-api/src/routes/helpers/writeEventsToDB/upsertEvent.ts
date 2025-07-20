@@ -194,6 +194,7 @@ const checkExistingEvent = async (event: NormalizedEventInput, organizerId: stri
     const filters: string[] = [];
 
     if (event.original_id) {
+        console.log(`CHECK EXISTING EVENT: Checking by original_id ${event.original_id}`)
         filters.push(`original_id.eq."${event.original_id}"`);
     }
 
