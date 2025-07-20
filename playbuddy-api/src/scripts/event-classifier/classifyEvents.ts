@@ -103,9 +103,9 @@ export async function classifyEventsInBatches(batchSize = 10) {
 
     const batches = chunkArray(events.slice(0, MAX_EVENTS), batchSize);
 
-    for (const batch of batches) {
-        const batchIndex = batches.indexOf(batch);
-        console.log(`Classifying batch ${batchIndex + 1} of ${batches.length}`);
+    for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        console.log(`Classifying batch ${i + 1} of ${batches.length}`);
 
         const userPrompt = batch.map(event => {
             return `
@@ -133,7 +133,7 @@ export async function classifyEventsInBatches(batchSize = 10) {
     // const facilitatorResults = await matchEventsToFacilitators(results, events);
     // console.log('Facilitator results', facilitatorResults);
 
-    updateSupabaseAndWriteToFile(results, 'classifications.json');
+    await updateSupabaseAndWriteToFile(results, 'classifications.json');
 
     return results;
 }

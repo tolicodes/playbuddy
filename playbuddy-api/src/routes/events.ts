@@ -4,13 +4,14 @@ import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
-import { Event, EventMedia, FacilitatorMedia } from '../commonTypes.js';
+import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import scrapeURLs from '../scrapers/scrapeURLs.js';
+import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 
 const router = Router();
 
@@ -190,9 +191,10 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
         eventResults.push(eventResult);
     }
 
+    const classifiedEvents = await classifyEventsInBatches();
     await flushEvents();
 
-    res.json(eventResults);
+    res.json(classifiedEvents);
 });
 
 router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
@@ -224,5 +226,7 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
         return res.status(500).json({ error: "Internal server error" });
     }
 });
+
+
 
 export default router;
