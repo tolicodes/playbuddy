@@ -1,6 +1,7 @@
 export const FETLIFE_HANDLES = [
-    'Queens_Kinksters',
+    'Kink-Collective', // no promo
     'TES-NYC', // no promo
+    'Queens_Kinksters',
     'JinkyKews',
     'Geekaholic',
     'KinkyCannaMunch',
@@ -9,14 +10,13 @@ export const FETLIFE_HANDLES = [
     'KinkyKlimbers',
     'TallGoddessNY',
     'Sir-airose',
-    'Kink-Collective', // no promo
     'Miss__Scorpio',
-    'thetaillorgroup', // ask promo
     'JJWatchEvents', // munch only
     'shemagickevents',
     'queertakeover',
     'missbloomsexed',
     'masterdanteamor',
+    'creatrixofchaos'
 
 
 
@@ -58,7 +58,6 @@ export const FETLIFE_HANDLES = [
     // misschele
     // deviantsnyc
     // parkslopegowanus
-    // creatrixofchaos
     // lubegirl - ghosted
     // nyc_cgl_munch
     // eroticanyc
@@ -75,6 +74,8 @@ export const FETLIFE_HANDLES = [
     // rorpheus - in pagan's
     // dominus_eros - pagan's
     // goddessshakti - pagan's
+    // 'thetaillorgroup', //eventbrite
+
 ];
 
 export const INSTAGRAM_HANDLES = [
