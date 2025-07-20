@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ACRO_COMMUNITY_ID, Community, LocationArea, useCommonContext } from '../../../../Common/hooks/CommonContext';
-import { LocationAreaMenu, CommunityMenu } from '../../../../Common/Header/DefaultsMenus';
+import { ACRO_COMMUNITY_ID, Community, LocationArea, useCommonContext } from '../../../Common/hooks/CommonContext';
+import { LocationAreaMenu, CommunityMenu } from '../../../../_depracated/DefaultsMenus.tsx.deprecated';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { logEvent } from '../../../../Common/hooks/logger';
-import { useUpdateUserProfile } from '../../hooks/useUserProfile';
-import { useUserContext } from '../../hooks/UserContext';
-import { DEFAULT_LOCATION_AREA_ID, DEFAULT_COMMUNITY_ID, ALL_LOCATION_AREAS_ID, ALL_COMMUNITIES_ID } from '../../../../Common/hooks/CommonContext';
+import { logEvent } from '../../../Common/hooks/logger';
+import { useUpdateUserProfile } from '../hooks/useUserProfile';
+import { useUserContext } from '../hooks/UserContext';
+import { DEFAULT_LOCATION_AREA_ID, DEFAULT_COMMUNITY_ID, ALL_LOCATION_AREAS_ID, ALL_COMMUNITIES_ID } from '../../../Common/hooks/CommonContext';
 export const PreferencesScreen = () => {
     const { authUserId } = useUserContext();
     const {

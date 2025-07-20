@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Event, NormalizedEventInput } from "../types/commonTypes";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -50,3 +50,18 @@ export const useUpdateEvent = () => {
         }
     });
 };
+
+
+export const useToggleWeeklyPickEvent = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ eventId, status }: { eventId: number, status: boolean }) => {
+            await axios.put(`${API_BASE_URL}/events/weekly-picks/${eventId}`, {
+                status,
+            });
+            // Invalidate the "events" query to refetch updated data
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+        }
+    });
+}
