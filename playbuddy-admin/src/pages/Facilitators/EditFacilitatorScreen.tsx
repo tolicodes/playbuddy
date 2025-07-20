@@ -117,6 +117,9 @@ export default function EditFacilitatorScreen() {
     // Watch for preview URLs
     const profileImageUrl = watch('profile_image_url');
 
+    const f = list?.find((f) => f.id === editingId);
+
+
     // Populate form when editing
     useEffect(() => {
         if (editingId && list) {
@@ -404,7 +407,7 @@ export default function EditFacilitatorScreen() {
 
             {/* Events Manager */}
             {editingId && (
-                <EventsManager facilitatorId={editingId} events={events} organizers={organizers} refetch={refetch} />
+                <EventsManager facilitatorId={editingId} facilitatorName={f?.name!} events={events} organizers={organizers} refetch={refetch} />
             )}
         </Paper>
     );

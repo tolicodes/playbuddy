@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Box,
     Button,
@@ -21,12 +21,13 @@ import { createFilterOptions } from '@mui/material/Autocomplete';
 
 interface EventsManagerProps {
     facilitatorId: string;
+    facilitatorName: string;
     events: Event[] | undefined;
     organizers: { id: number; name: string }[] | undefined;
     refetch: () => void;
 }
 
-export function EventsManager({ facilitatorId, events, organizers, refetch }: EventsManagerProps) {
+export function EventsManager({ facilitatorId, facilitatorName, events, organizers, refetch }: EventsManagerProps) {
     const addFacEvent = useAddFacilitatorEvent();
     const deleteFacEvent = useRemoveFacilitatorEvent();
     const { data: list } = useFetchFacilitators();
@@ -43,9 +44,9 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
     // filter events by organizer
-    const availableEvents = events?.filter(
-        (e) => !selectedOrganizer || e.organizer.id === selectedOrganizer.id
-    );
+    const availableEvents = useMemo(() => events?.filter(
+        (e) => !selectedOrganizer || String(e.organizer.id) === String(selectedOrganizer.id)
+    ), [events, selectedOrganizer]);
 
     // handlers
     const handleAdd = async () => {
@@ -87,12 +88,21 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
                 getOptionDisabled={(option) => facilitatorEvents.some(ev => ev.id === option.id)}
                 renderOption={(props, option) => {
                     const isAdded = facilitatorEvents.some(ev => ev.id === option.id);
+                    const containsFacilitator = option.hosts?.includes(facilitatorName);
                     return (
-                        <li {...props}>
+                        <li {...props} style={{
+                            backgroundColor: (
+                                isAdded ? '#f0f0f0' : (
+                                    containsFacilitator ? 'red' : 'transparent'
+                                )
+                            ),
+                            color: isAdded ? '#666' : 'inherit',
+                        }}>
                             {isAdded && <CheckIcon fontSize="small" sx={{ mr: 1, color: 'primary.main' }} />}
+
                             {option.start_date && <span style={{ marginRight: 8 }}>{new Date(option.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}</span>}
 
-                            {option.name}
+                            {option.name} [{option.hosts?.join(', ')}]
                         </li>
                     );
                 }}
@@ -117,7 +127,7 @@ export function EventsManager({ facilitatorId, events, organizers, refetch }: Ev
                                 <TableCell>
                                     {ev.start_date && <span style={{ marginRight: 8 }}>{new Date(ev.start_date).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit' })}</span>}
 
-                                    {ev.name}
+                                    {ev.name} [{ev.hosts?.join(', ')}]
                                 </TableCell>
                                 <TableCell>
                                     <IconButton onClick={() => handleDelete(ev.id)}>
