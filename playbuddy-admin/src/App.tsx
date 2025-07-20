@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, Link as RouterLink } from "react-router-dom";
 import { AppBar, Toolbar, Tabs, Tab, Box } from "@mui/material";
-import WeeklyPicks from "./pages/WeeklyPicksScreen";
+import WeeklyPicks from "./pages/WeeklyPicks/WeeklyPicksScreen";
 import AddEventScreen from "./pages/Events/EditEventScreen";
 import FacilitatorsListScreen from "./pages/Facilitators/FacilitatorsListScreen";
 import EditFacilitatorScreen from "./pages/Facilitators/EditFacilitatorScreen";

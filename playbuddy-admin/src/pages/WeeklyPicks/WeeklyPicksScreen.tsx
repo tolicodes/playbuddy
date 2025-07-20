@@ -1,58 +1,40 @@
 // src/pages/WeeklyPicksScreen.tsx
 
 import React from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import { API_BASE_URL } from "../common/config";
-import { useFetchWishlistByCode, useToggleWishlistEvent } from "../common/db-axios/useWishlist";
-import { useFetchEvents } from "../common/db-axios/useEvents";
-
-// Define the shape of an Event returned by the PlayBuddy API
-interface EventItem {
-    id: number;
-    name: string;
-    organizer: {
-        name: string;
-    };
-    image_url?: string | null;
-    start_date: string; // ISO string
-    weekly_pick?: boolean; // indicates if this event is currently a weekly pick
-}
-
-// Define the shape of a wishlist entry (assuming it returns event IDs)
-type WishlistItem = number;
+import moment from 'moment-timezone';
+import { useFetchWishlistByCode } from "../../common/db-axios/useWishlist";
+import { useFetchEvents, useToggleWeeklyPickEvent } from "../../common/db-axios/useEvents";
+import { Event } from "../../common/types/commonTypes";
+import WeeklyPickWhatsappMessage from "./WeeklyPicksWhasappMessage";
 
 // Base URLs
 const PB_SHARE_CODE = "DCK9PD";
 
-// Utility: Given a Date, return the Date of the Sunday at the start of that week
-function getWeekStart(date: Date): Date {
-    const d = new Date(date);
-    const day = d.getDay(); // 0 = Sunday, 1 = Monday, ...
-    d.setDate(d.getDate() - day);
-    d.setHours(0, 0, 0, 0);
-    return d;
+function getNYWeekStart(date: string | Date): string {
+    const m = moment.tz(date, 'America/New_York');
+    const day = m.day(); // 0 (Sun) to 6 (Sat)
+    const diff = (day + 6) % 7; // convert Sun→6, Mon→0, Tue→1...
+    return m.subtract(diff, 'days').startOf('day').format('YYYY-MM-DD');
 }
+
 
 // Format a week range, e.g. "Jun 2 – Jun 8"
 function formatWeekRange(weekStart: Date): string {
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6);
-    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
-    return (
-        weekStart.toLocaleDateString(undefined, options) +
-        " – " +
-        weekEnd.toLocaleDateString(undefined, options)
-    );
+    const nyStart = moment.tz(weekStart, 'America/New_York');
+    const nyEnd = nyStart.clone().add(6, 'days');
+
+    // If months are different, show both. Otherwise, drop repeated month.
+    if (nyStart.month() !== nyEnd.month()) {
+        return `${nyStart.format('MMM D')} – ${nyEnd.format('MMM D')}`;
+    } else {
+        return `${nyStart.format('MMM D')} – ${nyEnd.format('D')}`;
+    }
 }
 
 export default function WeeklyPicksScreen() {
-    const queryClient = useQueryClient();
-
     const { data: wishlist, isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { data: events, isLoading: eventsLoading, error: eventsError } = useFetchEvents();
-    const { mutate: toggleWishlistEvent, isPending: toggleWishlistEventLoading, error: toggleWishlistEventError } = useToggleWishlistEvent();
-
+    const { mutate: toggleWeeklyPickEvent, isPending: toggleWeeklyPickEventLoading, error: toggleWeeklyPickEventError } = useToggleWeeklyPickEvent();
 
     // Build a Set of event IDs in wishlist for quick lookup
     const wishlistSet = React.useMemo(() => {
@@ -83,11 +65,9 @@ export default function WeeklyPicksScreen() {
     }
 
     // Group events by week start (Sunday)
-    const eventsByWeek: Record<string, EventItem[]> = {};
+    const eventsByWeek: Record<string, Event[]> = {};
     events!.forEach((evt) => {
-        const weekStart = getWeekStart(new Date(evt.start_date))
-            .toISOString()
-            .slice(0, 10);
+        const weekStart = getNYWeekStart(evt.start_date);
         if (!eventsByWeek[weekStart]) eventsByWeek[weekStart] = [];
         eventsByWeek[weekStart].push(evt);
     });
@@ -106,11 +86,12 @@ export default function WeeklyPicksScreen() {
 
             {/* Scrollable list of weeks */}
             <div style={styles.content}>
+                <WeeklyPickWhatsappMessage events={events!} />
                 {sortedWeekKeys.length === 0 ? (
                     <p style={styles.noEventsText}>No events available.</p>
                 ) : (
                     sortedWeekKeys.map((weekStartStr) => {
-                        const weekStartDate = new Date(weekStartStr);
+                        const weekStartDate = moment.tz(weekStartStr, 'America/New_York').toDate();
                         // Sort events within the week ascending by start_date
                         const weekEvents = eventsByWeek[weekStartStr].sort(
                             (a, b) =>
@@ -125,7 +106,7 @@ export default function WeeklyPicksScreen() {
                                 </h2>
                                 <ul style={styles.eventList}>
                                     {weekEvents.map((evt) => {
-                                        const isPicked = evt.weekly_pick;
+                                        const isWeeklyPick = evt?.weekly_pick;
                                         const isInWishlist = wishlistSet.has(evt.id);
                                         return (
                                             <li key={evt.id} style={styles.eventItem}>
@@ -150,6 +131,9 @@ export default function WeeklyPicksScreen() {
                                                     <p style={styles.eventOrganizer}>
                                                         {evt.organizer.name}
                                                     </p>
+                                                    <p style={styles.description}>
+                                                        {evt.short_description}
+                                                    </p>
                                                     <p style={styles.eventDate}>
                                                         {new Date(evt.start_date).toLocaleString([], {
                                                             month: "short",
@@ -165,8 +149,11 @@ export default function WeeklyPicksScreen() {
                                                     {/* Weekly Pick Checkbox */}
                                                     <input
                                                         type="checkbox"
-                                                        checked={isPicked}
-                                                        onChange={() => toggleWishlistEvent({ eventId: evt.id, isOnWishlist: wishlistSet.has(evt.id) })}
+                                                        checked={isWeeklyPick}
+                                                        onChange={() => toggleWeeklyPickEvent({
+                                                            eventId: evt.id,
+                                                            status: !isWeeklyPick
+                                                        })}
                                                         style={styles.checkbox}
                                                     />
                                                     {/* Read-only Wishlist Checkbox */}
@@ -313,5 +300,10 @@ const styles: { [key: string]: React.CSSProperties } = {
         textAlign: "center",
         color: "#6B7280",
         marginTop: "32px",
+    },
+    description: {
+        fontSize: "12px",
+        color: "#6B7280",
+        margin: "2px 0 0 0",
     },
 };

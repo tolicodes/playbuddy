@@ -6,7 +6,7 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
     const [promoCode, setPromoCode] = useState('');
     const [discount, setDiscount] = useState('');
     const [discountType, setDiscountType] = useState('percent'); // or 'fixed'
-    const [scope, setScope] = useState('organizer'); // or 'event'
+    const [scope, setScope] = useState('event'); // or 'event'
 
     const createPromo = useCreatePromoCode();
 
@@ -26,7 +26,7 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
         setPromoCode('');
         setDiscount('');
         setDiscountType('percent');
-        setScope('organizer');
+        setScope('event');
     };
 
     return (
@@ -78,8 +78,8 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
                         onChange={e => setScope(e.target.value)}
                         style={{ padding: 8 }}
                     >
-                        <option value="organizer">Organizer</option>
                         <option value="event">Event</option>
+                        <option value="organizer">Organizer</option>
                     </select>
                 </label>
             </div>

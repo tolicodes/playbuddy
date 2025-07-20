@@ -26,6 +26,7 @@
     "date-fns": "^4.1.0",
     "framer-motion": "^12.15.0",
     "jszip": "^3.10.1",
+    "moment-timezone": "^0.6.0",
     "papaparse": "^5.5.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

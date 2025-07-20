@@ -44,43 +44,43 @@ export default function BranchExtractor({
             complete: (res) => {
                 const rows = res.data
 
-                // Find the header row
+                // Step 1: Find the header row with "Title & Url"
                 const hdrIdx = rows.findIndex(r =>
-                    r.some(c => c.toLowerCase().includes('marketing title')) &&
-                    r.some(c => c.toLowerCase().includes('short url'))
+                    r.some(c => c.toLowerCase().includes('title & url'))
                 )
 
                 if (hdrIdx < 0) {
-                    setError('Could not find header row containing “marketing title” and “short url”.')
+                    setError('Could not find header row containing “Title & Url”.')
                     setLoading(false)
                     return
                 }
 
                 const header = rows[hdrIdx].map(c => c.toLowerCase())
-                const titleIdx = header.findIndex(c => c.includes('marketing title'))
-                const urlIdx = header.findIndex(c => c.includes('short url'))
+                const titleUrlIdx = header.findIndex(c => c.includes('title & url'))
 
-                if (titleIdx < 0 || urlIdx < 0) {
-                    setError('Header row is missing the required columns.')
+                if (titleUrlIdx < 0) {
+                    setError('Header row is missing the required "Title & Url" column.')
                     setLoading(false)
                     return
                 }
 
-                // Match entries like: [300] Peanutbutter ...
+                // Match entries like: [300] Peanutbutter ... / https://...
                 const re = new RegExp(`\\[(\\d+)\\]\\s*${escapeRegExp(assignee)}`, 'i')
+                const urlRe = /(https?:\/\/\S+)/
+
                 const out: Mapping[] = []
 
                 for (let i = hdrIdx + 1; i < rows.length; i++) {
                     const row = rows[i]
-                    const title = (row[titleIdx] || '').trim()
-                    const url = (row[urlIdx] || '').trim()
+                    const cell = (row[titleUrlIdx] || '').trim()
 
-                    const m = title.match(re)
-                    if (!m) continue
+                    const m = cell.match(re)
+                    const urlMatch = cell.match(urlRe)
+                    if (!m || !urlMatch) continue
 
                     const n = parseInt(m[1], 10)
                     if (n >= startNumber && n < startNumber + count) {
-                        const code = url.split('/').pop() || ''
+                        const code = urlMatch[1].split('/').pop() || ''
                         if (code) {
                             out.push({ printRunAssetNumber: n, code })
                         }
@@ -94,6 +94,7 @@ export default function BranchExtractor({
                 setMappings(out)
                 onExtract(out)
                 setLoading(false)
+
             },
             error: (err) => {
                 setError(err.message)
