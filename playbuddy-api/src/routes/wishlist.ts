@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
-import { fetchPaginatedEventRecords } from '../helpers/fetchPaginatedRecords.js';
+import { fetchPaginatedSwipeModeChoicesRecords } from '../helpers/fetchPaginatedSwipeModeChoicesRecords.js';
 import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 const router = Router();
@@ -88,7 +88,7 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
 router.get('/swipe_mode_choices', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
     try {
         if (!req.authUserId) throw new Error('Unauthorized')
-        const data = await fetchPaginatedEventRecords('swipe_mode_choices', req.authUserId);
+        const data = await fetchPaginatedSwipeModeChoicesRecords(req.authUserId);
 
         const swipeModeChosenWishlist = data
             .filter((choice) => choice.choice === 'wishlist')
@@ -300,7 +300,9 @@ router.get('/code/:share_code', async (req: Request, res: Response) => {
 
         return res.status(200).json(eventIds);
     } catch (error) {
-        console.error(`Error fetching calendar: ${error.message}`);
+        if (error instanceof Error) {
+            console.error(`Error fetching calendar: ${error.message}`);
+        }
         return res.status(500).json({ error: 'Failed to fetch calendar' });
     }
 });

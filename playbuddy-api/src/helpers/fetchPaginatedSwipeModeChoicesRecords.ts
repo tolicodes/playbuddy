@@ -1,7 +1,7 @@
 import { supabaseClient } from "../connections/supabaseClient.js";
 import moment from "moment";
 
-export async function fetchPaginatedRecords(tableName: string, userId: string, pageSize: number = 1000) {
+export async function fetchPaginatedSwipeModeChoicesRecords(userId: string, pageSize: number = 1000) {
     let allData: any[] = [];
     let from = 0;
     let to = pageSize - 1;
@@ -9,7 +9,7 @@ export async function fetchPaginatedRecords(tableName: string, userId: string, p
 
     while (hasMore) {
         const { data, error, count } = await supabaseClient
-            .from(tableName)
+            .from('swipe_mode_choices')
             .select('id, event_id, choice, event:events!inner(start_date)', { count: 'exact' })
             .eq('user_id', userId)
             .gte('event.start_date', moment().subtract(1, 'day').toISOString())
