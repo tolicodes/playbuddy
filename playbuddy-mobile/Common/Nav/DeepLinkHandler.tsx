@@ -18,10 +18,11 @@ import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFetchDeepLinks, useAddDeepLinkToUser } from '../hooks/useDeepLinks';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
-import { getAnalyticsPropsDeepLink, logEvent } from '../../Common/hooks/logger';
+import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import type { DeepLink } from '../../commonTypes';
 import DeepLinkNow from '@deeplinknow/react-native';
+import { useAnalyticsProps } from '../hooks/useAnalytics';
 
 
 const CLIPBOARD_CHECK_KEY = 'hasCheckedDeepLinkClipboard';
@@ -63,10 +64,11 @@ const deepLinkNowInit = async () => {
 }
 
 export default function DeepLinkHandler() {
+    const analyticsProps = useAnalyticsProps();
 
-    useEffect(() => {
-        deepLinkNowInit();
-    }, []);
+    // useEffect(() => {
+    //     deepLinkNowInit();
+    // }, []);
 
     const { data: deepLinks = [], isLoading: loadingLinks } = useFetchDeepLinks();
     const addDeepLink = useAddDeepLinkToUser();
@@ -78,9 +80,6 @@ export default function DeepLinkHandler() {
             const parsed = new URLParse(url)
             const urlPath = parsed.pathname;
             const searchParams = parsed.query;
-
-            // alert('urlPath: ' + JSON.stringify(searchParams))
-
             const slug = urlPath.split('/').pop();
             return deepLinks.find(d => d.slug === slug);
         },
@@ -94,24 +93,22 @@ export default function DeepLinkHandler() {
                 return;
             }
             const dl = matchDeepLink(url);
+            console.log(`DeepLinkHandler: ${url} -> ${dl?.slug}`);
             if (!dl) return;
 
             queue.current = null;
             setCurrentDeepLink(dl);
 
+
             logEvent(UE.DeepLinkDetected, {
-                auth_user_id: authUserId,
+                ...analyticsProps,
                 url,
                 source,
-                ...getAnalyticsPropsDeepLink(dl),
             });
 
             if (authUserId) {
                 addDeepLink.mutate(dl.id);
-                logEvent(UE.DeepLinkAttributed, {
-                    auth_user_id: authUserId,
-                    ...getAnalyticsPropsDeepLink(dl),
-                });
+                logEvent(UE.DeepLinkAttributed, analyticsProps);
             }
         },
         [loadingLinks, authUserId, matchDeepLink, setCurrentDeepLink, addDeepLink],

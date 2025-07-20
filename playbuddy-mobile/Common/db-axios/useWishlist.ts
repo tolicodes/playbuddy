@@ -11,17 +11,3 @@ export const useFetchWishlistByCode = (shareCode: string) => {
         }
     });
 }
-
-export const useToggleWishlistEvent = () => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: async ({ eventId, isOnWishlist }: { eventId: number, isOnWishlist: boolean }) => {
-            await axios.put(`${API_BASE_URL}/events/weekly-picks/${eventId}`, {
-                status: !isOnWishlist,
-            });
-            // Invalidate the "events" query to refetch updated data
-            queryClient.invalidateQueries({ queryKey: ["events"] });
-        }
-    });
-}
