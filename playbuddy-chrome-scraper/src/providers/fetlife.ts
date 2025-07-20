@@ -3,63 +3,52 @@ import type { EventResult } from '../types.js';
 import { postStatus, openTab, sleep, getRandomDelay, throttleHourly } from '../utils.js';
 import moment from 'moment-timezone';
 
+/**
+ * Parses a rawDatetime string into ISO start and end datetimes in UTC.
+ * Supports all known FetLife datetime formats.
+ *
+ * @param {string} rawDatetime - The raw datetime string (e.g. "Thu, Jul 17, 2025 at 7:00 PM - 10:30 PM")
+ * @param {string} timezone - IANA timezone string (default: 'America/New_York')
+ * @returns {{ start: string, end: string } | null}
+ */
+export function parseRawDatetime(rawDatetime: string, timezone = 'America/New_York') {
+    if (!rawDatetime) return null;
 
-function parseToISO(input: string): { start: string | null; end: string | null; error?: string; raw?: string } {
-    const tz = 'America/New_York';
-    const fmt = 'ddd, MMM D, YYYY h:mm A';
+    // Replace non-breaking spaces
+    const raw = rawDatetime.replace(/\u00a0/g, ' ').trim();
 
-    const cleaned = input
-        .replace(/\u00A0|\u2009|\u202F/g, ' ')
-        .replace(/\u2013|\u2014/g, '-')
-        .replace(/EDT|EST/g, '')
-        .trim();
+    let startStr, endStr;
 
-    const lines = cleaned
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(Boolean);
+    if (raw.startsWith('From:')) {
+        // Format: From: Sat, Jul 19, 2025 at 7:00 PM Until: Sun, Jul 20, 2025 at 12:00 AM
+        const match = raw.match(/From:\s*(.+?)\s*Until:\s*(.+)/);
+        if (!match) return null;
+        [, startStr, endStr] = match;
+    } else {
+        // Format: Thu, Jul 17, 2025 at 7:00 PM - 10:30 PM
+        const match = raw.match(/^(.+?) at (.+?) - (.+)$/);
+        if (!match) return null;
 
-    try {
-        if (lines.length >= 3 && lines[0].toLowerCase().startsWith('starts in')) {
-            const [, dateLine, timeRange] = lines;
-            const [startTime, endTime] = timeRange.split('-').map((s) => s.trim());
-            const start = moment.tz(`${dateLine} ${startTime}`, fmt, tz);
-            const end = moment.tz(`${dateLine} ${endTime}`, fmt, tz);
-            return { start: start.toISOString(), end: end.toISOString() };
-        }
-
-        if (lines.length === 1 && lines[0].includes(' at ') && lines[0].includes('-')) {
-            const [datePart, timePart] = lines[0].split(' at ').map((s) => s.trim());
-            const [startTime, endTime] = timePart.split('-').map((s) => s.trim());
-            const start = moment.tz(`${datePart} ${startTime}`, fmt, tz);
-            const end = moment.tz(`${datePart} ${endTime}`, fmt, tz);
-            return { start: start.toISOString(), end: end.toISOString() };
-        }
-
-        if (lines.length === 2 && lines[1].includes('-')) {
-            const [startTime, endTime] = lines[1].split('-').map((s) => s.trim());
-            const start = moment.tz(`${lines[0]} ${startTime}`, fmt, tz);
-            const end = moment.tz(`${lines[0]} ${endTime}`, fmt, tz);
-            return { start: start.toISOString(), end: end.toISOString() };
-        }
-
-        if (lines.length >= 5 && lines[2].toLowerCase().startsWith('until')) {
-            const start = moment.tz(`${lines[0]} ${lines[1]}`, fmt, tz);
-            const end = moment.tz(`${lines[3]} ${lines[4]}`, fmt, tz);
-            return { start: start.toISOString(), end: end.toISOString() };
-        }
-
-        if (lines.length >= 6 && lines[0].toLowerCase().startsWith('from') && lines[3].toLowerCase().startsWith('until')) {
-            const start = moment.tz(`${lines[1]} ${lines[2]}`, fmt, tz);
-            const end = moment.tz(`${lines[4]} ${lines[5]}`, fmt, tz);
-            return { start: start.toISOString(), end: end.toISOString() };
-        }
-
-        throw new Error('Unrecognized datetime format');
-    } catch (err: any) {
-        return { start: null, end: null, error: err.message, raw: input };
+        const [, datePart, startTime, endTime] = match;
+        startStr = `${datePart} at ${startTime}`;
+        endStr = `${datePart} at ${endTime}`;
     }
+
+    const start = moment.tz(startStr, 'ddd, MMM D, YYYY [at] h:mm A', timezone);
+    const end = moment.tz(endStr, 'ddd, MMM D, YYYY [at] h:mm A', timezone);
+
+    // If end is before start (e.g. 7 PM - 2 AM), add a day to end
+    if (end.isBefore(start)) {
+        end.add(1, 'day');
+    }
+
+    return {
+        start: start.toISOString(),
+        end: end.toISOString(),
+    };
 }
+
+
 
 function extractEventDetailFromPage(): EventResult {
     function cleanHtml(html: string | null): string {
@@ -160,12 +149,13 @@ export async function scrapeEvents(handles: string[]): Promise<EventResult[]> {
             });
 
             result.fetlife_handle = handle;
-            const { start, end, error } = parseToISO(result.rawDatetime);
-            result.start_date = start;
-            result.end_date = end;
+            const parsedDateTime = parseRawDatetime(result.rawDatetime);
 
-            if (error || !start || !end) {
-                errors.push({ name: result.name, ticket_url: result.ticket_url, error });
+            result.start_date = parsedDateTime?.start;
+            result.end_date = parsedDateTime?.end;
+
+            if (!parsedDateTime?.start || !parsedDateTime?.end) {
+                errors.push({ name: result.name, ticket_url: result.ticket_url, error: 'Invalid datetime' });
             }
 
             results.push(result);
@@ -226,12 +216,12 @@ export async function scrapeNearbyEvents(): Promise<EventResult[]> {
             func: extractEventDetailFromPage,
         });
 
-        const { start, end, error } = parseToISO(result.rawDatetime);
-        result.start_date = start;
-        result.end_date = end;
+        const parsedDateTime = parseRawDatetime(result.rawDatetime);
+        result.start_date = parsedDateTime?.start;
+        result.end_date = parsedDateTime?.end;
 
-        if (error || !start || !end) {
-            errors.push({ name: result.name, ticket_url: result.ticket_url, error });
+        if (!parsedDateTime?.start || !parsedDateTime?.end) {
+            errors.push({ name: result.name, ticket_url: result.ticket_url, error: 'Invalid datetime' });
         }
 
         results.push(result);
