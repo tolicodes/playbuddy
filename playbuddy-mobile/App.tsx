@@ -11,7 +11,7 @@ import * as Sentry from '@sentry/react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
 import { CommonProvider } from './Common/hooks/CommonContext';
 import { useFetchExpoUpdateAsync } from './Common/hooks/ExpoUpdate';
-import { BuddiesProvider } from './Pages/Buddies/hooks/BuddiesContext';
+import { BuddiesProvider } from './Common/hooks/BuddiesContext';
 import { queryClient } from './Common/hooks/reactQueryClient';
 import { PaperProvider } from 'react-native-paper';
 import DeepLinkHandler from './Common/Nav/DeepLinkHandler';
