@@ -59,6 +59,13 @@ export default function EventsListScreen() {
                     Import from CSV
                 </Button>
 
+                <Button
+                    variant="contained"
+                    onClick={() => navigate('/events/import-urls')}
+                >
+                    Import from URLs
+                </Button>
+
                 <TextField
                     fullWidth
                     label="Search Organizer"
@@ -107,6 +114,7 @@ export default function EventsListScreen() {
                         <TableHead>
                             <TableRow>
                                 <TableCell>Name</TableCell>
+                                <TableCell>Hosts</TableCell>
                                 <TableCell>Date</TableCell>
                                 <TableCell>Edit</TableCell>
                             </TableRow>
@@ -115,6 +123,7 @@ export default function EventsListScreen() {
                             {filteredEvents.map((event) => (
                                 <TableRow key={event.id}>
                                     <TableCell>{event.name}</TableCell>
+                                    <TableCell>{event.hosts?.join(', ')}</TableCell>
                                     <TableCell>{new Date(event.start_date).toLocaleString()} -
                                         {new Date(event.end_date).toLocaleString()}</TableCell>
                                     <TableCell>

@@ -65,3 +65,11 @@ export const useToggleWeeklyPickEvent = () => {
         }
     });
 }
+
+export const useImportEventURLs = () => {
+    return useMutation({
+        mutationFn: async (urls: string[]) => {
+            return axios.post(API_BASE_URL + '/events/import-urls', urls).then((response: any) => response.data);
+        },
+    });
+}

@@ -1,118 +1,86 @@
-import { NormalizedEventInput, EventDataSource } from "../commonTypes.js";
-import { ScraperParams } from '../scrapers/types.js'
-import scrapePartifulEvent from "./partiful.js";
-// import scrapeEventbriteAllEventsFromEventPage from "../scrapers/_depracated/scrapeEventbriteAllEventsFromOrganizerPage.js";
-// import scrapeLumaEventFromPage from "../scrapers/_depracated/luma.js";
+import { NormalizedEventInput } from '../commonTypes.js';
+import { ScraperParams } from '../scrapers/types.js';
+import { scrapeForbiddenTicketsEvent } from './forbiddenTickets.js';
+import scrapePartifulEvent from './partiful.js';
 
-type ScrapersConfig = {
-    [domain: string]: {
-        scraper: (params: ScraperParams) => Promise<NormalizedEventInput[] | null>;
-        eventRegex: RegExp;
-        eventRegexIndex: number;
-    };
+type ScraperEntry = {
+    scraper: (params: ScraperParams) => Promise<NormalizedEventInput[] | null>;
+    eventRegex: RegExp;
+    eventRegexIndex: number;
 };
 
-export const SCRAPERS: ScrapersConfig = {
-    "partiful.com": {
+const SCRAPERS: Record<string, ScraperEntry> = {
+    'partiful.com': {
         scraper: scrapePartifulEvent,
         eventRegex: /partiful\.com\/e\/([^/?#]+)/,
         eventRegexIndex: 1,
     },
-    //   // /This is used for whatsapp groups to scrape all events from an organizer
-    //   "eventbrite.com": {
-    //     scraper: scrapeEventbriteAllEventsFromEventPage,
-    //     eventRegex: /.*/,
-    //     eventRegexIndex: 0,
-    //   },
-    //   "lu.ma": {
-    //     scraper: scrapeLumaEventFromPage,
-    //     eventRegex: /.*/,
-    //     eventRegexIndex: 0,
-    //   },
+    'forbiddentickets.com': {
+        scraper: scrapeForbiddenTicketsEvent,
+        eventRegex: /.*/,
+        eventRegexIndex: 0,
+    },
 };
 
-// Timeout function that returns a promise that rejects after a specified time
-const timeout = (ms: number) =>
-    new Promise<null>((_, reject) => {
-        setTimeout(() => reject(new Error("Timeout")), ms);
-    });
+const timeout = (ms: number): Promise<null> =>
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
-const dedupeByLink = (arr: EventDataSource[]): EventDataSource[] => {
+const dedupe = (urls: string[]): string[] => {
     const seen = new Set();
-    return arr.filter((item) => {
-        const duplicate = seen.has(item.source_url);
-        seen.add(item.source_url);
-        return !duplicate;
+    return urls.filter((url) => {
+        const isNew = !seen.has(url);
+        seen.add(url);
+        return isNew;
     });
 };
 
-export const scrapeURLs = async (
-    links: EventDataSource[],
-): Promise<NormalizedEventInput[]> => {
-    const events: NormalizedEventInput[] = [];
+const getDomainKey = (url: string): string => {
+    const { hostname } = new URL(url);
+    const parts = hostname.replace(/^www\./, '').split('.');
+    return parts.slice(-2).join('.');
+};
 
-    // Remove duplicate URLs
-    const dedupedLinks = dedupeByLink(links);
+export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]> => {
+    const results: NormalizedEventInput[] = [];
+    const uniqueUrls = dedupe(urls);
 
-    // Process each link sequentially
-    for (let i = 0; i < dedupedLinks.length; i++) {
-        const eventDataSource = dedupedLinks[i];
-        const url = eventDataSource.source_url;
-        if (!url) continue;
-        console.log(`[${i}/${dedupedLinks.length}] Processing URL: ${url}`);
+    for (let i = 0; i < uniqueUrls.length; i++) {
+        const url = uniqueUrls[i];
+        console.log(`[${i + 1}/${uniqueUrls.length}] ${url}`);
 
-        const extractTLD = (url: string) => {
-            const domain = new URL(url).hostname.replace(/^www\./, "");
-            const parts = domain.split(".");
-            return parts.slice(-2).join("."); // Get the last two parts for the TLD
-        };
+        const domain = getDomainKey(url);
+        const config = SCRAPERS[domain];
 
-        const domain = extractTLD(url);
-
-        const scraperConfig = SCRAPERS[domain];
-
-        if (!scraperConfig) {
-            console.error(`No scraper available for domain: ${domain}`);
+        if (!config) {
+            console.warn(`No scraper configured for: ${domain}`);
             continue;
         }
 
-        const { scraper, eventRegex, eventRegexIndex } = scraperConfig;
-        const match = url.match(eventRegex);
+        const match = url.match(config.eventRegex);
+        if (!match || !match[config.eventRegexIndex]) {
+            console.warn(`Could not extract event ID from: ${url}`);
+            continue;
+        }
 
-        if (match && match[eventRegexIndex]) {
-            const eventId = match[eventRegexIndex];
-            console.log(`Scraping ${domain} URL: ${url} with event ID: ${eventId}`);
-            try {
-                // Set a timeout of 60 seconds (60000 milliseconds)
-                const eventsScraped = await Promise.race([
-                    scraper({
-                        url: eventId,
-                        eventDefaults: {
-                            ...eventDataSource,
-                        }
-                    }),
-                    timeout(200000),
-                ]);
+        const eventId = match[config.eventRegexIndex];
 
-                if (eventsScraped) {
-                    events.push(...eventsScraped);
-                }
-
-            } catch (error: any) {
-                if (error?.message === "Timeout") {
-                    console.warn(`Scraping ${url} timed out.`);
-                } else {
-                    console.error(`Error scraping ${url}:`, error);
-                }
+        try {
+            const scraped = await Promise.race([
+                config.scraper({ url: eventId, eventDefaults: {} }),
+                timeout(200000),
+            ]);
+            if (scraped) results.push(...scraped);
+        } catch (err: any) {
+            if (err?.message === 'Timeout') {
+                console.warn(`Timeout scraping: ${url}`);
+            } else {
+                console.error(`Error scraping ${url}:`, err);
             }
-        } else {
-            console.error(`No event ID found for URL: ${url}`);
         }
     }
 
-    console.log(`Scraped ${events.length} events`);
-
-    return events;
+    console.log(`✅ Scraped ${results.length} events`);
+    return results;
 };
 
 export default scrapeURLs;

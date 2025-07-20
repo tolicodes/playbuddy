@@ -15,6 +15,7 @@ import EventsListScreen from "./pages/Events/EventsListScreen";
 import ImportCSVScreen from "./pages/Events/ImportCSVScreen";
 import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
 import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
+import ImportEventURLsScreen from "./pages/Events/ImportEventURLsScreen";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -46,6 +47,7 @@ export default function App() {
     '/print-runs',
     '/promo-codes',
     '/events/import-fetlife',
+    '/events/import-urls',
     '/deep-links',
     '/deep-links/new',
     '/deep-links/:id'
@@ -77,6 +79,7 @@ export default function App() {
         <Route path="/events/add" element={<AddEventScreen />} />
         <Route path="/events/:id" element={<AddEventScreen />} />
         <Route path="/events/import-csv" element={<ImportCSVScreen />} />
+        <Route path="/events/import-urls" element={<ImportEventURLsScreen />} />
         <Route path="/facilitators" element={<FacilitatorsListScreen />} />
         <Route path="/facilitators/new" element={<EditFacilitatorScreen />} />
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />

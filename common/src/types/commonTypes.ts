@@ -375,7 +375,7 @@ export type Community = {
     join_code?: string | null;
 }
 
-type EventTypes =
+export type EventTypes =
     'event' |
     'play_party' |
     'munch' |
