@@ -48,7 +48,7 @@ export type NavStackProps = {
     };
 
     'Facilitators': undefined;
-    'FacilitatorProfile': {
+    'Facilitator Profile': {
         facilitatorId: string;
     };
 

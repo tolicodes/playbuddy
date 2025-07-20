@@ -16,6 +16,9 @@ import { useUserContext } from '../Auth/hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { LAVENDER_BACKGROUND } from '../../components/styles';
+import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { logEvent } from '../../Common/hooks/logger';
+import { UE } from '../../userEventTypes';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = 180;
@@ -30,6 +33,7 @@ interface DiscoverEventsTourProps {
 export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose }) => {
     const { authUserId } = useUserContext();
     const navigation = useNavigation<NavStack>();
+    const analyticsProps = useAnalyticsProps();
 
     // “left” = show SKIP overlay; “right” = show SAVE overlay
     const [stage, setStage] = useState<Stage>('right');
@@ -111,11 +115,16 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 
     const handlePrimaryPress = async () => {
         if (authUserId) {
+            logEvent(UE.DiscoverGameHideTourPressed, analyticsProps)
             // Mark that we have seen the intro
             await AsyncStorage.setItem(STORAGE_KEY, 'true');
+
             onClose();
         } else {
             // If not logged in, navigate to login/signup
+
+            logEvent(UE.DiscoverGameCreateAccountPressed, analyticsProps)
+
             navigation.navigate('AuthNav', { screen: 'Login Form' });
         }
     };

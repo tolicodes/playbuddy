@@ -12,17 +12,16 @@ import {
     TouchableOpacity,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
-import FAIcon from "react-native-vector-icons/FontAwesome";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { LAVENDER_BACKGROUND } from "../../components/styles";
-import type { Munch } from "../../commonTypes";
+import { type Munch } from "../../commonTypes";
+import { UE } from "../../userEventTypes";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
-import { LinkifyText } from "./LinkifyText";
-import { EventListItem } from "../Calendar/EventListItem";
 import { MunchDetailsEventsTab } from "./MunchDetailsEventsTab";
 import { MunchDetailsMainTab } from "./MunchDetailsMainTab";
+import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -35,6 +34,7 @@ export const MunchDetails = () => {
     const route = useRoute<MunchDetailsRouteProp>();
     const navigation = useNavigation<NavStack>();
     const { munchId } = route.params;
+    const analyticsProps = useAnalyticsProps();
 
     const { data: munches = [], isLoading } = useFetchMunches();
     const { data: events = [] } = useFetchEvents({ includeFacilitatorOnly: true });
@@ -48,7 +48,6 @@ export const MunchDetails = () => {
 
     useEffect(() => {
         navigation.setOptions({ title: "Munch Details" });
-        logEvent("munch_detail_screen_view", { munchId });
         const found = munches.find((m) => m.id === parseInt(munchId, 10));
         setMunch(found || null);
     }, [munchId, munches]);
@@ -69,24 +68,6 @@ export const MunchDetails = () => {
         );
     }
 
-    const formatHosts = (hosts: string | null) => {
-        if (!hosts) return null;
-        const list = hosts
-            .split(/\r?\n|,/) // handle newline or comma
-            .map((h) => h.trim())
-            .filter((h) => h.length > 0);
-        return list.join(" • ");
-    };
-
-    const renderField = (label: string, value: string | null) => {
-        if (!value) return null;
-        return (
-            <View style={styles.fieldRow} key={label}>
-                <Text style={styles.fieldLabel}>{label}</Text>
-                <Text style={styles.fieldValue}>{value}</Text>
-            </View>
-        );
-    };
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -96,7 +77,10 @@ export const MunchDetails = () => {
                         <TouchableOpacity
                             key={key}
                             style={[styles.tabButton, activeTab === key && styles.activeTab]}
-                            onPress={() => setActiveTab(key)}
+                            onPress={() => {
+                                setActiveTab(key);
+                                logEvent(UE.MunchDetailsTabSelected, { ...analyticsProps, tab: key });
+                            }}
                         >
                             <Text style={activeTab === key ? styles.activeTabText : styles.tabText}>
                                 {key === 'details' ? 'Munch Details' : 'Munch Events'}

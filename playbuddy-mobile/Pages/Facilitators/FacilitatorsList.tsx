@@ -12,9 +12,6 @@ import {
 } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
-import {
-    useFetchFacilitators,
-} from '../../Common/db-axios/useFacilitators';
 import { useFetchFollows, useFollow, useUnfollow } from '../../Common/db-axios/useFollows';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { LAVENDER_BACKGROUND } from '../../components/styles';
@@ -22,6 +19,9 @@ import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { Facilitator } from '../../Common/types/commonTypes';
+import { logEvent } from '../../Common/hooks/logger';
+import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { UE } from '../../userEventTypes';
 
 const ADMIN_EMAIL = 'toli@toli.me';
 
@@ -37,6 +37,8 @@ export const FacilitatorsList = ({
     const { data: events } = useFetchEvents({
         includeFacilitatorOnly: true
     });
+
+    const analyticsProps = useAnalyticsProps();
 
     const [searchQuery, setSearchQuery] = useState('');
     const { data: follows } = useFetchFollows(authUserId || undefined);
@@ -121,9 +123,13 @@ export const FacilitatorsList = ({
                                 { backgroundColor: '#fff' }
                             ]}
                             activeOpacity={0.8}
-                            onPress={() =>
+                            onPress={() => {
+                                logEvent(UE.FacilitatorListOpenFacilitatorProfile, {
+                                    ...analyticsProps,
+                                    facilitator_id: item.id
+                                });
                                 navigation.navigate('Facilitator Profile', { facilitatorId: item.id })
-                            }
+                            }}
                         >
                             <View style={styles.row}>
                                 {item.profile_image_url
@@ -159,7 +165,21 @@ export const FacilitatorsList = ({
                                 </View>
 
                                 <TouchableOpacity
-                                    onPress={() => isFollowing ? handleUnfollow(item.id) : handleFollow(item.id)}
+                                    onPress={() => {
+                                        if (isFollowing) {
+                                            logEvent(UE.FacilitatorListUnfollowFacilitator, {
+                                                ...analyticsProps,
+                                                facilitator_id: item.id
+                                            });
+                                            handleUnfollow(item.id)
+                                        } else {
+                                            logEvent(UE.FacilitatorListFollowFacilitator, {
+                                                ...analyticsProps,
+                                                facilitator_id: item.id
+                                            });
+                                            handleFollow(item.id)
+                                        }
+                                    }}
                                     style={styles.heartBtn}
                                 >
                                     <FAIcon

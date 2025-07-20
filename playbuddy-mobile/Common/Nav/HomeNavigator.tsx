@@ -3,13 +3,13 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { View, ActivityIndicator } from 'react-native';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { TabNavigator } from './TabNavigator';
-import { PromoScreen } from '../../Pages/Auth/screens/Promo/PromoScreen';
+import { PromosEntryScreen } from '../../Pages/Entries/PromosEntryScreen';
 import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
 import { MunchDetails } from '../../Pages/Munches/MunchDetails';
-import EventDetail from '../../Pages/Calendar/EventDetail';
+import EventDetails from '../../Pages/Calendar/EventDetails/EventDetails';
 import { useNavigation } from '@react-navigation/native';
 import { NavStack } from './NavStackType';
-import AuthNav from '../../Pages/Auth/screens/AuthNav';
+import AuthNav from '../../Pages/Auth/AuthNav';
 import { headerOptions } from '../Header/Header';
 import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile';
 
@@ -104,7 +104,7 @@ export function HomeStackNavigator() {
     }, [isLoadingUserProfile, authUserId, isProfileComplete, isLoading, isError, isSkippingWelcomeScreen, currentDeepLink, navigation]);
 
     const PromoScreenWrap = () => (
-        <PromoScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
+        <PromosEntryScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
     );
 
     if (isLoadingUserProfile) {
@@ -128,7 +128,7 @@ export function HomeStackNavigator() {
 
             <HomeStack.Screen name="Event Details"
                 options={headerOptions({ navigation, title: 'Event Details' })}
-                component={EventDetail} />
+                component={EventDetails} />
 
             {/* Detail Screens */}
             <HomeStack.Screen name="Community Events"

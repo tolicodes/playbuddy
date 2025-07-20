@@ -6,6 +6,9 @@ import { HEADER_PURPLE } from '../../../components/styles';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useFollows';
 import { FollowButton } from './FollowButton';
+import { logEvent } from '../../../Common/hooks/logger';
+import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { UE } from '../../../userEventTypes';
 
 export const ProfileHeader = ({
     facilitatorId,
@@ -33,6 +36,8 @@ export const ProfileHeader = ({
     const openLink = (url: string) =>
         Linking.canOpenURL(url).then(ok => (ok ? Linking.openURL(url) : Alert.alert('Cannot open link')));
 
+    const analyticsProps = useAnalyticsProps();
+
     return (
         <View style={[styles.header, paddingTop ? { paddingTop: 24 } : undefined]}>
             <View style={styles.headerTop}>
@@ -54,31 +59,58 @@ export const ProfileHeader = ({
                         {fetlife && (
                             <TouchableOpacity
                                 style={styles.socialItem}
-                                onPress={() => openLink(`https://fetlife.com/${fetlife}`)}
+                                onPress={() => {
+                                    openLink(`https://fetlife.com/${fetlife}`);
+                                    logEvent(UE.FacilitatorsProfileFetlifePressed, {
+                                        ...analyticsProps,
+                                        url: `https://fetlife.com/${fetlife}`,
+                                        facilitator_id: facilitatorId,
+                                    });
+                                }}
                             >
                                 <Image
                                     style={{ width: SOCIAL_ITEM_HEIGHT, height: SOCIAL_ITEM_HEIGHT }}
                                     source={{
-                                        uri:
-                                            'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png',
+                                        uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc//fetlife_icon_white.png',
                                     }}
                                 />
                             </TouchableOpacity>
                         )}
                         {website && (
-                            <TouchableOpacity style={styles.socialItem} onPress={() => openLink(website)}>
+                            <TouchableOpacity style={styles.socialItem} onPress={() => {
+                                openLink(website);
+                                logEvent(UE.FacilitatorsProfileWebsitePressed, {
+                                    ...analyticsProps,
+                                    url: website,
+                                    facilitator_id: facilitatorId,
+                                });
+                            }}>
                                 <FontAwesome name="globe" size={SOCIAL_ITEM_HEIGHT} color="white" />
                             </TouchableOpacity>
                         )}
                         {email && (
-                            <TouchableOpacity style={styles.socialItem} onPress={() => openLink(`mailto:${email}`)}>
+                            <TouchableOpacity style={styles.socialItem} onPress={() => {
+                                openLink(`mailto:${email}`);
+                                logEvent(UE.FacilitatorsProfileEmailPressed, {
+                                    ...analyticsProps,
+                                    email: email,
+                                    facilitator_id: facilitatorId,
+                                });
+                            }}>
                                 <FontAwesome name="envelope" size={SOCIAL_ITEM_HEIGHT} color="white" />
                             </TouchableOpacity>
                         )}
                         {email && (
                             <TouchableOpacity
                                 style={styles.bookButton}
-                                onPress={() => Linking.openURL(`mailto:${email}?subject=Book%20Private%20Session`)}
+                                onPress={() => {
+                                    Linking.openURL(`mailto:${email}?subject=Book%20Private%20Session`);
+                                    logEvent(UE.FacilitatorsProfileBookSessionPressed, {
+                                        ...analyticsProps,
+                                        email: email,
+                                        facilitator_id: facilitatorId,
+                                    });
+                                }}
                             >
                                 <Text style={styles.bookButtonText}>Book Session</Text>
                             </TouchableOpacity>

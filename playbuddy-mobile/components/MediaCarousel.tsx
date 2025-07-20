@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import Video from 'react-native-video';
 import type { Media } from '../Common/types/commonTypes.js';
-
+import { logEvent } from '@amplitude/analytics-react-native';
+import { UE } from '../Common/types/userEventTypes';
+import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 const { width, height } = Dimensions.get('window');
 const DOT_SIZE = 8;
 const DOT_SPACING = 8;
@@ -20,19 +22,23 @@ const DOT_SPACING = 8;
 export const MediaCarousel = ({
     medias,
     facilitatorName,
+    facilitatorId,
 }: {
     medias: Media[];
     facilitatorName?: string;
+    facilitatorId?: string;
 }) => {
     const [modalVisible, setModalVisible] = useState(false);
     const [startIndex, setStartIndex] = useState(0);
     const [activeIndex, setActiveIndex] = useState(0);
     const [loadedMap, setLoadedMap] = useState<Record<number, boolean>>({});
     const [audioMutedMap, setAudioMutedMap] = useState<Record<number, boolean>>({});
+    const analyticsProps = useAnalyticsProps();
 
     const gridRef = useRef<FlatList>(null);
     const carouselRef = useRef<FlatList>(null);
 
+    // analytics in onPress
     const openAt = (idx: number) => {
         setStartIndex(idx);
         setActiveIndex(idx);
@@ -52,11 +58,26 @@ export const MediaCarousel = ({
     };
 
     const toggleMute = (index: number) => {
+        logEvent(UE.MediaCarouselToggleMute, {
+            ...analyticsProps,
+            media_id: medias[index].id,
+            entity_type: 'facilitator',
+            entity_id: facilitatorId,
+        });
+
         setAudioMutedMap(m => ({ ...m, [index]: !m[index] }));
     };
 
     const renderThumbnail = ({ item: m, index }: { item: Media; index: number }) => (
-        <TouchableOpacity style={styles.thumbContainer} onPress={() => openAt(index)}>
+        <TouchableOpacity style={styles.thumbContainer} onPress={() => {
+            logEvent(UE.MediaCarouselOpenMedia, {
+                ...analyticsProps,
+                media_id: m.id,
+                entity_type: 'facilitator',
+                entity_id: facilitatorId,
+            });
+            openAt(index);
+        }}>
             <Image source={{ uri: m.thumbnail_url || m.storage_path }} style={styles.thumb} />
         </TouchableOpacity>
     );
@@ -77,7 +98,15 @@ export const MediaCarousel = ({
                 )}
 
                 {m.type === 'video' && (
-                    <TouchableOpacity style={styles.audioButton} onPress={() => toggleMute(index)}>
+                    <TouchableOpacity style={styles.audioButton} onPress={() => {
+                        toggleMute(index);
+                        logEvent(UE.MediaCarouselToggleMute, {
+                            ...analyticsProps,
+                            media_id: m.id,
+                            entity_type: 'facilitator',
+                            entity_id: facilitatorId,
+                        });
+                    }}>
                         <Text style={styles.audioButtonText}>{buttonLabel}</Text>
                     </TouchableOpacity>
                 )}
@@ -145,7 +174,15 @@ export const MediaCarousel = ({
                         ))}
                     </View>
 
-                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                    <TouchableOpacity style={styles.closeButton} onPress={() => {
+                        setModalVisible(false);
+                        logEvent(UE.MediaCarouselClose, {
+                            ...analyticsProps,
+                            media_id: medias[activeIndex].id,
+                            entity_type: 'facilitator',
+                            entity_id: facilitatorId,
+                        });
+                    }}>
                         <Text style={styles.closeText}>✕</Text>
                     </TouchableOpacity>
                 </View>

@@ -1,8 +1,23 @@
 import { View, StyleSheet, TouchableOpacity, Text, Modal, Dimensions, Image } from 'react-native';
 import Video from 'react-native-video';
 import { useRef, useState } from 'react';
+import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { logEvent } from '../../../Common/hooks/logger';
+import { UE } from '../../../userEventTypes';
 
-export const IntroVideo = ({ url, name, onAspectRatio }: { url: string; name: string; onAspectRatio: (aspectRatio: 'portrait' | 'landscape') => void; }) => {
+export const IntroVideo = ({
+    url,
+    name,
+    onAspectRatio,
+    facilitatorId
+}: {
+    url: string;
+    name: string;
+    onAspectRatio: (aspectRatio: 'portrait' | 'landscape') => void;
+    facilitatorId: string;
+}) => {
+    const analyticsProps = useAnalyticsProps();
+
     const videoRef = useRef(null);
     const [isModalVisible, setModalVisible] = useState(false);
     const [isInitialVideoMuted, setIsInitialVideoMuted] = useState(false);
@@ -20,11 +35,21 @@ export const IntroVideo = ({ url, name, onAspectRatio }: { url: string; name: st
         setModalVisible(true);
         setIsInitialVideoMuted(true);
         setIsFullscreenVideoMuted(false);
+        logEvent(UE.FacilitatorsProfileIntroVideoPressed, {
+            ...analyticsProps,
+            url: url,
+            facilitator_id: facilitatorId,
+        });
     };
 
     const handleModalClose = () => {
         setModalVisible(false);
         setIsFullscreenVideoMuted(true);
+        logEvent(UE.FacilitatorsProfileIntroVideoClosed, {
+            ...analyticsProps,
+            url: url,
+            facilitator_id: facilitatorId,
+        });
     };
 
     return (

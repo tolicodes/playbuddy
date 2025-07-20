@@ -108,6 +108,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const [fullNameFromOAuthedUser, setFullNameFromOAuthedUser] = useState<string | null>(null);
 
+    const analyticsProps = {
+        auth_user_id: session?.user?.id || null,
+        deep_link_id: currentDeepLink?.id,
+    };
+
     const value = useMemo(
         () => ({
             authUserId: session?.user?.id || null,
@@ -144,6 +149,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             fullNameFromOAuthedUser,
             setFullNameFromOAuthedUser,
+
+            analyticsProps,
         }),
         [
             session,

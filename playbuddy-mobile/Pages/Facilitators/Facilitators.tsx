@@ -6,11 +6,15 @@ import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { useFetchFacilitators } from '../../Common/db-axios/useFacilitators';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { FacilitatorsList } from './FacilitatorsList'; // You’ll need to extract your FlatList item rendering here
+import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { logEvent } from '../../Common/hooks/logger';
+import { UE } from '../../userEventTypes';
 
 type TabKey = 'my' | 'all';
 
 export const Facilitators = () => {
     const [activeTab, setActiveTab] = useState<TabKey>('all');
+    const analyticsProps = useAnalyticsProps();
 
     const { authUserId } = useUserContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
@@ -50,7 +54,13 @@ export const Facilitators = () => {
 
     return (
         <View style={styles.container}>
-            <TabBar tabs={tabs} active={activeTab} onPress={(value) => setActiveTab(value as TabKey)} />
+            <TabBar tabs={tabs} active={activeTab} onPress={(value) => {
+                setActiveTab(value as TabKey);
+                logEvent(UE.FacilitatorsTabChange, {
+                    ...analyticsProps,
+                    tab: value
+                });
+            }} />
 
             {visibleFacilitators.length === 0 ? (
                 <Text style={styles.emptyMessage}>

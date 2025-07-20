@@ -1,11 +1,7 @@
-import { NavStack } from "../../../Common/Nav/NavStackType";
-import { EventListItem } from "../../Calendar/EventListItem";
 import { LinkifyText } from "../../Munches/LinkifyText";
 import type { Event, Facilitator } from "../../../Common/types/commonTypes";
-import { FlatList } from "react-native-gesture-handler";
 import { View, StyleSheet } from "react-native";
-import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
-import EventCalendarView from "../../Calendar/EventCalendarView/EventCalendarView";
+import EventCalendarView from "../../Calendar/ListView/EventCalendarView";
 
 export const EventsTab = ({
     events,
@@ -33,7 +29,7 @@ export const EventsTab = ({
     }
 
     return (
-        <EventCalendarView events={events} />
+        <EventCalendarView events={events} entity="facilitator" entityId={facilitator.id} />
     );
 };
 

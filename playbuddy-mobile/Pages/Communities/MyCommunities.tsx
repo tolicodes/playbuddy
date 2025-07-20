@@ -7,6 +7,7 @@ import { logEvent } from "../../Common/hooks/logger";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { useLeaveCommunity } from "../../Common/hooks/useCommunities";
 import { UE } from "../../userEventTypes";
+import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 
 const CommunityList = ({
     title,
@@ -21,6 +22,7 @@ const CommunityList = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const [searchQuery, setSearchQuery] = useState('');
+    const analyticsProps = useAnalyticsProps();
 
     const filteredCommunities = communities
         .filter(community => community.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -34,7 +36,7 @@ const CommunityList = ({
                     title="Follow an organizer"
                     onPress={() => {
                         navigation.navigate('Organizers', { screen: 'All Organizers' });
-                        logEvent('my_communities_navigate_to_all_organizers');
+                        logEvent(UE.MyCommunitiesNavigateToAllOrganizers, analyticsProps);
                     }}
                 />
             </View>
@@ -60,14 +62,14 @@ const CommunityList = ({
                     <TouchableOpacity style={styles.communityItem}
                         onPress={() => {
                             navigation.navigate('Community Events', { communityId: item.id });
-                            logEvent(UE.CommunityListNavigateToCommunityEvents, { communityId: item.id });
+                            logEvent(UE.CommunityListNavigateToCommunityEvents, { ...analyticsProps, community_id: item.id });
                         }}
                     >
                         <View style={styles.communityItemContent}>
                             <Text style={styles.communityName}>{item.name}</Text>
                             <TouchableOpacity onPress={() => {
                                 onClickLeave.mutate({ community_id: item.id });
-                                logEvent('my_communities_unfollow_community', { communityId: item.id });
+                                logEvent(UE.CommunityListCommunityLeft, { ...analyticsProps, community_id: item.id });
                             }} style={styles.unfollowButton}>
                                 <Text style={styles.buttonText}>Unfollow</Text>
                             </TouchableOpacity>

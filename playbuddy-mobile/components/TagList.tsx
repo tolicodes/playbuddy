@@ -2,28 +2,40 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { commonStyles, HEADER_PURPLE } from './styles';
+import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
+import { logEvent } from '../Common/hooks/logger';
+import { UE } from '../userEventTypes';
 
-// Generic tag type
 export type TagType = {
     id: string;
     name: string;
-    icon?: string;           // MaterialIcons icon name
-    color?: string;          // pill background color
-    url?: string;            // clickable link
+    icon?: string;              // MaterialIcons icon name
+    color?: string;             // pill background color
+    url?: string;               // clickable link
+    facilitatorId?: string;     // for analytics
 };
 
-// Reusable Tag component (formerly Pill)
 const Tag: React.FC<{ tag: TagType }> = ({ tag }) => {
+    const analyticsProps = useAnalyticsProps();
     const content = (
-        <View style={[styles.tag, tag.color ? { backgroundColor: tag.color } : null]}>
-            {tag.icon && <MaterialIcons name={tag.icon} size={14} color="#fff" style={styles.icon} />}
-            <Text style={styles.tagText}>{tag.name}</Text>
+        <View style={[tagStyles.tag, tag.color ? { backgroundColor: tag.color } : null]}>
+            {tag.icon && <MaterialIcons name={tag.icon} size={14} color="#fff" style={tagStyles.icon} />}
+            <Text style={tagStyles.tagText}>{tag.name}</Text>
         </View>
     );
 
     if (tag.url) {
         return (
-            <TouchableOpacity onPress={() => Linking.openURL(tag.url!)}>
+            <TouchableOpacity onPress={() => {
+                logEvent(UE.TagPress, {
+                    ...analyticsProps,
+                    entity_type: 'facilitator',
+                    entity_id: tag.facilitatorId,
+                    url: tag.url,
+                    name: tag.name,
+                });
+                Linking.openURL(tag.url!);
+            }}>
                 {content}
             </TouchableOpacity>
         );
@@ -32,22 +44,15 @@ const Tag: React.FC<{ tag: TagType }> = ({ tag }) => {
     return content;
 };
 
-// Renders a list of Tag components
 export const TagList: React.FC<{ tags: TagType[] }> = ({ tags }) => (
-    <View style={[commonStyles.paddedHorizontal16, { paddingBottom: 8 }, styles.tagsRow]}>
+    <View style={[commonStyles.paddedHorizontalMedium, { paddingBottom: 8 }, tagStyles.tagsRow]}>
         {tags.map(t => (
             <Tag key={t.id} tag={t} />
         ))}
     </View>
 );
 
-/**
- * Styles specific to Tag component and TagList
- */
 export const tagStyles = StyleSheet.create({
-    /**
-     * Pill container
-     */
     tag: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -58,24 +63,17 @@ export const tagStyles = StyleSheet.create({
         height: 32,
         justifyContent: 'center',
     },
-    /**
-     * Text inside pill
-     */
     tagText: {
         color: '#fff',
         fontSize: 14,
     },
-    /**
-     * Icon margin
-     */
+
     icon: {
         marginRight: 4,
     },
-    /**
-     * Container for multiple tags
-     */
     tagsRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
     },
+
 });

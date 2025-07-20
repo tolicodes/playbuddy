@@ -1,27 +1,26 @@
 import { View } from "react-native";
-import * as amplitude from '@amplitude/analytics-react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import { TouchableOpacity } from "react-native";
-import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
-import { Badge } from "./Badge";
-import EventCalendarView from "../../Pages/Calendar/EventCalendarView/EventCalendarView";
-import MyCalendar from "../../Pages/MyCalendar";
+import EventCalendarView from "../../Pages/Calendar/ListView/EventCalendarView";
+import MyCalendar from "../../Pages/EventLists/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
-import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
-import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useNavigation } from "@react-navigation/native";
 import { headerOptions } from "../Header/Header";
-import { DiscoverPage } from "../../Pages/Discover/DiscoverPage";
 import { NavStack } from "./NavStackType";
 import { useFetchEvents } from "../db-axios/useEvents";
+import { UE } from "../../userEventTypes";
+import { logEvent } from "../hooks/logger";
+import { useAnalyticsProps } from "../hooks/useAnalytics";
+import { DiscoverPage } from "../../Pages/DiscoverPage";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
     const navigation = useNavigation<NavStack>();
+    const analyticsProps = useAnalyticsProps();
     const { data: events } = useFetchEvents();
 
     const WrappedEventCalendarView = () => {
@@ -35,7 +34,11 @@ export const TabNavigator = () => {
                     <TouchableOpacity
                         {...props}
                         onPress={(e) => {
-                            amplitude.logEvent('Tab Clicked', { tabName: props.accessibilityLabel });
+                            logEvent(UE.TabNavigatorTabClicked, {
+                                ...analyticsProps,
+                                // "Organizers, tab, 3 of 4" -> "Organizers"
+                                tab_name: props.accessibilityLabel?.replace(/,.*/g, '') || ''
+                            });
                             props.onPress?.(e);
                         }}
                     />

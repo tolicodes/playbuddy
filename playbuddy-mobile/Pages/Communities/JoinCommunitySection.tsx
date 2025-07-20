@@ -17,53 +17,54 @@ import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
 import { LAVENDER_BACKGROUND } from '../../components/styles';
+import { UE } from '../../userEventTypes';
 
 export const JoinCommunitySection = ({
     type = 'private',
 }: {
     type?: 'organizer' | 'private';
 }) => {
-    const [communityCode, setCommunityCode] = useState<string>('');
-    const joinCommunity = useJoinCommunity();
-    const { navigate } = useNavigation<NavStack>();
+    // const [communityCode, setCommunityCode] = useState<string>('');
+    // const joinCommunity = useJoinCommunity();
+    // const { navigate } = useNavigation<NavStack>();
 
     const {
         communities: { organizerPublicCommunities },
     } = useCommonContext();
 
-    const handleJoinCommunity = async () => {
-        if (!communityCode.trim()) {
-            alert('Please enter a valid community code');
-            return;
-        }
+    // const handleJoinPrivateCommunity = async () => {
+    //     if (!communityCode.trim()) {
+    //         alert('Please enter a valid community code');
+    //         return;
+    //     }
 
-        try {
-            const { status } = await joinCommunity.mutateAsync({
-                community_id: communityCode,
-                join_code: communityCode.trim(),
-                type: 'private',
-            });
+    //     try {
+    //         const { status } = await joinCommunity.mutateAsync({
+    //             community_id: communityCode,
+    //             join_code: communityCode.trim(),
+    //             type: 'private',
+    //         });
 
-            logEvent('join_community_section_join_community', { communityCode });
+    //         logEvent(UE.JoinCommunitySectionJoinCommunity, { communityCode });
 
-            if (status === 'pending') {
-                alert(`Applied to join community: ${communityCode}`);
-            } else {
-                alert(`Joined community: ${communityCode}`);
-                navigate('Communities', { screen: 'My Communities' });
-            }
-            setCommunityCode('');
-        } catch {
-            alert(`Failed to join community: ${communityCode}`);
-            logEvent('join_community_section_join_community_failed', {
-                communityCode,
-            });
-        }
-    };
+    //         if (status === 'pending') {
+    //             alert(`Applied to join community: ${communityCode}`);
+    //         } else {
+    //             alert(`Joined community: ${communityCode}`);
+    //             navigate('Communities', { screen: 'My Communities' });
+    //         }
+    //         setCommunityCode('');
+    //     } catch {
+    //         alert(`Failed to join community: ${communityCode}`);
+    //         logEvent(UE.JoinCommunitySectionJoinCommunityFailed, {
+    //             communityCode,
+    //         });
+    //     }
+    // };
 
     return (
         <View style={styles.container}>
-            {type === 'private' && (
+            {/* {type === 'private' && (
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
                     style={styles.joinContainer}
@@ -83,20 +84,19 @@ export const JoinCommunitySection = ({
                     />
                     <TouchableOpacity
                         style={styles.button}
-                        onPress={handleJoinCommunity}
+                        onPress={handleJoinPrivateCommunity}
                         activeOpacity={0.8}
                     >
                         <Text style={styles.buttonText}>Join</Text>
                     </TouchableOpacity>
                 </KeyboardAvoidingView>
-            )}
+            )} */}
 
             {type === 'organizer' && (
                 <View style={styles.listContainer}>
                     <CommunitiesList
                         title=""
                         communities={organizerPublicCommunities}
-                        flex={1}
                         showSearch={true}
                     />
                 </View>

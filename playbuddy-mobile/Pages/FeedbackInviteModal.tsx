@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
+import { logEvent } from '../Common/hooks/logger';
+import { UE } from '../userEventTypes';
 
 const SHOW_DELAY_MS = 24 * 60 * 60 * 1000; // 1 day
 const TIMER_KEY = 'feedback_modal_timer';
@@ -8,6 +11,7 @@ const HIDE_KEY = 'feedback_modal_hide';
 const WHATSAPP_URL = 'https://chat.whatsapp.com/IxE95YmQMc07umbD7vFrPM';
 
 export function FeedbackInviteModal() {
+    const analyticsProps = useAnalyticsProps();
     const [visible, setVisible] = useState(false);
 
     useEffect(() => {
@@ -30,11 +34,13 @@ export function FeedbackInviteModal() {
     }, []);
 
     const dismiss = async () => {
+        logEvent(UE.FeedbackInviteModalDismissed, analyticsProps);
         await AsyncStorage.setItem(HIDE_KEY, 'true');
         setVisible(false);
     };
 
     const openWhatsapp = async () => {
+        logEvent(UE.FeedbackInviteModalOpenWhatsapp, analyticsProps);
         await AsyncStorage.setItem(HIDE_KEY, 'true');
         Linking.openURL(WHATSAPP_URL);
         setVisible(false);

@@ -9,7 +9,6 @@ import {
     StyleSheet,
     FlatList,
     Switch,
-    Dimensions,
 } from "react-native";
 import FAIcon from "react-native-vector-icons/FontAwesome";
 import { useNavigation } from "@react-navigation/native";
@@ -60,7 +59,7 @@ export const CommunitiesList = ({
                         ? "organizer_public_community"
                         : "private_community",
             });
-            logEvent("community_list_community_joined", { communityId });
+            logEvent(UE.CommunityListCommunityJoined, { community_id: communityId });
         },
         [joinCommunity, entityType]
     );
@@ -68,7 +67,7 @@ export const CommunitiesList = ({
     const handleLeave = useCallback(
         (communityId: string) => {
             leaveCommunity.mutate({ community_id: communityId });
-            logEvent("community_list_community_left", { communityId });
+            logEvent(UE.CommunityListCommunityLeft, { community_id: communityId });
         },
         [leaveCommunity]
     );
@@ -108,7 +107,7 @@ export const CommunitiesList = ({
                                 screen: "Follow Organizers",
                             });
                             logEvent(
-                                "community_list_navigate_to_join_community_button_pressed"
+                                UE.CommunityListNavigateToJoinCommunityButtonPressed
                             );
                         }}
                     >
@@ -168,7 +167,7 @@ export const CommunitiesList = ({
                                     communityId: item.id,
                                 });
                                 logEvent(UE.CommunityListNavigateToCommunityEvents, {
-                                    communityId: item.id,
+                                    community_id: item.id,
                                 });
                             }}
                         >

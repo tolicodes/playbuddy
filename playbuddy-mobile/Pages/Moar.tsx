@@ -5,6 +5,8 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { MISC_URLS } from '../config'
 import { logEvent } from '../Common/hooks/logger';
+import { UE } from '../userEventTypes';
+import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 
 type LinkItem = {
     id: string;
@@ -78,8 +80,10 @@ const tools: LinkItem[] = [
 ];
 
 const Moar: React.FC = () => {
+    const analyticsProps = useAnalyticsProps();
+
     const handlePress = useCallback((url: string, title: string) => {
-        logEvent('moar_link_clicked', { title });
+        logEvent(UE.MoarLinkClicked, { ...analyticsProps, link_name: title });
         Linking.openURL(url);
     }, []);
 
@@ -112,7 +116,7 @@ const Moar: React.FC = () => {
             <Text style={styles.getInTouch}>Contact me at</Text>
 
             <TouchableOpacity onPress={() => {
-                logEvent('moar_get_in_touch_click_email');
+                logEvent(UE.MoarGetInTouchClickEmail, analyticsProps);
                 Linking.openURL('mailto:support@playbuddy.me');
             }}>
                 <Text style={{ color: 'blue', ...styles.getInTouch }}>support@playbuddy.me</Text>

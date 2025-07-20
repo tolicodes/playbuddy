@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import EventCalendarView from "../Calendar/EventCalendarView/EventCalendarView";
+import EventCalendarView from "../Calendar/ListView/EventCalendarView";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { logEvent } from "../../Common/hooks/logger";
 import { useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";

@@ -18,11 +18,10 @@ import { EventsTab } from './EventsTab';
 import { BioTab } from './BioTab';
 import { ProfileHeader } from './ProfileHeader';
 import { IntroVideo } from './IntroVideo';
-import { HEADER_PURPLE } from '../../../components/styles';
 import TabBar from '../../../components/TabBar';
-import { useCommonContext } from '../../../Common/hooks/CommonContext';
-import { useUserContext } from '../../Auth/hooks/UserContext';
-import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useMarketing';
+import { logEvent } from '../../../Common/hooks/logger';
+import { UE } from '../../../userEventTypes';
+import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 
 const STATIC_HEADER_HEIGHT = 140;
 
@@ -33,6 +32,8 @@ const TABS = [
 ]
 
 export default function ProfileScreen() {
+    const analyticsProps = useAnalyticsProps();
+
     const { height: SCREEN_HEIGHT } = Dimensions.get('window');
     const { params } = useRoute<any>();
     const facilitatorId = params?.facilitatorId;
@@ -92,6 +93,14 @@ export default function ProfileScreen() {
         extrapolate: 'clamp',
     });
 
+    const tabBar = <TabBar tabs={TABS} active={activeTab} onPress={(value) => {
+        setActiveTab(value);
+        logEvent(UE.FacilitatorsProfileTabChange, {
+            ...analyticsProps,
+            tab: value
+        });
+    }} />
+
     const header = showAnimatedHeader ? (
         <Animated.View style={[styles.headerContainer, { transform: [{ translateY }] }]}>
             <View style={[styles.videoContainer, { height: INTRO_VIDEO_HEIGHT }]}>
@@ -99,29 +108,24 @@ export default function ProfileScreen() {
                     url={facilitator.intro_video_url!}
                     name={facilitator.name}
                     onAspectRatio={setIntroVideoAspectRatio}
+                    facilitatorId={facilitator.id}
                 />
             </View>
             <View style={styles.staticHeaderContent}>
                 <ProfileHeader {...headerProps} paddingTop={true} />
-                <TabBar tabs={TABS} active={activeTab} onPress={setActiveTab} />
+                {tabBar}
             </View>
         </Animated.View>
     ) : (
         <View style={styles.staticHeaderContent}>
             <ProfileHeader {...headerProps} />
-            <TabBar
-                tabs={TABS}
-                active={activeTab}
-                onPress={setActiveTab}
-            />
+            {tabBar}
         </View>
     )
 
     return (
         <View style={styles.container}>
-            {activeTab === 'bio' ? header : (
-                <TabBar tabs={TABS} active={activeTab} onPress={setActiveTab} />
-            )}
+            {activeTab === 'bio' ? header : tabBar}
 
             {activeTab === 'bio' ? (
                 <Animated.ScrollView
@@ -139,9 +143,12 @@ export default function ProfileScreen() {
             ) : (
                 <View style={styles.bottom}>
                     {activeTab === 'events' && (
-                        <EventsTab events={combinedEvents} navigation={navigation} facilitator={facilitator} />
+                        <EventsTab events={combinedEvents} facilitator={facilitator} />
                     )}
-                    {activeTab === 'media' && <MediaCarousel medias={facilitator.media || []} facilitatorName={facilitator.name} />}
+                    {activeTab === 'media' && <MediaCarousel
+                        medias={facilitator.media || []}
+                        facilitatorName={facilitator.name}
+                        facilitatorId={facilitator.id} />}
                 </View>
             )}
         </View>

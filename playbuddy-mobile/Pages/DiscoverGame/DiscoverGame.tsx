@@ -1,5 +1,4 @@
 import React, {
-    useEffect,
     useState,
     useCallback,
     useMemo,
@@ -25,6 +24,8 @@ import { LAVENDER_BACKGROUND } from '../../components/styles';
 import { DiscoverEventsTour } from './DiscoverEventsTour';
 import { DiscoverEventsCard } from './DiscoverEventsCard';
 import { useShowDiscoverEventsTour } from './DiscoverEventsTour';
+import { UE } from '../../userEventTypes';
+import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -35,6 +36,7 @@ export const DiscoverGame: React.FC = () => {
     const { authUserId } = useUserContext();
     const recordSwipe = useRecordSwipeChoice();
     const swiperRef = useRef<Swiper<any> | null>(null);
+    const analyticsProps = useAnalyticsProps();
 
     const { visible: discoverEventsTourVisible, saveVisible: setDiscoverEventsTourVisible } = useShowDiscoverEventsTour();
 
@@ -77,11 +79,11 @@ export const DiscoverGame: React.FC = () => {
 
                 logEvent(
                     direction === 'right'
-                        ? 'swipe_mode_swipe_right'
-                        : 'swipe_mode_swipe_left',
+                        ? UE.SwipeModeSwipeRight
+                        : UE.SwipeModeSwipeLeft,
                     {
+                        ...analyticsProps,
                         event_id: event.id,
-                        event_name: event.name
                     }
                 );
 
@@ -119,14 +121,12 @@ export const DiscoverGame: React.FC = () => {
         // Analytics for undo
         const undoneEvent = cards[last.index];
         if (undoneEvent) {
-            logEvent('swipe_mode_undo', {
+            logEvent(UE.SwipeModeUndo, {
+                ...analyticsProps,
                 event_id: undoneEvent.id,
-                event_name: undoneEvent.name
             });
         }
     }, [swipedHistory, cards, toggleWishlistEvent]);
-
-
 
     if (!authUserId || discoverEventsTourVisible) {
         return <DiscoverEventsTour onClose={() => setDiscoverEventsTourVisible(false)} />
@@ -142,39 +142,49 @@ export const DiscoverGame: React.FC = () => {
         <View style={styles.container}>
             {discoverEventsTourVisible && <DiscoverEventsTour onClose={() => setDiscoverEventsTourVisible(false)} />}
 
-            <Swiper
-                ref={(ref) => (swiperRef.current = ref)}
-                cards={cards}
-                renderCard={(event) => (
-                    <DiscoverEventsCard
-                        key={event.id}
-                        event={event}
-                    />
-                )}
-                onSwipedRight={onSwipeRight}
-                onSwipedLeft={onSwipeLeft}
-                cardIndex={0}
-                stackSize={3}
-                verticalSwipe={false}
-                backgroundColor={LAVENDER_BACKGROUND}
-                stackSeparation={20}
-                overlayLabels={{
-                    left: {
-                        title: 'SKIP',
-                        style: styles.overlayLeft
-                    },
-                    right: {
-                        title: 'WISHLIST',
-                        style: styles.overlayRight
-                    }
-                }}
-            />
+            <View style={styles.swiperContainer}>
+
+                <Swiper
+                    ref={(ref) => (swiperRef.current = ref)}
+                    cards={cards}
+                    renderCard={(event) => (
+                        <View style={{ flex: 1 }}>
+                            <DiscoverEventsCard
+                                key={event.id}
+                                event={event}
+                            />
+                        </View>
+                    )}
+                    onSwipedRight={onSwipeRight}
+                    onSwipedLeft={onSwipeLeft}
+                    cardIndex={0}
+                    stackSize={3}
+                    verticalSwipe={false}
+                    backgroundColor={LAVENDER_BACKGROUND}
+                    stackSeparation={20}
+                    overlayLabels={{
+                        left: {
+                            title: 'SKIP',
+                            style: styles.overlayLeft
+                        },
+                        right: {
+                            title: 'WISHLIST',
+                            style: styles.overlayRight
+                        }
+                    }}
+                    cardStyle={{ flex: 1 }}
+                />
+            </View>
 
             {/* ─── Swipe Control Buttons Row ───────────────────────────────────────────── */}
             <View style={styles.controlsRow}>
                 <TouchableOpacity
                     style={styles.controlButton}
-                    onPress={() => swiperRef.current?.swipeLeft()}
+                    onPress={() => {
+                        swiperRef.current?.swipeLeft()
+                        // not sure how to get event index
+                        logEvent(UE.SwipeModeBottomPressLeft, analyticsProps);
+                    }}
                 >
                     <Icon name="close" size={32} color="#999" />
                 </TouchableOpacity>
@@ -188,7 +198,11 @@ export const DiscoverGame: React.FC = () => {
 
                 <TouchableOpacity
                     style={[styles.controlButton, styles.heartButton]}
-                    onPress={() => swiperRef.current?.swipeRight()}
+                    onPress={() => {
+                        swiperRef.current?.swipeRight()
+                        // not sure how to get event index
+                        logEvent(UE.SwipeModeBottomPressRight, analyticsProps);
+                    }}
                 >
                     <Icon name="favorite" size={32} color="#FF2675" />
                 </TouchableOpacity>
@@ -204,8 +218,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: LAVENDER_BACKGROUND,
-        justifyContent: 'center',
-        alignItems: 'center'
+    },
+    swiperContainer: {
+        flex: 1,
+        width: '100%',
+        paddingBottom: 120,
     },
     overlayLeft: {
         label: {

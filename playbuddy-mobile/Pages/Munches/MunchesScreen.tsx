@@ -16,6 +16,8 @@ import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { logEvent } from "../../Common/hooks/logger";
 import { useFetchMunches } from "../../Common/db-axios/useMunches";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
+import { UE } from "../../userEventTypes";
+import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 
 const GettingConsent = () => (
     <View style={styles.centeredContainer}>
@@ -30,6 +32,7 @@ const GettingConsent = () => (
 export const MunchesScreen = ({ showSearch = true }: { showSearch?: boolean }) => {
     const navigation = useNavigation<NavStack>();
     const [searchQuery, setSearchQuery] = useState("");
+    const analyticsProps = useAnalyticsProps();
 
     const { data: munches = [], isLoading } = useFetchMunches();
     const { data: events = [] } = useFetchEvents({ includeFacilitatorOnly: true });
@@ -112,7 +115,7 @@ export const MunchesScreen = ({ showSearch = true }: { showSearch?: boolean }) =
                             activeOpacity={0.8}
                             onPress={() => {
                                 navigation.navigate("Munch Details", { munchId: item.id.toString() });
-                                logEvent("munches_list_navigate_to_munch_detail", { munchId: item.id });
+                                logEvent(UE.MunchesListNavigateToMunchDetail, { ...analyticsProps, munch_id: item.id });
                             }}
                         >
                             <View style={styles.row}>

@@ -5,10 +5,13 @@ import { useUserContext } from '../hooks/UserContext';
 import { useUploadAvatar } from '../hooks/useUserProfile';
 import { logEvent } from '../../../Common/hooks/logger';
 import { AvatarCircle } from './AvatarCircle';
-import { Buddy } from '../../Buddies/hooks/BuddiesContext';
+import { UE } from '../../../Common/types/userEventTypes';
+import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 
 export const Avatar = ({ name }: { name?: string }) => {
     const { authUserId, userProfile, session } = useUserContext();
+
+    const analyticsProps = useAnalyticsProps();
 
     const [uploadImageUri, setUploadImageUri] = useState<string | null>(
         session?.user?.user_metadata?.avatar_url || null
@@ -22,19 +25,19 @@ export const Avatar = ({ name }: { name?: string }) => {
         if (uploadImageUri && authUserId) {
             setUploading(true);
             uploadAvatar.mutate({ avatarUrl: uploadImageUri });
-            logEvent('avatar_upload_started');
+            logEvent(UE.AvatarUploadStarted, analyticsProps);
         }
     }, [uploadImageUri, authUserId]);
 
     useEffect(() => {
         if (uploadAvatar.isSuccess) {
             setUploading(false);
-            logEvent('avatar_upload_completed');
+            logEvent(UE.AvatarUploadCompleted, analyticsProps);
         } else if (uploadAvatar.isError) {
             console.error('uploadAvatar.isError', uploadAvatar.error);
             setUploading(false);
             alert('Uploading Avatar failed');
-            logEvent('avatar_upload_failed');
+            logEvent(UE.AvatarUploadFailed, analyticsProps);
         }
     }, [uploadAvatar.isSuccess, uploadAvatar.isError]);
 
@@ -53,7 +56,7 @@ export const Avatar = ({ name }: { name?: string }) => {
             quality: 1,
         });
 
-        logEvent('avatar_press_pick_image');
+        logEvent(UE.AvatarPressPickImage, analyticsProps);
 
         if (!result.canceled) {
             setUploadImageUri(result.assets[0].uri);

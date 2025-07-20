@@ -4,6 +4,9 @@ import { FontAwesome } from '@expo/vector-icons';
 import { HEADER_PURPLE } from '../../../components/styles';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useFollows';
+import { logEvent } from '@amplitude/analytics-react-native';
+import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { UE } from '../../../userEventTypes';
 
 type Props = {
     followeeId: string;
@@ -15,6 +18,7 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const { mutate: follow } = useFollow(authUserId || undefined);
     const { mutate: unfollow } = useUnfollow(authUserId || undefined);
+    const analyticsProps = useAnalyticsProps();
 
     const isFollowed = follows?.[followeeType]?.includes(followeeId);
 
@@ -25,8 +29,16 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
         }
 
         if (isFollowed) {
+            logEvent(UE.FacilitatorsProfileUnfollowPressed, {
+                ...analyticsProps,
+                facilitator_id: followeeId,
+            });
             unfollow({ followee_type: followeeType, followee_id: followeeId });
         } else {
+            logEvent(UE.FacilitatorsProfileFollowPressed, {
+                ...analyticsProps,
+                facilitator_id: followeeId,
+            });
             follow({ followee_type: followeeType, followee_id: followeeId });
         }
     };

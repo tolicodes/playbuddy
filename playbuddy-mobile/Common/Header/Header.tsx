@@ -1,21 +1,22 @@
 import React, { Suspense, useEffect, useRef } from "react";
 import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, SafeAreaView } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import HeaderLoginButton from "../../Pages/Auth/Buttons/LoginButton";
+import HeaderLoginButton from "../../Pages/Auth/Buttons/HeaderLoginButton";
 import { NavStack } from "../Nav/NavStackType";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
-import { LAVENDER_BACKGROUND } from "../../components/styles";
+import { useAnalyticsProps } from "../hooks/useAnalytics";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
+    const analyticsProps = useAnalyticsProps();
     const onPress = () => {
         if (backToWelcome) {
             navigation.navigate('AuthNav', { screen: 'Welcome' });
         } else {
             navigation.goBack();
         }
-        logEvent(UE.HeaderBackButtonClicked);
+        logEvent(UE.HeaderBackButtonClicked, analyticsProps);
     };
 
     return (
@@ -27,10 +28,11 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
 
 // Custom Drawer Button
 export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
+    const analyticsProps = useAnalyticsProps();
     const onPressToggleDrawer = () => {
         // @ts-expect-error It does exist
         navigation.toggleDrawer();
-        logEvent(UE.HeaderDrawerButtonClicked);
+        logEvent(UE.HeaderDrawerButtonClicked, analyticsProps);
     };
     return (
         <TouchableOpacity onPress={onPressToggleDrawer} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Menu">
@@ -90,9 +92,27 @@ const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false
 };
 
 // Header Options for Navigation
-export const headerOptions = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => ({
+export const headerOptions = ({
+    navigation,
+    title,
+    isRootScreen = false,
+    backToWelcome = false,
+    analyticsProps,
+}: {
+    navigation: NavStack,
+    title: string,
+    isRootScreen?: boolean,
+    backToWelcome?: boolean,
+    analyticsProps?: any,
+}) => ({
     header: () => <Header navigation={navigation} title={title} isRootScreen={isRootScreen} backToWelcome={backToWelcome} />,
     headerShown: true,
+    onPress: () => {
+        logEvent(UE.HeaderBackButtonClicked, {
+            ...analyticsProps,
+            tab_name: title || ''
+        });
+    },
 });
 
 // Simple Header Options for Details Pages

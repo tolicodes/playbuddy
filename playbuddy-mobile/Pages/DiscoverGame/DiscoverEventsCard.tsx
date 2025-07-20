@@ -17,10 +17,10 @@ import { formatDate } from '../Calendar/hooks/calendarUtils';
 import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { logEvent } from '../../Common/hooks/logger';
 import type { Event } from '../../commonTypes';
-import { BadgeRow } from '../common/EventBadgesRow';
+import { BadgeRow } from '../../components/EventBadgesRow';
+import { UE } from '../../Common/types/userEventTypes';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-export const CARD_HEIGHT = 450;
+export const CARD_HEIGHT = 500;
 const IMAGE_HEIGHT = CARD_HEIGHT * 0.4;
 const DATE_PILL_HEIGHT = 28; // adjust if font/padding changes
 
@@ -236,8 +236,9 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({
     const description = event.short_description || '';
 
     const handleMoreInfo = useCallback(() => {
+        if (!event.event_url) return;
         Linking.openURL(event.event_url);
-        logEvent('discover_events_more_info_click', { eventId: event.id });
+        logEvent(UE.DiscoverEventsMoreInfoClicked, { event_id: event.id });
     }, [event]);
 
     const promoLabel = promo
@@ -248,7 +249,7 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({
 
     return (
         <CardWrapper>
-            <CardImage uri={getSmallAvatarUrl(event.image_url)} />
+            {event.image_url && <CardImage uri={getSmallAvatarUrl(event.image_url)} />}
 
             {/* Date pill overlapping image & content */}
             <DatePill date={day} />

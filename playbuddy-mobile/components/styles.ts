@@ -57,4 +57,6 @@ export const commonStyles = StyleSheet.create({
     // Empty States
     emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     emptyText: { color: '#000', fontSize: 16 },
+
+    paddedHorizontalMedium: { paddingHorizontal: 16 },
 });

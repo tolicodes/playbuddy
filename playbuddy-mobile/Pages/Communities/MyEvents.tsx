@@ -1,9 +1,9 @@
 import React, { useMemo } from "react";
 
-import { Community } from "../../../common/types/commonTypes";
+import { Community } from "../../Common/types/commonTypes";
 import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
-import EventCalendarView from "../Calendar/EventCalendarView/EventCalendarView";
+import EventCalendarView from "../Calendar/ListView/EventCalendarView";
 
 const getMyEvents = (myCommunities: Community[]) => {
     const { allEvents } = useCalendarContext();
