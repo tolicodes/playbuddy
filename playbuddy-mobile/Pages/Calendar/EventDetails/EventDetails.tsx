@@ -222,6 +222,11 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         <MaterialIcons name="location-pin" size={14} color="#fff" />
                         <Text style={styles.infoText}>{selectedEvent.location}</Text>
                     </View>
+
+                    {selectedEvent.price && <View style={styles.infoRowPill}>
+                        <MaterialIcons name="paid" size={14} color="#fff" />
+                        <Text style={styles.infoText}>{selectedEvent.price}</Text>
+                    </View>}
                 </View>
 
                 <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
