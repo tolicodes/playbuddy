@@ -1,0 +1,30 @@
+# fly.toml app configuration file generated for playbuddy-api on 2025-08-10T11:02:14-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'playbuddy-api'
+primary_region = 'iad'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  processes = ['app']
+
+  # Keep the machine warm; no scale-to-zero
+  auto_start_machines = true
+  auto_stop_machines  = false
+  min_machines_running = 1
+
+  # Still good to have limits to protect the instance
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 80
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1

@@ -1,0 +1,17 @@
+# flyctl launch added from .gitignore
+**/coverage
+**/dist
+**/node_modules
+**/cloudconfig
+**/.env
+**/dist
+**/**/*.d.ts
+**/**/*.d.ts.map
+
+**/src/scripts/qrcodes/inputs/*
+**/src/scripts/qrcodes/output/*
+
+# flyctl launch added from src/scripts/qrcodes/.gitignore
+src/scripts/qrcodes/**/output/*
+src/scripts/qrcodes/**/filled/*
+fly.toml

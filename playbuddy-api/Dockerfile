@@ -1,5 +1,5 @@
 # Use the official Node.js image as the base image
-FROM node:18-slim
+FROM node:20-slim
 
 # Set the working directory
 WORKDIR /usr/src/app
@@ -14,8 +14,6 @@ RUN npm install
 COPY . .
 
 RUN npm run build
-
-RUN cat /usr/src/app/dist/app.js
 
 # Expose the port on which your app will run
 EXPOSE 8080
