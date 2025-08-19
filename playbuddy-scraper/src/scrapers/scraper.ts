@@ -133,14 +133,20 @@ const runClassify = () => {
  */
 export const scrapeEvents = async (): Promise<NormalizedEventInput[]> => {
     // 1) Run selected scrapers based on SCRAPE_TARGETS
-    const scrapeResults: NormalizedEventInput[][] = [];
+    const resultPromises = [];
 
     for (const target of SCRAPE_TARGETS) {
-        const { fn, outputFile } = SCRAPERS[target];
-        const events = await fn();
-        writeJSON(outputFile, events);
-        scrapeResults.push(events);
+        const { fn } = SCRAPERS[target];
+        const eventsPromise = fn();
+
+        eventsPromise.then((events) => {
+            writeJSON(SCRAPERS[target].outputFile, events);
+        });
+
+        resultPromises.push(eventsPromise);
     }
+
+    const scrapeResults = await Promise.all(resultPromises);
 
     // 2) Merge all results in memory (no reading of old files)
     const allMerged: NormalizedEventInput[] = scrapeResults.flat();
