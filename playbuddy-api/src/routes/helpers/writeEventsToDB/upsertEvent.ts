@@ -8,7 +8,7 @@ import { syncEntityMedia } from "../syncMedia.js";
 
 export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
-type UpsertEventResult = 'inserted' | 'updated' | 'failed';
+export type UpsertEventResult = 'inserted' | 'updated' | 'failed';
 
 // stash originals before overriding
 const originalLog = console.log;

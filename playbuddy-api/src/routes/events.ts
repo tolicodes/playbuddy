@@ -7,7 +7,7 @@ import { fetchAndCacheData } from '../helpers/cacheHelper.js';
 import { Event } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
 import { authenticateAdminRequest, AuthenticatedRequest, authenticateRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
-import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
+import { upsertEvent, UpsertEventResult } from './helpers/writeEventsToDB/upsertEvent.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import scrapeURLs from '../scrapers/scrapeURLs.js';
@@ -55,7 +55,8 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 inclusivity
             )
         `)
-                .gte("start_date", nycMidnightUTC),
+                .gte("start_date", nycMidnightUTC)
+                .eq('hidden', false),
             flushCache
         );
 
@@ -151,6 +152,7 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
 });
 
 router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    console.log('post events')
     const event = req.body;
     const eventResult = await upsertEvent(event, req.authUserId)
     await flushEvents();
@@ -158,21 +160,44 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
     res.json(eventResult);
 });
 
+
+const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
+    const counts = {
+        created: 0,
+        updated: 0,
+        failed: 0,
+    };
+
+    for (const eventResult of eventResults) {
+        if (eventResult === 'updated') {
+            counts.updated++;
+        } else if (eventResult === 'inserted') {
+            counts.created++;
+        } else {
+            counts.failed++;
+        }
+    }
+
+    console.log(`Created: ${counts.created}`);
+    console.log(`Updated: ${counts.updated}`);
+    console.log(`Failed: ${counts.failed}`);
+}
+
 router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const events = req.body;
 
-    const eventResults = [];
+    const eventResults: UpsertEventResult[] = [];
     for (const event of events) {
         const eventResult = await upsertEvent(event, req.authUserId);
         eventResults.push(eventResult);
     }
+    printBulkAddStats(eventResults);
     await flushEvents();
 
     res.json(eventResults);
 });
 
 router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { id } = req.params;
     const event = req.body;
     const eventResult = await upsertEvent(event, req.authUserId)
     await flushEvents();
@@ -185,7 +210,7 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
 
     const scrapedEvents = await scrapeURLs(urls);
 
-    const eventResults = [];
+    const eventResults: UpsertEventResult[] = [];
     for (const event of scrapedEvents) {
         const eventResult = await upsertEvent(event, req.authUserId);
         eventResults.push(eventResult);

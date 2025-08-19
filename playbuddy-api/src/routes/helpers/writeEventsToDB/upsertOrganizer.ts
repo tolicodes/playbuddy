@@ -3,68 +3,164 @@
 import { CreateOrganizerInput } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 
+
 // Function to upsert an organizer and its associated community
 export async function upsertOrganizer(
     organizer: CreateOrganizerInput
-): Promise<{ organizerId?: string, communityId?: string }> {
-    const { name, url, original_id, instagram_handle, fetlife_handle } = organizer;
-    const id = organizer.id;
+): Promise<{ organizerId?: string; communityId?: string }> {
+    const { id, name, url, original_id, instagram_handle, fetlife_handle } = organizer;
 
-    const orIDClause = id ? `,id.eq.${id}` : '';
-    const orInstagramClause = organizer.instagram_handle ? `,instagram_handle.eq.${organizer.instagram_handle}` : '';
-    const orFetlifeClause = organizer.fetlife_handle ? `,fetlife_handle.eq.${organizer.fetlife_handle}` : '';
-    const orClause = `name.eq."${name}",aliases.cs.{"${name}"}${orIDClause}${orInstagramClause}${orFetlifeClause}`;
-
-    // Attempt to find an existing organizer by name or alias
-    const { data: existingOrganizer, error: fetchError } = await supabaseClient
-        .from("organizers")
-        .select("id, name")
-        .or(orClause)
-        .single();
-
-    // Handle any errors that occur during the fetch
-    if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Error fetching organizer:", fetchError);
-        throw fetchError;
+    // Require at least one identifier
+    if (!id && !name && !instagram_handle && !fetlife_handle) {
+        const msg = "ORGANIZER: No id, name, instagram_handle, or fetlife_handle provided";
+        console.error(msg);
+        throw new Error(msg);
     }
 
-    // Initialize organizerId with the existing organizer's ID if found
-    let organizerId = existingOrganizer?.id;
+    // Normalize + resolve a display name
+    const trimmedName = name?.trim();
+    const trimmedInsta = instagram_handle?.trim();
+    const trimmedFet = fetlife_handle?.trim();
+    const resolvedName = trimmedName || trimmedInsta || trimmedFet || "Unknown Organizer";
 
-    if (existingOrganizer) {
-        console.log(`ORGANIZER: Found existing organizer ${existingOrganizer.name}`)
-    }
+    type OrgRow = { id: string; name: string; aliases?: string[] | null };
 
-    // If we don't have an organizer name default to their fet or insta
-    const resolvedName = name || instagram_handle || fetlife_handle;
+    let existing: OrgRow | null = null;
 
-    // If no existing organizer is found, upsert a new organizer
-    if (!organizerId) {
-        const { data: insertedOrganizer, error: upsertError } = await supabaseClient
+    // 1) Prefer explicit ID
+    if (id && !existing) {
+        const { data } = await supabaseClient
             .from("organizers")
-            .upsert({ name: resolvedName, url, original_id, instagram_handle, fetlife_handle }, { onConflict: "name" })
-            .select("id, name")
-            .single();
+            .select("id,name,aliases")
+            .eq("id", id)
+            .maybeSingle();
+        if (data) existing = data as OrgRow;
+    }
 
-        // Handle any errors that occur during the upsert
-        if (upsertError) {
-            console.error("Error upserting organizer:", upsertError);
-            throw upsertError;
+    // 2) Exact name match
+    if (trimmedName && !existing) {
+        const { data } = await supabaseClient
+            .from("organizers")
+            .select("id,name,aliases")
+            .eq("name", trimmedName)
+            .maybeSingle();
+        if (data) existing = data as OrgRow;
+    }
+
+    // 3) Alias contains (text[]). If your column is JSONB, this still works in supabase-js.
+    if (trimmedName && !existing) {
+        const { data } = await supabaseClient
+            .from("organizers")
+            .select("id,name,aliases")
+            .contains("aliases", [trimmedName])
+            .maybeSingle();
+        if (data) existing = data as OrgRow;
+    }
+
+    // 4) Social handles
+    if (trimmedInsta && !existing) {
+        const { data } = await supabaseClient
+            .from("organizers")
+            .select("id,name,aliases")
+            .eq("instagram_handle", trimmedInsta)
+            .maybeSingle();
+        if (data) existing = data as OrgRow;
+    }
+
+    if (trimmedFet && !existing) {
+        const { data } = await supabaseClient
+            .from("organizers")
+            .select("id,name,aliases")
+            .eq("fetlife_handle", trimmedFet)
+            .maybeSingle();
+        if (data) existing = data as OrgRow;
+    }
+
+    let organizerId = existing?.id;
+
+    if (existing) {
+        // Merge aliases if we got a new human-readable name
+        const currentAliases = Array.isArray(existing.aliases) ? existing.aliases : [];
+        const needsAlias =
+            !!trimmedName &&
+            trimmedName !== existing.name &&
+            !currentAliases.includes(trimmedName);
+
+        const updatePatch: Record<string, any> = {
+            url: url ?? undefined,
+            original_id: original_id ?? undefined,
+            // prefer to *fill* missing handles; don't overwrite non-null values
+            instagram_handle: trimmedInsta ? undefined : undefined,
+            fetlife_handle: trimmedFet ? undefined : undefined
+        };
+
+        // Only set handles if not already present
+        if (trimmedInsta) {
+            updatePatch.instagram_handle = updatePatch.instagram_handle ?? trimmedInsta;
+        }
+        if (trimmedFet) {
+            updatePatch.fetlife_handle = updatePatch.fetlife_handle ?? trimmedFet;
         }
 
-        // Assign the newly inserted organizer's ID
-        organizerId = insertedOrganizer?.id;
+        if (needsAlias) {
+            updatePatch.aliases = Array.from(new Set([...currentAliases, trimmedName!]));
+        }
+
+        // Remove undefined keys to avoid overwriting with nulls unintentionally
+        Object.keys(updatePatch).forEach((k) => updatePatch[k] === undefined && delete updatePatch[k]);
+
+        if (Object.keys(updatePatch).length > 0) {
+            const { data, error } = await supabaseClient
+                .from("organizers")
+                .update(updatePatch)
+                .eq("id", existing.id)
+                .select("id,name")
+                .single();
+
+            if (error) {
+                console.error("ORGANIZER: update failed", error);
+                throw error;
+            }
+            organizerId = data?.id ?? organizerId;
+            console.log(`ORGANIZER: Updated ${data?.name || existing.name}`);
+        } else {
+            console.log(`ORGANIZER: No updates needed for ${existing.name}`);
+        }
+    } else {
+        // Insert with conflict on name so duplicates don't throw 23505
+        const insertPayload: Record<string, any> = {
+            name: resolvedName,
+            url,
+            original_id,
+            instagram_handle: trimmedInsta ?? null,
+            fetlife_handle: trimmedFet ?? null,
+            aliases: trimmedName ? [trimmedName] : []
+        };
+
+        const { data, error } = await supabaseClient
+            .from("organizers")
+            .upsert(insertPayload, { onConflict: "name" })
+            .select("id,name")
+            .single();
+
+        if (error) {
+            console.error("ORGANIZER: upsert failed", error);
+            throw error;
+        }
+
+        organizerId = data?.id;
+        console.log(`ORGANIZER: Upserted ${data?.name}`);
     }
 
-    // Upsert the community associated with the organizer
+    // Create/update the related community
     const communityId = await upsertCommunityFromOrganizer({
         organizerId: organizerId ?? "",
-        organizerName: existingOrganizer?.name ?? resolvedName
+        organizerName: existing?.name ?? resolvedName
     });
 
-    // Return the organizer and community IDs
     return { organizerId, communityId };
 }
+
 
 // Function to upsert a community from an organizer
 export const upsertCommunityFromOrganizer = async ({
@@ -86,6 +182,7 @@ export const upsertCommunityFromOrganizer = async ({
 
     // Return the existing community ID if it exists
     if (communityId) {
+        console.log(`ORGANIZER: Found existing community ${communityId}`);
         return communityId;
     }
 
