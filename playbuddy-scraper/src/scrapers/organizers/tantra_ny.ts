@@ -96,8 +96,6 @@ export const scrapeOrganizerTantraNY = async ({
       const vetted = [4, 11].includes(parseInt(event.ProductId));
       const play_party = event.ProductId === '4';
 
-      console.log('vetted', event.ProductId, vetted)
-
       return {
         ...eventDefaults,
 
