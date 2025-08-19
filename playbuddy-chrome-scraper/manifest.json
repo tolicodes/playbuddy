@@ -3,7 +3,7 @@
     "name": "Playbuddy Scraper Extension",
     "version": "1.0",
     "description": "Scrapes event data from FetLife and Instagram",
-    "permissions": ["tabs", "scripting", "downloads", "storage", "webRequest", "activeTab"],
+    "permissions": ["tabs", "scripting", "downloads", "storage", "webRequest", "activeTab", "alarms"],
     "host_permissions": ["<all_urls>"],
     "background": {
       "service_worker": "src/background.ts",
