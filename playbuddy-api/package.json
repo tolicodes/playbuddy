@@ -7,7 +7,7 @@
   "type": "module",
   "main": "./dist/app.js",
   "bin": {
-    "cmd": "./bin/cmd"
+    "cmd": "bin/cmd"
   },
   "files": [
     "dist/**.*"
@@ -26,7 +26,9 @@
     "logs": " gcloud beta run services logs read $SERVICE --project=$PROJECT --region=[REGION] --limit=10",
     "logs:tail": "gcloud beta run services logs tail $SERVICE --project=$PROJECT --region=$REGION",
     "script:importMunches": "source .env && npx tsx src/scripts/importMunches.ts",
-    "script:qrcodes": "source .env && npx tsx src/scripts/qrcodes/index.ts"
+    "script:qrcodes": "source .env && npx tsx src/scripts/qrcodes/index.ts",
+    "script:doSchedule": "npx tsx ./src/scripts/doSchedule/index.ts --main 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRae3avNWRn85A4Ox3WCjcQiLsOYDMLfalQ38FychB5fYCH50UVcYqgImm2pxyu0N0sRkP_oYJsmDmF/pub?gid=1774091174&single=true&output=csv' --workshops 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRae3avNWRn85A4Ox3WCjcQiLsOYDMLfalQ38FychB5fYCH50UVcYqgImm2pxyu0N0sRkP_oYJsmDmF/pub?gid=928344789&single=true&output=csv' --ion 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRae3avNWRn85A4Ox3WCjcQiLsOYDMLfalQ38FychB5fYCH50UVcYqgImm2pxyu0N0sRkP_oYJsmDmF/pub?gid=41278806&single=true&output=csv' --year 2025 --month 8 --tz America/New_York --jsonOut ../playbuddy-web/public/misc/do_summer_camp_2025.json --icsOut ../playbuddy-web/public/misc/do_summer_camp_2025.ics --fuzzyThreshold 0.4 --debugFuzzy && cd ../playbuddy-web && npm run deploy",
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org toli-zaslavskiy --project playbuddy-api ./dist && sentry-cli sourcemaps upload --org toli-zaslavskiy --project playbuddy-api ./dist"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -56,15 +58,20 @@
   },
   "dependencies": {
     "@google-cloud/logging": "11.0.0",
+    "@sentry/cli": "^2.51.1",
+    "@sentry/node": "^10.5.0",
     "@supabase/supabase-js": "^2.45.3",
     "axios": "^1.9.0",
     "cheerio": "^1.1.0",
     "cors": "^2.8.5",
+    "csv-parse": "^6.1.0",
     "csv-parser": "^3.2.0",
     "dotenv": "^16.4.5",
     "express": "4.18.2",
+    "fuse.js": "^7.1.0",
     "i18n-iso-countries": "^7.14.0",
     "ical-generator": "^7.2.0",
+    "ics": "^3.8.1",
     "ioredis": "^5.4.1",
     "luxon": "^3.7.1",
     "moment-timezone": "^0.5.45",
@@ -75,5 +82,7 @@
     "redis": "^4.7.0",
     "sharp": "^0.34.2",
     "turndown": "^7.2.0"
-  }
+  },
+  "keywords": [],
+  "author": ""
 }
