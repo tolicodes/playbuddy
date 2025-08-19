@@ -25,6 +25,15 @@ export const useFetchEvents = ({
     });
 };
 
+export const useFetchUnapprovedEvents = () => {
+    return useQuery<Event[]>({
+        queryKey: ['unapproved-events'],
+        queryFn: async () => {
+            return axios.get<Event[]>(API_BASE_URL + '/events/unapproved').then((response: any) => response.data);
+        },
+    });
+};
+
 export const useCreateEvent = () => {
     return useMutation<Event, unknown, NormalizedEventInput>({
         mutationFn: async (event: NormalizedEventInput) => {

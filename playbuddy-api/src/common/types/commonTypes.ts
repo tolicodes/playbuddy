@@ -1029,4 +1029,13 @@ export interface FollowPayload {
 }
 
 
+export interface FestivalScheduleEvent {
+    startDate: string;
+    endDate: string;
+    name: string;
+    location: string;
+    organizers: string[];
+    description?: string;
+}
+
 export type { UE };

@@ -1,0 +1,456 @@
+:root {
+  --lane-gap: 8px;
+  --cards-visible: 2.2;
+  --card-w: calc(
+    (100% - (var(--cards-visible) - 1) * var(--lane-gap)) / var(--cards-visible)
+  );
+
+  --tabbar-h: 60px;
+  --time-gutter-w: 64px; /* default desktop/tablet */
+}
+
+@media (max-width: 480px) {
+  :root {
+    --time-gutter-w: 56px;
+  }
+  .timeTick {
+    right: 6px;
+    font-size: 11px;
+  }
+}
+
+/* ---------- Global shell (fix black background, force light) ---------- */
+:global(html, body, #root) {
+  height: 100%;
+  background: #faf8ff;
+}
+:global(:root) {
+  color-scheme: light;
+}
+
+/* ---------- Page wrapper ---------- */
+.wrap {
+  padding: 16px;
+  background: #faf8ff;
+  min-height: 100svh; /* cover full viewport */
+  /* keep content above fixed tab bar */
+  padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 8px);
+}
+
+/* ===================== Date strip ===================== */
+.dateStrip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+  scrollbar-width: none; /* Firefox */
+}
+.dateStrip::-webkit-scrollbar {
+  display: none;
+} /* WebKit */
+
+.datePill,
+.datePillActive {
+  min-width: 56px;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #f1e9ff;
+  color: #333;
+  outline: none;
+}
+.datePill:focus-visible,
+.datePillActive:focus-visible {
+  box-shadow: 0 0 0 2px #8b5cf6, 0 0 0 4px rgba(139, 92, 246, 0.35);
+}
+.datePillActive {
+  background: #8b5cf6;
+  color: #fff;
+}
+.dateDow {
+  font-size: 11px;
+  opacity: 0.9;
+}
+.dateNum {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ===================== Search ===================== */
+.searchWrap {
+  position: relative;
+  margin: 6px 0 10px;
+}
+.search {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+.clearBtn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+/* ===================== States / header ===================== */
+.state {
+  padding: 24px;
+  color: #6b7280;
+}
+.dayHdr {
+  font-weight: 700;
+  font-size: 16px;
+  margin: 0 0 12px 2px;
+}
+
+/* ===================== Grid ===================== */
+/* Narrower gutter on small screens */
+
+/* Use the variable for the grid */
+.gridWrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--time-gutter-w) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.timeGutter {
+  position: relative;
+  border-right: 1px solid #eee;
+}
+.timeTick {
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ===================== Canvas ===================== */
+.canvas {
+  position: relative;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden; /* clip vertical bleed like Google Cal */
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04) inset;
+}
+.hourLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Now line */
+.nowLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #f43f5e;
+}
+.nowDot {
+  position: absolute;
+  right: 6px;
+  top: -5px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f43f5e;
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.5);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+  }
+}
+
+/* ===================== Overlap rows (clusters) ===================== */
+.cluster {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden; /* no vertical scrolling inside row */
+}
+/* ---------- Allow vertical scroll over the event area ---------- */
+/* This was `touch-action: pan-x`, which prevents page scroll on iOS.
+   Let the browser decide — you still get horizontal scroll in the row,
+   and vertical swipes will bubble to the page. */
+.clusterInner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--lane-gap);
+  flex-wrap: nowrap;
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+
+  /* REMOVE the old line:
+       touch-action: pan-x;
+    */
+  touch-action: auto; /* allow both x & y gestures */
+}
+
+/* ===================== Cards ===================== */
+.card {
+  contain: layout paint; /* avoids paint bleed with shadows/rounding */
+  position: relative;
+  box-sizing: border-box;
+  padding: 12px 14px 14px; /* comfy bottom padding */
+  border-radius: 18px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  /* ~2.2 visible per row */
+  flex: 0 0 var(--card-w);
+  scroll-snap-align: start;
+
+  /* desktop cap */
+  max-width: 250px;
+}
+@media (max-width: 768px) {
+  .card {
+    max-width: none;
+  }
+}
+
+/* 2-line title */
+.title {
+  color: #111; /* black title */
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.25;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+}
+
+/* Single-line info rows */
+.line {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.i {
+  margin-right: 6px;
+}
+.orgLine {
+  color: #374151;
+}
+
+/* Favorite hearts */
+.heart {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  color: #6b7280;
+  transition: color 0.2s ease;
+}
+.heart:hover {
+  color: #111;
+}
+.heartOn {
+  color: #ef4444;
+  transform: translateZ(0);
+}
+
+/* ===================== Modal (portal) ===================== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: grid; /* robust centering */
+  place-items: center;
+  z-index: 9999;
+  padding: 16px;
+}
+.modal {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  max-height: min(90vh, 720px);
+  background: #fff;
+  color: #111; /* ensure dark text */
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  overflow: auto; /* scroll inside if content is tall */
+}
+.modalHeader {
+  position: sticky; /* keep title visible */
+  top: 0;
+  padding: 14px 44px 14px 16px;
+  color: #111; /* readable over light gradients */
+  /* background gradient class is applied dynamically (grad*) */
+}
+.modalTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: #111;
+}
+.modalClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: #111;
+}
+
+.modalMeta {
+  display: grid;
+  gap: 6px;
+  margin: 12px 16px 10px;
+  color: #6b7280;
+  font-size: 14px;
+}
+.metaRow {
+  white-space: nowrap;
+}
+
+.modalChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 16px 12px;
+}
+.orgChip {
+  font-size: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.modalDesc {
+  margin: 0 16px 16px;
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+.modalActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px 16px;
+  border-top: 1px solid #f1f5f9;
+}
+.primaryBtn,
+.secondaryBtn {
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+}
+.primaryBtn {
+  background: #8b5cf6;
+  color: #fff;
+}
+.secondaryBtn {
+  background: #f3f4f6;
+  color: #111;
+}
+
+/* ===================== Bottom iOS-style tab bar ===================== */
+.tabBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--tabbar-h);
+  background: #ffffffcc; /* slight translucency */
+  backdrop-filter: saturate(150%) blur(10px);
+  border-top: 1px solid #e5e7eb;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 20;
+}
+.tabBtn,
+.tabBtnActive {
+  appearance: none;
+  border: none;
+  background: transparent;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  color: #6b7280;
+  cursor: pointer;
+  font: inherit;
+}
+.tabBtnActive {
+  color: #8b5cf6;
+  font-weight: 600;
+}
+.tabIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+.tabLabel {
+  font-size: 12px;
+  line-height: 1;
+}
+
+/* ===================== Location gradients ===================== */
+.gradPavilion {
+  background: linear-gradient(180deg, #e9d5ff, #f3e8ff);
+}
+.gradDining {
+  background: linear-gradient(180deg, #dbeafe, #e0f2fe);
+}
+.gradTemple {
+  background: linear-gradient(180deg, #ffd6e7, #ffe4e6);
+}
+.gradOther {
+  background: linear-gradient(180deg, #fef3c7, #fff7ed);
+}
