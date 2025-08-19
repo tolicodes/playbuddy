@@ -1,13 +1,13 @@
-import axios from "axios";
 import cheerio from 'cheerio';
 import TurndownService from 'turndown';
+import Table from 'cli-table3';
 
+
+import { addURLToQueue } from "../../helpers/getUsingProxy.js";
+
+import { EventbriteEvent } from './types.js';
 import { ScraperParams } from "../types.js";
 import { NormalizedEventInput } from "../../commonTypes.js";
-
-import { EventbriteEvent } from "./types.js";
-
-
 
 const filterByRegion = (event: EventbriteEvent, region: string) => {
   return event.venue?.address?.region === region;
@@ -15,12 +15,12 @@ const filterByRegion = (event: EventbriteEvent, region: string) => {
 
 const isRetreat = (event: EventbriteEvent) => {
   return new Date(event.end.utc).getTime() - new Date(event.start.utc).getTime() > 24 * 60 * 60 * 1000;
-
 }
 
 const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], eventDefaults: Partial<NormalizedEventInput>): NormalizedEventInput[] => {
   const nyEvents = eventbriteEvents.filter(event => filterByRegion(event, 'NY'));
-  console.log('FILTER: NY Events: ', eventbriteEvents.length, 'to', nyEvents.length);
+  console.log('Organizer', eventbriteEvents[0]?.organizer?.name);
+  console.log('FILTER: Total Events: ', eventbriteEvents.length, ' to NY Events:', nyEvents.length);
 
   return eventbriteEvents.map((event) => {
     const start_date = event.start.utc;
@@ -64,7 +64,7 @@ const mapEventbriteEventToEvent = (eventbriteEvents: EventbriteEvent[], eventDef
 
 const scrapeDescriptionFromEventPage = async (eventPageUrl: string): Promise<string> => {
   try {
-    const { data } = await axios.get(eventPageUrl);
+    const data = await addURLToQueue({ url: eventPageUrl, json: false, label: 'Get Eventbrite Event Page: ' + eventPageUrl });
     const $ = cheerio.load(data);
 
     const description = $('.event-description__content--expanded').html();
@@ -83,21 +83,10 @@ const scrapeDescriptionFromEventPage = async (eventPageUrl: string): Promise<str
   }
 }
 
-const waitBetweenRequests = () => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 5000);
-  });
-};
-
 const scrapeOrganizerPage = async ({
   url,
   eventDefaults,
 }: ScraperParams): Promise<NormalizedEventInput[]> => {
-  const separator = '-'.repeat(process.stdout.columns);
-  console.log('\n' + separator);
-  console.log(`SCRAPE ORGANIZER: [${url}]`);
-  console.log(separator + '\n');
-
   const allEvents: NormalizedEventInput[] = [];
 
   try {
@@ -107,34 +96,36 @@ const scrapeOrganizerPage = async ({
       return [];
     }
 
-    let page = 1;
-    const pageSize = 50;
+    for (let page = 1; page <= 5; page++) {
+      const apiUrl = `https://www.eventbrite.com/api/v3/organizers/${organizerId}/events/?expand=ticket_availability,organizer,venue&status=live&only_public=true&page=${page}`;
 
-    const apiUrl = `https://www.eventbrite.com/api/v3/organizers/${organizerId}/events/?expand=ticket_availability,organizer&status=live&only_public=true`
+      const response = await addURLToQueue({
+        url: apiUrl,
+        json: true,
+        label: `Get Eventbrite Organizer page ${page}: ${apiUrl}`
+      });
 
-    // old endpoint
-    // const endpointUrl = `https://www.eventbrite.com/org/${organizerId}/showmore/?page_size=1000&type=future&page=${page}`;
+      if (!response || (!response.events || response.events.length === 0)) {
+        console.error(`SCRAPE ORGANIZER: No events found for organizer ${url}`);
+        return [];
+      }
+      const rawEvents = response.events;
 
-    console.log(`Fetching API page ${page}: ${apiUrl}`);
+      const filteredEvents = rawEvents.filter((event: EventbriteEvent) => !event.is_series_parent);
+      const events = mapEventbriteEventToEvent(filteredEvents, eventDefaults);
 
-    const response = await axios.get(apiUrl);
+      const descriptions = await Promise.all(events.map((event) => scrapeDescriptionFromEventPage(event.event_url!)));
 
-    const rawEvents = response.data.events;
-    if (!rawEvents || rawEvents.length === 0) {
-      console.log(`No more events found on page ${page}.`);
+      for (let i = 0; i < events.length; i++) {
+        events[i].description = descriptions[i];
+      }
+
+      allEvents.push(...events);
+
+      if (!response.pagination?.has_more_items) {
+        break;
+      }
     }
-
-    const filteredEvents = rawEvents.filter((event: EventbriteEvent) => !event.is_series_parent);
-
-    const events = mapEventbriteEventToEvent(filteredEvents, eventDefaults);
-    for (const event of events) {
-      console.log(`Scraping description for: ${event.name}`);
-      event.description = await scrapeDescriptionFromEventPage(event.event_url!);
-      await waitBetweenRequests();
-    }
-
-    allEvents.push(...events);
-    // if (!response.data.pagination?.has_more_items) break;
   } catch (error) {
     console.error(`Error scraping Eventbrite API`, error);
   }
@@ -142,7 +133,28 @@ const scrapeOrganizerPage = async ({
   return allEvents;
 };
 
+function printTable(rows: Record<string, any>[]) {
+  if (rows.length === 0) {
+    console.log('(no data)');
+    return;
+  }
 
+  const headers = Object.keys(rows[0]);
+
+  const table = new Table({ head: headers });
+
+  for (const row of rows) {
+    table.push(headers.map(header => row[header]));
+  }
+
+  console.log(table.toString());
+}
+
+
+function extractOrganizerSlug(url: string): string {
+  const match = url.match(/eventbrite\.com\/o\/(.*)-\d+$/);
+  return match ? match[1] : 'unknown';
+}
 
 // MAIN FUNCTION
 export const scrapeEventsFromOrganizers = async ({
@@ -152,18 +164,64 @@ export const scrapeEventsFromOrganizers = async ({
   organizerURLs: string[];
   eventDefaults: Partial<NormalizedEventInput>;
 }): Promise<NormalizedEventInput[]> => {
-  const events = [];
+  console.time(`⏱️ scrapeEventsFromOrganizers (${organizerURLs.length} organizers)`);
 
-  for (const organizerURL of organizerURLs) {
-    const organizerEvents = await scrapeOrganizerPage({
-      url: organizerURL,
-      eventDefaults,
-    });
-    events.push(...organizerEvents);
-    await waitBetweenRequests();
+  const organizerResults: {
+    url: string;
+    promise: PromiseSettledResult<NormalizedEventInput[]>;
+  }[] = [];
+
+  const scrapePromises = organizerURLs.map(async (organizerURL) => {
+    const result = await Promise.resolve()
+      .then(() => scrapeOrganizerPage({ url: organizerURL, eventDefaults }))
+      .then(events => ({ status: 'fulfilled', value: events }))
+      .catch(error => ({ status: 'rejected', reason: error }));
+
+    organizerResults.push({ url: organizerURL, promise: result as PromiseSettledResult<NormalizedEventInput[]> });
+  });
+
+  await Promise.all(scrapePromises);
+
+  // Count how many times each organizer succeeded/failed
+  const organizerStats: Record<string, { success: number; failed: number }> = {};
+
+  for (const { url, promise } of organizerResults) {
+    const slug = extractOrganizerSlug(url);
+    if (!organizerStats[slug]) {
+      organizerStats[slug] = { success: 0, failed: 0 };
+    }
+
+    if (promise.status === 'fulfilled') {
+      organizerStats[slug].success += promise.value.length;
+    } else {
+      organizerStats[slug].failed += 1;
+    }
   }
 
-  return events;
+  // Convert to table format
+  const tableData = Object.entries(organizerStats).map(([organizer, { success, failed }]) => ({
+    organizer,
+    success,
+    failed,
+  }));
+
+  // Print the table
+  console.log('\n📊 Organizer scrape results (grouped by slug):');
+  printTable(tableData);
+
+  // Totals across all attempts
+  const totalSuccess = tableData.reduce((sum, row) => sum + row.success, 0);
+  const totalFailed = tableData.reduce((sum, row) => sum + row.failed, 0);
+  console.log(`✅ total success: ${totalSuccess}`);
+  console.log(`❌ total failed:  ${totalFailed}`);
+
+  console.timeEnd(`⏱️ scrapeEventsFromOrganizers (${organizerURLs.length} organizers)`);
+
+  const allEvents = organizerResults
+    .filter(r => r.promise.status === 'fulfilled')
+    .flatMap(r => (r.promise as PromiseFulfilledResult<NormalizedEventInput[]>).value);
+
+  return allEvents;
 };
 
 export default scrapeEventsFromOrganizers;
