@@ -20,13 +20,13 @@ app.head("/", (req: Request, res: Response): void => {
 });
 
 app.get("/scrape", async (req: Request, res: Response): Promise<void> => {
-  await scrapeEvents()
-    ;
+  // no promise for async due to time limit
+  scrapeEvents();
+
   res.send({
     status: "ok",
   });
 });
-
 
 let server: Server;
 export async function start(port: number | string): Promise<Server> {
