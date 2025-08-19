@@ -3,14 +3,14 @@ import dotenv from 'dotenv';
 import fs from 'fs/promises';
 import { systemPrompt } from './systemPrompt.js';
 import { supabaseClient } from '../../connections/supabaseClient.js';
-import { Classification } from '../../commonTypes.js';
-import { matchEventsToFacilitators } from './matchEventsToFacilitators.js';
+import { Classification, Event } from '../../commonTypes.js';
+import { flushEvents } from '../../helpers/flushCache.js';
 
 dotenv.config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-async function fetchQueuedEvents(): Promise<any[]> {
+async function fetchQueuedEvents(): Promise<Event[]> {
     const { data, error } = await supabaseClient
         .from('events')
         .select(`*,
@@ -27,6 +27,37 @@ async function fetchQueuedEvents(): Promise<any[]> {
     }
     return data ?? [];
 }
+
+// Adjust as needed to match your schema
+export type UUID = string;
+
+export type EventType =
+    | 'munch'
+    | 'play_party'
+    | 'class'
+    | 'social'
+    | 'workshop'
+    | string;
+
+export type EventUpdate = Partial<Omit<Event, 'id' | 'created_at'>> & {
+    id?: never;
+    created_at?: never;
+};
+
+export type CandidateEventPatch = Partial<Pick<
+    EventUpdate,
+    'type' | 'short_description' | 'vetted' | 'vetting_url' | 'location' | 'hosts' | 'price'
+>>;
+
+export type NullableGuardedKeys =
+    | 'vetted'
+    | 'non_ny'
+    | 'is_munch'
+    | 'play_party'
+    | 'price';
+
+export type EventUpdatePayload = Partial<EventUpdate>;
+
 
 async function updateSupabaseAndWriteToFile(
     classifications: Classification[],
@@ -50,25 +81,57 @@ async function updateSupabaseAndWriteToFile(
             );
 
 
-        const { error: updateError } = await supabaseClient
-            .from('events')
-            .update({
-                type: c.type,
-                short_description: c.short_description,
-                vetted: c.vetted,
-                vetting_url: c.vetting_url,
-                location: c.location,
-                non_ny: c.non_ny,
-                hosts: c.hosts,
-                is_munch: c.type === 'munch',
-                play_party: c.type === 'play_party',
-                price: c.price,
-            })
-            .eq('id', event_id);
 
-        if (upsertError || updateError) {
-            console.error(`Upsert error for ${event_id}:`, upsertError || updateError);
-            continue;
+        // Step 1: Fetch the current event
+        const { data: existing, error: fetchError } = await supabaseClient
+            .from('events')
+            .select('*')
+            .eq('id', event_id)
+            .single();
+
+        if (fetchError) {
+            console.error('Error fetching event:', fetchError);
+            return;
+        }
+
+        // Step 2: Build an update object only for null fields
+        const updateFields: EventUpdatePayload = {};
+
+        if (existing.vetted === null) {
+            updateFields.vetted = c.vetted;
+        }
+        if (existing.non_ny === null) {
+            updateFields.non_ny = c.non_ny;
+        }
+        if (existing.is_munch === null) {
+            updateFields.is_munch = c.type === 'munch';
+        }
+        if (existing.play_party === null) {
+            updateFields.play_party = c.type === 'play_party';
+        }
+        if (existing.price === null) {
+            updateFields.price = c.price;
+        }
+
+        // You can still update always-overwritten fields here
+        updateFields.type = c.type;
+        updateFields.short_description = c.short_description;
+        updateFields.vetting_url = c.vetting_url;
+        updateFields.location = c.location;
+        updateFields.hosts = c.hosts;
+
+        // Step 3: Only update if there's something to change
+        if (Object.keys(updateFields).length > 0) {
+            const { error: updateError } = await supabaseClient
+                .from('events')
+                .update(updateFields)
+                .eq('id', event_id);
+
+
+            if (upsertError || updateError) {
+                console.error(`Upsert error for ${event_id}:`, upsertError || updateError);
+                continue;
+            }
         }
 
         const { error: classificationUpdateError } = await supabaseClient
@@ -77,14 +140,16 @@ async function updateSupabaseAndWriteToFile(
             .eq('id', event_id);
 
         if (classificationUpdateError) {
-            console.error(`Update error for ${event_id}:`, updateError);
+            console.error(`Update error for ${event_id}:`, classificationUpdateError);
             continue;
         }
 
     }
 
-    await fs.writeFile(outputPath, JSON.stringify(classifications, null, 2));
-    console.log(`Wrote batch to ${outputPath}`);
+    await flushEvents();
+
+    await fs.appendFile(OUTPUT_PATH, JSON.stringify(classifications, null, 2));
+    console.log(`Wrote batch to ${OUTPUT_PATH}`);
 }
 
 function chunkArray(array: any[], chunkSize: number) {
@@ -95,6 +160,7 @@ function chunkArray(array: any[], chunkSize: number) {
 }
 
 const MAX_EVENTS = Infinity;
+const OUTPUT_PATH = 'classifications.json';
 
 export async function classifyEventsInBatches(batchSize = 10) {
     const events = await fetchQueuedEvents();
@@ -102,6 +168,8 @@ export async function classifyEventsInBatches(batchSize = 10) {
     const results = [];
 
     const batches = chunkArray(events.slice(0, MAX_EVENTS), batchSize);
+
+    await fs.unlink(OUTPUT_PATH);
 
     for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
@@ -126,6 +194,8 @@ export async function classifyEventsInBatches(batchSize = 10) {
 
         const classifications = JSON.parse(response.choices[0].message.content!).events;
         results.push(...classifications);
+        await updateSupabaseAndWriteToFile(results, OUTPUT_PATH);
+
         console.log('Classified', classifications);
     }
 
@@ -133,7 +203,6 @@ export async function classifyEventsInBatches(batchSize = 10) {
     // const facilitatorResults = await matchEventsToFacilitators(results, events);
     // console.log('Facilitator results', facilitatorResults);
 
-    await updateSupabaseAndWriteToFile(results, 'classifications.json');
 
     return results;
 }

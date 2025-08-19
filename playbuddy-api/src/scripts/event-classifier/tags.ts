@@ -26,7 +26,7 @@ export default [
     },
     {
         "name": "D/S",
-        "description": "Power exchange play.",
+        "description": "Power exchange play. List this ONLY if it's the main theme",
         "related": ["Relationship Dynamics", "Control", "Training", "Discipline", "Service", "Obedience", "Power"]
     },
     {
@@ -41,8 +41,8 @@ export default [
     },
     {
         "name": "Exhibitionism",
-        "description": "",
-        "related": ["Voyeurism", "Public Play", "Performance", "Karaoke"]
+        "description": "List this ONLY if it's the main theme. Play Parties are a good example",
+        "related": ["Play Party", "Voyeurism", "Public Play", "Performance", "Karaoke"]
     },
     {
         "name": "Knife Play",
@@ -174,14 +174,6 @@ export default [
         "description": "Non-monogamous relationships.",
         "related": ["ENM", "Relationships", "Communication", "Love"]
     },
-
-
-
-    {
-        "name": "Consent",
-        "description": "Communication and boundaries.",
-        "related": ["Communication", "Ethics", "Safety"]
-    },
     {
         "name": "Dating",
         "description": "Meeting partners.",
@@ -197,6 +189,18 @@ export default [
         "name": "Healing",
         "description": "Care and integration.",
         "related": ["Aftercare", "Somatic", "Emotional Support"],
+        low_priority: true
+    },
+    {
+        "name": "Community",
+        "description": "Don't use this tag",
+        "related": [],
+        low_priority: true
+    },
+    {
+        "name": "Connection",
+        "description": "Don't use this tag",
+        "related": [],
         low_priority: true
     },
 ]

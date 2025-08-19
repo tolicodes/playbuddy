@@ -176,7 +176,7 @@ export const event_classifications = [
     {
         "classification": "vetted",
         "name": "Vetted",
-        "description": `is this event vetted?`,
+        "description": `is this event vetted? Be SUPER CAREFUL to make sure this is a vetted event. It should say "vetted" or "membership required"`,
     },
 
     {
@@ -199,10 +199,10 @@ export const event_classifications = [
 
     {
         "classification": "hosts",
-        "name": "Hosts",
+        "name": "try to find the event hosts. the organizer (ex: Pagan's Paradise) is NOT the host but rather the organizer. take out any titles (ex: Erebus the Coach -> Erebus)",
         "description": `
             Output:
-            string[] // try to find the event hosts. the organizer (ex: Pagan's Paradise) is NOT the host but rather the organizer. take out any titles (ex: Erebus the Coach -> Erebus)
+            string[] 
         `,
     },
 ]
