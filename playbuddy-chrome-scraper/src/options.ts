@@ -1,4 +1,4 @@
-type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'instagram' | 'tickettailor';
+type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'instagram' | 'tickettailor' | 'pluraPromoStats';
 
 function bindScrapeButton(buttonId: string, sourceName: ScrapeSource) {
     const button = document.getElementById(buttonId);
@@ -18,3 +18,5 @@ bindScrapeButton('startFetlife', 'fetlife');
 bindScrapeButton('startFetlifeNearby', 'fetlifeNearby');
 bindScrapeButton('startInstagram', 'instagram');
 bindScrapeButton('startTicketTailor', 'tickettailor');
+bindScrapeButton('startPluraPromoStats', 'pluraPromoStats');
+

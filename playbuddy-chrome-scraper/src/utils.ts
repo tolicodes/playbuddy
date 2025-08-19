@@ -1,6 +1,6 @@
 import { TEST_MODE } from './config.js';
 
-const MAX_EVENTS_PER_HOUR = 25;
+const MAX_EVENTS_PER_HOUR = 1000;
 
 let eventTimestamps: number[] = [];
 
@@ -45,8 +45,9 @@ export async function openTab(url: string): Promise<chrome.tabs.Tab> {
 
             const timeout = setTimeout(() => {
                 chrome.tabs.onUpdated.removeListener(listener);
-                reject(new Error('Tab load timed out'));
-            }, 15000); // 15s timeout
+                console.log('tab timeout')
+                resolve(tab);
+            }, 30000); // 30s timeout
 
             function listener(tabId: number, info: any) {
                 if (tabId === tab.id && info.status === 'complete') {
@@ -57,6 +58,14 @@ export async function openTab(url: string): Promise<chrome.tabs.Tab> {
             }
 
             chrome.tabs.onUpdated.addListener(listener);
+        });
+    });
+}
+
+export async function closeTab(tab: chrome.tabs.Tab): Promise<void> {
+    return new Promise((resolve) => {
+        chrome.tabs.remove(tab.id!, () => {
+            resolve();
         });
     });
 }

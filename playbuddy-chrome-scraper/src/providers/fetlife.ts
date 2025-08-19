@@ -1,6 +1,6 @@
 import { TEST_MODE } from '../config.js';
 import type { EventResult } from '../types.js';
-import { postStatus, openTab, sleep, getRandomDelay, throttleHourly } from '../utils.js';
+import { postStatus, openTab, sleep, getRandomDelay, throttleHourly, closeTab } from '../utils.js';
 import moment from 'moment-timezone';
 
 /**
@@ -135,6 +135,8 @@ export async function scrapeEvents(handles: string[]): Promise<EventResult[]> {
             },
         });
 
+        await closeTab(tab);
+
         for (const url of links) {
             await throttleHourly();
             await getRandomDelay();
@@ -147,6 +149,8 @@ export async function scrapeEvents(handles: string[]): Promise<EventResult[]> {
                 target: { tabId: eventTab.id! },
                 func: extractEventDetailFromPage,
             });
+
+            await closeTab(eventTab);
 
             result.fetlife_handle = handle;
             const parsedDateTime = parseRawDatetime(result.rawDatetime);
@@ -203,6 +207,8 @@ export async function scrapeNearbyEvents(): Promise<EventResult[]> {
         },
     });
 
+    await closeTab(tab);
+
     for (const url of links) {
         await throttleHourly();
         await getRandomDelay();
@@ -223,6 +229,8 @@ export async function scrapeNearbyEvents(): Promise<EventResult[]> {
         if (!parsedDateTime?.start || !parsedDateTime?.end) {
             errors.push({ name: result.name, ticket_url: result.ticket_url, error: 'Invalid datetime' });
         }
+
+        await closeTab(eventTab);
 
         results.push(result);
         postStatus(`   ✅ Scraped "${result.name}"`);
