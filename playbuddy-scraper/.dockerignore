@@ -1,0 +1,14 @@
+# flyctl launch added from .gitignore
+**/node_modules
+**/.wwebjs*
+**/gmail_token.json
+**/gmail_credentials.json
+**/openai_token.json
+**/openai_key.json
+**/.env
+**/.env.production
+**/types
+**/dist
+**/data/outputs
+**/whatsapp-login
+fly.toml
