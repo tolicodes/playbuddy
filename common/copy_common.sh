@@ -37,6 +37,7 @@ TARGET_DIRECTORIES=(
   "playbuddy-mobile/Common"
   "playbuddy-api/src/common"
   "playbuddy-scraper/src/common"
+  "playbuddy-festival-schedule/src/common"
 )
 
 for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
@@ -48,7 +49,7 @@ for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
   fi
 done
 
-# Only for playbuddy-api and playbuddy-scraper, delete db-axios
+# Only for playbuddy-api and playbuddy-scraper, and scraper delete db-axios
 for TARGET_DIR in "playbuddy-api" "playbuddy-scraper"; do
   if [ -d "$TARGET_DIR/src/common/db-axios" ]; then
     rm -rf "$TARGET_DIR/src/common/db-axios"
@@ -56,5 +57,21 @@ for TARGET_DIR in "playbuddy-api" "playbuddy-scraper"; do
   fi
 done
 
+
+## CHROME EXTENSION ONLY NEEDS TYPES, no config
+SOURCE_DIRECTORY="common/src/types"
+
+TARGET_DIRECTORIES=(
+  "playbuddy-chrome-scraper/src/common/types"
+)
+
+for TARGET_DIR in "${TARGET_DIRECTORIES[@]}"; do
+  if [ -d "$TARGET_DIR" ]; then
+    cp -r "$SOURCE_DIRECTORY" "$TARGET_DIR"
+    echo "Copied $SOURCE_DIRECTORY to $TARGET_DIR"
+  else
+    echo "Target directory $TARGET_DIR does not exist. Skipping..."
+  fi
+done
 
 echo "Done!!"
