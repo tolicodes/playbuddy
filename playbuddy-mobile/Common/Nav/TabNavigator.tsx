@@ -76,16 +76,16 @@ export const TabNavigator = () => {
                 }}
             />
             <Tab.Screen
-                name="Discover"
+                name="Menu"
                 component={DiscoverPage}
                 options={{
                     tabBarIcon: ({ color, size }) => (
                         <View>
-                            <FAIcon name="search" size={size} color={color} />
+                            <FAIcon name="ellipsis-h" size={size} color={color} />
                             {/* {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />} */}
                         </View>
                     ),
-                    ...headerOptions({ navigation, title: 'Discover', isRootScreen: true }),
+                    ...headerOptions({ navigation, title: 'Menu', isRootScreen: true }),
                 }}
             />
         </Tab.Navigator>
