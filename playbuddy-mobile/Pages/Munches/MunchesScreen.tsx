@@ -161,7 +161,7 @@ export const MunchesScreen = ({ showSearch = true }: { showSearch?: boolean }) =
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND, paddingTop: 20 },
+    container: { flex: 1, backgroundColor: 'transparent', paddingTop: 20 },
     searchInput: {
         height: 44,
         marginHorizontal: 16,

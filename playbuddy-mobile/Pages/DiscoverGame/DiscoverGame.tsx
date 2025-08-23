@@ -217,7 +217,7 @@ const BUTTON_SPACING = 32;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
     },
     swiperContainer: {
         flex: 1,

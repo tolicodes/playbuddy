@@ -1,6 +1,6 @@
 import React, { View, TouchableOpacity, Text, StyleSheet } from "react-native";
 import moment from "moment-timezone";
-import { LAVENDER_BACKGROUND } from '../../../components/styles';
+import { LAVENDER_BACKGROUND, ACCENT_PURPLE, HEADER_PURPLE, WHITE, DARK_GRAY, MEDIUM_GRAY, LIGHT_GRAY, DISABLED_GRAY, BORDER_LAVENDER } from '../../../components/styles';
 
 export const WeekStrip = ({ weekDays, selectedDate, onSelectDay, hasEventsOnDay }: any) => (
     <View style={weekStripStyles.weekStrip}>
@@ -12,20 +12,24 @@ export const WeekStrip = ({ weekDays, selectedDate, onSelectDay, hasEventsOnDay 
                     key={day.toISOString()}
                     style={[
                         weekStripStyles.weekDay,
-                        selected && weekStripStyles.weekDaySelected,
-                        hasEvent && !selected && weekStripStyles.weekDayHasEvent
+                        selected && weekStripStyles.weekDaySelectedBackground,
+                        hasEvent && !selected && weekStripStyles.weekDayHasEvent,
+                        !hasEvent && weekStripStyles.weekDayNoEvent,
                     ]}
                     onPress={() => onSelectDay(day)}
                 >
                     <Text style={[
                         weekStripStyles.weekDayText,
-                        selected && weekStripStyles.weekDayTextSelected
+                        selected && weekStripStyles.weekDayTextSelected,
+                        !hasEvent && weekStripStyles.weekDayNoEventText
                     ]}>
                         {moment(day).format('ddd')}
                     </Text>
                     <Text style={[
                         weekStripStyles.weekDayNumber,
-                        selected && weekStripStyles.weekDayNumberSelected
+                        selected && weekStripStyles.weekDayNumberSelected,
+                        selected && weekStripStyles.weekDayTextSelected,
+                        !hasEvent && weekStripStyles.weekDayNoEventText
                     ]}>
                         {moment(day).format('D')}
                     </Text>
@@ -42,7 +46,7 @@ const weekStripStyles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: 10,
         paddingHorizontal: 8,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
     },
     weekDay: {
         alignItems: 'center',
@@ -50,24 +54,31 @@ const weekStripStyles = StyleSheet.create({
         paddingVertical: 6,
         paddingHorizontal: 10,
         borderRadius: 10,
+        backgroundColor: LAVENDER_BACKGROUND,
     },
     weekDayHasEvent: {
-        backgroundColor: '#f0e8fc',
+        backgroundColor: ACCENT_PURPLE,
     },
-    weekDaySelected: {
-        backgroundColor: '#9C6ADE',
+    weekDayNoEvent: {
+        backgroundColor: '#D9C8F6',
+    },
+    weekDayNoEventText: {
+        color: '#666',
+    },
+    weekDaySelectedBackground: {
+        backgroundColor: LAVENDER_BACKGROUND,
     },
     weekDayText: {
         fontSize: 12,
-        color: '#666',
+        color: 'white',
     },
     weekDayTextSelected: {
-        color: '#fff',
+        color: 'black',
         fontWeight: '600',
     },
     weekDayNumber: {
         fontSize: 16,
-        color: '#333',
+        color: 'white',
         fontWeight: '500',
     },
     weekDayNumberSelected: {

@@ -102,9 +102,9 @@ export const MunchDetails = () => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND },
+    container: { flex: 1, backgroundColor: 'transparent' },
     content: { paddingBottom: 40 },
-    centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: LAVENDER_BACKGROUND },
+    centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: 'transparent' },
     errorText: { fontSize: 16, color: "#E74C3C", textAlign: "center" },
     headerCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 4 }, android: { elevation: 3 } }) },
     titleRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },

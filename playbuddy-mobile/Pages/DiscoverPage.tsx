@@ -45,8 +45,6 @@ export const DiscoverPage = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Explore PlayBuddy</Text>
-
             {menuGroups.map((group, groupIndex) => (
                 <View key={`group-${groupIndex}`} style={styles.group}>
                     <View style={styles.groupCard}>
@@ -92,7 +90,7 @@ export const DiscoverPage = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
         paddingTop: 40,
         paddingHorizontal: 16,
     },

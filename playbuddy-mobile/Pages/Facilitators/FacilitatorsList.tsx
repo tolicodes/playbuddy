@@ -14,7 +14,6 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useNavigation } from '@react-navigation/native';
 import { useFetchFollows, useFollow, useUnfollow } from '../../Common/db-axios/useFollows';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { LAVENDER_BACKGROUND } from '../../components/styles';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import { NavStack } from '../../Common/Nav/NavStackType';
@@ -202,7 +201,7 @@ export const FacilitatorsList = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
         paddingTop: 12
     },
     searchInput: {

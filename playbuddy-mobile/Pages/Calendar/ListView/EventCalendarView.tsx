@@ -208,6 +208,11 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({
         setAndScrollToDate(nextDate);
     };
 
+    const goToToday = () => {
+        logEvent(UE.EventCalendarViewGoToToday, analyticsPropsPlusEntity);
+        setAndScrollToDate(new Date());
+    };
+
     const onPressFilters = () => {
         if (filtersEnabled) {
             logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
@@ -271,6 +276,7 @@ const EventCalendarView: React.FC<EventCalendarViewProps> = ({
                     currentDate={currentDate}
                     goToPrev={goToPrev}
                     goToNext={goToNext}
+                    goToToday={goToToday}
                 />
             )}
 
@@ -302,7 +308,7 @@ export default EventCalendarView;
 
 // Main Styles
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F2F2F2' },
-    calendarContainer: { width: '100%', overflow: 'hidden', backgroundColor: '#fff' },
+    container: { flex: 1, backgroundColor: 'transparent' },
+    calendarContainer: { width: '100%', overflow: 'hidden', backgroundColor: 'transparent' },
     eventListContainer: { flex: 1 },
 });

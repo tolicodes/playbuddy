@@ -224,7 +224,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 export const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
     },
 
     // ── Top Container ─────────────────────────────────────────────

@@ -81,7 +81,7 @@ export const Facilitators = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F6FF',
+        backgroundColor: 'transparent',
         paddingTop: 12,
     },
     emptyMessage: {

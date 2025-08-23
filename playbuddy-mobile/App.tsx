@@ -15,8 +15,6 @@ import { BuddiesProvider } from './Common/hooks/BuddiesContext';
 import { queryClient } from './Common/hooks/reactQueryClient';
 import { PaperProvider } from 'react-native-paper';
 import DeepLinkHandler from './Common/Nav/DeepLinkHandler';
-import { MaintainenceScreen } from './Pages/Maintainence';
-// import './Common/hooks/appsFlyer';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed');
 
@@ -39,7 +37,6 @@ const App = () => {
             <CalendarProvider>
               <PaperProvider>
                 <DeepLinkHandler />
-                {/* <MaintainenceScreen /> */}
                 <Nav />
               </PaperProvider>
             </CalendarProvider>

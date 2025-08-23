@@ -126,7 +126,7 @@ const SOCIAL_ITEM_HEIGHT = 30;
 
 const styles = StyleSheet.create({
     header: {
-        backgroundColor: HEADER_PURPLE,
+        backgroundColor: 'transparent',
         paddingHorizontal: 16,
         paddingBottom: 24,
         zIndex: 1,

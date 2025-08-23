@@ -16,7 +16,6 @@ import { NavStack } from "../../../Common/Nav/NavStackType";
 import { Event } from "../../../commonTypes";
 import { logEvent } from "../../../Common/hooks/logger";
 import { useUserContext } from "../../Auth/hooks/UserContext";
-import { LAVENDER_BACKGROUND } from "../../../components/styles";
 import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
 import { UE } from "../../../Common/types/userEventTypes";
 import { getEventAnalyticsProps, useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
@@ -75,14 +74,17 @@ const EventList: React.FC<EventListProps> = ({
     };
 
     const renderSectionHeader = ({ section }: { section: SectionType }) => (
-        <View style={styles.sectionHeaderWrapper}>
-            <Text style={styles.sectionHeader}>{section.title}</Text>
+        <View style={styles.sectionHeaderOuterWrapper}>
+            <View style={styles.sectionHeaderPill}>
+                <Text style={styles.sectionHeaderText}>{section.title}</Text>
+            </View>
         </View>
     );
 
     return (
         <SectionList
             ref={sectionListRef}
+            style={styles.sectionList}
             sections={sections}
             keyExtractor={(item, i) => `${i}_${item.id}`}
             stickySectionHeadersEnabled={true}
@@ -90,7 +92,7 @@ const EventList: React.FC<EventListProps> = ({
             renderSectionHeader={renderSectionHeader}
             getItemLayout={sectionListGetItemLayout({
                 getItemHeight: () => ITEM_HEIGHT,
-                getSectionHeaderHeight: () => HEADER_HEIGHT,
+                getSectionHeaderHeight: () => HEADER_HEIGHT + 10 + 20,
             })}
             ListEmptyComponent={
                 <View style={styles.emptyList}>
@@ -110,13 +112,32 @@ const EventList: React.FC<EventListProps> = ({
 export default EventList;
 
 const styles = StyleSheet.create({
-    sectionHeaderWrapper: {
-        backgroundColor: LAVENDER_BACKGROUND,
+    sectionList: {
+        marginTop: 10,
+    },
+    sectionHeaderOuterWrapper: {
+        paddingBottom: 10,
+        paddingTop: 20,
+        marginHorizontal: 16,
+    },
+    sectionHeaderPill: {
+        backgroundColor: 'white',
         paddingHorizontal: 20,
         height: HEADER_HEIGHT,
         justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 100,
+        borderWidth: StyleSheet.hairlineWidth,
+        borderColor: 'rgba(0,0,0,0.08)',
+        alignSelf: 'center',
+        // subtle shadow for depth
+        shadowColor: '#000',
+        shadowOpacity: 0.50,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3, // Android shadow
     },
-    sectionHeader: {
+    sectionHeaderText: {
         fontSize: 20,
         fontWeight: '600',
         color: '#333',
@@ -129,9 +150,9 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#888',
+        color: 'white',
     },
     eventItemWrapper: {
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
     },
 });

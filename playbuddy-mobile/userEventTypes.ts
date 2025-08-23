@@ -74,6 +74,7 @@ export const UE = {
     EventCalendarViewGoToPrev: 'event_calendar_view_go_to_prev',
     EventCalendarViewGoToNext: 'event_calendar_view_go_to_next',
     EventCalendarViewSelectDay: 'event_calendar_view_select_day',
+    EventCalendarViewGoToToday: 'event_calendar_view_go_to_today',
 
     // Filters
     FilterTagSelected: 'filter_tag_selected',
@@ -331,6 +332,10 @@ export interface EventPayloadMap {
         entityId?: string;
     };
     [UE.EventCalendarViewSelectDay]: AnalyticsProps & { day: string } & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.EventCalendarViewGoToToday]: AnalyticsProps & {
         entity: string;
         entityId?: string;
     };

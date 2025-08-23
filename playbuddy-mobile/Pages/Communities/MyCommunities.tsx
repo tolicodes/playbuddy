@@ -32,13 +32,7 @@ const CommunityList = ({
         return (
             <View style={styles.centeredView}>
                 <Text>You&apos;re not following any organizers yet.</Text>
-                <Button
-                    title="Follow an organizer"
-                    onPress={() => {
-                        navigation.navigate('Organizers', { screen: 'All Organizers' });
-                        logEvent(UE.MyCommunitiesNavigateToAllOrganizers, analyticsProps);
-                    }}
-                />
+
             </View>
         )
     }

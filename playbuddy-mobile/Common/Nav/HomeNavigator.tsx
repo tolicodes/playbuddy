@@ -116,7 +116,10 @@ export function HomeStackNavigator() {
     }
 
     return (
-        <HomeStack.Navigator screenOptions={{ headerShown: false }}>
+        <HomeStack.Navigator screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: 'transparent' },
+        }}>
             <HomeStack.Screen name="Home"
                 component={TabNavigator} />
             <HomeStack.Screen name="AuthNav"

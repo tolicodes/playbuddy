@@ -37,18 +37,27 @@ export const TopBar = ({ searchQuery, setSearchQuery, filtersEnabled, onPressFil
             {showGoogleCalendar && <TouchableOpacity style={topBarStyles.topButton} onPress={onPressGoogleCalendar}>
                 <Image source={require('../images/google-calendar.png')} style={topBarStyles.googleCalendarImage} />
             </TouchableOpacity>}
-            <TouchableOpacity style={topBarStyles.topButton} onPress={onPressFilters}>
-                <FAIcon name={filtersEnabled ? 'times-circle' : 'filter'}
-                    size={24}
-                    color={filtersEnabled ? "red" : "#888"}
-                    accessibilityLabel={filtersEnabled ? 'Clear filters' : 'Filter'} />
+            <TouchableOpacity
+                style={[
+                    topBarStyles.filterButton,
+                    filtersEnabled && topBarStyles.filterButtonActive,
+                ]}
+                onPress={onPressFilters}
+            >
+                <FAIcon
+                    name={filtersEnabled ? 'times' : 'filter'}
+                    size={18}
+                    color={filtersEnabled ? '#fff' : '#666'}
+                    accessibilityLabel={filtersEnabled ? 'Clear filters' : 'Filter'}
+                />
             </TouchableOpacity>
-            <TouchableOpacity style={topBarStyles.topButton} onPress={onPressExpand}>
+
+            {/* <TouchableOpacity style={topBarStyles.topButton} onPress={onPressExpand}>
                 <FAIcon name={isCalendarExpanded ? 'angle-double-up' : 'angle-double-down'}
                     size={24}
                     color="#888"
                     accessibilityLabel={isCalendarExpanded ? 'Collapse calendar' : 'Expand calendar'} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
         </View>
     </View>
 );
@@ -60,7 +69,7 @@ const topBarStyles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingBottom: 10,
         paddingTop: 10,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
     },
     searchBubble: {
         flex: 1,
@@ -86,4 +95,21 @@ const topBarStyles = StyleSheet.create({
         elevation: 2,
     },
     googleCalendarImage: { width: 26, height: 26 },
+    filterButton: {
+        marginHorizontal: 4,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        borderRadius: 20,
+        backgroundColor: '#F5F5F5',
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+        elevation: 2,
+    },
+    filterButtonActive: {
+        backgroundColor: '#7F5AF0', // PlayBuddy purple
+    },
 });

@@ -38,7 +38,7 @@ const BioTab = ({ bio, facilitator }: { bio: string; facilitator: Facilitator })
 );
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingVertical: 16 },
+    container: { flex: 1, paddingVertical: 16, backgroundColor: 'white' },
     separator: { height: 1, backgroundColor: '#EEE', marginVertical: 8 },
     locationRowWhite: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
     locationWhite: { color: '#555', marginLeft: 6 },

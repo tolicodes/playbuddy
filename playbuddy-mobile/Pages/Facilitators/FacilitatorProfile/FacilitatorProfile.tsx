@@ -166,7 +166,7 @@ const styles = StyleSheet.create({
         zIndex: 10,
     },
     staticHeaderContent: {
-        backgroundColor: '#fff',
+        backgroundColor: 'transparent',
         borderBottomColor: '#ddd',
         borderBottomWidth: 1,
         paddingBottom: 8,

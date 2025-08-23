@@ -108,7 +108,7 @@ export const JoinCommunitySection = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
         borderBottomWidth: 1,
         borderBottomColor: '#E5E5E5',
     },
@@ -172,6 +172,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 0,
         paddingTop: 0,
         marginTop: 0,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
     },
 });

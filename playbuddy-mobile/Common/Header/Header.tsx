@@ -6,6 +6,7 @@ import { NavStack } from "../Nav/NavStackType";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
+import { Image } from "react-native";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
@@ -28,6 +29,11 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
 
 // Custom Drawer Button
 export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
+    return (
+        <Image style={styles.logo} source={require('../../assets/logo-transparent.png')} />
+    );
+
+
     const analyticsProps = useAnalyticsProps();
     const onPressToggleDrawer = () => {
         // @ts-expect-error It does exist
@@ -123,7 +129,7 @@ export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack 
 // Styles
 const styles = StyleSheet.create({
     headerContainer: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: 'transparent',
     },
     headerInnerContainer: {
         flexDirection: 'row',
@@ -138,7 +144,7 @@ const styles = StyleSheet.create({
     },
     titleWrapper: {
         flex: 1,
-        alignItems: 'center',
+        alignItems: 'flex-start',
     },
     rightContainer: {
         width: 50,
@@ -149,10 +155,14 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     headerTitleText: {
-        fontSize: 20,
+        fontSize: 35,
         fontWeight: '600',
         color: '#FFFFFF',
         textAlign: 'center',
+    },
+    logo: {
+        width: 50,
+        height: 50,
     },
 });
 

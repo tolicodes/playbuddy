@@ -94,7 +94,7 @@ export const MunchDetailsMainTab = ({ munch }: { munch: Munch }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: LAVENDER_BACKGROUND },
+    container: { flex: 1, backgroundColor: 'transparent' },
     content: { padding: 16, paddingBottom: 40 },
     headerCard: {
         backgroundColor: '#FFF',

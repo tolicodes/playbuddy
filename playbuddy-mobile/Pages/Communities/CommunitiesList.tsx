@@ -104,7 +104,7 @@ export const CommunitiesList = ({
                         style={styles.ctaButton}
                         onPress={() => {
                             navigation.navigate("Organizers", {
-                                screen: "Follow Organizers",
+                                screen: "All Organizers",
                             });
                             logEvent(
                                 UE.CommunityListNavigateToJoinCommunityButtonPressed
@@ -217,7 +217,7 @@ export const CommunitiesList = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: LAVENDER_BACKGROUND,
+        backgroundColor: 'transparent',
         paddingTop: 20,
     },
     searchInput: {
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     },
     filterText: {
         fontSize: 14,
-        color: "#555",
+        color: "white",
     },
     communityItem: {
         marginHorizontal: 16,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     },
     emptyMessage: {
         fontSize: 16,
-        color: "#666",
+        color: "white",
         textAlign: "center",
         marginBottom: 20,
     },

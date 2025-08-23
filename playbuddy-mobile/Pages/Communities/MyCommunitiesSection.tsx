@@ -23,6 +23,6 @@ export const MyCommunitiesSection = ({ type }: { type: 'organizer' | 'private' }
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f2f2f7',
+        backgroundColor: 'transparent',
     }
 });
