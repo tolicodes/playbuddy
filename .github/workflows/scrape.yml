@@ -1,0 +1,15 @@
+name: Scrape Events
+
+on:
+  schedule:
+    # Runs every 12 hours
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape-events:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Scrape events
+        run: |
+          curl -X GET "https://playbuddy-scraper.fly.dev/scrape"
