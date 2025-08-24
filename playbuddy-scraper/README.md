@@ -48,6 +48,66 @@ Here's a summary of the whole flow for the event scraping and processing system:
 
 This flow ensures that events from multiple sources are regularly scraped, processed, deduplicated, and stored in the database, keeping the event data up-to-date and consistent across different platforms and communities.
 
+## Automated Scheduling
+
+The scraper includes built-in scheduling capabilities to automatically trigger scraping every 12 hours.
+
+### Environment Variables
+
+- `ENABLE_SCHEDULER` (default: `true`) - Set to `false` to disable automatic scheduling
+- `CRON_SCHEDULE` (default: `0 */12 * * *`) - Cron pattern for scheduling scrapes
+- `PORT` (default: `8082`) - Port for the HTTP server
+
+### Endpoints
+
+- `GET /health` - Returns application status and scheduler configuration
+- `GET /scrape` - Manually trigger a scraping operation
+- `HEAD /` - Health check endpoint
+
+### Examples
+
+**Default configuration (runs every 12 hours):**
+```bash
+npm start
+```
+
+**Disable automatic scheduling:**
+```bash
+ENABLE_SCHEDULER=false npm start
+```
+
+**Custom schedule (daily at 8 AM and 8 PM UTC):**
+```bash
+CRON_SCHEDULE="0 8,20 * * *" npm start
+```
+
+**Check scheduler status:**
+```bash
+curl http://localhost:8082/health
+```
+
+**Manually trigger scraping:**
+```bash
+curl http://localhost:8082/scrape
+```
+
+### Production Deployment with Google Cloud Scheduler
+
+For production deployments on Google Cloud Run, you can also use Google Cloud Scheduler as an alternative to the built-in cron:
+
+1. Deploy the service with `ENABLE_SCHEDULER=false`
+2. Create a Cloud Scheduler job:
+
+```bash
+gcloud scheduler jobs create http playbuddy-scraper-job \
+  --schedule="0 */12 * * *" \
+  --uri="https://your-service-url/scrape" \
+  --http-method=GET \
+  --time-zone="UTC"
+```
+
+This approach provides better observability and management through Google Cloud Console.
+
 ## Flow
 
 1. `scraper.ts`
