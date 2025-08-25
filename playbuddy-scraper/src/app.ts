@@ -79,13 +79,19 @@ if (import.meta.url.endsWith(process.argv[1]!)) {
   const port = process.env["PORT"] || "8082";
 
   process.on('uncaughtException', (err) => {
-    console.error('Uncaught Exception:', err);
-  }).on('error', (err) => {
-    console.error('Error:', err);
-
-  }).on('close', () => {
-    console.log('Server closed');
+    console.error('[FATAL] UncaughtException:', err?.stack || err);
+  });
+  process.on('unhandledRejection', (reason, p) => {
+    console.error('[FATAL] UnhandledRejection at:', p, 'reason:', reason);
+  });
+  process.on('SIGTERM', () => {
+    console.log('[SIGNAL] SIGTERM received, shutting down gracefully…');
+  });
+  process.on('SIGINT', () => {
+    console.log('[SIGNAL] SIGINT received, shutting down gracefully…');
   });
 
   await start(port);
 }
+
+
