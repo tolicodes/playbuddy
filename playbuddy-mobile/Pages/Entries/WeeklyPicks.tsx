@@ -5,8 +5,7 @@ import { NavStack } from '../../Common/Nav/NavStackType';
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
 import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { toZonedTime } from 'date-fns-tz';
-import { format as formatTz } from 'date-fns-tz';
+import moment from 'moment-timezone';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
 import { logEvent } from '@amplitude/analytics-react-native';
@@ -26,8 +25,8 @@ export const WeeklyPicks = () => {
         const generateWeekDates = () => {
             const dates = [];
             for (let i = 0; i < 3; i++) {
-                const nyNow = toZonedTime(new Date(), NY_TIMEZONE);
-                const start = startOfWeek(addWeeks(nyNow, i), { weekStartsOn: 1 });
+                const nyNow = moment().tz(NY_TIMEZONE);
+                const start = startOfWeek(addWeeks(nyNow.toDate(), i), { weekStartsOn: 1 });
                 const end = endOfWeek(start, { weekStartsOn: 1 });
                 dates.push(`${format(start, 'MMM d')} - ${format(end, 'MMM d')}${i === 0 ? ' (this week)' : ''}`);
             }
@@ -50,9 +49,9 @@ export const WeeklyPicks = () => {
     }, [weekDates, allEvents]);
 
     const getWeeklyPicks = (weekOffset: number) => {
-        const nyNow = toZonedTime(new Date(), NY_TIMEZONE);
+        const nyNow = moment().tz(NY_TIMEZONE);
 
-        const startDate = startOfWeek(addWeeks(nyNow, weekOffset), { weekStartsOn: 1 });
+        const startDate = startOfWeek(addWeeks(nyNow.toDate(), weekOffset), { weekStartsOn: 1 });
         const endDate = endOfWeek(startDate, { weekStartsOn: 1 });
 
         return allEvents
@@ -67,8 +66,8 @@ export const WeeklyPicks = () => {
                 const promoCodeDiscount = eventPromoCode || organizerPromoCode;
 
                 return ({
-                    dateKey: formatTz(new Date(e.start_date), 'yyyy-MM-dd', { timeZone: NY_TIMEZONE }),
-                    dayOfWeek: formatTz(new Date(e.start_date), 'EEE', { timeZone: NY_TIMEZONE }),
+                    dateKey: moment(new Date(e.start_date)).tz(NY_TIMEZONE).format('yyyy-MM-dd'),
+                    dayOfWeek: moment(new Date(e.start_date)).tz(NY_TIMEZONE).format('EEE'),
                     title: e.name,
                     organizer: e.organizer.name,
                     description: e.short_description,
@@ -196,7 +195,7 @@ const styles = StyleSheet.create({
     weekText: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#6A1B9A',
+        color: 'white',
     },
     eventsContainer: {
     },
