@@ -93,13 +93,14 @@ export default function ProfileScreen() {
         extrapolate: 'clamp',
     });
 
-    const tabBar = <TabBar tabs={TABS} active={activeTab} onPress={(value) => {
-        setActiveTab(value);
-        logEvent(UE.FacilitatorsProfileTabChange, {
-            ...analyticsProps,
-            tab: value
-        });
-    }} />
+    const tabBar =
+        <TabBar tabs={TABS} active={activeTab} onPress={(value) => {
+            setActiveTab(value);
+            logEvent(UE.FacilitatorsProfileTabChange, {
+                ...analyticsProps,
+                tab: value
+            });
+        }} />
 
     const header = showAnimatedHeader ? (
         <Animated.View style={[styles.headerContainer, { transform: [{ translateY }] }]}>

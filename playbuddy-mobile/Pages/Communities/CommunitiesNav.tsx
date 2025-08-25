@@ -1,51 +1,55 @@
-import React, { useMemo } from 'react';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
+import React, { useState } from 'react';
+import { StyleSheet } from 'react-native';
 
 import { MyCommunitiesSection } from './MyCommunitiesSection';
-import { MyEvents } from './MyEvents';
 import { JoinCommunitySection } from './JoinCommunitySection';
-import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
+import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { View } from 'react-native';
+import TabBar from '../../components/TabBar';
 
-const Tab = createMaterialTopTabNavigator();
+type TabKey = 'favorite' | 'all';
 
 const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }) => {
+    const [activeTab, setActiveTab] = useState<TabKey>('all');
     const analyticsProps = useAnalyticsProps();
 
-    const TypedMyCommunitiesSection = () => useMemo(() => <MyCommunitiesSection type={type} />, [type]);
-    const TypedMyEvents = () => useMemo(() => <MyEvents type={type} />, [type]);
-    const TypedJoinCommunitySection = () => useMemo(() => <JoinCommunitySection type={type} />, [type]);
-
-    const onPressTab = (name: string) => {
-        return {
-            tabPress: () => {
-                logEvent(UE.CommunityTabNavigatorTabClicked, {
-                    tab_name: name,
-                });
-            }
-        }
-    }
+    const tabs = [
+        { name: 'My Organizers', value: 'favorite' },
+        { name: 'All Organizers', value: 'all' },
+    ];
 
     return (
-        <Tab.Navigator>
-            <Tab.Screen
-                name="My Organizers"
-                component={TypedMyCommunitiesSection}
-                listeners={onPressTab('My Organizers')}
-            />
-            <Tab.Screen
-                name="My Events"
-                component={TypedMyEvents}
-                listeners={onPressTab('My Events')}
-            />
-            <Tab.Screen
-                name="Follow Organizers"
-                component={TypedJoinCommunitySection}
-                listeners={onPressTab('Follow Organizers')}
-            />
-        </Tab.Navigator>
-    );
+        <View style={[styles.container]}>
+            <TabBar tabs={tabs} active={activeTab} onPress={(value) => {
+                setActiveTab(value as TabKey);
+                logEvent(UE.CommunityTabNavigatorTabClicked, {
+                    ...analyticsProps,
+                    tab_name: value
+                });
+            }} />
+
+            {
+                activeTab === 'favorite' ? (
+                    <MyCommunitiesSection type={type} onPressAllCommunities={() => {
+                        setActiveTab('all');
+                    }} />
+                ) : (
+                    <JoinCommunitySection type={type} />
+                )
+            }
+
+        </View>
+    )
 };
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'transparent',
+        paddingTop: 12,
+    },
+});
 
 export default CommunitiesNav;

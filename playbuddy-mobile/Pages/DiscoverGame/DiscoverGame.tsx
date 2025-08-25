@@ -19,7 +19,6 @@ import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useBadgeNotifications } from '../../Common/Nav/useBadgeNotifications';
 import { logEvent } from '../../Common/hooks/logger';
-import { LAVENDER_BACKGROUND } from '../../components/styles';
 
 import { DiscoverEventsTour } from './DiscoverEventsTour';
 import { DiscoverEventsCard } from './DiscoverEventsCard';
@@ -155,12 +154,12 @@ export const DiscoverGame: React.FC = () => {
                             />
                         </View>
                     )}
+                    backgroundColor='transparent'
                     onSwipedRight={onSwipeRight}
                     onSwipedLeft={onSwipeLeft}
                     cardIndex={0}
                     stackSize={3}
                     verticalSwipe={false}
-                    backgroundColor={LAVENDER_BACKGROUND}
                     stackSeparation={20}
                     overlayLabels={{
                         left: {

@@ -1,7 +1,7 @@
 import React, { View, TextInput, TouchableOpacity, Image, StyleSheet } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { LAVENDER_BACKGROUND } from '../../../components/styles';
+import { HORIZONTAL_PADDING, LAVENDER_BACKGROUND } from '../../../components/styles';
 
 // All analytics in EventCalendarView
 
@@ -66,7 +66,7 @@ const topBarStyles = StyleSheet.create({
     topBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
+        paddingHorizontal: HORIZONTAL_PADDING,
         paddingBottom: 10,
         paddingTop: 10,
         backgroundColor: 'transparent',
@@ -77,7 +77,7 @@ const topBarStyles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'white',
         borderRadius: 25,
-        paddingHorizontal: 12,
+        paddingHorizontal: HORIZONTAL_PADDING,
         paddingVertical: 6,
     },
     searchIcon: { marginRight: 8 },
@@ -94,11 +94,11 @@ const topBarStyles = StyleSheet.create({
         alignItems: 'center',
         elevation: 2,
     },
-    googleCalendarImage: { width: 26, height: 26 },
+    googleCalendarImage: { width: 20, height: 20 },
     filterButton: {
         marginHorizontal: 4,
         paddingVertical: 6,
-        paddingHorizontal: 12,
+        paddingHorizontal: HORIZONTAL_PADDING,
         borderRadius: 20,
         backgroundColor: '#F5F5F5',
         justifyContent: 'center',

@@ -3,6 +3,7 @@ import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import moment from "moment-timezone";
+import { HORIZONTAL_PADDING } from "../../../components/styles";
 
 const TZ = "America/New_York";
 
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between", // keeps symmetry
-        paddingHorizontal: 12,
+        paddingHorizontal: HORIZONTAL_PADDING,
         marginTop: 10,
     },
     sideSpacer: {

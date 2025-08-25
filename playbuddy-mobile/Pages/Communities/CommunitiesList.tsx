@@ -21,7 +21,6 @@ import { logEvent } from "../../Common/hooks/logger";
 import type { Community } from "../../Common/hooks/CommonContext";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../userEventTypes";
-import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
@@ -30,11 +29,13 @@ export const CommunitiesList = ({
     communities,
     showSearch = false,
     entityType = "organizer",
+    onPressAllCommunities,
 }: {
     title: string;
     communities: Community[];
     showSearch?: boolean;
     entityType?: "private_community" | "organizer";
+    onPressAllCommunities?: () => void;
 }) => {
     const navigation = useNavigation<NavStack>();
     const { authUserId } = useUserContext();
@@ -103,9 +104,7 @@ export const CommunitiesList = ({
                     <TouchableOpacity
                         style={styles.ctaButton}
                         onPress={() => {
-                            navigation.navigate("Organizers", {
-                                screen: "All Organizers",
-                            });
+                            onPressAllCommunities?.();
                             logEvent(
                                 UE.CommunityListNavigateToJoinCommunityButtonPressed
                             );

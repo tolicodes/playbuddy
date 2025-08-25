@@ -28,21 +28,13 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
 };
 
 // Custom Drawer Button
-export const CustomDrawerButton = ({ navigation }: { navigation: NavStack }) => {
-    return (
-        <Image style={styles.logo} source={require('../../assets/logo-transparent.png')} />
-    );
-
-
-    const analyticsProps = useAnalyticsProps();
-    const onPressToggleDrawer = () => {
-        // @ts-expect-error It does exist
-        navigation.toggleDrawer();
-        logEvent(UE.HeaderDrawerButtonClicked, analyticsProps);
+export const HomeButton = ({ navigation }: { navigation: NavStack }) => {
+    const onPressHomeButton = () => {
+        navigation.navigate('Calendar');
     };
     return (
-        <TouchableOpacity onPress={onPressToggleDrawer} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Menu">
-            <IonIcon name="menu" size={24} color="#FFFFFF" />
+        <TouchableOpacity onPress={onPressHomeButton} accessibilityRole="button" accessibilityLabel="Menu">
+            <Image style={styles.logo} source={require('../../assets/logo-transparent.png')} />
         </TouchableOpacity>
     );
 };
@@ -82,7 +74,7 @@ const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false
             <View style={styles.headerInnerContainer}>
                 <View style={styles.leftContainer}>
                     {isRootScreen
-                        ? <CustomDrawerButton navigation={navigation} />
+                        ? <HomeButton navigation={navigation} />
                         : <CustomBackButton navigation={navigation} backToWelcome={backToWelcome} />
                     }
                 </View>
@@ -135,7 +127,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 5,
+        paddingHorizontal: 10,
         paddingBottom: 5,
     },
     leftContainer: {
@@ -160,6 +152,7 @@ const styles = StyleSheet.create({
         color: '#FFFFFF',
         textAlign: 'center',
     },
+
     logo: {
         width: 50,
         height: 50,

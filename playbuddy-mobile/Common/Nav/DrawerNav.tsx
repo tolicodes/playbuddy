@@ -46,12 +46,7 @@ export const DrawerNav = () => {
     }
 
     return (
-        <Drawer.Navigator
-            screenOptions={{
-                sceneContainerStyle: { backgroundColor: 'transparent' },
-
-            }}
-        >
+        <Drawer.Navigator>
             <Drawer.Screen
                 name="HomeDrawer"
                 component={HomeStackNavigator}

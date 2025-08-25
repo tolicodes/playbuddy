@@ -29,6 +29,7 @@ import { useCalendarContext } from '../hooks/CalendarContext';
 import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { HORIZONTAL_PADDING } from '../../../components/styles';
 
 /* 
  * VideoPlayer
@@ -681,7 +682,7 @@ const styles = StyleSheet.create({
     infoCardButton: {
         backgroundColor: '#7F5AF0',
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: HORIZONTAL_PADDING,
         borderRadius: 24,
         alignSelf: 'flex-start',
         shadowColor: '#000',
@@ -699,7 +700,7 @@ const styles = StyleSheet.create({
 
     tagContainer: {
         paddingVertical: 8,
-        paddingHorizontal: 16,
+        paddingHorizontal: HORIZONTAL_PADDING,
         backgroundColor: '#F8F3FF',
         borderRadius: 14,
     },

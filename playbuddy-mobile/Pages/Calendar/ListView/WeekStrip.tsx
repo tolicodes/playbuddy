@@ -12,7 +12,7 @@ import {
     NativeScrollEvent,
 } from "react-native";
 import moment from "moment-timezone";
-import { LAVENDER_BACKGROUND, ACCENT_PURPLE } from "../../../components/styles";
+import { LAVENDER_BACKGROUND, ACCENT_PURPLE, HORIZONTAL_PADDING } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -156,7 +156,7 @@ const s = StyleSheet.create({
         justifyContent: "space-around",
         alignItems: "center",
         paddingVertical: 10,
-        paddingHorizontal: 8,
+        paddingHorizontal: HORIZONTAL_PADDING,
         backgroundColor: "transparent",
     },
     dayCell: {

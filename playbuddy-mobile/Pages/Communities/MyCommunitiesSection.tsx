@@ -3,7 +3,7 @@ import { StyleSheet, View } from "react-native";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { CommunitiesList } from "./CommunitiesList";
 
-export const MyCommunitiesSection = ({ type }: { type: 'organizer' | 'private' } = { type: 'private' }) => {
+export const MyCommunitiesSection = ({ type, onPressAllCommunities }: { type: 'organizer' | 'private'; onPressAllCommunities?: () => void } = { type: 'private' }) => {
     const { myCommunities } = useCommonContext();
     const privateCommunities = [
         ...myCommunities.myPrivateCommunities,
@@ -14,8 +14,18 @@ export const MyCommunitiesSection = ({ type }: { type: 'organizer' | 'private' }
 
     return (
         <View style={styles.container}>
-            {type === 'private' && <CommunitiesList title="My Private Communities" communities={privateCommunities} entityType="private_community" />}
-            {type === 'organizer' && <CommunitiesList title="My Favorite Organizers" communities={myOrganizerPublicCommunities} entityType="organizer" />}
+            {type === 'private' && <CommunitiesList
+                title="My Private Communities"
+                communities={privateCommunities}
+                entityType="private_community"
+                onPressAllCommunities={onPressAllCommunities}
+            />}
+            {type === 'organizer' && <CommunitiesList
+                title="My Favorite Organizers"
+                communities={myOrganizerPublicCommunities}
+                entityType="organizer"
+                onPressAllCommunities={onPressAllCommunities}
+            />}
         </View>
     );
 }

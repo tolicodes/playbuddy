@@ -9,11 +9,9 @@ import {
     ActivityIndicator,
     Platform,
     Dimensions,
-    TouchableOpacity,
 } from "react-native";
 import { RouteProp, useRoute, useNavigation } from "@react-navigation/native";
 import type { NavStack } from "../../Common/Nav/NavStackType";
-import { LAVENDER_BACKGROUND } from "../../components/styles";
 import { type Munch } from "../../commonTypes";
 import { UE } from "../../userEventTypes";
 import { logEvent } from "../../Common/hooks/logger";
@@ -22,6 +20,7 @@ import { useFetchEvents } from "../../Common/db-axios/useEvents";
 import { MunchDetailsEventsTab } from "./MunchDetailsEventsTab";
 import { MunchDetailsMainTab } from "./MunchDetailsMainTab";
 import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
+import TabBar from "../../components/TabBar";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -29,6 +28,13 @@ type MunchDetailsRouteProp = RouteProp<
     { MunchDetails: { munchId: string } },
     "MunchDetails"
 >;
+
+type TabKey = 'details' | 'events';
+
+const tabs = [
+    { name: 'Details', value: 'details' },
+    { name: 'Events', value: 'events' },
+];
 
 export const MunchDetails = () => {
     const route = useRoute<MunchDetailsRouteProp>();
@@ -71,26 +77,13 @@ export const MunchDetails = () => {
 
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <View style={styles.tabContainer}>
-                <View style={styles.tabRow}>
-                    {(['details', 'events'] as const).map(key => (
-                        <TouchableOpacity
-                            key={key}
-                            style={[styles.tabButton, activeTab === key && styles.activeTab]}
-                            onPress={() => {
-                                setActiveTab(key);
-                                logEvent(UE.MunchDetailsTabSelected, { ...analyticsProps, tab: key });
-                            }}
-                        >
-                            <Text style={activeTab === key ? styles.activeTabText : styles.tabText}>
-                                {key === 'details' ? 'Munch Details' : 'Munch Events'}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            </View>
-
-
+            <TabBar tabs={tabs} active={activeTab} onPress={(value) => {
+                setActiveTab(value as TabKey);
+                logEvent(UE.MunchDetailsTabSelected, {
+                    ...analyticsProps,
+                    tab: value
+                });
+            }} />
 
             {activeTab === 'details' ? (
                 <MunchDetailsMainTab munch={munch} />
@@ -133,10 +126,4 @@ const styles = StyleSheet.create({
     thanksCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.05, shadowOffset: { width: 0, height: 1 }, shadowRadius: 3 }, android: { elevation: 2 } }) },
     thanksText: { fontSize: 16, color: "#333", lineHeight: 22, marginBottom: 8 },
     thanksMessage: { fontSize: 16, color: "#333", lineHeight: 22 },
-    tabContainer: { backgroundColor: '#fff', marginBottom: 10, borderRadius: 12 },
-    tabRow: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 5, backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, marginBottom: 10 },
-    tabButton: { paddingVertical: 8 },
-    tabText: { color: '#888' },
-    activeTab: { borderBottomWidth: 3, borderBottomColor: '#7F5AF0' },
-    activeTabText: { color: '#7F5AF0', fontWeight: '600' },
 });

@@ -10,6 +10,8 @@ export const LIGHT_GRAY = '#CCCCCC';                    // Disabled titles
 export const DISABLED_GRAY = '#D9D9D9';                 // Disabled dots & arrows
 export const BORDER_LAVENDER = '#EAE0F8';               // Card borders
 
+export const HORIZONTAL_PADDING = 16;
+
 
 /**
  * Common shared styles for PlayBuddy React Native app
