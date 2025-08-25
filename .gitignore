@@ -13,3 +13,4 @@ playbuddy-api/.DS_Store
 *.map
 *.d.ts
 *.d.ts.map
+playbuddy-api/facilitator_match_audit.json
