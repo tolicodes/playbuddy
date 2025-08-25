@@ -15,9 +15,10 @@ import axios from "axios";
  * You can toggle these entries on or off as needed.
  */
 const SCRAPE_TARGETS: Array<"eb" | "plura" | "tantrany"> = [
-    "eb",
     "plura",
     "tantrany",
+    // make sure evenbrite always overwrites plura and others for promo codes
+    "eb",
 ];
 
 
@@ -123,8 +124,13 @@ const SCRAPERS: Record<
  */
 const FILTERED_EVENTS_FILE = "./data/outputs/filtered_events.json";
 
-const runClassify = () => {
-    axios.get(process.env.PLAYBUDDY_API_URL + '/classifications/classify');
+const runClassify = async () => {
+    try {
+        await axios.get(process.env.PLAYBUDDY_API_URL + '/classifications/classify');
+        console.log('Events classified successfully')
+    } catch (e) {
+        console.log('Failed to classify events');
+    }
 }
 
 /**
