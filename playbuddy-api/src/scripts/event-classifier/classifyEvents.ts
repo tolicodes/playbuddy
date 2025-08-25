@@ -5,6 +5,7 @@ import { systemPrompt } from './systemPrompt.js';
 import { supabaseClient } from '../../connections/supabaseClient.js';
 import { Classification, Event } from '../../commonTypes.js';
 import { flushEvents } from '../../helpers/flushCache.js';
+import { matchEventsToFacilitators } from '../../routes/helpers/matchEventsToFaciliator.js';
 
 dotenv.config();
 
@@ -61,7 +62,6 @@ export type EventUpdatePayload = Partial<EventUpdate>;
 
 async function updateSupabaseAndWriteToFile(
     classifications: Classification[],
-    outputPath: string
 ) {
     for (let i = 0; i < classifications.length; i++) {
         const c = classifications[i];
@@ -146,6 +146,8 @@ async function updateSupabaseAndWriteToFile(
 
     }
 
+    await matchEventsToFacilitators({ dryRun: false });
+
     await flushEvents();
 
     await fs.appendFile(OUTPUT_PATH, JSON.stringify(classifications, null, 2));
@@ -160,7 +162,7 @@ function chunkArray(array: any[], chunkSize: number) {
 }
 
 const MAX_EVENTS = Infinity;
-const OUTPUT_PATH = 'classifications.json';
+const OUTPUT_PATH = './classifications.json';
 
 export async function classifyEventsInBatches(batchSize = 10) {
     const events = await fetchQueuedEvents();
@@ -169,7 +171,11 @@ export async function classifyEventsInBatches(batchSize = 10) {
 
     const batches = chunkArray(events.slice(0, MAX_EVENTS), batchSize);
 
-    await fs.unlink(OUTPUT_PATH);
+    try {
+        await fs.unlink(OUTPUT_PATH);
+    } catch (e) {
+        console.log('No previous classifications file found');
+    }
 
     for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
@@ -194,15 +200,10 @@ export async function classifyEventsInBatches(batchSize = 10) {
 
         const classifications = JSON.parse(response.choices[0].message.content!).events;
         results.push(...classifications);
-        await updateSupabaseAndWriteToFile(results, OUTPUT_PATH);
+        await updateSupabaseAndWriteToFile(results);
 
         console.log('Classified', classifications);
     }
-
-    // now do facilitator matching
-    // const facilitatorResults = await matchEventsToFacilitators(results, events);
-    // console.log('Facilitator results', facilitatorResults);
-
 
     return results;
 }
