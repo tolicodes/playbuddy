@@ -97,10 +97,10 @@ chrome.alarms.onAlarm.addListener(async alarm => {
 
     const now = Date.now();
 
-    const { lastRun } = await chrome.storage.local.get('lastRun');
-    const SIX_HOURS = 6 * 60 * 60 * 1000;
+    const { lastRun } = await chrome.storage.local.get('fetlifeTimer');
+    const DAY = 24 * 60 * 60 * 1000;
 
-    if (lastRun && (now - lastRun) < SIX_HOURS - 60_000) { // 1 min buffer
+    if (lastRun && (now - lastRun) < DAY - 60_000) { // 1 min buffer
         console.log('Skipping duplicate alarm fire');
         return;
     }
@@ -109,5 +109,5 @@ chrome.alarms.onAlarm.addListener(async alarm => {
     await chrome.storage.local.set({ lastRun: now });
 
     // Do your task
-    console.log('Running six hour job at', new Date(now).toISOString());
+    console.log('Running daily job at', new Date(now).toISOString());
 });
