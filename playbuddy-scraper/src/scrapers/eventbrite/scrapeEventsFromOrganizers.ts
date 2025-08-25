@@ -96,7 +96,7 @@ const scrapeOrganizerPage = async ({
       return [];
     }
 
-    for (let page = 1; page <= 5; page++) {
+    for (let page = 1; page <= 3; page++) {
       const apiUrl = `https://www.eventbrite.com/api/v3/organizers/${organizerId}/events/?expand=ticket_availability,organizer,venue&status=live&only_public=true&page=${page}`;
 
       const response = await addURLToQueue({
@@ -105,7 +105,7 @@ const scrapeOrganizerPage = async ({
         label: `Get Eventbrite Organizer page ${page}: ${apiUrl}`
       });
 
-      if (!response || (!response.events || response.events.length === 0)) {
+      if (!response || (!response.events || response.events?.length === 0)) {
         console.error(`SCRAPE ORGANIZER: No events found for organizer ${url}`);
         return [];
       }
@@ -143,7 +143,9 @@ function printTable(rows: Record<string, any>[]) {
 
   const table = new Table({ head: headers });
 
-  for (const row of rows) {
+  const sortedRows = rows.sort((a, b) => a.name?.localeCompare(b.name));
+
+  for (const row of sortedRows) {
     table.push(headers.map(header => row[header]));
   }
 
@@ -156,7 +158,6 @@ function extractOrganizerSlug(url: string): string {
   return match ? match[1] : 'unknown';
 }
 
-// MAIN FUNCTION
 export const scrapeEventsFromOrganizers = async ({
   organizerURLs,
   eventDefaults,
@@ -171,57 +172,38 @@ export const scrapeEventsFromOrganizers = async ({
     promise: PromiseSettledResult<NormalizedEventInput[]>;
   }[] = [];
 
-  const scrapePromises = organizerURLs.map(async (organizerURL) => {
-    const result = await Promise.resolve()
-      .then(() => scrapeOrganizerPage({ url: organizerURL, eventDefaults }))
-      .then(events => ({ status: 'fulfilled', value: events }))
-      .catch(error => ({ status: 'rejected', reason: error }));
-
-    organizerResults.push({ url: organizerURL, promise: result as PromiseSettledResult<NormalizedEventInput[]> });
-  });
-
-  await Promise.all(scrapePromises);
-
-  // Count how many times each organizer succeeded/failed
-  const organizerStats: Record<string, { success: number; failed: number }> = {};
-
-  for (const { url, promise } of organizerResults) {
-    const slug = extractOrganizerSlug(url);
-    if (!organizerStats[slug]) {
-      organizerStats[slug] = { success: 0, failed: 0 };
-    }
-
-    if (promise.status === 'fulfilled') {
-      organizerStats[slug].success += promise.value.length;
-    } else {
-      organizerStats[slug].failed += 1;
+  // ✅ SEQUENTIAL: one organizer at a time
+  for (const organizerURL of organizerURLs) {
+    try {
+      const events = await scrapeOrganizerPage({ url: organizerURL, eventDefaults }); // waits for all its queued work
+      organizerResults.push({ url: organizerURL, promise: { status: 'fulfilled', value: events } });
+    } catch (err) {
+      organizerResults.push({ url: organizerURL, promise: { status: 'rejected', reason: err } as PromiseRejectedResult });
     }
   }
 
-  // Convert to table format
-  const tableData = Object.entries(organizerStats).map(([organizer, { success, failed }]) => ({
-    organizer,
-    success,
-    failed,
-  }));
+  // (unchanged) stats + return
+  const organizerStats: Record<string, { success: number; failed: number }> = {};
+  for (const { url, promise } of organizerResults) {
+    const slug = extractOrganizerSlug(url);
+    if (!organizerStats[slug]) organizerStats[slug] = { success: 0, failed: 0 };
+    if (promise.status === 'fulfilled') organizerStats[slug].success += (promise as PromiseFulfilledResult<NormalizedEventInput[]>).value.length;
+    else organizerStats[slug].failed += 1;
+  }
 
-  // Print the table
+  const tableData = Object.entries(organizerStats).map(([organizer, { success, failed }]) => ({ organizer, success, failed }));
   console.log('\n📊 Organizer scrape results (grouped by slug):');
   printTable(tableData);
-
-  // Totals across all attempts
-  const totalSuccess = tableData.reduce((sum, row) => sum + row.success, 0);
-  const totalFailed = tableData.reduce((sum, row) => sum + row.failed, 0);
+  const totalSuccess = tableData.reduce((s, r) => s + r.success, 0);
+  const totalFailed = tableData.reduce((s, r) => s + r.failed, 0);
   console.log(`✅ total success: ${totalSuccess}`);
   console.log(`❌ total failed:  ${totalFailed}`);
-
   console.timeEnd(`⏱️ scrapeEventsFromOrganizers (${organizerURLs.length} organizers)`);
 
-  const allEvents = organizerResults
+  return organizerResults
     .filter(r => r.promise.status === 'fulfilled')
     .flatMap(r => (r.promise as PromiseFulfilledResult<NormalizedEventInput[]>).value);
-
-  return allEvents;
 };
+
 
 export default scrapeEventsFromOrganizers;
