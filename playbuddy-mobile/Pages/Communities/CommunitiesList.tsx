@@ -23,6 +23,7 @@ import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../userEventTypes";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
+import { WishlistHeart } from "../Calendar/ListView/WishlistHeart";
 
 export const CommunitiesList = ({
     title,
@@ -189,19 +190,10 @@ export const CommunitiesList = ({
                                     </Text>
                                 </View>
 
-                                <TouchableOpacity
-                                    style={styles.heartButton}
-                                    onPress={(e) => {
-                                        e.stopPropagation();
-                                        isJoined ? handleLeave(item.id) : handleJoin(item.id);
-                                    }}
-                                >
-                                    <FAIcon
-                                        name={isJoined ? "heart" : "heart-o"}
-                                        size={32}
-                                        color={isJoined ? "#FF6B6B" : "#666"}
-                                    />
-                                </TouchableOpacity>
+                                <WishlistHeart itemIsOnWishlist={isJoined} handleToggleEventWishlist={() => {
+                                    // TODO: Add analytics
+                                    isJoined ? handleLeave(item.id) : handleJoin(item.id);
+                                }} />
                             </View>
                         </TouchableOpacity>
                     );

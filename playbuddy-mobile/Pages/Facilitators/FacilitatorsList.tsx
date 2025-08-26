@@ -21,6 +21,7 @@ import { Facilitator } from '../../Common/types/commonTypes';
 import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
+import { WishlistHeart } from '../Calendar/ListView/WishlistHeart';
 
 const ADMIN_EMAIL = 'toli@toli.me';
 
@@ -127,7 +128,10 @@ export const FacilitatorsList = ({
                                     ...analyticsProps,
                                     facilitator_id: item.id
                                 });
-                                navigation.navigate('Facilitator Profile', { facilitatorId: item.id })
+                                navigation.navigate('Facilitator Profile', {
+                                    facilitatorId: item.id,
+                                    title: item.name
+                                })
                             }}
                         >
                             <View style={styles.row}>
@@ -163,30 +167,21 @@ export const FacilitatorsList = ({
                                     </Text>
                                 </View>
 
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        if (isFollowing) {
-                                            logEvent(UE.FacilitatorListUnfollowFacilitator, {
-                                                ...analyticsProps,
-                                                facilitator_id: item.id
-                                            });
-                                            handleUnfollow(item.id)
-                                        } else {
-                                            logEvent(UE.FacilitatorListFollowFacilitator, {
-                                                ...analyticsProps,
-                                                facilitator_id: item.id
-                                            });
-                                            handleFollow(item.id)
-                                        }
-                                    }}
-                                    style={styles.heartBtn}
-                                >
-                                    <FAIcon
-                                        name={isFollowing ? 'heart' : 'heart-o'}
-                                        size={24}
-                                        color={isFollowing ? '#E11D48' : '#666'}
-                                    />
-                                </TouchableOpacity>
+                                <WishlistHeart itemIsOnWishlist={isFollowing || false} handleToggleEventWishlist={() => {
+                                    if (isFollowing) {
+                                        logEvent(UE.FacilitatorListUnfollowFacilitator, {
+                                            ...analyticsProps,
+                                            facilitator_id: item.id
+                                        });
+                                        handleUnfollow(item.id)
+                                    } else {
+                                        logEvent(UE.FacilitatorListFollowFacilitator, {
+                                            ...analyticsProps,
+                                            facilitator_id: item.id
+                                        });
+                                        handleFollow(item.id)
+                                    }
+                                }} />
                             </View>
                         </TouchableOpacity>
                     );

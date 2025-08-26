@@ -39,15 +39,23 @@ export const ProfileHeader = ({
     const analyticsProps = useAnalyticsProps();
 
     return (
-        <View style={[styles.header, paddingTop ? { paddingTop: 24 } : undefined]}>
+        <View style={[styles.header]}>
             <View style={styles.headerTop}>
                 {photoUrl && <Image source={{ uri: photoUrl }} style={styles.photo} />}
                 <View style={styles.infoSection}>
-                    <View style={styles.nameRow}>
+                    {/* <View style={styles.nameRow}>
                         <Text style={styles.name}>{name}</Text>
                         {verified && <MaterialIcons name="check-circle" size={18} color="white" style={{ marginLeft: 6 }} />}
-                    </View>
-                    <Text style={styles.title}>{title}</Text>
+                    </View> */}
+                    <Text
+                        style={styles.title}
+                        numberOfLines={3}
+                        ellipsizeMode="tail"
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.8}
+                    >
+                        {title}
+                    </Text>
                     <View style={styles.socialRow}>
                         <FollowButton followeeId={facilitatorId} followeeType="facilitator" />
 
@@ -100,21 +108,6 @@ export const ProfileHeader = ({
                                 <FontAwesome name="envelope" size={SOCIAL_ITEM_HEIGHT} color="white" />
                             </TouchableOpacity>
                         )}
-                        {email && (
-                            <TouchableOpacity
-                                style={styles.bookButton}
-                                onPress={() => {
-                                    Linking.openURL(`mailto:${email}?subject=Book%20Private%20Session`);
-                                    logEvent(UE.FacilitatorsProfileBookSessionPressed, {
-                                        ...analyticsProps,
-                                        email: email,
-                                        facilitator_id: facilitatorId,
-                                    });
-                                }}
-                            >
-                                <Text style={styles.bookButtonText}>Book Session</Text>
-                            </TouchableOpacity>
-                        )}
                     </View>
                 </View>
             </View>
@@ -128,11 +121,11 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: 'transparent',
         paddingHorizontal: 16,
-        paddingBottom: 24,
         zIndex: 1,
+        paddingTop: 10
     },
     headerTop: { flexDirection: 'row', alignItems: 'flex-start' },
-    photo: { width: 80, height: 80, borderRadius: 40, borderWidth: 2, borderColor: '#fff' },
+    photo: { width: 100, height: 100, borderRadius: 50, borderWidth: 2, borderColor: '#fff' },
     infoSection: { marginLeft: 16, flex: 1 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
     name: { color: '#fff', fontSize: 24, fontWeight: '700' },
@@ -193,6 +186,4 @@ const styles = StyleSheet.create({
     unfollowText: {
         color: '#fff',
     },
-
-
 });

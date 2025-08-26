@@ -46,7 +46,10 @@ const EventList: React.FC<EventListProps> = ({
 
     useEffect(() => {
         if (selectedEvent) {
-            navigation.navigate('Event Details', { selectedEvent });
+            navigation.navigate('Event Details', {
+                selectedEvent,
+                title: selectedEvent.name,
+            });
         }
     }, [selectedEvent]);
 

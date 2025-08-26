@@ -1,6 +1,6 @@
 import { LinkifyText } from "../../Munches/LinkifyText";
 import type { Event, Facilitator } from "../../../Common/types/commonTypes";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import EventCalendarView from "../../Calendar/ListView/EventCalendarView";
 
 export const EventsTab = ({
@@ -34,8 +34,6 @@ export const EventsTab = ({
 };
 
 const styles = StyleSheet.create({
-    list: { paddingTop: 8 },
-
     emptyEventsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     emptyEventsText: { color: '#000', fontSize: 16 },
 });

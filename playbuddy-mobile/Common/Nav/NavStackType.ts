@@ -36,6 +36,7 @@ export type NavStackProps = {
     'Weekly Picks': undefined;
     'Event Details': {
         selectedEvent: EventWithMetadata;
+        title: string;
     };
     'Buddy Events': {
         buddyId: string;
@@ -50,6 +51,7 @@ export type NavStackProps = {
     'Facilitators': undefined;
     'Facilitator Profile': {
         facilitatorId: string;
+        title?: string;
     };
 
     // Other Sections

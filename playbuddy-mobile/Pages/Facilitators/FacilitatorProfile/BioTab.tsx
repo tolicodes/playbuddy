@@ -38,7 +38,7 @@ const BioTab = ({ bio, facilitator }: { bio: string; facilitator: Facilitator })
 );
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingVertical: 16, backgroundColor: 'white' },
+    container: { flex: 1, paddingTop: 16, backgroundColor: 'white' },
     separator: { height: 1, backgroundColor: '#EEE', marginVertical: 8 },
     locationRowWhite: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
     locationWhite: { color: '#555', marginLeft: 6 },
@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     pill: { backgroundColor: HEADER_PURPLE, borderRadius: 16, paddingHorizontal: 12, margin: 4, height: 32, justifyContent: 'center' },
     pillText: { color: '#fff', fontSize: 14 },
 
-    bioContainer: { padding: 16 },
+    bioContainer: { padding: 16, paddingTop: 0 },
 });
 
 export { Separator, TagsLocation, BioTab };

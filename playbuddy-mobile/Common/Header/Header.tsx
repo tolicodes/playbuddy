@@ -7,6 +7,7 @@ import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { Image } from "react-native";
+import { useRoute } from "@react-navigation/native";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
@@ -40,7 +41,7 @@ export const HomeButton = ({ navigation }: { navigation: NavStack }) => {
 };
 
 // Header Title Text with Animation
-const HeaderTitleText = ({ title }: { title: string }) => {
+const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
@@ -53,7 +54,15 @@ const HeaderTitleText = ({ title }: { title: string }) => {
 
     return (
         <Animated.View style={{ opacity: fadeAnim }}>
-            <Text numberOfLines={1} style={styles.headerTitleText}>{title}</Text>
+            <Text
+                numberOfLines={1}
+                style={[styles.headerTitleText, { fontSize: isSmall ? 24 : 35 }]}
+                ellipsizeMode="tail"
+                adjustsFontSizeToFit
+                minimumFontScale={0.5}
+            >
+                {title}
+            </Text>
         </Animated.View>
     );
 };
@@ -69,6 +78,8 @@ export const HeaderRight = () => (
 
 // Main Header Component
 const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
+    const route = useRoute();
+    const routeTitle = route.params?.title;
     return (
         <SafeAreaView style={styles.headerContainer}>
             <View style={styles.headerInnerContainer}>
@@ -80,7 +91,10 @@ const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false
                 </View>
 
                 <View style={styles.titleWrapper}>
-                    <HeaderTitleText title={title} />
+                    <HeaderTitleText
+                        title={routeTitle || title}
+                        isSmall={routeTitle}
+                    />
                 </View>
 
                 <HeaderRight />

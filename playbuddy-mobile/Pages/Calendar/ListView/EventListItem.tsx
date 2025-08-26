@@ -16,6 +16,7 @@ import { BORDER_LAVENDER } from '../../../components/styles';
 import { BadgeRow } from '../../../components/EventBadgesRow';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { WishlistHeart } from './WishlistHeart';
 
 interface ListItemProps {
     item: EventWithMetadata;
@@ -98,9 +99,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                             </Text>
                                         </View>
                                     )}
-                                    <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
-                                        <FAIcon name={itemIsOnWishlist ? 'heart' : 'heart-o'} size={25} color="red" />
-                                    </TouchableOpacity>
+                                    <WishlistHeart itemIsOnWishlist={itemIsOnWishlist} handleToggleEventWishlist={handleToggleEventWishlist} />
                                 </View>
                             </View>
 

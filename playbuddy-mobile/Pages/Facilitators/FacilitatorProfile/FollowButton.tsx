@@ -53,13 +53,13 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
         >
             <View style={styles.iconRow}>
                 <FontAwesome
-                    name={isFollowed ? 'heart-o' : 'heart'}
+                    name={isFollowed ? 'heart' : 'heart-o'}
                     size={14}
                     color={isFollowed ? '#fff' : HEADER_PURPLE}
                     style={{ marginRight: 6 }}
                 />
-                <Text style={[styles.followButtonText, isFollowed ? styles.unfollowText : styles.followText]}>
-                    {isFollowed ? 'Unfollow' : 'Follow'}
+                <Text style={[styles.followButtonText, isFollowed ? styles.unfollowButtonText : styles.followText]}>
+                    {isFollowed ? 'Following' : 'Follow'}
                 </Text>
             </View>
         </TouchableOpacity>
@@ -67,6 +67,13 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
 };
 
 const styles = StyleSheet.create({
+    unfollowButton: {
+        backgroundColor: 'transparent',
+        borderColor: '#fff',
+    },
+    unfollowButtonText: {
+        color: '#fff',
+    },
     followButton: {
         paddingVertical: 6,
         paddingHorizontal: 16,
@@ -75,26 +82,20 @@ const styles = StyleSheet.create({
         marginRight: 4,
         marginBottom: 8,
     },
+    followButtonText: {
+        fontWeight: '600',
+        fontSize: 14,
+        color: '#fff'
+    },
     followButtonActive: {
         backgroundColor: '#fff',
         borderColor: '#fff',
     },
-    unfollowButton: {
-        backgroundColor: 'transparent',
-        borderColor: '#fff',
+    followText: {
+        color: HEADER_PURPLE,
     },
     iconRow: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-    followButtonText: {
-        fontWeight: '600',
-        fontSize: 14,
-    },
-    followText: {
-        color: HEADER_PURPLE,
-    },
-    unfollowText: {
-        color: '#fff',
     },
 });

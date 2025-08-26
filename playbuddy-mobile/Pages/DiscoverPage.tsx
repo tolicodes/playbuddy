@@ -8,7 +8,6 @@ import {
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../Common/Nav/NavStackType';
-import { LAVENDER_BACKGROUND } from '../components/styles';
 import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
 import { useCalendarContext } from './Calendar/hooks/CalendarContext';
 import { Badge } from 'react-native-paper';
@@ -19,6 +18,8 @@ import { logEvent } from '../Common/hooks/logger';
 const menuGroups = [
     [
         { title: 'Facilitators', icon: 'user-tie', route: 'Facilitators' },
+    ],
+    [
         { title: 'Promos', icon: 'ticket-alt', route: 'Promos' },
         { title: "PB's Weekly Picks", icon: 'calendar-week', route: 'Weekly Picks' },
     ],
