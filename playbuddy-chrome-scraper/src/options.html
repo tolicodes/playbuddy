@@ -6,11 +6,14 @@
       body {
         font-family: sans-serif;
         padding: 20px;
-        max-width: 600px;
+        width: 800px; /* 800 is near Chrome’s popup max */
+
+        max-width: 800px; /* wider */
       }
 
       h1 {
         font-size: 1.5em;
+        margin-bottom: 12px;
       }
 
       #log {
@@ -30,19 +33,35 @@
         font-size: 1em;
       }
 
-      input {
+      input[type="text"] {
         width: 100%;
         box-sizing: border-box;
+      }
+
+      #apiStatus {
+        margin-left: 10px;
+        font-size: 0.9em;
+        color: #666;
       }
     </style>
   </head>
   <body>
     <h1>Scraper</h1>
-    <button id="startFetlife">Start Fetlife</button>
-    <button id="startFetlifeNearby">Start Fetlife Nearby</button>
-    <button id="startInstagram">Start Instagram</button>
-    <button id="startTicketTailor">Start TicketTailor</button>
-    <button id="startPluraPromoStats">Start Plura Promo Stats</button>
+
+    <!-- API Key -->
+    <label for="apiKey">API Key</label>
+    <input id="apiKey" type="text" placeholder="Enter your API key" />
+    <button id="saveApiKey">Save</button>
+    <span id="apiStatus"></span>
+
+    <!-- Actions -->
+    <div style="margin-top: 18px;">
+      <button id="startFetlife">Start Fetlife</button>
+      <button id="startFetlifeNearby">Start Fetlife Nearby</button>
+      <button id="startInstagram">Start Instagram</button>
+      <button id="startTicketTailor">Start TicketTailor</button>
+      <button id="startPluraPromoStats">Start Plura Promo Stats</button>
+    </div>
 
     <div id="log"></div>
 
