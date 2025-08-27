@@ -18,8 +18,14 @@ interface ScrapeResponse {
 
 // const API_BASE = "https://api.playbuddy.me";   // change if needed
 const API_BASE = "http://localhost:8080";
-const API_KEY = "DC79C24C486DE6D8888AC86B25818";
 const BULK_URL = `${API_BASE}/events/bulk`;
+
+const getApiKey = () => {
+    return chrome.storage.local.get('PLAYBUDDY_API_KEY').then((result) => {
+        return result['PLAYBUDDY_API_KEY'];
+    });
+}
+
 
 function mapEvent(e: EventResult): NormalizedEventInput {
     return {
@@ -47,7 +53,7 @@ async function uploadEvents(jsonArray: EventResult[]) {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${API_KEY}`
+            "Authorization": `Bearer ${await getApiKey()}`
         },
         body: JSON.stringify(events)
     });
