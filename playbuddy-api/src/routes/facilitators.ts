@@ -39,7 +39,7 @@ const facilitatorFields = `
     id, sort_order, created_at,
     media: media ( * )
   ),
-  facilitator_events ( event_id ),
+  facilitator_events!facilitator_events_facilitator_id_fkey ( event_id ),
   facilitator_followers ( auth_user_id )
 `;
 
@@ -113,8 +113,6 @@ router.get(
 );
 
 
-// POST /api/facilitators/:facilitator_id/events
-// Body: { event_id: number }
 router.post(
     '/:facilitator_id/events',
     authenticateAdminRequest,
