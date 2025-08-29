@@ -12,7 +12,7 @@ import TabBar from '../../components/TabBar';
 type TabKey = 'favorite' | 'all';
 
 const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }) => {
-    const [activeTab, setActiveTab] = useState<TabKey>('all');
+    const [activeTab, setActiveTab] = useState<TabKey>('favorite');
     const analyticsProps = useAnalyticsProps();
 
     const tabs = [
