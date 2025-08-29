@@ -42,7 +42,6 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 12,
         paddingHorizontal: 12,
-        paddingVertical: 4,
     },
     // Pills
     tabButton: {
