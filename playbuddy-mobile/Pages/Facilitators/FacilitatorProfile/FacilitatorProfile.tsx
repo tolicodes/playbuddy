@@ -154,8 +154,8 @@ const styles = StyleSheet.create({
     container: { flex: 1 },
 
     // Bio tab scroll container
-    bioScroll: { flex: 1, backgroundColor: 'transparent' },
-    bioScrollContent: { flex: 1 },
+    bioScroll: { flex: 1, backgroundColor: 'transparent', },
+    bioScrollContent: {},
 
     videoContainer: { backgroundColor: '#000' },
 
