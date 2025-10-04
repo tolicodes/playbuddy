@@ -4,6 +4,8 @@ node_modules/
 cloudconfig
 .env
 dist
+.logs
+classifications.json
 
 src/scripts/qrcodes/inputs/*
 src/scripts/qrcodes/output/*
