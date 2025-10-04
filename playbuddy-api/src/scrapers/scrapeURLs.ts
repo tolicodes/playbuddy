@@ -1,8 +1,10 @@
 import { NormalizedEventInput } from '../commonTypes.js';
 import { ScraperParams } from '../scrapers/types.js';
+import { scrapeEventbriteEvent } from './eventbrite.js';
 import { scrapeForbiddenTicketsEvent } from './forbiddenTickets.js';
 import scrapePartifulEvent from './partiful.js';
-
+import { aiScrapeEventsFromUrl } from '../../../playbuddy-scraper/src/scrapers/ai/single.js';
+import { aiDiscoverAndScrapeFromUrl } from '../../../playbuddy-scraper/src/scrapers/ai/discovery.js';
 type ScraperEntry = {
     scraper: (params: ScraperParams) => Promise<NormalizedEventInput[] | null>;
     eventRegex: RegExp;
@@ -10,6 +12,11 @@ type ScraperEntry = {
 };
 
 const SCRAPERS: Record<string, ScraperEntry> = {
+    'eventbrite.com': {
+        scraper: scrapeEventbriteEvent,
+        eventRegex: /.*/,
+        eventRegexIndex: 0,
+    },
     'partiful.com': {
         scraper: scrapePartifulEvent,
         eventRegex: /partiful\.com\/e\/([^/?#]+)/,
@@ -21,6 +28,13 @@ const SCRAPERS: Record<string, ScraperEntry> = {
         eventRegexIndex: 0,
     },
 };
+
+const AI_SCRAPER: ScraperEntry = {
+    scraper: aiScrapeEventsFromUrl,
+    // scraper: aiDiscoverAndScrapeFromUrl,
+    eventRegex: /.*/,
+    eventRegexIndex: 0,
+}
 
 const timeout = (ms: number): Promise<null> =>
     new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
@@ -49,12 +63,7 @@ export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]
         console.log(`[${i + 1}/${uniqueUrls.length}] ${url}`);
 
         const domain = getDomainKey(url);
-        const config = SCRAPERS[domain];
-
-        if (!config) {
-            console.warn(`No scraper configured for: ${domain}`);
-            continue;
-        }
+        const config = SCRAPERS[domain] || AI_SCRAPER;
 
         const match = url.match(config.eventRegex);
         if (!match || !match[config.eventRegexIndex]) {
@@ -78,6 +87,8 @@ export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]
             }
         }
     }
+
+    console.log('results', results)
 
     console.log(`✅ Scraped ${results.length} events`);
     return results;
