@@ -30,6 +30,8 @@ import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { HORIZONTAL_PADDING } from '../../../components/styles';
+import { EventSummary } from './EventSummary';
+import SectionCard from './SectionCard';
 
 /* 
  * VideoPlayer
@@ -246,7 +248,6 @@ const MediaTab = ({ event }: { event: EventWithMetadata }) => {
         />
     )
 }
-
 const CLASSIFICATION_ICONS = [
     'hands', // interactivity
     'spa', // comfort
@@ -272,19 +273,84 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
 
     return (
         <View style={styles.contentContainer}>
-            {promoCode && <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />}
+            <SectionCard title="Summary" icon="style">
+                {event.short_description && (
+                    <Text>{event.short_description}</Text>
+                )}
+            </SectionCard>
+
+            {event.classification && (
+                <SectionCard title="Tags" icon="style">
+                    {event.classification.tags?.length > 0 && (
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                        >
+                            {event.classification.tags.map((theme, i) => (
+                                <View key={`theme-${i}`} style={styles.tagPill}>
+                                    <FAIcon
+                                        name={'tag'}
+                                        size={12}
+                                        color="#4B2ABF"
+                                        style={{ marginRight: 6 }}
+                                        solid
+                                    />
+                                    <Text style={styles.tagText}>{theme}</Text>
+                                </View>
+                            ))}
+                        </ScrollView>
+                    )}
+
+                    {/* Row 2: Tags + Classification fields */}
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                    >
+                        {[
+                            event.classification.interactivity_level,
+                            event.classification.experience_level
+                        ]
+                            .filter(Boolean)
+                            .map((tag, i) => {
+                                const icon = CLASSIFICATION_ICONS[i];
+                                return (
+                                    <View key={`tag-${i}`} style={[styles.tagPill, styles.tagPillSecondary]}>
+                                        <FAIcon
+                                            name={icon}
+                                            size={12}
+                                            color="#4B2ABF"
+                                            style={{ marginRight: 6 }}
+                                            solid
+                                        />
+                                        <Text style={styles.tagText}>{tag}</Text>
+                                    </View>
+                                );
+                            })}
+
+                    </ScrollView>
+                </SectionCard>
+            )}
+
+            {promoCode && (
+                <SectionCard title="Promo Code" icon="style">
+                    <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />
+                </SectionCard>
+            )}
+
+
             {event.vetted && (
-                <View style={styles.vettedInfo}>
+                <SectionCard title="Vetted" icon="style">
                     <Text style={styles.vettedInfoText}>
                         This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
                         {event.vetting_url && <Text style={{ color: '#4a6ee0', fontWeight: 'bold' }}>
                             <Text onPress={() => Linking.openURL(event.vetting_url || '')}>here</Text>
                         </Text>}
                     </Text>
-                </View>
+                </SectionCard>
             )}
+
             {event.munch_id && (
-                <View style={styles.infoCardMunch}>
+                <SectionCard title="Munch" icon="style">
                     <Text style={styles.infoCardText}>
                         🍽️ This event is a <Text style={{ fontWeight: 'bold' }}>munch</Text>. Learn more on the Munch page:
                     </Text>
@@ -296,11 +362,11 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                     >
                         <Text style={styles.infoCardButtonText}>Go to Munch</Text>
                     </TouchableOpacity>
-                </View>
+                </SectionCard>
             )}
 
             {event.ticket_url?.includes('fetlife') && (
-                <View style={styles.infoCardFetlife}>
+                <SectionCard title="FetLife" icon="style">
                     <Text style={styles.infoCardText}>
                         🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
                     </Text>
@@ -310,69 +376,8 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                     >
                         <Text style={styles.infoCardButtonText}>Open in FetLife</Text>
                     </TouchableOpacity>
-                </View>
+                </SectionCard>
             )}
-
-            {event.classification && (
-                <>
-                    {event.classification && (
-                        <View style={{ marginTop: 16, marginBottom: 10, gap: 10 }}>
-                            {/* Row 1: Themes */}
-                            {event.classification.tags?.length > 0 && (
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                >
-                                    {event.classification.tags.map((theme, i) => (
-                                        <View key={`theme-${i}`} style={styles.tagPill}>
-                                            <FAIcon
-                                                name={'tag'}
-                                                size={12}
-                                                color="#4B2ABF"
-                                                style={{ marginRight: 6 }}
-                                                solid
-                                            />
-                                            <Text style={styles.tagText}>{theme}</Text>
-                                        </View>
-                                    ))}
-                                </ScrollView>
-                            )}
-
-                            {/* Row 2: Tags + Classification fields */}
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                            >
-                                {[
-                                    event.classification.interactivity_level,
-                                    event.classification.comfort_level,
-                                    event.classification.experience_level
-                                ]
-                                    .filter(Boolean)
-                                    .map((tag, i) => {
-                                        const icon = CLASSIFICATION_ICONS[i];
-                                        return (
-                                            <View key={`tag-${i}`} style={[styles.tagPill, styles.tagPillSecondary]}>
-                                                <FAIcon
-                                                    name={icon}
-                                                    size={12}
-                                                    color="#4B2ABF"
-                                                    style={{ marginRight: 6 }}
-                                                    solid
-                                                />
-                                                <Text style={styles.tagText}>{tag}</Text>
-                                            </View>
-                                        );
-                                    })}
-
-                            </ScrollView>
-                        </View>
-                    )}
-
-
-                </>
-            )
-            }
 
             <Markdown style={markdownStyles}>{description}</Markdown>
         </View >

@@ -14,8 +14,6 @@ const PromoCodeSection = ({ promoCode, onCopy }: { promoCode: PromoCode, onCopy:
 
     return (
         <TouchableOpacity onPress={handleCopy} style={styles.promoContainer}>
-            {/* Floating label */}
-            <Text style={styles.promoLabel}>Promo Code</Text>
             <View style={styles.promoContent}>
                 <Text style={styles.promoText}>{promoCode.promo_code}</Text>
                 <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
@@ -35,18 +33,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         padding: 16,
         marginVertical: 10,
-        position: 'relative',             // Allows the label to overlap
-        marginTop: 20
-    },
-    promoLabel: {
-        position: 'absolute',
-        top: -10,                         // Adjust this value to control the overlap
-        left: 12,
-        backgroundColor: '#fdf6e3',         // Same as container so it appears integrated
-        paddingHorizontal: 4,
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#333',
+
     },
     promoContent: {
         flexDirection: 'row',
