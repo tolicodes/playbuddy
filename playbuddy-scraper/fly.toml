@@ -12,6 +12,7 @@ primary_region = 'ewr'
   internal_port = 8082
   force_https = true
   auto_start_machines = true
+  auto_stop_machines = "stop"   # or "suspend"
   min_machines_running = 0
   processes = ['app']
 
