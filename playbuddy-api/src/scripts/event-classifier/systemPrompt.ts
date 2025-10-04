@@ -16,7 +16,7 @@ event_name: string;
 organizer_name: string;
 
 type: string | snake_case
-short_description: string
+short_description: string 
 
 tags: string[] | Title Case
 experience_level: string | snake_case

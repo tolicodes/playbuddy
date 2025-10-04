@@ -58,8 +58,11 @@ export const event_classifications = [
         "name": "Short Description",
         "description": `
          - short description of the event
+         - should be specific about what's in the workshop like exercises. 
+         - Attendee should know what they're into and whether this is hands on.
          - let them now simply what they in for without fancy marketing speak (ex: fire play)
-         - should be 1-2 sentences`,
+         - list something unique about the event
+         - should be 2 sentences`,
     },
 
     {

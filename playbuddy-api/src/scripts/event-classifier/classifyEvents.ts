@@ -19,7 +19,7 @@ async function fetchQueuedEvents(): Promise<Event[]> {
                 name
             )
         `)
-        .is('classification_status', null)
+        .in('classification_status', [null, 'queued'])
         .gte('start_date', new Date().toISOString());
 
     if (error) {
