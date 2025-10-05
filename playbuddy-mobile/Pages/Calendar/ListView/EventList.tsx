@@ -55,7 +55,6 @@ const EventList: React.FC<EventListProps> = ({
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
         const attendeesForEvent = attendees?.find((a) => a.event_id === event.id)?.attendees || [];
-
         return (
             <View style={styles.eventItemWrapper}>
                 <EventListItem

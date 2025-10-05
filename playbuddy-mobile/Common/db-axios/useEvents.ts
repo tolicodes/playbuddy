@@ -5,19 +5,30 @@ import { API_BASE_URL } from "../config";
 
 export const useFetchEvents = ({
     includeFacilitatorOnly = false,
+    includeNonNY = false,
 }: {
     includeFacilitatorOnly?: boolean;
+    includeNonNY?: boolean;
 } = {
         includeFacilitatorOnly: false,
+        includeNonNY: false,
     }) => {
     return useQuery<Event[]>({
         queryKey: ['events'],
         queryFn: async () => {
             const response = await axios.get<Event[]>(API_BASE_URL + '/events').then((response: any) => {
+                // include non NY for facilitator only
                 if (includeFacilitatorOnly) {
                     return response.data;
                 } else {
-                    return response.data.filter((event: any) => !event.facilitator_only);
+                    return response.data
+                        .filter((event: Event) => {
+                            if (includeNonNY) {
+                                return !event.facilitator_only;
+                            } else {
+                                return !event.facilitator_only && !event.non_ny;
+                            }
+                        });
                 }
             });
             return response;

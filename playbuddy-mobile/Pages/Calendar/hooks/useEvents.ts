@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Event } from '../../../commonTypes';
 import { API_URL } from '../../../config';
@@ -32,7 +31,7 @@ function addEventMetadata({ events, organizerColorMap }: { events: Event[]; orga
 
 export const useFetchEvents = (appState?: string, authUserId?: string) => {
     const { data: events = [], isLoading: isLoadingEvents, refetch: reloadEvents } = useQuery({
-        queryKey: ['events'],
+        queryKey: ['events_calendar_context'],
         queryFn: async () => {
             return axios.get<Event[]>(API_URL.events).then(response => response.data);
         },

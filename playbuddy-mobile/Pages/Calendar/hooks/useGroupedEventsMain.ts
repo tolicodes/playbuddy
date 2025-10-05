@@ -5,67 +5,55 @@ import type { EventWithMetadata } from '../../../Common/Nav/NavStackType';
 
 export const SECTION_DATE_FORMAT = 'MMM D, YYYY (dddd)';
 
-// Custom hook to group filtered events by date, create sections for rendering, 
-// and generate marked dates with organizer dots for the calendar.
-export const useGroupedEvents = (events: EventWithMetadata[], featuredEvents?: EventWithMetadata[]) => {
-    // Sections is the list of events grouped by date
-    const groupedEvents = useMemo(() => {
-        if (!Array.isArray(events)) return {};
+type Grouped = Record<string, Event[]>;
+type MarkedDates = Record<string, { marked: boolean; dotColor: string[] }>;
 
-        return events.reduce((acc: Record<string, Event[]>, event) => {
-            const date = moment(event.start_date).format('YYYY-MM-DD'); // Format date to 'YYYY-MM-DD'
-            if (!acc[date]) {
-                acc[date] = [];
-            }
-            acc[date].push(event); // Add event to the corresponding date group
-            // TODO: Better way to sort
-            acc[date] = acc[date].sort((a, b) => a.start_date.localeCompare(b.start_date));
-            return acc;
-        }, {});
-    }, [events]);
+export const useGroupedEvents = (
+    events: EventWithMetadata[],
+    featuredEvents?: EventWithMetadata[]
+) => {
+    const { groupedEvents, sections, markedDates } = useMemo(() => {
+        // 1) Sort once globally
+        const sorted = (Array.isArray(events) ? events : []).slice().sort((a, b) =>
+            a.start_date.localeCompare(b.start_date)
+        );
 
-    const sectionsRegular = useMemo(() => {
-        return Object.keys(groupedEvents)
-            .map(date => ({
+        // 2) Group by YYYY-MM-DD
+        const grouped: Grouped = {};
+        for (const ev of sorted) {
+            const key = moment(ev.start_date).format('YYYY-MM-DD');
+            (grouped[key] ||= []).push(ev);
+        }
+
+        // 3) Build sections
+        const baseSections = Object.entries(grouped)
+            .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+            .map(([date, data]) => ({
                 key: date,
                 date,
-                title: moment(date).format(SECTION_DATE_FORMAT), // Format the date for display
-                data: groupedEvents[date], // Events for that date
-            }))
-            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort by date
-    }, [groupedEvents]);
+                title: moment(date).format(SECTION_DATE_FORMAT),
+                data,
+            }));
 
-    let sections;
+        const finalSections = featuredEvents?.length
+            ? [{ key: 'featured', date: 'Featured', title: 'Featured', data: featuredEvents }, ...baseSections]
+            : baseSections;
 
-    if (featuredEvents) {
-        const featuredSection = {
-            key: 'featured',
-            date: 'Featured',
-            title: 'Featured',
-            data: featuredEvents,
+        // 4) Marked dates (unique organizer colors)
+        const marks: MarkedDates = {};
+        for (const [date, dayEvents] of Object.entries(grouped)) {
+            const dots = Array.from(
+                new Set(
+                    dayEvents
+                        .map((e: EventWithMetadata) => e.organizerColor)
+                        .filter((c): c is string => Boolean(c))
+                )
+            );
+            marks[date] = { marked: true, dotColor: dots };
         }
-        sections = [featuredSection, ...sectionsRegular];
-    } else {
-        sections = sectionsRegular;
-    }
 
-    // Create marked dates with dot colors for the calendar
-    const markedDates = useMemo(() => {
-        return Object.entries(groupedEvents).reduce((acc: Record<string, { marked: boolean; dotColor: string[] }>, [date, events]) => {
-            // Extract dot colors for each event's organizer and filter out undefined values
-            // Should already be deduplicated and sorted by event count
-            const dots = Array.from(new Set(
-                events
-                    .map((event: EventWithMetadata) => event.organizerColor)
-                    // some might not have a color, don't show them
-                    .filter((color: string | undefined) => !!color)
-            ));
-
-            // Assign marked date with the corresponding dot colors
-            acc[date] = acc[date] || { marked: true, dotColor: dots };
-            return acc;
-        }, {});
-    }, [groupedEvents]);
+        return { groupedEvents: grouped, sections: finalSections, markedDates: marks };
+    }, [events, featuredEvents]);
 
     return { groupedEvents, sections, markedDates };
 };
