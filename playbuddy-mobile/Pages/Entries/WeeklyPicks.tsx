@@ -66,8 +66,8 @@ export const WeeklyPicks = () => {
                 const promoCodeDiscount = eventPromoCode || organizerPromoCode;
 
                 return ({
-                    dateKey: moment(new Date(e.start_date)).tz(NY_TIMEZONE).format('yyyy-MM-dd'),
-                    dayOfWeek: moment(new Date(e.start_date)).tz(NY_TIMEZONE).format('EEE'),
+                    dateKey: moment(new Date(e.start_date)).tz(NY_TIMEZONE).format('YYYY-MM-DD'),
+                    dayOfWeek: moment(new Date(e.start_date)).tz(NY_TIMEZONE).format('ddd'), // e.g., "Wed"
                     title: e.name,
                     organizer: e.organizer.name,
                     description: e.short_description,
