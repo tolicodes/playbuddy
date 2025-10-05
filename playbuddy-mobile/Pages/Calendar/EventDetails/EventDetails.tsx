@@ -30,7 +30,6 @@ import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { HORIZONTAL_PADDING } from '../../../components/styles';
-import { EventSummary } from './EventSummary';
 import SectionCard from './SectionCard';
 
 /* 

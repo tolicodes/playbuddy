@@ -85,7 +85,6 @@ export function deriveWeekArrays(weekAnchorDate: Date) {
 /** Initial state: selected = today if events, else next future event (fallback today). */
 export function computeInitialState(events: EventWithMetadata[]): NavState {
     const today = moment().tz(TZ).toDate();
-    const todayWeek = ny.startOfWeek(today).toDate();
 
     const todayHas = hasEventsOnDayNY(events, today);
     const nextFuture = todayHas ? today : findEventDayFrom(events, today, 1);
@@ -95,12 +94,6 @@ export function computeInitialState(events: EventWithMetadata[]): NavState {
         weekAnchorDate: ny.startOfWeek(selected).toDate(),
         selectedDate: selected,
     };
-
-    console.log("[nav] computeInitialState", {
-        today: moment(today).tz(TZ).format("YYYY-MM-DD"),
-        selected: moment(initial.selectedDate).tz(TZ).format("YYYY-MM-DD"),
-        weekAnchor: moment(initial.weekAnchorDate).tz(TZ).format("YYYY-MM-DD"),
-    });
 
     return initial;
 }
