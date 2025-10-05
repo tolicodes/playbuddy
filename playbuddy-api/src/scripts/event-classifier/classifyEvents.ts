@@ -163,7 +163,6 @@ function chunkArray(array: any[], chunkSize: number) {
 
 const MAX_EVENTS = Infinity;
 const OUTPUT_PATH = './classifications.json';
-
 export async function classifyEventsInBatches(batchSize = 10) {
     const events = await fetchQueuedEvents();
 
@@ -172,7 +171,9 @@ export async function classifyEventsInBatches(batchSize = 10) {
     const batches = chunkArray(events.slice(0, MAX_EVENTS), batchSize);
 
     try {
-        await fs.unlink(OUTPUT_PATH);
+        if (await fs.stat(OUTPUT_PATH).catch(() => false)) {
+            await fs.unlink(OUTPUT_PATH);
+        }
     } catch (e) {
         console.log('No previous classifications file found');
     }

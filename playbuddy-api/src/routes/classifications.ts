@@ -1,5 +1,5 @@
 import express, { Response } from 'express';
-import { AuthenticatedRequest, authenticateRequest, authenticateAdminRequest } from '../middleware/authenticateRequest.js';
+import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 import { flushEvents } from '../helpers/flushCache.js';
