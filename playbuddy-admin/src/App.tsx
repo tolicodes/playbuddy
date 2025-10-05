@@ -16,6 +16,7 @@ import ImportCSVScreen from "./pages/Events/ImportCSVScreen";
 import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
 import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 import ImportEventURLsScreen from "./pages/Events/ImportEventURLsScreen";
+import { supabaseClient } from "./lib/supabaseClient";
 
 // Suppose `sessionToken` is the current Supabase access token (JWT)
 function setAxiosAuthHeader(sessionToken: string) {
@@ -38,7 +39,7 @@ export default function App() {
 
   // Determine the active tab index based on the current path
   const tabIndex = [
-    '/',
+    '/login',
     '/weekly-picks',
     '/events/add',
     '/facilitators',
@@ -53,27 +54,35 @@ export default function App() {
     '/deep-links/:id'
   ].indexOf(pathname);
 
+  useEffect(() => {
+    (async () => {
+      if (pathname === '/login') return
+      const { data, error } = await supabaseClient.auth.getUser()
+      if (error || !data.user) {
+        window.location.href = '/login'
+      }
+    })()
+  }, [])
+
   return (
     <Box>
       {/* Top AppBar with Tabs for navigation */}
       <AppBar position="sticky" color="primary">
         <Toolbar variant="dense">
           <Tabs value={tabIndex} textColor="inherit" indicatorColor="secondary">
-            <Tab label="Login" component={RouterLink} to="/" />
             <Tab label="Weekly Picks" component={RouterLink} to="/weekly-picks" />
             <Tab label="Events" component={RouterLink} to="/events" />
-            <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
-            <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
             <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
+            <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
+            <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
           </Tabs>
         </Toolbar>
       </AppBar>
 
       {/* Route definitions */}
       <Routes>
-        {/* <Route path="/organizers" element={<Organizers />} /> */}
-        <Route path="/" element={<LoginScreen />} />
+        <Route path="/login" element={<LoginScreen />} />
         <Route path="/weekly-picks" element={<WeeklyPicks />} />
         <Route path="/events" element={<EventsListScreen />} />
         <Route path="/events/add" element={<AddEventScreen />} />
