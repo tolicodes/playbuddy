@@ -2,7 +2,7 @@
   "expo": {
     "name": "PlayBuddy",
     "slug": "kink-buddy-ios",
-    "version": "6.3.2",
+    "version": "6.4.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
@@ -176,7 +176,16 @@
           "apiKey": "key_live_hvi7tyCi0TTYfjmRfuCD7nngvrcGQvaF",
           "iosAppDomain": "l.playbuddy.me"
         }
-      ]
+      ],
+      ["expo-build-properties", {
+        "android": {
+          "compileSdkVersion": 34,
+          "targetSdkVersion": 35,
+          "buildToolsVersion": "35.0.0",
+          "kotlinVersion": "1.9.24",
+          "gradlePluginVersion": "8.3.2"
+        }
+      }]
     ],
     "owner": "tolicodes1",
     "runtimeVersion": "4.16.1"
