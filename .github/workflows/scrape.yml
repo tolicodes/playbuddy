@@ -52,13 +52,6 @@ jobs:
       - name: Install jq
         run: sudo apt-get update -y && sudo apt-get install -y jq
 
-      - name: Fly auth (non-interactive)
-        run: |
-          set -euo pipefail
-          test -n "${FLY_API_TOKEN:-}" || { echo "Missing FLY_API_TOKEN secret"; exit 1; }
-          flyctl auth login --access-token "$FLY_API_TOKEN"
-          flyctl auth whoami
-
       - name: Start machines if stopped
         run: |
           set -euo pipefail
