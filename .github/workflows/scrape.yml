@@ -4,56 +4,69 @@ on:
   workflow_dispatch:
     inputs:
       app:
-        description: "Fly app name"
+        description: Fly app name
         required: true
-        default: "playbuddy-scraper"
+        default: playbuddy-scraper
       base_url:
-        description: "Base URL to hit"
+        description: Base URL to hit
         required: true
-        default: "https://playbuddy-scraper.fly.dev"
+        default: https://playbuddy-scraper.fly.dev
       endpoint_path:
-        description: "Endpoint to hit (e.g., /run)"
+        description: Endpoint to hit (e.g., /run)
         required: true
-        default: "/run"
+        default: /run
       health_path:
-        description: "Health endpoint (e.g., /healthz)"
+        description: Health endpoint (e.g., /healthz)
         required: true
-        default: "/healthz"
+        default: /healthz
       keep_alive_minutes:
-        description: "Minutes to keep service up after hit"
+        description: Minutes to keep service up after hit
         required: true
         default: "60"
+
   schedule:
     - cron: "0 */12 * * *" # every 12 hours (UTC)
-
-env:
-  FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
 jobs:
   run-and-stop:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    concurrency:
+      group: ping-endpoint
+      cancel-in-progress: true
+
+    # Fallbacks ensure schedule runs work with no inputs
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_ACCESS_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      FLY_APP: ${{ github.event.inputs.app || 'playbuddy-scraper' }}
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://playbuddy-scraper.fly.dev' }}
+      ENDPOINT_PATH: ${{ github.event.inputs.endpoint_path || '/run' }}
+      HEALTH_PATH: ${{ github.event.inputs.health_path || '/healthz' }}
+      KEEP_ALIVE_MINUTES: ${{ github.event.inputs.keep_alive_minutes || '60' }}
 
     steps:
       - name: Setup flyctl
         uses: superfly/flyctl-actions/setup-flyctl@v1
 
-      - name: Ensure jq is available
+      - name: Install jq
+        run: sudo apt-get update -y && sudo apt-get install -y jq
+
+      - name: Fly auth (non-interactive)
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y jq
+          set -euo pipefail
+          test -n "${FLY_API_TOKEN:-}" || { echo "Missing FLY_API_TOKEN secret"; exit 1; }
+          flyctl auth login --access-token "$FLY_API_TOKEN"
+          flyctl auth whoami
 
       - name: Start machines if stopped
-        env:
-          # FLY_APP: ${{ github.event.inputs.app }}
-          FLY_APP: playbuddy-scraper
-        shell: bash
         run: |
           set -euo pipefail
           JSON=$(flyctl machines list -a "$FLY_APP" --json)
           IDS=$(echo "$JSON" | jq -r '.[].id')
           if [ -z "$IDS" ]; then
-            echo "No machines found for $FLY_APP"; exit 1
+            echo "No machines found for $FLY_APP"
+            exit 1
           fi
           echo "$JSON" | jq -r '.[] | "\(.id) \(.state)"' | while read -r id state; do
             id=$(echo -n "$id" | tr -d '\r\n\t ')
@@ -67,31 +80,22 @@ jobs:
           done
 
       - name: Wait for health
-        env:
-          BASE_URL: ${{ github.event.inputs.base_url }}
-          HEALTH_PATH: ${{ github.event.inputs.health_path }}
-          # BASE_URL: https://playbuddy-scraper.fly.dev
-          # HEALTH_PATH: /healthz
-        shell: bash
         run: |
           set -euo pipefail
           URL="${BASE_URL}${HEALTH_PATH}"
           echo "Waiting for $URL to return 200..."
           for i in {1..90}; do
             if curl -fsS --retry 2 --retry-connrefused "$URL" > /dev/null; then
-              echo "Healthy!"
+              echo "Healthy"
               exit 0
             fi
-            echo "Not healthy yet... ($i/90)"; sleep 5
+            echo "Not healthy yet... ($i/90)"
+            sleep 5
           done
-          echo "Service never became healthy"; exit 1
+          echo "Service never became healthy"
+          exit 1
 
       - name: Hit job endpoint
-        env:
-          BASE_URL: ${{ github.event.inputs.base_url }}
-          ENDPOINT_PATH: ${{ github.event.inputs.endpoint_path }}
-          # BASE_URL: https://playbuddy-scraper.fly.dev
-          # ENDPOINT_PATH: /scrape
         run: |
           set -euo pipefail
           URL="${BASE_URL}${ENDPOINT_PATH}"
@@ -100,29 +104,20 @@ jobs:
           echo "Endpoint responded OK"
 
       - name: Keep alive
-        env:
-          MINS: ${{ github.event.inputs.keep_alive_minutes }}
-          # MINS: 1
         run: |
           set -euo pipefail
-          echo "Sleeping for ${MINS} minutes..."
-          # Protect against non-numeric input
-          case "$MINS" in
-            ''|*[!0-9]*) echo "keep_alive_minutes must be numeric"; exit 1 ;;
-          esac
-          sleep $(( MINS * 60 ))
+          case "$KEEP_ALIVE_MINUTES" in ''|*[!0-9]*) echo "KEEP_ALIVE_MINUTES must be numeric"; exit 1 ;; esac
+          echo "Sleeping for ${KEEP_ALIVE_MINUTES} minutes..."
+          sleep $(( KEEP_ALIVE_MINUTES * 60 ))
 
       - name: Stop all machines
         if: always()
-        env:
-          FLY_APP: ${{ github.event.inputs.app }}
-          # FLY_APP: playbuddy-scraper
-        shell: bash
         run: |
           set -euo pipefail
           IDS=$(flyctl machines list -a "$FLY_APP" --json | jq -r '.[].id')
           if [ -z "$IDS" ]; then
-            echo "No machines found to stop"; exit 0
+            echo "No machines found to stop"
+            exit 0
           fi
           while IFS= read -r id; do
             id=$(echo -n "$id" | tr -d '\r\n\t ')
