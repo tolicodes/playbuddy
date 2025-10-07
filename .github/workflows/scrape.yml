@@ -14,7 +14,7 @@ on:
       endpoint_path:
         description: Endpoint to hit (e.g., /run)
         required: true
-        default: /run
+        default: /scrape
       health_path:
         description: Health endpoint (e.g., /healthz)
         required: true
@@ -41,7 +41,7 @@ jobs:
       FLY_ACCESS_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       FLY_APP: ${{ github.event.inputs.app || 'playbuddy-scraper' }}
       BASE_URL: ${{ github.event.inputs.base_url || 'https://playbuddy-scraper.fly.dev' }}
-      ENDPOINT_PATH: ${{ github.event.inputs.endpoint_path || '/run' }}
+      ENDPOINT_PATH: ${{ github.event.inputs.endpoint_path || '/scrape' }}
       HEALTH_PATH: ${{ github.event.inputs.health_path || '/healthz' }}
       KEEP_ALIVE_MINUTES: ${{ github.event.inputs.keep_alive_minutes || '60' }}
 

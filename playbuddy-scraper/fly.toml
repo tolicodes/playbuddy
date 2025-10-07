@@ -8,12 +8,16 @@ primary_region = 'ewr'
 
 [build]
 
+[auto_stop]
+  enabled = true
+  timeout = "1h"
+
 [http_service]
   internal_port = 8082
   force_https = true
-  auto_start_machines = true
-  auto_stop_machines = "stop"   # or "suspend"
   min_machines_running = 0
+  auto_start_machines = false
+  auto_stop_machines = "off"
   processes = ['app']
 
 [[vm]]
