@@ -46,6 +46,37 @@ const VideoPlayer = ({ uri }: { uri: string }) => (
     />
 );
 
+const buildTicketUrl = (rawUrl: string, opts?: { promoCode?: string }) => {
+    const { promoCode } = opts || {};
+
+    // Only attach affiliate for Eventbrite. UTM is safe everywhere.
+    const addParams = (u: URL) => {
+        const isEventbrite = u.hostname.includes('eventbrite.');
+        if (isEventbrite) {
+            u.searchParams.set('aff', 'playbuddy');        // Eventbrite affiliate
+            if (promoCode) u.searchParams.set('discount', promoCode); // EB promo
+        } else {
+            // Safe defaults for non-EB vendors; won’t break pages
+            u.searchParams.set('utm_source', 'playbuddy');
+            if (promoCode) u.searchParams.set('discount', promoCode);
+        }
+    };
+
+    try {
+        const u = new URL(rawUrl);
+        addParams(u);
+        return u.toString();
+    } catch {
+        // Fallback for relative/invalid URLs
+        const sep = rawUrl.includes('?') ? '&' : '?';
+        const params = new URLSearchParams();
+        // We can’t detect vendor here, so use safe defaults
+        params.set('utm_source', 'playbuddy');
+        if (promoCode) params.set('discount', promoCode);
+        return `${rawUrl}${sep}${params.toString()}`;
+    }
+};
+
 const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) => {
     const { currentDeepLink, authUserId } = useUserContext();
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
@@ -119,7 +150,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         logEvent(UE.EventDetailGetTicketsClicked, eventAnalyticsProps);
 
         if (!promoCode) {
-            Linking.openURL(selectedEvent.ticket_url);
+            Linking.openURL(buildTicketUrl(selectedEvent.ticket_url || ''));
             logEvent(UE.EventDetailTicketPressed, eventAnalyticsProps);
         } else {
             setDiscountModalVisible(true);
@@ -155,7 +186,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
     };
 
     const ticketUrlWithPromo = (() => {
-        if (!promoCode) return selectedEvent.ticket_url;
+        if (!promoCode) return buildTicketUrl(selectedEvent.ticket_url || '');
 
         try {
             const url = new URL(selectedEvent.ticket_url);
@@ -164,7 +195,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         } catch (e) {
             // Fallback in case the URL is relative or invalid
             const separator = selectedEvent.ticket_url.includes('?') ? '&' : '?';
-            return `${selectedEvent.ticket_url}${separator}discount=${promoCode.promo_code}`;
+            return `${buildTicketUrl(selectedEvent.ticket_url || '')}${separator}discount=${promoCode.promo_code}`;
         }
     })();
 
@@ -183,7 +214,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         return;
                     }
                     logEvent(UE.EventDetailModalTicketPressed, eventAnalyticsProps);
-                    Linking.openURL(ticketUrlWithPromo);
+                    Linking.openURL(buildTicketUrl(ticketUrlWithPromo));
                     setDiscountModalVisible(false);
                 }}
                 organizerName={selectedEvent.organizer?.name}
@@ -370,7 +401,7 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                         🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
                     </Text>
                     <TouchableOpacity
-                        onPress={() => Linking.openURL(event.ticket_url)}
+                        onPress={() => Linking.openURL(buildTicketUrl(event.ticket_url || ''))}
                         style={styles.infoCardButton}
                     >
                         <Text style={styles.infoCardButtonText}>Open in FetLife</Text>
