@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { useEffect, useState } from "react";
-import { Routes, Route, Navigate, Link as RouterLink } from "react-router-dom";
+import { Routes, Route, Navigate, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { AppBar, Toolbar, Tabs, Tab, Box } from "@mui/material";
 import WeeklyPicks from "./pages/WeeklyPicks/WeeklyPicksScreen";
 import AddEventScreen from "./pages/Events/EditEventScreen";
@@ -31,7 +31,6 @@ function initAxiosAuthOnce() {
   if (axiosAuthInitialized) return;
   axiosAuthInitialized = true;
 
-  // Pre-attach a fresh token before every request (refresh if near expiry)
   axios.interceptors.request.use(async (config) => {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const now = Math.floor(Date.now() / 1000);
@@ -53,11 +52,10 @@ function initAxiosAuthOnce() {
     return config;
   });
 
-  // Retry once on 401 after an explicit refresh
   axios.interceptors.response.use(
     (res) => res,
     async (error) => {
-      const original = error?.config || {};
+      const original: any = error?.config || {};
       if (error?.response?.status === 401 && !original._retry) {
         original._retry = true;
         try {
@@ -85,9 +83,12 @@ function initAxiosAuthOnce() {
 // ------------------------------------------------------
 
 export default function App() {
-  const pathname = window.location.pathname;
-  const [authReady, setAuthReady] = useState(false); // to avoid flicker
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pathname = location.pathname;
   const isLoginRoute = pathname === "/login";
+
+  const [authReady, setAuthReady] = useState(false);
 
   // Init axios auth once and sync defaults on auth state changes
   useEffect(() => {
@@ -99,36 +100,32 @@ export default function App() {
       const { data: { session } } = await supabaseClient.auth.getSession();
       const loggedIn = !!session?.access_token;
 
-      // If not logged in and not on /login, redirect
       if (!loggedIn && !isLoginRoute) {
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
         return;
       }
       setAuthReady(true);
 
-      // Keep axios.defaults synced as Supabase rotates tokens
       const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, s) => {
         const token = s?.access_token ?? null;
         if (token) axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         else delete axios.defaults.headers.common["Authorization"];
 
-        // If user becomes logged out, push to login unless already there
-        if (!token && !isLoginRoute) window.location.href = "/login";
+        if (!token && !isLoginRoute) navigate("/login", { replace: true });
       });
       unsub = () => subscription.unsubscribe();
     })();
 
     return () => { unsub?.(); };
-  }, [isLoginRoute]);
+  }, [isLoginRoute, navigate]);
 
-  // Guard on first mount and when path changes (except /login):
+  // Guard on mount and on route changes (except /login)
   useEffect(() => {
     (async () => {
       if (isLoginRoute) {
         setAuthReady(true);
         return;
       }
-      // Ensure fresh session and verify user
       let { data: { session } } = await supabaseClient.auth.getSession();
       const now = Math.floor(Date.now() / 1000);
       if (!session || (session.expires_at ?? 0) <= now + 5) {
@@ -137,29 +134,27 @@ export default function App() {
       }
       const { data, error } = await supabaseClient.auth.getUser();
       if (error || !data.user) {
-        window.location.href = "/login";
+        navigate("/login", { replace: true });
         return;
       }
       setAuthReady(true);
     })();
-  }, [pathname, isLoginRoute]);
+  }, [pathname, isLoginRoute, navigate]);
 
-  // Tabs index (best-effort; dynamic params won't match exactly)
-  const tabIndex = [
-    "/login",
+  // Tabs: map + prefix-match so /events/:id stays selected
+  const tabRoutes = [
     "/weekly-picks",
-    "/events/add",
-    "/facilitators",
-    "/facilitators/new",
-    "/facilitators/:id",
-    "/print-runs",
+    "/events",
     "/promo-codes",
-    "/events/import-fetlife",
-    "/events/import-urls",
     "/deep-links",
-    "/deep-links/new",
-    "/deep-links/:id",
-  ].indexOf(pathname);
+    "/facilitators",
+    "/print-runs",
+    "/events/import-urls",
+  ];
+
+  const currentTabIndex = tabRoutes.findIndex(
+    (r) => pathname === r || pathname.startsWith(`${r}/`)
+  );
 
   if (!authReady) {
     return <Box p={2} color="#6B7280">Checking session…</Box>;
@@ -169,8 +164,16 @@ export default function App() {
     <Box>
       <AppBar position="sticky" color="primary">
         <Toolbar variant="dense">
-          <Tabs value={tabIndex} textColor="inherit" indicatorColor="secondary">
+          <Tabs
+            value={currentTabIndex >= 0 ? currentTabIndex : false}
+            textColor="inherit"
+            indicatorColor="secondary"
+            variant="scrollable"
+            scrollButtons
+            allowScrollButtonsMobile
+          >
             <Tab label="Weekly Picks" component={RouterLink} to="/weekly-picks" />
+            <Tab label="Import URLs" component={RouterLink} to="/events/import-urls" />
             <Tab label="Events" component={RouterLink} to="/events" />
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
             <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
@@ -196,7 +199,6 @@ export default function App() {
         <Route path="/deep-links" element={<DeepLinksListScreen />} />
         <Route path="/deep-links/new" element={<EditDeepLinkScreen />} />
         <Route path="/deep-links/:id" element={<EditDeepLinkScreen />} />
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/weekly-picks" replace />} />
       </Routes>
     </Box>
