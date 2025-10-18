@@ -140,39 +140,34 @@ export const fetchSession = async (): Promise<Session | null> => {
 // Auto refresh if the app goes into the foreground
 export const useInitializeAuth = (setSession: Dispatch<SetStateAction<Session | null>>) => {
     useEffect(() => {
-        /// Auto refresh if the app goes into the foreground
-        const appStateListener = AppState.addEventListener('change', (state) => {
+        const appStateListener = AppState.addEventListener('change', async (state) => {
             if (state === 'active') {
-                supabase.auth.startAutoRefresh();
-            } else {
-                supabase.auth.stopAutoRefresh();
+                // Pull a fresh session when app resumes
+                const { data } = await supabase.auth.refreshSession();
+                setupAxiosHeaders(data.session ?? null);
+                setSession(data.session ?? null);
             }
         });
 
-        // Check for invalid auth state and log out
-        const authStateListener = supabase.auth.onAuthStateChange(async (event, session) => {
-            if (!session?.user?.id) {
-                setSession(null);
-            }
+        // Single source of truth: update on *any* auth change
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_evt, session) => {
+            setupAxiosHeaders(session ?? null);
+            setSession(session ?? null);
         });
 
         return () => {
             appStateListener.remove();
-            authStateListener?.data?.subscription?.unsubscribe();
+            subscription.unsubscribe();
         };
-    }, []);
-}
-
-export const setupAxiosHeaders = (session: Session | null): void => {
-    const token = session?.access_token;
-    if (token) {
-        // for debugging
-        console.log('token', session?.access_token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    } else {
-        delete axios.defaults.headers.common['Authorization'];
-    }
+    }, [setSession]);
 };
+
+export const setupAxiosHeaders = (session: Session | null) => {
+    const token = session?.access_token;
+    if (token) axios.defaults.headers.common.Authorization = `Bearer ${token}`;
+    else delete axios.defaults.headers.common.Authorization;
+};
+
 
 export const useSetupTracking = (session?: Session | null, userProfile?: UserProfile | null) => {
     useEffect(() => {
