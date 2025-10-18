@@ -117,6 +117,7 @@ function extractServerData($: cheerio.CheerioAPI): any | null {
                 // keep searching; sometimes multiple scripts present
             }
         }
+        return;
     });
     return blob;
 }

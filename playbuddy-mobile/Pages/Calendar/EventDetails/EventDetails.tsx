@@ -46,13 +46,15 @@ const VideoPlayer = ({ uri }: { uri: string }) => (
     />
 );
 
+const allowedAffiliates = ['1pb'];
+
 const buildTicketUrl = (rawUrl: string, opts?: { promoCode?: string }) => {
     const { promoCode } = opts || {};
 
     // Only attach affiliate for Eventbrite. UTM is safe everywhere.
     const addParams = (u: URL) => {
         const isEventbrite = u.hostname.includes('eventbrite.');
-        if (isEventbrite) {
+        if (isEventbrite && !allowedAffiliates.includes(u.searchParams.get('aff') || '')) {
             u.searchParams.set('aff', 'playbuddy');        // Eventbrite affiliate
             if (promoCode) u.searchParams.set('discount', promoCode); // EB promo
         } else {

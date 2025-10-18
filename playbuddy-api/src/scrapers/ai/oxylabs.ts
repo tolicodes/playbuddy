@@ -2,7 +2,7 @@
 import fetch from 'node-fetch';
 import { dbg } from './debug.js';
 import { OXY_REALTIME_URL, OXY_USERNAME, OXY_PASSWORD } from './config.js';
-import { getUsingProxy } from '../../helpers/getUsingProxy.js';
+import { getUsingProxy } from '../helpers/getUsingProxy.js';
 
 function basicAuthHeader(user: string, pass: string) {
     return 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64');

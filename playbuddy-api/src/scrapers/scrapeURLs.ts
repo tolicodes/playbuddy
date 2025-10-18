@@ -3,8 +3,8 @@ import { ScraperParams } from '../scrapers/types.js';
 import { scrapeEventbriteEvent } from './eventbrite.js';
 import { scrapeForbiddenTicketsEvent } from './forbiddenTickets.js';
 import scrapePartifulEvent from './partiful.js';
-import { aiScrapeEventsFromUrl } from '../../../playbuddy-scraper/src/scrapers/ai/single.js';
-import { aiDiscoverAndScrapeFromUrl } from '../../../playbuddy-scraper/src/scrapers/ai/discovery.js';
+import { aiScrapeEventsFromUrl } from './ai/single.js';
+import { aiDiscoverAndScrapeFromUrl } from './ai/discovery.js';
 type ScraperEntry = {
     scraper: (params: ScraperParams) => Promise<NormalizedEventInput[] | null>;
     eventRegex: RegExp;
@@ -74,10 +74,10 @@ export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]
         const eventId = match[config.eventRegexIndex];
 
         try {
-            const scraped = await Promise.race([
-                config.scraper({ url: eventId, eventDefaults: {} }),
-                timeout(200000),
-            ]);
+            const scraped = await config.scraper({ url: eventId, eventDefaults: {} });
+
+            console.log('scraped', scraped)
+
             if (scraped) results.push(...scraped);
         } catch (err: any) {
             if (err?.message === 'Timeout') {

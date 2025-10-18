@@ -1,5 +1,9 @@
 {
-  "include": ["./src/**/*", "./test/**/*"],
+  "include": [
+    "./src/**/*",
+    "./test/**/*",
+    "../playbuddy-api/src/scrapers/helpers/getUsingProxy.ts"
+  ],
   "compilerOptions": {
     "alwaysStrict": true,
     "esModuleInterop": true,

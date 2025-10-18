@@ -5,7 +5,7 @@ import { fetchRenderedHtml } from './oxylabs.js';
 import { cleanHtml, safeParseJsonObject } from './html.js';
 import { dbg, DEBUG_SAVE_HTML, saveLogFile, stableNameFrom } from './debug.js';
 import { classifyPlatform, deriveOrganizerOriginalId, deriveOriginalId, isFutureEvent, isRetreatByDuration, toISO } from './normalize.js';
-import { MODEL, openai, turndown } from './config.js';
+import { MODEL, openai } from './config.js';
 
 export const aiScrapeEventsFromUrl = async function ({
     url,
@@ -22,8 +22,14 @@ export const aiScrapeEventsFromUrl = async function ({
     }
 
     const ev = await extractEventAIOnly(html, url, eventDefaults);
-    if (!ev?.name || !ev?.start_date) return [];
-    if (!isFutureEvent(ev, nowISO)) return [];
+    if (!ev?.name || !ev?.start_date) {
+        console.log('No name or start date found');
+        return [];
+    }
+    if (!isFutureEvent(ev, nowISO)) {
+        console.log('Not a future event');
+        return [];
+    }
     return [ev];
 };
 
@@ -55,10 +61,15 @@ export async function extractEventAIOnly(
         temperature: 0,
         messages: [{ role: 'user', content: prompt }],
     });
+
+
     dbg('EXTRACT ms', Date.now() - t0);
 
     const raw = resp.choices[0]?.message?.content ?? '';
     const core = safeParseJsonObject(raw) as any;
+    console.log('ML Extract', core);
+
+
     if (!core) return null;
 
     const originalId = deriveOriginalId(url, platform);
@@ -83,7 +94,7 @@ export async function extractEventAIOnly(
         image_url: core?.image_url ?? null,
         event_url: core?.event_url ?? url,
         description: descriptionMarkdown || null,
-        short_description: (core?.short_summary || '').toString().trim() || null,
+        // short_description: (core?.short_summary || '').toString().trim() || null,
         location: core?.location ?? null,
         price: core?.price ?? null,
         tags: Array.isArray(core?.tags) ? core.tags.filter(Boolean) : [],
@@ -92,6 +103,8 @@ export async function extractEventAIOnly(
         non_ny: false,
         type: isRetreatByDuration(startISO, endISO) ? 'retreat' : 'event',
     };
+
+    console.log('base', base)
 
     return base;
 }
