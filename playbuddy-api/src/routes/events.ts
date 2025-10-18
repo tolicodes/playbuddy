@@ -169,9 +169,9 @@ const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
     };
 
     for (const eventResult of eventResults) {
-        if (eventResult === 'updated') {
+        if (eventResult.result === 'updated') {
             counts.updated++;
-        } else if (eventResult === 'inserted') {
+        } else if (eventResult.result === 'inserted') {
             counts.created++;
         } else {
             counts.failed++;
@@ -181,19 +181,49 @@ const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
     console.log(`Created: ${counts.created}`);
     console.log(`Updated: ${counts.updated}`);
     console.log(`Failed: ${counts.failed}`);
+
+    return {
+        created: counts.created,
+        updated: counts.updated,
+        failed: counts.failed,
+    }
+}
+
+const upsertEventsClassifyAndStats = async (events: any[], authUserId: string | undefined) => {
+    if (!authUserId) {
+        throw Error('User not specified');
+    }
+
+    const eventResults: UpsertEventResult[] = [];
+    for (const event of events) {
+        const eventResult = await upsertEvent(event, authUserId);
+        eventResults.push(eventResult);
+    }
+
+    const stats = printBulkAddStats(eventResults);
+    await flushEvents();
+
+    await classifyEventsInBatches();
+
+    return {
+        stats,
+        events: eventResults,
+    };
 }
 
 router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const events = req.body;
 
-    const eventResults: UpsertEventResult[] = [];
-    for (const event of events) {
-        const eventResult = await upsertEvent(event, req.authUserId);
-        eventResults.push(eventResult);
-    }
-    printBulkAddStats(eventResults);
-    await flushEvents();
+    const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId);
+    res.json(eventResults);
+});
 
+router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const urls = req.body;
+
+    const scrapedEvents = await scrapeURLs(urls);
+
+    const eventResults = await upsertEventsClassifyAndStats(scrapedEvents, req.authUserId);
     res.json(eventResults);
 });
 
@@ -203,23 +233,6 @@ router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, r
     await flushEvents();
 
     res.json(eventResult);
-});
-
-router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const urls = req.body;
-
-    const scrapedEvents = await scrapeURLs(urls);
-
-    const eventResults: UpsertEventResult[] = [];
-    for (const event of scrapedEvents) {
-        const eventResult = await upsertEvent(event, req.authUserId);
-        eventResults.push(eventResult);
-    }
-
-    const classifiedEvents = await classifyEventsInBatches();
-    await flushEvents();
-
-    res.json(classifiedEvents);
 });
 
 router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {

@@ -1,4 +1,4 @@
-import { CreateOrganizerInput, Media, NormalizedEventInput } from "../../../common/types/commonTypes.js";
+import { CreateOrganizerInput, Media, NormalizedEventInput, E } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import axios from "axios";
@@ -8,7 +8,10 @@ import { syncEntityMedia } from "../syncMedia.js";
 
 export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
-export type UpsertEventResult = 'inserted' | 'updated' | 'failed';
+export type UpsertEventResult = {
+    result: 'inserted' | 'updated' | 'failed';
+    event: Event | null;
+};
 
 // stash originals before overriding
 const originalLog = console.log;
@@ -89,13 +92,13 @@ async function attachCommunities(eventId: string, communities: any[], organizerC
 
 export async function upsertEvent(event: NormalizedEventInput, authUserId?: string): Promise<UpsertEventResult> {
     const organizerInfo = prepareOrganizer(event);
-    if (!organizerInfo) return 'failed';
+    if (!organizerInfo) return { result: 'failed', event: null };
 
     logEventHeader(organizerInfo.logName, event);
 
     try {
         const upsertedOrganizer = await tryUpsertOrganizer(event.organizer!);
-        if (!upsertedOrganizer) return 'failed';
+        if (!upsertedOrganizer) return { result: 'failed', event: null };
 
         const { organizerId, organizerCommunityId } = upsertedOrganizer;
 
@@ -111,12 +114,12 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
 
         if (!upsertedEvent) {
             logError(`EVENT: Failed to upsert event`);
-            return 'failed';
+            return { result: 'failed', event: null };
         }
 
         const communities = event.communities || [];
         const attached = await attachCommunities(upsertedEvent.id, communities, organizerCommunityId);
-        if (!attached) return 'failed';
+        if (!attached) return { result: 'failed', event: null };
 
         if (event.media && event.media.length > 0) {
             await syncEntityMedia({
@@ -141,11 +144,15 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
         }
 
         log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
-        return existingEventId ? 'updated' : 'inserted';
+
+        return {
+            result: existingEventId ? 'updated' : 'inserted',
+            event: upsertedEvent,
+        }
 
     } catch (error) {
         logError(`EVENT: Failed to upsert event`, error as Error);
-        return 'failed';
+        return { result: 'failed', event: null };
     }
 }
 
@@ -319,6 +326,8 @@ const upsertEventInDB = async (event: NormalizedEventInput, organizerId: string,
         }, { onConflict: 'id' })
         .select()
         .single();
+
+    upsertedEvent.organizer = { name: event.organizer?.name };
 
     if (upsertError || !upsertedEvent) {
         throw new Error(`EVENT: Error upserting event ${upsertError?.message}`);
