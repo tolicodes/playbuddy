@@ -94,11 +94,11 @@ export default function DeepLinkHandler() {
             }
             const dl = matchDeepLink(url);
             console.log(`DeepLinkHandler: ${url} -> ${dl?.slug}`);
+
             if (!dl) return;
 
             queue.current = null;
-            setCurrentDeepLink(dl);
-
+            setCurrentDeepLink({ ...dl });
 
             logEvent(UE.DeepLinkDetected, {
                 ...analyticsProps,
