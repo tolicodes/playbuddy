@@ -6,17 +6,21 @@ import { API_BASE_URL } from "../config";
 export const useFetchEvents = ({
     includeFacilitatorOnly = false,
     includeNonNY = false,
+    includePrivate = false,
 }: {
     includeFacilitatorOnly?: boolean;
     includeNonNY?: boolean;
+    includePrivate?: boolean
 } = {
         includeFacilitatorOnly: false,
         includeNonNY: false,
+        includePrivate: false,
     }) => {
     return useQuery<Event[]>({
         queryKey: ['events'],
         queryFn: async () => {
-            const response = await axios.get<Event[]>(API_BASE_URL + '/events').then((response: any) => {
+            const privateParam = (includePrivate ? '?visibility=private' : '');
+            const response = await axios.get<Event[]>(API_BASE_URL + '/events' + privateParam).then((response: any) => {
                 // include non NY for facilitator only
                 if (includeFacilitatorOnly) {
                     return response.data;
@@ -80,6 +84,7 @@ export const useToggleWeeklyPickEvent = () => {
             await axios.put(`${API_BASE_URL}/events/weekly-picks/${eventId}`, {
                 status,
             });
+
             // Invalidate the "events" query to refetch updated data
             queryClient.invalidateQueries({ queryKey: ["events"] });
         }
