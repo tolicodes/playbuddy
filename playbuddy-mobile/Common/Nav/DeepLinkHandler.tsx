@@ -72,7 +72,7 @@ export default function DeepLinkHandler() {
 
     const { data: deepLinks = [], isLoading: loadingLinks } = useFetchDeepLinks();
     const addDeepLink = useAddDeepLinkToUser();
-    const { setCurrentDeepLink, authUserId } = useUserContext();
+    const { setCurrentDeepLink, currentDeepLink, authUserId } = useUserContext();
     const queue = useRef<string | null>(null);
 
     const matchDeepLink = useCallback(
@@ -98,7 +98,10 @@ export default function DeepLinkHandler() {
             if (!dl) return;
 
             queue.current = null;
-            setCurrentDeepLink({ ...dl });
+
+            if (dl.id !== currentDeepLink?.id) {
+                setCurrentDeepLink({ ...dl });
+            }
 
             logEvent(UE.DeepLinkDetected, {
                 ...analyticsProps,
