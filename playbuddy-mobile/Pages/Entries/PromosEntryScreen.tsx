@@ -20,7 +20,7 @@ import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { formatDate } from '../../utils/formatDate';
-
+import { useFetchEvents } from '../../Common/db-axios/useEvents';
 export const PromosEntryScreen = ({
     onPromoScreenViewed,
 }: {
@@ -29,6 +29,7 @@ export const PromosEntryScreen = ({
     const navigation = useNavigation<NavStack>();
     const promoCode = usePromoCode();
     const eventProps = useEventAnalyticsProps(promoCode?.featuredEvent);
+    const { data: events } = useFetchEvents();
 
     useEffect(() => {
         if (!eventProps.event_id) {
@@ -43,6 +44,10 @@ export const PromosEntryScreen = ({
 
     const { featuredPromoCode, featuredEvent, promoCodes, organizer } = promoCode;
 
+    const fullEvent = events?.find(e => e.id === featuredEvent?.id);
+
+    console.log('fullEvent', fullEvent)
+
     // Helper: copy a code to clipboard
     const copy = async (code: string) => {
         if (!eventProps.event_id) return;
@@ -50,7 +55,6 @@ export const PromosEntryScreen = ({
         await Clipboard.setStringAsync(code);
         Alert.alert('Promo Code Copied', `${code} copied to clipboard.`);
     };
-
 
     // we want to go to the community events screen but if they want
     // to go back, they will go to the home screen instead of this one
@@ -64,11 +68,17 @@ export const PromosEntryScreen = ({
         } else {
             logEvent(UE.PromoScreenEventDetailsClicked, eventProps);
 
-            navigation.navigate('Event Details', { selectedEvent: featuredEvent });
+            navigation.navigate('Event Details', { selectedEvent: fullEvent, title: fullEvent?.name });
         }
 
         onPromoScreenViewed();
     };
+
+    if (!fullEvent) {
+        console.log('no event')
+        navigation.replace('Home');
+        return;
+    }
 
     return (
         <SafeAreaView style={styles.safe}>
