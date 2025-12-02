@@ -12,13 +12,11 @@ export interface TopBarProps {
     filtersEnabled: boolean;
     onPressFilters: () => void;
     onPressGoogleCalendar: () => void;
-    onPressExpand: () => void;
-    isCalendarExpanded: boolean;
     showGoogleCalendar: boolean;
 }
 
 // UE handled upstream
-export const TopBar = ({ searchQuery, setSearchQuery, filtersEnabled, onPressFilters, onPressGoogleCalendar, onPressExpand, isCalendarExpanded, showGoogleCalendar }: TopBarProps) => (
+export const TopBar = ({ searchQuery, setSearchQuery, filtersEnabled, onPressFilters, onPressGoogleCalendar, showGoogleCalendar }: TopBarProps) => (
     <View style={topBarStyles.topBar}>
         <View style={topBarStyles.searchBubble}>
             <Ionicons name="search" size={20} color="#888" style={topBarStyles.searchIcon} />
@@ -51,13 +49,6 @@ export const TopBar = ({ searchQuery, setSearchQuery, filtersEnabled, onPressFil
                     accessibilityLabel={filtersEnabled ? 'Clear filters' : 'Filter'}
                 />
             </TouchableOpacity>
-
-            {/* <TouchableOpacity style={topBarStyles.topButton} onPress={onPressExpand}>
-                <FAIcon name={isCalendarExpanded ? 'angle-double-up' : 'angle-double-down'}
-                    size={24}
-                    color="#888"
-                    accessibilityLabel={isCalendarExpanded ? 'Collapse calendar' : 'Expand calendar'} />
-            </TouchableOpacity> */}
         </View>
     </View>
 );

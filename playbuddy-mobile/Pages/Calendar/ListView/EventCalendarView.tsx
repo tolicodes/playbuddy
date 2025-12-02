@@ -32,6 +32,7 @@ import {
     goToTodayNav,
     canGoPrev as canGoPrevWeek,
 } from "./calendarNavUtils";
+import { FullCalendar } from "./FullCalendar";
 
 interface Props {
     events?: EventWithMetadata[];
@@ -48,6 +49,7 @@ const EventCalendarView: React.FC<Props> = ({
     entity = "events",
     entityId,
 }) => {
+    const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
     const { isLoadingEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
 
@@ -104,10 +106,15 @@ const EventCalendarView: React.FC<Props> = ({
     const { sections } = useGroupedEvents(filteredEvents, featuredEvents);
 
     // ===== NY-time Navigation State =====
-    const [nav, setNav] = useState<NavState>(() => computeInitialState(filteredEvents));
+    const initialNav = useMemo(() => computeInitialState(filteredEvents), [filteredEvents]);
+    const [nav, setNav] = useState<NavState>(initialNav);
+    const [monthAnchorDate, setMonthAnchorDate] = useState<Date>(() =>
+        moment(initialNav.weekAnchorDate).startOf("month").toDate()
+    );
 
     // Re-sanitize selection when filters change
     useEffect(() => {
+        const recomputed = computeInitialState(filteredEvents);
         setNav((prev) => {
             const selectedStillOk = hasEventsOnOrAfterTodayNY(filteredEvents, prev.selectedDate);
             if (selectedStillOk) {
@@ -118,8 +125,9 @@ const EventCalendarView: React.FC<Props> = ({
                 }
                 return prev;
             }
-            return computeInitialState(filteredEvents);
+            return recomputed;
         });
+        setMonthAnchorDate(moment(recomputed.weekAnchorDate).startOf("month").toDate());
     }, [filteredEvents]);
 
     const { prevWeekDays, weekDays, nextWeekDays } = useMemo(
@@ -149,15 +157,27 @@ const EventCalendarView: React.FC<Props> = ({
         const next = { weekAnchorDate: ny.startOfWeek(day).toDate(), selectedDate: day };
 
         setNav(next);
+        setMonthAnchorDate(moment(day).startOf("month").toDate());
         scrollToDate(day);
+        setIsCalendarExpanded(false);
     };
 
-    const prevDisabled = !canGoPrevWeek(nav.weekAnchorDate);
+    const prevDisabled = !isCalendarExpanded && !canGoPrevWeek(nav.weekAnchorDate);
+
+    const shiftMonth = (delta: number) => {
+        const nextMonth = moment(monthAnchorDate).add(delta, "month").startOf("month").toDate();
+        setMonthAnchorDate(nextMonth);
+        const nextNav = { weekAnchorDate: ny.startOfWeek(nextMonth).toDate(), selectedDate: nextMonth };
+        setNav(nextNav);
+        scrollToDate(nextMonth);
+    };
 
     const goToPrev = () => {
-        if (prevDisabled) {
+        if (isCalendarExpanded) {
+            shiftMonth(-1);
             return;
         }
+        if (prevDisabled) return;
         const next = goToPrevWeekNav(nav, filteredEvents);
         if (next !== nav) {
             setNav(next);
@@ -166,6 +186,10 @@ const EventCalendarView: React.FC<Props> = ({
     };
 
     const goToNext = () => {
+        if (isCalendarExpanded) {
+            shiftMonth(1);
+            return;
+        }
         const next = goToNextWeekNav(nav, filteredEvents);
         setNav(next);
         if (!ny.isSameDay(next.selectedDate, nav.selectedDate)) {
@@ -176,8 +200,22 @@ const EventCalendarView: React.FC<Props> = ({
     const goToToday = () => {
         const next = goToTodayNav(nav, filteredEvents);
         setNav(next);
+        const nextMonth = moment(next.selectedDate).startOf("month").toDate();
+        setMonthAnchorDate(nextMonth);
         scrollToDate(next.selectedDate);
     };
+
+    const onPressExpand = () => {
+        setIsCalendarExpanded((prev) => {
+            const next = !prev;
+            if (next) {
+                setMonthAnchorDate(moment(nav.selectedDate).startOf("month").toDate());
+            }
+            return next;
+        });
+    };
+
+    const headerDate = isCalendarExpanded ? monthAnchorDate : nav.weekAnchorDate;
 
     return (
         <View style={styles.container}>
@@ -215,33 +253,43 @@ const EventCalendarView: React.FC<Props> = ({
                     logEvent(UE.EventCalendarViewGoogleCalendar, analyticsPropsPlusEntity);
                     Linking.openURL(MISC_URLS.addGoogleCalendar());
                 }}
-                onPressExpand={() => { }}
-                isCalendarExpanded={false}
                 showGoogleCalendar={showGoogleCalendar}
                 filtersEnabled={Object.values(filters).some((a) => a.length > 0)}
             />
 
             <DateStripHeader
-                currentDate={nav.weekAnchorDate}
+                currentDate={headerDate}
                 goToPrev={goToPrev}
                 goToNext={goToNext}
                 goToToday={goToToday}
                 disabledPrev={prevDisabled}
+                showWeekRange={!isCalendarExpanded}
+                isExpanded={isCalendarExpanded}
+                onToggleExpand={onPressExpand}
             />
 
-            <View style={styles.calendarContainer}>
-                <WeekStrip
-                    prevWeekDays={prevWeekDays}
-                    weekDays={weekDays}
-                    nextWeekDays={nextWeekDays}
-                    selectedDay={nav.selectedDate}
-                    onChangeSelectedDay={onSelectDay}
+            {isCalendarExpanded ? (
+                <FullCalendar
+                    currentDate={monthAnchorDate}
+                    onSelectDay={onSelectDay}
                     hasEventsOnDay={hasEventsOnDay}
-                    goToPrev={goToPrev}
-                    goToNext={goToNext}
-                    canGoPrev={!prevDisabled}
+                    selectedDate={nav.selectedDate}
                 />
-            </View>
+            ) : (
+                <View style={styles.calendarContainer}>
+                    <WeekStrip
+                        prevWeekDays={prevWeekDays}
+                        weekDays={weekDays}
+                        nextWeekDays={nextWeekDays}
+                        selectedDay={nav.selectedDate}
+                        onChangeSelectedDay={onSelectDay}
+                        hasEventsOnDay={hasEventsOnDay}
+                        goToPrev={goToPrev}
+                        goToNext={goToNext}
+                        canGoPrev={!prevDisabled}
+                    />
+                </View>
+            )}
 
             <View style={styles.eventListContainer}>
                 <EventList

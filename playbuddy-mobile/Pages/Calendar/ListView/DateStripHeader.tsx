@@ -14,6 +14,8 @@ type Props = {
     goToToday: () => void;
     disabledPrev?: boolean;            // Gray & disable the left chevron
     showWeekRange?: boolean;           // If true, show "Aug 24 – 30, 2025"
+    isExpanded?: boolean;              // Month view vs week view
+    onToggleExpand?: () => void;       // Toggle between week/month
 };
 
 export const DateStripHeader: React.FC<Props> = ({
@@ -23,6 +25,8 @@ export const DateStripHeader: React.FC<Props> = ({
     goToToday,
     disabledPrev = false,
     showWeekRange = false,
+    isExpanded = false,
+    onToggleExpand,
 }) => {
     const m = moment(currentDate).tz(TZ);
 
@@ -51,8 +55,18 @@ export const DateStripHeader: React.FC<Props> = ({
 
     return (
         <View style={styles.headerWrap}>
-            {/* Left spacer to balance the Today button */}
-            <View style={styles.sideSpacer} />
+            <TouchableOpacity
+                style={styles.expandButton}
+                onPress={() => onToggleExpand?.()}
+                accessibilityLabel={isExpanded ? "Collapse calendar" : "Expand calendar"}
+            >
+                <FAIcon
+                    name={isExpanded ? "calendar-alt" : "calendar"}
+                    solid={isExpanded}
+                    size={20}
+                    color="#fff"
+                />
+            </TouchableOpacity>
 
             {/* Center group (pager) */}
             <View style={styles.centerGroup}>
@@ -106,13 +120,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: HORIZONTAL_PADDING,
         marginTop: 10,
     },
-    sideSpacer: {
-        width: 70, // reserves space equal-ish to Today pill
-    },
     centerGroup: {
         flexDirection: "row",
         alignItems: "center",
         maxWidth: "65%",
+    },
+    expandButton: {
+        width: 30,
+        height: 30,
+        borderRadius: 19,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.15)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.3)",
     },
     centerText: {
         fontSize: 18,

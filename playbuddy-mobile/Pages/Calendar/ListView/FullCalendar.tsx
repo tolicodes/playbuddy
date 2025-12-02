@@ -12,28 +12,38 @@ export const FullCalendar = ({ currentDate, markedDates, onSelectDay, hasEventsO
         <Calendar
             current={currentDate.toISOString()}
             markedDates={markedDates}
-            onDayPress={(day: any) => onSelectDay(new Date(day.dateString))}
+            onDayPress={(day: any) =>
+                onSelectDay(moment.tz(day.dateString, 'America/New_York').toDate())
+            }
             hideExtraDays={false}
+            hideArrows
+            renderHeader={() => <></>}
             dayComponent={({ date, state }: any) => {
                 const iso = date.dateString;
                 const selected = isSameDayNY(iso, selectedDate);
+                const isDisabled = state === 'disabled';
+                const hasEvent = hasEventsOnDay(iso);
+                const bg = selected ? '#FFFFFF' : hasEvent ? 'rgba(156,106,222,0.7)' : 'transparent';
+                const textColor = selected ? '#6A4BD8' : isDisabled ? 'rgba(255,255,255,0.5)' : '#FFFFFF';
                 return (
                     <TouchableOpacity
+                        disabled={false}
                         style={{
-                            width: 30,
-                            height: 30,
-                            borderRadius: 15,
+                            width: 32,
+                            height: 32,
+                            borderRadius: 16,
                             justifyContent: 'center',
                             alignItems: 'center',
-                            backgroundColor: selected ? '#9C6ADE' : '#f7f2fa',
-                            opacity: hasEventsOnDay(iso) ? 1 : 0.5,
+                            backgroundColor: bg,
+                            opacity: isDisabled ? 0.5 : 1,
                         }}
-                        onPress={() => onSelectDay(new Date(iso))}
+                        onPress={() => onSelectDay(moment.tz(iso, 'America/New_York').toDate())}
                     >
                         <Text
                             style={{
-                                color: selected ? 'white' : state === 'disabled' ? '#ccc' : '#333',
-                                fontWeight: 'bold',
+                                color: textColor,
+                                fontWeight: '700',
+                                fontSize: 12,
                             }}
                         >
                             {date.day}
@@ -48,25 +58,25 @@ export const FullCalendar = ({ currentDate, markedDates, onSelectDay, hasEventsO
 
 // The full calendar
 const calendarTheme = {
-    backgroundColor: 'transparent',
+    backgroundColor: 'red',
     calendarBackground: 'transparent',
-    textSectionTitleColor: '#333333',
-    textSectionTitleDisabledColor: '#CCCCCC',
-    selectedDayBackgroundColor: '#9C6ADE',
-    selectedDayTextColor: '#FFFFFF',
-    todayTextColor: '#9C6ADE',
-    dayTextColor: '#333333',
-    textDisabledColor: '#D9D9D9',
-    dotColor: '#9C6ADE',
-    selectedDotColor: '#FFFFFF',
-    arrowColor: '#9C6ADE',
-    disabledArrowColor: '#D9D9D9',
-    monthTextColor: '#333333',
-    indicatorColor: '#9C6ADE',
-    textDayFontWeight: '300',
-    textMonthFontWeight: '600',
-    textDayHeaderFontWeight: '500',
+    textSectionTitleColor: '#FFFFFF',
+    textSectionTitleDisabledColor: 'rgba(255,255,255,0.5)',
+    selectedDayBackgroundColor: '#FFFFFF',
+    selectedDayTextColor: '#6A4BD8',
+    todayTextColor: '#FFFFFF',
+    dayTextColor: '#FFFFFF',
+    textDisabledColor: 'rgba(255,255,255,0.45)',
+    dotColor: 'rgba(255,255,255,0.9)',
+    selectedDotColor: '#6A4BD8',
+    arrowColor: '#FFFFFF',
+    disabledArrowColor: 'rgba(255,255,255,0.35)',
+    monthTextColor: '#FFFFFF',
+    indicatorColor: '#FFFFFF',
+    textDayFontWeight: '600',
+    textMonthFontWeight: '700',
+    textDayHeaderFontWeight: '600',
     textDayFontSize: 12,
-    textMonthFontSize: 14,
-    textDayHeaderFontSize: 10,
+    textMonthFontSize: 16,
+    textDayHeaderFontSize: 11,
 };
