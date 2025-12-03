@@ -1,18 +1,21 @@
-// scrapeEventbriteEvent.ts
-import axios from 'axios';
 import TurndownService from 'turndown';
 import { DateTime } from 'luxon';
 import * as cheerio from 'cheerio';
 import { ScraperParams } from './types.js';
 import { EventDataSource, NormalizedEventInput } from '../commonTypes.js';
 import { EventTypes } from '../common/types/commonTypes.js';
+import { addURLToQueue } from './helpers/getUsingProxy.js';
 
 const turndown = new TurndownService();
 
 export const scrapeEventbriteEvent = async (
     { url, eventDefaults }: ScraperParams
 ): Promise<NormalizedEventInput[]> => {
-    const { data: html } = await axios.get(url);
+    const html = await addURLToQueue({
+        url,
+        json: false,
+        label: `Eventbrite Event Page: ${url}`,
+    });
     const $ = cheerio.load(html);
 
     // 1) Extract window.__SERVER_DATA__ JSON
@@ -72,6 +75,12 @@ export const scrapeEventbriteEvent = async (
         deriveLocationFromBody(longHtml) ||                         // e.g., "Bushwick, Brooklyn (TBA)"
         'To be announced';
 
+    // Region for NY vs non-NY
+    const region =
+        comps?.eventDetails?.location?.address?.region ||
+        (typeof comps?.eventDetails?.location?.venueAddress === 'string' ? comps.eventDetails.location.venueAddress : undefined) ||
+        '';
+
     // 7) Tags (category/subcategory ≈ tags)
     const tags = [ev.category, ev.subcategory].filter(Boolean) as string[];
 
@@ -96,6 +105,7 @@ export const scrapeEventbriteEvent = async (
         price,
         location,
         tags,
+        non_ny: region ? region !== 'NY' : !/new york|nyc|brooklyn|queens|bronx|staten island/i.test(location || ''),
         source_ticketing_platform: 'Eventbrite' as EventDataSource['source_ticketing_platform'],
     };
 

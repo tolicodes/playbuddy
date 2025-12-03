@@ -1,6 +1,7 @@
 import { NormalizedEventInput } from '../commonTypes.js';
 import { ScraperParams } from '../scrapers/types.js';
 import { scrapeEventbriteEvent } from './eventbrite.js';
+import { scrapeEventbriteOrganizers } from './eventbriteOrganizers.js';
 import { scrapeForbiddenTicketsEvent } from './forbiddenTickets.js';
 import scrapePartifulEvent from './partiful.js';
 import { aiScrapeEventsFromUrl } from './ai/single.js';
@@ -54,7 +55,10 @@ const getDomainKey = (url: string): string => {
     return parts.slice(-2).join('.');
 };
 
-export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]> => {
+export const scrapeURLs = async (
+    urls: string[],
+    eventDefaults: Partial<NormalizedEventInput> = {}
+): Promise<NormalizedEventInput[]> => {
     const results: NormalizedEventInput[] = [];
     const uniqueUrls = dedupe(urls);
 
@@ -63,6 +67,21 @@ export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]
         console.log(`[${i + 1}/${uniqueUrls.length}] ${url}`);
 
         const domain = getDomainKey(url);
+
+        // Handle Eventbrite organizer pages directly (fetch multiple events)
+        if (domain === 'eventbrite.com' && /eventbrite\.com\/o\//i.test(url)) {
+            try {
+                const organizerEvents = await scrapeEventbriteOrganizers({
+                    organizerURLs: [url],
+                    eventDefaults,
+                });
+                results.push(...organizerEvents);
+            } catch (err) {
+                console.error(`Error scraping Eventbrite organizer ${url}:`, err);
+            }
+            continue;
+        }
+
         const config = SCRAPERS[domain] || AI_SCRAPER;
 
         const match = url.match(config.eventRegex);
@@ -74,7 +93,7 @@ export const scrapeURLs = async (urls: string[]): Promise<NormalizedEventInput[]
         const eventId = match[config.eventRegexIndex];
 
         try {
-            const scraped = await config.scraper({ url: eventId, eventDefaults: {} });
+            const scraped = await config.scraper({ url: eventId, eventDefaults });
 
             console.log('scraped', scraped)
 
