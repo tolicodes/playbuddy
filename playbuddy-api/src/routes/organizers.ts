@@ -9,8 +9,10 @@ router.get('/', async (req: Request, res: Response) => {
         const { data, error } = await supabaseClient
             .from('organizers')
             .select(`
-                *
+                *,
+                events:events(count)
             `)
+            .order('count', { foreignTable: 'events', ascending: false });
 
 
         if (error) {

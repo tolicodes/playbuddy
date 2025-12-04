@@ -70,16 +70,10 @@ export const scrapeEventbriteEvent = async (
         undefined;
 
     // 6) Location (human-friendly)
-    const location =
+    const computedLocation =
         comps?.eventDetails?.location?.venueName ||
         deriveLocationFromBody(longHtml) ||                         // e.g., "Bushwick, Brooklyn (TBA)"
         'To be announced';
-
-    // Region for NY vs non-NY
-    const region =
-        comps?.eventDetails?.location?.address?.region ||
-        (typeof comps?.eventDetails?.location?.venueAddress === 'string' ? comps.eventDetails.location.venueAddress : undefined) ||
-        '';
 
     // 7) Tags (category/subcategory ≈ tags)
     const tags = [ev.category, ev.subcategory].filter(Boolean) as string[];
@@ -89,6 +83,11 @@ export const scrapeEventbriteEvent = async (
 
     // 9) Type (retreat vs event) based on title/description
     const type: EventTypes = /retreat|immersion/i.test(`${ev.name} ${description}`) ? 'retreat' as EventTypes : 'event' as EventTypes;
+
+    // 10) Non-NY detection (parity with old scraper: flag if region !== 'NY')
+    const region = (eventDefaults as any)?.region;
+    const non_ny = region ? region !== 'NY' : eventDefaults?.non_ny ?? false;
+    const location = eventDefaults?.location || computedLocation;
 
     // 10) Build output (keep parity with your Forbidden Tickets shape)
     const out: NormalizedEventInput = {
@@ -105,8 +104,8 @@ export const scrapeEventbriteEvent = async (
         price,
         location,
         tags,
-        non_ny: region ? region !== 'NY' : !/new york|nyc|brooklyn|queens|bronx|staten island/i.test(location || ''),
         source_ticketing_platform: 'Eventbrite' as EventDataSource['source_ticketing_platform'],
+        non_ny,
     };
 
     return [out];

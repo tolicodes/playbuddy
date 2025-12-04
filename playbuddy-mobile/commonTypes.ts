@@ -199,6 +199,54 @@ export interface Event extends EventDataSource {
     hosts?: string[];
 }
 
+// Scrape job/task tracking
+export type ScrapeJobRecord = {
+    id: string;
+    status: string;
+    priority: number;
+    total_tasks: number;
+    completed_tasks: number;
+    failed_tasks: number;
+    created_at: string;
+    created_by_auth_user_id?: string | null;
+    started_at?: string | null;
+    finished_at?: string | null;
+    source?: string | null;
+    mode?: string | null;
+    metadata?: any;
+    result?: {
+        inserted: number;
+        updated: number;
+        failed: number;
+    };
+};
+
+export type ScrapeTaskRecord = {
+    id: string;
+    job_id: string;
+    url: string;
+    source?: string | null;
+    status: string;
+    priority: number;
+    attempts: number;
+    event_id?: string | null;
+    result?: {
+        inserted?: boolean;
+        updated?: boolean;
+        failed?: boolean;
+        errorMessage?: string;
+        insertedIds?: string[];
+        updatedIds?: string[];
+        failedIds?: string[];
+    } | any;
+    last_error?: string | null;
+    created_at: string;
+    started_at?: string | null;
+    finished_at?: string | null;
+};
+
+export type ScrapeJobWithTasks = ScrapeJobRecord & { tasks: ScrapeTaskRecord[] };
+
 /**
  * Metadata about the source of the event
  * used to override the default values when importing from a source

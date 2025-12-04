@@ -16,6 +16,7 @@ import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
 import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 import ImportEventURLsScreen from "./pages/Events/ImportEventURLsScreen";
 import { supabaseClient } from "./lib/supabaseClient";
+import JobsScreen from "./pages/Jobs/JobsScreen";
 
 // ---------- Global axios auth (no instances) ----------
 let axiosAuthInitialized = false;
@@ -150,6 +151,7 @@ export default function App() {
     "/facilitators",
     "/print-runs",
     "/events/import-urls",
+    "/jobs",
   ];
 
   const currentTabIndex = tabRoutes.findIndex(
@@ -179,6 +181,7 @@ export default function App() {
             <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
             <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
+            <Tab label="Jobs" component={RouterLink} to="/jobs" />
           </Tabs>
         </Toolbar>
       </AppBar>
@@ -198,6 +201,7 @@ export default function App() {
         <Route path="/promo-codes" element={<PromoCodeEventManager />} />
         <Route path="/deep-links" element={<DeepLinksListScreen />} />
         <Route path="/deep-links/new" element={<EditDeepLinkScreen />} />
+        <Route path="/jobs" element={<JobsScreen />} />
         <Route path="/deep-links/:id" element={<EditDeepLinkScreen />} />
         <Route path="*" element={<Navigate to="/weekly-picks" replace />} />
       </Routes>

@@ -1,7 +1,4 @@
 import { Response, Router } from 'express';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import PQueue from 'p-queue';
 import moment from 'moment-timezone';
 import { connectRedisClient } from '../connections/redisClient.js';
@@ -17,15 +14,10 @@ import { transformMedia } from './helpers/transformMedia.js';
 import scrapeURLs from '../scrapers/scrapeURLs.js';
 import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 import { createJob, getJob } from '../scrapers/jobQueue.js';
-import { scrapeEventbriteOrganizers } from '../scrapers/eventbriteOrganizers.js';
-import { scrapePluraEvents } from '../scrapers/plura.js';
-import { scrapeOrganizerTantraNY } from '../scrapers/organizers/tantraNY.js';
+import { listJobs } from '../scrapers/jobQueue.js';
+import runAllScrapers from '../scrapers/runAllScrapers.js';
 
 const router = Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DEFAULT_EB_LIST = path.resolve(__dirname, '../../data/datasets/kink_eventbrite_organizer_urls.json');
-const DEFAULT_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b';
 const EXCLUDE_EVENT_IDS = [
     "e7179b3b-b4f8-40df-8d87-f205b0caaeb1", // New York LGBTQ+ Community Events Calendar
     "036f8010-9910-435f-8119-2025a046f452", // NYC Kink Community Events Calendar
@@ -36,6 +28,10 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
     const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
     const calendarType = req.query.wishlist ? "wishlist" : "calendar";
+    const includeHiddenOrganizers = req.query.includeHiddenOrganizers === 'true';
+    const includeHiddenEvents = req.query.includeHidden === 'true';
+    const visibilityParam = req.query.visibility;
+    const cacheKeyWithFlags = `${cacheKey}:${includeHiddenOrganizers}:${includeHiddenEvents}:${visibilityParam || 'public'}`;
 
     if (req.query.visibility === 'private') {
         if (!req.authUserId) {
@@ -46,13 +42,19 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     }
 
     try {
-        const redisClient = await connectRedisClient();
+        let redisClient = null;
+        try {
+            redisClient = await connectRedisClient();
+        } catch (err) {
+            console.error('[events] redis unavailable, proceeding without cache', err);
+        }
 
-        const responseData = await fetchAndCacheData(redisClient, cacheKey, () =>
-            // @ts-ignore
-            supabaseClient
-                .from("events")
-                .select(`
+        const runQuery = () => {
+            let query =
+                // @ts-ignore
+                supabaseClient
+                    .from("events")
+                    .select(`
           *,
           organizer:organizers(id, name, url, hidden, promo_codes(id, promo_code, discount, discount_type, scope, organizer_id)),
           communities!inner(id, name, organizer_id),
@@ -63,18 +65,26 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
           event_media (
             id, sort_order, created_at,
             media: media ( * )
-          ),
-           classification:classifications(
+            ),
+          classification:classifications(
                 tags,
                 experience_level,
                 interactivity_level,
                 inclusivity
             )
         `)
-                .gte("start_date", nycMidnightUTC)
-                .eq('hidden', false),
-            flushCache
-        );
+                    .gte("start_date", nycMidnightUTC);
+
+            if (!includeHiddenEvents) {
+                query = query.eq('hidden', false);
+            }
+
+            return query;
+        };
+
+        const responseData = redisClient
+            ? await fetchAndCacheData(redisClient, cacheKeyWithFlags, runQuery, flushCache)
+            : JSON.stringify((await runQuery()).data || []);
 
         let response = JSON.parse(responseData);
 
@@ -99,18 +109,12 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
 
         response = transformPromoCodes(response);
 
-        // filter out hidden organizers that we want to ignore but are still
-        // automatically ingested into the database
-        const eventsWithVisibleOrganizers = response
-            .filter((event: Event) => !event.organizer.hidden)
+        // filter out hidden organizers that we want to ignore but are still automatically ingested into the database
+        const eventsWithVisibleOrganizers = includeHiddenOrganizers
+            ? response
+            : response.filter((event: Event) => !event.organizer.hidden);
 
-        const publicEvents = eventsWithVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
-        response = publicEvents;
-
-        // // all private events
-        // const privateEvents = withVisibleOrganizers.filter((event: Event) => event.visibility === 'private')
-
-        // we want to extract events only from their private communities
+        // If requesting private events, include both public and my private events
         if (req.query.visibility === 'private') {
             if (!req.authUserId) {
                 console.error('User not specified');
@@ -125,9 +129,18 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                     && event.visibility === 'private'
             })
 
-            res.status(200).send(myPrivateCommunityEvents);
+            const publicEvents = eventsWithVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
+            const mergedById = [...publicEvents, ...myPrivateCommunityEvents].reduce<Record<string, Event>>((acc, ev: any) => {
+                acc[String(ev.id)] = ev;
+                return acc;
+            }, {});
+            res.status(200).send(Object.values(mergedById));
             return;
         }
+
+        // Default: public events only
+        const publicEvents = eventsWithVisibleOrganizers.filter((event: Event) => event.visibility === 'public');
+        response = publicEvents;
 
         // if we request the wishlist, we need to filter the events
         if (calendarType === 'wishlist') {
@@ -159,6 +172,7 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 .set("Content-Type", "text/calendar")
                 .send(createIcal(response, calendarType));
         } else {
+            console.log('[events] sending', response.length, 'events')
             res.status(200).send(response);
         }
     } catch (error) {
@@ -241,72 +255,11 @@ router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest,
     res.json(eventResults);
 });
 
-// Daily Eventbrite scrape using organizer URLs (default list or provided)
-router.post('/scrape/eventbrite', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    try {
-        const { organizerURLs, eventDefaults } = req.body || {};
-        const urls: string[] = Array.isArray(organizerURLs) && organizerURLs.length
-            ? organizerURLs
-            : JSON.parse(fs.readFileSync(DEFAULT_EB_LIST, 'utf-8'));
-
-        if (!Array.isArray(urls) || urls.length === 0) {
-            res.status(400).json({ error: 'organizerURLs is required (non-empty)' });
-            return;
-        }
-
-        const defaults = eventDefaults || {
-            source_ticketing_platform: 'Eventbrite',
-            dataset: 'Kink',
-            communities: [{ id: DEFAULT_COMMUNITY_ID }],
-        };
-
-        const events = await scrapeEventbriteOrganizers({
-            organizerURLs: urls,
-            eventDefaults: defaults,
-        });
-
-        const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId);
-        res.json({ events: eventResults, count: events.length });
-    } catch (err: any) {
-        console.error('Error scraping Eventbrite organizers', err);
-        res.status(500).json({ error: err?.message || 'Failed to scrape Eventbrite organizers' });
-    }
-});
-
 // Run all scrapers (Eventbrite organizers, Plura, TantraNY) and upsert + classify
 router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     try {
-        const ebUrls: string[] = JSON.parse(fs.readFileSync(DEFAULT_EB_LIST, 'utf-8'));
-
-        const ebDefaults = {
-            source_ticketing_platform: 'Eventbrite' as const,
-            dataset: 'Kink' as const,
-            communities: [{ id: DEFAULT_COMMUNITY_ID }],
-        };
-
-        const pluraDefaults = {
-            source_ticketing_platform: 'Plura' as const,
-            dataset: 'Kink' as const,
-            communities: [{ id: DEFAULT_COMMUNITY_ID }],
-        };
-
-        const tantraDefaults = {
-            dataset: 'Kink' as const,
-            source_origination_platform: 'organizer_api' as const,
-        };
-
-        const [ebEvents, pluraEvents, tantraEvents] = await Promise.all([
-            scrapeEventbriteOrganizers({ organizerURLs: ebUrls, eventDefaults: ebDefaults }),
-            scrapePluraEvents({ eventDefaults: pluraDefaults }),
-            scrapeOrganizerTantraNY({ url: undefined as any, eventDefaults: tantraDefaults }),
-        ]);
-
-        const allEvents = [...ebEvents, ...pluraEvents, ...tantraEvents].filter(
-            ev => !ev.original_id || !EXCLUDE_EVENT_IDS.includes(ev.original_id)
-        );
-
-        const eventResults = await upsertEventsClassifyAndStats(allEvents, req.authUserId);
-        res.json({ count: allEvents.length, events: eventResults });
+        const { jobId, enqueued } = await runAllScrapers(req.authUserId);
+        res.json({ jobId, enqueued });
     } catch (err: any) {
         console.error('Error scraping all sources', err);
         res.status(500).json({ error: err?.message || 'Failed to scrape sources' });
@@ -319,18 +272,81 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
         res.status(400).json({ error: 'urls (array) is required' });
         return;
     }
-    const jobId = createJob(urls, priority);
+    const jobId = await createJob(urls, priority, { authUserId: req.authUserId, source: 'auto' });
     res.json({ jobId });
 });
 
 router.get('/import-urls/:jobId', authenticateAdminRequest, (req: AuthenticatedRequest, res: Response) => {
     const { jobId } = req.params;
-    const payload = getJob(jobId);
-    if (!payload) {
-        res.status(404).json({ error: 'job not found' });
-        return;
+    getJob(jobId).then(payload => {
+        if (!payload) {
+            res.status(404).json({ error: 'job not found' });
+            return;
+        }
+        res.json(payload);
+    }).catch(err => {
+        console.error('Failed to fetch job', err);
+        res.status(500).json({ error: 'failed to fetch job' });
+    });
+});
+
+router.get('/import-urls', authenticateAdminRequest, (_req: AuthenticatedRequest, res: Response) => {
+    listJobs().then(jobs => res.json({ jobs })).catch(err => {
+        console.error('Failed to list jobs', err);
+        res.status(500).json({ error: 'failed to list jobs' });
+    });
+});
+
+// Jobs + tasks in one payload
+router.get('/scrape-jobs', authenticateAdminRequest, async (_req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { data: jobs, error: jobsErr } = await supabaseClient
+            .from('scrape_jobs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(3);
+        if (jobsErr) {
+            res.status(500).json({ error: jobsErr.message });
+            return;
+        }
+
+        const jobIds = (jobs || []).map((j: any) => j.id);
+        console.log('[scrape-jobs] fetched jobs', jobIds.length);
+
+        let tasks: any[] = [];
+        if (jobIds.length > 0) {
+            const { data: t, error: tasksErr } = await supabaseClient
+                .from('scrape_tasks')
+                .select('*')
+                .in('job_id', jobIds);
+            if (tasksErr) {
+                console.error('[scrape-jobs] failed tasks query', tasksErr);
+                res.status(500).json({ error: tasksErr.message });
+                return;
+            }
+            tasks = t || [];
+        }
+        console.log('[scrape-jobs] fetched tasks', tasks.length);
+
+        const grouped = (jobs || []).map((job: any) => ({
+            ...job,
+            tasks: tasks.filter((t: any) => t.job_id === job.id),
+            result: (() => {
+                const summary = { inserted: 0, updated: 0, failed: 0 };
+                tasks.forEach((t: any) => {
+                    if (t.job_id !== job.id) return;
+                    if (t.result?.inserted) summary.inserted += 1;
+                    if (t.result?.updated) summary.updated += 1;
+                    if (t.result?.failed || t.status === 'failed') summary.failed += 1;
+                });
+                return summary;
+            })(),
+        }));
+        res.json({ jobs: grouped });
+    } catch (err: any) {
+        console.error('Failed to load jobs+tasks', err);
+        res.status(500).json({ error: err?.message || 'failed to load jobs' });
     }
-    res.json(payload);
 });
 
 router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {

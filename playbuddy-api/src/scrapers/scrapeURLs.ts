@@ -4,6 +4,8 @@ import { scrapeEventbriteEvent } from './eventbrite.js';
 import { scrapeEventbriteOrganizers } from './eventbriteOrganizers.js';
 import { scrapeForbiddenTicketsEvent } from './forbiddenTickets.js';
 import scrapePartifulEvent from './partiful.js';
+import scrapePluraEvents from './plura.js';
+import scrapeOrganizerTantraNY from './organizers/tantraNY.js';
 import { aiScrapeEventsFromUrl } from './ai/single.js';
 import { aiDiscoverAndScrapeFromUrl } from './ai/discovery.js';
 type ScraperEntry = {
@@ -15,6 +17,16 @@ type ScraperEntry = {
 const SCRAPERS: Record<string, ScraperEntry> = {
     'eventbrite.com': {
         scraper: scrapeEventbriteEvent,
+        eventRegex: /.*/,
+        eventRegexIndex: 0,
+    },
+    'joinbloom.community': {
+        scraper: scrapePluraEvents,
+        eventRegex: /.*/,
+        eventRegexIndex: 0,
+    },
+    'tantrany.com': {
+        scraper: scrapeOrganizerTantraNY as any,
         eventRegex: /.*/,
         eventRegexIndex: 0,
     },
@@ -94,9 +106,6 @@ export const scrapeURLs = async (
 
         try {
             const scraped = await config.scraper({ url: eventId, eventDefaults });
-
-            console.log('scraped', scraped)
-
             if (scraped) results.push(...scraped);
         } catch (err: any) {
             if (err?.message === 'Timeout') {
@@ -107,9 +116,6 @@ export const scrapeURLs = async (
         }
     }
 
-    console.log('results', results)
-
-    console.log(`✅ Scraped ${results.length} events`);
     return results;
 };
 

@@ -2,6 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { User } from '@supabase/supabase-js';
 
+const SERVICE_AUTH_USER_ID = '72d7d9d2-fe96-4615-a57b-1d1cbdedf8d3';
+
 const getAuthUser = async (token: string) => {
     // Verify the token using Supabase Admin client
     const { data, error } = await supabaseClient.auth.getUser(token);
@@ -71,6 +73,8 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
 
     // service key for scraper
     if (process.env.PLAYBUDDY_API_SERVICE_KEY === token) {
+        console.log('authenticated as scraper')
+        req.authUserId = SERVICE_AUTH_USER_ID;
         return next();
     }
 
