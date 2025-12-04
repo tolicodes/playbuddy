@@ -1,4 +1,4 @@
-import { CreateOrganizerInput, Media, NormalizedEventInput } from "../../../common/types/commonTypes.js";
+import { CreateOrganizerInput, Media, NormalizedEventInput, Event } from "../../../common/types/commonTypes.js";
 import { supabaseClient } from "../../../connections/supabaseClient.js";
 import { upsertOrganizer } from "./upsertOrganizer.js";
 import axios from "axios";
