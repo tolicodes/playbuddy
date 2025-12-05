@@ -42,5 +42,5 @@ jobs:
           if [ -n "$AUTH_TOKEN" ]; then
             HEADERS+=( -H "Authorization: Bearer ${AUTH_TOKEN}" )
           fi
-          curl -fsS --retry 3 --retry-connrefused "${HEADERS[@]}" "$URL"
+          curl -fsS --retry 3 --retry-connrefused -X POST "${HEADERS[@]}" "$URL"
           echo "Endpoint responded OK at $NOW"
