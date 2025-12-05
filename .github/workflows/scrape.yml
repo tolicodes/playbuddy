@@ -1,119 +1,46 @@
-name: Ping endpoint, keep 1h, then stop
+name: Call API Scrape
 
 on:
   workflow_dispatch:
     inputs:
-      app:
-        description: Fly app name
-        required: true
-        default: playbuddy-scraper
       base_url:
         description: Base URL to hit
         required: true
-        default: https://playbuddy-scraper.fly.dev
+        default: https://api.playbuddy.me
       endpoint_path:
-        description: Endpoint to hit (e.g., /run)
+        description: Endpoint to hit (e.g., /events/scrape)
         required: true
-        default: /scrape
-      health_path:
-        description: Health endpoint (e.g., /healthz)
-        required: true
-        default: /healthz
-      keep_alive_minutes:
-        description: Minutes to keep service up after hit
-        required: true
-        default: "60"
+        default: /events/scrape
+      auth_token:
+        description: Bearer token to call the API (optional)
+        required: false
 
   schedule:
     - cron: "0 */12 * * *" # every 12 hours (UTC)
 
 jobs:
-  run-and-stop:
+  call-api:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 30
     concurrency:
-      group: ping-endpoint
+      group: call-api-scrape
       cancel-in-progress: true
 
-    # Fallbacks ensure schedule runs work with no inputs
     env:
-      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      FLY_ACCESS_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-      FLY_APP: ${{ github.event.inputs.app || 'playbuddy-scraper' }}
-      BASE_URL: ${{ github.event.inputs.base_url || 'https://playbuddy-scraper.fly.dev' }}
-      ENDPOINT_PATH: ${{ github.event.inputs.endpoint_path || '/scrape' }}
-      HEALTH_PATH: ${{ github.event.inputs.health_path || '/healthz' }}
-      KEEP_ALIVE_MINUTES: ${{ github.event.inputs.keep_alive_minutes || '60' }}
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://api.playbuddy.me' }}
+      ENDPOINT_PATH: ${{ github.event.inputs.endpoint_path || '/events/scrape' }}
+      AUTH_TOKEN: ${{ github.event.inputs.auth_token || secrets.PLAYBUDDY_API_SERVICE_KEY || '' }}
 
     steps:
-      - name: Setup flyctl
-        uses: superfly/flyctl-actions/setup-flyctl@v1
-
-      - name: Install jq
-        run: sudo apt-get update -y && sudo apt-get install -y jq
-
-      - name: Start machines if stopped
-        run: |
-          set -euo pipefail
-          JSON=$(flyctl machines list -a "$FLY_APP" --json)
-          IDS=$(echo "$JSON" | jq -r '.[].id')
-          if [ -z "$IDS" ]; then
-            echo "No machines found for $FLY_APP"
-            exit 1
-          fi
-          echo "$JSON" | jq -r '.[] | "\(.id) \(.state)"' | while read -r id state; do
-            id=$(echo -n "$id" | tr -d '\r\n\t ')
-            echo "Machine: $id (state=$state)"
-            if [ "$state" != "started" ]; then
-              echo "Starting $id"
-              flyctl machine start "$id" -a "$FLY_APP"
-            else
-              echo "$id already started"
-            fi
-          done
-
-      - name: Wait for health
-        run: |
-          set -euo pipefail
-          URL="${BASE_URL}${HEALTH_PATH}"
-          echo "Waiting for $URL to return 200..."
-          for i in {1..90}; do
-            if curl -fsS --retry 2 --retry-connrefused "$URL" > /dev/null; then
-              echo "Healthy"
-              exit 0
-            fi
-            echo "Not healthy yet... ($i/90)"
-            sleep 5
-          done
-          echo "Service never became healthy"
-          exit 1
-
-      - name: Hit job endpoint
+      - name: Call scrape endpoint
         run: |
           set -euo pipefail
           URL="${BASE_URL}${ENDPOINT_PATH}"
-          echo "Calling: $URL"
-          curl -fsS --retry 2 --retry-connrefused "$URL" > /dev/null
-          echo "Endpoint responded OK"
-
-      - name: Keep alive
-        run: |
-          set -euo pipefail
-          case "$KEEP_ALIVE_MINUTES" in ''|*[!0-9]*) echo "KEEP_ALIVE_MINUTES must be numeric"; exit 1 ;; esac
-          echo "Sleeping for ${KEEP_ALIVE_MINUTES} minutes..."
-          sleep $(( KEEP_ALIVE_MINUTES * 60 ))
-
-      - name: Stop all machines
-        if: always()
-        run: |
-          set -euo pipefail
-          IDS=$(flyctl machines list -a "$FLY_APP" --json | jq -r '.[].id')
-          if [ -z "$IDS" ]; then
-            echo "No machines found to stop"
-            exit 0
+          NOW="$(date -u +"%Y-%m-%d %H:%M:%SZ")"
+          echo "Calling: $URL at $NOW"
+          HEADERS=()
+          if [ -n "$AUTH_TOKEN" ]; then
+            HEADERS+=( -H "Authorization: Bearer ${AUTH_TOKEN}" )
           fi
-          while IFS= read -r id; do
-            id=$(echo -n "$id" | tr -d '\r\n\t ')
-            echo "Stopping $id"
-            flyctl machine stop "$id" -a "$FLY_APP" || true
-          done <<< "$IDS"
+          curl -fsS --retry 3 --retry-connrefused "${HEADERS[@]}" "$URL"
+          echo "Endpoint responded OK at $NOW"
