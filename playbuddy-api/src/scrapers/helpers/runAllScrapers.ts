@@ -2,9 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createJob } from './jobQueue.js';
-import { scrapePluraEvents } from './plura.js';
-import { scrapeOrganizerTantraNY } from './organizers/tantraNY.js';
-import { scrapeEventbriteOrganizers } from './eventbriteOrganizers.js';
+import { scrapePluraEvents } from '../plura.js';
+import { scrapeOrganizerTantraNY } from '../organizers/tantraNY.js';
+import { scrapeEventbriteOrganizers } from '../eventbriteOrganizers.js';
 
 const ENABLE_PLURA = false;
 const ENABLE_TANTRA = false;
@@ -12,7 +12,8 @@ const ENABLE_EVENTBRITE = process.env.ENABLE_EVENTBRITE !== 'false';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DEFAULT_EB_LIST = path.resolve(__dirname, '../../data/datasets/kink_eventbrite_organizer_urls.json');
+const DEFAULT_EB_LIST = path.resolve(__dirname, '../../../data/datasets/kink_eventbrite_organizer_urls.json');
+const EXTRA_URLS_LIST = path.resolve(__dirname, '../../../data/datasets/urls.json');
 const DEFAULT_COMMUNITY_ID = '72f599a9-6711-4d4f-a82d-1cb66eac0b7b';
 
 const normalizeTantraUrl = (raw?: string) => {
@@ -25,6 +26,9 @@ const normalizeTantraUrl = (raw?: string) => {
 
 export const runAllScrapers = async (authUserId?: string) => {
     const ebUrls: string[] = JSON.parse(fs.readFileSync(DEFAULT_EB_LIST, 'utf-8'));
+    const extraUrls: string[] = fs.existsSync(EXTRA_URLS_LIST)
+        ? JSON.parse(fs.readFileSync(EXTRA_URLS_LIST, 'utf-8'))
+        : [];
 
     const ebDefaults = {
         source_ticketing_platform: 'Eventbrite' as const,
@@ -71,10 +75,16 @@ export const runAllScrapers = async (authUserId?: string) => {
         prefetched: [ev],
     }));
 
+    const extraTasks = extraUrls.map(url => ({
+        url,
+        source: 'auto',
+    }));
+
     const tasks = [
         ...ebTasks,
         ...pluraTasks,
         ...tantraTasks,
+        ...extraTasks,
     ];
 
     const jobId = await createJob(tasks as any, 5, { authUserId, source: 'all' });

@@ -122,12 +122,19 @@ const JobsScreen: React.FC = () => {
       {isLoading && <Typography variant="body2">Loading…</Typography>}
       <Stack spacing={2}>
         {[...jobs]
-          .sort((a, b) => (b.tasks?.length || 0) - (a.tasks?.length || 0))
+          .sort((a, b) => {
+            const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
+            const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
+            return bTime - aTime;
+          })
           .map((job: ScrapeJobWithTasks) => {
             const tasks = job.tasks || [];
             const total = job.total_tasks || tasks.length || 0;
             const done = job.completed_tasks + job.failed_tasks;
             const pct = total ? Math.round((done / total) * 100) : 0;
+            const jobCreated = job.created_at
+              ? new Date(job.created_at).toLocaleString()
+              : "unknown";
             const grouped = tasks.reduce<Record<string, ScrapeTask[]>>((acc, t) => {
               const ids = getEventIdsFromTask(t);
               const ev = ids.length ? eventById[ids[0]] : undefined;
@@ -138,15 +145,18 @@ const JobsScreen: React.FC = () => {
               return acc;
             }, {});
 
-            return (
-              <Accordion key={job.id} defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Stack direction="row" spacing={2} alignItems="center" sx={{ width: "100%" }}>
-                    <Typography variant="subtitle1">Job {job.id}</Typography>
-                    <Chip size="small" label={job.status} color={statusColor(job.status) as any} />
-                    <Typography variant="body2">
-                      {done}/{total} completed
-                    </Typography>
+          return (
+            <Accordion key={job.id}>
+              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                <Stack direction="row" spacing={2} alignItems="center" sx={{ width: "100%" }}>
+                  <Typography variant="subtitle1">Job {job.id}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Started: {jobCreated}
+                  </Typography>
+                  <Chip size="small" label={job.status} color={statusColor(job.status) as any} />
+                  <Typography variant="body2">
+                    {done}/{total} completed
+                  </Typography>
                     <Box sx={{ flex: 1 }}>
                       <LinearProgress variant="determinate" value={pct} sx={{ height: 8, borderRadius: 4 }} />
                     </Box>

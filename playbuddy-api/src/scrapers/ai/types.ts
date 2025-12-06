@@ -16,7 +16,6 @@ export type DiscoverParams = {
 
 export type DiscoveredLink = {
     url: string;
-    approx_start_time?: string | null;
-    title?: string | null;
-    source_hint?: string | null;
+    start_date?: string | null;
+    source?: string | null;
 };

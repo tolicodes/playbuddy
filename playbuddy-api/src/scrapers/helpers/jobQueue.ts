@@ -1,9 +1,9 @@
 import PQueue from 'p-queue';
 import { randomUUID } from 'crypto';
 import scrapeURLs from './scrapeURLs.js';
-import { supabaseClient } from '../connections/supabaseClient.js';
-import { NormalizedEventInput } from '../commonTypes.js';
-import { upsertEvent } from '../routes/helpers/writeEventsToDB/upsertEvent.js';
+import { supabaseClient } from '../../connections/supabaseClient.js';
+import { NormalizedEventInput } from '../../commonTypes.js';
+import { upsertEvent } from '../../routes/helpers/writeEventsToDB/upsertEvent.js';
 
 type TaskStatus = 'pending' | 'running' | 'completed' | 'failed';
 type JobStatus = 'pending' | 'running' | 'completed' | 'failed';

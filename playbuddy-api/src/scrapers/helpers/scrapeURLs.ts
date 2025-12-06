@@ -1,13 +1,12 @@
-import { NormalizedEventInput } from '../commonTypes.js';
-import { ScraperParams } from '../scrapers/types.js';
-import { scrapeEventbriteEvent } from './eventbrite.js';
-import { scrapeEventbriteOrganizers } from './eventbriteOrganizers.js';
-import { scrapeForbiddenTicketsEvent } from './forbiddenTickets.js';
-import scrapePartifulEvent from './partiful.js';
-import scrapePluraEvents from './plura.js';
-import scrapeOrganizerTantraNY from './organizers/tantraNY.js';
-import { aiScrapeEventsFromUrl } from './ai/single.js';
-import { aiDiscoverAndScrapeFromUrl } from './ai/discovery.js';
+import { NormalizedEventInput } from '../../commonTypes.js';
+import { ScraperParams } from '../types.js';
+import { scrapeEventbriteEvent } from '../eventbrite.js';
+import { scrapeEventbriteOrganizers } from '../eventbriteOrganizers.js';
+import { scrapeForbiddenTicketsEvent } from '../forbiddenTickets.js';
+import scrapePartifulEvent from '../partiful.js';
+import scrapePluraEvents from '../plura.js';
+import scrapeOrganizerTantraNY from '../organizers/tantraNY.js';
+import aiAutoScrapeUrl from '../ai/auto.js';
 type ScraperEntry = {
     scraper: (params: ScraperParams) => Promise<NormalizedEventInput[] | null>;
     eventRegex: RegExp;
@@ -41,16 +40,6 @@ const SCRAPERS: Record<string, ScraperEntry> = {
         eventRegexIndex: 0,
     },
 };
-
-const AI_SCRAPER: ScraperEntry = {
-    scraper: aiScrapeEventsFromUrl,
-    // scraper: aiDiscoverAndScrapeFromUrl,
-    eventRegex: /.*/,
-    eventRegexIndex: 0,
-}
-
-const timeout = (ms: number): Promise<null> =>
-    new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms));
 
 const dedupe = (urls: string[]): string[] => {
     const seen = new Set();
@@ -94,7 +83,14 @@ export const scrapeURLs = async (
             continue;
         }
 
-        const config = SCRAPERS[domain] || AI_SCRAPER;
+        const config = SCRAPERS[domain];
+
+        // If no explicit scraper, let AI decide multi vs single
+        if (!config) {
+            const aiEvents = await aiAutoScrapeUrl({ url, eventDefaults });
+            if (aiEvents?.length) results.push(...aiEvents);
+            continue;
+        }
 
         const match = url.match(config.eventRegex);
         if (!match || !match[config.eventRegexIndex]) {

@@ -80,6 +80,26 @@ export function PromoCodeEventManager() {
                 <div style={{ marginTop: '30px' }}>
                     <CreatePromoCode organizerId={selectedOrganizerId} />
 
+                    {organizerPromoCodes.length > 0 && (
+                        <div style={{ marginTop: 16 }}>
+                            <h3>Organizer Promo Codes</h3>
+                            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                {organizerPromoCodes.map((pc) => (
+                                    <li key={pc.id} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>
+                                        <strong>{pc.promo_code}</strong>{' '}
+                                        <span style={{ color: '#555' }}>
+                                            {pc.discount_type === 'percent'
+                                                ? `${pc.discount}%`
+                                                : pc.discount_type === 'amount'
+                                                    ? `$${pc.discount}`
+                                                    : pc.discount_type}
+                                        </span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
                     <h3>Events</h3>
                     {filteredEvents.map(event => {
                         const attached = event.promo_codes?.[0];

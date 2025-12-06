@@ -1,4 +1,3 @@
-// src/scrapers/ai/discovery.ts
 import type { NormalizedEventInput } from '../../commonTypes.js';
 import { DiscoverParams, DiscoveredLink } from './types.js';
 import { fetchRenderedHtml } from './oxylabs.js';
@@ -23,12 +22,13 @@ export const aiDiscoverAndScrapeFromUrl = async function ({
         if (file) dbg('Saved LIST HTML', file);
     }
 
-    const discovered = await extractEventLinksAIOnly(html, url, nowISO);
-    dbg('DISCOVERED (pre-cap)', discovered?.length || 0);
-    console.log('discovered', discovered)
-    if (!discovered?.length) return [];
+    const discovered = await extractEventLinksAIOnly(html, url, nowISO, maxEvents);
+    dbg('DISCOVERED type', `${discovered?.type} count=${discovered?.items?.length || 0}`);
+    if (!discovered || discovered.type === 'single') {
+        return await aiScrapeEventsFromUrl({ url, eventDefaults, nowISO });
+    }
 
-    const uniq = dedupeByUrl(discovered).slice(0, Math.max(1, Math.min(500, maxEvents)));
+    const uniq = dedupeByUrl(discovered.items || []).slice(0, Math.max(1, Math.min(500, maxEvents)));
     dbg('DISCOVERED (uniq, capped)', uniq.length);
 
     const results = await Promise.allSettled(
@@ -39,30 +39,34 @@ export const aiDiscoverAndScrapeFromUrl = async function ({
         results.flatMap(r => r.status === 'fulfilled' ? (r.value || []) : []);
     const final = flat.filter(ev => isFutureEvent(ev, nowISO));
 
-    console.log('final', final)
     dbg('FINAL_SCRAPED_EVENTS', final.length);
     return final;
 };
 
-export async function extractEventLinksAIOnly(html: string, baseUrl: string, nowISO: string): Promise<DiscoveredLink[]> {
-    const cleaned = cleanHtml(html);
+export async function extractEventLinksAIOnly(html: string, baseUrl: string, nowISO: string, maxEvents = 25): Promise<{ type: 'list' | 'single'; items: DiscoveredLink[] }> {
+    // Lightly clean and strip obvious boilerplate to focus the prompt
+    const cleaned = cleanHtml(html)
+        .replace(/<script[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?<\/style>/gi, '');
     const u = new URL(baseUrl);
+    const truncated = cleaned.slice(0, 120000); // keep generous context but trimmed
 
     const prompt = [
-        `Extract ticket URLs from an HTML page that is a list of events.`,
+        `You are classifying and extracting events from HTML.`,
+        `Return ONLY strict JSON: { "type": "list" | "single", "items": [{ "url": string, "start_date": string|null, "source": string|null }] }`,
         `Rules:`,
-        `- Ignore nav, footer, socials, and non-event links.`,
-        `- Treat as a list if the page has multiple blocks with date/time and links to ticket sites or internal event pages.`,
-        `- Return only links that look like dedicated event detail pages or direct ticket pages.`,
-        `- If you can infer datetime near a link, include it as ISO in "approx_start_time", else null.`,
-        `- Add "source_hint" when detectable from URL.`,
-        `- Prefer future events relative to NOW_ISO. Exclude items you can tell are in the past.`,
-        `Output strict JSON: { "items": Array<{ url: string, approx_start_time: string|null, title: string|null, source_hint: string|null }> }`,
-        ``,
+        `- If this is a single-event page (one event, buy button, long description), set type:"single" and items:[]`,
+        `- If this is a list of multiple events, set type:"list" and return up to ${maxEvents} items.`,
+        `- URLs must be absolute HTTPS; convert relative using BASE_ORIGIN. Drop mailto/tel/# links.`,
+        `- Only include links that look like event detail/ticket pages (eventbrite, partiful, forbiddentickets, joinbloom, tantrany, google form, ticket URLs).`,
+        `- Ignore nav/footer/social/login/cart/etc.`,
+        `- Only include a url if you see a date/time near a link, store date in ISO in start_date.`,
+        `- Exclude obvious past events relative to NOW_ISO.`,
+        `- Deduplicate by canonical URL (strip query/fragment).`,
         `BASE_URL: ${baseUrl}`,
         `BASE_ORIGIN: ${u.origin}`,
         `NOW_ISO: ${nowISO}`,
-        `CLEAN_HTML (truncated):\n${cleaned.slice(0, 120_000)}`
+        `CLEAN_HTML (truncated):\n${truncated}`
     ].join('\n');
 
     const t0 = Date.now();
@@ -75,6 +79,7 @@ export async function extractEventLinksAIOnly(html: string, baseUrl: string, now
 
     const raw = resp.choices[0]?.message?.content ?? '';
     const obj = safeParseJsonObject(raw) as any;
+    const type: 'list' | 'single' = obj?.type === 'single' ? 'single' : 'list';
     const items = Array.isArray(obj?.items) ? obj.items : [];
 
     const normalized: DiscoveredLink[] = [];
@@ -84,18 +89,17 @@ export async function extractEventLinksAIOnly(html: string, baseUrl: string, now
         let abs: string;
         try { abs = new URL(href, u).toString(); } catch { continue; }
 
-        const approxISO = toISO(it?.approx_start_time) || null;
+        const approxISO = toISO(it?.start_date) || null;
         if (approxISO && !isStartFuture(approxISO, nowISO)) continue;
 
         normalized.push({
             url: abs,
-            approx_start_time: approxISO,
-            title: (it?.title ?? null) || null,
-            source_hint: (it?.source_hint ?? null) || classifyPlatform(abs) || null,
+            start_date: approxISO,
+            source: (it?.source ?? null) || classifyPlatform(abs) || null,
         });
     }
 
-    return normalized;
+    return { type, items: normalized };
 }
 
 function dedupeByUrl(items: DiscoveredLink[]): DiscoveredLink[] {
