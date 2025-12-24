@@ -1,7 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Box,
   Checkbox,
+  Chip,
+  Tabs,
+  Tab,
+  Divider,
+  Paper,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -9,6 +15,9 @@ import {
   TableRow,
   Typography,
   Button,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import TurndownService from 'turndown';
 
@@ -16,6 +25,7 @@ import TurndownService from 'turndown';
 import { useCreateEventBulk } from '../../common/db-axios/useEvents';
 import { useUpdateMunch } from '../../common/db-axios/useMunches';
 import { useFetchMunches } from '../../common/db-axios/useMunches';
+import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { Munch, Event } from '../../common/types/commonTypes';
 
 const FETLIFE_URL = 'https://fetlife.com';
@@ -34,6 +44,7 @@ interface MappedEvent extends ImportedEvent {
 
 export default function ImportCSVScreen() {
   const { data: munches = [] } = useFetchMunches();
+  const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
   const createEventBulk = useCreateEventBulk();
   const updateMunch = useUpdateMunch();
 
@@ -41,23 +52,57 @@ export default function ImportCSVScreen() {
   const [excluded, setExcluded] = useState<Record<string, boolean>>({});
   const [isMunchOverride, setIsMunchOverride] = useState<Record<string, boolean>>({});
   const [isPlayParty, setIsPlayParty] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [tab, setTab] = useState<'table' | 'calendar'>('table');
+  const [hideExistingOrgsInCalendar, setHideExistingOrgsInCalendar] = useState(true);
 
   const turndownService = new TurndownService();
+
+  const normalizeHandle = (handle?: string | null) =>
+    (handle || '').replace(/^@/, '').trim().toLowerCase() || 'unknown';
+
+  const compareByDate = (a?: string | null, b?: string | null) => {
+    const da = a ? new Date(a).getTime() : NaN;
+    const db = b ? new Date(b).getTime() : NaN;
+    if (Number.isNaN(da) && Number.isNaN(db)) return 0;
+    if (Number.isNaN(da)) return 1;
+    if (Number.isNaN(db)) return -1;
+    return da - db;
+  };
+
+  const formatDateParts = (iso?: string | null) => {
+    if (!iso) return { weekday: '–', monthDay: '' };
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return { weekday: '–', monthDay: '' };
+    const weekday = d.toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase();
+    const monthDay = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase();
+    return { weekday, monthDay };
+  };
 
   const munchMap = useMemo(() => {
     const map: Record<string, Munch> = {};
     munches.forEach((munch: Munch) => {
       if (munch.fetlife_handle) {
-        map[munch.fetlife_handle.toLowerCase()] = munch;
+        map[normalizeHandle(munch.fetlife_handle)] = munch;
       }
     });
     return map;
   }, [munches]);
 
+  const organizerByFetlifeHandle = useMemo(() => {
+    const map: Record<string, any> = {};
+    organizers.forEach((org: any) => {
+      if (org.fetlife_handle) {
+        map[normalizeHandle(org.fetlife_handle)] = org;
+      }
+    });
+    return map;
+  }, [organizers]);
+
   const groupedEvents = useMemo(() => {
     const grouped: Record<string, MappedEvent[]> = {};
     importedEvents.forEach((event) => {
-      const handle = event.fetlife_handle?.toLowerCase() || event.instagram_handle?.toLowerCase();
+      const handle = normalizeHandle(event.fetlife_handle || event.instagram_handle);
       const munch = munchMap[handle];
       if (!grouped[handle]) grouped[handle] = [];
       grouped[handle].push({ ...event, munch });
@@ -67,6 +112,31 @@ export default function ImportCSVScreen() {
     console.log('grouped', grouped)
     return grouped;
   }, [importedEvents, munchMap]);
+
+  const sortedGroupEntries = useMemo(() => {
+    return Object.entries(groupedEvents)
+      .map(([handle, events]) => [handle, [...events].sort((a, b) => compareByDate(a.start_date, b.start_date))] as [string, MappedEvent[]])
+      .sort(([, aEvents], [, bEvents]) => compareByDate(aEvents[0]?.start_date, bEvents[0]?.start_date));
+  }, [groupedEvents]);
+
+  const calendarEvents = useMemo(() => {
+    return [...importedEvents]
+      .map((ev) => {
+        const sourceType = ev.fetlife_handle ? 'fetlife' : 'instagram';
+        const orgName = ev.fetlife_handle || ev.instagram_handle || 'Unknown organizer';
+        const orgUrl =
+          sourceType === 'fetlife'
+            ? `https://fetlife.com/${ev.fetlife_handle}`
+            : ev.instagram_handle
+              ? `https://instagram.com/${ev.instagram_handle}`
+              : undefined;
+        const handle = normalizeHandle(ev.fetlife_handle || ev.instagram_handle);
+        const existing = organizerByFetlifeHandle[handle];
+        return { ...ev, sourceType, orgName, orgUrl, existing };
+      })
+      .filter((ev) => !(hideExistingOrgsInCalendar && ev.existing))
+      .sort((a, b) => compareByDate(a.start_date, b.start_date));
+  }, [importedEvents, hideExistingOrgsInCalendar, organizerByFetlifeHandle]);
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -110,6 +180,20 @@ export default function ImportCSVScreen() {
     reader.readAsText(file);
   };
 
+  useEffect(() => {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      Object.keys(groupedEvents).forEach((handle) => {
+        if (next[handle] === undefined) {
+          next[handle] = !!organizerByFetlifeHandle[handle];
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [groupedEvents, organizerByFetlifeHandle]);
+
   const getMissingFields = (event: ImportedEvent) => {
     const missing = [];
     if (!event.name) missing.push('name');
@@ -125,7 +209,7 @@ export default function ImportCSVScreen() {
   };
 
   const handleCreateAll = async () => {
-    for (const [handle, handleEvents] of Object.entries(groupedEvents)) {
+    for (const [, handleEvents] of Object.entries(groupedEvents)) {
       const createEventsInput = []
       for (const event of handleEvents) {
         const key = `${event.name}_${event.start_date}`;
@@ -185,98 +269,236 @@ export default function ImportCSVScreen() {
   };
 
   return (
-    <Box p={4}>
-      <Typography variant="h4" gutterBottom>CSV Importer</Typography>
-      <input type="file" accept=".json" onChange={handleJsonUpload} />
+    <Box p={4} sx={{ backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+        <Typography variant="h4">CSV Importer</Typography>
+        <Chip label="FetLife / Instagram JSON" color="primary" variant="outlined" />
+      </Stack>
+      <Typography color="text.secondary" mb={2}>
+        Upload the JSON exported from the scraper. Existing FetLife organizers will start collapsed and grayed out.
+      </Typography>
+      <Button variant="contained" component="label" sx={{ mb: 3 }}>
+        Upload JSON
+        <input hidden type="file" accept=".json" onChange={handleJsonUpload} />
+      </Button>
 
-      {Object.entries(groupedEvents).map(([handle, munchEvents]) => (
-        <Box key={handle} mt={4}>
+      <Divider sx={{ mb: 2 }} />
+      <Tabs value={tab} onChange={(_, val) => setTab(val)} sx={{ mb: 2 }}>
+        <Tab value="table" label="Table" />
+        <Tab value="calendar" label="Calendar" />
+      </Tabs>
 
-          <Typography variant="h6">
-            Group:&nbsp;
-            {(() => {
-              const firstEvent = munchEvents[0];
-              const sourceType = firstEvent.fetlife_handle ? 'fetlife' : 'instagram';
-              const url = sourceType === 'fetlife'
-                ? `https://fetlife.com/${firstEvent.fetlife_handle}`
-                : `https://instagram.com/${firstEvent.instagram_handle}`;
-              const name = sourceType === 'fetlife'
-                ? firstEvent.fetlife_handle
-                : firstEvent.instagram_handle;
+      {tab === 'table' && sortedGroupEntries.map(([handle, munchEvents]) => {
+        const firstEvent = munchEvents[0];
+        const sourceType = firstEvent.fetlife_handle ? 'fetlife' : 'instagram';
+        const url = sourceType === 'fetlife'
+          ? `https://fetlife.com/${firstEvent.fetlife_handle}`
+          : `https://instagram.com/${firstEvent.instagram_handle}`;
+        const name = sourceType === 'fetlife'
+          ? firstEvent.fetlife_handle
+          : firstEvent.instagram_handle;
+        const existingOrganizer = organizerByFetlifeHandle[handle];
+        const isCollapsed = !!collapsedGroups[handle];
 
-              return <a href={url} target="_blank" rel="noopener noreferrer">{name}</a>;
-            })()}
-          </Typography>
+        return (
+          <Paper
+            key={handle}
+            elevation={0}
+            sx={{
+              mt: 3,
+              borderRadius: 2,
+              border: '1px solid #e5e7eb',
+              backgroundColor: existingOrganizer ? '#f3f4f6' : '#fff',
+              opacity: existingOrganizer && isCollapsed ? 0.75 : 1,
+              transition: 'background-color 0.2s ease, opacity 0.2s ease',
+              p: 2.5,
+            }}
+          >
+            <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
+              <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" rowGap={1}>
+                <Typography variant="h6">
+                  <a href={url} target="_blank" rel="noopener noreferrer">{name || '(unknown handle)'}</a>
+                </Typography>
+                <Chip label={`${munchEvents.length} event${munchEvents.length === 1 ? '' : 's'}`} size="small" />
+                <Chip label={sourceType === 'fetlife' ? 'FetLife' : 'Instagram'} size="small" color="secondary" variant="outlined" />
+                {existingOrganizer && (
+                  <Chip
+                    label={`Existing organizer: ${existingOrganizer.name}`}
+                    size="small"
+                    color="default"
+                    variant="filled"
+                  />
+                )}
+              </Stack>
+              <Stack direction="row" spacing={1}>
+                {existingOrganizer && (
+                  <Chip label="Already in DB" size="small" color="default" variant="outlined" />
+                )}
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() =>
+                    setCollapsedGroups((prev) => ({ ...prev, [handle]: !prev[handle] }))
+                  }
+                >
+                  {isCollapsed ? 'Expand' : 'Collapse'}
+                </Button>
+              </Stack>
+            </Stack>
 
-          <Table>
-            <TableHead>
+            {!isCollapsed && (
+              <Table size="small" sx={{ mt: 2, backgroundColor: '#fff' }}>
+                <TableHead>
               <TableRow>
-                <TableCell>Title</TableCell>
-                <TableCell>Is Munch?</TableCell>
-                <TableCell>Is Play Party?</TableCell>
-                <TableCell>Exclude</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {munchEvents.map((event, idx) => {
-                const key = `${event.name}_${event.start_date}`;
-                const missingFields = getMissingFields(event);
+                  <TableCell>Date</TableCell>
+                  <TableCell>Title</TableCell>
+                  <TableCell>Is Munch?</TableCell>
+                  <TableCell>Is Play Party?</TableCell>
+                  <TableCell>Exclude</TableCell>
+                  <TableCell>Status</TableCell>
+                </TableRow>
+                </TableHead>
+                <TableBody>
+                  {munchEvents.map((event, idx) => {
+                    const { weekday, monthDay } = formatDateParts(event.start_date);
+                    const key = `${event.name}_${event.start_date}`;
+                    const missingFields = getMissingFields(event);
 
-                return (
-                  <TableRow key={idx}>
-                    <TableCell>
-                      <a href={event.ticket_url} target="_blank" rel="noopener noreferrer">
-                        {event.name}
+                    return (
+                      <TableRow key={idx} hover>
+                        <TableCell width="110">
+                          <Stack alignItems="center" spacing={0.5}>
+                            <Typography fontWeight={700} fontSize="0.9rem" color="text.secondary">
+                              {weekday}
+                            </Typography>
+                            <Typography fontWeight={800} fontSize="1.1rem" letterSpacing={1}>
+                              {monthDay}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
+                        <TableCell>
+                          <a href={event.ticket_url} target="_blank" rel="noopener noreferrer">
+                            {event.name}
+                          </a>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {event.location}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={!!isMunchOverride[key]}
+                            onChange={() =>
+                              setIsMunchOverride((prev) => ({
+                                ...prev,
+                                [key]: !prev[key],
+                              }))
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={!!isPlayParty[key]}
+                            onChange={() =>
+                              setIsPlayParty((prev) => ({
+                                ...prev,
+                                [key]: !prev[key],
+                              }))
+                            }
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Checkbox
+                            checked={!!excluded[key]}
+                            onChange={() => toggleExclude(key)}
+                          />
+                        </TableCell>
+
+                        <TableCell>
+                          {missingFields.length > 0 ? (
+                            <Typography color="error" fontSize="0.875rem">
+                              Missing: {missingFields.join(', ')}
+                            </Typography>
+                          ) : (
+                            <Typography color="success.main" fontSize="0.875rem">
+                              Ready
+                            </Typography>
+                          )}
+                        </TableCell>
+                      </TableRow>
+
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
+          </Paper>
+        );
+      })}
+
+      {tab === 'calendar' && (
+        <Paper elevation={0} sx={{ mt: 2, p: 2.5, border: '1px solid #e5e7eb', borderRadius: 2 }}>
+          <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            <Chip
+              label={hideExistingOrgsInCalendar ? 'Existing organizers hidden' : 'Existing organizers shown'}
+              size="small"
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setHideExistingOrgsInCalendar((prev) => !prev)}
+            >
+              {hideExistingOrgsInCalendar ? 'Show existing organizers' : 'Hide existing organizers'}
+            </Button>
+          </Stack>
+          <List dense>
+            {calendarEvents.map((ev, idx) => {
+              const { weekday, monthDay } = formatDateParts(ev.start_date);
+              return (
+                <ListItem key={`${ev.name}_${ev.start_date}_${idx}`} alignItems="flex-start" divider>
+                  <Stack width={96} alignItems="center" spacing={0.5} mr={2}>
+                    <Typography fontWeight={700} fontSize="0.9rem" color="text.secondary">
+                      {weekday}
+                    </Typography>
+                    <Typography fontWeight={800} fontSize="1.1rem" letterSpacing={1}>
+                      {monthDay}
+                    </Typography>
+                  </Stack>
+                  <ListItemText
+                    primary={
+                      <a href={ev.ticket_url} target="_blank" rel="noopener noreferrer">
+                        {ev.name}
                       </a>
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={!!isMunchOverride[key]}
-                        onChange={() =>
-                          setIsMunchOverride((prev) => ({
-                            ...prev,
-                            [key]: !prev[key],
-                          }))
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={!!isPlayParty[key]}
-                        onChange={() =>
-                          setIsPlayParty((prev) => ({
-                            ...prev,
-                            [key]: !prev[key],
-                          }))
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={!!excluded[key]}
-                        onChange={() => toggleExclude(key)}
-                      />
-                    </TableCell>
+                    }
+                    secondary={
+                      <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                        {ev.orgUrl ? (
+                          <a href={ev.orgUrl} target="_blank" rel="noopener noreferrer">
+                            {ev.orgName}
+                          </a>
+                        ) : (
+                          ev.orgName
+                        )}
+                        <Chip label={ev.sourceType === 'fetlife' ? 'FetLife' : 'Instagram'} size="small" />
+                        {ev.location && (
+                          <Typography variant="caption" color="text.secondary">
+                            {ev.location}
+                          </Typography>
+                        )}
+                      </Stack>
+                    }
+                  />
+                </ListItem>
+              );
+            })}
+          </List>
+        </Paper>
+      )}
 
-                    <TableCell>
-                      {missingFields.length > 0 && (
-                        <Typography color="error" fontSize="0.875rem">
-                          Missing: {missingFields.join(', ')}
-                        </Typography>
-                      )}
-                    </TableCell>
-                  </TableRow>
-
-                );
-              })}
-            </TableBody>
-          </Table>
+      {Object.keys(groupedEvents).length > 0 && tab === 'table' && (
+        <Box mt={4}>
+          <Button variant="contained" onClick={handleCreateAll}>Create Events</Button>
         </Box>
-      ))}
-
-      <Box mt={4}>
-        <Button variant="contained" onClick={handleCreateAll}>Create Events</Button>
-      </Box>
+      )}
     </Box>
   );
 }

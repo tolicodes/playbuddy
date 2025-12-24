@@ -1,7 +1,7 @@
 .container {
-  max-width: 600px;
+  max-width: 960px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2rem 1.5rem;
 }
 
 .title {
@@ -11,8 +11,9 @@
 }
 
 .card {
-  background: white;
-  border: 1px solid #ccc;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
   padding: 1.5rem;
   border-radius: 8px;
   display: flex;
@@ -33,7 +34,7 @@
 
 .button {
   padding: 0.75rem 1.5rem;
-  background-color: #6a1b9a;
+  background: linear-gradient(120deg, #2563eb, #7c3aed);
   color: white;
   font-weight: 600;
   border: none;
@@ -43,7 +44,7 @@
 }
 
 .button:hover:not(:disabled) {
-  background-color: #8e24aa;
+  filter: brightness(1.05);
 }
 
 .button:disabled {
@@ -54,4 +55,222 @@
 .successMessage {
   color: #2e7d32;
   font-weight: 500;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.statCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #f8fafc;
+}
+
+.statLabel {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.resultsBlock {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resultsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.resultsTitle {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.resultsSubtitle {
+  margin: 4px 0 0 0;
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.countPill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.eventsList {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.eventRow {
+  display: flex;
+  align-items: center;
+  padding: 12px 14px;
+  gap: 14px;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+}
+
+.eventRow:last-child {
+  border-bottom: none;
+}
+
+.dateBadge {
+  min-width: 72px;
+  text-align: center;
+  border-radius: 10px;
+  background: #f1f5f9;
+  padding: 10px 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.weekday {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.monthDay {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.eventContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.eventTitle {
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.eventMeta {
+  color: #6b7280;
+  font-size: 13px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.metaLabel {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.statusPill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statusInserted {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.statusUpserted {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.statusFailed {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.statusNeutral {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.emptyState {
+  margin-top: 12px;
+  padding: 16px;
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  color: #6b7280;
+  text-align: center;
+  background: #f9fafb;
+}
+
+.thumbWrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbPlaceholder {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  border: 1px dashed #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #94a3b8;
+  background: #f8fafc;
+}
+
+.description {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.45;
+}
+
+.jsonBlock {
+  margin-top: 8px;
+  padding: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  overflow-x: auto;
 }

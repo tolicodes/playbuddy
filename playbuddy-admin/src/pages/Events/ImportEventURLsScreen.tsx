@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useImportEventURLs } from '../../common/db-axios/useEvents';
 import styles from './ImportEventURLsScreen.module.css';
 
@@ -38,17 +38,22 @@ function extractEventLike(row: upsertEventResult | AnyObj) {
 
   const name = ev?.name ?? '(no name)';
   const organizer = ev?.organizer?.name ?? '(no organizer)';
+  const startDate = ev?.start_date || ev?.start_time || ev?.end_time || null;
+  const image = ev?.image_url || ev?.cover_image_url || ev?.media?.[0]?.url || ev?.media?.[0]?.storage_path || null;
+  const description = ev?.description || ev?.description_md || ev?.description_html || '';
+  const location = ev?.location || ev?.venue_name || ev?.venue || ev?.address || '';
 
   const status = getRowStatus(row);
   const failed = status === 'Failed';
 
-  return { name, organizer, status, failed };
+  return { name, organizer, status, failed, startDate, image, description, location, raw: ev };
 }
 
 export default function ImportEventURLsScreen() {
   const [input, setInput] = useState('');
   const [status, setStatus] = useState<'idle' | 'importing' | 'done' | 'error'>('idle');
   const [result, setResult] = useState<any>(null);
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
 
   const importEvents = useImportEventURLs();
 
@@ -63,7 +68,7 @@ export default function ImportEventURLsScreen() {
     setStatus('importing');
     setResult(null);
     try {
-      const res = await importEvents.mutateAsync(urls);
+      const res = await importEvents.mutateAsync({ urls });
       setResult(res);
       setStatus('done');
     } catch (err) {
@@ -73,9 +78,19 @@ export default function ImportEventURLsScreen() {
   };
 
   // Normalize results for rendering
-  const eventsArray: upsertEventResult[] = Array.isArray(result)
-    ? result
-    : (result?.events as upsertEventResult[]) ?? [];
+  const eventsArray: upsertEventResult[] = useMemo(() => {
+    if (Array.isArray(result)) return result;
+    return (result?.events as upsertEventResult[]) ?? [];
+  }, [result]);
+
+  const formatDateParts = (iso?: string | null) => {
+    if (!iso) return { weekday: '–', monthDay: '' };
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return { weekday: '–', monthDay: '' };
+    const weekday = d.toLocaleDateString(undefined, { weekday: 'short' }).toUpperCase();
+    const monthDay = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return { weekday, monthDay };
+  };
 
   // Build detailed counts (inserted, upserted, failed)
   const derivedCounts = (() => {
@@ -135,76 +150,112 @@ export default function ImportEventURLsScreen() {
         </div>
 
         {/* Stats */}
-        {(status === 'done' || status === 'error') && (
-          <div style={{ marginTop: 16 }}>
-            <h3 style={{ margin: '8px 0' }}>Stats</h3>
-            <ul style={{ margin: 0, paddingLeft: 16, lineHeight: 1.6 }}>
-              {requested != null && <li><b>Requested:</b> {requested}</li>}
-              {scraped != null && <li><b>Scraped:</b> {scraped}</li>}
-              {counts && (
-                <>
-                  <li><b>Inserted:</b> {counts.inserted}</li>
-                  <li><b>Upserted:</b> {counts.upserted}</li>
-                  <li><b>Failed:</b> {counts.failed}</li>
-                  <li><b>Total returned:</b> {counts.total}</li>
-                </>
-              )}
-              {!counts && <li><b>Total returned:</b> {eventsArray.length}</li>}
-            </ul>
+        {result && (
+          <div className={styles.statsGrid}>
+            {requested != null && (
+              <div className={styles.statCard}>
+                <div className={styles.statLabel}>Requested</div>
+                <div className={styles.statValue}>{requested}</div>
+              </div>
+            )}
+            {scraped != null && (
+              <div className={styles.statCard}>
+                <div className={styles.statLabel}>Scraped</div>
+                <div className={styles.statValue}>{scraped}</div>
+              </div>
+            )}
+            {counts && (
+              <>
+                <div className={styles.statCard}>
+                  <div className={styles.statLabel}>Inserted</div>
+                  <div className={styles.statValue}>{counts.inserted}</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statLabel}>Upserted</div>
+                  <div className={styles.statValue}>{counts.upserted}</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statLabel}>Failed</div>
+                  <div className={styles.statValue}>{counts.failed}</div>
+                </div>
+                <div className={styles.statCard}>
+                  <div className={styles.statLabel}>Returned</div>
+                  <div className={styles.statValue}>{counts.total}</div>
+                </div>
+              </>
+            )}
+            {!counts && (
+              <div className={styles.statCard}>
+                <div className={styles.statLabel}>Returned</div>
+                <div className={styles.statValue}>{eventsArray.length}</div>
+              </div>
+            )}
           </div>
         )}
 
         {/* Results list */}
-        {status === 'done' && eventsArray.length > 0 && (
-          <div style={{ marginTop: 16 }}>
-            <h3 style={{ margin: '8px 0' }}>Imported Events</h3>
-            <div
-              style={{
-                maxHeight: 360,
-                overflowY: 'auto',
-                border: '1px solid #E5E7EB',
-                borderRadius: 8,
-              }}
-            >
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: 14,
-                }}
-              >
-                <thead>
-                  <tr style={{ background: '#F9FAFB' }}>
-                    <th style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>#</th>
-                    <th style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>Name</th>
-                    <th style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>Organizer</th>
-                    <th style={{ textAlign: 'left', padding: '8px 10px', borderBottom: '1px solid #E5E7EB' }}>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {eventsArray.map((row, idx) => {
-                    const { name, organizer, status } = extractEventLike(row);
-                    const color =
-                      status === 'Failed' ? '#DC2626' :
-                        status === 'Inserted' ? '#2563EB' : // blue-ish for insert
-                          status === 'Upserted' ? '#059669' :  // green for update
-                            '#6B7280'; // gray for OK/other
+        {result && eventsArray.length > 0 && (
+          <div className={styles.resultsBlock}>
+            <div className={styles.resultsHeader}>
+              <div>
+                <h3 className={styles.resultsTitle}>Imported Events</h3>
+                <p className={styles.resultsSubtitle}>Name, date, and organizer for each scraped URL.</p>
+              </div>
+              <span className={styles.countPill}>{eventsArray.length} events</span>
+            </div>
 
-                    return (
-                      <tr key={idx}>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid #F3F4F6', width: 36 }}>{idx + 1}</td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid #F3F4F6' }}>{name}</td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid #F3F4F6' }}>{organizer}</td>
-                        <td style={{ padding: '8px 10px', borderBottom: '1px solid #F3F4F6' }}>
-                          <span style={{ color }}>{status}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+            <div className={styles.eventsList}>
+              {eventsArray.map((row, idx) => {
+                const { name, organizer, status: rowStatus, startDate, image, description, location, raw } = extractEventLike(row);
+                const { weekday, monthDay } = formatDateParts(startDate);
+                const statusClass =
+                  rowStatus === 'Failed' ? styles.statusFailed :
+                    rowStatus === 'Inserted' ? styles.statusInserted :
+                      rowStatus === 'Upserted' ? styles.statusUpserted :
+                        styles.statusNeutral;
+                const isOpen = !!expanded[idx];
+
+                return (
+                  <div key={idx} className={styles.eventRow}>
+                    <div className={styles.dateBadge}>
+                      <div className={styles.weekday}>{weekday}</div>
+                      <div className={styles.monthDay}>{monthDay}</div>
+                    </div>
+                    {image ? (
+                      <div className={styles.thumbWrap}>
+                        <img src={image} alt={name} className={styles.thumb} />
+                      </div>
+                    ) : (
+                      <div className={styles.thumbPlaceholder}>No Image</div>
+                    )}
+                    <div className={styles.eventContent} onClick={() => setExpanded(prev => ({ ...prev, [idx]: !isOpen }))}>
+                      <div className={styles.eventTitle}>{name}</div>
+                      <div className={styles.eventMeta}>
+                        <span className={styles.metaLabel}>Organizer</span>
+                        <span>{organizer}</span>
+                      </div>
+                      {location && (
+                        <div className={styles.eventMeta}>
+                          <span className={styles.metaLabel}>Location</span>
+                          <span>{location}</span>
+                        </div>
+                      )}
+                      {isOpen && description && (
+                        <div className={styles.description}>{description}</div>
+                      )}
+                      {isOpen && (
+                        <pre className={styles.jsonBlock}>{JSON.stringify(raw, null, 2)}</pre>
+                      )}
+                    </div>
+                    <span className={`${styles.statusPill} ${statusClass}`}>{rowStatus}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
+        )}
+        {result && eventsArray.length === 0 && (
+          <div className={styles.emptyState}>No events returned.</div>
         )}
       </div>
     </div>

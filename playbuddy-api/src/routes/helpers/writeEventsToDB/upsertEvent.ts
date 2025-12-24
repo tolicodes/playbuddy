@@ -91,42 +91,50 @@ async function attachCommunities(eventId: string, communities: any[], organizerC
 
 
 export async function upsertEvent(event: NormalizedEventInput, authUserId?: string): Promise<UpsertEventResult> {
-    const organizerInfo = prepareOrganizer(event);
+    const normalizedEvent: NormalizedEventInput = { ...event };
+    if (!normalizedEvent.end_date && normalizedEvent.start_date) {
+        const start = new Date(normalizedEvent.start_date);
+        if (!Number.isNaN(start.getTime())) {
+            normalizedEvent.end_date = new Date(start.getTime() + 3 * 60 * 60 * 1000).toISOString();
+        }
+    }
+
+    const organizerInfo = prepareOrganizer(normalizedEvent);
     if (!organizerInfo) return { result: 'failed', event: null };
 
-    logEventHeader(organizerInfo.logName, event);
+    logEventHeader(organizerInfo.logName, normalizedEvent);
 
     try {
-        const upsertedOrganizer = await tryUpsertOrganizer(event.organizer!);
+        const upsertedOrganizer = await tryUpsertOrganizer(normalizedEvent.organizer!);
         if (!upsertedOrganizer) return { result: 'failed', event: null };
 
         const { organizerId, organizerCommunityId } = upsertedOrganizer;
 
-        const existingEventId = await resolveExistingEventId(event, organizerId);
+        const existingEventId = await resolveExistingEventId(normalizedEvent, organizerId);
 
-        if (existingEventId && event.visibility === 'public') {
+        if (existingEventId && normalizedEvent.visibility === 'public') {
             await setVisibility(existingEventId, 'public');
             log(`VISIBILITY: Changed to public`);
         }
 
         const locationAreaId = NYC_LOCATION_ID; // TODO: Replace with real location
-        const upsertedEvent = await upsertEventInDB(event, organizerId, locationAreaId, existingEventId);
+        const upsertedEvent = await upsertEventInDB(normalizedEvent, organizerId, locationAreaId, existingEventId);
 
         if (!upsertedEvent) {
             logError(`EVENT: Failed to upsert event`);
             return { result: 'failed', event: null };
         }
 
-        const communities = event.communities || [];
+        const communities = normalizedEvent.communities || [];
         const attached = await attachCommunities(upsertedEvent.id, communities, organizerCommunityId);
         if (!attached) return { result: 'failed', event: null };
 
-        if (event.media && event.media.length > 0) {
+        if (normalizedEvent.media && normalizedEvent.media.length > 0) {
             await syncEntityMedia({
                 entityId: upsertedEvent.id,
                 entityKey: 'event_id',
                 joinTable: 'event_media',
-                media: event.media?.map((med: Media) => {
+                media: normalizedEvent.media?.map((med: Media) => {
                     return {
                         id: med.id,
                         storage_path: med.storage_path,
@@ -140,7 +148,7 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
                 authUserId: authUserId!,
             });
 
-            log(`EVENT MEDIA: Synced ${event.media?.length} media`);
+            log(`EVENT MEDIA: Synced ${normalizedEvent.media?.length} media`);
         }
 
         log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
@@ -326,12 +334,11 @@ const upsertEventInDB = async (event: NormalizedEventInput, organizerId: string,
         }, { onConflict: 'id' })
         .select()
         .single();
-
-    upsertedEvent.organizer = { name: event.organizer?.name };
-
     if (upsertError || !upsertedEvent) {
         throw new Error(`EVENT: Error upserting event ${upsertError?.message}`);
     }
+
+    upsertedEvent.organizer = { name: event.organizer?.name };
 
     return upsertedEvent;
 }
