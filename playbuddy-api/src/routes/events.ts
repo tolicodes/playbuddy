@@ -12,8 +12,6 @@ import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 import { upsertEventsClassifyAndStats } from './helpers/upsertEventsBatch.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
-import scrapeURLs from '../scrapers/helpers/scrapeURLs.js';
-import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 import scrapeRoutes from './eventsScrape.js';
 
 const router = Router();
@@ -32,7 +30,10 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
     const includeHiddenOrganizers = req.query.includeHiddenOrganizers === 'true';
     const includeHiddenEvents = req.query.includeHidden === 'true';
     const visibilityParam = req.query.visibility;
-    const cacheKeyWithFlags = `${cacheKey}:${includeHiddenOrganizers}:${includeHiddenEvents}:${visibilityParam || 'public'}`;
+    const hasCustomFlags = includeHiddenOrganizers || includeHiddenEvents || !!visibilityParam || calendarType !== 'calendar';
+    const cacheKeyWithFlags = cacheKey; // always use base cache key
+
+    console.log('cacheKeyWithFlags', cacheKeyWithFlags, 'hasCustomFlags', hasCustomFlags);
 
     if (req.query.visibility === 'private') {
         if (!req.authUserId) {
@@ -57,7 +58,7 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                     .from("events")
                     .select(`
           *,
-          organizer:organizers(id, name, url, hidden, promo_codes(id, promo_code, discount, discount_type, scope, organizer_id)),
+          organizer:organizers(*, promo_codes(*)),
           communities!inner(id, name, organizer_id),
           location_area:location_areas(id, name),
           promo_code_event(
@@ -83,9 +84,22 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
             return query;
         };
 
-        const responseData = redisClient
-            ? await fetchAndCacheData(redisClient, cacheKeyWithFlags, runQuery, flushCache)
-            : JSON.stringify((await runQuery()).data || []);
+        let responseData: string;
+        if (redisClient) {
+            if (hasCustomFlags) {
+                console.log(`Flushing cache for key: ${cacheKeyWithFlags} due to custom flags`);
+                await redisClient.del(cacheKeyWithFlags);
+                responseData = JSON.stringify((await runQuery()).data || []);
+            } else {
+                if (flushCache) {
+                    console.log(`Flushing cache for key: ${cacheKeyWithFlags}`);
+                    await redisClient.del(cacheKeyWithFlags);
+                }
+                responseData = await fetchAndCacheData(redisClient, cacheKeyWithFlags, runQuery, flushCache);
+            }
+        } else {
+            responseData = JSON.stringify((await runQuery()).data || []);
+        }
 
         let response = JSON.parse(responseData);
 
@@ -173,7 +187,6 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
                 .set("Content-Type", "text/calendar")
                 .send(createIcal(response, calendarType));
         } else {
-            console.log('[events] sending', response.length, 'events')
             res.status(200).send(response);
         }
     } catch (error) {
@@ -230,7 +243,7 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
 
         await flushEvents();
 
-        return res.status(200).json({ message: "Event marked as weekly pick", event: data });
+        return res.status(200).json({ message: status ? "Event marked as weekly pick" : "Event removed from weekly picks", event: data });
     } catch (err) {
         console.error("Unexpected error:", err);
         return res.status(500).json({ error: "Internal server error" });
