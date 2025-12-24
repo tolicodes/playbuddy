@@ -84,7 +84,7 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
             throw new Error('No user found');
         }
 
-        if (user.authUser.email !== 'toli@toli.me') {
+        if (user.authUser.email !== 'toli@toli.me' && user.authUser.email !== 'admin@playbuddy.me') {
             throw new Error('User is not an admin');
         }
 
