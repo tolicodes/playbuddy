@@ -3,6 +3,23 @@ import type { EventResult } from '../types.js';
 import { postStatus, openTab, sleep, getRandomDelay, throttleHourly, closeTab } from '../utils.js';
 import moment from 'moment-timezone';
 
+function isTargetLocation(location: string | null | undefined): boolean {
+    if (!location) return false;
+    const loc = location.toLowerCase();
+    return loc.includes('new york');
+}
+
+function isBdsmparty(category: string | null | undefined): boolean {
+    if (!category) return false;
+    return category.trim().toLowerCase() === 'bdsm party';
+}
+
+function meetsBdsmpartyThreshold(ev: { category?: string | null; rsvp_count?: number | null }): boolean {
+    if (!isBdsmparty(ev.category)) return true;
+    const r = typeof ev.rsvp_count === 'number' ? ev.rsvp_count : Number(ev.rsvp_count || 0);
+    return r > 50;
+}
+
 /**
  * Parses a rawDatetime string into ISO start and end datetimes in UTC.
  * Supports all known FetLife datetime formats.
@@ -80,6 +97,28 @@ function extractEventDetailFromPage(): EventResult {
     const orgBlock = blocks.find((b) => b.textContent?.includes('Organized by'));
     const organizerLink = orgBlock?.querySelector('a');
 
+    const rsvpCount = (() => {
+        const candidates = Array.from(document.querySelectorAll('span, div, p, h6, strong')).map((el) =>
+            el.textContent?.trim() || ''
+        );
+        const patterns = [
+            /(\d+)\s*(?:rsvps?|rsvped|going|attending)/i,
+            /rsvps?\s*\(?(\d+)\)?/i,
+        ];
+        for (const text of candidates) {
+            for (const pat of patterns) {
+                const match = text.match(pat);
+                if (match) return Number(match[1]);
+            }
+        }
+        const bodyText = document.body?.innerText || '';
+        for (const pat of patterns) {
+            const match = bodyText.match(pat);
+            if (match) return Number(match[1]);
+        }
+        return null;
+    })();
+
     return {
         name: document.querySelector('h1.break-words.text-left')?.textContent?.trim() || '',
         rawDatetime: ps[2]?.textContent?.trim() || fallbackDatetime || '',
@@ -89,6 +128,7 @@ function extractEventDetailFromPage(): EventResult {
         ticket_url: location.href,
         fetlife_handle: organizerLink?.textContent?.trim() || null,
         organizer_href: organizerLink?.href || null,
+        rsvp_count: rsvpCount,
     };
 }
 
@@ -136,6 +176,11 @@ export async function scrapeEvents(handles: string[]): Promise<EventResult[]> {
         });
 
         await closeTab(tab);
+        postStatus(`🔎 Found ${links.length} event links for ${handle} (first few: ${links.slice(0, 5).join(', ')})`);
+
+        let skippedNJ = 0;
+        let skippedBDSM = 0;
+        let invalidDate = 0;
 
         for (const url of links) {
             await throttleHourly();
@@ -160,11 +205,26 @@ export async function scrapeEvents(handles: string[]): Promise<EventResult[]> {
 
             if (!parsedDateTime?.start || !parsedDateTime?.end) {
                 errors.push({ name: result.name, ticket_url: result.ticket_url, error: 'Invalid datetime' });
+                invalidDate += 1;
             }
 
-            results.push(result);
-            postStatus(`       ✔️ Scraped "${result.name}"`);
+            if (!isTargetLocation(result.location)) {
+                postStatus(`       ⏭️ Skipping non-NY event "${result.name}"`);
+                skippedNJ += 1;
+            } else if (!meetsBdsmpartyThreshold(result)) {
+                postStatus(`       ⏭️ Skipping BDSM Party under 50 RSVPs: "${result.name}"`);
+                skippedBDSM += 1;
+            } else {
+                if (result.category) postStatus(`       • Type: ${result.category}`);
+                results.push(result);
+                postStatus(`       ✔️ Scraped "${result.name}"`);
+            }
         }
+
+        const scrapedCount = results.length;
+        postStatus(
+        `📊 Summary for ${handle}: found ${links.length}, scraped ${scrapedCount}, skipped non-NY ${skippedNJ}, skipped low-RSVP BDSM ${skippedBDSM}, invalid datetime ${invalidDate}`
+        );
     }
 
     return results;
@@ -184,16 +244,69 @@ export async function scrapeNearbyEvents(): Promise<EventResult[]> {
                 return new Promise((resolve) => setTimeout(resolve, ms));
             }
 
-            const clickFilter = (label: string) => {
-                const btn = [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === label);
-                if (btn) btn.click();
+            const normalize = (s: string | null | undefined) => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+
+            async function waitForButton(label: string, timeoutMs = 15000, intervalMs = 250) {
+                const start = Date.now();
+                while (Date.now() - start < timeoutMs) {
+                    const btn = [...document.querySelectorAll('button')].find(
+                        (b) => normalize(b.textContent) === normalize(label)
+                    );
+                    if (btn) return btn as HTMLButtonElement;
+                    await sleep(intervalMs);
+                }
+                return null;
+            }
+
+            async function setDistance(label: string) {
+                // Open the distance dropdown (shows current like "50mi")
+                const trigger = await (async () => {
+                    const start = Date.now();
+                    while (Date.now() - start < 4000) {
+                        const match = [...document.querySelectorAll('a.link, button, div')].find((el) => {
+                            const txt = normalize(el.textContent);
+                            return /\d+mi/.test(txt) || txt.includes('mi');
+                        });
+                        if (match) return match as HTMLElement;
+                        await sleep(250);
+                    }
+                    return null;
+                })();
+                if (!trigger) return;
+                trigger.click();
+                await sleep(300);
+
+                const option = await (async () => {
+                    const start = Date.now();
+                    while (Date.now() - start < 8000) {
+                        const found = [...document.querySelectorAll('a.dropdown-menu-entry, a[range] span, span')]
+                            .map((el) => el.closest('a.dropdown-menu-entry') || (el.parentElement?.closest('a.dropdown-menu-entry') as HTMLElement | null) || null)
+                            .filter(Boolean) as HTMLElement[];
+                        const match = found.find((el) => normalize(el.textContent) === normalize(label));
+                        if (match) return match;
+                        await sleep(200);
+                    }
+                    return null;
+                })();
+                if (!option) return;
+                option.click();
+                await sleep(500);
+            }
+
+            const clickFilter = async (label: string) => {
+                const btn = await waitForButton(label);
+                if (!btn) return;
+                btn.click(); // single click to avoid toggling off
+                await sleep(500);
             };
 
-            clickFilter('5m');
-            clickFilter('Educational');
-            clickFilter('Social');
-            clickFilter('Conference / Festival');
-            await sleep(5000);
+            await setDistance('5mi');
+            await clickFilter('5m'); // can load late; wait for it explicitly
+            await clickFilter('Educational');
+            await clickFilter('Social');
+            await clickFilter('Conference / Festival');
+            await clickFilter('BDSM Party');
+            await sleep(8000); // give filters time to apply and results to hydrate
 
             const scrollContainer = document.scrollingElement || document.body;
             for (let i = 0; i < (TEST_MODE ? 2 : 20); i++) {
@@ -208,13 +321,18 @@ export async function scrapeNearbyEvents(): Promise<EventResult[]> {
     });
 
     await closeTab(tab);
+    postStatus(`🔍 Nearby page returned ${links.length} links (first few: ${links.slice(0, 5).join(', ')})`);
+
+    let skippedNJ = 0;
+    let skippedBDSM = 0;
+    let invalidDate = 0;
 
     for (const url of links) {
-        await throttleHourly();
-        await getRandomDelay();
+            await throttleHourly();
+            await getRandomDelay();
 
-        postStatus(`📍 Scraping ${url}`);
-        const eventTab = await openTab(url);
+            postStatus(`📍 Scraping ${url}`);
+            const eventTab = await openTab(url);
         await sleep(3000);
 
         const [{ result }]: any = await chrome.scripting.executeScript({
@@ -228,13 +346,27 @@ export async function scrapeNearbyEvents(): Promise<EventResult[]> {
 
         if (!parsedDateTime?.start || !parsedDateTime?.end) {
             errors.push({ name: result.name, ticket_url: result.ticket_url, error: 'Invalid datetime' });
+            invalidDate += 1;
         }
 
         await closeTab(eventTab);
 
-        results.push(result);
-        postStatus(`   ✅ Scraped "${result.name}"`);
+        if (!isTargetLocation(result.location)) {
+            postStatus(`   ⏭️ Skipping non-NY event "${result.name}"`);
+            skippedNJ += 1;
+        } else if (!meetsBdsmpartyThreshold(result)) {
+            postStatus(`   ⏭️ Skipping BDSM Party under 50 RSVPs: "${result.name}"`);
+            skippedBDSM += 1;
+        } else {
+            if (result.category) postStatus(`   • Type: ${result.category}`);
+            results.push(result);
+            postStatus(`   ✅ Scraped "${result.name}"`);
+        }
     }
+
+    postStatus(
+        `📈 Nearby summary: found ${links.length}, scraped ${results.length}, skipped non-NY ${skippedNJ}, skipped low-RSVP BDSM ${skippedBDSM}, invalid datetime ${invalidDate}`
+    );
 
     return results;
 }

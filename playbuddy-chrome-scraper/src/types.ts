@@ -12,6 +12,7 @@ export interface EventResult {
     start_date?: string | null;
     end_date?: string | null;
     image_url?: string | null;
+    rsvp_count?: number | null;
     error?: string;
 }
 

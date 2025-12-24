@@ -1,6 +1,6 @@
 import { scrapeTicketSite as scrapeFromTicketSites } from '../ticketSiteMapper.js';
 import type { EventResult, InstagramLink } from '../types.js';
-import { sleep, getRandomDelay, openTab, postStatus, throttleHourly } from '../utils.js';
+import { getRandomDelay, openTab, postStatus, sleep, throttleHourly } from '../utils.js';
 
 export async function scrapeInstagram(usernames: string[]): Promise<EventResult[]> {
     const results: EventResult[] = [];

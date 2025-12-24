@@ -1,8 +1,16 @@
 import { TEST_MODE } from './config.js';
 
 const MAX_EVENTS_PER_HOUR = 1000;
+const PROGRESS_KEY = 'PB_PROGRESS_LOGS';
 
 let eventTimestamps: number[] = [];
+let activeRunId: string | null = null;
+
+type ProgressRun = {
+    runId: string;
+    startedAt: number;
+    entries: { ts: number; msg: string }[];
+};
 
 export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -32,8 +40,33 @@ export function postStatus(msg: string): void {
     console.log(`🟣 ${msg}`);
     try {
         chrome.runtime?.sendMessage?.({ action: 'log', text: msg }, () => { });
+        appendProgress(msg);
     } catch (e) {
         // Fail silently if chrome runtime isn't available (e.g., when testing outside extension)
+    }
+}
+
+export function setActiveRunId(runId: string | null) {
+    activeRunId = runId;
+}
+
+async function appendProgress(msg: string) {
+    if (!activeRunId) return;
+    if (!chrome?.storage?.local) return;
+    const entry = { ts: Date.now(), msg };
+    try {
+        const { [PROGRESS_KEY]: existing = [] } = await chrome.storage.local.get(PROGRESS_KEY);
+        const runs: ProgressRun[] = (existing as ProgressRun[]) || [];
+        const idx = runs.findIndex(r => r.runId === activeRunId);
+        if (idx >= 0) {
+            runs[idx].entries = [...runs[idx].entries, entry].slice(-400);
+        } else {
+            runs.unshift({ runId: activeRunId, startedAt: Date.now(), entries: [entry] });
+        }
+        const capped = runs.slice(0, 8);
+        await chrome.storage.local.set({ [PROGRESS_KEY]: capped });
+    } catch (err) {
+        console.warn('Failed to persist progress', err);
     }
 }
 export async function openTab(url: string): Promise<chrome.tabs.Tab> {
