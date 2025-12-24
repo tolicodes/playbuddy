@@ -5,6 +5,8 @@ export type ScraperParams = {
     url: string;
     eventDefaults: Partial<NormalizedEventInput>;
     nowISO?: string;
+    multipleEvents?: boolean;
+    extractFromListPage?: boolean;
 };
 
 export type DiscoverParams = {
@@ -12,6 +14,7 @@ export type DiscoverParams = {
     eventDefaults: Partial<NormalizedEventInput>;
     nowISO?: string;
     maxEvents?: number;
+    extractFromListPage?: boolean;
 };
 
 export type DiscoveredLink = {

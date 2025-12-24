@@ -24,11 +24,17 @@ const normalizeTantraUrl = (raw?: string) => {
     return `https://tantrany.com/${raw}`;
 };
 
-export const runAllScrapers = async (authUserId?: string) => {
+export const runAllScrapers = async (authUserId?: string, opts: { scenario?: string } = {}) => {
+    const scenario = opts.scenario || 'all';
+    const urlsOnly = scenario === 'urls_json';
+
     const ebUrls: string[] = JSON.parse(fs.readFileSync(DEFAULT_EB_LIST, 'utf-8'));
-    const extraUrls: string[] = fs.existsSync(EXTRA_URLS_LIST)
+    const rawExtra = fs.existsSync(EXTRA_URLS_LIST)
         ? JSON.parse(fs.readFileSync(EXTRA_URLS_LIST, 'utf-8'))
         : [];
+    const extraUrls: { url: string; multipleEvents?: boolean; extractFromListPage?: boolean; metadata?: Record<string, any> }[] = (rawExtra as any[])
+        .map((entry) => (typeof entry === 'string' ? { url: entry } : entry))
+        .filter((e) => e?.url);
 
     const ebDefaults = {
         source_ticketing_platform: 'Eventbrite' as const,
@@ -47,14 +53,18 @@ export const runAllScrapers = async (authUserId?: string) => {
         source_origination_platform: 'organizer_api' as const,
     };
 
-    const ebEvents = ENABLE_EVENTBRITE
+    const includeEB = ENABLE_EVENTBRITE && !urlsOnly;
+    const includePlura = ENABLE_PLURA && !urlsOnly;
+    const includeTantra = ENABLE_TANTRA && !urlsOnly;
+
+    const ebEvents = includeEB
         ? await scrapeEventbriteOrganizers({ organizerURLs: ebUrls, eventDefaults: ebDefaults })
         : [];
 
     // Prefetch Plura and TantraNY to create per-record tasks
     const [pluraEvents, tantraEvents] = await Promise.all([
-        ENABLE_PLURA ? scrapePluraEvents({ eventDefaults: pluraDefaults }) : Promise.resolve([]),
-        ENABLE_TANTRA ? scrapeOrganizerTantraNY({ url: 'https://tantrany.com/api/events-listings.json.php?user=toli', eventDefaults: tantraDefaults }) : Promise.resolve([]),
+        includePlura ? scrapePluraEvents({ eventDefaults: pluraDefaults }) : Promise.resolve([]),
+        includeTantra ? scrapeOrganizerTantraNY({ url: 'https://tantrany.com/api/events-listings.json.php?user=toli', eventDefaults: tantraDefaults }) : Promise.resolve([]),
     ]);
 
     const ebTasks = ebEvents.map(ev => ({
@@ -75,19 +85,22 @@ export const runAllScrapers = async (authUserId?: string) => {
         prefetched: [ev],
     }));
 
-    const extraTasks = extraUrls.map(url => ({
-        url,
+    const extraTasks = extraUrls.map(entry => ({
+        url: entry.url,
         source: 'auto',
+        multipleEvents: !!entry.multipleEvents,
+        extractFromListPage: !!entry.extractFromListPage,
+        eventDefaults: entry.metadata,
     }));
 
     const tasks = [
-        ...ebTasks,
-        ...pluraTasks,
-        ...tantraTasks,
+        ...(includeEB ? ebTasks : []),
+        ...(includePlura ? pluraTasks : []),
+        ...(includeTantra ? tantraTasks : []),
         ...extraTasks,
     ];
 
-    const jobId = await createJob(tasks as any, 5, { authUserId, source: 'all' });
+    const jobId = await createJob(tasks as any, 5, { authUserId, source: scenario || 'all' });
     return { jobId, enqueued: tasks.length };
 };
 

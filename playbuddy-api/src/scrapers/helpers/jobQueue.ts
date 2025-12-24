@@ -33,6 +33,8 @@ export type ScrapeTask = {
     attempts: number;
     eventDefaults?: Partial<NormalizedEventInput>;
     prefetched?: NormalizedEventInput[];
+    multipleEvents?: boolean;
+    extractFromListPage?: boolean;
     result?: any;
     error?: string;
     event_id?: string | null;
@@ -58,6 +60,20 @@ const TASK_CONCURRENCY = Number(process.env.SCRAPE_TASK_CONCURRENCY || 200);
 const UPSERT_CONCURRENCY = Number(process.env.SCRAPE_UPSERT_CONCURRENCY || 40);
 const taskQueue = new PQueue({ concurrency: TASK_CONCURRENCY });
 const upsertQueue = new PQueue({ concurrency: UPSERT_CONCURRENCY });
+
+let classifyRun: Promise<any> | null = null;
+export const triggerClassification = () => {
+    if (classifyRun) return classifyRun;
+    classifyRun = import('../../scripts/event-classifier/classifyEvents.js')
+        .then(mod => mod.classifyEventsInBatches?.())
+        .catch(err => {
+            console.error('[jobs] classifyEventsInBatches failed', err);
+        })
+        .finally(() => {
+            classifyRun = null;
+        });
+    return classifyRun;
+};
 
 const upsertJobRecord = async (job: ScrapeJob) => {
     try {
@@ -147,6 +163,8 @@ const updateJobProgress = (task: ScrapeTask) => {
     if (totalDone === job.totalTasks) {
         job.status = job.failedTasks > 0 ? 'failed' : 'completed';
         job.finishedAt = new Date();
+        // Once a scrape job finishes (success or failure), kick off classification for newly added events.
+        triggerClassification();
     } else {
         job.status = 'running';
     }
@@ -173,7 +191,10 @@ const runTask = async (taskId: string) => {
     upsertTaskRecord(updated);
 
     try {
-        const scrapedEvents = task.prefetched ?? await scrapeURLs([task.url], task.eventDefaults || {});
+        const scrapedEvents = task.prefetched ?? await scrapeURLs(
+            [{ url: task.url, multipleEvents: task.multipleEvents, extractFromListPage: task.extractFromListPage }],
+            task.eventDefaults || {}
+        );
         const upsertPromises = scrapedEvents.map(ev =>
             upsertQueue.add(async () => {
                 try {
@@ -277,7 +298,14 @@ const runTask = async (taskId: string) => {
     }
 };
 
-type JobInput = string | { url: string; eventDefaults?: Partial<NormalizedEventInput>; prefetched?: NormalizedEventInput[]; source?: string };
+type JobInput = string | {
+    url: string;
+    eventDefaults?: Partial<NormalizedEventInput>;
+    prefetched?: NormalizedEventInput[];
+    source?: string;
+    multipleEvents?: boolean;
+    extractFromListPage?: boolean;
+};
 
 type JobOptions = {
     priority?: number;
@@ -315,6 +343,8 @@ export const createJob = async (urls: JobInput[], priority = 5, options: JobOpti
         const eventDefaults = typeof input === 'string' ? undefined : input.eventDefaults;
         const prefetched = typeof input === 'string' ? undefined : input.prefetched;
         const inputSource = typeof input === 'string' ? undefined : input.source;
+        const multipleEvents = typeof input === 'string' ? undefined : input.multipleEvents;
+        const extractFromListPage = typeof input === 'string' ? undefined : input.extractFromListPage;
         const source = inputSource || resolveSource(url);
         const taskId = randomUUID();
         const task: ScrapeTask = {
@@ -327,6 +357,8 @@ export const createJob = async (urls: JobInput[], priority = 5, options: JobOpti
             attempts: 0,
             eventDefaults,
             prefetched,
+            multipleEvents,
+            extractFromListPage,
             createdAt: now,
         };
         tasks.set(taskId, task);

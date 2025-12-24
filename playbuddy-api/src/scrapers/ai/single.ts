@@ -1,36 +1,44 @@
 // src/scrapers/ai/single.ts
 import type { NormalizedEventInput } from '../../commonTypes.js';
 import { ScraperParams } from './types.js';
-import { fetchRenderedHtml } from './oxylabs.js';
 import { cleanHtml, safeParseJsonObject } from './html.js';
 import { dbg, DEBUG_SAVE_HTML, saveLogFile, stableNameFrom } from './debug.js';
 import { classifyPlatform, deriveOrganizerOriginalId, deriveOriginalId, isFutureEvent, isRetreatByDuration, toISO } from './normalize.js';
 import { MODEL, openai } from './config.js';
+import { renderAndPick } from './renderPicker.js';
 
 export const aiScrapeEventsFromUrl = async function ({
     url,
     eventDefaults,
     nowISO = new Date().toISOString(),
 }: ScraperParams): Promise<NormalizedEventInput[]> {
-    const html = await fetchRenderedHtml(url);
-    if (!html) return [];
-
-    if (DEBUG_SAVE_HTML) {
-        const base = stableNameFrom(url, html);
-        const file = await saveLogFile(`html-${base}`, '.html', html);
-        if (file) dbg('Saved HTML', file);
-    }
-
-    const ev = await extractEventAIOnly(html, url, eventDefaults);
-    if (!ev?.name || !ev?.start_date) {
-        console.log('No name or start date found');
+    const picked = await renderAndPick(url);
+    if (!picked) {
+        console.log('No valid renderers returned HTML');
         return [];
     }
-    if (!isFutureEvent(ev, nowISO)) {
-        console.log('Not a future event');
-        return [];
+
+    // Try chosen first, then fall back to other candidates if extraction fails
+    const ordered = [picked.chosen, ...picked.candidates.filter(c => c.provider !== picked.chosen.provider)];
+
+    for (const c of ordered) {
+        if (DEBUG_SAVE_HTML) {
+            const base = stableNameFrom(`${c.provider}-${url}`, c.html);
+            await saveLogFile(`html-${c.provider}-${base}`, '.html', c.html);
+        }
+
+        const ev = await extractEventAIOnly(c.html, url, eventDefaults);
+        if (ev && ev.name && ev.start_date && isFutureEvent(ev, nowISO)) {
+            dbg('EXTRACT pick', {
+                provider: c.provider,
+                renders: picked.renders.map(r => ({ provider: r.provider, ok: r.ok }))
+            });
+            return [ev];
+        }
     }
-    return [ev];
+
+    console.log('No valid event extracted from any renderer');
+    return [];
 };
 
 export async function extractEventAIOnly(
@@ -49,7 +57,7 @@ export async function extractEventAIOnly(
         `- Turn into markdown including images`,
         `Return ONLY strict JSON with ALL keys (null or [] if unknown):`,
         `  source_url, name, start_time (ISO), end_time (ISO),`,
-        `  organizer: { name, url }, ticket_url, image_url, event_url,`,
+        `  organizer: { name, url }, ticket_url (make sure you include domain), image_url, event_url,`,
         `  location, price, tags (array), description_md, short_summary.`,
         `SOURCE_URL: ${url}`,
         `CLEAN_HTML (truncated):\n${cleaned.slice(0, 120_000)}`
@@ -68,7 +76,6 @@ export async function extractEventAIOnly(
     const raw = resp.choices[0]?.message?.content ?? '';
     const core = safeParseJsonObject(raw) as any;
     console.log('ML Extract', core);
-
 
     if (!core) return null;
 
@@ -103,8 +110,6 @@ export async function extractEventAIOnly(
         non_ny: false,
         type: isRetreatByDuration(startISO, endISO) ? 'retreat' : 'event',
     };
-
-    console.log('base', base)
 
     return base;
 }

@@ -51,18 +51,22 @@ function padBlockTagsWithNewlines(input: string): string {
 
 export function safeParseJsonObject(txt: string): Record<string, any> | null {
     const direct = tryJson(txt);
-    if (direct && typeof direct === 'object' && !Array.isArray(direct)) return direct;
+    if (direct && typeof direct === 'object') return direct;
 
     const fence = txt.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
     if (fence) {
         const fenced = tryJson(fence[1]);
-        if (fenced && typeof fenced === 'object' && !Array.isArray(fenced)) return fenced;
+        if (fenced && typeof fenced === 'object') return fenced;
     }
-    const first = txt.indexOf('{');
-    const last = txt.lastIndexOf('}');
-    if (first !== -1 && last !== -1 && last > first) {
-        const maybe = tryJson(txt.slice(first, last + 1));
-        if (maybe && typeof maybe === 'object' && !Array.isArray(maybe)) return maybe;
+    const firstBrace = txt.indexOf('{');
+    const firstBracket = txt.indexOf('[');
+    const start = [firstBrace, firstBracket].filter(n => n !== -1).sort((a, b) => a - b)[0];
+    const lastBrace = txt.lastIndexOf('}');
+    const lastBracket = txt.lastIndexOf(']');
+    const end = Math.max(lastBrace, lastBracket);
+    if (start !== undefined && start !== -1 && end !== -1 && end > start) {
+        const maybe = tryJson(txt.slice(start, end + 1));
+        if (maybe && typeof maybe === 'object') return maybe;
     }
     return null;
 }

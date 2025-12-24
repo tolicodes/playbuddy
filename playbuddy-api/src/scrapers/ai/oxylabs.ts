@@ -1,6 +1,5 @@
 // src/scrapers/ai/fetchers.ts
 import fetch from 'node-fetch';
-import { dbg } from './debug.js';
 import { OXY_REALTIME_URL, OXY_USERNAME, OXY_PASSWORD } from './config.js';
 import { getUsingProxy } from '../helpers/getUsingProxy.js';
 
@@ -12,21 +11,35 @@ type OxylabsResult = {
     results?: Array<{ content?: string; status_code?: number }>;
 };
 
-export async function fetchRenderedHtml(url: string): Promise<string> {
-    // 1) Try Oxygen (single attempt)
-    try {
-        const html = await fetchWithOxygen(url);
-        if (html && html.length >= 100) {
-            dbg('Fetched with Oxygen');
-            return html;
-        }
-        dbg('Oxygen returned empty/short content — falling back to ScrapeDo');
-    } catch (e) {
-        dbg('Oxygen failed — falling back to ScrapeDo', e);
-    }
+export type RenderProvider = 'oxylabs' | 'scrapeio';
+export type RenderResult = { provider: RenderProvider; ok: boolean; html: string | null; ms: number; error?: string };
 
-    // 2) Fallback: ScrapeDo
-    return await getUsingProxy({ url, json: false });
+async function fetchWithScrapeIO(url: string): Promise<string | null> {
+    const html = await getUsingProxy({ url, json: false, render: true });
+    return html && html.trim().length > 0 ? html : null;
+}
+
+export async function fetchRenderedHtml(url: string): Promise<string> {
+    const results = await fetchRenderedHtmlBoth(url);
+    const pick = results.find(r => r.ok && r.html) || results.find(r => r.html) || null;
+    if (pick?.html) return pick.html;
+    throw new Error(`render failed (oxylabs ok=${results.find(r => r.provider === 'oxylabs')?.ok}, scrapeio ok=${results.find(r => r.provider === 'scrapeio')?.ok})`);
+}
+
+export async function fetchRenderedHtmlBoth(url: string): Promise<RenderResult[]> {
+    const run = async (provider: RenderProvider): Promise<RenderResult> => {
+        const t0 = Date.now();
+        try {
+            const html = provider === 'oxylabs'
+                ? await fetchWithOxygen(url)
+                : await fetchWithScrapeIO(url);
+            return { provider, ok: !!html, html: html ?? null, ms: Date.now() - t0 };
+        } catch (err: any) {
+            return { provider, ok: false, html: null, ms: Date.now() - t0, error: err?.message || String(err) };
+        }
+    };
+    const results = await Promise.all([run('oxylabs'), run('scrapeio')]);
+    return results;
 }
 
 async function fetchWithOxygen(url: string): Promise<string | null> {

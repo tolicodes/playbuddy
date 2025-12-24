@@ -7,6 +7,7 @@ import scrapePartifulEvent from '../partiful.js';
 import scrapePluraEvents from '../plura.js';
 import scrapeOrganizerTantraNY from '../organizers/tantraNY.js';
 import aiAutoScrapeUrl from '../ai/auto.js';
+type UrlInput = string | { url: string; multipleEvents?: boolean; extractFromListPage?: boolean; metadata?: Partial<NormalizedEventInput> };
 type ScraperEntry = {
     scraper: (params: ScraperParams) => Promise<NormalizedEventInput[] | null>;
     eventRegex: RegExp;
@@ -41,13 +42,21 @@ const SCRAPERS: Record<string, ScraperEntry> = {
     },
 };
 
-const dedupe = (urls: string[]): string[] => {
-    const seen = new Set();
-    return urls.filter((url) => {
-        const isNew = !seen.has(url);
-        seen.add(url);
-        return isNew;
-    });
+const normalizeInputs = (inputs: UrlInput[]): { url: string; multipleEvents?: boolean; extractFromListPage?: boolean; metadata?: Partial<NormalizedEventInput> }[] => {
+    return inputs
+        .map((i) => (typeof i === 'string' ? { url: i } : i))
+        .filter((i) => !!i.url);
+};
+
+const dedupe = (inputs: { url: string; multipleEvents?: boolean; extractFromListPage?: boolean; metadata?: Partial<NormalizedEventInput> }[]) => {
+    const seen = new Set<string>();
+    const out: typeof inputs = [];
+    for (const i of inputs) {
+        if (seen.has(i.url)) continue;
+        seen.add(i.url);
+        out.push(i);
+    }
+    return out;
 };
 
 const getDomainKey = (url: string): string => {
@@ -57,15 +66,23 @@ const getDomainKey = (url: string): string => {
 };
 
 export const scrapeURLs = async (
-    urls: string[],
+    urls: UrlInput[],
     eventDefaults: Partial<NormalizedEventInput> = {}
 ): Promise<NormalizedEventInput[]> => {
     const results: NormalizedEventInput[] = [];
-    const uniqueUrls = dedupe(urls);
+    const uniqueInputs = dedupe(normalizeInputs(urls));
 
-    for (let i = 0; i < uniqueUrls.length; i++) {
-        const url = uniqueUrls[i];
-        console.log(`[${i + 1}/${uniqueUrls.length}] ${url}`);
+    for (let i = 0; i < uniqueInputs.length; i++) {
+        const { url, multipleEvents, extractFromListPage, metadata } = uniqueInputs[i];
+        const mergedDefaults: Partial<NormalizedEventInput> = {
+            ...eventDefaults,
+            ...(metadata || {}),
+            organizer: {
+                ...(eventDefaults.organizer || {}),
+                ...((metadata as any)?.organizer || {}),
+            },
+        };
+        console.log(`[${i + 1}/${uniqueInputs.length}] ${url}`);
 
         const domain = getDomainKey(url);
 
@@ -87,7 +104,7 @@ export const scrapeURLs = async (
 
         // If no explicit scraper, let AI decide multi vs single
         if (!config) {
-            const aiEvents = await aiAutoScrapeUrl({ url, eventDefaults });
+            const aiEvents = await aiAutoScrapeUrl({ url, eventDefaults: mergedDefaults, multipleEvents, extractFromListPage });
             if (aiEvents?.length) results.push(...aiEvents);
             continue;
         }
@@ -101,7 +118,7 @@ export const scrapeURLs = async (
         const eventId = match[config.eventRegexIndex];
 
         try {
-            const scraped = await config.scraper({ url: eventId, eventDefaults });
+            const scraped = await config.scraper({ url: eventId, eventDefaults: mergedDefaults });
             if (scraped) results.push(...scraped);
         } catch (err: any) {
             if (err?.message === 'Timeout') {
