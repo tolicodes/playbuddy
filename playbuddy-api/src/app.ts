@@ -1,7 +1,9 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import cors from "cors";
+import bodyParser from "body-parser";
+
 
 // Import routes
 import eventsRoute from './routes/events.js';
@@ -23,8 +25,28 @@ import marketingRoute from './routes/marketing.js'
 import attendeesRoute from './routes/attendees.js'
 import followsRoute from './routes/follows.js'
 import classificationsRoute from './routes/classifications.js'
+import scriptsRoute from './routes/scripts.js'
+
+console.log('API Started')
+
+// Import with `import * as Sentry from "@sentry/node"` if you are using ESM
+import * as Sentry from "@sentry/node";
+
+Sentry.init({
+  dsn: "https://eb473a7813bd49e3e03fb5d42a28d35d@o4509833897377792.ingest.us.sentry.io/4509833897902080",
+
+  // Setting this option to true will send default PII data to Sentry.
+  // For example, automatic IP address collection on events
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0, //  Capture 100% of the transactions
+
+});
+
+
 
 export const app = express();
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
 // Middleware setup
 app.use(express.urlencoded({ extended: true }));
@@ -56,12 +78,13 @@ app.use('/marketing', marketingRoute);
 app.use('/attendees', attendeesRoute);
 app.use('/follows', followsRoute);
 app.use('/classifications', classificationsRoute);
+app.use('/scripts', scriptsRoute);
 
-// Error handling middleware
-app.use((err: any, req: Request, res: Response) => {
-  console.error(err);
-  res.status(500).json({ success: false, message: 'Internal Server Error' });
-});
+// // Error handling middleware
+// app.use((err: any, req: Request, res: Response) => {
+//   console.error(err);
+//   res.status(500).json({ success: false, message: 'Internal Server Error' });
+// });
 
 let server: Server;
 
