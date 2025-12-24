@@ -16,66 +16,22 @@ export const FETLIFE_HANDLES = [
     'queertakeover',
     'missbloomsexed',
     'masterdanteamor',
-    'creatrixofchaos'
+    'creatrixofchaos',
+    'SRQDarkTemple',
+    'CuddleKnight'
 
-
-
-    // ask
-    // 'jjwatchevents' - M
-    // poohseefairy - M
-    // bellaanastasya - M
-    // smiley4face - M
-    // sirs_unicorn - M
-    // sanctionedevents - M
-    // naughtynzuri - M
-    // absolutedlight - M
-    // _i- - M
-    // knotasha - M
-    // ethero - M
-    // natashaxdress - not kink
-    // mastcliftonnj - M
-    // 
-    // nyclittlescouts
-    // ropeisfun
-    // apollodelfino
-    // dommenationnyc
-    // malswitch
-    // knotty_chris
-    // bossy_switcher
-    // ropeboi
-    // laughingbonobo
-    /// hedonez_
-    // 
-    // callmebilly - ghosted
-    // efn
-    // freythor
-    // nj_sextherapist
-    // nakedinmotion
-    // nyctng - ghost
-    // lolamontez
-    // ezulie_supreme
-    // shaggals
-    // misschele
-    // deviantsnyc
-    // parkslopegowanus
-    // lubegirl - ghosted
-    // nyc_cgl_munch
-    // eroticanyc
-    // odynenj
-    // queensdarkangel
-    // bowtie_prod
-    // haitianqueen4kng
-    // s8nshrimp
-    // smittenslair
-    // mistressmarley94
-    // thebodyelect
-    // dubbull_dickens
-
-    // rorpheus - in pagan's
-    // dominus_eros - pagan's
-    // goddessshakti - pagan's
-    // 'thetaillorgroup', //eventbrite
-
+    // asked
+    // _hedonez
+    // NostalgicPleasur
+    // theDommeKat
+    // SocieteAnonymeNY
+    // LolaMontez
+    // Bowtie_Prod
+    // cocotheconnector
+    // QueerRopeSocial
+    // callmebilly
+    // ethero
+    // Knotasha
 ];
 
 export const INSTAGRAM_HANDLES = [
@@ -105,16 +61,15 @@ export const INSTAGRAM_HANDLES = [
     // wonderland - contacted - http://wonderlandnewyork.com/.
 
 
+    // already imported
+    // knotasha - HMU
+
 
     // CONTACT
     // https://www.polycocktails.com/contact/
     // https://www.ns-fw.com/events
     // le organizer https://linktr.ee/consensual_events
     // https://www.wearethekismet.com/contact/
-
-
-
-
 
     // clubs
     // https://clublabyrinth.com/hours-rates/
