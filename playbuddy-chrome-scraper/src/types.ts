@@ -13,7 +13,9 @@ export interface EventResult {
     end_date?: string | null;
     image_url?: string | null;
     rsvp_count?: number | null;
+    type?: string | null;
     error?: string;
+    skippedLog?: Array<{ reason: string; name?: string; url?: string }>;
 }
 
 export interface InstagramLink {

@@ -54,6 +54,7 @@ export default function ImportEventURLsScreen() {
   const [status, setStatus] = useState<'idle' | 'importing' | 'done' | 'error'>('idle');
   const [result, setResult] = useState<any>(null);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   const importEvents = useImportEventURLs();
 
@@ -82,6 +83,16 @@ export default function ImportEventURLsScreen() {
     if (Array.isArray(result)) return result;
     return (result?.events as upsertEventResult[]) ?? [];
   }, [result]);
+
+  const typeOptions = useMemo(() => {
+    const set = new Set<string>();
+    eventsArray.forEach((row) => {
+      const ev = (row as any).event ?? row;
+      const t = ev?.type || ev?.category;
+      if (t) set.add(String(t));
+    });
+    return Array.from(set);
+  }, [eventsArray]);
 
   const formatDateParts = (iso?: string | null) => {
     if (!iso) return { weekday: '–', monthDay: '' };
@@ -201,11 +212,34 @@ export default function ImportEventURLsScreen() {
                 <h3 className={styles.resultsTitle}>Imported Events</h3>
                 <p className={styles.resultsSubtitle}>Name, date, and organizer for each scraped URL.</p>
               </div>
-              <span className={styles.countPill}>{eventsArray.length} events</span>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                {typeOptions.length > 0 && (
+                  <select
+                    className={styles.filterSelect}
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                  >
+                    <option value="all">All types</option>
+                    {typeOptions.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                )}
+                <span className={styles.countPill}>{eventsArray.length} events</span>
+              </div>
             </div>
 
             <div className={styles.eventsList}>
-              {eventsArray.map((row, idx) => {
+              {eventsArray
+                .filter((row) => {
+                  if (typeFilter === 'all') return true;
+                  const ev = (row as any).event ?? row;
+                  const t = ev?.type || ev?.category;
+                  return t === typeFilter;
+                })
+                .map((row, idx) => {
+                const ev = (row as any).event ?? row;
+                const eventType = ev?.type || ev?.category || '';
                 const { name, organizer, status: rowStatus, startDate, image, description, location, raw } = extractEventLike(row);
                 const { weekday, monthDay } = formatDateParts(startDate);
                 const statusClass =
@@ -230,6 +264,7 @@ export default function ImportEventURLsScreen() {
                     )}
                     <div className={styles.eventContent} onClick={() => setExpanded(prev => ({ ...prev, [idx]: !isOpen }))}>
                       <div className={styles.eventTitle}>{name}</div>
+                      {eventType && <div className={styles.typeBadge}>{eventType}</div>}
                       <div className={styles.eventMeta}>
                         <span className={styles.metaLabel}>Organizer</span>
                         <span>{organizer}</span>

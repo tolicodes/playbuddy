@@ -1,9 +1,12 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { UseMutationResult } from '@tanstack/react-query';
-import { useEvents } from './useEvents';
 import { useWishlist } from './useWishlist';
 import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
-import { OrganizerFilterOption } from './calendarUtils';
+import { OrganizerFilterOption, getAvailableOrganizers } from './calendarUtils';
+import { useUserContext } from '../../Auth/hooks/UserContext';
+import { ADMIN_EMAILS } from '../../../config';
+import { useFetchEvents as useCommonFetchEvents } from '../../../Common/db-axios/useEvents';
+import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors, useFetchPrivateEvents } from './eventHelpers';
 
 type CalendarContextType = {
     organizers: OrganizerFilterOption[];
@@ -40,7 +43,32 @@ export const useCalendarContext = () => {
 // };
 
 export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const { eventsWithMetadata, organizers, reloadEvents, isLoadingEvents } = useEvents();
+    const { userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+
+    const { data: events = [], isLoading: isLoadingEvents, refetch: reloadEvents } = useCommonFetchEvents({
+        includeApprovalPending: isAdmin,
+    });
+    const { privateEvents, isLoadingPrivateEvents } = useFetchPrivateEvents();
+
+    const allEvents = useMemo(() => [...events, ...privateEvents], [events, privateEvents]);
+
+    const organizers = useMemo(
+        () => getAvailableOrganizers(allEvents || []),
+        [allEvents]
+    );
+    const organizerColorMap = useMemo(
+        () => mapOrganizerColors(organizers as any),
+        [organizers]
+    );
+
+    const eventsWithMetadata = useMemo(() => {
+        const withoutFacilitatorOnly = allEvents
+            .filter(event => !event.facilitator_only)
+            .filter(event => !event.non_ny);
+        return addEventMetadata({ events: withoutFacilitatorOnly, organizerColorMap });
+    }, [allEvents, organizerColorMap]);
+
     const {
         wishlistEvents,
         isOnWishlist,
@@ -64,7 +92,7 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
         // Events
         allEvents: eventsWithMetadata,
         reloadEvents,
-        isLoadingEvents,
+        isLoadingEvents: isLoadingEvents || isLoadingPrivateEvents,
 
         // Wishlist
         wishlistEvents,

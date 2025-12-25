@@ -54,6 +54,7 @@ export default function ImportCSVScreen() {
   const [isPlayParty, setIsPlayParty] = useState<Record<string, boolean>>({});
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const [tab, setTab] = useState<'table' | 'calendar'>('table');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'social' | 'bdsm_party' | 'other'>('all');
   const [hideExistingOrgsInCalendar, setHideExistingOrgsInCalendar] = useState(true);
 
   const turndownService = new TurndownService();
@@ -119,10 +120,24 @@ export default function ImportCSVScreen() {
       .sort(([, aEvents], [, bEvents]) => compareByDate(aEvents[0]?.start_date, bEvents[0]?.start_date));
   }, [groupedEvents]);
 
-  const calendarEvents = useMemo(() => {
-    return [...importedEvents]
+  type CalendarEvent = ImportedEvent & {
+    sourceType: 'fetlife' | 'instagram';
+    orgName: string;
+    orgUrl?: string;
+    existing?: any;
+  };
+
+  const calendarEvents = useMemo<CalendarEvent[]>(() => {
+    const filtered = [...importedEvents]
+      .filter(ev => {
+        const cat = (ev.category || '').toLowerCase();
+        if (typeFilter === 'social') return cat === 'social';
+        if (typeFilter === 'bdsm_party') return cat === 'bdsm party' || cat === 'bdsm party';
+        if (typeFilter === 'other') return cat && cat !== 'social' && cat !== 'bdsm party';
+        return true;
+      })
       .map((ev) => {
-        const sourceType = ev.fetlife_handle ? 'fetlife' : 'instagram';
+        const sourceType: 'fetlife' | 'instagram' = ev.fetlife_handle ? 'fetlife' : 'instagram';
         const orgName = ev.fetlife_handle || ev.instagram_handle || 'Unknown organizer';
         const orgUrl =
           sourceType === 'fetlife'
@@ -136,7 +151,8 @@ export default function ImportCSVScreen() {
       })
       .filter((ev) => !(hideExistingOrgsInCalendar && ev.existing))
       .sort((a, b) => compareByDate(a.start_date, b.start_date));
-  }, [importedEvents, hideExistingOrgsInCalendar, organizerByFetlifeHandle]);
+    return filtered as CalendarEvent[];
+  }, [importedEvents, hideExistingOrgsInCalendar, organizerByFetlifeHandle, typeFilter]);
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -442,6 +458,22 @@ export default function ImportCSVScreen() {
               label={hideExistingOrgsInCalendar ? 'Existing organizers hidden' : 'Existing organizers shown'}
               size="small"
             />
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as any)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: 8,
+                border: '1px solid #e5e7eb',
+                background: '#fff',
+                fontSize: 13,
+              }}
+            >
+              <option value="all">All types</option>
+              <option value="social">Social</option>
+              <option value="bdsm_party">BDSM Party</option>
+              <option value="other">Other</option>
+            </select>
             <Button
               size="small"
               variant="outlined"
@@ -479,6 +511,9 @@ export default function ImportCSVScreen() {
                           ev.orgName
                         )}
                         <Chip label={ev.sourceType === 'fetlife' ? 'FetLife' : 'Instagram'} size="small" />
+                        {ev.category && (
+                          <Chip label={ev.category} size="small" color="primary" variant="outlined" />
+                        )}
                         {ev.location && (
                           <Typography variant="caption" color="text.secondary">
                             {ev.location}

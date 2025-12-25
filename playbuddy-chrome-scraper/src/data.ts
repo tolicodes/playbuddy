@@ -1,6 +1,6 @@
 export const FETLIFE_HANDLES = [
-    'Kink-Collective', // no promo
-    'TES-NYC', // no promo
+    'Kink-Collective',
+    'TES-NYC',
     'Queens_Kinksters',
     'JinkyKews',
     'Geekaholic',
@@ -11,14 +11,16 @@ export const FETLIFE_HANDLES = [
     'TallGoddessNY',
     'Sir-airose',
     'Miss__Scorpio',
-    'JJWatchEvents', // munch only
+    'JJWatchEvents',
     'shemagickevents',
     'queertakeover',
     'missbloomsexed',
     'masterdanteamor',
     'creatrixofchaos',
     'SRQDarkTemple',
-    'CuddleKnight'
+    'CuddleKnight',
+    'SmittensLair',
+    'Sirs_Unicorn'
 
     // asked
     // _hedonez

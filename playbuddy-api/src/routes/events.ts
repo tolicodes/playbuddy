@@ -13,6 +13,7 @@ import { upsertEventsClassifyAndStats } from './helpers/upsertEventsBatch.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import scrapeRoutes from './eventsScrape.js';
+import { ADMIN_EMAILS } from '../config.js';
 
 const router = Router();
 const EXCLUDE_EVENT_IDS = [
@@ -87,7 +88,7 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
         let responseData: string;
         if (redisClient) {
             if (hasCustomFlags) {
-                console.log(`Flushing cache for key: ${cacheKeyWithFlags} due to custom flags`);
+                console.log(`Flushing cache for key: ${cacheKeyWithFlags} due to custom flags`, req.query);
                 await redisClient.del(cacheKeyWithFlags);
                 responseData = JSON.stringify((await runQuery()).data || []);
             } else {
@@ -123,6 +124,15 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
         })
 
         response = transformPromoCodes(response);
+
+        const isAdmin = !!req.authUser && ADMIN_EMAILS.includes((req.authUser as any)?.email);
+        let allowedStatuses: (string | null)[] = [null, 'approved'];
+        const reqStatuses = req.query.approval_status as string | undefined;
+        if (isAdmin && reqStatuses) {
+            allowedStatuses = reqStatuses.split(',').map(s => s.trim()).filter(Boolean) as any[];
+            if (allowedStatuses.includes('approved')) allowedStatuses.push(null);
+        }
+        response = response.filter((event: any) => allowedStatuses.includes((event.approval_status ?? null) as any));
 
         // filter out hidden organizers that we want to ignore but are still automatically ingested into the database
         const eventsWithVisibleOrganizers = includeHiddenOrganizers
@@ -207,8 +217,9 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
 
 router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const events = req.body;
+    const skipExisting = req.query.skipExisting === 'true';
 
-    const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId);
+    const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId, { skipExisting });
     res.json(eventResults);
 });
 

@@ -24,9 +24,10 @@ interface ListItemProps {
     noPadding?: boolean;
     fullDate?: boolean;
     attendees: Attendee[];
+    isAdmin?: boolean;
 }
 
-export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees }) => {
+export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees, isAdmin }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
     const [scrolling, setScrolling] = useState(false);
@@ -69,9 +70,15 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
         <FAIcon name="calendar" size={50} color="#666" style={styles.icon} />
     );
 
+    const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
+
     return (
         <View style={styles.wrapper}>
-            <View style={[styles.cardWrapper, noPadding && styles.noPadding]}>
+            <View style={[
+                styles.cardWrapper,
+                noPadding && styles.noPadding,
+                showApprovalBorder && styles.pendingBorder
+            ]}>
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8}>
                     <View style={styles.topSection}>
                         <View style={styles.imageContainer}>
@@ -158,6 +165,11 @@ const styles = StyleSheet.create({
     },
     noPadding: {
         marginHorizontal: 0,
+    },
+    pendingBorder: {
+        borderColor: '#f59e0b',
+        borderStyle: 'dotted',
+        borderWidth: 2,
     },
 
     // Header layout

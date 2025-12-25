@@ -1,7 +1,7 @@
-import type { NormalizedEventInput } from './common/types/commonTypes';
+import type { EventTypes, NormalizedEventInput } from './common/types/commonTypes';
 import { scrapeBySource, type ScrapeSource } from './scrapeRouter';
 import type { EventResult } from './types';
-import { postStatus } from './utils';
+import { postStatus, setActiveRunId, resetLiveLog } from './utils';
 
 type ScrapeAction = 'scrapeSingleSource';
 
@@ -19,6 +19,29 @@ interface ScrapeResponse {
 // const API_BASE = "https://api.playbuddy.me";   // change if needed
 const API_BASE = "http://localhost:8080";
 const BULK_URL = `${API_BASE}/events/bulk`;
+const RUN_LOG_KEY = 'PB_SCRAPE_LOGS';
+const FETLIFE_HISTORY_KEY = 'PB_FETLIFE_HISTORY';
+const SKIP_OVERWRITE_KEY = 'PB_SKIP_OVERWRITE';
+const TABLE_LOG_KEY = 'PB_TABLE_HTML';
+
+type RunLogEntry = {
+    id: string;
+    source: ScrapeSource;
+    startedAt: number;
+    endedAt: number;
+    durationMs: number;
+    eventCount: number;
+    status: 'success' | 'error';
+    error?: string;
+    uploaded?: boolean;
+    filename?: string;
+};
+
+type FetlifeRun = RunLogEntry & {
+    events: Array<Pick<EventResult,
+        'name' | 'start_date' | 'end_date' | 'location' | 'ticket_url' | 'fetlife_handle' | 'rsvp_count' | 'category'
+    >>;
+};
 
 const getApiKey = () => {
     return chrome.storage.local.get('PLAYBUDDY_API_KEY').then((result) => {
@@ -26,8 +49,18 @@ const getApiKey = () => {
     });
 }
 
+const getSkipOverwrite = async () => {
+    const res = await chrome.storage.local.get(SKIP_OVERWRITE_KEY);
+    return !!res[SKIP_OVERWRITE_KEY];
+};
 
-function mapEvent(e: EventResult): NormalizedEventInput {
+const EVENT_TYPES: EventTypes[] = ['event', 'play_party', 'munch', 'retreat', 'festival', 'workshop', 'performance', 'discussion'];
+const coerceEventType = (val?: string | null): EventTypes => {
+    if (val && EVENT_TYPES.includes(val as EventTypes)) return val as EventTypes;
+    return 'event';
+};
+
+function mapEvent(e: EventResult, approval_status?: 'pending' | 'approved' | 'rejected'): NormalizedEventInput {
     return {
         organizer: {
             name: e.fetlife_handle || e.instagram_handle || 'Unknown',
@@ -43,38 +76,216 @@ function mapEvent(e: EventResult): NormalizedEventInput {
         ticket_url: e.ticket_url || '',
         event_url: e.ticket_url || '',
         image_url: e.image_url || '',
-        type: 'event'
+        type: coerceEventType(e.type),
+        approval_status,
     };
 }
 
-async function uploadEvents(jsonArray: EventResult[]) {
-    const events = jsonArray.map(mapEvent);
-    const res = await fetch(BULK_URL, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${await getApiKey()}`
-        },
-        body: JSON.stringify(events)
-    });
-    const text = await res.text();
-    try { console.log(JSON.parse(text)); } catch { console.log(text); }
+async function uploadEvents(jsonArray: EventResult[], approval_status?: 'pending' | 'approved' | 'rejected', opts: { forceSkipExisting?: boolean } = {}) {
+    const events = jsonArray.map(e => mapEvent(e, approval_status));
+    const skipExisting = opts.forceSkipExisting || await getSkipOverwrite();
+    const targetUrl = skipExisting ? `${BULK_URL}?skipExisting=true` : BULK_URL;
+    let text = '';
+    const startedAt = Date.now();
+    try {
+        const res = await fetch(targetUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${await getApiKey()}`
+            },
+            body: JSON.stringify(events)
+        });
+        text = await res.text();
+        if (!res.ok) {
+            postStatus(`❌ Upload failed (${res.status}): ${text.slice(0, 200)}`);
+            throw new Error(`Upload failed ${res.status}`);
+        }
+        postStatus(`⬆️ Uploaded ${events.length} events (status ${approval_status || 'approved'})${skipExisting ? ' • skipExisting' : ''}`);
+        postStatus(`✅ Upload finished in ${Math.round((Date.now() - startedAt) / 1000)}s`);
+        try { console.log(JSON.parse(text)); } catch { console.log(text); }
+    } catch (err: any) {
+        postStatus(`❌ Upload error: ${err?.message || err}`);
+        console.error('Upload error', err, text);
+        throw err;
+    }
+}
+
+async function appendRunLog(entry: RunLogEntry) {
+    const { [RUN_LOG_KEY]: existing = [] } = await chrome.storage.local.get(RUN_LOG_KEY);
+    const next = [entry, ...(existing as RunLogEntry[])].slice(0, 50);
+    await chrome.storage.local.set({ [RUN_LOG_KEY]: next });
+}
+
+async function saveFetlifeHistory(entry: RunLogEntry, events: EventResult[]) {
+    if (!entry.source.startsWith('fetlife')) return;
+    const slimEvents = events.map(e => ({
+        name: e.name,
+        start_date: e.start_date,
+        end_date: e.end_date,
+        location: e.location,
+        ticket_url: e.ticket_url,
+        fetlife_handle: e.fetlife_handle,
+        rsvp_count: e.rsvp_count,
+        category: (e as any).category,
+    }));
+    const { [FETLIFE_HISTORY_KEY]: existing = [] } = await chrome.storage.local.get(FETLIFE_HISTORY_KEY);
+    const next: FetlifeRun[] = [
+        { ...entry, events: slimEvents },
+        ...(existing as FetlifeRun[]),
+    ].slice(0, 20); // keep last 20 runs
+    await chrome.storage.local.set({ [FETLIFE_HISTORY_KEY]: next });
+}
+
+async function setTableLog(html: string) {
+    try {
+        await chrome.storage.local.set({ [TABLE_LOG_KEY]: html });
+    } catch (err) {
+        console.warn('Failed to persist table log', err);
+    }
+}
+
+type TableRowStatus = 'pending' | 'scraped' | 'skipped';
+type TableRow = {
+    organizer?: string | null;
+    name?: string | null;
+    url?: string | null;
+    status?: TableRowStatus;
+    reason?: string | null;
+    type?: string | null;
+    date?: string | null;
+};
+
+function buildStatusTable(
+    events: EventResult[],
+    skipped?: Array<{ reason: string; name?: string; url?: string; organizer?: string }>,
+    rows?: TableRow[],
+): string {
+    const safe = (v: string | null | undefined) => (v || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const statusLabel = (status?: TableRowStatus) => {
+        if (status === 'pending') return 'Pending';
+        if (status === 'skipped') return 'Skipped';
+        return 'Scraped';
+    };
+
+    const tableRows: TableRow[] = (rows && rows.length)
+        ? rows
+        : [
+            ...events.map(ev => ({
+                organizer: ev.fetlife_handle || ev.instagram_handle || 'Unknown',
+                name: ev.name || '(no title)',
+                url: ev.ticket_url || (ev as any).event_url || '',
+                type: (ev as any).category || '',
+                date: ev.start_date || '',
+                status: 'scraped' as TableRowStatus,
+            })),
+            ...(skipped || []).map(s => ({
+                organizer: s.organizer || '',
+                name: s.name || '',
+                url: s.url || '',
+                status: 'skipped' as TableRowStatus,
+                reason: s.reason || '',
+                date: '',
+            })),
+        ];
+
+    if (!tableRows.length) return '<div><em>No events</em></div>';
+
+    const rowsHtml = tableRows.map(r => {
+        const organizer = safe(r.organizer || '');
+        const name = safe(r.name || '(no title)');
+        const reason = safe(r.reason || '');
+        const type = safe(r.type || '');
+        const date = safe(r.date || '');
+        const link = r.url ? `<a href="${r.url}" target="_blank" rel="noreferrer" style="color:#fff;">${name}</a>` : name;
+        return `<tr><td>${date}</td><td>${organizer}</td><td>${link}</td><td>${type}</td><td>${statusLabel(r.status)}</td><td>${reason}</td></tr>`;
+    }).join('');
+    return `<table border="1" cellspacing="0" cellpadding="6" style="color:#fff;"><thead><tr><th>Date</th><th>Organizer</th><th>Event</th><th>Type</th><th>Status</th><th>Reason</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 
 const doScrape = (source: ScrapeSource) => {
-    scrapeBySource(source)
-        .then((events: EventResult[]) => {
-
-            console.log('events', events)
+    const startedAt = Date.now();
+    const runId = `${source}-${startedAt}-${Math.random().toString(36).slice(2, 8)}`;
+    resetLiveLog();
+    setActiveRunId(runId);
+    postStatus(`▶️ Started ${source} (${runId})`);
+    return scrapeBySource(source)
+        .then(async (events: EventResult[]) => {
+            try {
+                console.log('events', events)
             const json = JSON.stringify(events, null, 2);
             const blobUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-            chrome.downloads.download({ url: blobUrl, filename: `${source}-events.json` });
-            uploadEvents(events);
-            postStatus(`✅ Done! Downloaded ${events.length} events.`);
+            const filename = `${source}-events.json`;
+            chrome.downloads.download({ url: blobUrl, filename });
+            const approval_status = source === 'fetlifeNearby' ? 'pending' : undefined;
+            const forceSkipExisting = source === 'fetlife' || source === 'fetlifeNearby';
+
+            const skipped = (events as any)?.skippedLog || [];
+            const tableRows = (events as any)?.tableRows as TableRow[] | undefined;
+            const tableHtml = buildStatusTable(events, skipped, tableRows);
+            await setTableLog(tableHtml);
+            try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
+            if (skipped.length) {
+                const summary = skipped.map((s: any) => `${s.name || s.url || 'Unknown'} — ${s.reason || ''}`).join('; ');
+                postStatus(`🚫 Skipped (${skipped.length}): ${summary}`);
+            }
+
+            await uploadEvents(events, approval_status, { forceSkipExisting });
+            postStatus(`✅ Done! Downloaded/uploaded ${events.length} events.`);
+                const endedAt = Date.now();
+                await appendRunLog({
+                    id: runId,
+                    source,
+                    startedAt,
+                    endedAt,
+                    durationMs: endedAt - startedAt,
+                    eventCount: events.length,
+                    status: 'success',
+                    uploaded: true,
+                    filename,
+                });
+                await saveFetlifeHistory({
+                    id: runId,
+                    source,
+                    startedAt,
+                    endedAt,
+                    durationMs: endedAt - startedAt,
+                    eventCount: events.length,
+                    status: 'success',
+                    uploaded: true,
+                    filename,
+                }, events);
+            } catch (err: any) {
+                postStatus(`❌ Error during upload: ${err?.message || err}`);
+                throw err;
+            }
         })
-        .catch(err => {
+        .catch(async err => {
             console.error('❌ Error in scrapeBySource:', err);
             chrome.runtime.sendMessage({ action: 'log', text: `❌ Error: ${err.message}` });
+            try {
+                const tableHtml = buildStatusTable([], []);
+                await setTableLog(tableHtml);
+                chrome.runtime.sendMessage({ action: 'table', html: tableHtml });
+            } catch {}
+            const endedAt = Date.now();
+            const baseEntry: RunLogEntry = {
+                id: runId,
+                source,
+                startedAt,
+                endedAt,
+                durationMs: endedAt - startedAt,
+                eventCount: 0,
+                status: 'error',
+                error: err?.message || String(err),
+                uploaded: source !== 'fetlifeNearby',
+            };
+            await appendRunLog(baseEntry);
+            await saveFetlifeHistory(baseEntry, []);
+        })
+        .finally(() => {
+            postStatus(`⏹️ Finished ${source} (${runId})`);
+            setActiveRunId(null);
         });
 }
 
@@ -97,23 +308,65 @@ chrome.runtime.onMessage.addListener((
 console.log('🛠️ [SW] background.ts loaded');
 
 const ALARM = 'fetlifeTimer';
+const ALARM_INTERVAL_MINUTES = 12 * 60;
+const LAST_RUN_KEY = 'fetlifeTimer';
+
+async function setLastRun(ts: number) {
+    await chrome.storage.local.set({ [LAST_RUN_KEY]: ts });
+}
+
+async function getLastRun(): Promise<number | null> {
+    const res = await chrome.storage.local.get(LAST_RUN_KEY);
+    return typeof res?.[LAST_RUN_KEY] === 'number' ? res[LAST_RUN_KEY] : null;
+}
+
+async function ensureAlarm() {
+    const existing = await chrome.alarms.get(ALARM);
+    if (!existing) {
+        chrome.alarms.create(ALARM, { periodInMinutes: ALARM_INTERVAL_MINUTES });
+    }
+}
+
+async function runSourcesSequential(sources: ScrapeSource[]) {
+    for (const src of sources) {
+        await doScrape(src);
+    }
+}
+
+async function runScheduledScrapes() {
+    await runSourcesSequential(['fetlife', 'fetlifeNearby']);
+}
+
+async function maybeRunOnStartup() {
+    const now = Date.now();
+    const lastRun = await getLastRun();
+    const intervalMs = ALARM_INTERVAL_MINUTES * 60 * 1000;
+    if (!lastRun || (now - lastRun) >= intervalMs - 60_000) {
+        await setLastRun(now);
+        await runScheduledScrapes();
+    }
+}
 
 chrome.alarms.onAlarm.addListener(async alarm => {
     if (alarm.name !== ALARM) return;
 
     const now = Date.now();
 
-    const { lastRun } = await chrome.storage.local.get('fetlifeTimer');
-    const DAY = 24 * 60 * 60 * 1000;
+    const lastRun = await getLastRun();
+    const intervalMs = ALARM_INTERVAL_MINUTES * 60 * 1000;
 
-    if (lastRun && (now - lastRun) < DAY - 60_000) { // 1 min buffer
+    if (lastRun && (now - lastRun) < intervalMs - 60_000) { // 1 min buffer
         console.log('Skipping duplicate alarm fire');
         return;
     }
 
     // Save run time
-    await chrome.storage.local.set({ lastRun: now });
+    await setLastRun(now);
 
     // Do your task
-    console.log('Running daily job at', new Date(now).toISOString());
+    console.log('Running scheduled job at', new Date(now).toISOString());
+    await runScheduledScrapes();
 });
+
+ensureAlarm().catch(err => console.warn('Failed to ensure alarm', err));
+maybeRunOnStartup().catch(err => console.warn('Failed startup run', err));

@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { Event } from '../../../commonTypes';
-import { API_URL } from '../../../config';
+import { API_URL, ADMIN_EMAILS } from '../../../config';
 import { getAvailableOrganizers } from './calendarUtils';
 import { useQuery } from '@tanstack/react-query';
 import { useUserContext } from '../../Auth/hooks/UserContext';
+import { useFetchEvents as useCommonFetchEvents } from '../../../Common/db-axios/useEvents';
 
 type OrganizerColorMap = { [key: string]: { color: string; priority: number } }
 type Organizer = {
@@ -29,20 +30,16 @@ function addEventMetadata({ events, organizerColorMap }: { events: Event[]; orga
     })).sort((a, b) => a.organizerPriority - b.organizerPriority);
 }
 
-export const useFetchEvents = (appState?: string, authUserId?: string) => {
-    const { data: events = [], isLoading: isLoadingEvents, refetch: reloadEvents } = useQuery({
-        queryKey: ['events_calendar_context'],
-        queryFn: async () => {
-            return axios.get<Event[]>(API_URL.events).then(response => response.data);
-        },
-    });
+export const useFetchEvents = (appState?: string, authUserId?: string, isAdmin?: boolean) => {
+    const query = useCommonFetchEvents({ includeApprovalPending: !!isAdmin });
+    const events = query.data || [];
 
     // Reload events when the app state changes
     useEffect(() => {
-        reloadEvents();
-    }, [appState, authUserId]);
+        query.refetch();
+    }, [appState, authUserId, query.refetch]);
 
-    return { events, reloadEvents, isLoadingEvents };
+    return { events, reloadEvents: query.refetch, isLoadingEvents: query.isLoading };
 };
 
 export const useFetchPrivateEvents = () => {
@@ -60,9 +57,10 @@ export const useFetchPrivateEvents = () => {
 
 
 export const useEvents = (appState?: string) => {
-    const { authUserId } = useUserContext();
+    const { authUserId, userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     // Fetch events based on app state
-    const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState, authUserId || '');
+    const { events, reloadEvents, isLoadingEvents } = useFetchEvents(appState, authUserId || '', isAdmin);
     const { privateEvents, isLoadingPrivateEvents } = useFetchPrivateEvents();
 
     const allEvents = [...events, ...privateEvents];

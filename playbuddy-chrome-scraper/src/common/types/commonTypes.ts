@@ -132,6 +132,11 @@ export interface Event extends EventDataSource {
      */
     visibility?: 'public' | 'private';
 
+    /**
+     * Approval workflow status
+     */
+    approval_status?: 'pending' | 'approved' | 'rejected' | null;
+
     // Only shows in facilitator profile
     facilitator_only?: boolean
 

@@ -67,6 +67,7 @@ export const optionalAuthenticateRequest = async (req: AuthenticatedRequest, res
 
 export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const token = req.headers.authorization?.split(' ')[1]; // Extract the token from 'Bearer token'
+
     if (!token) {
         return res.status(401).json({ error: 'No token provided' });
     }
@@ -84,7 +85,9 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
             throw new Error('No user found');
         }
 
-        if (user.authUser.email !== 'toli@toli.me' && user.authUser.email !== 'admin@playbuddy.me') {
+        const { ADMIN_EMAILS } = await import('../config.js');
+        const email = user.authUser.email;
+        if (!email || !ADMIN_EMAILS.includes(email)) {
             throw new Error('User is not an admin');
         }
 

@@ -19,6 +19,7 @@ import { useUserContext } from "../../Auth/hooks/UserContext";
 import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
 import { UE } from "../../../Common/types/userEventTypes";
 import { getEventAnalyticsProps, useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
+import { ADMIN_EMAILS } from "../../../config";
 
 const HEADER_HEIGHT = 40;
 
@@ -39,10 +40,11 @@ const EventList: React.FC<EventListProps> = ({
     isLoadingEvents,
 }) => {
     const navigation = useNavigation<NavStack>();
-    const { currentDeepLink } = useUserContext();
+    const { currentDeepLink, userProfile } = useUserContext();
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const { data: attendees } = useFetchAttendees();
     const analyticsProps = useAnalyticsProps();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
     useEffect(() => {
         if (selectedEvent) {
@@ -70,6 +72,7 @@ const EventList: React.FC<EventListProps> = ({
                         });
                     }}
                     attendees={attendeesForEvent}
+                    isAdmin={isAdmin}
                 />
             </View>
         );

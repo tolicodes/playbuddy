@@ -10,7 +10,7 @@ import type { EventResult } from './types';
 import { TEST_MODE } from './config';
 import * as instaFollow from './providers/follow_instagram';
 
-export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
+export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeFestivals' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
 
 type ScrapeFn = () => Promise<EventResult[]>;
 
@@ -21,6 +21,7 @@ const followInstagramHandles = TEST_MODE ? ['nightowls_ig'] : FOLLOW_IG_HANDLES;
 export const scrapeRouter: Record<ScrapeSource, ScrapeFn> = {
     fetlife: () => fetlife.scrapeEvents(fetlifeHandles),
     fetlifeNearby: () => fetlife.scrapeNearbyEvents(),
+    fetlifeFestivals: () => fetlife.scrapeFestivals(),
     instagram: () => insta.scrapeInstagram(instagramHandles),
     instagramFollow: () => instaFollow.followInstagram(followInstagramHandles),
     // @ts-ignore

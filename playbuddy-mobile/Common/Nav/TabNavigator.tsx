@@ -16,12 +16,16 @@ import { UE } from "../../userEventTypes";
 import { logEvent } from "../hooks/logger";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { DiscoverPage } from "../../Pages/DiscoverPage";
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { ADMIN_EMAILS } from "../../config";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
     const navigation = useNavigation<NavStack>();
     const analyticsProps = useAnalyticsProps();
-    const { data: events } = useFetchEvents();
+    const { userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const { data: events } = useFetchEvents({ includeApprovalPending: isAdmin });
 
     const WrappedEventCalendarView = () => {
         return <EventCalendarView events={events || []} />

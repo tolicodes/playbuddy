@@ -9,7 +9,7 @@ import { syncEntityMedia } from "../syncMedia.js";
 export const NYC_LOCATION_ID = "73352aef-334c-49a6-9256-0baf91d56b49";
 
 export type UpsertEventResult = {
-    result: 'inserted' | 'updated' | 'failed';
+    result: 'inserted' | 'updated' | 'failed' | 'skipped';
     event: Event | null;
 };
 
@@ -90,8 +90,11 @@ async function attachCommunities(eventId: string, communities: any[], organizerC
 }
 
 
-export async function upsertEvent(event: NormalizedEventInput, authUserId?: string): Promise<UpsertEventResult> {
+export async function upsertEvent(event: NormalizedEventInput, authUserId?: string, opts: { skipExisting?: boolean } = {}): Promise<UpsertEventResult> {
     const normalizedEvent: NormalizedEventInput = { ...event };
+    if (normalizedEvent.approval_status === undefined || normalizedEvent.approval_status === null) {
+        normalizedEvent.approval_status = 'approved';
+    }
     if (!normalizedEvent.end_date && normalizedEvent.start_date) {
         const start = new Date(normalizedEvent.start_date);
         if (!Number.isNaN(start.getTime())) {
@@ -111,6 +114,11 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
         const { organizerId, organizerCommunityId } = upsertedOrganizer;
 
         const existingEventId = await resolveExistingEventId(normalizedEvent, organizerId);
+
+        if (existingEventId && opts.skipExisting) {
+            log(`EVENT: Skipping existing event ${existingEventId} (skipExisting=true)`);
+            return { result: 'skipped', event: null };
+        }
 
         if (existingEventId && normalizedEvent.visibility === 'public') {
             await setVisibility(existingEventId, 'public');

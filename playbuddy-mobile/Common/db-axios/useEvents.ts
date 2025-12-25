@@ -9,26 +9,30 @@ export const useFetchEvents = ({
     includePrivate = false,
     includeHiddenOrganizers = false,
     includeHidden = false,
+    includeApprovalPending = false,
 }: {
     includeFacilitatorOnly?: boolean;
     includeNonNY?: boolean;
     includePrivate?: boolean;
     includeHiddenOrganizers?: boolean;
     includeHidden?: boolean;
+    includeApprovalPending?: boolean;
 } = {
         includeFacilitatorOnly: false,
         includeNonNY: false,
         includePrivate: false,
         includeHiddenOrganizers: false,
         includeHidden: false,
+        includeApprovalPending: false,
     }) => {
     return useQuery<Event[]>({
-        queryKey: ['events', { includeFacilitatorOnly, includeNonNY, includePrivate, includeHiddenOrganizers, includeHidden }],
+        queryKey: ['events', { includeFacilitatorOnly, includeNonNY, includePrivate, includeHiddenOrganizers, includeHidden, includeApprovalPending }],
         queryFn: async () => {
             const params = new URLSearchParams();
             if (includeHiddenOrganizers) params.set('includeHiddenOrganizers', 'true');
             if (includeHidden) params.set('includeHidden', 'true');
             if (includePrivate) params.set('visibility', 'private');
+            if (includeApprovalPending) params.set('approval_status', 'approved,pending');
 
             const queryString = params.toString() ? `?${params.toString()}` : '';
 
@@ -104,8 +108,8 @@ export const useToggleWeeklyPickEvent = () => {
 
 export const useImportEventURLs = () => {
     return useMutation({
-        mutationFn: async (urls: string[]) => {
-            return axios.post(API_BASE_URL + '/events/import-urls', urls).then((response: any) => response.data);
+        mutationFn: async (data: { urls: string[] }) => {
+            return axios.post(API_BASE_URL + '/events/import-urls', data).then((response: any) => response.data);
         },
     });
 }

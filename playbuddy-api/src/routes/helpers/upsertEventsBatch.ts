@@ -8,6 +8,7 @@ export const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
         created: 0,
         updated: 0,
         failed: 0,
+        skipped: 0,
     };
 
     for (const eventResult of eventResults) {
@@ -15,6 +16,8 @@ export const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
             counts.updated++;
         } else if (eventResult.result === 'inserted') {
             counts.created++;
+        } else if (eventResult.result === 'skipped') {
+            counts.skipped++;
         } else {
             counts.failed++;
         }
@@ -22,16 +25,18 @@ export const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
 
     console.log(`Created: ${counts.created}`);
     console.log(`Updated: ${counts.updated}`);
+    console.log(`Skipped: ${counts.skipped}`);
     console.log(`Failed: ${counts.failed}`);
 
     return {
         created: counts.created,
         updated: counts.updated,
         failed: counts.failed,
+        skipped: counts.skipped,
     };
 };
 
-export const upsertEventsClassifyAndStats = async (events: any[], authUserId: string | undefined) => {
+export const upsertEventsClassifyAndStats = async (events: any[], authUserId: string | undefined, opts: { skipExisting?: boolean } = {}) => {
     if (!authUserId) {
         throw Error('User not specified');
     }
@@ -42,7 +47,7 @@ export const upsertEventsClassifyAndStats = async (events: any[], authUserId: st
     await Promise.all(
         events.map(event =>
             upsertQueue.add(async () => {
-                const eventResult = await upsertEvent(event, authUserId);
+                const eventResult = await upsertEvent(event, authUserId, { skipExisting: opts.skipExisting });
                 eventResults.push(eventResult);
             })
         )

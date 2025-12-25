@@ -25,6 +25,7 @@ export const EVENT_FIELDS = [
     'vetted',
     'vetting_url',
     'video_url',
+    'approval_status',
     'city',
     'region',
     'country',

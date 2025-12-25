@@ -1,7 +1,8 @@
-import { TEST_MODE } from './config.js';
+import { isTestMode } from './config.js';
 
 const MAX_EVENTS_PER_HOUR = 1000;
 const PROGRESS_KEY = 'PB_PROGRESS_LOGS';
+const LIVE_LOG_KEY = 'PB_LIVE_LOG';
 
 let eventTimestamps: number[] = [];
 let activeRunId: string | null = null;
@@ -16,8 +17,11 @@ export function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function getRandomDelay(min: number = TEST_MODE ? 100 : 500, max: number = TEST_MODE ? 500 : 2000): Promise<void> {
-    const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+export async function getRandomDelay(min?: number, max?: number): Promise<void> {
+    const testMode = await isTestMode();
+    const lo = typeof min === 'number' ? min : (testMode ? 100 : 500);
+    const hi = typeof max === 'number' ? max : (testMode ? 500 : 2000);
+    const delay = Math.floor(Math.random() * (hi - lo + 1)) + lo;
     await sleep(delay);
 }
 
@@ -40,6 +44,7 @@ export function postStatus(msg: string): void {
     console.log(`🟣 ${msg}`);
     try {
         chrome.runtime?.sendMessage?.({ action: 'log', text: msg }, () => { });
+        appendLiveLog(msg);
         appendProgress(msg);
     } catch (e) {
         // Fail silently if chrome runtime isn't available (e.g., when testing outside extension)
@@ -48,6 +53,24 @@ export function postStatus(msg: string): void {
 
 export function setActiveRunId(runId: string | null) {
     activeRunId = runId;
+}
+
+export async function resetLiveLog() {
+    try {
+        await chrome.storage.local.set({ [LIVE_LOG_KEY]: [] });
+    } catch (err) {
+        console.warn('Failed to reset live log', err);
+    }
+}
+
+async function appendLiveLog(msg: string) {
+    try {
+        const { [LIVE_LOG_KEY]: existing = [] } = await chrome.storage.local.get(LIVE_LOG_KEY);
+        const next = [...(existing as { ts: number; msg: string }[]), { ts: Date.now(), msg }].slice(-500);
+        await chrome.storage.local.set({ [LIVE_LOG_KEY]: next });
+    } catch (err) {
+        console.warn('Failed to persist live log', err);
+    }
 }
 
 async function appendProgress(msg: string) {
