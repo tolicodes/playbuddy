@@ -1,12 +1,13 @@
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
+import asyncHandler from './helpers/asyncHandler.js';
 
 
 const router = Router();
 
 // Fetch buddies
-router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { data, error } = await supabaseClient
             .from('buddies')
@@ -44,11 +45,12 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
         } else {
             res.status(500).json({ error: 'Failed to fetch buddies' });
         }
+        throw error;
     }
-});
+}));
 
 // Add a new buddy
-router.post('/add', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/add', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     let { buddyUserId, shareCode } = req.body;
 
     if (shareCode) {
@@ -86,10 +88,10 @@ router.post('/add', authenticateRequest, async (req: AuthenticatedRequest, res: 
             return res.status(500).json({ error: 'Failed to add buddy' });
         }
     }
-});
+}));
 
 // Fetch buddy lists with buddies
-router.get('/lists', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/lists', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { data, error } = await supabaseClient
             .from('buddy_lists')
@@ -106,10 +108,10 @@ router.get('/lists', authenticateRequest, async (req: AuthenticatedRequest, res:
             return res.status(500).json({ error: 'Failed to fetch buddy lists' });
         }
     }
-});
+}));
 
 // Create a new buddy list
-router.post('/lists', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/lists', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { listName } = req.body;
 
     try {
@@ -127,10 +129,10 @@ router.post('/lists', authenticateRequest, async (req: AuthenticatedRequest, res
             return res.status(500).json({ error: 'Failed to create buddy list' });
         }
     }
-});
+}));
 
 // Add a buddy to a buddy list
-router.post('/lists/:listId/buddies', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/lists/:listId/buddies', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { listId } = req.params;
     const { buddyId } = req.body;
 
@@ -149,6 +151,6 @@ router.post('/lists/:listId/buddies', authenticateRequest, async (req: Authentic
             return res.status(500).json({ error: 'Failed to add buddy to list' });
         }
     }
-});
+}));
 
 export default router;

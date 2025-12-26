@@ -1,4 +1,4 @@
-import { Response, Router } from 'express';
+import { Response, Router, NextFunction, RequestHandler } from 'express';
 import PQueue from 'p-queue';
 import moment from 'moment-timezone';
 import { connectRedisClient } from '../connections/redisClient.js';
@@ -16,6 +16,9 @@ import scrapeRoutes from './eventsScrape.js';
 import { ADMIN_EMAILS } from '../config.js';
 
 const router = Router();
+const asyncHandler = (fn: RequestHandler) => (req: any, res: any, next: NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+};
 const EXCLUDE_EVENT_IDS = [
     "e7179b3b-b4f8-40df-8d87-f205b0caaeb1", // New York LGBTQ+ Community Events Calendar
     "036f8010-9910-435f-8119-2025a046f452", // NYC Kink Community Events Calendar
@@ -23,7 +26,7 @@ const EXCLUDE_EVENT_IDS = [
 
 router.use('/', scrapeRoutes);
 
-router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const cacheKey = "events";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
     const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
@@ -201,37 +204,37 @@ router.get('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, r
         }
     } catch (error) {
         console.error("Error:", error);
-        res.status(500).send({ error: error });
+        throw error;
     }
-});
+}));
 
-router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     console.log('post events')
     const event = req.body;
     const eventResult = await upsertEvent(event, req.authUserId)
     await flushEvents();
 
     res.json(eventResult);
-});
+}));
 
 
-router.post('/bulk', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/bulk', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const events = req.body;
     const skipExisting = req.query.skipExisting === 'true';
 
     const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId, { skipExisting });
     res.json(eventResults);
-});
+}));
 
-router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const event = req.body;
     const eventResult = await upsertEvent(event, req.authUserId)
     await flushEvents();
 
     res.json(eventResult);
-});
+}));
 
-router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.put("/weekly-picks/:eventId", authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { eventId } = req.params;
     const { status } = req.body;
 
@@ -259,7 +262,7 @@ router.put("/weekly-picks/:eventId", authenticateAdminRequest, async (req: Authe
         console.error("Unexpected error:", err);
         return res.status(500).json({ error: "Internal server error" });
     }
-});
+}));
 
 
 

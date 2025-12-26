@@ -9,3 +9,6 @@ classifications.json
 
 src/scripts/qrcodes/inputs/*
 src/scripts/qrcodes/output/*
+
+# Sentry Config File
+.sentryclirc

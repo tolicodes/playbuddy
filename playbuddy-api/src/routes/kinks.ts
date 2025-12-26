@@ -2,10 +2,11 @@ import { Request, Response, Router } from 'express';
 import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
+import asyncHandler from './helpers/asyncHandler.js';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+router.get('/', asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const cacheKey = "kinks";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
 
@@ -20,8 +21,8 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         res.status(200).send(responseData);
     } catch (error) {
         console.error("Error:", error);
-        res.status(500).send({ error: error });
+        throw error;
     }
-});
+}));
 
 export default router;

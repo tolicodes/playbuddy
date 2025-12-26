@@ -1,8 +1,12 @@
-import express from "express";
+import express, { Router, RequestHandler } from "express";
 import { Server } from "node:http";
 import { AddressInfo } from "node:net";
 import cors from "cors";
 import bodyParser from "body-parser";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
 
 
 // Import routes
@@ -33,19 +37,46 @@ console.log('API Started')
 // Import with `import * as Sentry from "@sentry/node"` if you are using ESM
 import * as Sentry from "@sentry/node";
 
+const tracesSampleRate = Number(process.env.SENTRY_TRACES_SAMPLE_RATE ?? "0.2");
+const release =
+  process.env.SENTRY_RELEASE ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.GIT_COMMIT ||
+  process.env.HEROKU_SLUG_COMMIT ||
+  `${(pkg as any).name}@${(pkg as any).version}`;
 Sentry.init({
-  dsn: "https://eb473a7813bd49e3e03fb5d42a28d35d@o4509833897377792.ingest.us.sentry.io/4509833897902080",
-
+  dsn: process.env.SENTRY_DSN,
+  environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "development",
+  release,
+  integrations: [
+    Sentry.httpIntegration(),
+    Sentry.expressIntegration(),
+  ],
   // Setting this option to true will send default PII data to Sentry.
   // For example, automatic IP address collection on events
   sendDefaultPii: true,
-  tracesSampleRate: 1.0, //  Capture 100% of the transactions
-
+  tracesSampleRate: Number.isFinite(tracesSampleRate) ? tracesSampleRate : 0.2,
 });
 
-
-
 export const app = express();
+
+const wrapRouter = (router: Router | RequestHandler): RequestHandler => {
+  return (req, res, next) => {
+    try {
+      const maybePromise = (router as any)(req, res, next);
+      if (maybePromise && typeof maybePromise.then === 'function') {
+        maybePromise.catch(next);
+      }
+    } catch (err) {
+      next(err);
+    }
+  };
+};
+
+app.get("/debug-sentry", function mainHandler() {
+  throw new Error("My first Sentry error!");
+});
+
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -59,34 +90,58 @@ app.use(cors({
   credentials: true,
 }));
 
-// Routes setup
-app.use('/events', eventsRoute);
-app.use('/kinks', kinksRoute);
-app.use('/wishlist', wishlistRoute);
-app.use('/communities', communitiesRoute);
-app.use('/buddies', buddiesRoutes);
-app.use('/profile', profileRoutes);
-app.use('/personalization', personalizationRoutes);
-app.use('/user_events', userEventsRoute);
-app.use('/deep_links', deepLinkRoute);
-app.use('/organizers', organizersRoute);
-app.use('/promo_codes', promoCodesRoute);
-app.use('/munches', munchesRoute);
-app.use('/facilitators', facilitatorsRoute);
-app.use('/tags', tagsRoute);
-app.use('/media', mediaRoute);
-app.use('/marketing', marketingRoute);
-app.use('/attendees', attendeesRoute);
-app.use('/follows', followsRoute);
-app.use('/classifications', classificationsRoute);
-app.use('/scripts', scriptsRoute);
-app.use('/import_sources', importSourcesRoute);
+// Routes setup (wrapped to surface async errors)
+app.use('/events', wrapRouter(eventsRoute));
+app.use('/kinks', wrapRouter(kinksRoute));
+app.use('/wishlist', wrapRouter(wishlistRoute));
+app.use('/communities', wrapRouter(communitiesRoute));
+app.use('/buddies', wrapRouter(buddiesRoutes));
+app.use('/profile', wrapRouter(profileRoutes));
+app.use('/personalization', wrapRouter(personalizationRoutes));
+app.use('/user_events', wrapRouter(userEventsRoute));
+app.use('/deep_links', wrapRouter(deepLinkRoute));
+app.use('/organizers', wrapRouter(organizersRoute));
+app.use('/promo_codes', wrapRouter(promoCodesRoute));
+app.use('/munches', wrapRouter(munchesRoute));
+app.use('/facilitators', wrapRouter(facilitatorsRoute));
+app.use('/tags', wrapRouter(tagsRoute));
+app.use('/media', wrapRouter(mediaRoute));
+app.use('/marketing', wrapRouter(marketingRoute));
+app.use('/attendees', wrapRouter(attendeesRoute));
+app.use('/follows', wrapRouter(followsRoute));
+app.use('/classifications', wrapRouter(classificationsRoute));
+app.use('/scripts', wrapRouter(scriptsRoute));
+app.use('/import_sources', wrapRouter(importSourcesRoute));
 
-// // Error handling middleware
-// app.use((err: any, req: Request, res: Response) => {
-//   console.error(err);
-//   res.status(500).json({ success: false, message: 'Internal Server Error' });
-// });
+// Sentry error handler should be before any other error middleware
+Sentry.setupExpressErrorHandler(app);
+
+// Global error handler to fail fast and surface an eventId when possible
+app.use((err: any, req: any, res: any, next: any) => {
+  const status = err?.statusCode || err?.status || 500;
+  const shouldExposeDetails = (process.env.NODE_ENV || 'development') !== 'production';
+  console.error('[api-error]', err);
+
+  // Ensure the error is captured even if Sentry middleware missed it
+  const eventId = typeof Sentry.captureException === 'function'
+    ? Sentry.captureException(err)
+    : (typeof Sentry.lastEventId === 'function' ? Sentry.lastEventId() : undefined);
+
+  if (res.headersSent) {
+    return next(err);
+  }
+  const payload: any = {
+    error: err?.message || 'Internal Server Error',
+    eventId,
+    status,
+  };
+  if (shouldExposeDetails) {
+    payload.name = err?.name;
+    payload.stack = err?.stack;
+    payload.details = err?.details || err?.data || undefined;
+  }
+  res.status(status).json(payload);
+});
 
 let server: Server;
 
@@ -110,6 +165,9 @@ if (import.meta.url.endsWith(process.argv[1]!)) {
 
   }).on('close', () => {
     console.log('Server closed');
+  }).on('unhandledRejection', (reason: any) => {
+    console.error('Unhandled Rejection:', reason);
+    throw reason;
   });
 
   await start(port);

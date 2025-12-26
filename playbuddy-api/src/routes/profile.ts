@@ -1,12 +1,13 @@
 import { Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js';
+import asyncHandler from './helpers/asyncHandler.js';
 
 const router = Router();
 
 
 // Fetch user profile by user_id
-router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { authUserId } = req;
 
     try {
@@ -40,10 +41,10 @@ router.get('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
         console.error('Error fetching user profile:', error);
         return res.status(500).json({ error: 'Error fetching user profile' });
     }
-});
+}));
 
 // Update a user profile
-router.put('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { authUserId } = req;
 
     try {
@@ -90,10 +91,10 @@ router.put('/me', authenticateRequest, async (req: AuthenticatedRequest, res: Re
         console.error('Error inserting user profile:', error);
         return res.status(500).json({ error: 'Error inserting user profile' });
     }
-});
+}));
 
 // Upload image and update avatar URL for a user
-router.post('/me/upload-avatar', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/me/upload-avatar', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { avatarPublicUrl } = req.params;
 
     if (!avatarPublicUrl) {
@@ -114,12 +115,12 @@ router.post('/me/upload-avatar', authenticateRequest, async (req: AuthenticatedR
         console.error('Error uploading avatar:', error);
         return res.status(500).json({ error: 'Failed to upload avatar' });
     }
-});
+}));
 
 router.post(
     '/me/deep-link',
     authenticateRequest,
-    async (req: AuthenticatedRequest, res: Response) => {
+    asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
         const { authUserId } = req;
         const { deep_link_id, claimed_on } = req.body;
         const row = {
@@ -157,7 +158,7 @@ router.post(
             console.error('Error handling deep link:', err);
             return res.status(500).json({ error: err.message });
         }
-    }
+    })
 );
 
 

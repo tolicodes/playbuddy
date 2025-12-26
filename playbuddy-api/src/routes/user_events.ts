@@ -1,9 +1,10 @@
 import { Request, Response, Router } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js'; // Adjust the import path to match your project
+import asyncHandler from './helpers/asyncHandler.js';
 const router = Router();
 
-router.post('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', optionalAuthenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { user_event_name, user_event_props } = req.body;
 
     const { data, error } = await supabaseClient
@@ -16,6 +17,6 @@ router.post('/', optionalAuthenticateRequest, async (req: AuthenticatedRequest, 
     }
 
     return res.status(200).json(data);
-});
+}));
 
 export default router;

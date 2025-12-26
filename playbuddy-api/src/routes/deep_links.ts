@@ -2,10 +2,11 @@ import { supabaseClient } from "../connections/supabaseClient.js"
 import { Router } from "express";
 import { Request, Response } from "express";
 import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
+import asyncHandler from './helpers/asyncHandler.js';
 
 export const router = Router();
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', asyncHandler(async (req: Request, res: Response) => {
   try {
     // 1) Query: deep_links plus nested relationships
     const { data, error } = await supabaseClient
@@ -78,11 +79,11 @@ router.get('/', async (req: Request, res: Response) => {
     return res.json(transformed);
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: (err as Error).message });
+    throw err;
   }
-});
+}));
 
-router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { campaign, slug, type, organizer_id, featured_event_id, featured_promo_code_id, facilitator_id, campaign_start_date, campaign_end_date, channel } = req.body;
 
   const { data, error } = await supabaseClient
@@ -108,6 +109,6 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
   }
 
   return res.json({ data });
-});
+}));
 
 export default router;  
