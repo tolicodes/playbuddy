@@ -1,1 +1,0 @@
-export const EVENTBRITE_EVENTS_API = "https://www.eventbrite.com/api/v3/destination/event"
