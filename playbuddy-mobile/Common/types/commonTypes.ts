@@ -132,6 +132,11 @@ export interface Event extends EventDataSource {
      */
     visibility?: 'public' | 'private';
 
+    /**
+     * Approval workflow status
+     */
+    approval_status?: 'pending' | 'approved' | 'rejected' | null;
+
     // Only shows in facilitator profile
     facilitator_only?: boolean
 
@@ -433,6 +438,21 @@ export type EventTypes =
     'performance' |
     'discussion'
 
+export type ImportMethod = 'chrome_scraper' | 'eb_scraper' | 'ai_scraper';
+export type IdentifierType = 'handle' | 'url';
+
+export interface ImportSource {
+    id: string;
+    source: string; // e.g., fetlife handle, Eventbrite URL, or raw URL
+    method: ImportMethod;
+    identifier: string;
+    identifier_type?: IdentifierType;
+    metadata: Record<string, any>;
+    event_defaults: Record<string, any>;
+    created_at: string;
+    updated_at: string;
+}
+
 /**
  * Table: classifications
  * Classification metadata for events.
@@ -654,6 +674,9 @@ export interface Organizer {
 
     instagram_handle?: string;
     fetlife_handle?: string;
+
+    membership_app_url: string;
+    membership_only: boolean
 }
 
 export type CreateOrganizerInput = {
