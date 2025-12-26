@@ -218,7 +218,7 @@ const doScrape = (source: ScrapeSource) => {
             const filename = `${source}-events.json`;
             chrome.downloads.download({ url: blobUrl, filename });
             const approval_status = source === 'fetlifeNearby' ? 'pending' : undefined;
-            const forceSkipExisting = source === 'fetlife' || source === 'fetlifeNearby';
+            const forceSkipExisting = source === 'fetlife' || source === 'fetlifeNearby' || source === 'fetlifeFestivals';
 
             const skipped = (events as any)?.skippedLog || [];
             const tableRows = (events as any)?.tableRows as TableRow[] | undefined;

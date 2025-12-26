@@ -1,6 +1,6 @@
 import { isTestMode, MAX_EVENTS_KEY } from '../../config.js';
 import { getRandomDelay, openTab, postStatus, sleep, throttleHourly, closeTab } from '../../utils.js';
-import { DEFAULT_FESTIVAL_CAP, LOG_SKIP_REASONS, SIX_MONTHS_MS, VERBOSE_EVENT_LOGS } from './constants.js';
+import { DEFAULT_FESTIVAL_CAP, LOG_SKIP_REASONS, VERBOSE_EVENT_LOGS } from './constants.js';
 import { extractEventDetailFromPage, parseRawDatetime } from './parsers.js';
 import { formatDate, updateTableProgress } from './table.js';
 import type { EventResult } from '../../types.js';
@@ -19,7 +19,7 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
             MAX_EVENTS = n;
         }
     } catch { /* ignore */ }
-    const sixMonthsAhead = Date.now() + SIX_MONTHS_MS;
+    // no future cap enforced for festivals
 
     const tab = await openTab('https://fetlife.com/events/near');
     try { await chrome.tabs.update(tab.id!, { active: true }); } catch { /* best effort */ }
@@ -130,10 +130,17 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
     });
 
     await closeTab(tab);
-    const debugLinks = (links as any[]).slice(0, 10).map((l: any) => `${l.url || '?'} | rsvps=${l.rsvps ?? 'n/a'}`);
-    postStatus(`🎪 Festivals page returned ${links.length} links (first few: ${debugLinks.join('; ')})`);
+    const uniqueLinks = (links as any[]).reduce((acc: any[], item: any) => {
+        const url = item?.url;
+        if (!url) return acc;
+        if (acc.find((l) => l.url === url)) return acc;
+        acc.push(item);
+        return acc;
+    }, []);
+    const debugLinks = uniqueLinks.slice(0, 10).map((l: any) => `${l.url || '?'} | rsvps=${l.rsvps ?? 'n/a'}`);
+    postStatus(`🎪 Festivals page returned ${links.length} links, ${uniqueLinks.length} unique (first few: ${debugLinks.join('; ')})`);
 
-    tableRows = (links as any[]).map((l: any) => ({
+    tableRows = uniqueLinks.map((l: any) => ({
         url: l?.url || '',
         name: l?.title || l?.url || '(pending)',
         organizer: '',
@@ -157,14 +164,13 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
     let skippedLowRsvpList = 0;
     let skippedLowRsvpDetail = 0;
     let invalidDate = 0;
-    let skippedFuture = 0;
     let skippedCap = 0;
 
     let processed = 0;
-    const totalToProcess = Math.min((links as any[]).length, MAX_EVENTS);
+    const totalToProcess = Math.min(uniqueLinks.length, MAX_EVENTS);
     await updateTableProgress(results, skippedLog, tableRows);
 
-    for (const item of links as any[]) {
+    for (const item of uniqueLinks as any[]) {
         if (processed >= totalToProcess) break;
         const url = item.url as string;
         const listRsvps = typeof item.rsvps === 'number' ? item.rsvps : null;
@@ -184,7 +190,7 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
         const parsedDateTime = parseRawDatetime(result.rawDatetime);
         result.start_date = parsedDateTime?.start;
         result.end_date = parsedDateTime?.end;
-        result.type = 'retreat';
+        result.type = 'festival';
 
         if (!parsedDateTime?.start || !parsedDateTime?.end) {
             invalidDate += 1;
@@ -202,8 +208,6 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
             date: dateOnly,
         });
 
-        const startTs = result.start_date ? new Date(result.start_date).getTime() : null;
-
         const markSkipped = async (reason: string) => {
             skippedLog.push({ reason, name: result.name, url, organizer: result.fetlife_handle });
             if (LOG_SKIP_REASONS) postStatus(`SKIP: ${reason} | ${result.name} | ${url}`);
@@ -219,9 +223,6 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
 
         if (!parsedDateTime?.start || !parsedDateTime?.end) {
             await markSkipped('invalid datetime');
-        } else if (startTs && startTs > sixMonthsAhead) {
-            skippedFuture += 1;
-            await markSkipped('future>6mo');
         } else if (listRsvps !== null && listRsvps < 100) {
             skippedLowRsvpList += 1;
             const reason = `listRSVP<100${listRsvps !== null ? ` (${listRsvps})` : ''}`;
@@ -264,7 +265,7 @@ export async function scrapeFestivals(): Promise<EventResult[] & { skippedLog?: 
     }
 
     postStatus(
-        `🎪 Festival summary: found ${links.length}, scraped ${results.length} (cap ${MAX_EVENTS}), skipped list RSVPs<100 ${skippedLowRsvpList}, skipped detail RSVPs<100 ${skippedLowRsvpDetail}, skipped future>6mo ${skippedFuture}, invalid datetime ${invalidDate}${skippedCap ? `, not processed (cap) ${skippedCap}` : ''}`
+        `🎪 Festival summary: found ${links.length}, scraped ${results.length} (cap ${MAX_EVENTS}), skipped list RSVPs<100 ${skippedLowRsvpList}, skipped detail RSVPs<100 ${skippedLowRsvpDetail}, invalid datetime ${invalidDate}${skippedCap ? `, not processed (cap) ${skippedCap}` : ''}`
     );
 
     return Object.assign(results, { skippedLog, tableRows });

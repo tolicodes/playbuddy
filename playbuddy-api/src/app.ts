@@ -26,6 +26,7 @@ import attendeesRoute from './routes/attendees.js'
 import followsRoute from './routes/follows.js'
 import classificationsRoute from './routes/classifications.js'
 import scriptsRoute from './routes/scripts.js'
+import importSourcesRoute from './routes/import_sources.js'
 
 console.log('API Started')
 
@@ -79,6 +80,7 @@ app.use('/attendees', attendeesRoute);
 app.use('/follows', followsRoute);
 app.use('/classifications', classificationsRoute);
 app.use('/scripts', scriptsRoute);
+app.use('/import_sources', importSourcesRoute);
 
 // // Error handling middleware
 // app.use((err: any, req: Request, res: Response) => {

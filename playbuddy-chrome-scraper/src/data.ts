@@ -1,4 +1,9 @@
-export const FETLIFE_HANDLES = [
+import type { ImportSource } from './common/types/commonTypes.js';
+
+const API_BASE = 'http://localhost:8080';
+const LS_KEY = 'PLAYBUDDY_API_KEY';
+
+export const DEFAULT_FETLIFE_HANDLES = [
     'Kink-Collective',
     'TES-NYC',
     'Queens_Kinksters',
@@ -39,41 +44,39 @@ export const FETLIFE_HANDLES = [
 export const INSTAGRAM_HANDLES = [
     'nightowlsig', // ticketailor
     'trixielapointe', // linktree EB
-    'sucianyc' // linktree - meet and greet - forbiddentickets.com
+    'sucianyc', // linktree - meet and greet - forbiddentickets.com
+];
 
+async function fetchApiKey(): Promise<string | null> {
+    try {
+        const res = await chrome.storage.local.get(LS_KEY);
+        return res?.[LS_KEY] || null;
+    } catch {
+        return null;
+    }
+}
 
+export async function fetchImportSources(): Promise<ImportSource[]> {
+    const apiKey = await fetchApiKey();
+    if (!apiKey) return [];
+    try {
+        const res = await fetch(`${API_BASE}/import_sources`, {
+            headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        return await res.json();
+    } catch (err) {
+        console.warn('Failed to fetch import_sources; using defaults', err);
+        return [];
+    }
+}
 
-    // SNCTM - contacted -https://snctm.com/events/
-    // skirt club - contacted -  https://skirtclub.co.uk/events/cities
-    // 'thelibrarynyc', // linktree -> zeffy
-
-    // iamlubegirl - linkree, vetting form, contact
-    // rina_trevi - linkree, website, non NY
-    // psexperienceyou - website no events
-    // zensteady - linktree - non ny
-    // yawatutu - website - dead
-    // hajime_shibari - website - non ny 
-    // oksanazhabiuk - no link, non ny
-    // sydonarogue - linktree, website, upstate NY, 
-    // tatianalimati - nothing
-    // its.mistress.seren - no link, non-remote
-    // bound_nyc - linktree - ra.co
-
-    // topfloor - contacted - https://www.topfloorclub.com/.
-    // wonderland - contacted - http://wonderlandnewyork.com/.
-
-
-    // already imported
-    // knotasha - HMU
-
-
-    // CONTACT
-    // https://www.polycocktails.com/contact/
-    // https://www.ns-fw.com/events
-    // le organizer https://linktr.ee/consensual_events
-    // https://www.wearethekismet.com/contact/
-
-    // clubs
-    // https://clublabyrinth.com/hours-rates/
-
-]
+export async function getFetlifeHandles(): Promise<string[]> {
+    const imports = await fetchImportSources();
+    const handles = imports
+        .filter(src => src.source === 'fetlife_handle' || src.identifier_type === 'handle')
+        .map(src => (src.identifier || '').replace(/^@/, '').trim())
+        .filter(Boolean);
+    const unique = Array.from(new Set(handles));
+    return unique.length ? unique : DEFAULT_FETLIFE_HANDLES;
+}

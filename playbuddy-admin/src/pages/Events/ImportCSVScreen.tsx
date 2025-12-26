@@ -26,6 +26,7 @@ import { useCreateEventBulk } from '../../common/db-axios/useEvents';
 import { useUpdateMunch } from '../../common/db-axios/useMunches';
 import { useFetchMunches } from '../../common/db-axios/useMunches';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
+import { useImportSources } from '../../common/db-axios/useImportSources';
 import { Munch, Event } from '../../common/types/commonTypes';
 
 const FETLIFE_URL = 'https://fetlife.com';
@@ -44,7 +45,8 @@ interface MappedEvent extends ImportedEvent {
 
 export default function ImportCSVScreen() {
   const { data: munches = [] } = useFetchMunches();
-  const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
+  const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true }); // kept for other parts of the screen if needed
+  const { data: importSources = [] } = useImportSources();
   const createEventBulk = useCreateEventBulk();
   const updateMunch = useUpdateMunch();
 
@@ -90,19 +92,28 @@ export default function ImportCSVScreen() {
     return map;
   }, [munches]);
 
-  const organizerByFetlifeHandle = useMemo(() => {
+  const importSourceByHandle = useMemo(() => {
     const map: Record<string, any> = {};
-    organizers.forEach((org: any) => {
-      if (org.fetlife_handle) {
-        map[normalizeHandle(org.fetlife_handle)] = org;
-      }
+    importSources.forEach((src: any) => {
+      if ((src?.identifier_type || '').toLowerCase() !== 'handle') return;
+      const id = normalizeHandle(src?.identifier);
+      if (id) map[id] = src;
     });
     return map;
-  }, [organizers]);
+  }, [importSources]);
+
+  const futureImportedEvents = useMemo(() => {
+    const now = Date.now();
+    return importedEvents.filter(ev => {
+      if (!ev.start_date) return false;
+      const ts = new Date(ev.start_date).getTime();
+      return Number.isFinite(ts) && ts >= now;
+    });
+  }, [importedEvents]);
 
   const groupedEvents = useMemo(() => {
     const grouped: Record<string, MappedEvent[]> = {};
-    importedEvents.forEach((event) => {
+    futureImportedEvents.forEach((event) => {
       const handle = normalizeHandle(event.fetlife_handle || event.instagram_handle);
       const munch = munchMap[handle];
       if (!grouped[handle]) grouped[handle] = [];
@@ -128,7 +139,7 @@ export default function ImportCSVScreen() {
   };
 
   const calendarEvents = useMemo<CalendarEvent[]>(() => {
-    const filtered = [...importedEvents]
+    const filtered = [...futureImportedEvents]
       .filter(ev => {
         const cat = (ev.category || '').toLowerCase();
         if (typeFilter === 'social') return cat === 'social';
@@ -146,13 +157,13 @@ export default function ImportCSVScreen() {
               ? `https://instagram.com/${ev.instagram_handle}`
               : undefined;
         const handle = normalizeHandle(ev.fetlife_handle || ev.instagram_handle);
-        const existing = organizerByFetlifeHandle[handle];
+        const existing = importSourceByHandle[handle];
         return { ...ev, sourceType, orgName, orgUrl, existing };
       })
       .filter((ev) => !(hideExistingOrgsInCalendar && ev.existing))
       .sort((a, b) => compareByDate(a.start_date, b.start_date));
     return filtered as CalendarEvent[];
-  }, [importedEvents, hideExistingOrgsInCalendar, organizerByFetlifeHandle, typeFilter]);
+  }, [futureImportedEvents, hideExistingOrgsInCalendar, importSourceByHandle, typeFilter]);
 
   const handleJsonUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -202,13 +213,13 @@ export default function ImportCSVScreen() {
       let changed = false;
       Object.keys(groupedEvents).forEach((handle) => {
         if (next[handle] === undefined) {
-          next[handle] = !!organizerByFetlifeHandle[handle];
+          next[handle] = !!importSourceByHandle[handle];
           changed = true;
         }
       });
       return changed ? next : prev;
     });
-  }, [groupedEvents, organizerByFetlifeHandle]);
+  }, [groupedEvents, importSourceByHandle]);
 
   const getMissingFields = (event: ImportedEvent) => {
     const missing = [];
@@ -313,7 +324,7 @@ export default function ImportCSVScreen() {
         const name = sourceType === 'fetlife'
           ? firstEvent.fetlife_handle
           : firstEvent.instagram_handle;
-        const existingOrganizer = organizerByFetlifeHandle[handle];
+        const existingOrganizer = importSourceByHandle[handle];
         const isCollapsed = !!collapsedGroups[handle];
 
         return (
@@ -339,7 +350,7 @@ export default function ImportCSVScreen() {
                 <Chip label={sourceType === 'fetlife' ? 'FetLife' : 'Instagram'} size="small" color="secondary" variant="outlined" />
                 {existingOrganizer && (
                   <Chip
-                    label={`Existing organizer: ${existingOrganizer.name}`}
+                    label={`Existing organizer: ${existingOrganizer.identifier || name}`}
                     size="small"
                     color="default"
                     variant="filled"
