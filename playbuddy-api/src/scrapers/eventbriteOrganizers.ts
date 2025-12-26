@@ -43,8 +43,10 @@ const scrapeOrganizerPage = async ({
             });
 
             if (!response?.events?.length) {
-                console.error(`SCRAPE ORGANIZER: No events found for organizer ${url}`);
-                return [];
+                console.error(`SCRAPE ORGANIZER: No events found for organizer ${url} on page ${page}`);
+                // Only abort completely if the very first page is empty; otherwise stop paging and keep what we already have.
+                if (page === 1) return [];
+                break;
             }
 
             const filteredEvents = (response.events as EventbriteEvent[]).filter(ev => !ev.is_series_parent);
