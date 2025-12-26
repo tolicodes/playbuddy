@@ -119,14 +119,18 @@ async function extractEventsFromListPage(
 ): Promise<NormalizedEventInput[]> {
     const { truncatedStripped, baseName, jsonBlobs } = prepped ?? prepTruncated(html, baseUrl);
     const u = new URL(baseUrl);
+
     const prompt = [
         `Extract up to ${maxEvents} events directly from this LIST page (do not follow links).`,
         `Return ONLY strict JSON array: [{"name":string|null,"start_time":string|null,"end_time":string|null,"ticket_url":string|null,"location":string|null,"description_md":string|null,"image_url":string|null,"price":string|null,"organizer_name":string|null,"organizer_url":string|null}]`,
         `Rules:`,
+        `- Only include events with a future date/time (>= NOW_ISO); skip past events, footer/sidebar references, and repeated promos.`,
+        `- Focus on the primary event list for this page (e.g., "Upcoming" for an organizer or venue). Ignore navigation bars, footers, sidebars, "Popular" or "Suggested" city-wide lists, and "Past events" or archive sections; do not include items outside the main upcoming section.`,
         `- Do NOT invent or guess; leave fields null if not visible.`,
         `- Use ISO-8601 for times when present; if date/time unclear, set null.`,
         `- Prefer ticket/detail URLs found near the event entry; make them absolute with BASE_ORIGIN; drop mailto/tel/#.`,
         `- If multiple dates exist, pick the main/primary date shown.`,
+        `- Self-check before answering: ensure every returned event is visible in the "Upcoming" (future) section, has a future date (>= NOW_ISO), and is not from "Past events", "Popular", or similar sections. Drop anything uncertain or outside that main list.`,
         `BASE_URL: ${baseUrl}`,
         `BASE_ORIGIN: ${u.origin}`,
         `NOW_ISO: ${nowISO}`,

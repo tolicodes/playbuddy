@@ -15,8 +15,9 @@ export type RenderProvider = 'oxylabs' | 'scrapeio';
 export type RenderResult = { provider: RenderProvider; ok: boolean; html: string | null; ms: number; error?: string };
 
 async function fetchWithScrapeIO(url: string): Promise<string | null> {
-    const html = await getUsingProxy({ url, json: false, render: true });
-    return html && html.trim().length > 0 ? html : null;
+    const html = await getUsingProxy({ url, json: false });
+    if (html && html.trim().length > 0) return html;
+    throw new Error('ScrapeIO returned empty HTML');
 }
 
 export async function fetchRenderedHtml(url: string): Promise<string> {
@@ -47,28 +48,58 @@ async function fetchWithOxygen(url: string): Promise<string | null> {
         throw new Error('Oxylabs/Oxygen credentials missing: set OXY_USERNAME and OXY_PASSWORD');
     }
 
-    const body = {
+    const renderBody = {
         source: 'universal',
         url,
-        render: 'html',           // enable JS rendering
-        follow_redirects: true,
-        user_agent_type: 'desktop',
-        parse: false,
-        xhr: false,
-        markdown: false,
+        render: 'html',
+        // parse: true,
     };
 
-    const res = await fetch(OXY_REALTIME_URL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: basicAuthHeader(OXY_USERNAME, OXY_PASSWORD),
-        },
-        body: JSON.stringify(body),
-    });
+    const attempt = async (attemptIdx: number, body: any) => {
+        const res = await fetch(OXY_REALTIME_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: basicAuthHeader(OXY_USERNAME, OXY_PASSWORD),
+            },
+            body: JSON.stringify(body),
+        });
 
-    const txt = await res.text();
-    if (!res.ok) throw new Error(`Oxygen HTTP ${res.status}: ${txt.slice(0, 400)}…`);
+        const txt = await res.text();
+        if (!res.ok) throw new Error(`Oxygen HTTP ${res.status} (attempt ${attemptIdx}): ${txt.slice(0, 400)}…`);
+        return txt;
+    };
+
+    // Only try the render payload; retry with backoff on transient 5xx
+    const payloads = [renderBody];
+    let txt: string | null = null;
+    let lastErr: any = null;
+
+    for (let p = 0; p < payloads.length; p++) {
+        const body = payloads[p];
+        const maxAttempts = 3;
+        for (let i = 1; i <= maxAttempts; i++) {
+            try {
+                txt = await attempt(i, body);
+                lastErr = null;
+                break;
+            } catch (err: any) {
+                lastErr = err;
+                const msg = String(err?.message || '');
+                if (i === maxAttempts || !/HTTP 5\d{2}/.test(msg)) {
+                    // move to next payload or throw after loop
+                    break;
+                }
+                const backoff = 500 * i + Math.floor(Math.random() * 300);
+                await new Promise(res => setTimeout(res, backoff));
+            }
+        }
+        if (txt) break;
+    }
+
+    if (!txt) {
+        throw lastErr || new Error('Oxygen failed with no response');
+    }
 
     let json: OxylabsResult;
     try { json = JSON.parse(txt); } catch {
