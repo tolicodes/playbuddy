@@ -17,6 +17,9 @@ import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 import ImportEventURLsScreen from "./pages/Events/ImportEventURLsScreen";
 import { supabaseClient } from "./lib/supabaseClient";
 import JobsScreen from "./pages/Jobs/JobsScreen";
+import ScriptsScreen from "./pages/Scripts/ScriptsScreen";
+import ImportSourcesScreen from "./pages/ImportSources/ImportSourcesScreen";
+import OrganizerManager from "./pages/Organizers/OrganizerManager";
 
 // ---------- Global axios auth (no instances) ----------
 let axiosAuthInitialized = false;
@@ -152,6 +155,7 @@ export default function App() {
     "/print-runs",
     "/events/import-urls",
     "/jobs",
+    "/scripts",
   ];
 
   const currentTabIndex = tabRoutes.findIndex(
@@ -182,6 +186,9 @@ export default function App() {
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
             <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
             <Tab label="Jobs" component={RouterLink} to="/jobs" />
+            <Tab label="Scripts" component={RouterLink} to="/scripts" />
+            <Tab label="Import Sources" component={RouterLink} to="/import-sources" />
+            <Tab label="Organizers" component={RouterLink} to="/organizers/manage" />
           </Tabs>
         </Toolbar>
       </AppBar>
@@ -202,6 +209,9 @@ export default function App() {
         <Route path="/deep-links" element={<DeepLinksListScreen />} />
         <Route path="/deep-links/new" element={<EditDeepLinkScreen />} />
         <Route path="/jobs" element={<JobsScreen />} />
+        <Route path="/scripts" element={<ScriptsScreen />} />
+        <Route path="/import-sources" element={<ImportSourcesScreen />} />
+        <Route path="/organizers/manage" element={<OrganizerManager />} />
         <Route path="/deep-links/:id" element={<EditDeepLinkScreen />} />
         <Route path="*" element={<Navigate to="/weekly-picks" replace />} />
       </Routes>
