@@ -9,6 +9,7 @@ import { EventTypes } from '../common/types/commonTypes.js';
 const turndown = new TurndownService();
 
 export const scrapeForbiddenTicketsEvent = async ({ url, eventDefaults }: ScraperParams): Promise<NormalizedEventInput[]> => {
+    console.log(`[forbidden-tickets] fetching ${url}`);
     const { data: html } = await axios.get(url);
     const $ = cheerio.load(html);
 

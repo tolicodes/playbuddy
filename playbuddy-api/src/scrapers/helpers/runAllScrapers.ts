@@ -27,8 +27,9 @@ const normalizeTantraUrl = (raw?: string) => {
 export const runAllScrapers = async (authUserId?: string, opts: { scenario?: string } = {}) => {
     const scenario = opts.scenario || 'all';
     const urlsOnly = scenario === 'urls_json';
+    console.log(`[scrapers] runAllScrapers scenario=${scenario} urlsOnly=${urlsOnly}`);
 
-    const ebUrls: string[] = JSON.parse(fs.readFileSync(DEFAULT_EB_LIST, 'utf-8'));
+    const ebUrls: string[] = ENABLE_EVENTBRITE ? JSON.parse(fs.readFileSync(DEFAULT_EB_LIST, 'utf-8')) : [];
     const rawExtra = fs.existsSync(EXTRA_URLS_LIST)
         ? JSON.parse(fs.readFileSync(EXTRA_URLS_LIST, 'utf-8'))
         : [];
@@ -56,6 +57,7 @@ export const runAllScrapers = async (authUserId?: string, opts: { scenario?: str
     const includeEB = ENABLE_EVENTBRITE && !urlsOnly;
     const includePlura = ENABLE_PLURA && !urlsOnly;
     const includeTantra = ENABLE_TANTRA && !urlsOnly;
+    console.log(`[scrapers] includeEB=${includeEB} includePlura=${includePlura} includeTantra=${includeTantra} extraUrls=${extraUrls.length}`);
 
     const ebEvents = includeEB
         ? await scrapeEventbriteOrganizers({ organizerURLs: ebUrls, eventDefaults: ebDefaults })
@@ -99,6 +101,8 @@ export const runAllScrapers = async (authUserId?: string, opts: { scenario?: str
         ...(includeTantra ? tantraTasks : []),
         ...extraTasks,
     ];
+
+    console.log(`[scrapers] prepared tasks: eb=${ebTasks.length} plura=${pluraTasks.length} tantra=${tantraTasks.length} extra=${extraTasks.length} total=${tasks.length}`);
 
     const jobId = await createJob(tasks as any, 5, { authUserId, source: scenario || 'all' });
     return { jobId, enqueued: tasks.length };

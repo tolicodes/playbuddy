@@ -11,6 +11,7 @@ const turndown = new TurndownService();
 export const scrapeEventbriteEvent = async (
     { url, eventDefaults }: ScraperParams
 ): Promise<NormalizedEventInput[]> => {
+    console.log(`[eventbrite] fetching ${url}`);
     const html = await addURLToQueue({
         url,
         json: false,

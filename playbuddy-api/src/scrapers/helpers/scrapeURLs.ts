@@ -71,6 +71,7 @@ export const scrapeURLs = async (
 ): Promise<NormalizedEventInput[]> => {
     const results: NormalizedEventInput[] = [];
     const uniqueInputs = dedupe(normalizeInputs(urls));
+    console.log(`[scrapeURLs] start inputs=${uniqueInputs.length}`);
 
     for (let i = 0; i < uniqueInputs.length; i++) {
         const { url, multipleEvents, extractFromListPage, metadata } = uniqueInputs[i];
@@ -82,18 +83,20 @@ export const scrapeURLs = async (
                 ...((metadata as any)?.organizer || {}),
             },
         };
-        console.log(`[${i + 1}/${uniqueInputs.length}] ${url}`);
+        console.log(`[scrapeURLs] [${i + 1}/${uniqueInputs.length}] ${url}`);
 
         const domain = getDomainKey(url);
 
         // Handle Eventbrite organizer pages directly (fetch multiple events)
         if (domain === 'eventbrite.com' && /eventbrite\.com\/o\//i.test(url)) {
             try {
+                console.log(`[scrapeURLs] using Eventbrite organizer scraper for ${url}`);
                 const organizerEvents = await scrapeEventbriteOrganizers({
                     organizerURLs: [url],
                     eventDefaults,
                 });
                 results.push(...organizerEvents);
+                console.log(`[scrapeURLs] organizer events added=${organizerEvents.length}`);
             } catch (err) {
                 console.error(`Error scraping Eventbrite organizer ${url}:`, err);
             }
@@ -104,8 +107,10 @@ export const scrapeURLs = async (
 
         // If no explicit scraper, let AI decide multi vs single
         if (!config) {
+            console.log(`[scrapeURLs] no explicit scraper for ${domain}, delegating to AI (multipleEvents=${!!multipleEvents}, extractFromListPage=${!!extractFromListPage})`);
             const aiEvents = await aiAutoScrapeUrl({ url, eventDefaults: mergedDefaults, multipleEvents, extractFromListPage });
             if (aiEvents?.length) results.push(...aiEvents);
+            console.log(`[scrapeURLs] AI results=${aiEvents?.length || 0}`);
             continue;
         }
 
@@ -118,8 +123,10 @@ export const scrapeURLs = async (
         const eventId = match[config.eventRegexIndex];
 
         try {
+            console.log(`[scrapeURLs] using scraper for ${domain} id=${eventId}`);
             const scraped = await config.scraper({ url: eventId, eventDefaults: mergedDefaults });
             if (scraped) results.push(...scraped);
+            console.log(`[scrapeURLs] scraped count=${scraped?.length || 0} for ${url}`);
         } catch (err: any) {
             if (err?.message === 'Timeout') {
                 console.warn(`Timeout scraping: ${url}`);

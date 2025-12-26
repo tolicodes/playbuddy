@@ -10,6 +10,7 @@ async function scrapePartifulEvent({
     url: eventId,
     eventDefaults,
 }: ScraperParams): Promise<NormalizedEventInput[] | null> {
+    console.log(`[partiful] fetching eventId=${eventId}`);
     // user Id to name map
     async function getOrganizerData(page: puppeteer.Page): Promise<Map<string, string>> {
         const userDataCache = new Map<string, string>();

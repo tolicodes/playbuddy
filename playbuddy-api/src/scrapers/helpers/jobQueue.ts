@@ -175,6 +175,7 @@ const updateJobProgress = (task: ScrapeTask) => {
 const runTask = async (taskId: string) => {
     const task = tasks.get(taskId);
     if (!task) return;
+    const taskStart = Date.now();
     task.attempts += 1;
     console.log(`[jobs] start task ${taskId} url=${task.url} source=${task.source || 'unknown'}`);
     const job = jobs.get(task.jobId);
@@ -191,10 +192,13 @@ const runTask = async (taskId: string) => {
     upsertTaskRecord(updated);
 
     try {
+        const scrapeStart = Date.now();
         const scrapedEvents = task.prefetched ?? await scrapeURLs(
             [{ url: task.url, multipleEvents: task.multipleEvents, extractFromListPage: task.extractFromListPage }],
             task.eventDefaults || {}
         );
+        console.log(`[jobs] scraped task ${taskId} url=${task.url} events=${scrapedEvents.length} durationMs=${Date.now() - scrapeStart}`);
+
         const upsertPromises = scrapedEvents.map(ev =>
             upsertQueue.add(async () => {
                 try {
@@ -210,7 +214,9 @@ const runTask = async (taskId: string) => {
             })
         );
 
+        const upsertStart = Date.now();
         const upsertResults = await Promise.allSettled(upsertPromises);
+        console.log(`[jobs] upserted task ${taskId} url=${task.url} eventResults=${upsertResults.length} durationMs=${Date.now() - upsertStart}`);
 
         const summary = upsertResults.reduce(
             (acc, r) => {
@@ -273,7 +279,7 @@ const runTask = async (taskId: string) => {
         });
         updateJobProgress({ ...updated, status });
         console.log(
-            `[jobs] completed task ${taskId} url=${task.url} scraped=${scrapedEvents.length} inserted=${summary.inserted} updated=${summary.updated} failed=${summary.failed}`
+            `[jobs] completed task ${taskId} url=${task.url} scraped=${scrapedEvents.length} inserted=${summary.inserted} updated=${summary.updated} failed=${summary.failed} totalDurationMs=${Date.now() - taskStart}`
         );
     } catch (err: any) {
         tasks.set(taskId, {
@@ -294,7 +300,7 @@ const runTask = async (taskId: string) => {
             finishedAt: new Date(),
         });
         updateJobProgress({ ...updated, status: 'failed' });
-        console.error(`[jobs] failed task ${taskId} url=${task.url} error=${err?.message || err}`);
+        console.error(`[jobs] failed task ${taskId} url=${task.url} durationMs=${Date.now() - taskStart} error=${err?.message || err}`);
     }
 };
 

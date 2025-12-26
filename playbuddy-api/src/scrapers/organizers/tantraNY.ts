@@ -64,6 +64,7 @@ export const scrapeOrganizerTantraNY = async ({
     eventDefaults,
 }: ScraperParams): Promise<NormalizedEventInput[]> => {
     try {
+        console.log(`[tantraNY] fetching ${url}`);
         const data = await axios.get(url);
 
         const events = Object.values(data.data as EventDetails[]).map((event: EventDetails): NormalizedEventInput => {

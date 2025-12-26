@@ -32,6 +32,7 @@ const scrapeOrganizerPage = async ({
             console.error(`SCRAPE ORGANIZER: Could not extract organizer ID from URL: ${url}`);
             return [];
         }
+        console.log(`[eventbrite-organizer] start url=${url} organizerId=${organizerId}`);
 
         for (let page = 1; page <= 3; page++) {
             const apiUrl = `https://www.eventbrite.com/api/v3/organizers/${organizerId}/events/?expand=ticket_availability,organizer,venue&status=live&only_public=true&page=${page}`;
@@ -50,6 +51,7 @@ const scrapeOrganizerPage = async ({
             }
 
             const filteredEvents = (response.events as EventbriteEvent[]).filter(ev => !ev.is_series_parent);
+            console.log(`[eventbrite-organizer] page=${page} total=${response.events.length} filtered=${filteredEvents.length}`);
 
             const detailedEvents = await Promise.allSettled(
                 filteredEvents.map(ev =>
@@ -79,6 +81,7 @@ const scrapeOrganizerPage = async ({
 
             if (!response.pagination?.has_more_items) break;
         }
+        console.log(`[eventbrite-organizer] finished url=${url} totalEvents=${allEvents.length}`);
     } catch (error) {
         console.error(`Error scraping Eventbrite API`, error);
     }

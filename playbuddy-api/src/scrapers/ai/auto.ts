@@ -16,6 +16,7 @@ export const aiAutoScrapeUrl = async ({ url, eventDefaults, multipleEvents, extr
     // If explicitly list-only, rely on discovery and return whatever it yields
     if (extractFromListPage) {
         try {
+            console.log(`[ai-auto] discovery only (list page) url=${url}`);
             return await attemptDiscovery();
         } catch (err) {
             console.error('[ai-auto] discovery (list page) failed', url, err);
@@ -25,7 +26,10 @@ export const aiAutoScrapeUrl = async ({ url, eventDefaults, multipleEvents, extr
 
     try {
         const multi = await attemptDiscovery();
-        if (multi && multi.length) return multi;
+        if (multi && multi.length) {
+            console.log(`[ai-auto] discovery succeeded url=${url} events=${multi.length}`);
+            return multi;
+        }
     } catch (err) {
         console.error('[ai-auto] discovery failed', url, err);
     }
@@ -34,6 +38,7 @@ export const aiAutoScrapeUrl = async ({ url, eventDefaults, multipleEvents, extr
     if (multipleEvents) return [];
 
     try {
+        console.log(`[ai-auto] falling back to single scrape url=${url}`);
         const single = await aiScrapeEventsFromUrl({ url, eventDefaults });
         return single || [];
     } catch (err) {

@@ -16,6 +16,7 @@ export const scrapePluraEvents = async ({
 }: {
     eventDefaults: Partial<NormalizedEventInput>;
 }): Promise<NormalizedEventInput[]> => {
+    console.log('[plura] fetching hangouts feed');
     const response = await axios.get(API_URL);
     const data = response.data;
 
