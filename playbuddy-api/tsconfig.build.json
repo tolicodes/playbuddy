@@ -4,12 +4,16 @@
   "exclude": ["**/*.test.ts"],
   "rootDir": "./src",
   "compilerOptions": {
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "declaration": true,
     "declarationDir": "./types",
     "declarationMap": true,
     "noEmit": false,
     "noEmitOnError": true,
     "outDir": "./dist",
-    "removeComments": true
+    "removeComments": true,
+    "inlineSourceMap": false,
+    "inlineSources": true,
+    "sourceMap": true
   }
 }
