@@ -1,3 +1,15 @@
 [
-    "https://mailchi.mp/ed57c20512ed/night-owls"
+"https://mailchi.mp/ed57c20512ed/night-owls",
+  {
+    "url": "https://members.wearehacienda.com/events",
+    "multipleEvents": true,
+    "extractFromListPage": true,
+    "metadata": {
+        "organizer": {
+            "name": "Hacienda",
+            "url": "https://wearehacienda.com"
+        }
+    }
+  },
+  "https://ra.co/promoters/76521"
 ]
