@@ -1,3 +1,4 @@
+// @ts-nocheck
 // fullBranchStatsWithSession.playwright.ts
 // Usage:
 //   npm i -D typescript ts-node @types/node playwright
