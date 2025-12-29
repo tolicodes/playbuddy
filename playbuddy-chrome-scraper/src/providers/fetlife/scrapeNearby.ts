@@ -133,8 +133,13 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
     });
 
     await closeTab(tab);
-    const debugLinks = (links as any[]).slice(0, 10).map((l: any) => `${l.url || '?'} | rsvps=${l.rsvps ?? 'n/a'}`);
-    postStatus(`🔍 Nearby page returned ${links.length} links (first few: ${debugLinks.join('; ')})`);
+    const listEntries = (links as any[]).map((l: any, idx: number) => `${idx + 1}. ${l?.title || '(no title)'} - ${l?.url || '?'}`);
+    postStatus(`🔍 Nearby page returned ${links.length} links; listing names and URLs from the list page.`);
+    const chunkSize = 10;
+    for (let i = 0; i < listEntries.length; i += chunkSize) {
+        const slice = listEntries.slice(i, i + chunkSize);
+        postStatus(`📋 List items ${i + 1}-${i + slice.length}: ${slice.join(' | ')}`);
+    }
 
     tableRows = (links as any[]).map((l: any) => ({
         url: l?.url || '',
@@ -224,33 +229,27 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
             skippedNJ += 1;
             const reason = `non-NY${result.location ? ` (${result.location})` : ''}`;
             await markSkipped(reason);
-        } else if (!isBdsmparty(result.category)) {
-            await upsertTableRow(url, {
-                status: 'skipped',
-                reason: '',
-                name: result.name || url,
-                organizer: result.fetlife_handle || '',
-                type: result.category || '',
-                date: dateOnly,
-            });
         } else if (!meetsBdsmpartyThreshold(result)) {
             skippedBDSM += 1;
             await markSkipped('BDSM<50');
-        } else if (listRsvps !== null && listRsvps < 50) {
-            skippedLowRsvp += 1;
-            const reason = `listRSVP<50${listRsvps !== null ? ` (${listRsvps})` : ''}`;
-            await markSkipped(reason);
-        } else {
-            results.push(result);
-            await upsertTableRow(url, {
-                status: 'scraped',
-                reason: '',
-                name: result.name || url,
-                organizer: result.fetlife_handle || '',
-                type: result.category || '',
-                date: dateOnly,
-            });
+        } else if (listRsvps !== null) {
+            const listRsvpThreshold = isBdsmparty(result.category) ? 50 : 10;
+            if (listRsvps < listRsvpThreshold) {
+                skippedLowRsvp += 1;
+                const reason = `listRSVP<${listRsvpThreshold}${listRsvps !== null ? ` (${listRsvps})` : ''}`;
+                await markSkipped(reason);
+                continue;
+            }
         }
+        results.push(result);
+        await upsertTableRow(url, {
+            status: 'scraped',
+            reason: '',
+            name: result.name || url,
+            organizer: result.fetlife_handle || '',
+            type: result.category || '',
+            date: dateOnly,
+        });
         processed += 1;
         if (processed >= MAX_NEARBY_EVENTS) {
             postStatus(`⏹️ Reached nearby cap of ${MAX_NEARBY_EVENTS} events; stopping.`);

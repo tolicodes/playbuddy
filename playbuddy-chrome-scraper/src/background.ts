@@ -1,13 +1,22 @@
 import type { EventTypes, NormalizedEventInput } from './common/types/commonTypes';
+import * as fetlife from './providers/fetlife';
 import { scrapeBySource, type ScrapeSource } from './scrapeRouter';
 import type { EventResult } from './types';
 import { postStatus, setActiveRunId, resetLiveLog } from './utils';
 
-type ScrapeAction = 'scrapeSingleSource';
+type ScrapeAction = 'scrapeSingleSource' | 'setStage2Handles';
+type DoScrapeOpts = {
+    scrapeFn?: () => Promise<EventResult[]>;
+    approvalStatus?: 'pending' | 'approved' | 'rejected';
+    forceSkipExisting?: boolean;
+    approveExisting?: boolean;
+    filenamePrefix?: string;
+};
 
 interface ScrapeMessage {
     action: ScrapeAction;
     source: string;
+    handles?: string[];
 }
 
 interface ScrapeResponse {
@@ -81,14 +90,20 @@ function mapEvent(e: EventResult, approval_status?: 'pending' | 'approved' | 're
     };
 }
 
-async function uploadEvents(jsonArray: EventResult[], approval_status?: 'pending' | 'approved' | 'rejected', opts: { forceSkipExisting?: boolean } = {}) {
+async function uploadEvents(
+    jsonArray: EventResult[],
+    approval_status?: 'pending' | 'approved' | 'rejected',
+    opts: { forceSkipExisting?: boolean; approveExisting?: boolean } = {},
+) {
     const events = jsonArray.map(e => mapEvent(e, approval_status));
     const skipExisting = opts.forceSkipExisting || await getSkipOverwrite();
-    const targetUrl = skipExisting ? `${BULK_URL}?skipExisting=true` : BULK_URL;
+    const targetUrl = new URL(BULK_URL);
+    if (skipExisting) targetUrl.searchParams.set('skipExisting', 'true');
+    if (opts.approveExisting) targetUrl.searchParams.set('approveExisting', 'true');
     let text = '';
     const startedAt = Date.now();
     try {
-        const res = await fetch(targetUrl, {
+        const res = await fetch(targetUrl.toString(), {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -101,7 +116,12 @@ async function uploadEvents(jsonArray: EventResult[], approval_status?: 'pending
             postStatus(`❌ Upload failed (${res.status}): ${text.slice(0, 200)}`);
             throw new Error(`Upload failed ${res.status}`);
         }
-        postStatus(`⬆️ Uploaded ${events.length} events (status ${approval_status || 'approved'})${skipExisting ? ' • skipExisting' : ''}`);
+        const flags = [
+            skipExisting ? 'skipExisting' : null,
+            opts.approveExisting ? 'approveExisting' : null,
+        ].filter(Boolean);
+        const flagLabel = flags.length ? ` • ${flags.join(' + ')}` : '';
+        postStatus(`⬆️ Uploaded ${events.length} events (status ${approval_status || 'approved'})${flagLabel}`);
         postStatus(`✅ Upload finished in ${Math.round((Date.now() - startedAt) / 1000)}s`);
         try { console.log(JSON.parse(text)); } catch { console.log(text); }
     } catch (err: any) {
@@ -118,7 +138,7 @@ async function appendRunLog(entry: RunLogEntry) {
 }
 
 async function saveFetlifeHistory(entry: RunLogEntry, events: EventResult[]) {
-    if (!entry.source.startsWith('fetlife')) return;
+    if (!entry.source.startsWith('fetlife') || entry.source.startsWith('fetlifeFriends')) return;
     const slimEvents = events.map(e => ({
         name: e.name,
         start_date: e.start_date,
@@ -203,35 +223,49 @@ function buildStatusTable(
     return `<table border="1" cellspacing="0" cellpadding="6" style="color:#fff;"><thead><tr><th>Date</th><th>Organizer</th><th>Event</th><th>Type</th><th>Status</th><th>Reason</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 
-const doScrape = (source: ScrapeSource) => {
+const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
     const startedAt = Date.now();
     const runId = `${source}-${startedAt}-${Math.random().toString(36).slice(2, 8)}`;
     resetLiveLog();
     setActiveRunId(runId);
+    try {
+        setTableLog('');
+        chrome.runtime.sendMessage({ action: 'table', html: '' });
+    } catch { /* best effort */ }
     postStatus(`▶️ Started ${source} (${runId})`);
-    return scrapeBySource(source)
+    const scrapeFn = opts.scrapeFn || (() => scrapeBySource(source));
+    return scrapeFn()
         .then(async (events: EventResult[]) => {
             try {
                 console.log('events', events)
-            const json = JSON.stringify(events, null, 2);
-            const blobUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-            const filename = `${source}-events.json`;
-            chrome.downloads.download({ url: blobUrl, filename });
-            const approval_status = source === 'fetlifeNearby' ? 'pending' : undefined;
-            const forceSkipExisting = source === 'fetlife' || source === 'fetlifeNearby' || source === 'fetlifeFestivals';
+                const json = JSON.stringify(events, null, 2);
+                const blobUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
+                const isFriendSource = source.startsWith('fetlifeFriends');
+                const filenameBase = opts.filenamePrefix || source;
+                const filename = isFriendSource ? `${filenameBase}-friends.json` : `${filenameBase}-events.json`;
+                chrome.downloads.download({ url: blobUrl, filename });
 
-            const skipped = (events as any)?.skippedLog || [];
-            const tableRows = (events as any)?.tableRows as TableRow[] | undefined;
-            const tableHtml = buildStatusTable(events, skipped, tableRows);
-            await setTableLog(tableHtml);
-            try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
-            if (skipped.length) {
-                const summary = skipped.map((s: any) => `${s.name || s.url || 'Unknown'} — ${s.reason || ''}`).join('; ');
-                postStatus(`🚫 Skipped (${skipped.length}): ${summary}`);
-            }
+                if (!isFriendSource) {
+                    const approval_status = opts.approvalStatus ?? (source === 'fetlifeNearby' ? 'pending' : undefined);
+                    const forceSkipExisting = opts.forceSkipExisting ?? (source === 'fetlife' || source === 'fetlifeNearby' || source === 'fetlifeFestivals');
+                    const approveExisting = opts.approveExisting ?? (source === 'fetlife');
 
-            await uploadEvents(events, approval_status, { forceSkipExisting });
-            postStatus(`✅ Done! Downloaded/uploaded ${events.length} events.`);
+                    const skipped = (events as any)?.skippedLog || [];
+                    const tableRows = (events as any)?.tableRows as TableRow[] | undefined;
+                    const tableHtml = buildStatusTable(events, skipped, tableRows);
+                    await setTableLog(tableHtml);
+                    try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
+                    if (skipped.length) {
+                        const summary = skipped.map((s: any) => `${s.name || s.url || 'Unknown'} — ${s.reason || ''}`).join('; ');
+                        postStatus(`🚫 Skipped (${skipped.length}): ${summary}`);
+                    }
+
+                    await uploadEvents(events, approval_status, { forceSkipExisting, approveExisting });
+                    postStatus(`✅ Done! Downloaded/uploaded ${events.length} events.`);
+                } else {
+                    postStatus(`✅ Done! Downloaded ${events.length} friends.`);
+                }
+
                 const endedAt = Date.now();
                 await appendRunLog({
                     id: runId,
@@ -241,9 +275,10 @@ const doScrape = (source: ScrapeSource) => {
                     durationMs: endedAt - startedAt,
                     eventCount: events.length,
                     status: 'success',
-                    uploaded: true,
+                    uploaded: !isFriendSource,
                     filename,
                 });
+
                 await saveFetlifeHistory({
                     id: runId,
                     source,
@@ -252,7 +287,7 @@ const doScrape = (source: ScrapeSource) => {
                     durationMs: endedAt - startedAt,
                     eventCount: events.length,
                     status: 'success',
-                    uploaded: true,
+                    uploaded: !isFriendSource,
                     filename,
                 }, events);
             } catch (err: any) {
@@ -296,13 +331,45 @@ chrome.runtime.onMessage.addListener((
 ) => {
     console.log('🔔 [SW] got message:', msg);
 
-    if (msg.action === 'scrapeSingleSource') {
-        const { source } = msg;
-        doScrape(source as ScrapeSource);
+    (async () => {
+        if (msg.action === 'scrapeSingleSource') {
+            const { source } = msg;
+            if (source === 'fetlifeSingle') {
+                const handles = Array.isArray(msg.handles) ? msg.handles.map(h => (h || '').trim()).filter(Boolean) : [];
+                if (!handles.length) {
+                    sendResponse({ ok: false });
+                    return;
+                }
+                doScrape(source as ScrapeSource, {
+                    scrapeFn: () => fetlife.scrapeEvents(handles),
+                    forceSkipExisting: true,
+                    approveExisting: true,
+                    filenamePrefix: `fetlife-${handles[0]}`,
+                });
 
-        sendResponse({ ok: true });
-        return true;
-    }
+                sendResponse({ ok: true });
+                return;
+            }
+
+            doScrape(source as ScrapeSource);
+
+            sendResponse({ ok: true });
+            return;
+        }
+
+        if (msg.action === 'setStage2Handles' && Array.isArray(msg.handles)) {
+            try {
+                await fetlife.saveStage2Handles(msg.handles);
+                sendResponse({ ok: true });
+            } catch (err) {
+                console.error('Failed to save stage2 handles', err);
+                sendResponse({ ok: false });
+            }
+            return;
+        }
+    })();
+
+    return true;
 });
 
 console.log('🛠️ [SW] background.ts loaded');

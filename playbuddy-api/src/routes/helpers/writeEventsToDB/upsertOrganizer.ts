@@ -5,10 +5,14 @@ import { supabaseClient } from "../../../connections/supabaseClient.js";
 
 
 // Function to upsert an organizer and its associated community
+const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim();
+
 export async function upsertOrganizer(
     organizer: CreateOrganizerInput
 ): Promise<{ organizerId?: string; communityId?: string }> {
-    const { id, name, url, original_id, instagram_handle, fetlife_handle } = organizer;
+    const { id, name, url, original_id } = organizer;
+    const instagram_handle = normalizeHandle(organizer.instagram_handle);
+    const fetlife_handle = normalizeHandle(organizer.fetlife_handle);
 
     // Require at least one identifier
     if (!id && !name && !instagram_handle && !fetlife_handle) {
@@ -19,11 +23,11 @@ export async function upsertOrganizer(
 
     // Normalize + resolve a display name
     const trimmedName = name?.trim();
-    const trimmedInsta = instagram_handle?.trim();
-    const trimmedFet = fetlife_handle?.trim();
+    const trimmedInsta = instagram_handle || undefined;
+    const trimmedFet = fetlife_handle || undefined;
     const resolvedName = trimmedName || trimmedInsta || trimmedFet || "Unknown Organizer";
 
-    type OrgRow = { id: string; name: string; aliases?: string[] | null };
+    type OrgRow = { id: string; name: string; aliases?: string[] | null; instagram_handle?: string | null; fetlife_handle?: string | null };
 
     let existing: OrgRow | null = null;
 
@@ -31,7 +35,7 @@ export async function upsertOrganizer(
     if (id && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases")
+            .select("id,name,aliases,instagram_handle,fetlife_handle")
             .eq("id", id)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -41,7 +45,7 @@ export async function upsertOrganizer(
     if (trimmedName && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases")
+            .select("id,name,aliases,instagram_handle,fetlife_handle")
             .eq("name", trimmedName)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -51,7 +55,7 @@ export async function upsertOrganizer(
     if (trimmedName && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases")
+            .select("id,name,aliases,instagram_handle,fetlife_handle")
             .contains("aliases", [trimmedName])
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -61,8 +65,8 @@ export async function upsertOrganizer(
     if (trimmedInsta && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases")
-            .eq("instagram_handle", trimmedInsta)
+            .select("id,name,aliases,instagram_handle,fetlife_handle")
+            .ilike("instagram_handle", trimmedInsta)
             .maybeSingle();
         if (data) existing = data as OrgRow;
     }
@@ -70,8 +74,8 @@ export async function upsertOrganizer(
     if (trimmedFet && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases")
-            .eq("fetlife_handle", trimmedFet)
+            .select("id,name,aliases,instagram_handle,fetlife_handle")
+            .ilike("fetlife_handle", trimmedFet)
             .maybeSingle();
         if (data) existing = data as OrgRow;
     }
@@ -89,17 +93,14 @@ export async function upsertOrganizer(
         const updatePatch: Record<string, any> = {
             url: url ?? undefined,
             original_id: original_id ?? undefined,
-            // prefer to *fill* missing handles; don't overwrite non-null values
-            instagram_handle: trimmedInsta ? undefined : undefined,
-            fetlife_handle: trimmedFet ? undefined : undefined
         };
 
         // Only set handles if not already present
-        if (trimmedInsta) {
-            updatePatch.instagram_handle = updatePatch.instagram_handle ?? trimmedInsta;
+        if (trimmedInsta && !existing.instagram_handle) {
+            updatePatch.instagram_handle = trimmedInsta;
         }
-        if (trimmedFet) {
-            updatePatch.fetlife_handle = updatePatch.fetlife_handle ?? trimmedFet;
+        if (trimmedFet && !existing.fetlife_handle) {
+            updatePatch.fetlife_handle = trimmedFet;
         }
 
         if (needsAlias) {

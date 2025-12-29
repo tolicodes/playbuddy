@@ -14,3 +14,21 @@ export type TableRow = {
 };
 
 export type FetlifeResult = EventResult & { skippedLog?: SkippedEntry[]; tableRows?: TableRow[] };
+
+export type FriendResult = {
+    root_handle: string;
+    username: string;
+    profile_url: string;
+    image_url?: string | null;
+    label?: string | null; // e.g. "55F Domme"
+    location?: string | null;
+    pics?: number | null;
+    vids?: number | null;
+    writings?: number | null;
+    all_friends?: number | null;
+    mutual_friends?: number | null;
+    following?: number | null;
+    followers?: number | null;
+    score?: number | null; // all_friends + followers
+    raw?: any;
+};

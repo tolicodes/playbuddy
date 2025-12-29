@@ -2,6 +2,9 @@ type ScrapeSource =
     | 'fetlife'
     | 'fetlifeNearby'
     | 'fetlifeFestivals'
+    | 'fetlifeFriendsStage1'
+    | 'fetlifeFriendsStage2'
+    | 'fetlifeSingle'
     | 'instagram'
     | 'tickettailor'
     | 'pluraPromoStats';
@@ -24,6 +27,10 @@ function init() {
     const runLogsDiv = document.getElementById('runLogs') as HTMLDivElement | null;
     const logDiv = document.getElementById('log') as HTMLDivElement | null;
     const tableDiv = document.getElementById('tableOutput') as HTMLDivElement | null;
+    const stage2Input = document.getElementById('stage2File') as HTMLInputElement | null;
+    const stage2Btn = document.getElementById('startFetlifeFriendsStage2') as HTMLButtonElement | null;
+    const singleHandleInput = document.getElementById('singleFetlifeHandle') as HTMLInputElement | null;
+    const singleHandleBtn = document.getElementById('startSingleFetlifeHandle') as HTMLButtonElement | null;
 
     if (!apiKeyInput || !saveBtn || !apiStatus) {
         console.warn('Options page failed to find API key inputs.');
@@ -102,9 +109,54 @@ function init() {
     bindScrapeButton('startFetlife', 'fetlife');
     bindScrapeButton('startFetlifeNearby', 'fetlifeNearby');
     bindScrapeButton('startFetlifeFestivals', 'fetlifeFestivals');
+    bindScrapeButton('startFetlifeFriendsStage1', 'fetlifeFriendsStage1');
     bindScrapeButton('startInstagram', 'instagram');
     bindScrapeButton('startTicketTailor', 'tickettailor');
     bindScrapeButton('startPluraPromoStats', 'pluraPromoStats');
+
+    async function readStage2File(file: File): Promise<string[]> {
+        const text = await file.text();
+        let parsed: any;
+        try { parsed = JSON.parse(text); } catch { return []; }
+        if (!Array.isArray(parsed)) return [];
+        const handles = parsed
+            .map((row: any) => (row?.root_handle || row?.username || '') as string)
+            .filter((h: string) => typeof h === 'string' && h.trim())
+            .map((h: string) => h.trim());
+        return Array.from(new Set(handles));
+    }
+
+    stage2Btn?.addEventListener('click', async () => {
+        if (!stage2Input || !stage2Input.files?.length) {
+            alert('Please choose a Stage 1 JSON file first.');
+            return;
+        }
+        const handles = await readStage2File(stage2Input.files[0]);
+        if (!handles.length) {
+            alert('No valid handles found in file.');
+            return;
+        }
+        chrome.runtime.sendMessage({ action: 'setStage2Handles', handles }, () => {
+            chrome.runtime.sendMessage({ action: 'scrapeSingleSource', source: 'fetlifeFriendsStage2' }, (response: { ok: boolean }) => {
+                console.log('🚀 Stage2 response:', response);
+            });
+        });
+    });
+
+    singleHandleBtn?.addEventListener('click', () => {
+        if (!singleHandleInput) return;
+        const handle = singleHandleInput.value.trim();
+        if (!handle) {
+            alert('Please enter a Fetlife handle to scrape.');
+            return;
+        }
+        chrome.runtime.sendMessage(
+            { action: 'scrapeSingleSource', source: 'fetlifeSingle', handles: [handle] },
+            (response: { ok: boolean }) => {
+                console.log('🚀 Single handle response:', response);
+            }
+        );
+    });
 
     function persistLiveLog(line: string) {
         chrome.storage.local.get(LIVE_LOG_KEY, (res) => {

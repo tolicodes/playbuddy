@@ -94,9 +94,20 @@
       <button id="startFetlife">Start Fetlife</button>
       <button id="startFetlifeNearby">Start Fetlife Nearby</button>
       <button id="startFetlifeFestivals">Start Fetlife Festivals</button>
+      <button id="startFetlifeFriendsStage1">Stage 1: Fetlife Friends (Counts)</button>
       <button id="startInstagram">Start Instagram</button>
       <button id="startTicketTailor">Start TicketTailor</button>
       <button id="startPluraPromoStats">Start Plura Promo Stats</button>
+
+      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input id="stage2File" type="file" accept="application/json" style="background:#0c1626; color:#e5e7eb; border-radius:6px; padding:6px; border:1px solid #1f2937;" />
+        <button id="startFetlifeFriendsStage2">Stage 2: Scrape Uploaded Handles</button>
+      </div>
+
+      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <input id="singleFetlifeHandle" type="text" placeholder="Enter one Fetlife handle (e.g. Queens_Kinksters)" style="background:#0c1626; color:#e5e7eb; border-radius:6px; padding:10px 12px; border:1px solid #1f2937; flex:1; min-width:260px;" />
+        <button id="startSingleFetlifeHandle">Scrape Single Handle</button>
+      </div>
     </div>
 
     <div id="log"></div>

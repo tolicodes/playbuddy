@@ -10,7 +10,7 @@ import type { EventResult } from './types';
 import { TEST_MODE } from './config';
 import * as instaFollow from './providers/follow_instagram';
 
-export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeFestivals' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
+export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeFestivals' | 'fetlifeFriendsStage1' | 'fetlifeFriendsStage2' | 'fetlifeSingle' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
 
 type ScrapeFn = () => Promise<EventResult[]>;
 
@@ -25,6 +25,9 @@ export const scrapeRouter: Record<ScrapeSource, ScrapeFn> = {
     fetlife: async () => fetlife.scrapeEvents(await getFetlifeHandleList()),
     fetlifeNearby: () => fetlife.scrapeNearbyEvents(),
     fetlifeFestivals: () => fetlife.scrapeFestivals(),
+    fetlifeFriendsStage1: async () => fetlife.scrapeFriendsStage1(await getFetlifeHandleList()),
+    fetlifeFriendsStage2: async () => fetlife.scrapeFriendsStage2FromStorage(),
+    fetlifeSingle: async () => { throw new Error('fetlifeSingle requires a handle passed from the options UI'); },
     instagram: () => insta.scrapeInstagram(instagramHandles),
     instagramFollow: () => instaFollow.followInstagram(followInstagramHandles),
     // @ts-ignore

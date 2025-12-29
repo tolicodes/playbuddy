@@ -90,7 +90,7 @@ async function attachCommunities(eventId: string, communities: any[], organizerC
 }
 
 
-export async function upsertEvent(event: NormalizedEventInput, authUserId?: string, opts: { skipExisting?: boolean } = {}): Promise<UpsertEventResult> {
+export async function upsertEvent(event: NormalizedEventInput, authUserId?: string, opts: { skipExisting?: boolean; approveExisting?: boolean } = {}): Promise<UpsertEventResult> {
     const normalizedEvent: NormalizedEventInput = { ...event };
     if (normalizedEvent.approval_status === undefined || normalizedEvent.approval_status === null) {
         normalizedEvent.approval_status = 'approved';
@@ -116,6 +116,12 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
         const existingEventId = await resolveExistingEventId(normalizedEvent, organizerId);
 
         if (existingEventId && opts.skipExisting) {
+            const shouldApproveExisting = opts.approveExisting || normalizedEvent.approval_status === 'approved';
+            if (shouldApproveExisting) {
+                const approvedEvent = await setApprovalStatus(existingEventId, normalizedEvent.approval_status!);
+                log(`EVENT: Updated approval_status for existing event ${existingEventId} -> ${normalizedEvent.approval_status}`);
+                return { result: 'updated', event: approvedEvent };
+            }
             log(`EVENT: Skipping existing event ${existingEventId} (skipExisting=true)`);
             return { result: 'skipped', event: null };
         }
@@ -182,6 +188,21 @@ const setVisibility = async (eventId: string, visibility: 'public' | 'private') 
     if (visibilityError) {
         throw new Error(`SET VISIBILITY: Error setting visibility for event ${eventId}: ${visibilityError?.message}`);
     }
+}
+
+const setApprovalStatus = async (eventId: string, approval_status: 'approved' | 'pending' | 'rejected') => {
+    const { data, error } = await supabaseClient
+        .from("events")
+        .update({ approval_status })
+        .eq("id", eventId)
+        .select()
+        .single();
+
+    if (error) {
+        throw new Error(`SET APPROVAL: Error setting approval_status for event ${eventId}: ${error?.message}`);
+    }
+
+    return data;
 }
 
 const attachCommunity = async (eventId: string, communityId: string) => {

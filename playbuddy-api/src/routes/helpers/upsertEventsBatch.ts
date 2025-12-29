@@ -36,7 +36,7 @@ export const printBulkAddStats = (eventResults: UpsertEventResult[]) => {
     };
 };
 
-export const upsertEventsClassifyAndStats = async (events: any[], authUserId: string | undefined, opts: { skipExisting?: boolean } = {}) => {
+export const upsertEventsClassifyAndStats = async (events: any[], authUserId: string | undefined, opts: { skipExisting?: boolean; approveExisting?: boolean } = {}) => {
     if (!authUserId) {
         throw Error('User not specified');
     }
@@ -47,7 +47,10 @@ export const upsertEventsClassifyAndStats = async (events: any[], authUserId: st
     await Promise.all(
         events.map(event =>
             upsertQueue.add(async () => {
-                const eventResult = await upsertEvent(event, authUserId, { skipExisting: opts.skipExisting });
+                const eventResult = await upsertEvent(event, authUserId, {
+                    skipExisting: opts.skipExisting,
+                    approveExisting: opts.approveExisting,
+                });
                 eventResults.push(eventResult);
             })
         )

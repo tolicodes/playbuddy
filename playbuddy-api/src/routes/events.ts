@@ -221,9 +221,16 @@ router.post('/', authenticateAdminRequest, asyncHandler(async (req: Authenticate
 router.post('/bulk', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const events = req.body;
     const skipExisting = req.query.skipExisting === 'true';
+    const approveExisting = req.query.approveExisting === 'true';
 
-    const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId, { skipExisting });
-    res.json(eventResults);
+    const approvalStatuses = Array.from(new Set((events || []).map((ev: any) => ev?.approval_status || 'approved')));
+    console.log(`[events/bulk] skipExisting=${skipExisting} approveExisting=${approveExisting} approval_statuses=${approvalStatuses.join(',') || 'none'}`);
+
+    const eventResults = await upsertEventsClassifyAndStats(events, req.authUserId, { skipExisting, approveExisting });
+    res.json({
+        ...eventResults,
+        options: { skipExisting, approveExisting, approvalStatuses },
+    });
 }));
 
 router.put('/:id', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
