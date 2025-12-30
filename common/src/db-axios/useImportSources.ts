@@ -3,11 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { ImportSource } from "../types/commonTypes";
 
-export const useImportSources = () => {
+export const useImportSources = ({ includeAll = false }: { includeAll?: boolean } = {}) => {
     return useQuery({
-        queryKey: ['import_sources'],
+        queryKey: ['import_sources', { includeAll }],
         queryFn: async () => {
-            const res = await axios.get(`${API_BASE_URL}/import_sources`);
+            const res = await axios.get(`${API_BASE_URL}/import_sources`, {
+                params: includeAll ? { includeAll: true } : undefined,
+            });
             return res.data as ImportSource[];
         }
     });

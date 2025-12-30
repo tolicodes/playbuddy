@@ -13,6 +13,8 @@ export type UpsertEventResult = {
     event: Event | null;
 };
 
+const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+
 // stash originals before overriding
 const originalLog = console.log;
 const originalError = console.error;
@@ -112,6 +114,7 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
         if (!upsertedOrganizer) return { result: 'failed', event: null };
 
         const { organizerId, organizerCommunityId } = upsertedOrganizer;
+        const isApprovedEvent = normalizedEvent.approval_status === 'approved';
 
         const existingEventId = await resolveExistingEventId(normalizedEvent, organizerId);
 
@@ -120,9 +123,11 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
             if (shouldApproveExisting) {
                 const approvedEvent = await setApprovalStatus(existingEventId, normalizedEvent.approval_status!);
                 log(`EVENT: Updated approval_status for existing event ${existingEventId} -> ${normalizedEvent.approval_status}`);
+                await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
                 return { result: 'updated', event: approvedEvent };
             }
             log(`EVENT: Skipping existing event ${existingEventId} (skipExisting=true)`);
+            await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
             return { result: 'skipped', event: null };
         }
 
@@ -167,6 +172,8 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
 
         log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
 
+        await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+
         return {
             result: existingEventId ? 'updated' : 'inserted',
             event: upsertedEvent,
@@ -204,6 +211,66 @@ const setApprovalStatus = async (eventId: string, approval_status: 'approved' | 
 
     return data;
 }
+
+const ensureImportSourceForHandle = async (fetlife_handle?: string | null, organizerId?: string | number | null, isApproved?: boolean) => {
+    const handle = normalizeHandle(fetlife_handle);
+    if (!handle) return;
+
+    const organizer_id = organizerId ? Number(organizerId) : null;
+
+    try {
+        const { data: existing, error: fetchError } = await supabaseClient
+            .from('import_sources')
+            .select('id, approval_status, event_defaults')
+            .eq('source', 'fetlife_handle')
+            .eq('identifier', handle)
+            .limit(1);
+        if (fetchError) {
+            console.error(`IMPORT_SOURCE: Failed to fetch existing for ${handle}`, fetchError);
+            return;
+        }
+
+        if (existing && existing.length) {
+            const row = existing[0] as any;
+            const updates: any = {};
+            if (isApproved && row.approval_status !== 'approved') {
+                updates.approval_status = 'approved';
+            } else if (!isApproved && (!row.approval_status || row.approval_status === 'pending')) {
+                updates.approval_status = 'pending';
+            }
+            if (organizer_id) {
+                updates.event_defaults = { ...(row.event_defaults || {}), organizer_id };
+            }
+            if (Object.keys(updates).length) {
+                const { error: updateError } = await supabaseClient
+                    .from('import_sources')
+                    .update(updates)
+                    .eq('id', row.id);
+                if (updateError) {
+                    console.error(`IMPORT_SOURCE: Failed to update ${handle}`, updateError);
+                }
+            }
+            return;
+        }
+
+        const { error: insertError } = await supabaseClient
+            .from('import_sources')
+            .insert({
+                source: 'fetlife_handle',
+                method: 'chrome_scraper',
+                identifier: handle,
+                identifier_type: 'handle',
+                approval_status: isApproved ? 'approved' : 'pending',
+                metadata: {},
+                event_defaults: organizer_id ? { organizer_id } : {},
+            });
+        if (insertError) {
+            console.error(`IMPORT_SOURCE: Failed to insert source ${handle}`, insertError);
+        }
+    } catch (err) {
+        console.error(`IMPORT_SOURCE: Unexpected error for ${fetlife_handle}`, err);
+    }
+};
 
 const attachCommunity = async (eventId: string, communityId: string) => {
     // lookup if community event relationship already exists

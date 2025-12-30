@@ -87,6 +87,7 @@ const coerceEventType = (val?: string | null): EventTypes => {
 };
 
 function mapEvent(e: EventResult, approval_status?: 'pending' | 'approved' | 'rejected'): NormalizedEventInput {
+    const categoryTag = (e.category || '').trim();
     return {
         organizer: {
             name: e.fetlife_handle || e.instagram_handle || 'Unknown',
@@ -103,6 +104,7 @@ function mapEvent(e: EventResult, approval_status?: 'pending' | 'approved' | 're
         event_url: e.ticket_url || '',
         image_url: e.image_url || '',
         type: coerceEventType(e.type),
+        tags: categoryTag ? [categoryTag] : undefined,
         approval_status,
     };
 }

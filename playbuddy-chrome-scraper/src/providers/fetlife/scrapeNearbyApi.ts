@@ -1,7 +1,7 @@
 import { isTestMode, MAX_EVENTS_KEY } from '../../config.js';
 import { closeTab, getRandomDelay, openTab, postStatus } from '../../utils.js';
 import { DEFAULT_NEARBY_CAP, LOG_SKIP_REASONS } from './constants.js';
-import { getListRsvpThreshold, isBdsmparty, isTargetLocation, meetsBdsmpartyThreshold } from './parsers.js';
+import { containsExcludedTerms, getListRsvpThreshold, isBdsmparty, isTargetLocation, meetsBdsmpartyThreshold } from './parsers.js';
 import { formatDate, updateTableProgress } from './table.js';
 import type { EventResult } from '../../types.js';
 import type { SkippedEntry, TableRow, TableRowStatus } from './types.js';
@@ -211,6 +211,10 @@ export async function scrapeNearbyEventsApi(): Promise<EventResult[] & { skipped
             const reason = `non-NY${result.location ? ` (${result.location})` : ''}`;
             markSkipped(reason);
             continue;
+        } else if (containsExcludedTerms(result.name) || containsExcludedTerms(result.description)) {
+            skippedSexParty += 1;
+            markSkipped('excluded term');
+            continue;
         } else if (!meetsBdsmpartyThreshold(result)) {
             skippedBDSM += 1;
             markSkipped('BDSM<50');
@@ -250,7 +254,7 @@ export async function scrapeNearbyEventsApi(): Promise<EventResult[] & { skipped
     await updateTableProgress(results, skippedLog, tableRows);
 
     postStatus(
-        `📈 Nearby API summary: found ${allEntries.length}, scraped ${results.length} (cap ${MAX_NEARBY_EVENTS}), skipped sex-party ${skippedSexParty}, skipped non-NY ${skippedNJ}, skipped low-RSVP BDSM ${skippedBDSM}, skipped list RSVPs<50 (BDSM) ${skippedLowRsvp - skippedLowRsvpNonBDSM}, skipped list RSVPs<10 (other) ${skippedLowRsvpNonBDSM}, invalid datetime ${invalidDate}${skippedCap ? `, not processed (cap) ${skippedCap}` : ''}`
+        `📈 Nearby API summary: found ${allEntries.length}, scraped ${results.length} (cap ${MAX_NEARBY_EVENTS}), skipped sex-party ${skippedSexParty}, skipped non-NY ${skippedNJ}, skipped low-RSVP BDSM ${skippedBDSM}, skipped list RSVPs<50 (BDSM) ${skippedLowRsvp - skippedLowRsvpNonBDSM}, skipped list RSVPs<5 (other) ${skippedLowRsvpNonBDSM}, invalid datetime ${invalidDate}${skippedCap ? `, not processed (cap) ${skippedCap}` : ''}`
     );
 
     return Object.assign(results, { skippedLog, tableRows });

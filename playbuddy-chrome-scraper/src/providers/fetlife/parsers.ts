@@ -14,13 +14,21 @@ export function isBdsmparty(category: string | null | undefined): boolean {
 }
 
 export function getListRsvpThreshold(category: string | null | undefined): number {
-    return isBdsmparty(category) ? 50 : 10;
+    return isBdsmparty(category) ? 50 : 5;
 }
 
 export function meetsBdsmpartyThreshold(ev: { category?: string | null; rsvp_count?: number | null }): boolean {
     if (!isBdsmparty(ev.category)) return true;
     const r = typeof ev.rsvp_count === 'number' ? ev.rsvp_count : Number(ev.rsvp_count || 0);
     return r > 50;
+}
+
+const EXCLUDED_TERMS = ['blowbang', 'gangbang', 'blow bang', 'gang bang'];
+
+export function containsExcludedTerms(text?: string | null): boolean {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    return EXCLUDED_TERMS.some(term => lower.includes(term));
 }
 
 /**

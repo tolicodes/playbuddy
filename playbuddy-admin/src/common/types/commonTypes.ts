@@ -447,6 +447,8 @@ export interface ImportSource {
     method: ImportMethod;
     identifier: string;
     identifier_type?: IdentifierType;
+    approval_status?: 'pending' | 'approved' | 'rejected' | null;
+    message_sent?: boolean | null;
     metadata: Record<string, any>;
     event_defaults: Record<string, any>;
     created_at: string;
