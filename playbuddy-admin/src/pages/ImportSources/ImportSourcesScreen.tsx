@@ -108,6 +108,19 @@ export default function ImportSourcesScreen() {
         return map;
     }, [organizers]);
 
+    const organizerIdByHandle = useMemo(() => {
+        const map: Record<string, string> = {};
+        organizers.forEach((org: any) => {
+            const id = org?.id ? String(org.id) : '';
+            if (!id) return;
+            [org.fetlife_handle, org.instagram_handle].forEach((h: string | null | undefined) => {
+                const norm = normalizeHandle(h);
+                if (norm && !map[norm]) map[norm] = id;
+            });
+        });
+        return map;
+    }, [organizers]);
+
     type OrganizerOption = { id: string; label: string; handles?: string };
 
     const formatOrganizerFromSources = (src: ImportSource): string => {
@@ -261,7 +274,18 @@ export default function ImportSourcesScreen() {
                                     <Autocomplete<OrganizerOption, false, false, false>
                                         options={organizerOptions}
                                         getOptionLabel={(option) => option?.label || ''}
-                                        value={organizerOptions.find(o => o.id === ((src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId)) || null}
+                                        value={(() => {
+                                            const explicitId = (src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId;
+                                            const explicit = explicitId ? organizerOptions.find(o => o.id === String(explicitId)) : null;
+                                            if (explicit) return explicit;
+                                            const isHandle = (src.identifier_type || '').toLowerCase() === 'handle' || src.source === 'fetlife_handle';
+                                            if (isHandle) {
+                                                const norm = normalizeHandle(src.identifier);
+                                                const matchId = norm ? organizerIdByHandle[norm] : undefined;
+                                                if (matchId) return organizerOptions.find(o => o.id === matchId) || null;
+                                            }
+                                            return null;
+                                        })()}
                                         onChange={(_, val) => handleOrganizerUpdate(src, val?.id || '')}
                                         renderInput={(params) => (
                                             <TextField
