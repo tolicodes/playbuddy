@@ -220,7 +220,8 @@ router.post('/', authenticateAdminRequest, asyncHandler(async (req: Authenticate
 
 router.post('/bulk', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const events = req.body;
-    const skipExisting = req.query.skipExisting === 'true';
+    // Default to skipping existing events unless explicitly overridden with skipExisting=false
+    const skipExisting = req.query.skipExisting !== 'false';
     const approveExisting = req.query.approveExisting === 'true';
 
     const approvalStatuses = Array.from(new Set((events || []).map((ev: any) => ev?.approval_status || 'approved')));

@@ -73,6 +73,13 @@
     <input id="apiKey" type="text" placeholder="Enter your API key" />
     <button id="saveApiKey">Save</button>
     <span id="apiStatus"></span>
+    <div style="margin-top:10px; max-width:320px;">
+      <label for="apiEnv">API Environment</label>
+      <select id="apiEnv" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid #1f2a3d; background:#0c1626; color:#e5e7eb;">
+        <option value="local">Local (http://localhost:8080)</option>
+        <option value="prod">Production (https://api.playbuddy.me)</option>
+      </select>
+    </div>
 
     <div style="margin-top:12px;">
       <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
@@ -84,6 +91,14 @@
         <span>Do not overwrite existing events</span>
       </label>
       <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
+        <input id="autoFetlife" type="checkbox" style="width:16px; height:16px; accent-color:#22c55e;" />
+        <span>Auto-run Fetlife every 12h</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
+        <input id="autoFetlifeNearby" type="checkbox" style="width:16px; height:16px; accent-color:#22c55e;" />
+        <span>Auto-run Fetlife Nearby every 12h</span>
+      </label>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
         <span style="white-space:nowrap;">Max events to scrape</span>
         <input id="maxEvents" type="number" min="1" step="1" placeholder="1000" style="width:120px; color:#0b1220; background:#e5e7eb; border-radius:6px; padding:6px 8px; border:1px solid #1f2a3d;" />
       </label>
@@ -93,6 +108,7 @@
     <div style="margin-top: 18px;">
       <button id="startFetlife">Start Fetlife</button>
       <button id="startFetlifeNearby">Start Fetlife Nearby</button>
+      <button id="startFetlifeNearbyApi">Start Fetlife Nearby (API)</button>
       <button id="startFetlifeFestivals">Start Fetlife Festivals</button>
       <button id="startFetlifeFriendsStage1">Stage 1: Fetlife Friends (Counts)</button>
       <button id="startInstagram">Start Instagram</button>

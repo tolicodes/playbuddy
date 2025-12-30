@@ -1,7 +1,7 @@
 import { isTestMode, MAX_EVENTS_KEY } from '../../config.js';
 import { getRandomDelay, openTab, postStatus, sleep, throttleHourly, closeTab } from '../../utils.js';
 import { DEFAULT_NEARBY_CAP, LOG_SKIP_REASONS, THREE_MONTHS_MS } from './constants.js';
-import { extractEventDetailFromPage, isBdsmparty, isTargetLocation, meetsBdsmpartyThreshold, parseRawDatetime } from './parsers.js';
+import { extractEventDetailFromPage, getListRsvpThreshold, isBdsmparty, isTargetLocation, meetsBdsmpartyThreshold, parseRawDatetime } from './parsers.js';
 import { formatDate, updateTableProgress } from './table.js';
 import type { EventResult } from '../../types.js';
 import type { SkippedEntry, TableRow, TableRowStatus } from './types.js';
@@ -99,20 +99,36 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
             await clickFilter('BDSM Party');
             await sleep(1500); // shorter wait for filters to apply
 
-            const scrollContainer = document.scrollingElement || document.body;
-            const maxPasses = testModeFlag ? 3 : 35;
+            const scrollContainer = document.scrollingElement || document.documentElement;
+            const maxPasses = testModeFlag ? 3 : 100;
+            const stagnationLimit = testModeFlag ? 1 : 3;
             let stagnant = 0;
-            for (let i = 0; i < maxPasses; i++) {
-                const before = document.querySelectorAll('.mt-2.cursor-pointer.rounded-sm.bg-gray-900').length;
-                scrollContainer.scrollBy(0, 5000);
-                await sleep(testModeFlag ? 2600 : 3500);
-                const after = document.querySelectorAll('.mt-2.cursor-pointer.rounded-sm.bg-gray-900').length;
-                if (after > before) {
-                    stagnant = 0;
-                } else {
-                    stagnant += 1;
-                    if (stagnant >= (testModeFlag ? 1 : 3)) break;
+            let prevCount = 0;
+
+            const getCount = () => document.querySelectorAll('.mt-2.cursor-pointer.rounded-sm.bg-gray-900').length;
+
+            async function waitForGrowth(before: number, timeoutMs = 10000, intervalMs = 200) {
+                const start = Date.now();
+                while (Date.now() - start < timeoutMs) {
+                    await sleep(intervalMs);
+                    const current = getCount();
+                    if (current > before) return true;
                 }
+                return getCount() > before;
+            }
+
+            for (let i = 0; i < maxPasses; i++) {
+                const before = getCount();
+                scrollContainer.scrollBy(0, 5000);
+                await waitForGrowth(before, 10000, testModeFlag ? 150 : 250);
+                const count = getCount();
+                if (count <= prevCount) {
+                    stagnant += 1;
+                } else {
+                    stagnant = 0;
+                }
+                prevCount = count;
+                if (stagnant >= stagnationLimit) break;
             }
 
             const parseRsvps = (text: string | null | undefined) => {
@@ -150,6 +166,7 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
         rsvps: typeof l?.rsvps === 'number' ? l.rsvps : null,
         type: l?.type || '',
         date: formatDate(undefined, l?.dateText || ''),
+        location: '',
     }));
 
     const upsertTableRow = async (url: string, updates: Partial<TableRow>) => {
@@ -167,6 +184,7 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
     let invalidDate = 0;
     let skippedLowRsvp = 0;
     let skippedCap = 0;
+    let skippedLowRsvpNonBDSM = 0;
 
     let processed = 0;
 
@@ -206,6 +224,7 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
             organizer: result.fetlife_handle || '',
             type: result.category || '',
             date: dateOnly,
+            location: result.location || '',
         });
 
         const startTs = result.start_date ? new Date(result.start_date).getTime() : null;
@@ -220,6 +239,7 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
                 organizer: result.fetlife_handle || '',
                 type: result.category || '',
                 date: dateOnly,
+                location: result.location || '',
             });
         };
 
@@ -233,23 +253,25 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
             skippedBDSM += 1;
             await markSkipped('BDSM<50');
         } else if (listRsvps !== null) {
-            const listRsvpThreshold = isBdsmparty(result.category) ? 50 : 10;
+            const listRsvpThreshold = getListRsvpThreshold(result.category);
             if (listRsvps < listRsvpThreshold) {
                 skippedLowRsvp += 1;
+                if (!isBdsmparty(result.category)) skippedLowRsvpNonBDSM += 1;
                 const reason = `listRSVP<${listRsvpThreshold}${listRsvps !== null ? ` (${listRsvps})` : ''}`;
                 await markSkipped(reason);
                 continue;
             }
         }
         results.push(result);
-        await upsertTableRow(url, {
-            status: 'scraped',
-            reason: '',
-            name: result.name || url,
-            organizer: result.fetlife_handle || '',
-            type: result.category || '',
-            date: dateOnly,
-        });
+            await upsertTableRow(url, {
+                status: 'scraped',
+                reason: '',
+                name: result.name || url,
+                organizer: result.fetlife_handle || '',
+                type: result.category || '',
+                date: dateOnly,
+                location: result.location || '',
+            });
         processed += 1;
         if (processed >= MAX_NEARBY_EVENTS) {
             postStatus(`⏹️ Reached nearby cap of ${MAX_NEARBY_EVENTS} events; stopping.`);
@@ -272,7 +294,7 @@ export async function scrapeNearbyEvents(): Promise<EventResult[] & { skippedLog
     }
 
     postStatus(
-        `📈 Nearby summary: found ${links.length}, scraped ${results.length} (cap ${MAX_NEARBY_EVENTS}), skipped non-NY ${skippedNJ}, skipped low-RSVP BDSM ${skippedBDSM}, skipped list RSVPs<50 ${skippedLowRsvp}, invalid datetime ${invalidDate}${skippedCap ? `, not processed (cap) ${skippedCap}` : ''}`
+        `📈 Nearby summary: found ${links.length}, scraped ${results.length} (cap ${MAX_NEARBY_EVENTS}), skipped non-NY ${skippedNJ}, skipped low-RSVP BDSM ${skippedBDSM}, skipped list RSVPs<50 (BDSM) ${skippedLowRsvp - skippedLowRsvpNonBDSM}, skipped list RSVPs<10 (other) ${skippedLowRsvpNonBDSM}, invalid datetime ${invalidDate}${skippedCap ? `, not processed (cap) ${skippedCap}` : ''}`
     );
 
     return Object.assign(results, { skippedLog, tableRows });

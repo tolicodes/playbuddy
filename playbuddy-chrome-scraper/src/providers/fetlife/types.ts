@@ -11,6 +11,8 @@ export type TableRow = {
     rsvps?: number | null;
     type?: string | null;
     date?: string | null;
+    location?: string | null;
+    uploadStatus?: 'pending' | 'approved' | 'rejected' | string | null;
 };
 
 export type FetlifeResult = EventResult & { skippedLog?: SkippedEntry[]; tableRows?: TableRow[] };

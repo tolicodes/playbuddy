@@ -10,7 +10,7 @@ import type { EventResult } from './types';
 import { TEST_MODE } from './config';
 import * as instaFollow from './providers/follow_instagram';
 
-export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeFestivals' | 'fetlifeFriendsStage1' | 'fetlifeFriendsStage2' | 'fetlifeSingle' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
+export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeNearbyApi' | 'fetlifeFestivals' | 'fetlifeFriendsStage1' | 'fetlifeFriendsStage2' | 'fetlifeSingle' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
 
 type ScrapeFn = () => Promise<EventResult[]>;
 
@@ -23,7 +23,9 @@ const followInstagramHandles = TEST_MODE ? ['nightowls_ig'] : FOLLOW_IG_HANDLES;
 
 export const scrapeRouter: Record<ScrapeSource, ScrapeFn> = {
     fetlife: async () => fetlife.scrapeEvents(await getFetlifeHandleList()),
-    fetlifeNearby: () => fetlife.scrapeNearbyEvents(),
+    // Default nearby route now uses the API-based scraper (no per-event page visits)
+    fetlifeNearby: () => fetlife.scrapeNearbyEventsApi(),
+    fetlifeNearbyApi: () => fetlife.scrapeNearbyEventsApi(),
     fetlifeFestivals: () => fetlife.scrapeFestivals(),
     fetlifeFriendsStage1: async () => fetlife.scrapeFriendsStage1(await getFetlifeHandleList()),
     fetlifeFriendsStage2: async () => fetlife.scrapeFriendsStage2FromStorage(),

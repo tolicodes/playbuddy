@@ -1,3 +1,5 @@
+import { API_ENV_KEY, AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY } from './config.js';
+
 type ScrapeSource =
     | 'fetlife'
     | 'fetlifeNearby'
@@ -24,6 +26,9 @@ function init() {
     const skipOverwriteCheckbox = document.getElementById('skipOverwrite') as HTMLInputElement | null;
     const maxEventsInput = document.getElementById('maxEvents') as HTMLInputElement | null;
     const apiStatus = document.getElementById('apiStatus') as HTMLSpanElement | null;
+    const apiEnvSelect = document.getElementById('apiEnv') as HTMLSelectElement | null;
+    const autoFetlifeCheckbox = document.getElementById('autoFetlife') as HTMLInputElement | null;
+    const autoFetlifeNearbyCheckbox = document.getElementById('autoFetlifeNearby') as HTMLInputElement | null;
     const runLogsDiv = document.getElementById('runLogs') as HTMLDivElement | null;
     const logDiv = document.getElementById('log') as HTMLDivElement | null;
     const tableDiv = document.getElementById('tableOutput') as HTMLDivElement | null;
@@ -35,6 +40,31 @@ function init() {
     if (!apiKeyInput || !saveBtn || !apiStatus) {
         console.warn('Options page failed to find API key inputs.');
         return;
+    }
+    if (apiEnvSelect) {
+        chrome.storage.local.get(API_ENV_KEY, res => {
+            const val = res[API_ENV_KEY] || 'local';
+            apiEnvSelect.value = val;
+        });
+        apiEnvSelect.addEventListener('change', () => {
+            chrome.storage.local.set({ [API_ENV_KEY]: apiEnvSelect.value || 'local' });
+        });
+    }
+    if (autoFetlifeCheckbox) {
+        chrome.storage.local.get(AUTO_FETLIFE_KEY, res => {
+            autoFetlifeCheckbox.checked = !!res[AUTO_FETLIFE_KEY];
+        });
+        autoFetlifeCheckbox.addEventListener('change', () => {
+            chrome.storage.local.set({ [AUTO_FETLIFE_KEY]: !!autoFetlifeCheckbox.checked });
+        });
+    }
+    if (autoFetlifeNearbyCheckbox) {
+        chrome.storage.local.get(AUTO_FETLIFE_NEARBY_KEY, res => {
+            autoFetlifeNearbyCheckbox.checked = !!res[AUTO_FETLIFE_NEARBY_KEY];
+        });
+        autoFetlifeNearbyCheckbox.addEventListener('change', () => {
+            chrome.storage.local.set({ [AUTO_FETLIFE_NEARBY_KEY]: !!autoFetlifeNearbyCheckbox.checked });
+        });
     }
 
     function loadApiKey(): void {
@@ -108,6 +138,7 @@ function init() {
 
     bindScrapeButton('startFetlife', 'fetlife');
     bindScrapeButton('startFetlifeNearby', 'fetlifeNearby');
+    bindScrapeButton('startFetlifeNearbyApi', 'fetlifeNearbyApi' as ScrapeSource);
     bindScrapeButton('startFetlifeFestivals', 'fetlifeFestivals');
     bindScrapeButton('startFetlifeFriendsStage1', 'fetlifeFriendsStage1');
     bindScrapeButton('startInstagram', 'instagram');

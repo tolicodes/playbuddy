@@ -3,6 +3,8 @@ import * as fetlife from './providers/fetlife';
 import { scrapeBySource, type ScrapeSource } from './scrapeRouter';
 import type { EventResult } from './types';
 import { postStatus, setActiveRunId, resetLiveLog } from './utils';
+import { getApiBase, AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY } from './config.js';
+import { fetchImportSources } from './data.js';
 
 type ScrapeAction = 'scrapeSingleSource' | 'setStage2Handles';
 type DoScrapeOpts = {
@@ -25,9 +27,6 @@ interface ScrapeResponse {
 
 // Minimal browser JS: map your FetLife JSON array -> /events/bulk (no batching)
 
-// const API_BASE = "https://api.playbuddy.me";   // change if needed
-const API_BASE = "http://localhost:8080";
-const BULK_URL = `${API_BASE}/events/bulk`;
 const RUN_LOG_KEY = 'PB_SCRAPE_LOGS';
 const FETLIFE_HISTORY_KEY = 'PB_FETLIFE_HISTORY';
 const SKIP_OVERWRITE_KEY = 'PB_SKIP_OVERWRITE';
@@ -63,6 +62,24 @@ const getSkipOverwrite = async () => {
     return !!res[SKIP_OVERWRITE_KEY];
 };
 
+const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+
+async function fetchImportSourceHandles(): Promise<Set<string>> {
+    const out = new Set<string>();
+    try {
+        const imports = await fetchImportSources();
+        imports.forEach(src => {
+            if ((src?.identifier_type || '').toLowerCase() === 'handle' || src?.source === 'fetlife_handle') {
+                const norm = normalizeHandle(src?.identifier);
+                if (norm) out.add(norm);
+            }
+        });
+    } catch (err: any) {
+        postStatus(`⚠️ Failed to fetch import_sources handles: ${err?.message || err}`);
+    }
+    return out;
+}
+
 const EVENT_TYPES: EventTypes[] = ['event', 'play_party', 'munch', 'retreat', 'festival', 'workshop', 'performance', 'discussion'];
 const coerceEventType = (val?: string | null): EventTypes => {
     if (val && EVENT_TYPES.includes(val as EventTypes)) return val as EventTypes;
@@ -97,7 +114,7 @@ async function uploadEvents(
 ) {
     const events = jsonArray.map(e => mapEvent(e, approval_status));
     const skipExisting = opts.forceSkipExisting || await getSkipOverwrite();
-    const targetUrl = new URL(BULK_URL);
+    const targetUrl = new URL(`${await getApiBase()}/events/bulk`);
     if (skipExisting) targetUrl.searchParams.set('skipExisting', 'true');
     if (opts.approveExisting) targetUrl.searchParams.set('approveExisting', 'true');
     let text = '';
@@ -174,6 +191,8 @@ type TableRow = {
     reason?: string | null;
     type?: string | null;
     date?: string | null;
+    location?: string | null;
+    uploadStatus?: 'pending' | 'approved' | 'rejected' | string | null;
 };
 
 function buildStatusTable(
@@ -197,6 +216,8 @@ function buildStatusTable(
                 url: ev.ticket_url || (ev as any).event_url || '',
                 type: (ev as any).category || '',
                 date: ev.start_date || '',
+                location: (ev as any).location || '',
+                uploadStatus: (ev as any).uploadStatus || '',
                 status: 'scraped' as TableRowStatus,
             })),
             ...(skipped || []).map(s => ({
@@ -206,6 +227,8 @@ function buildStatusTable(
                 status: 'skipped' as TableRowStatus,
                 reason: s.reason || '',
                 date: '',
+                location: '',
+                uploadStatus: '',
             })),
         ];
 
@@ -218,9 +241,11 @@ function buildStatusTable(
         const type = safe(r.type || '');
         const date = safe(r.date || '');
         const link = r.url ? `<a href="${r.url}" target="_blank" rel="noreferrer" style="color:#fff;">${name}</a>` : name;
-        return `<tr><td>${date}</td><td>${organizer}</td><td>${link}</td><td>${type}</td><td>${statusLabel(r.status)}</td><td>${reason}</td></tr>`;
+        const location = safe((r as any).location || '');
+        const uploadStatus = safe((r as any).uploadStatus || '');
+        return `<tr><td>${date}</td><td>${organizer}</td><td>${link}</td><td>${type}</td><td>${location}</td><td>${uploadStatus}</td><td>${statusLabel(r.status)}</td><td>${reason}</td></tr>`;
     }).join('');
-    return `<table border="1" cellspacing="0" cellpadding="6" style="color:#fff;"><thead><tr><th>Date</th><th>Organizer</th><th>Event</th><th>Type</th><th>Status</th><th>Reason</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    return `<table border="1" cellspacing="0" cellpadding="6" style="color:#fff;"><thead><tr><th>Date</th><th>Organizer</th><th>Event</th><th>Type</th><th>Location</th><th>Upload</th><th>Status</th><th>Reason</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
 }
 
 const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
@@ -228,10 +253,7 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
     const runId = `${source}-${startedAt}-${Math.random().toString(36).slice(2, 8)}`;
     resetLiveLog();
     setActiveRunId(runId);
-    try {
-        setTableLog('');
-        chrome.runtime.sendMessage({ action: 'table', html: '' });
-    } catch { /* best effort */ }
+    // Keep prior table; do not clear between runs
     postStatus(`▶️ Started ${source} (${runId})`);
     const scrapeFn = opts.scrapeFn || (() => scrapeBySource(source));
     return scrapeFn()
@@ -246,22 +268,63 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                 chrome.downloads.download({ url: blobUrl, filename });
 
                 if (!isFriendSource) {
-                    const approval_status = opts.approvalStatus ?? (source === 'fetlifeNearby' ? 'pending' : undefined);
-                    const forceSkipExisting = opts.forceSkipExisting ?? (source === 'fetlife' || source === 'fetlifeNearby' || source === 'fetlifeFestivals');
-                    const approveExisting = opts.approveExisting ?? (source === 'fetlife');
+                    const isNearby = source.startsWith('fetlifeNearby');
+                    const approval_status = opts.approvalStatus ?? (isNearby ? 'pending' : undefined);
+                    const forceSkipExisting = opts.forceSkipExisting ?? (isNearby ? true : (source === 'fetlife' || source === 'fetlifeFestivals'));
+                    const approveExisting = opts.approveExisting ?? (source === 'fetlife' && !isNearby);
 
                     const skipped = (events as any)?.skippedLog || [];
                     const tableRows = (events as any)?.tableRows as TableRow[] | undefined;
-                    const tableHtml = buildStatusTable(events, skipped, tableRows);
-                    await setTableLog(tableHtml);
-                    try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
-                    if (skipped.length) {
-                        const summary = skipped.map((s: any) => `${s.name || s.url || 'Unknown'} — ${s.reason || ''}`).join('; ');
-                        postStatus(`🚫 Skipped (${skipped.length}): ${summary}`);
-                    }
 
-                    await uploadEvents(events, approval_status, { forceSkipExisting, approveExisting });
-                    postStatus(`✅ Done! Downloaded/uploaded ${events.length} events.`);
+                    const shouldSplit = isNearby;
+                    if (shouldSplit) {
+                        const handles = await fetchImportSourceHandles();
+                        const approvedEvents = events.filter(ev => {
+                            const h = normalizeHandle((ev as any).fetlife_handle);
+                            return h && handles.has(h);
+                        });
+                        const pendingEvents = events.filter(ev => !approvedEvents.includes(ev));
+
+                        const uploadStatusByUrl = new Map<string, string>();
+                        pendingEvents.forEach(ev => {
+                            if (ev.ticket_url) uploadStatusByUrl.set(ev.ticket_url, 'pending');
+                        });
+                        approvedEvents.forEach(ev => {
+                            if (ev.ticket_url) uploadStatusByUrl.set(ev.ticket_url, 'approved');
+                        });
+
+                        const tableRowsWithUpload = tableRows?.map(row => {
+                            const status = uploadStatusByUrl.get(row.url || '') || row.uploadStatus || '';
+                            return { ...row, uploadStatus: status };
+                        });
+                        events.forEach(ev => {
+                            const status = uploadStatusByUrl.get((ev as any).ticket_url || '') || (ev as any).uploadStatus || '';
+                            (ev as any).uploadStatus = status;
+                        });
+
+                        const tableHtml = buildStatusTable(events, skipped, tableRowsWithUpload);
+                        await setTableLog(tableHtml);
+                        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
+
+                        if (pendingEvents.length) {
+                            await uploadEvents(pendingEvents, 'pending', { forceSkipExisting: true, approveExisting: false });
+                        }
+                        if (approvedEvents.length) {
+                            const msg = `Nearby upload: approving ${approvedEvents.length} events (import_sources match)`;
+                            console.log(msg);
+                            postStatus(msg);
+                            await uploadEvents(approvedEvents, 'approved', { forceSkipExisting: true, approveExisting: true });
+                        }
+                        postStatus(`✅ Done! Uploaded ${pendingEvents.length} pending and ${approvedEvents.length} approved nearby events.`);
+                    } else {
+                        const tableHtml = buildStatusTable(events, skipped, tableRows);
+                        await setTableLog(tableHtml);
+                        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
+                        // Skipped summary intentionally omitted to reduce noise
+
+                        await uploadEvents(events, approval_status, { forceSkipExisting, approveExisting });
+                        postStatus(`✅ Done! Downloaded/uploaded ${events.length} events.`);
+                    }
                 } else {
                     postStatus(`✅ Done! Downloaded ${events.length} friends.`);
                 }
@@ -298,11 +361,6 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
         .catch(async err => {
             console.error('❌ Error in scrapeBySource:', err);
             chrome.runtime.sendMessage({ action: 'log', text: `❌ Error: ${err.message}` });
-            try {
-                const tableHtml = buildStatusTable([], []);
-                await setTableLog(tableHtml);
-                chrome.runtime.sendMessage({ action: 'table', html: tableHtml });
-            } catch {}
             const endedAt = Date.now();
             const baseEntry: RunLogEntry = {
                 id: runId,
@@ -400,8 +458,25 @@ async function runSourcesSequential(sources: ScrapeSource[]) {
     }
 }
 
+async function getAutoSources(): Promise<ScrapeSource[]> {
+    try {
+        const res = await chrome.storage.local.get([AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY]);
+        const sources: ScrapeSource[] = [];
+        if (res[AUTO_FETLIFE_KEY]) sources.push('fetlife');
+        if (res[AUTO_FETLIFE_NEARBY_KEY]) sources.push('fetlifeNearby');
+        return sources;
+    } catch {
+        return [];
+    }
+}
+
 async function runScheduledScrapes() {
-    await runSourcesSequential(['fetlife', 'fetlifeNearby']);
+    const sources = await getAutoSources();
+    if (!sources.length) {
+        postStatus('⏸️ Auto-run disabled for Fetlife/FetlifeNearby; skipping scheduled scrape.');
+        return;
+    }
+    await runSourcesSequential(sources);
 }
 
 async function maybeRunOnStartup() {

@@ -60,7 +60,10 @@ export const upsertEventsClassifyAndStats = async (events: any[], authUserId: st
     const stats = printBulkAddStats(eventResults);
     await flushEvents();
 
-    await classifyEventsInBatches();
+    // Kick off classification in the background; do not block API response
+    classifyEventsInBatches().catch(err => {
+        console.error('Background classifyEventsInBatches failed', err);
+    });
 
     return {
         stats,

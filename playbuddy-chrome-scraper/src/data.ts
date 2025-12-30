@@ -1,6 +1,6 @@
 import type { ImportSource } from './common/types/commonTypes.js';
+import { getApiBase } from './config.js';
 
-const API_BASE = 'http://localhost:8080';
 const LS_KEY = 'PLAYBUDDY_API_KEY';
 
 export const DEFAULT_FETLIFE_HANDLES = [
@@ -60,7 +60,7 @@ export async function fetchImportSources(): Promise<ImportSource[]> {
     const apiKey = await fetchApiKey();
     if (!apiKey) return [];
     try {
-        const res = await fetch(`${API_BASE}/import_sources`, {
+        const res = await fetch(`${await getApiBase()}/import_sources`, {
             headers: { Authorization: `Bearer ${apiKey}` },
         });
         if (!res.ok) throw new Error(`status ${res.status}`);

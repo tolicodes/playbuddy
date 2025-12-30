@@ -5,6 +5,8 @@ import {
 } from '@mui/material';
 import { useImportSources } from '../../common/db-axios/useImportSources';
 import { useCreateImportSource } from '../../common/db-axios/useCreateImportSource';
+import { useUpdateImportSource } from '../../common/db-axios/useUpdateImportSource';
+import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
 import { ImportSource } from '../../common/types/commonTypes';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 
@@ -43,6 +45,8 @@ export default function ImportSourcesScreen() {
     const { data: sources = [], isLoading } = useImportSources();
     const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
     const createSource = useCreateImportSource();
+    const updateSource = useUpdateImportSource();
+    const updateOrganizer = useUpdateOrganizer();
     const [form, setForm] = useState({
         source: '',
         method: METHODS[0],
@@ -53,16 +57,33 @@ export default function ImportSourcesScreen() {
 
     const handleChange = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
 
+    const updateOrganizerHandleIfNeeded = async (organizerId: string, identifier: string, identifierType?: string | null, source?: string) => {
+        const isHandleType = (identifierType || '').toLowerCase() === 'handle' || source === 'fetlife_handle';
+        const looksLikeHandle = !/^https?:\/\//i.test(identifier || '');
+        const norm = (isHandleType || looksLikeHandle) ? normalizeHandle(identifier) : '';
+        if (!organizerId || !norm) return;
+        try {
+            await updateOrganizer.mutateAsync({ id: Number(organizerId), fetlife_handle: norm });
+        } catch (err) {
+            console.warn('Failed to update organizer handle', err);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.source || !form.identifier) return;
-        await createSource.mutateAsync({
+        const saved = await createSource.mutateAsync({
             source: form.source,
             method: form.method,
             identifier: form.identifier,
             identifier_type: form.identifier_type,
             event_defaults: form.organizerId ? { organizer_id: form.organizerId } : undefined,
         });
+        if (form.organizerId) {
+            await updateOrganizerHandleIfNeeded(form.organizerId, form.identifier, form.identifier_type, form.source);
+        } else if (saved?.event_defaults?.organizer_id) {
+            await updateOrganizerHandleIfNeeded(saved.event_defaults.organizer_id, form.identifier, form.identifier_type, form.source);
+        }
         setForm(f => ({ ...f, identifier: '' }));
     };
 
@@ -87,6 +108,8 @@ export default function ImportSourcesScreen() {
         return map;
     }, [organizers]);
 
+    type OrganizerOption = { id: string; label: string; handles?: string };
+
     const formatOrganizerFromSources = (src: ImportSource): string => {
         const organizerId = (src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId || (src.metadata as any)?.organizer_id || (src.metadata as any)?.organizerId;
         if (organizerId && organizerById[organizerId]) return organizerById[organizerId];
@@ -99,13 +122,34 @@ export default function ImportSourcesScreen() {
         return formatOrganizer(src);
     };
 
-    const organizerOptions = useMemo(() => {
+    const organizerOptions: OrganizerOption[] = useMemo(() => {
         return organizers.map((org: any) => ({
             id: String(org.id),
             label: org.name || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`,
             handles: [org.fetlife_handle, org.instagram_handle].filter(Boolean).join(' • '),
         }));
     }, [organizers]);
+
+    const handleOrganizerUpdate = async (src: ImportSource, organizerId: string) => {
+        const nextEventDefaults = {
+            ...(src.event_defaults || {}),
+            organizer_id: organizerId || null,
+        };
+        const updated = await updateSource.mutateAsync({
+            id: src.id,
+            source: src.source,
+            method: src.method,
+            identifier: src.identifier,
+            identifier_type: src.identifier_type,
+            metadata: src.metadata,
+            event_defaults: nextEventDefaults,
+        });
+        if (organizerId) {
+            await updateOrganizerHandleIfNeeded(organizerId, src.identifier, src.identifier_type, src.source);
+        } else if ((updated as any)?.event_defaults?.organizer_id) {
+            await updateOrganizerHandleIfNeeded((updated as any).event_defaults.organizer_id, src.identifier, src.identifier_type, src.source);
+        }
+    };
 
     const sorted = useMemo(() => [...sources].sort((a, b) =>
         (b.created_at || '').localeCompare(a.created_at || '')
@@ -213,7 +257,34 @@ export default function ImportSourcesScreen() {
                                 <TableCell>{src.method}</TableCell>
                                 <TableCell>{src.identifier}</TableCell>
                                 <TableCell>{src.identifier_type || '—'}</TableCell>
-                                <TableCell>{formatOrganizerFromSources(src) || '—'}</TableCell>
+                                <TableCell sx={{ minWidth: 240 }}>
+                                    <Autocomplete<OrganizerOption, false, false, false>
+                                        options={organizerOptions}
+                                        getOptionLabel={(option) => option?.label || ''}
+                                        value={organizerOptions.find(o => o.id === ((src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId)) || null}
+                                        onChange={(_, val) => handleOrganizerUpdate(src, val?.id || '')}
+                                        renderInput={(params) => (
+                                            <TextField
+                                                {...params}
+                                                size="small"
+                                                label="Organizer"
+                                                placeholder={formatOrganizerFromSources(src) || 'Select organizer'}
+                                            />
+                                        )}
+                                        renderOption={(props, option) => (
+                                            <li {...props} key={option.id}>
+                                                <Stack>
+                                                    <Typography variant="body2">{option.label}</Typography>
+                                                    {option.handles && <Typography variant="caption" color="text.secondary">{option.handles}</Typography>}
+                                                </Stack>
+                                            </li>
+                                        )}
+                                        fullWidth
+                                        disableClearable={false}
+                                        clearOnBlur
+                                        loading={updateSource.isPending}
+                                    />
+                                </TableCell>
                                 <TableCell>{src.created_at ? new Date(src.created_at).toLocaleString() : '—'}</TableCell>
                             </TableRow>
                         ))}

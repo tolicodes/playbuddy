@@ -4,12 +4,17 @@ import type { EventResult } from '../../types.js';
 export function isTargetLocation(location: string | null | undefined): boolean {
     if (!location) return false;
     const loc = location.toLowerCase();
+    if (loc.includes('new jersey')) return false;
     return loc.includes('new york');
 }
 
 export function isBdsmparty(category: string | null | undefined): boolean {
     if (!category) return false;
     return category.trim().toLowerCase() === 'bdsm party';
+}
+
+export function getListRsvpThreshold(category: string | null | undefined): number {
+    return isBdsmparty(category) ? 50 : 10;
 }
 
 export function meetsBdsmpartyThreshold(ev: { category?: string | null; rsvp_count?: number | null }): boolean {
