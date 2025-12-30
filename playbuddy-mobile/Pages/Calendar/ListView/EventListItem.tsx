@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { Attendee, Event } from '../../../commonTypes';
 import { UE } from '../../../Common/types/userEventTypes';
@@ -13,7 +14,6 @@ import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
 import { BORDER_LAVENDER } from '../../../components/styles';
-import { BadgeRow } from '../../../components/EventBadgesRow';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistHeart } from './WishlistHeart';
@@ -38,6 +38,62 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
     const itemIsOnWishlist = isOnWishlist(item.id);
     const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
     const vetted = item.vetted;
+    const locationLabel = item.location || item.city || item.region || '';
+    type TagChip = { label: string; kind: 'type' | 'level' | 'vetted' | 'tag' };
+    const tagChips: TagChip[] = [];
+    const seenTags = new Set<string>();
+    const typeLabelMap: Record<string, string> = {
+        play_party: 'Play Party',
+        munch: 'Munch',
+        retreat: 'Retreat',
+        festival: 'Festival',
+        workshop: 'Workshop',
+        performance: 'Performance',
+        discussion: 'Discussion',
+    };
+    const levelLabelMap: Record<string, string> = {
+        beginner: 'Beginner',
+        intermediate: 'Intermediate',
+        advanced: 'Advanced',
+    };
+
+    const pushTag = (tag: string, kind: TagChip['kind']) => {
+        const clean = tag.trim();
+        if (!clean) return;
+        const key = clean.toLowerCase();
+        if (seenTags.has(key)) return;
+        if (tagChips.length >= 6) return;
+        seenTags.add(key);
+        tagChips.push({ label: clean, kind });
+    };
+
+    if (item.play_party) pushTag('Play Party', 'type');
+    if (item.is_munch) pushTag('Munch', 'type');
+    if (item.type && item.type !== 'event') {
+        pushTag(typeLabelMap[item.type] || item.type.replace(/_/g, ' '), 'type');
+    }
+    if (item.classification?.experience_level) {
+        const level = item.classification.experience_level.toLowerCase();
+        pushTag(levelLabelMap[level] || level.replace(/_/g, ' '), 'level');
+    }
+    if (vetted) pushTag('Vetted', 'vetted');
+
+    const extraTags = [...(item.classification?.tags || []), ...(item.tags || [])];
+    for (const tag of extraTags) {
+        pushTag(tag, 'tag');
+    }
+
+    const tagChipColors: Record<string, { background: string; text: string; border: string }> = {
+        'play party': { background: '#EFE9FF', text: '#5A43B5', border: '#DED7FF' },
+        'munch': { background: '#FFE2B6', text: '#8A5200', border: '#F1C07A' },
+        'retreat': { background: '#EAF6EE', text: '#2E6B4D', border: '#D6EBDC' },
+        'festival': { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
+        'workshop': { background: '#FDEBEC', text: '#9A3D42', border: '#F6D7DA' },
+        'performance': { background: '#F1E9FF', text: '#5D3FA3', border: '#E2D6FB' },
+        'discussion': { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
+        'vetted': { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
+    };
+    const levelChipColors = { background: '#E7F0FF', text: '#2F5DA8', border: '#D6E4FB' };
 
     const handlePressEvent = () => {
         // for attendee carousel scroll logic
@@ -65,9 +121,9 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
     };
 
     const placeHolderImage = item.munch_id ? (
-        <FAIcon name="cutlery" size={50} color="#666" style={styles.icon} />
+        <FAIcon name="cutlery" size={42} color="#666" />
     ) : (
-        <FAIcon name="calendar" size={50} color="#666" style={styles.icon} />
+        <FAIcon name="calendar" size={42} color="#666" />
     );
 
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
@@ -79,72 +135,145 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                 noPadding && styles.noPadding,
                 showApprovalBorder && styles.pendingBorder
             ]}>
-                <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.8}>
-                    <View style={styles.topSection}>
-                        <View style={styles.imageContainer}>
-                            {imageUrl ? (
-                                <Image source={{ uri: imageUrl }} style={styles.eventImage} />
-                            ) : (
-                                placeHolderImage
-                            )}
-                        </View>
-                        <View style={styles.detailsContainer}>
-                            <View style={styles.organizerRow}>
-                                <View style={styles.organizerContainer}>
-                                    <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
-                                    <Text style={styles.organizerName} numberOfLines={1}>
-                                        {item.organizer?.name}
-                                    </Text>
-                                </View>
-                                <View style={styles.rightContainer}>
-                                    {promoCode && (
-                                        <View style={styles.discountBadge}>
-                                            <Text style={styles.discountText}>
-                                                {promoCode.discount_type === 'percent'
-                                                    ? `${promoCode.discount}% off`
-                                                    : `$${promoCode.discount} off`}
-                                            </Text>
-                                        </View>
-                                    )}
-                                    <WishlistHeart itemIsOnWishlist={itemIsOnWishlist} handleToggleEventWishlist={handleToggleEventWishlist} />
-                                </View>
+                <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
+                    <View style={styles.poster}>
+                        {imageUrl ? (
+                            <Image source={{ uri: imageUrl }} style={styles.posterImage} contentFit="cover" />
+                        ) : (
+                            <View style={styles.posterPlaceholder}>
+                                {placeHolderImage}
                             </View>
-
+                        )}
+                        <LinearGradient
+                            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.7)']}
+                            style={styles.posterGradient}
+                        />
+                        {promoCode && (
+                            <View style={styles.discountBadge}>
+                                <Text style={styles.discountText}>
+                                    {promoCode.discount_type === 'percent'
+                                        ? `${promoCode.discount}% off`
+                                        : `$${promoCode.discount} off`}
+                                </Text>
+                            </View>
+                        )}
+                        <View style={styles.posterActions}>
+                            <WishlistHeart
+                                itemIsOnWishlist={itemIsOnWishlist}
+                                handleToggleEventWishlist={handleToggleEventWishlist}
+                                backgroundColor="#9ca3af"
+                                size={32}
+                            />
+                        </View>
+                        <View style={styles.posterFooter}>
                             <Text style={styles.eventTitle} numberOfLines={1}>
                                 {item.name}
                             </Text>
-
-                            <Text style={styles.eventTime}>{formattedDate}</Text>
+                            <View style={styles.organizerRow}>
+                                <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
+                                <Text style={styles.organizerName} numberOfLines={1}>
+                                    {item.organizer?.name}
+                                </Text>
+                            </View>
                         </View>
                     </View>
-                </TouchableOpacity>
 
-                {/* Badges and Attendees */}
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.scrollContainer}
-                    style={styles.scrollView}
-                    onScrollBeginDrag={() => setScrolling(true)}
-                    onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
-                >
-                    <BadgeRow
-                        vetted={vetted}
-                        playParty={item.play_party}
-                        center={false}
-                        munch={item.munch_id}
-                        classification={item.classification}
-                    />
-                    <AttendeeCarousel attendees={attendees!} />
-                </ScrollView>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.metaRowScroll}
+                        contentContainerStyle={styles.metaRow}
+                        onScrollBeginDrag={() => setScrolling(true)}
+                        onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
+                    >
+                        <View style={styles.metaItem}>
+                            <FAIcon name="calendar" size={12} color="#555" style={styles.metaIcon} />
+                            <Text style={styles.metaText} numberOfLines={1}>{formattedDate}</Text>
+                        </View>
+                        {locationLabel ? (
+                            <View style={styles.metaItem}>
+                                <FAIcon name="map-marker" size={12} color="#555" style={styles.metaIcon} />
+                                <Text style={styles.metaText} numberOfLines={1}>{locationLabel}</Text>
+                            </View>
+                        ) : null}
+                        {item.price ? (
+                            <View style={styles.metaItem}>
+                                <FAIcon name="tag" size={11} color="#555" style={styles.metaIcon} />
+                                <Text style={styles.metaText} numberOfLines={1}>{item.price}</Text>
+                            </View>
+                        ) : null}
+                    </ScrollView>
+
+                    {(tagChips.length > 0 || attendees.length > 0) && (
+                        <View style={styles.tagRowContainer}>
+                            {tagChips.length > 0 ? (
+                                <ScrollView
+                                    horizontal
+                                    showsHorizontalScrollIndicator={false}
+                                    contentContainerStyle={styles.tagRow}
+                                    style={styles.tagRowScroll}
+                                    onScrollBeginDrag={() => setScrolling(true)}
+                                    onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
+                                >
+                                    {tagChips.map((tag) => {
+                                        const key = tag.label.toLowerCase();
+                                        const colors =
+                                            tag.kind === 'level' ? levelChipColors : tagChipColors[key];
+                                        return (
+                                            <View
+                                                key={`${item.id}-${tag.label}`}
+                                                style={[
+                                                    styles.tagChip,
+                                                    colors && { backgroundColor: colors.background, borderColor: colors.border },
+                                                ]}
+                                            >
+                                                {tag.kind === 'tag' && (
+                                                    <FAIcon
+                                                        name="tag"
+                                                        size={10}
+                                                        color={colors ? colors.text : '#4a4a4a'}
+                                                        style={styles.tagChipIcon}
+                                                    />
+                                                )}
+                                                {tag.kind === 'level' && (
+                                                    <FAIcon
+                                                        name="signal"
+                                                        size={10}
+                                                        color={colors ? colors.text : '#4a4a4a'}
+                                                        style={styles.tagChipIcon}
+                                                    />
+                                                )}
+                                                <Text
+                                                    style={[
+                                                        styles.tagChipText,
+                                                        colors && { color: colors.text },
+                                                    ]}
+                                                    numberOfLines={1}
+                                                >
+                                                    {tag.label}
+                                                </Text>
+                                            </View>
+                                        );
+                                    })}
+                                </ScrollView>
+                            ) : (
+                                <View style={styles.tagRowSpacer} />
+                            )}
+                            {attendees.length > 0 && (
+                                <View style={styles.attendeeWrap}>
+                                    <AttendeeCarousel attendees={attendees} scrollEnabled={false} />
+                                </View>
+                            )}
+                        </View>
+                    )}
+                </TouchableOpacity>
             </View>
         </View>
     );
 };
 
 
-export const ITEM_HEIGHT = 140;
-const LEFT_PADDING = 75;
+export const ITEM_HEIGHT = 202;
 
 const styles = StyleSheet.create({
     // Container
@@ -158,73 +287,67 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: 'hidden',
         marginHorizontal: 16,
-        marginBottom: 10,
-        height: ITEM_HEIGHT - 10,
-        justifyContent: 'center',
-        shadowOpacity: 0.2,
+        marginBottom: 16,
+        height: ITEM_HEIGHT - 16,
+        shadowOpacity: 0.12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 10,
+        elevation: 4,
     },
     noPadding: {
         marginHorizontal: 0,
     },
     pendingBorder: {
-        borderColor: '#f59e0b',
+        borderColor: '#d97706',
         borderStyle: 'dotted',
-        borderWidth: 2,
+        borderWidth: 3,
     },
 
-    // Header layout
-    topSection: {
-        flexDirection: 'row',
-        padding: 12,
-        paddingBottom: 0,
+    poster: {
+        height: 120,
+        width: '100%',
+        backgroundColor: '#f2f2f2',
+    },
+    posterImage: {
+        width: '100%',
+        height: '100%',
+    },
+    posterPlaceholder: {
+        width: '100%',
+        height: '100%',
+        justifyContent: 'flex-start',
         alignItems: 'center',
+        backgroundColor: '#e9e9e9',
+        paddingTop: 10,
     },
-    imageContainer: {
-        marginRight: 12,
-        alignItems: 'center',
+    posterGradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 80,
     },
-    eventImage: {
-        width: 50,
-        height: 50,
-        borderRadius: 50,
-        backgroundColor: '#eee',
+    posterFooter: {
+        position: 'absolute',
+        left: 12,
+        right: 12,
+        bottom: 10,
     },
-    icon: {
-        width: 50,
-        height: 50,
-        borderRadius: 50,
-    },
-
-    // Text block
-    detailsContainer: {
-        flex: 1,
-        justifyContent: 'center',
+    posterActions: {
+        position: 'absolute',
+        right: 8,
+        top: 8,
     },
     eventTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 4,
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#fff',
     },
-    eventTime: {
-        fontSize: 14,
-        color: '#666',
-        marginBottom: 4,
-    },
-
-    // Organizer row
     organizerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 4,
-        justifyContent: 'space-between',
-    },
-    organizerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexShrink: 1,
-        flexGrow: 1,
-        marginRight: 8,
+        marginTop: 4,
     },
     organizerDot: {
         width: 8,
@@ -233,43 +356,95 @@ const styles = StyleSheet.create({
         marginRight: 6,
     },
     organizerName: {
-        fontSize: 14,
-        color: '#333',
-        flexShrink: 1,
-    },
-
-    // Promo badge and heart icon
-    rightContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexShrink: 0,
-        flexGrow: 0,
+        fontSize: 12,
+        color: '#f2f2f2',
     },
     discountBadge: {
+        position: 'absolute',
+        left: 12,
+        top: 12,
         backgroundColor: '#FFD700',
         borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 2,
     },
     discountText: {
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: 'bold',
         color: 'black',
     },
-    heartContainer: {
-        marginLeft: 8,
+    metaRowScroll: {
+        paddingHorizontal: 12,
+        paddingTop: 8,
+        paddingBottom: 6,
     },
-
-    // Scroll row (badges + attendees)
-    scrollContainer: {
+    metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 0,
-        paddingVertical: 0,
-        marginLeft: LEFT_PADDING,
     },
-    scrollView: {
-        maxHeight: 36,
-        flexGrow: 0,
+    metaItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    metaIcon: {
+        marginRight: 6,
+    },
+    metaText: {
+        fontSize: 12,
+        color: '#555',
+        fontWeight: '500',
+    },
+    tagRowContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingTop: 2,
+        paddingBottom: 2,
+        marginTop: 2,
+        minHeight: 30,
+    },
+    tagRowScroll: {
+        flexGrow: 1,
+        flexShrink: 1,
+    },
+    tagRow: {
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    tagRowSpacer: {
+        flexGrow: 1,
+        flexShrink: 1,
+    },
+    tagChip: {
+        backgroundColor: '#f1f3f8',
+        borderRadius: 999,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        marginRight: 6,
+        borderWidth: 1,
+        borderColor: '#e6eaf1',
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    tagChipIcon: {
+        marginRight: 4,
+    },
+    tagChipText: {
+        fontSize: 12,
+        color: '#4a4a4a',
+        fontWeight: '600',
+    },
+    attendeeWrap: {
+        marginLeft: 10,
+        maxWidth: '33%',
+        alignItems: 'flex-end',
+        flexShrink: 0,
+        overflow: 'hidden',
     },
 });

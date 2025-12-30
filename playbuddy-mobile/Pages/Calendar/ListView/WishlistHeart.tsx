@@ -1,8 +1,18 @@
 import React, { useRef, useEffect } from 'react';
-import { TouchableOpacity, Animated, StyleSheet } from 'react-native';
+import { TouchableOpacity, Animated, StyleSheet, View, ViewStyle } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
-export const WishlistHeart = ({ itemIsOnWishlist, handleToggleEventWishlist }: { itemIsOnWishlist: boolean; handleToggleEventWishlist: () => void }) => {
+export const WishlistHeart = ({
+    itemIsOnWishlist,
+    handleToggleEventWishlist,
+    backgroundColor,
+    size = 28,
+}: {
+    itemIsOnWishlist: boolean;
+    handleToggleEventWishlist: () => void;
+    backgroundColor?: string;
+    size?: number;
+}) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
@@ -22,13 +32,27 @@ export const WishlistHeart = ({ itemIsOnWishlist, handleToggleEventWishlist }: {
     }, [itemIsOnWishlist]);
 
     return (
-        <TouchableOpacity onPress={handleToggleEventWishlist} style={styles.heartContainer}>
+        <TouchableOpacity
+            onPress={handleToggleEventWishlist}
+            style={styles.heartContainer}
+        >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                <FAIcon
-                    name={itemIsOnWishlist ? 'heart' : 'heart-o'}
-                    size={25}
-                    color="red"
-                />
+                <View style={styles.iconStack}>
+                    {backgroundColor && itemIsOnWishlist && (
+                        <FAIcon
+                            name="heart"
+                            size={size}
+                            color={backgroundColor}
+                            style={styles.iconBase}
+                        />
+                    )}
+                    <FAIcon
+                        name={itemIsOnWishlist ? 'heart' : 'heart-o'}
+                        size={size}
+                        color="red"
+                        style={styles.iconTop}
+                    />
+                </View>
             </Animated.View>
         </TouchableOpacity>
     );
@@ -36,6 +60,19 @@ export const WishlistHeart = ({ itemIsOnWishlist, handleToggleEventWishlist }: {
 
 const styles = StyleSheet.create({
     heartContainer: {
-        paddingLeft: 10
+        padding: 4,
+    },
+    iconStack: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    iconBase: {
+        position: 'absolute',
+    },
+    iconTop: {
+        position: 'relative',
+        textShadowColor: 'rgba(0, 0, 0, 0.25)',
+        textShadowOffset: { width: 0, height: 1 },
+        textShadowRadius: 2,
     },
 });
