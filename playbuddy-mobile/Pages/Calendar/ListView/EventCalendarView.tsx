@@ -11,7 +11,7 @@ import WebsiteBanner from "../../../components/WebsiteBanner";
 import { logEvent } from "../../../Common/hooks/logger";
 import { MISC_URLS } from "../../../config";
 import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
-import { FeedbackInviteModal } from "../../FeedbackInviteModal";
+import { EdgePlayGroupModal } from "../../EdgePlayGroupModal";
 import { TopBar } from "./TopBar";
 import { DateStripHeader } from "./DateStripHeader";
 import { WeekStrip } from "./WeekStrip";
@@ -220,7 +220,7 @@ const EventCalendarView: React.FC<Props> = ({
     return (
         <View style={styles.container}>
             {!authUserId && <WebsiteBanner />}
-            <FeedbackInviteModal />
+            <EdgePlayGroupModal />
 
             <FiltersView
                 onApply={(f) => {

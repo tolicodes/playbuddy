@@ -185,9 +185,9 @@ export const UE = {
     WeeklyPicksPrevWeekClicked: 'weekly_picks_prev_week_clicked',
     WeeklyPicksNextWeekClicked: 'weekly_picks_next_week_clicked',
 
-    // Feedback Invite Modal
-    FeedbackInviteModalDismissed: 'feedback_invite_modal_dismissed',
-    FeedbackInviteModalOpenWhatsapp: 'feedback_invite_modal_open_whatsapp',
+    // EdgePlay Group Modal
+    EdgePlayGroupModalDismissed: 'edgeplay_group_modal_dismissed',
+    EdgePlayGroupModalOpenWhatsapp: 'edgeplay_group_modal_open_whatsapp',
 
     // Munches
     MunchesListNavigateToMunchDetail: 'munches_list_navigate_to_munch_detail',
@@ -560,9 +560,9 @@ export interface EventPayloadMap {
     };
 
 
-    // Feedback Invite Modal
-    [UE.FeedbackInviteModalDismissed]: AnalyticsProps;
-    [UE.FeedbackInviteModalOpenWhatsapp]: AnalyticsProps;
+    // EdgePlay Group Modal
+    [UE.EdgePlayGroupModalDismissed]: AnalyticsProps;
+    [UE.EdgePlayGroupModalOpenWhatsapp]: AnalyticsProps;
 }
 
 
