@@ -1,10 +1,9 @@
-import { View } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from "react-native";
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 
-import React from "react";
+import React, { useState } from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
-import { TouchableOpacity } from "react-native";
 import EventCalendarView from "../../Pages/Calendar/ListView/EventCalendarView";
 import MyCalendar from "../../Pages/EventLists/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
@@ -18,6 +17,7 @@ import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { DiscoverPage } from "../../Pages/DiscoverPage";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { ADMIN_EMAILS } from "../../config";
+import { ActionSheet } from "../../components/ActionSheet";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
@@ -26,72 +26,135 @@ export const TabNavigator = () => {
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const { data: events } = useFetchEvents({ includeApprovalPending: isAdmin });
+    const { height: windowHeight } = useWindowDimensions();
+    const [isMoreOpen, setIsMoreOpen] = useState(false);
 
     const WrappedEventCalendarView = () => {
         return <EventCalendarView events={events || []} />
     }
 
+    const moreSheetHeight = Math.min(windowHeight * 0.85, 680);
+
     return (
-        <Tab.Navigator
-            screenOptions={{
-                tabBarButton: (props: BottomTabBarButtonProps) => (
-                    <TouchableOpacity
-                        {...props}
-                        onPress={(e) => {
-                            logEvent(UE.TabNavigatorTabClicked, {
-                                ...analyticsProps,
-                                // "Organizers, tab, 3 of 4" -> "Organizers"
-                                tab_name: props.accessibilityLabel?.replace(/,.*/g, '') || ''
-                            });
-                            props.onPress?.(e);
-                        }}
-                    />
-                ),
-            }}
-        >
-            <Tab.Screen
-                name="Calendar"
-                component={WrappedEventCalendarView}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <FAIcon name="calendar" size={size} color={color} />
+        <>
+            <Tab.Navigator
+                screenOptions={({ route }) => ({
+                    tabBarButton: (props: BottomTabBarButtonProps) => (
+                        <TouchableOpacity
+                            {...props}
+                            onPress={(e) => {
+                                const tabName = props.accessibilityLabel?.replace(/,.*/g, '') || route.name;
+                                logEvent(UE.TabNavigatorTabClicked, {
+                                    ...analyticsProps,
+                                    tab_name: tabName,
+                                });
+
+                                if (route.name === 'More') {
+                                    setIsMoreOpen((prev) => !prev);
+                                    return;
+                                }
+
+                                props.onPress?.(e);
+                            }}
+                        />
                     ),
-                    ...headerOptions({ navigation, title: 'Calendar', isRootScreen: true }),
-                }}
-            />
-            <Tab.Screen
-                name="My Calendar"
-                component={MyCalendar}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <FAIcon name="heart" size={size} color={color} />
-                    ),
-                    ...headerOptions({ navigation, title: 'My Calendar', isRootScreen: true }),
-                }}
-            />
-            <Tab.Screen
-                name="Organizers"
-                component={OrganizersNav}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <FAIcon name="users-cog" size={size} color={color} />
-                    ),
-                    ...headerOptions({ navigation, title: 'Organizers', isRootScreen: true }),
-                }}
-            />
-            <Tab.Screen
-                name="More"
-                component={DiscoverPage}
-                options={{
-                    tabBarIcon: ({ color, size }) => (
-                        <View>
-                            <FAIcon name="ellipsis-h" size={size} color={color} />
-                            {/* {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />} */}
-                        </View>
-                    ),
-                    ...headerOptions({ navigation, title: 'More', isRootScreen: true }),
-                }}
-            />
-        </Tab.Navigator>
+                })}
+            >
+                <Tab.Screen
+                    name="Calendar"
+                    component={WrappedEventCalendarView}
+                    options={{
+                        tabBarIcon: ({ color, size }) => (
+                            <FAIcon name="calendar" size={size} color={color} />
+                        ),
+                        ...headerOptions({ navigation, title: 'Calendar', isRootScreen: true }),
+                    }}
+                />
+                <Tab.Screen
+                    name="My Calendar"
+                    component={MyCalendar}
+                    options={{
+                        tabBarIcon: ({ color, size }) => (
+                            <FAIcon name="heart" size={size} color={color} />
+                        ),
+                        ...headerOptions({ navigation, title: 'My Calendar', isRootScreen: true }),
+                    }}
+                />
+                <Tab.Screen
+                    name="Organizers"
+                    component={OrganizersNav}
+                    options={{
+                        tabBarIcon: ({ color, size }) => (
+                            <FAIcon name="users-cog" size={size} color={color} />
+                        ),
+                        ...headerOptions({ navigation, title: 'Organizers', isRootScreen: true }),
+                    }}
+                />
+                <Tab.Screen
+                    name="More"
+                    component={DiscoverPage}
+                    options={{
+                        tabBarIcon: ({ color, size }) => (
+                            <View>
+                                <FAIcon name="ellipsis-h" size={size} color={color} />
+                                {/* {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />} */}
+                            </View>
+                        ),
+                        ...headerOptions({ navigation, title: 'More', isRootScreen: true }),
+                    }}
+                />
+            </Tab.Navigator>
+            <ActionSheet
+                visible={isMoreOpen}
+                height={moreSheetHeight}
+                onClose={() => setIsMoreOpen(false)}
+                dismissOnBackdropPress
+            >
+                <View style={styles.moreSheet}>
+                    <View style={styles.moreHandle} />
+                    <View style={styles.moreHeader}>
+                        <Text style={styles.moreTitle}>More</Text>
+                        <TouchableOpacity
+                            onPress={() => setIsMoreOpen(false)}
+                            accessibilityLabel="Close more menu"
+                        >
+                            <FAIcon name="times" size={18} color="#555" />
+                        </TouchableOpacity>
+                    </View>
+                    <DiscoverPage variant="modal" onRequestClose={() => setIsMoreOpen(false)} />
+                </View>
+            </ActionSheet>
+        </>
     );
 };
+
+const styles = StyleSheet.create({
+    moreSheet: {
+        flex: 1,
+        backgroundColor: '#f6f7f9',
+    },
+    moreHandle: {
+        width: 36,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: '#d0d0d0',
+        alignSelf: 'center',
+        marginTop: 8,
+        marginBottom: 4,
+    },
+    moreHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 16,
+        paddingTop: 4,
+        paddingBottom: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e9e9e9',
+    },
+    moreTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+    },
+});
