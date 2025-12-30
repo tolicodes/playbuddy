@@ -8,6 +8,16 @@ import { ADMIN_EMAILS } from '../../../config';
 import { useFetchEvents as useCommonFetchEvents } from '../../../Common/db-axios/useEvents';
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors, useFetchPrivateEvents } from './eventHelpers';
 
+const dedupeEventsById = <T extends { id: number }>(events: T[]) => {
+    const seen = new Map<number, T>();
+    for (const event of events) {
+        if (!seen.has(event.id)) {
+            seen.set(event.id, event);
+        }
+    }
+    return Array.from(seen.values());
+};
+
 type CalendarContextType = {
     organizers: OrganizerFilterOption[];
 
@@ -51,7 +61,10 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
     });
     const { privateEvents, isLoadingPrivateEvents } = useFetchPrivateEvents();
 
-    const allEvents = useMemo(() => [...events, ...privateEvents], [events, privateEvents]);
+    const allEvents = useMemo(
+        () => dedupeEventsById([...events, ...privateEvents]),
+        [events, privateEvents]
+    );
 
     const organizers = useMemo(
         () => getAvailableOrganizers(allEvents || []),

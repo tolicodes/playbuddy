@@ -61,6 +61,12 @@ const EventCalendarView: React.FC<Props> = ({
         experience_levels: [],
         interactivity_levels: [],
     });
+    type QuickFilterCategory = 'munches' | 'play_parties' | 'rope';
+    type QuickFilterSelection =
+        | { type: 'category'; key: QuickFilterCategory }
+        | { type: 'tag'; tag: string };
+
+    const [quickFilter, setQuickFilter] = useState<QuickFilterSelection | null>(null);
 
     const allClassifications = useMemo(() => {
         if (!events)
@@ -73,14 +79,63 @@ const EventCalendarView: React.FC<Props> = ({
 
     const sectionListRef = useRef<SectionList>(null);
 
-    // Filtered events (unchanged)
+    const eventHasTag = (event: EventWithMetadata, tag: string) => {
+        const target = tag.toLowerCase();
+        const combinedTags = [...(event.tags || []), ...(event.classification?.tags || [])];
+        return combinedTags.some((t) => t.toLowerCase().includes(target));
+    };
+
+    const matchesQuickFilter = (event: EventWithMetadata) => {
+        if (!quickFilter) return true;
+        if (quickFilter.type === 'category') {
+            if (quickFilter.key === 'munches') return event.is_munch === true;
+            if (quickFilter.key === 'play_parties') return event.play_party === true;
+            if (quickFilter.key === 'rope') {
+                const tagMatches = eventHasTag(event, 'rope');
+                const nameMatches = event.name?.toLowerCase().includes('rope');
+                const descMatches = event.description?.toLowerCase().includes('rope');
+                const shortMatches = event.short_description?.toLowerCase().includes('rope');
+                return Boolean(tagMatches || nameMatches || descMatches || shortMatches);
+            }
+            return true;
+        }
+        return eventHasTag(event, quickFilter.tag);
+    };
+
+    const quickTagChips = useMemo(() => {
+        const excluded = new Set(['munch', 'munches', 'play party', 'play parties', 'rope']);
+        const tags: string[] = [];
+
+        for (const tag of allClassifications.tags || []) {
+            const name = tag.name.trim();
+            const key = name.toLowerCase();
+            if (!name || excluded.has(key)) continue;
+            if (tags.some((t) => t.toLowerCase() === key)) continue;
+            tags.push(name);
+            if (tags.length >= 12) break;
+        }
+
+        return tags;
+    }, [allClassifications.tags]);
+
+    const quickFilters = useMemo(
+        () => [
+            { id: 'category:munches', label: 'Munches' },
+            { id: 'category:play_parties', label: 'Play Parties' },
+            { id: 'category:rope', label: 'Rope' },
+            ...quickTagChips.map((tag) => ({ id: `tag:${tag}`, label: tag })),
+        ],
+        [quickTagChips]
+    );
+
     const filteredEvents = useMemo(() => {
         if (!events) return [];
         const normalize = (str?: string) => str?.toLowerCase().replace(/ /g, "_");
+        const baseEvents = quickFilter ? events.filter(matchesQuickFilter) : events;
 
         if (searchQuery.trim().length > 0) {
             const lower = searchQuery.toLowerCase();
-            return events.filter(
+            return baseEvents.filter(
                 (event) =>
                     event.name.toLowerCase().includes(lower) ||
                     event.organizer.name.toLowerCase().includes(lower) ||
@@ -90,9 +145,11 @@ const EventCalendarView: React.FC<Props> = ({
             );
         }
 
-        return events.filter((event) => {
-            const tags = event.classification?.tags || [];
-            const matchesTags = filters.tags.length === 0 || filters.tags.some((t) => tags.includes(t));
+        return baseEvents.filter((event) => {
+            const tags = [...(event.classification?.tags || []), ...(event.tags || [])];
+            const matchesTags =
+                filters.tags.length === 0 ||
+                filters.tags.some((t) => tags.some((tag) => tag.toLowerCase() === t.toLowerCase()));
             const exp = normalize(event.classification?.experience_level);
             const matchesExp = filters.experience_levels.length === 0 || filters.experience_levels.includes(exp || "");
             const inter = normalize(event.classification?.interactivity_level);
@@ -101,7 +158,38 @@ const EventCalendarView: React.FC<Props> = ({
                 filters.event_types.length === 0 || filters.event_types.includes("events") || filters.event_types.includes(event.type);
             return matchesTags && matchesExp && matchesInter && matchesType;
         });
-    }, [events, searchQuery, filters]);
+    }, [events, searchQuery, filters, quickFilter]);
+
+    const selectedQuickFilterId = quickFilter
+        ? quickFilter.type === 'category'
+            ? `category:${quickFilter.key}`
+            : `tag:${quickFilter.tag}`
+        : null;
+
+    const tagSuggestions = useMemo(() => {
+        const seen = new Set<string>();
+        const suggestions: string[] = [];
+
+        for (const tag of allClassifications.tags || []) {
+            const name = tag.name.trim();
+            const key = name.toLowerCase();
+            if (!name || seen.has(key)) continue;
+            seen.add(key);
+            suggestions.push(name);
+        }
+
+        for (const event of events || []) {
+            for (const tag of event.tags || []) {
+                const name = tag.trim();
+                const key = name.toLowerCase();
+                if (!name || seen.has(key)) continue;
+                seen.add(key);
+                suggestions.push(name);
+            }
+        }
+
+        return suggestions;
+    }, [allClassifications.tags, events]);
 
     const { sections } = useGroupedEvents(filteredEvents, featuredEvents);
 
@@ -255,6 +343,32 @@ const EventCalendarView: React.FC<Props> = ({
                 }}
                 showGoogleCalendar={showGoogleCalendar}
                 filtersEnabled={Object.values(filters).some((a) => a.length > 0)}
+                quickFilters={quickFilters}
+                selectedQuickFilterId={selectedQuickFilterId}
+                onSelectQuickFilter={(filterId) => {
+                    if (filterId === selectedQuickFilterId) {
+                        setQuickFilter(null);
+                        return;
+                    }
+                    if (filterId.startsWith('category:')) {
+                        const key = filterId.replace('category:', '') as QuickFilterCategory;
+                        setQuickFilter({ type: 'category', key });
+                        return;
+                    }
+                    if (filterId.startsWith('tag:')) {
+                        const tag = filterId.replace('tag:', '');
+                        setQuickFilter({ type: 'tag', tag });
+                    }
+                }}
+                onPressQuickFilterMore={() => setFiltersVisible(true)}
+                tagSuggestions={tagSuggestions}
+                onSelectTagSuggestion={(tag) => {
+                    setFilters((prev) => {
+                        if (prev.tags.includes(tag)) return prev;
+                        return { ...prev, tags: [...prev.tags, tag] };
+                    });
+                    setSearchQuery('');
+                }}
             />
 
             <DateStripHeader
