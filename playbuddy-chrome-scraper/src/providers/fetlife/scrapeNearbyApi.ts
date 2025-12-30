@@ -1,6 +1,6 @@
 import { isTestMode, MAX_EVENTS_KEY } from '../../config.js';
 import { closeTab, getRandomDelay, openTab, postStatus } from '../../utils.js';
-import { DEFAULT_NEARBY_CAP, LOG_SKIP_REASONS, THREE_MONTHS_MS } from './constants.js';
+import { DEFAULT_NEARBY_CAP, LOG_SKIP_REASONS } from './constants.js';
 import { getListRsvpThreshold, isBdsmparty, isTargetLocation, meetsBdsmpartyThreshold } from './parsers.js';
 import { formatDate, updateTableProgress } from './table.js';
 import type { EventResult } from '../../types.js';
@@ -41,7 +41,6 @@ export async function scrapeNearbyEventsApi(): Promise<EventResult[] & { skipped
             MAX_NEARBY_EVENTS = n;
         }
     } catch { /* ignore */ }
-    const threeMonthsAhead = Date.now() + THREE_MONTHS_MS;
     let tableRows: TableRow[] = [];
 
     const allEntries: FetlifeApiEntry[] = [];
@@ -186,8 +185,6 @@ export async function scrapeNearbyEventsApi(): Promise<EventResult[] & { skipped
             location: result.location || '',
         });
 
-        const startTs = result.start_date ? new Date(result.start_date).getTime() : null;
-
         const markSkipped = (reason: string) => {
             skippedLog.push({ reason, name: result.name || undefined, url, organizer: result.fetlife_handle || undefined });
             if (LOG_SKIP_REASONS) postStatus(`SKIP: ${reason} | ${result.name} | ${url}`);
@@ -208,9 +205,6 @@ export async function scrapeNearbyEventsApi(): Promise<EventResult[] & { skipped
         } else if ((result.category || '').toLowerCase().includes('sex')) {
             skippedSexParty += 1;
             markSkipped('category=sex_party');
-            continue;
-        } else if (startTs && startTs > threeMonthsAhead) {
-            markSkipped('future>3mo');
             continue;
         } else if (!isTargetLocation(result.location)) {
             skippedNJ += 1;
