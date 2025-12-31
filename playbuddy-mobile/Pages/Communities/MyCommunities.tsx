@@ -31,7 +31,7 @@ const CommunityList = ({
     if (communities.length === 0) {
         return (
             <View style={styles.centeredView}>
-                <Text>You&apos;re not following any organizers yet.</Text>
+                <Text>You&apos;re not following any communities yet.</Text>
 
             </View>
         )

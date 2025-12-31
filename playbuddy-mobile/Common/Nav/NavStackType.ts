@@ -21,6 +21,9 @@ export type NavStackProps = {
     };
     'Community Events': {
         communityId: string;
+        communityIds?: string[];
+        displayName?: string;
+        organizerId?: string;
     };
 
     // Authentication & Profile
@@ -34,6 +37,7 @@ export type NavStackProps = {
     // Promotional & Events
     'PromoScreen': undefined;
     'Weekly Picks': undefined;
+    'Popular Events': undefined;
     'Event Details': {
         selectedEvent: EventWithMetadata;
         title: string;

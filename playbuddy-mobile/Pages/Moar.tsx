@@ -79,7 +79,7 @@ const tools: LinkItem[] = [
 const resources: LinkItem[] = [
     {
         id: 'organizers',
-        title: 'List of Organizers',
+        title: 'List of Communities',
         url: 'https://www.notion.so/bcc0be4e78bf47b0a593988fa5a4ec6f?v=ed152f9629a2457bbabb58bbaae42155&pvs=4',
         icon: 'list-ul',
     },

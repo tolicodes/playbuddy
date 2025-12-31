@@ -27,6 +27,64 @@ interface ListItemProps {
     isAdmin?: boolean;
 }
 
+const TAG_TONES = {
+    spiritual: { background: '#FFF4E6', text: '#B45309', border: '#FFD7A8' },
+    social: { background: '#E9FBF3', text: '#1F8A5B', border: '#BDEDD8' },
+    skill: { background: '#EEF5FF', text: '#2B5AD7', border: '#CFE0FF' },
+    scene: { background: '#F6EEFF', text: '#6B35C6', border: '#DEC8FF' },
+    default: { background: '#F5F1FF', text: '#4B2ABF', border: '#E3DBFF' },
+};
+
+const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
+    {
+        tone: 'spiritual',
+        keywords: ['tantra', 'spiritual', 'meditat', 'ritual', 'ceremony', 'sacred', 'yoga', 'breath', 'energy', 'shaman', 'hypnosis'],
+    },
+    {
+        tone: 'social',
+        keywords: ['social', 'community', 'munch', 'meet', 'mingle', 'dating', 'poly', 'network', 'party', 'celebration'],
+    },
+    {
+        tone: 'skill',
+        keywords: ['workshop', 'class', 'training', 'lesson', 'beginner', 'intermediate', 'advanced', 'practice', 'hands on', 'education', 'consent', 'safety'],
+    },
+    {
+        tone: 'scene',
+        keywords: ['bdsm', 'kink', 'rope', 'shibari', 'bondage', 'fetish', 'impact', 'domin', 'submiss', 'sadis', 'masoch', 'exhibition', 'voyeur', 'play', 'erotic', 'sensual', 'sexual'],
+    },
+];
+
+const getTagTone = (tag: string) => {
+    const normalized = tag.trim().toLowerCase();
+    const match = TAG_TONE_MATCHERS.find(({ keywords }) =>
+        keywords.some(keyword => normalized.includes(keyword))
+    );
+    return TAG_TONES[match?.tone ?? 'default'];
+};
+
+const TYPE_ICONS: Record<string, string> = {
+    'play party': 'glass',
+    'munch': 'cutlery',
+    'retreat': 'leaf',
+    'festival': 'music',
+    'workshop': 'wrench',
+    'performance': 'microphone',
+    'discussion': 'comments',
+    'event': 'calendar',
+};
+
+const EVENT_RAIL_COLORS: Record<string, string> = {
+    event: '#9B8FD4',
+    'play party': '#5A43B5',
+    munch: '#B45309',
+    retreat: '#2E6B4D',
+    festival: '#2F5DA8',
+    workshop: '#9A3D42',
+    performance: '#5D3FA3',
+    discussion: '#2D5E6F',
+    default: '#9B8FD4',
+};
+
 export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees, isAdmin }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
@@ -94,6 +152,13 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
         'vetted': { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
     };
     const levelChipColors = { background: '#E7F0FF', text: '#2F5DA8', border: '#D6E4FB' };
+    const eventTypeKey = (() => {
+        if (item.play_party) return 'play party';
+        if (item.is_munch) return 'munch';
+        if (item.type && item.type !== 'event') return item.type.replace(/_/g, ' ').toLowerCase();
+        return 'event';
+    })();
+    const eventRailColor = EVENT_RAIL_COLORS[eventTypeKey] || EVENT_RAIL_COLORS.default;
 
     const handlePressEvent = () => {
         // for attendee carousel scroll logic
@@ -135,6 +200,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                 noPadding && styles.noPadding,
                 showApprovalBorder && styles.pendingBorder
             ]}>
+                <View pointerEvents="none" style={[styles.typeRail, { backgroundColor: eventRailColor }]} />
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
                     <View style={styles.poster}>
                         {imageUrl ? (
@@ -218,20 +284,32 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                     {tagChips.map((tag) => {
                                         const key = tag.label.toLowerCase();
                                         const colors =
-                                            tag.kind === 'level' ? levelChipColors : tagChipColors[key];
+                                            tag.kind === 'level'
+                                                ? levelChipColors
+                                                : tag.kind === 'tag'
+                                                    ? getTagTone(tag.label)
+                                                    : tagChipColors[key] || TAG_TONES.default;
                                         return (
                                             <View
                                                 key={`${item.id}-${tag.label}`}
                                                 style={[
                                                     styles.tagChip,
-                                                    colors && { backgroundColor: colors.background, borderColor: colors.border },
+                                                    { backgroundColor: colors.background, borderColor: colors.border },
                                                 ]}
                                             >
+                                                {tag.kind === 'type' && (
+                                                    <FAIcon
+                                                        name={TYPE_ICONS[key] || 'calendar'}
+                                                        size={10}
+                                                        color={colors.text}
+                                                        style={styles.tagChipIcon}
+                                                    />
+                                                )}
                                                 {tag.kind === 'tag' && (
                                                     <FAIcon
                                                         name="tag"
                                                         size={10}
-                                                        color={colors ? colors.text : '#4a4a4a'}
+                                                        color={colors.text}
                                                         style={styles.tagChipIcon}
                                                     />
                                                 )}
@@ -239,14 +317,14 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                                     <FAIcon
                                                         name="signal"
                                                         size={10}
-                                                        color={colors ? colors.text : '#4a4a4a'}
+                                                        color={colors.text}
                                                         style={styles.tagChipIcon}
                                                     />
                                                 )}
                                                 <Text
                                                     style={[
                                                         styles.tagChipText,
-                                                        colors && { color: colors.text },
+                                                        { color: colors.text },
                                                     ]}
                                                     numberOfLines={1}
                                                 >
@@ -273,7 +351,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
 };
 
 
-export const ITEM_HEIGHT = 202;
+export const ITEM_HEIGHT = 196;
 
 const styles = StyleSheet.create({
     // Container
@@ -284,11 +362,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderWidth: 1,
         borderColor: BORDER_LAVENDER,
-        borderRadius: 12,
+        borderRadius: 16,
         overflow: 'hidden',
         marginHorizontal: 16,
         marginBottom: 16,
         height: ITEM_HEIGHT - 16,
+        position: 'relative',
         shadowOpacity: 0.12,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 4 },
@@ -303,9 +382,19 @@ const styles = StyleSheet.create({
         borderStyle: 'dotted',
         borderWidth: 3,
     },
+    typeRail: {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        bottom: 0,
+        width: 6,
+        borderTopLeftRadius: 16,
+        borderBottomLeftRadius: 16,
+        zIndex: 2,
+    },
 
     poster: {
-        height: 120,
+        height: 108,
         width: '100%',
         backgroundColor: '#f2f2f2',
     },
@@ -326,18 +415,18 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        height: 80,
+        height: 68,
     },
     posterFooter: {
         position: 'absolute',
-        left: 12,
-        right: 12,
-        bottom: 10,
+        left: 16,
+        right: 16,
+        bottom: 12,
     },
     posterActions: {
         position: 'absolute',
-        right: 8,
-        top: 8,
+        right: 12,
+        top: 12,
     },
     eventTitle: {
         fontSize: 18,
@@ -361,8 +450,8 @@ const styles = StyleSheet.create({
     },
     discountBadge: {
         position: 'absolute',
-        left: 12,
-        top: 12,
+        left: 14,
+        top: 14,
         backgroundColor: '#FFD700',
         borderRadius: 8,
         paddingHorizontal: 10,
@@ -379,9 +468,9 @@ const styles = StyleSheet.create({
         color: 'black',
     },
     metaRowScroll: {
-        paddingHorizontal: 12,
+        paddingHorizontal: 16,
         paddingTop: 8,
-        paddingBottom: 6,
+        paddingBottom: 8,
     },
     metaRow: {
         flexDirection: 'row',
@@ -390,22 +479,22 @@ const styles = StyleSheet.create({
     metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 12,
+        marginRight: 10,
     },
     metaIcon: {
         marginRight: 6,
     },
     metaText: {
-        fontSize: 12,
+        fontSize: 11,
         color: '#555',
-        fontWeight: '500',
+        fontWeight: '600',
     },
     tagRowContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingTop: 2,
-        paddingBottom: 2,
+        paddingHorizontal: 16,
+        paddingTop: 4,
+        paddingBottom: 6,
         marginTop: 2,
         minHeight: 30,
     },
@@ -422,13 +511,11 @@ const styles = StyleSheet.create({
         flexShrink: 1,
     },
     tagChip: {
-        backgroundColor: '#f1f3f8',
         borderRadius: 999,
-        paddingHorizontal: 8,
+        paddingHorizontal: 12,
         paddingVertical: 3,
         marginRight: 6,
         borderWidth: 1,
-        borderColor: '#e6eaf1',
         flexDirection: 'row',
         alignItems: 'center',
     },
@@ -436,8 +523,7 @@ const styles = StyleSheet.create({
         marginRight: 4,
     },
     tagChipText: {
-        fontSize: 12,
-        color: '#4a4a4a',
+        fontSize: 11.5,
         fontWeight: '600',
     },
     attendeeWrap: {

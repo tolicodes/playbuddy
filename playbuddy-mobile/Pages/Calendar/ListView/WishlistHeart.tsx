@@ -7,11 +7,13 @@ export const WishlistHeart = ({
     handleToggleEventWishlist,
     backgroundColor,
     size = 28,
+    containerStyle,
 }: {
     itemIsOnWishlist: boolean;
     handleToggleEventWishlist: () => void;
     backgroundColor?: string;
     size?: number;
+    containerStyle?: ViewStyle;
 }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -34,7 +36,7 @@ export const WishlistHeart = ({
     return (
         <TouchableOpacity
             onPress={handleToggleEventWishlist}
-            style={styles.heartContainer}
+            style={[styles.heartContainer, containerStyle]}
         >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <View style={styles.iconStack}>

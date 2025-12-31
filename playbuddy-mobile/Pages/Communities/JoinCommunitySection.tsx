@@ -95,9 +95,10 @@ export const JoinCommunitySection = ({
             {type === 'organizer' && (
                 <View style={styles.listContainer}>
                     <CommunitiesList
-                        title=""
+                        title="All Communities"
                         communities={organizerPublicCommunities}
                         showSearch={true}
+                        listMode="all"
                     />
                 </View>
             )}

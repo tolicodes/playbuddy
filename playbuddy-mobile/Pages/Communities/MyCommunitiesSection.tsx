@@ -21,9 +21,11 @@ export const MyCommunitiesSection = ({ type, onPressAllCommunities }: { type: 'o
                 onPressAllCommunities={onPressAllCommunities}
             />}
             {type === 'organizer' && <CommunitiesList
-                title="My Favorite Organizers"
+                title="My Communities"
                 communities={myOrganizerPublicCommunities}
                 entityType="organizer"
+                showSearch={true}
+                listMode="my"
                 onPressAllCommunities={onPressAllCommunities}
             />}
         </View>

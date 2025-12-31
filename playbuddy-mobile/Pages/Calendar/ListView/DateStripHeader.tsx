@@ -55,25 +55,13 @@ export const DateStripHeader: React.FC<Props> = ({
 
     return (
         <View style={styles.headerWrap}>
-            <TouchableOpacity
-                style={styles.expandButton}
-                onPress={() => onToggleExpand?.()}
-                accessibilityLabel={isExpanded ? "Collapse calendar" : "Expand calendar"}
-            >
-                <FAIcon
-                    name={isExpanded ? "calendar-alt" : "calendar"}
-                    solid={isExpanded}
-                    size={20}
-                    color="#fff"
-                />
-            </TouchableOpacity>
-
-            {/* Center group (pager) */}
-            <View style={styles.centerGroup}>
-                <TouchableOpacity
-                    onPress={disabledPrev ? undefined : goToPrev}
-                    disabled={disabledPrev}
-                    style={[styles.arrowBtn, disabledPrev && styles.arrowDisabled]}
+            <View style={styles.leftGroup}>
+                {/* Date range + pager */}
+                <View style={styles.centerGroup}>
+                    <TouchableOpacity
+                        onPress={disabledPrev ? undefined : goToPrev}
+                        disabled={disabledPrev}
+                        style={[styles.arrowBtn, disabledPrev && styles.arrowDisabled]}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     accessibilityLabel="Previous week"
                     accessibilityState={{ disabled: disabledPrev }}
@@ -95,19 +83,33 @@ export const DateStripHeader: React.FC<Props> = ({
                 >
                     <FAIcon name="chevron-right" size={18} color="#fff" />
                 </TouchableOpacity>
+                </View>
             </View>
 
-            {/* Today button on right */}
-            <TouchableOpacity
-                onPress={goToToday}
-                style={styles.todayPill}
-                hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                accessibilityLabel="Jump to today"
-                testID="dateStrip-today"
-            >
-                <FAIcon name="calendar-day" size={14} color="#fff" />
-                <Text style={styles.todayText}>Today</Text>
-            </TouchableOpacity>
+            <View style={styles.rightGroup}>
+                <TouchableOpacity
+                    onPress={goToToday}
+                    style={styles.todayPill}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    accessibilityLabel="Jump to today"
+                    testID="dateStrip-today"
+                >
+                    <FAIcon name="calendar-day" size={14} color="#fff" />
+                    <Text style={styles.todayText}>Today</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.expandButton}
+                    onPress={() => onToggleExpand?.()}
+                    accessibilityLabel={isExpanded ? "Collapse calendar" : "Expand calendar"}
+                >
+                    <FAIcon
+                        name={isExpanded ? "chevron-up" : "chevron-down"}
+                        size={14}
+                        color="#fff"
+                    />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -116,33 +118,49 @@ const styles = StyleSheet.create({
     headerWrap: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "space-between", // keeps symmetry
+        justifyContent: "space-between",
         paddingHorizontal: HORIZONTAL_PADDING,
-        marginTop: 10,
+        paddingVertical: 6,
+    },
+    leftGroup: {
+        flex: 1,
+        marginRight: 10,
     },
     centerGroup: {
         flexDirection: "row",
         alignItems: "center",
-        maxWidth: "65%",
-    },
-    expandButton: {
-        width: 30,
-        height: 30,
-        borderRadius: 19,
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.15)",
+        justifyContent: "space-between",
+        backgroundColor: "rgba(255,255,255,0.18)",
+        borderRadius: 18,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.3)",
+        paddingHorizontal: 10,
+        height: 36,
+    },
+    expandButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.2)",
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.35)",
     },
     centerText: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: "700",
         color: "#fff",
-        marginHorizontal: 6,
+        flexShrink: 1,
+        textAlign: "center",
     },
-    arrowBtn: { padding: 6, opacity: 1 },
+    arrowBtn: { padding: 4, opacity: 1 },
     arrowDisabled: { opacity: 0.35 },
+    rightGroup: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+    },
     todayPill: {
         flexDirection: "row",
         alignItems: "center",
@@ -150,13 +168,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         paddingVertical: 6,
         borderRadius: 999,
-        backgroundColor: "rgba(255,255,255,0.22)",
+        backgroundColor: "rgba(255,255,255,0.2)",
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.35)",
     },
     todayText: {
         color: "#fff",
-        fontSize: 13,
+        fontSize: 12,
         fontWeight: "600",
         letterSpacing: 0.3,
     },

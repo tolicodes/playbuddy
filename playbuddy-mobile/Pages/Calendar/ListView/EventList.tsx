@@ -21,7 +21,7 @@ import { UE } from "../../../Common/types/userEventTypes";
 import { getEventAnalyticsProps, useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
 import { ADMIN_EMAILS } from "../../../config";
 
-const HEADER_HEIGHT = 40;
+const HEADER_HEIGHT = 34;
 
 type SectionType = {
     title: string;              // e.g., "Apr 13, 2025"
@@ -97,7 +97,7 @@ const EventList: React.FC<EventListProps> = ({
             renderSectionHeader={renderSectionHeader}
             getItemLayout={sectionListGetItemLayout({
                 getItemHeight: () => ITEM_HEIGHT,
-                getSectionHeaderHeight: () => HEADER_HEIGHT + 10 + 20,
+                getSectionHeaderHeight: () => HEADER_HEIGHT + 18,
             })}
             ListEmptyComponent={
                 <View style={styles.emptyList}>
@@ -118,34 +118,35 @@ export default EventList;
 
 const styles = StyleSheet.create({
     sectionList: {
-        marginTop: 10,
+        marginTop: 4,
     },
     sectionHeaderOuterWrapper: {
-        paddingBottom: 10,
-        paddingTop: 20,
+        paddingBottom: 12,
+        paddingTop: 12,
         marginHorizontal: 16,
     },
     sectionHeaderPill: {
-        backgroundColor: 'white',
-        paddingHorizontal: 20,
+        width: '100%',
+        backgroundColor: 'rgba(255,255,255,0.95)',
+        paddingHorizontal: 16,
         height: HEADER_HEIGHT,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 100,
+        borderRadius: 16,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(0,0,0,0.08)',
-        alignSelf: 'center',
-        // subtle shadow for depth
+        borderColor: 'rgba(90,67,181,0.12)',
+        alignSelf: 'stretch',
         shadowColor: '#000',
-        shadowOpacity: 0.50,
+        shadowOpacity: 0.08,
         shadowRadius: 6,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3, // Android shadow
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 3,
     },
     sectionHeaderText: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#333',
+        fontSize: 14,
+        fontWeight: '700',
+        color: '#2F2A3A',
+        textAlign: 'center',
     },
     emptyList: {
         flex: 1,
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: 'white',
+        color: '#6B7280',
     },
     eventItemWrapper: {
         backgroundColor: 'transparent',

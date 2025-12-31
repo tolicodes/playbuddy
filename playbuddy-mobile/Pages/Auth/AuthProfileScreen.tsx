@@ -1,11 +1,12 @@
 import React from 'react';
 import { Image } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, Share, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, SafeAreaView } from 'react-native';
 import { useUserContext } from './hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { Avatar } from './Buttons/Avatar';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
@@ -55,52 +56,59 @@ export default function AccountDetails() {
         Linking.openURL('mailto:support@playbuddy.me');
     }
 
-    const authUserId = userProfile?.auth_user_id;
-
     return (
         <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <View style={styles.centeredContent}>
-                    {!userProfile?.avatar_url && (
-                        <View style={styles.avatarInstructions}>
-                            <Image source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc/question_person.png?t=2024-11-05T12%3A57%3A25.907Z' }} style={styles.avatarInstructionsImage} />
-                            <Text style={styles.avatarInstructionsText}>Your avatar helps your buddies identify you!</Text>
-                        </View>
-                    )}
+            <LinearGradient colors={['#7B57E8', '#A757E8']} style={styles.gradient}>
+                <ScrollView contentContainerStyle={styles.scrollViewContent}>
+                    <View style={styles.sectionCard}>
+                        {!userProfile?.avatar_url && (
+                            <View style={styles.tipBanner}>
+                                <Image
+                                    source={{ uri: 'https://bsslnznasebtdktzxjqu.supabase.co/storage/v1/object/public/misc/question_person.png?t=2024-11-05T12%3A57%3A25.907Z' }}
+                                    style={styles.tipIcon}
+                                />
+                                <Text style={styles.tipText}>Your avatar helps your buddies recognize you.</Text>
+                            </View>
+                        )}
+                        <Avatar />
+                    </View>
 
-                    <Avatar />
+                    <View style={styles.sectionCard}>
+                        <Text style={styles.sectionTitle}>Account</Text>
+                        <InfoItem
+                            label="Logged in as"
+                            value={userProfile?.email || userProfile?.phone}
+                        />
+                        <InfoItem
+                            label="Display Name"
+                            value={userProfile?.name || fullNameFromOAuthedUser || ''}
+                        />
+                    </View>
 
-                    <TouchableOpacity style={styles.button} onPress={onPressHome}>
-                        <View style={styles.iconTextContainer}>
-                            <Icon name="home" size={24} color="white" />
-                            <Text style={styles.buttonText}>Go to Home</Text>
-                        </View>
+                    <View style={styles.sectionCard}>
+                        <Text style={styles.sectionTitle}>Actions</Text>
+                        <TouchableOpacity style={styles.primaryButton} onPress={onPressHome}>
+                            <View style={styles.iconTextContainer}>
+                                <Icon name="home" size={20} color="#fff" />
+                                <Text style={styles.primaryButtonText}>Go to Home</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.secondaryButton} onPress={onPressSignOut}>
+                            <Text style={styles.secondaryButtonText}>Sign Out</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.dangerButton} onPress={onPressDeleteAccount}>
+                            <Text style={styles.dangerButtonText}>Delete Account</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity onPress={onPressSupport} style={styles.supportLink}>
+                        <Text style={styles.supportText}>support@playbuddy.me</Text>
+                        <Text style={styles.supportSubText}>Support or feature ideas</Text>
                     </TouchableOpacity>
-
-                    <>
-                        <View style={styles.infoContainer}>
-                            <InfoItem label="Logged in as" value={
-                                userProfile?.email ||
-                                userProfile?.phone
-                            } />
-                            <InfoItem label="Display Name" value={userProfile?.name || fullNameFromOAuthedUser || ''} />
-
-                        </View>
-                    </>
-
-                    <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={onPressSignOut}>
-                        <Text style={styles.buttonText}>Sign Out</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={[styles.button, styles.deleteAccountButton]} onPress={onPressDeleteAccount}>
-                        <Text style={styles.buttonText}>Delete Account</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity onPress={onPressSupport}>
-                        <Text style={styles.getSupport}>Get support or suggest features: support@playbuddy.me</Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </LinearGradient>
         </SafeAreaView>
     );
 }
@@ -115,128 +123,131 @@ const InfoItem = ({ label, value }: { label: string, value?: string }) => (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: '#7B57E8',
+    },
+    gradient: {
+        flex: 1,
     },
     scrollViewContent: {
         flexGrow: 1,
-        justifyContent: 'center',
-    },
-    centeredContent: {
-        alignItems: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 40,
+        paddingTop: 12,
+        paddingBottom: 40,
     },
-    headerText: {
-        fontSize: 34,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#000',
-        textAlign: 'center',
+    sectionCard: {
+        backgroundColor: 'rgba(255,255,255,0.96)',
+        borderRadius: 20,
+        padding: 18,
+        marginBottom: 16,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.5)',
+        shadowColor: '#000',
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 4,
     },
-    avatarInstructions: {
-        backgroundColor: '#007AFF',
-        padding: 16,
-        borderRadius: 10,
-        marginBottom: 20,
+    sectionTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#4C2FA8',
+        marginBottom: 12,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    tipBanner: {
+        flexDirection: 'row',
         alignItems: 'center',
+        gap: 10,
+        padding: 12,
+        backgroundColor: '#EFE9FF',
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: '#DED7FF',
+        marginBottom: 12,
     },
-
-    avatarInstructionsText: {
-        fontSize: 16,
-        textAlign: 'center',
-        color: 'white',
-        fontWeight: 'bold',
+    tipIcon: {
+        width: 24,
+        height: 24,
     },
-    avatarInstructionsImage: {
-        width: 30,
-        height: 30,
-    },
-    infoContainer: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 10,
-        padding: 20,
-        marginBottom: 20,
-        alignItems: 'center',
-        width: '100%',
+    tipText: {
+        flex: 1,
+        fontSize: 14,
+        color: '#4C2FA8',
+        fontWeight: '600',
     },
     infoItem: {
-        marginBottom: 16,
-        alignItems: 'center',
+        marginBottom: 14,
     },
     iconTextContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-    },
-    sectionHeader: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginTop: 20,
-        marginBottom: 10,
-        color: '#000',
-        textAlign: 'center',
+        gap: 8,
     },
     label: {
-        fontSize: 14,
-        color: '#8E8E93',
+        fontSize: 12,
+        color: '#7E7A8D',
         marginBottom: 4,
-        textAlign: 'center',
     },
     value: {
-        fontSize: 17,
-        color: '#000',
-        textAlign: 'center',
-    },
-    shareCodeInstruction: {
-        fontSize: 14,
-        color: '#8E8E93',
-        textAlign: 'center',
-        marginVertical: 10,
-    },
-    qrCodeWrapper: {
-        alignItems: 'center',
-        marginVertical: 20,
-    },
-    shareCodeContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-    },
-    shareCode: {
-        fontSize: 24,
+        fontSize: 16,
+        color: '#1F1A2B',
         fontWeight: '600',
-        color: '#000',
-        textAlign: 'center',
     },
-    shareIconButton: {
-        padding: 10,
-        marginLeft: 10,
-    },
-    button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 10,
+    primaryButton: {
+        backgroundColor: '#6B4CE6',
+        borderRadius: 14,
         paddingVertical: 14,
-        paddingHorizontal: 20,
-        marginBottom: 16,
-        width: '100%',
+        paddingHorizontal: 16,
+        marginBottom: 12,
     },
-    buttonText: {
+    primaryButtonText: {
         color: '#FFFFFF',
-        fontSize: 17,
-        fontWeight: '600',
+        fontSize: 16,
+        fontWeight: '700',
         textAlign: 'center',
     },
-    signOutButton: {
-        backgroundColor: '#FF3B30',
+    secondaryButton: {
+        backgroundColor: '#F3F0FF',
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderWidth: 1,
+        borderColor: '#DDD5FF',
+        marginBottom: 10,
     },
-    deleteAccountButton: {
-        backgroundColor: '#FF3B30',
-    },
-    getSupport: {
-        color: '#007AFF',
+    secondaryButtonText: {
+        color: '#5A43B5',
+        fontSize: 15,
+        fontWeight: '700',
         textAlign: 'center',
+    },
+    dangerButton: {
+        backgroundColor: '#FFF1F2',
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderWidth: 1,
+        borderColor: '#FBC6CC',
+    },
+    dangerButtonText: {
+        color: '#C0363C',
+        fontSize: 15,
+        fontWeight: '700',
+        textAlign: 'center',
+    },
+    supportLink: {
+        alignItems: 'center',
+        paddingVertical: 6,
+    },
+    supportText: {
+        color: '#FFFFFF',
         fontSize: 14,
-        marginTop: 20,
+        fontWeight: '700',
+    },
+    supportSubText: {
+        color: 'rgba(255,255,255,0.75)',
+        fontSize: 12,
     },
 });

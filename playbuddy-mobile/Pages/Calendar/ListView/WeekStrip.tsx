@@ -12,7 +12,7 @@ import {
     NativeScrollEvent,
 } from "react-native";
 import moment from "moment-timezone";
-import { LAVENDER_BACKGROUND, ACCENT_PURPLE, HORIZONTAL_PADDING } from "../../../components/styles";
+import { HORIZONTAL_PADDING } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -35,6 +35,9 @@ type Props = {
 
     // If false, prevent going to previous week (used for greying past)
     canGoPrev?: boolean;
+
+    // Constrain width to container size (for docked layout)
+    containerWidth?: number;
 };
 
 export const WeekStrip: React.FC<Props> = ({
@@ -47,12 +50,14 @@ export const WeekStrip: React.FC<Props> = ({
     goToPrev,
     goToNext,
     canGoPrev = true,
+    containerWidth,
 }) => {
+    const pageWidth = containerWidth || SCREEN_WIDTH;
     const scrollRef = useRef<ScrollView>(null);
-    const offsetX = useRef(new Animated.Value(SCREEN_WIDTH)).current; // center page
+    const offsetX = useRef(new Animated.Value(pageWidth)).current; // center page
 
     const scrollToCenter = (animated: boolean) => {
-        scrollRef.current?.scrollTo({ x: SCREEN_WIDTH, y: 0, animated });
+        scrollRef.current?.scrollTo({ x: pageWidth, y: 0, animated });
     };
 
     // Keep the scroller centered whenever the week arrays change
@@ -69,7 +74,7 @@ export const WeekStrip: React.FC<Props> = ({
         moment(d).tz(TZ).isSame(moment().tz(TZ), "day");
 
     const renderWeek = (days: Date[], isCenter: boolean) => (
-        <View style={s.weekStrip}>
+        <View style={[s.weekStrip, { width: pageWidth }]}>
             {days.map((day) => {
                 const key = String(day instanceof Date ? day.getTime() : +new Date(day));
                 const selectable = hasEventsOnDay(day);
@@ -105,12 +110,12 @@ export const WeekStrip: React.FC<Props> = ({
 
     const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
         const x = e.nativeEvent.contentOffset.x;
-        // pages: 0 = prev, SCREEN_WIDTH = center, 2*SCREEN_WIDTH = next
-        if (x > SCREEN_WIDTH + TRIGGER_PX) {
+        // pages: 0 = prev, pageWidth = center, 2*pageWidth = next
+        if (x > pageWidth + TRIGGER_PX) {
             // went to NEXT (forward in time)
             scrollToCenter(false);
             goToNext();
-        } else if (x < SCREEN_WIDTH - TRIGGER_PX) {
+        } else if (x < pageWidth - TRIGGER_PX) {
             // went to PREV (back in time)
             scrollToCenter(false);
             if (canGoPrev) {
@@ -126,7 +131,7 @@ export const WeekStrip: React.FC<Props> = ({
     };
 
     return (
-        <Animated.View style={{ width: SCREEN_WIDTH, backgroundColor: "transparent" }}>
+        <Animated.View style={{ width: pageWidth, backgroundColor: "transparent" }}>
             <ScrollView
                 ref={scrollRef}
                 horizontal
@@ -134,8 +139,8 @@ export const WeekStrip: React.FC<Props> = ({
                 showsHorizontalScrollIndicator={false}
                 bounces
                 keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ width: SCREEN_WIDTH * 3 }}
-                contentOffset={{ x: SCREEN_WIDTH, y: 0 }} // start centered
+                contentContainerStyle={{ width: pageWidth * 3 }}
+                contentOffset={{ x: pageWidth, y: 0 }} // start centered
                 onMomentumScrollEnd={onMomentumEnd}
                 // keep taps working smoothly on emulators
                 scrollEventThrottle={16}
@@ -153,7 +158,7 @@ const s = StyleSheet.create({
     weekStrip: {
         width: SCREEN_WIDTH,
         flexDirection: "row",
-        justifyContent: "space-around",
+        justifyContent: "space-between",
         alignItems: "center",
         paddingVertical: 10,
         paddingHorizontal: HORIZONTAL_PADDING,
@@ -162,21 +167,38 @@ const s = StyleSheet.create({
     dayCell: {
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 6,
+        paddingVertical: 7,
         paddingHorizontal: 10,
-        borderRadius: 12,
+        borderRadius: 14,
         minWidth: 44,
         gap: 2,
+        borderWidth: 1,
+        borderColor: "rgba(255,255,255,0.3)",
+        backgroundColor: "rgba(255,255,255,0.16)",
     },
-    dayHasEvent: { backgroundColor: ACCENT_PURPLE },
-    dayNoEvent: { backgroundColor: "#D9C8F6" },
-    daySelected: { backgroundColor: LAVENDER_BACKGROUND },
-    todayRing: { borderWidth: 1, borderColor: "rgba(255,255,255,0.65)" },
+    dayHasEvent: {
+        backgroundColor: "rgba(255,255,255,0.28)",
+        borderColor: "rgba(255,255,255,0.45)",
+    },
+    dayNoEvent: {
+        backgroundColor: "rgba(255,255,255,0.12)",
+        borderColor: "rgba(255,255,255,0.22)",
+    },
+    daySelected: {
+        backgroundColor: "#FFFFFF",
+        borderColor: "#E3D9FF",
+        shadowColor: "#000",
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 3,
+    },
+    todayRing: { borderWidth: 1.5, borderColor: "rgba(255,255,255,0.85)" },
     dowText: { fontSize: 12 },
     dayNum: { fontSize: 16, fontWeight: "600" },
-    textOn: { color: "white" },
-    textOff: { color: "#6b6b6b" },
-    textSelected: { color: "black" },
+    textOn: { color: "#3E2E72" },
+    textOff: { color: "#9B90B9" },
+    textSelected: { color: "#5A43B5" },
 });
 
 export default WeekStrip;

@@ -15,6 +15,7 @@ import PlayParties from "../../Pages/EventLists/PlayParties";
 import { MunchesScreen } from '../../Pages/Munches/MunchesScreen'
 import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
 import { Facilitators } from "../../Pages/Facilitators/Facilitators";
+import PopularEvents from "../../Pages/EventLists/PopularEvents";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
@@ -99,6 +100,16 @@ export const DrawerNav = () => {
 
                 }}
                 listeners={onPressItemLogEventListener('Weekly Picks')}
+            />
+
+            <Drawer.Screen
+                name="Popular Events"
+                component={PopularEvents}
+                options={{
+                    drawerIcon: getIcon('fire'),
+                    ...headerOptions({ navigation, title: 'Popular Events' }),
+                }}
+                listeners={onPressItemLogEventListener('Popular Events')}
             />
 
             <Drawer.Screen

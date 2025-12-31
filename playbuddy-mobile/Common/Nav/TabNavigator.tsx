@@ -85,9 +85,10 @@ export const TabNavigator = () => {
                     component={OrganizersNav}
                     options={{
                         tabBarIcon: ({ color, size }) => (
-                            <FAIcon name="users-cog" size={size} color={color} />
+                            <FAIcon name="user-friends" size={size} color={color} />
                         ),
-                        ...headerOptions({ navigation, title: 'Organizers', isRootScreen: true }),
+                        tabBarLabel: 'Communities',
+                        ...headerOptions({ navigation, title: 'Communities', isRootScreen: true }),
                     }}
                 />
                 <Tab.Screen

@@ -7,8 +7,10 @@ import {
     Linking,
     ScrollView,
     Alert,
+    Share,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
 import { WebView } from 'react-native-webview';
@@ -18,7 +20,6 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { formatDate } from '../hooks/calendarUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { EventWithMetadata, NavStack } from '../../../Common/Nav/NavStackType';
-import { generateGoogleCalendarUrl } from '../hooks/generateGoogleCalendarUrl';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { TicketPromoModal } from './TicketPromoModal';
 import { UE } from '../../../userEventTypes';
@@ -79,6 +80,43 @@ const buildTicketUrl = (rawUrl: string, opts?: { promoCode?: string }) => {
     }
 };
 
+const TAG_TONES = {
+    spiritual: { backgroundColor: '#FFF4E6', borderColor: '#FFD7A8', textColor: '#B45309' },
+    social: { backgroundColor: '#E9FBF3', borderColor: '#BDEDD8', textColor: '#1F8A5B' },
+    skill: { backgroundColor: '#EEF5FF', borderColor: '#CFE0FF', textColor: '#2B5AD7' },
+    scene: { backgroundColor: '#F6EEFF', borderColor: '#DEC8FF', textColor: '#6B35C6' },
+    default: { backgroundColor: '#F5F1FF', borderColor: '#E3DBFF', textColor: '#4B2ABF' },
+};
+
+const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
+    {
+        tone: 'spiritual',
+        keywords: ['tantra', 'spiritual', 'meditat', 'ritual', 'ceremony', 'sacred', 'yoga', 'breath', 'energy', 'shaman', 'hypnosis'],
+    },
+    {
+        tone: 'social',
+        keywords: ['social', 'community', 'munch', 'meet', 'mingle', 'dating', 'poly', 'network', 'party'],
+    },
+    {
+        tone: 'skill',
+        keywords: ['workshop', 'class', 'training', 'lesson', 'beginner', 'intermediate', 'advanced', 'practice', 'hands on', 'education', 'consent', 'safety'],
+    },
+    {
+        tone: 'scene',
+        keywords: ['bdsm', 'kink', 'rope', 'shibari', 'bondage', 'fetish', 'impact', 'domin', 'submiss', 'sadis', 'masoch', 'exhibition', 'voyeur', 'play', 'erotic', 'sensual', 'sexual'],
+    },
+];
+
+const getTagTone = (tag: string) => {
+    const normalized = tag.trim().toLowerCase();
+    const match = TAG_TONE_MATCHERS.find(({ keywords }) =>
+        keywords.some(keyword => normalized.includes(keyword))
+    );
+    return TAG_TONES[match?.tone ?? 'default'];
+};
+
+const MAX_COLLAPSED_TAGS = 6;
+
 const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) => {
     const { currentDeepLink, authUserId } = useUserContext();
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
@@ -87,19 +125,81 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
 
     const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
-    const fullEvent = allEvents?.find(event => event.id === selectedEvent.id);
+    const fullEvent = allEvents?.find(event => event.id === selectedEvent.id) || selectedEvent;
 
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
-    const noImageOrVideo = !selectedEvent.image_url && !selectedEvent.video_url;
+    const eventAnalyticsProps = useEventAnalyticsProps(selectedEvent);
 
-    const eventAnalyticsProps = useEventAnalyticsProps(selectedEvent)
+    const locationLabel = selectedEvent.location || selectedEvent.city || selectedEvent.region || '';
+    const promoBadgeLabel = promoCode
+        ? promoCode.discount_type === 'percent'
+            ? `${promoCode.discount}% off`
+            : `$${promoCode.discount} off`
+        : null;
 
-    if (!fullEvent || !selectedEvent) return null;
+    const infoItems = [
+        { icon: 'schedule', label: formatDate(selectedEvent, true) },
+        locationLabel ? { icon: 'location-pin', label: locationLabel } : null,
+        selectedEvent.price ? { icon: 'paid', label: selectedEvent.price } : null,
+    ].filter(Boolean) as { icon: string; label: string }[];
+
+    const formatLabel = (value: string) =>
+        value
+            .split('_')
+            .map(word => word[0].toUpperCase() + word.slice(1))
+            .join(' ');
+
+    const typeLabelMap: Record<string, string> = {
+        play_party: 'Play Party',
+        munch: 'Munch',
+        retreat: 'Retreat',
+        festival: 'Festival',
+        workshop: 'Workshop',
+        performance: 'Performance',
+        discussion: 'Discussion',
+    };
+    const typeIconMap: Record<string, string> = {
+        play_party: 'glass-cheers',
+        munch: 'utensils',
+        retreat: 'leaf',
+        festival: 'music',
+        workshop: 'chalkboard-teacher',
+        performance: 'microphone',
+        discussion: 'comments',
+        event: 'calendar-alt',
+    };
+    type QuickChip = { label: string; icon: string };
+    const quickChips: QuickChip[] = [];
+    const seenQuick = new Set<string>();
+    const pushQuickChip = (label: string, icon: string) => {
+        const clean = label.trim();
+        const key = clean.toLowerCase();
+        if (!clean || seenQuick.has(key)) return;
+        seenQuick.add(key);
+        quickChips.push({ label: clean, icon });
+    };
+
+    if (selectedEvent.play_party) pushQuickChip('Play Party', typeIconMap.play_party);
+    if (selectedEvent.is_munch) pushQuickChip('Munch', typeIconMap.munch);
+    if (selectedEvent.type && selectedEvent.type !== 'event') {
+        const typeLabel = typeLabelMap[selectedEvent.type] || formatLabel(selectedEvent.type);
+        pushQuickChip(typeLabel, typeIconMap[selectedEvent.type] || typeIconMap.event);
+    }
+    if (selectedEvent.classification?.experience_level) {
+        pushQuickChip(formatLabel(selectedEvent.classification.experience_level), 'signal');
+    }
+    if (selectedEvent.classification?.interactivity_level) {
+        pushQuickChip(formatLabel(selectedEvent.classification.interactivity_level), 'hands');
+    }
+
+    if (!selectedEvent) return null;
+
+    const isWishlisted = isOnWishlist(selectedEvent.id);
 
     // Toggles the wishlist status for the event.
     const handleToggleWishlist = () => {
         if (!authUserId) {
-            alert('You need an account to add events to your calendar');
+            alert('You need an account to add events to your wishlist');
             return;
         }
 
@@ -108,12 +208,11 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
             return;
         }
 
-        const currentStatus = isOnWishlist(selectedEvent.id);
         logEvent(UE.EventDetailWishlistToggled, {
             ...eventAnalyticsProps,
-            is_on_wishlist: !currentStatus,
+            is_on_wishlist: !isWishlisted,
         });
-        toggleWishlistEvent.mutate({ eventId: selectedEvent.id, isOnWishlist: !currentStatus });
+        toggleWishlistEvent.mutate({ eventId: selectedEvent.id, isOnWishlist: !isWishlisted });
     };
 
     // Navigates to the organizer’s community events page.
@@ -124,13 +223,39 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         logEvent(UE.EventDetailOrganizerClicked, eventAnalyticsProps);
 
         // from the allEvents array, find the community that the organizer is in
-        const community = fullEvent.communities?.find(
-            community => community.organizer_id?.toString() === selectedEvent.organizer?.id?.toString()
-        )?.id;
+        const organizerId = selectedEvent.organizer?.id?.toString();
+        if (!organizerId) return;
 
-        if (community) {
+        const communityIdSet = new Set<string>();
+        const addCommunityId = (id?: string) => {
+            if (id) communityIdSet.add(id);
+        };
+
+        for (const event of allEvents || []) {
+            if (event.organizer?.id?.toString() !== organizerId) continue;
+            for (const community of event.communities || []) {
+                if (!community.organizer_id || community.organizer_id.toString() === organizerId) {
+                    addCommunityId(community.id);
+                }
+            }
+        }
+
+        for (const community of fullEvent.communities || []) {
+            addCommunityId(community.id);
+        }
+
+        const communityIds = Array.from(communityIdSet);
+        const communityId =
+            fullEvent.communities?.find(
+                community => community.organizer_id?.toString() === organizerId
+            )?.id || communityIds[0];
+
+        if (communityId) {
             navigation.navigate('Community Events', {
-                communityId: community
+                communityId,
+                communityIds,
+                displayName: selectedEvent.organizer?.name,
+                organizerId,
             });
         }
     };
@@ -168,23 +293,26 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         logEvent(UE.EventDetailTicketPromoModalPromoCopied, eventAnalyticsProps);
     };
 
-    // Opens the Google Calendar URL.
-    const handleGoogleCalendar = () => {
+    const handleShare = async () => {
         if (!eventAnalyticsProps.event_id) {
             return;
         }
-        logEvent(UE.EventDetailGoogleCalendarClicked, eventAnalyticsProps);
-        const calendarUrl = generateGoogleCalendarUrl({
-            title: selectedEvent.name,
-            startDate: selectedEvent.start_date,
-            endDate: selectedEvent.end_date,
-            description: selectedEvent.description,
-            location: selectedEvent.location,
-        });
+        logEvent(UE.EventListItemSharePressed, eventAnalyticsProps);
 
-        Linking.openURL(calendarUrl).catch(err => {
-            Alert.alert('Error', `Failed to open Google Calendar: ${err}`);
-        });
+        const shareUrl = selectedEvent.ticket_url
+            ? buildTicketUrl(selectedEvent.ticket_url)
+            : '';
+
+        if (!shareUrl) {
+            Alert.alert('No ticket link yet', 'Tickets are not available for this event yet.');
+            return;
+        }
+
+        try {
+            await Share.share({ message: shareUrl });
+        } catch (err) {
+            Alert.alert('Error', 'Unable to share right now.');
+        }
     };
 
     const ticketUrlWithPromo = (() => {
@@ -202,6 +330,22 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
     })();
 
     const isAvailableSoon = !selectedEvent.ticket_url?.includes('https');
+    const membershipUrl = selectedEvent.organizer?.membership_app_url;
+    const membershipOnly = selectedEvent.organizer?.membership_only;
+    const isMembershipOnly = !!(membershipUrl && membershipOnly);
+    const ticketLabel = isMembershipOnly
+        ? 'Apply For Membership'
+        : isAvailableSoon
+            ? 'Available Soon'
+            : 'Get Tickets';
+    const ticketDisabled = isAvailableSoon && !isMembershipOnly;
+    const handleTicketPress = () => {
+        if (isMembershipOnly && membershipUrl) {
+            Linking.openURL(membershipUrl);
+            return;
+        }
+        handleGetTickets();
+    };
 
     return (
         <>
@@ -222,70 +366,135 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                 organizerName={selectedEvent.organizer?.name}
                 onCopy={handleModalCopyPromoCode}
             />
-            {
-                selectedEvent.video_url ? (
-                    <VideoPlayer uri={selectedEvent.video_url} />
-                ) : selectedEvent.image_url ? (
-                    <Image source={{ uri: selectedEvent.image_url }} style={styles.fullViewImage} />
-                ) : null
-            }
-            <View style={[styles.headerCard, noImageOrVideo && styles.headerCardNoImage]}>
-                <View style={styles.titleRow}>
-                    <MaterialIcons name="event" size={24} color="#fff" style={styles.icon} />
-                    <Text style={styles.headerTitle}>{selectedEvent.name}</Text>
-                    <TouchableOpacity onPress={handleToggleWishlist} style={styles.favoriteIcon}>
+            <View style={styles.heroWrapper}>
+                <View style={styles.heroMedia}>
+                    {selectedEvent.video_url ? (
+                        <VideoPlayer uri={selectedEvent.video_url} />
+                    ) : selectedEvent.image_url ? (
+                        <Image
+                            source={{ uri: selectedEvent.image_url }}
+                            style={styles.heroImage}
+                            contentFit="cover"
+                        />
+                    ) : (
+                        <View style={styles.heroPlaceholder}>
+                            <MaterialIcons name="event" size={56} color="#c7b9ff" />
+                        </View>
+                    )}
+                    <LinearGradient
+                        colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.75)']}
+                        style={styles.heroGradient}
+                    />
+                    {promoBadgeLabel && (
+                        <View style={styles.heroPromoBadge}>
+                            <Text style={styles.heroPromoText}>{promoBadgeLabel}</Text>
+                        </View>
+                    )}
+                    <View style={styles.heroFooter}>
+                        <Text style={styles.heroTitle} numberOfLines={2}>
+                            {selectedEvent.name}
+                        </Text>
+                        {selectedEvent.organizer?.name ? (
+                            <TouchableOpacity onPress={handleOrganizerClick} style={styles.heroOrganizer}>
+                                <View
+                                    style={[
+                                        styles.organizerDot,
+                                        { backgroundColor: selectedEvent.organizerColor || '#fff' },
+                                    ]}
+                                />
+                                <Text style={styles.heroOrganizerText} numberOfLines={1}>
+                                    {selectedEvent.organizer?.name}
+                                </Text>
+                            </TouchableOpacity>
+                        ) : null}
+                    </View>
+                </View>
+            </View>
+
+            <View style={styles.headerSheet}>
+                <View style={styles.ctaRow}>
+                    <TouchableOpacity
+                        style={[
+                            styles.ticketButton,
+                            ticketDisabled && styles.ticketButtonDisabled,
+                        ]}
+                        onPress={handleTicketPress}
+                        disabled={ticketDisabled}
+                    >
                         <MaterialIcons
-                            name={isOnWishlist(selectedEvent.id) ? 'favorite' : 'favorite-border'}
-                            size={28}
+                            name={ticketDisabled ? 'schedule' : 'confirmation-number'}
+                            size={18}
                             color="#fff"
+                            style={styles.ticketIcon}
+                        />
+                        <Text style={styles.ticketText}>{ticketLabel}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.calendarButton} onPress={handleToggleWishlist}>
+                        <FAIcon
+                            name="heart"
+                            size={22}
+                            color="#ef4444"
+                            solid={isWishlisted}
                         />
                     </TouchableOpacity>
-                </View>
-
-                <View style={styles.infoRow}>
-                    <TouchableOpacity onPress={handleOrganizerClick} style={styles.organizerPill}>
-                        <MaterialIcons name="group" size={14} color="#fff" />
-                        <Text style={styles.organizerText}>{selectedEvent.organizer?.name}</Text>
+                    <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+                        <FAIcon name="share-square" size={18} color="#6B57D0" />
                     </TouchableOpacity>
-
-                    <View style={styles.infoRowPill}>
-                        <MaterialIcons name="schedule" size={14} color="#fff" />
-                        <Text style={styles.infoText}>{formatDate(selectedEvent, true)}</Text>
-                    </View>
-
-                    <View style={styles.infoRowPill}>
-                        <MaterialIcons name="location-pin" size={14} color="#fff" />
-                        <Text style={styles.infoText}>{selectedEvent.location}</Text>
-                    </View>
-
-                    {selectedEvent.price && <View style={styles.infoRowPill}>
-                        <MaterialIcons name="paid" size={14} color="#fff" />
-                        <Text style={styles.infoText}>{selectedEvent.price}</Text>
-                    </View>}
                 </View>
 
-                <TouchableOpacity style={styles.ticketButton} onPress={handleGetTickets}>
-                    <Text style={styles.ticketText}>{isAvailableSoon ? 'Available Soon' : '🎟️ Get Tickets 🎟️'}</Text>
-                </TouchableOpacity>
+                {infoItems.length > 0 && (
+                    <View style={styles.metaList}>
+                        {infoItems.map((item, index) => (
+                            <View key={`${item.label}-${index}`} style={styles.metaLine}>
+                                <View style={styles.metaIconWrap}>
+                                    <MaterialIcons
+                                        name={item.icon}
+                                        size={16}
+                                        color="#5D4BB7"
+                                    />
+                                </View>
+                                <Text style={styles.metaText} numberOfLines={2}>
+                                    {item.label}
+                                </Text>
+                            </View>
+                        ))}
+                    </View>
+                )}
 
+                {quickChips.length > 0 && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.quickRowScroll}
+                        contentContainerStyle={styles.quickRow}
+                    >
+                        {quickChips.map((chip, index) => (
+                            <View key={`${chip.label}-${index}`} style={styles.quickPill}>
+                                <FAIcon
+                                    name={chip.icon}
+                                    size={11}
+                                    color="#5A43B5"
+                                    style={styles.quickPillIcon}
+                                />
+                                <Text style={styles.quickPillText}>{chip.label}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
+                )}
             </View>
         </>
-    )
+    );
 }
 
 const MediaTab = ({ event }: { event: EventWithMetadata }) => {
     return (
-        <MediaCarousel
-            medias={event.media || []}
-        />
+        <View style={styles.mediaSection}>
+            <MediaCarousel
+                medias={event.media || []}
+            />
+        </View>
     )
 }
-const CLASSIFICATION_ICONS = [
-    'hands', // interactivity
-    'spa', // comfort
-    'school', // experience
-]
-
 const TABS = [
     { name: 'Details', value: 'details' },
     { name: 'Organizer', value: 'organizer' },
@@ -296,82 +505,82 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
     const { currentDeepLink } = useUserContext();
     const promoCode = getBestPromoCode(event, currentDeepLink);
     const navigation = useNavigation<NavStack>();
+    const [showAllTags, setShowAllTags] = useState(false);
 
     const isAvailableSoon = !event.ticket_url?.includes('https');
 
-    const description = (isAvailableSoon && !event.description) ?
-        'This event is available soon. Please check back later.'
-        : event.description.replace('\n', '\n\n');
+    const rawDescription = event.description || '';
+    const description = (isAvailableSoon && !rawDescription)
+        ? 'This event is available soon. Please check back later.'
+        : rawDescription;
+    const markdownDescription = description ? description.replace('\n', '\n\n') : '';
+    const tagList = Array.from(
+        new Set([...(event.classification?.tags || []), ...(event.tags || [])])
+    );
+    const hasHiddenTags = tagList.length > MAX_COLLAPSED_TAGS;
+    const visibleTags = showAllTags ? tagList : tagList.slice(0, MAX_COLLAPSED_TAGS);
+    const hiddenTagCount = hasHiddenTags ? tagList.length - MAX_COLLAPSED_TAGS : 0;
+
+    useEffect(() => {
+        setShowAllTags(false);
+    }, [event.id]);
 
     return (
         <View style={styles.contentContainer}>
-            <SectionCard title="Summary" icon="style">
-                {event.short_description && (
-                    <Text>{event.short_description}</Text>
-                )}
-            </SectionCard>
-
-            {event.classification && (
-                <SectionCard title="Tags" icon="style">
-                    {event.classification.tags?.length > 0 && (
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                        >
-                            {event.classification.tags.map((theme, i) => (
-                                <View key={`theme-${i}`} style={styles.tagPill}>
-                                    <FAIcon
-                                        name={'tag'}
-                                        size={12}
-                                        color="#4B2ABF"
-                                        style={{ marginRight: 6 }}
-                                        solid
-                                    />
-                                    <Text style={styles.tagText}>{theme}</Text>
-                                </View>
-                            ))}
-                        </ScrollView>
-                    )}
-
-                    {/* Row 2: Tags + Classification fields */}
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                    >
-                        {[
-                            event.classification.interactivity_level,
-                            event.classification.experience_level
-                        ]
-                            .filter(Boolean)
-                            .map((tag, i) => {
-                                const icon = CLASSIFICATION_ICONS[i];
-                                return (
-                                    <View key={`tag-${i}`} style={[styles.tagPill, styles.tagPillSecondary]}>
-                                        <FAIcon
-                                            name={icon}
-                                            size={12}
-                                            color="#4B2ABF"
-                                            style={{ marginRight: 6 }}
-                                            solid
-                                        />
-                                        <Text style={styles.tagText}>{tag}</Text>
-                                    </View>
-                                );
-                            })}
-
-                    </ScrollView>
+            {event.short_description && (
+                <SectionCard title="Summary" icon="subject" tone="default">
+                    <Text style={styles.bodyText}>{event.short_description}</Text>
                 </SectionCard>
             )}
 
             {promoCode && (
-                <SectionCard title="Promo Code" icon="style">
+                <SectionCard title="Promo Code" icon="local-offer" tone="warning">
                     <PromoCodeSection promoCode={promoCode} onCopy={handleCopyPromoCode} />
+                </SectionCard>
+            )}
+
+            {tagList.length > 0 && (
+                <SectionCard title="Tags" icon="local-offer">
+                    <View style={styles.tagWrap}>
+                        {visibleTags.map((theme, i) => {
+                            const tone = getTagTone(theme);
+                            return (
+                                <View
+                                    key={`theme-${i}`}
+                                    style={[
+                                        styles.tagPill,
+                                        { backgroundColor: tone.backgroundColor, borderColor: tone.borderColor },
+                                    ]}
+                                >
+                                    <Text style={[styles.tagText, { color: tone.textColor }]}>{theme}</Text>
+                                </View>
+                            );
+                        })}
+                        {hasHiddenTags && !showAllTags && (
+                            <TouchableOpacity
+                                style={[styles.tagPill, styles.tagMorePill]}
+                                onPress={() => setShowAllTags(true)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={[styles.tagText, styles.tagMoreText]}>+{hiddenTagCount} more</Text>
+                            </TouchableOpacity>
+                        )}
+                        {hasHiddenTags && showAllTags && (
+                            <TouchableOpacity
+                                style={[styles.tagPill, styles.tagMorePill]}
+                                onPress={() => setShowAllTags(false)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={[styles.tagText, styles.tagMoreText]}>Show less</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
                 </SectionCard>
             )}
 
 
             {event.vetted && (
-                <SectionCard title="Vetted" icon="style">
+                <SectionCard title="Vetted" icon="verified-user" tone="info">
                     <Text style={styles.vettedInfoText}>
                         This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
                         {event.vetting_url && <Text style={{ color: '#4a6ee0', fontWeight: 'bold' }}>
@@ -382,7 +591,7 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
             )}
 
             {event.munch_id && (
-                <SectionCard title="Munch" icon="style">
+                <SectionCard title="Munch" icon="restaurant" tone="warning">
                     <Text style={styles.infoCardText}>
                         🍽️ This event is a <Text style={{ fontWeight: 'bold' }}>munch</Text>. Learn more on the Munch page:
                     </Text>
@@ -398,7 +607,7 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
             )}
 
             {event.ticket_url?.includes('fetlife') && (
-                <SectionCard title="FetLife" icon="style">
+                <SectionCard title="FetLife" icon="link" tone="info">
                     <Text style={styles.infoCardText}>
                         🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
                     </Text>
@@ -411,7 +620,11 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                 </SectionCard>
             )}
 
-            <Markdown style={markdownStyles}>{description}</Markdown>
+            {markdownDescription ? (
+                <SectionCard title="About" icon="subject">
+                    <Markdown style={markdownStyles}>{markdownDescription}</Markdown>
+                </SectionCard>
+            ) : null}
         </View >
     )
 }
@@ -454,11 +667,22 @@ export const EventDetails = ({ route }) => {
 
     return (
         <>
-            <ScrollView style={styles.scrollView}>
+            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
 
                 <EventHeader selectedEvent={selectedEvent} />
 
-                {enabledTabs.length > 1 && <TabBar tabs={enabledTabs} active={activeTab} onPress={setActiveTab} />}
+                {enabledTabs.length > 1 && (
+                    <View style={styles.tabBarWrap}>
+                        <LinearGradient
+                            colors={['#6B57D0', '#7F5AF0']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.tabBarGradient}
+                        >
+                            <TabBar tabs={enabledTabs} active={activeTab} onPress={setActiveTab} />
+                        </LinearGradient>
+                    </View>
+                )}
 
                 {activeTab === 'details' && (
                     <DetailsTab event={selectedEvent} handleCopyPromoCode={handleCopyPromoCode} />
@@ -474,250 +698,257 @@ export const EventDetails = ({ route }) => {
 
 const styles = StyleSheet.create({
     scrollView: {
-        backgroundColor: '#fefaff', // Very soft background
+        backgroundColor: '#f6f2ff',
     },
-    headerContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 24,
-        paddingTop: 10,
+    scrollContent: {
+        paddingBottom: 24,
     },
-    flexOne: {
-        flex: 1,
+    heroWrapper: {
+        marginBottom: 0,
     },
-    fullViewImage: {
+    heroMedia: {
+        height: 260,
         width: '100%',
-        height: 250,
-        marginBottom: 20,
-        borderBottomLeftRadius: 20,
-        borderBottomRightRadius: 20,
+        backgroundColor: '#1f1b2e',
+        borderBottomLeftRadius: 24,
+        borderBottomRightRadius: 24,
         overflow: 'hidden',
     },
-    fullViewTitle: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#7F5AF0', // friendly purple
-        marginRight: 20,
-    },
-    eventOrganizer: {
-        fontSize: 18,
-        color: '#5C5C5C',
-        fontWeight: '500',
-        marginBottom: 8,
-    },
-    eventTime: {
-        fontSize: 16,
-        color: '#8E8E93', // soft gray
-        marginBottom: 6,
-    },
-    eventLocation: {
-        fontSize: 16,
-        color: '#8E8E93',
-        marginBottom: 10,
+    heroImage: {
+        width: '100%',
+        height: '100%',
     },
     video: {
         width: '100%',
-        height: 280,
-        borderRadius: 16,
-        marginBottom: 20,
+        height: '100%',
     },
-    contentContainer: {
+    heroPlaceholder: {
         flex: 1,
-        paddingHorizontal: 24,
-        backgroundColor: '#ffffff',
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: -3 },
-        shadowRadius: 10,
-        elevation: 5,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#2a2438',
     },
-    googleCalendarButton: {
+    heroGradient: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        height: 120,
+    },
+    heroPromoBadge: {
+        position: 'absolute',
+        left: 16,
+        top: 16,
+        backgroundColor: '#FFD700',
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        shadowColor: '#000',
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: 2,
+    },
+    heroPromoText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#1f1f1f',
+    },
+    heroFooter: {
+        position: 'absolute',
+        left: 16,
+        right: 16,
+        bottom: 36,
+    },
+    heroTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: '#fff',
+    },
+    heroOrganizer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 6,
+        alignSelf: 'flex-start',
+        backgroundColor: 'rgba(0,0,0,0.68)',
+        borderRadius: 999,
+        paddingVertical: 8,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.55)',
+        shadowColor: '#000',
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
+    },
+    organizerDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        marginRight: 10,
+        backgroundColor: '#fff',
+    },
+    heroOrganizerText: {
+        fontSize: 15,
+        fontWeight: '800',
+        letterSpacing: 0.2,
+        color: '#fff',
+    },
+    headerSheet: {
+        backgroundColor: '#fff',
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        marginTop: -18,
+        paddingTop: 16,
+        paddingBottom: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: -2 },
+        shadowRadius: 10,
+        elevation: 3,
+    },
+    metaList: {
+        paddingHorizontal: 16,
+        paddingTop: 12,
+        gap: 6,
+    },
+    metaLine: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        paddingVertical: 2,
+    },
+    metaIconWrap: {
+        width: 20,
+        alignItems: 'center',
+        marginRight: 8,
+        marginTop: 2,
+    },
+    metaText: {
+        flex: 1,
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#3b2f74',
+        lineHeight: 20,
+    },
+    quickRowScroll: {
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: 8,
+    },
+    quickRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    quickPill: {
+        backgroundColor: '#F8F6FF',
+        borderRadius: 999,
+        paddingVertical: 4,
+        paddingHorizontal: 10,
+        marginRight: 6,
+        borderWidth: 1,
+        borderColor: '#E5DFF9',
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    quickPillIcon: {
+        marginRight: 6,
+    },
+    quickPillText: {
+        fontSize: 12,
+        fontWeight: '600',
+        color: '#5A43B5',
+    },
+    ctaRow: {
+        flexDirection: 'row',
+        gap: 10,
+        paddingHorizontal: 16,
+        paddingTop: 6,
+    },
+    ticketButton: {
+        flex: 1.2,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 12,
-        borderRadius: 12,
-        backgroundColor: '#7F5AF0',
-    },
-    googleCalendarImage: {
-        width: 26,
-        height: 26,
-    },
-    googleCalendarText: {
-        fontSize: 16,
-        color: '#5C5C5C',
-        fontWeight: '500',
-    },
-    buttonText: {
-        color: 'black',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    favoriteIcon: {
-        padding: 4,
-    },
-    headerCard: {
-        backgroundColor: '#7F5AF0',
-        borderTopLeftRadius: 30,
-        borderTopRightRadius: 30,
-        padding: 16,
-        paddingTop: 20,
-        marginTop: -60, // make it flush against the white container
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: -2 },
-        shadowRadius: 4,
-        elevation: 5,
-    },
-    headerCardNoImage: {
-        marginTop: 0,
-        borderTopLeftRadius: 0,
-        borderTopRightRadius: 0,
-    },
-    titleRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    icon: {
-        marginRight: 10,
-    },
-    headerTitle: {
-        flex: 1,
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#FFF',
-    },
-    badgesRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-
-    },
-    badge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 4,
-        paddingHorizontal: 10,
-        borderRadius: 12,
-        marginRight: 8,
-        marginBottom: 8,
-    },
-    organizerBadge: {
-        backgroundColor: '#5C4DB1',
-    },
-    timeBadge: {
-        backgroundColor: '#8566F2',
-    },
-    badgeText: {
-        marginLeft: 4,
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#FFF',
-    },
-    infoRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginTop: 12,
-        marginBottom: 12,
-        gap: 8,
-        flexWrap: 'wrap',
-    },
-
-    organizerPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#5C4DB1',
-        paddingVertical: 4,
-        paddingHorizontal: 10,
-        borderRadius: 20,
-    },
-    organizerText: {
-        marginLeft: 6,
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '600',
-        textDecorationLine: 'underline',
-    },
-
-    infoRowPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
         backgroundColor: '#6B57D0',
-        paddingVertical: 4,
-        paddingHorizontal: 10,
-        borderRadius: 20,
-    },
-    infoText: {
-        marginLeft: 6,
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '500',
-    },
-
-    ticketButton: {
-        backgroundColor: '#fff',
         paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 30,
-        alignItems: 'center',
-        marginTop: 8,
-        shadowColor: '#000',
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 5,
-        elevation: 3,
+        borderRadius: 24,
+    },
+    ticketButtonDisabled: {
+        backgroundColor: '#9A8ED8',
+    },
+    ticketIcon: {
+        marginRight: 6,
     },
     ticketText: {
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: '700',
-        color: '#7F5AF0',
+        color: '#fff',
     },
-    // Replace your existing styles for these:
-    vettedInfo: {
-        backgroundColor: '#E8F5E9',
-        borderLeftWidth: 5,
-        borderLeftColor: '#4CAF50',
-        padding: 12,
-        marginBottom: 16,
-        borderRadius: 12,
-        marginTop: 16
+    calendarButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 1.5,
+        borderColor: '#ef4444',
+        backgroundColor: '#FFF5F6',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOpacity: 0.12,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
     },
-
+    shareButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        borderWidth: 1,
+        borderColor: '#C9B8FF',
+        backgroundColor: '#fff',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabBarWrap: {
+        paddingHorizontal: 16,
+        marginTop: 12,
+    },
+    tabBarGradient: {
+        borderRadius: 24,
+        paddingVertical: 6,
+        paddingHorizontal: 4,
+    },
+    contentContainer: {
+        flex: 1,
+        paddingHorizontal: 16,
+        paddingTop: 4,
+        paddingBottom: 24,
+        backgroundColor: 'transparent',
+    },
+    bodyText: {
+        fontSize: 14,
+        color: '#2f2f2f',
+        lineHeight: 20,
+    },
+    mediaSection: {
+        paddingHorizontal: 16,
+        paddingTop: 8,
+        paddingBottom: 24,
+    },
     vettedInfoText: {
         fontSize: 14,
         color: '#2E7D32',
         fontWeight: '500',
     },
-
-    infoCardMunch: {
-        backgroundColor: '#FFF3E0',
-        borderLeftWidth: 5,
-        borderLeftColor: '#FFA000',
-        padding: 14,
-        borderRadius: 12,
-        marginVertical: 12,
-    },
-
-    infoCardFetlife: {
-        backgroundColor: '#E1F5FE',
-        borderLeftWidth: 5,
-        borderLeftColor: '#039BE5',
-        padding: 14,
-        borderRadius: 12,
-        marginVertical: 12,
-    },
-
     infoCardText: {
         fontSize: 14,
         color: '#333',
         lineHeight: 20,
         marginBottom: 8,
     },
-
     infoCardButton: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: '#6B57D0',
         paddingVertical: 8,
         paddingHorizontal: HORIZONTAL_PADDING,
         borderRadius: 24,
@@ -728,46 +959,37 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 2,
     },
-
     infoCardButtonText: {
         fontSize: 14,
         fontWeight: '600',
         color: '#fff',
     },
-
-    tagContainer: {
-        paddingVertical: 8,
-        paddingHorizontal: HORIZONTAL_PADDING,
-        backgroundColor: '#F8F3FF',
-        borderRadius: 14,
-    },
-
-    tagRow: {
+    tagPill: {
         flexDirection: 'row',
         alignItems: 'center',
-    },
-
-    tagPill: {
-        flexDirection: 'row', // ← make icon and text inline
-        alignItems: 'center',
-        backgroundColor: '#E2D9FF',
-        paddingVertical: 4,
-        paddingHorizontal: 10,
+        paddingVertical: 3,
+        paddingHorizontal: 12,
         borderRadius: 999,
-        marginRight: 6,
+        marginRight: 8,
+        marginBottom: 8,
+        borderWidth: 1,
     },
-
-
-    tagPillSecondary: {
-        backgroundColor: '#E8EAF0',
+    tagWrap: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        paddingTop: 6,
     },
-
     tagText: {
         fontSize: 12,
-        fontWeight: '500',
-        color: '#4B2ABF',
+        fontWeight: '600',
     },
-
+    tagMorePill: {
+        backgroundColor: '#F4F4F7',
+        borderColor: '#DADAE6',
+    },
+    tagMoreText: {
+        color: '#6B7280',
+    },
 });
 
 const markdownStyles = {

@@ -24,6 +24,7 @@ const menuGroups: MenuGroup[] = [
         title: 'Highlights',
         items: [
             { title: "PB's Weekly Picks", icon: 'calendar-week', route: 'Weekly Picks' },
+            { title: 'Popular Events', icon: 'fire', route: 'Popular Events' },
             { title: 'Deals', icon: 'ticket-alt', route: 'Promos' },
         ],
     },
