@@ -20,7 +20,18 @@ export type FetlifeResult = EventResult & { skippedLog?: SkippedEntry[]; tableRo
 export type FriendResult = {
     root_handle: string;
     username: string;
-    profile_url: string;
+    profile_url?: string;
+    following_of?: string;
+    nickname?: string | null;
+    url?: string | null;
+    profile_pic_url?: string | null;
+    avatar_url?: string | null;
+    id?: number | null;
+    age?: number | null;
+    gender?: string | null;
+    role?: string | null;
+    supporter_badge?: boolean | null;
+    organization?: boolean | null;
     image_url?: string | null;
     label?: string | null; // e.g. "55F Domme"
     location?: string | null;

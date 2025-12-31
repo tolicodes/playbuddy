@@ -3,9 +3,12 @@ import { API_ENV_KEY, AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY } from './config
 type ScrapeSource =
     | 'fetlife'
     | 'fetlifeNearby'
+    | 'fetlifeNearbyApi'
     | 'fetlifeFestivals'
     | 'fetlifeFriendsStage1'
     | 'fetlifeFriendsStage2'
+    | 'fetlifeFriendsApiStage1'
+    | 'fetlifeFriendsApiStage2'
     | 'fetlifeSingle'
     | 'instagram'
     | 'tickettailor'
@@ -34,6 +37,7 @@ function init() {
     const tableDiv = document.getElementById('tableOutput') as HTMLDivElement | null;
     const stage2Input = document.getElementById('stage2File') as HTMLInputElement | null;
     const stage2Btn = document.getElementById('startFetlifeFriendsStage2') as HTMLButtonElement | null;
+    const stage2ApiBtn = document.getElementById('startFetlifeFriendsApiStage2') as HTMLButtonElement | null;
     const singleHandleInput = document.getElementById('singleFetlifeHandle') as HTMLInputElement | null;
     const singleHandleBtn = document.getElementById('startSingleFetlifeHandle') as HTMLButtonElement | null;
 
@@ -138,9 +142,10 @@ function init() {
 
     bindScrapeButton('startFetlife', 'fetlife');
     bindScrapeButton('startFetlifeNearby', 'fetlifeNearby');
-    bindScrapeButton('startFetlifeNearbyApi', 'fetlifeNearbyApi' as ScrapeSource);
+    bindScrapeButton('startFetlifeNearbyApi', 'fetlifeNearbyApi');
     bindScrapeButton('startFetlifeFestivals', 'fetlifeFestivals');
     bindScrapeButton('startFetlifeFriendsStage1', 'fetlifeFriendsStage1');
+    bindScrapeButton('startFetlifeFriendsApiStage1', 'fetlifeFriendsApiStage1');
     bindScrapeButton('startInstagram', 'instagram');
     bindScrapeButton('startTicketTailor', 'tickettailor');
     bindScrapeButton('startPluraPromoStats', 'pluraPromoStats');
@@ -150,14 +155,27 @@ function init() {
         let parsed: any;
         try { parsed = JSON.parse(text); } catch { return []; }
         if (!Array.isArray(parsed)) return [];
+        const normalize = (value: string) =>
+            value.trim()
+                .replace(/^@+/, '')
+                .replace(/^https?:\/\/(www\.)?fetlife\.com\//i, '');
         const handles = parsed
-            .map((row: any) => (row?.root_handle || row?.username || '') as string)
-            .filter((h: string) => typeof h === 'string' && h.trim())
-            .map((h: string) => h.trim());
+            .map((row: any) => {
+                const raw =
+                    row?.username ||
+                    row?.nickname ||
+                    row?.handle ||
+                    row?.root_handle ||
+                    row?.profile_url ||
+                    row?.url ||
+                    '';
+                return typeof raw === 'string' ? normalize(raw) : '';
+            })
+            .filter((h: string) => h);
         return Array.from(new Set(handles));
     }
 
-    stage2Btn?.addEventListener('click', async () => {
+    const runStage2 = (source: ScrapeSource) => async () => {
         if (!stage2Input || !stage2Input.files?.length) {
             alert('Please choose a Stage 1 JSON file first.');
             return;
@@ -168,11 +186,14 @@ function init() {
             return;
         }
         chrome.runtime.sendMessage({ action: 'setStage2Handles', handles }, () => {
-            chrome.runtime.sendMessage({ action: 'scrapeSingleSource', source: 'fetlifeFriendsStage2' }, (response: { ok: boolean }) => {
+            chrome.runtime.sendMessage({ action: 'scrapeSingleSource', source }, (response: { ok: boolean }) => {
                 console.log('🚀 Stage2 response:', response);
             });
         });
-    });
+    };
+
+    stage2Btn?.addEventListener('click', runStage2('fetlifeFriendsStage2'));
+    stage2ApiBtn?.addEventListener('click', runStage2('fetlifeFriendsApiStage2'));
 
     singleHandleBtn?.addEventListener('click', () => {
         if (!singleHandleInput) return;

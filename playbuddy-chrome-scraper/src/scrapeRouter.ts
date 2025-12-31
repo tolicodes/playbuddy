@@ -10,7 +10,7 @@ import type { EventResult } from './types';
 import { TEST_MODE } from './config';
 import * as instaFollow from './providers/follow_instagram';
 
-export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeNearbyApi' | 'fetlifeFestivals' | 'fetlifeFriendsStage1' | 'fetlifeFriendsStage2' | 'fetlifeSingle' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
+export type ScrapeSource = 'fetlife' | 'fetlifeNearby' | 'fetlifeNearbyApi' | 'fetlifeFestivals' | 'fetlifeFriendsStage1' | 'fetlifeFriendsStage2' | 'fetlifeFriendsApiStage1' | 'fetlifeFriendsApiStage2' | 'fetlifeSingle' | 'instagram' | 'instagramFollowing' | 'pluraPromoStats';
 
 type ScrapeFn = () => Promise<EventResult[]>;
 
@@ -29,6 +29,8 @@ export const scrapeRouter: Record<ScrapeSource, ScrapeFn> = {
     fetlifeFestivals: () => fetlife.scrapeFestivals(),
     fetlifeFriendsStage1: async () => fetlife.scrapeFriendsStage1(await getFetlifeHandleList()),
     fetlifeFriendsStage2: async () => fetlife.scrapeFriendsStage2FromStorage(),
+    fetlifeFriendsApiStage1: async () => fetlife.scrapeFetlifeFriendsApiStage1(),
+    fetlifeFriendsApiStage2: async () => fetlife.scrapeFetlifeFriendsApiStage2FromStorage(),
     fetlifeSingle: async () => { throw new Error('fetlifeSingle requires a handle passed from the options UI'); },
     instagram: () => insta.scrapeInstagram(instagramHandles),
     instagramFollow: () => instaFollow.followInstagram(followInstagramHandles),
