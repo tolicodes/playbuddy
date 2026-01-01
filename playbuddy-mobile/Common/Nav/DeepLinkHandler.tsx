@@ -74,6 +74,9 @@ export default function DeepLinkHandler() {
     const addDeepLink = useAddDeepLinkToUser();
     const { setCurrentDeepLink, currentDeepLink, authUserId } = useUserContext();
     const queue = useRef<string | null>(null);
+    const handledUrls = useRef<Set<string>>(new Set());
+    const handledDeepLinks = useRef<Set<string>>(new Set());
+    const attributedDeepLinks = useRef<Set<string>>(new Set());
 
     const matchDeepLink = useCallback(
         (url: string): DeepLink | undefined => {
@@ -92,7 +95,8 @@ export default function DeepLinkHandler() {
                 queue.current = url;
                 return;
             }
-            const dl = matchDeepLink(url);
+            const normalizedUrl = url.trim();
+            const dl = matchDeepLink(normalizedUrl);
             console.log(`DeepLinkHandler: ${url} -> ${dl?.slug}`);
 
             if (!dl) return;
@@ -103,15 +107,27 @@ export default function DeepLinkHandler() {
                 setCurrentDeepLink({ ...dl });
             }
 
+            const seenUrl = handledUrls.current.has(normalizedUrl);
+            const seenDeepLink = handledDeepLinks.current.has(dl.id);
+            if (seenUrl || seenDeepLink) {
+                return;
+            }
+
+            handledUrls.current.add(normalizedUrl);
+            handledDeepLinks.current.add(dl.id);
+
             logEvent(UE.DeepLinkDetected, {
                 ...analyticsProps,
-                url,
+                url: normalizedUrl,
                 source,
             });
 
             if (authUserId) {
-                addDeepLink.mutate(dl.id);
-                logEvent(UE.DeepLinkAttributed, analyticsProps);
+                if (!attributedDeepLinks.current.has(dl.id)) {
+                    attributedDeepLinks.current.add(dl.id);
+                    addDeepLink.mutate(dl.id);
+                    logEvent(UE.DeepLinkAttributed, analyticsProps);
+                }
             }
         },
         [loadingLinks, authUserId, matchDeepLink, setCurrentDeepLink, addDeepLink],
