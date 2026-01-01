@@ -19,6 +19,7 @@ const App = () => {
         <QueryClientProvider client={queryClient}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/events" element={<Home />} />
             <Route path="/event/:eventId" element={<EventDetails />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
           </Routes>

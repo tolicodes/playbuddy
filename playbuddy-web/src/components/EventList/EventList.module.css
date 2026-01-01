@@ -1,41 +1,232 @@
 .eventList {
-  padding: 20px;
-  background-color: #f3ebff;
+  position: relative;
+  min-height: 100vh;
+  padding: 32px 16px 48px;
+  background: linear-gradient(
+    180deg,
+    rgba(122, 74, 215, 0.22) 0%,
+    #f7f2ff 20%,
+    #fceaf2 62%,
+    #fff1d6 100%
+  );
+  overflow: hidden;
+}
+
+.eventList::before,
+.eventList::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.eventList::before {
+  background: radial-gradient(
+    circle at 18% 10%,
+    rgba(128, 90, 255, 0.18),
+    transparent 60%
+  );
+}
+
+.eventList::after {
+  background: radial-gradient(
+    circle at 85% 80%,
+    rgba(255, 120, 180, 0.16),
+    transparent 55%
+  );
+}
+
+.eventListInner {
+  position: relative;
+  z-index: 1;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.weeklySection {
+  margin-bottom: 28px;
+}
+
+.weeklyHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.weeklyTitle {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #2f2a3a;
+}
+
+.weeklySubtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.weeklyScroller {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+
+.weeklyScroller::-webkit-scrollbar {
+  display: none;
+}
+
+.weeklyCard {
+  display: flex;
+  flex-direction: column;
+  border: none;
+  background: #fff;
+  border-radius: 18px;
+  padding: 0;
+  text-align: left;
+  min-width: 240px;
+  max-width: 280px;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(24, 16, 54, 0.12);
+  border: 1px solid rgba(90, 67, 181, 0.16);
+  font-family: var(--font-body);
+  flex: 0 0 auto;
+  appearance: none;
+}
+
+.weeklyCard:focus-visible {
+  outline: 3px solid rgba(127, 90, 240, 0.35);
+  outline-offset: 2px;
+}
+
+.weeklyPoster {
+  position: relative;
+  height: 150px;
+  background: #efeaff;
+  border-top-left-radius: 18px;
+  border-top-right-radius: 18px;
+  overflow: hidden;
+}
+
+.weeklyPosterImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.weeklyPosterPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.weeklyOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75));
+}
+
+.weeklyPill {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 215, 0, 0.95);
+  color: #1f1f1f;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.weeklyFooter {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 12px;
+  color: #fff;
+}
+
+.weeklyCardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weeklyCardMeta {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.weeklyTags {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px 14px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.weeklyTags::-webkit-scrollbar {
+  display: none;
+}
+
+.weeklyTag {
+  border-radius: 999px;
+  border: 1px solid;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .emptyList {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 40px;
+  padding: 48px 16px;
   text-align: center;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .emptyText {
   font-size: 16px;
-  color: #888;
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
 .loaderOverlay {
-  position: fixed; /* sit on top of everything */
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100vw; /* full viewport width */
-  height: 100vh; /* full viewport height */
-  display: flex; /* center contents */
+  width: 100vw;
+  height: 100vh;
+  display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(255, 255, 255, 0.85); /* semi‐opaque backdrop */
-  z-index: 9999; /* high above other elements */
+  background: rgba(248, 244, 255, 0.86);
+  z-index: 9999;
 }
 
-/* your existing spinner */
 .spinner {
-  width: 48px; /* bump up size if you like */
+  width: 48px;
   height: 48px;
-  border: 6px solid #eee;
-  border-top: 6px solid #7f5af0;
+  border: 6px solid #ebe7f9;
+  border-top: 6px solid var(--accent-purple);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -50,17 +241,49 @@
 }
 
 .eventSection {
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .sectionHeader {
-  font-size: 22px;
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 12px;
+}
+
+.sectionHeaderPill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  padding: 0 16px;
+  border-radius: 16px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(90, 67, 181, 0.12);
+  box-shadow: 0 6px 14px rgba(16, 12, 38, 0.1);
+  font-size: 14px;
   font-weight: 700;
-  color: black;
-  margin: 24px 0 8px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 4px;
+  color: #2f2a3a;
 }
 
 .eventItemWrapper {
+  margin-bottom: 16px;
+  animation: cardRise 0.45s ease both;
+  animation-delay: var(--item-delay, 0s);
+}
+
+@keyframes cardRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eventItemWrapper {
+    animation: none;
+  }
 }

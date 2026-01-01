@@ -6,6 +6,7 @@ export type EventWithMetadata = Event & {
 }
 
 export type SectionType = {
+    key?: string;
     title: string;              // e.g., "Apr 13, 2025"
     data: EventWithMetadata[];  // events for that date
 };

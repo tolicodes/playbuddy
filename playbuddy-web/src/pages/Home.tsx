@@ -8,12 +8,9 @@ export const Home = () => {
 
     const [showModal, setShowModal] = useState(true);
 
-    if (showModal) {
-        return <WebEntryModal onClose={() => setShowModal(false)} />
-    }
-
     return (
         <div>
+            {showModal && <WebEntryModal onClose={() => setShowModal(false)} />}
             <EventList
                 events={events}
                 isLoadingEvents={isLoading}
