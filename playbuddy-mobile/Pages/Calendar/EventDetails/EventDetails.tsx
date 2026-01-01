@@ -21,7 +21,6 @@ import { formatDate } from '../hooks/calendarUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { EventWithMetadata, NavStack } from '../../../Common/Nav/NavStackType';
 import { useUserContext } from '../../Auth/hooks/UserContext';
-import { TicketPromoModal } from './TicketPromoModal';
 import { UE } from '../../../userEventTypes';
 import { getBestPromoCode } from '../../../utils/getBestPromoCode';
 import { useFetchEvents } from '../../../Common/db-axios/useEvents';
@@ -122,8 +121,6 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { data: allEvents } = useFetchEvents()
     const navigation = useNavigation<NavStack>();
-
-    const [discountModalVisible, setDiscountModalVisible] = useState(false);
 
     const fullEvent = allEvents?.find(event => event.id === selectedEvent.id) || selectedEvent;
 
@@ -276,21 +273,12 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
 
         logEvent(UE.EventDetailGetTicketsClicked, eventAnalyticsProps);
 
-        if (!promoCode) {
-            Linking.openURL(buildTicketUrl(selectedEvent.ticket_url || ''));
-            logEvent(UE.EventDetailTicketPressed, eventAnalyticsProps);
-        } else {
-            setDiscountModalVisible(true);
-            logEvent(UE.EventDetailDiscountModalOpened, eventAnalyticsProps);
-        }
-    };
-
-    const handleModalCopyPromoCode = () => {
-        if (!promoCode) return;
-        if (!eventAnalyticsProps.event_id) {
-            return;
-        }
-        logEvent(UE.EventDetailTicketPromoModalPromoCopied, eventAnalyticsProps);
+        const ticketUrl = buildTicketUrl(
+            selectedEvent.ticket_url || '',
+            promoCode ? { promoCode: promoCode.promo_code } : undefined
+        );
+        Linking.openURL(ticketUrl);
+        logEvent(UE.EventDetailTicketPressed, eventAnalyticsProps);
     };
 
     const handleShare = async () => {
@@ -315,20 +303,6 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         }
     };
 
-    const ticketUrlWithPromo = (() => {
-        if (!promoCode) return buildTicketUrl(selectedEvent.ticket_url || '');
-
-        try {
-            const url = new URL(selectedEvent.ticket_url);
-            url.searchParams.set('discount', promoCode.promo_code);
-            return url.toString();
-        } catch (e) {
-            // Fallback in case the URL is relative or invalid
-            const separator = selectedEvent.ticket_url.includes('?') ? '&' : '?';
-            return `${buildTicketUrl(selectedEvent.ticket_url || '')}${separator}discount=${promoCode.promo_code}`;
-        }
-    })();
-
     const isAvailableSoon = !selectedEvent.ticket_url?.includes('https');
     const membershipUrl = selectedEvent.organizer?.membership_app_url;
     const membershipOnly = selectedEvent.organizer?.membership_only;
@@ -349,23 +323,6 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
 
     return (
         <>
-            <TicketPromoModal
-                visible={discountModalVisible}
-                promoCode={promoCode?.promo_code || 'N/A'}
-                discount={`${promoCode?.discount}${promoCode?.discount_type === 'percent' ? '%' : '$'
-                    }`}
-                onClose={() => setDiscountModalVisible(false)}
-                onBuyTicket={() => {
-                    if (!eventAnalyticsProps.event_id) {
-                        return;
-                    }
-                    logEvent(UE.EventDetailModalTicketPressed, eventAnalyticsProps);
-                    Linking.openURL(buildTicketUrl(ticketUrlWithPromo));
-                    setDiscountModalVisible(false);
-                }}
-                organizerName={selectedEvent.organizer?.name}
-                onCopy={handleModalCopyPromoCode}
-            />
             <View style={styles.heroWrapper}>
                 <View style={styles.heroMedia}>
                     {selectedEvent.video_url ? (

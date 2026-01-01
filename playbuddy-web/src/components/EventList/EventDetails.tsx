@@ -29,6 +29,18 @@ export const EventDetails = () => {
     const formattedDate = formatDate(event, true, true);
     const isFetlife = event.ticket_url?.includes('fetlife');
     const availableSoon = !event.ticket_url?.includes('https');
+    const ticketUrl = (() => {
+        if (!event.ticket_url) return '';
+        if (!promoCode) return event.ticket_url;
+        try {
+            const url = new URL(event.ticket_url);
+            url.searchParams.set('discount', promoCode.promo_code);
+            return url.toString();
+        } catch {
+            const separator = event.ticket_url.includes('?') ? '&' : '?';
+            return `${event.ticket_url}${separator}discount=${promoCode.promo_code}`;
+        }
+    })();
     const locationLabel = event.location || [event.city, event.region].filter(Boolean).join(', ');
     const tagChips = getTagChips(event);
     const organizerColor = event.organizerColor || '#fff';
@@ -128,7 +140,7 @@ export const EventDetails = () => {
                             <button
                                 className={styles.ticketButton}
                                 disabled={availableSoon}
-                                onClick={() => window.open(event.ticket_url, '_blank')}
+                                onClick={() => window.open(ticketUrl, '_blank')}
                             >
                                 Get Tickets
                             </button>
@@ -167,7 +179,7 @@ export const EventDetails = () => {
                                 Imported from FetLife with organizer's permission. Requires a FetLife
                                 account.
                                 <br />
-                                <a href={event.ticket_url} target="_blank" rel="noreferrer">
+                                <a href={ticketUrl} target="_blank" rel="noreferrer">
                                     Open in FetLife
                                 </a>
                             </div>
