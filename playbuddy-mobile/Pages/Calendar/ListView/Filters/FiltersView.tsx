@@ -231,6 +231,7 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                                     });
                                                     setSelectedTags(prev => [...prev, tag.name]);
                                                     setQuery('');
+                                                    setTagSearchFocused(false);
                                                 }}
                                             >
                                                 <Text style={styles.tagDropdownText}>{tag.name}</Text>
@@ -438,10 +439,14 @@ const styles = StyleSheet.create({
     },
     searchSection: {
         marginVertical: 16,
+        position: 'relative',
+        zIndex: 30,
+        elevation: 6,
     },
     tagSearchWrap: {
         position: 'relative',
         zIndex: 10,
+        elevation: 5,
     },
     searchInput: {
         borderWidth: 1,
@@ -460,11 +465,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E6E0F5',
         maxHeight: 200,
+        zIndex: 20,
         shadowColor: '#000',
         shadowOpacity: 0.12,
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 3 },
-        elevation: 4,
+        elevation: 8,
+        overflow: 'hidden',
     },
     tagDropdownItem: {
         flexDirection: 'row',
@@ -474,6 +481,7 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#F0EDF8',
+        backgroundColor: '#fff',
     },
     tagDropdownText: {
         fontSize: 14,
