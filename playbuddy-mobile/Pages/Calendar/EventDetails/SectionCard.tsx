@@ -3,6 +3,7 @@ import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import { colors, fontFamilies, radius, spacing } from '../../../components/styles';
 
 type Props = {
     title?: string;
@@ -14,8 +15,8 @@ type Props = {
 };
 
 const TONES = {
-    default: { surface: '#FFFFFF', tint: 'rgba(106,27,154,0.10)' },
-    tint: { surface: '#FFFFFF', tint: 'rgba(106,27,154,0.12)' },
+    default: { surface: colors.white, tint: 'rgba(106,27,154,0.10)' },
+    tint: { surface: colors.white, tint: 'rgba(106,27,154,0.12)' },
     warning: { surface: '#FFF9E8', tint: 'rgba(255,176,0,0.25)' },
     info: { surface: '#F3F7FF', tint: 'rgba(36,112,255,0.18)' },
 };
@@ -53,17 +54,17 @@ export default function SectionCard({
 
 const styles = StyleSheet.create({
     outer: {
-        borderRadius: 16,
+        borderRadius: radius.lg,
         padding: 2,              // space for gradient hairline
-        marginTop: 14,
+        marginTop: spacing.mdPlus,
     },
     border: {
         ...StyleSheet.absoluteFillObject,
-        borderRadius: 16,
+        borderRadius: radius.lg,
     },
     inner: {
-        borderRadius: 14,
-        padding: 14,
+        borderRadius: radius.md,
+        padding: spacing.mdPlus,
         shadowColor: 'rgba(0,0,0,0.15)',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
@@ -73,12 +74,13 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
     },
     title: {
         fontSize: 12.5,
         fontWeight: '800',
         letterSpacing: 0.5,
         color: '#6A1B9A',
+        fontFamily: fontFamilies.body,
     },
 });

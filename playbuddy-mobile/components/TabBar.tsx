@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { colors, fontSizes, radius, spacing } from './styles';
 
 type Tab = { name: string; value: string };
 interface TabBarProps {
@@ -40,23 +41,23 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         flexDirection: 'row',
         justifyContent: 'center',
-        gap: 12,
-        paddingHorizontal: 12,
+        gap: spacing.md,
+        paddingHorizontal: spacing.md,
     },
     // Pills
     tabButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 20,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.xl,
         backgroundColor: 'rgba(255,255,255,0.18)', // subtle glass for inactive
     },
     tabText: {
-        fontSize: 15,
+        fontSize: fontSizes.lg,
         fontWeight: '500',
         color: '#E8E8E8', // soft light over purple
     },
     activeTab: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: colors.accentPurple,
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
@@ -68,8 +69,8 @@ const styles = StyleSheet.create({
         }),
     },
     activeTabText: {
-        fontSize: 15,
+        fontSize: fontSizes.lg,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: colors.white,
     },
 });

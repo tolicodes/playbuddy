@@ -6,6 +6,7 @@ import { logEvent } from "../../Common/hooks/logger";
 import { useJoinCommunity, useLeaveCommunity } from "../../Common/hooks/useCommunities";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
+import { colors, fontFamilies, fontSizes, radius, spacing } from "../../components/styles";
 
 export const CommunityEvents = ({
     route: { params: { communityId, communityIds = [], displayName, organizerId } },
@@ -87,33 +88,36 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xsPlus,
     },
     communityName: {
-        fontSize: 18,
+        fontSize: fontSizes.xxl,
         fontWeight: '700',
         flex: 1,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.display,
     },
     followButton: {
-        backgroundColor: '#007AFF',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 5,
+        backgroundColor: colors.linkBlue,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.sm,
+        borderRadius: radius.xs,
         alignItems: 'center',
-        marginVertical: 5,
+        marginVertical: spacing.xsPlus,
     },
     unfollowButton: {
-        backgroundColor: '#ff3b30',
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 5,
+        backgroundColor: colors.danger,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.sm,
+        borderRadius: radius.xs,
         alignItems: 'center',
-        marginVertical: 5,
+        marginVertical: spacing.xsPlus,
     },
     buttonText: {
-        color: 'white',
-        fontSize: 16,
+        color: colors.white,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
     }
 });
 

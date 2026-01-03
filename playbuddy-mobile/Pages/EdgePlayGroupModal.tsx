@@ -1,48 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Linking, Animated, Easing } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { logEvent } from '../Common/hooks/logger';
 import { UE } from '../userEventTypes';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
-const SHOW_DELAY_MS = 5 * 1000; // 5 seconds (testing)
-const SNOOZE_DELAY_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
-const TIMER_KEY = 'edgeplay_modal_timer';
-const HIDE_KEY = 'edgeplay_modal_hide';
-const SNOOZE_KEY = 'edgeplay_modal_snooze';
 const WHATSAPP_URL = 'https://chat.whatsapp.com/KQrj1IBURWdEQrHVLZ23vM';
 
-export function EdgePlayGroupModal() {
+type EdgePlayGroupModalProps = {
+    visible: boolean;
+    onDismiss: () => void;
+    onSnooze: () => void;
+};
+
+export function EdgePlayGroupModal({ visible, onDismiss, onSnooze }: EdgePlayGroupModalProps) {
     const analyticsProps = useAnalyticsProps();
-    const [visible, setVisible] = useState(false);
     const firePulse = useRef(new Animated.Value(1)).current;
     const bulletOpacities = useRef([new Animated.Value(0), new Animated.Value(0)]).current;
 
     useEffect(() => {
-        (async () => {
-            const hideModal = await AsyncStorage.getItem(HIDE_KEY);
-            if (hideModal === 'true') return;
-
-            const now = Date.now();
-
-            const snoozeUntil = await AsyncStorage.getItem(SNOOZE_KEY);
-            if (snoozeUntil && now < Number(snoozeUntil)) return;
-
-            let timer = await AsyncStorage.getItem(TIMER_KEY);
-
-            if (!timer) {
-                timer = String(now);
-                await AsyncStorage.setItem(TIMER_KEY, timer);
-            }
-
-            if (now - Number(timer) >= SHOW_DELAY_MS) {
-                setVisible(true);
-            }
-        })();
-    }, []);
-
-    useEffect(() => {
+        if (!visible) return;
+        firePulse.setValue(1);
         const pulse = Animated.loop(
             Animated.sequence([
                 Animated.timing(firePulse, { toValue: 1.08, duration: 600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
@@ -52,9 +30,11 @@ export function EdgePlayGroupModal() {
         );
         pulse.start();
         return () => pulse.stop();
-    }, [firePulse]);
+    }, [firePulse, visible]);
 
     useEffect(() => {
+        if (!visible) return;
+        bulletOpacities.forEach((val) => val.setValue(0));
         Animated.stagger(120, bulletOpacities.map((val) =>
             Animated.timing(val, {
                 toValue: 1,
@@ -63,25 +43,22 @@ export function EdgePlayGroupModal() {
                 useNativeDriver: true,
             })
         )).start();
-    }, [bulletOpacities]);
+    }, [bulletOpacities, visible]);
 
     const dismissForever = async () => {
         logEvent(UE.EdgePlayGroupModalDismissed, analyticsProps);
-        await AsyncStorage.setItem(HIDE_KEY, 'true');
-        setVisible(false);
+        onDismiss();
     };
 
     const snooze = async () => {
         logEvent(UE.EdgePlayGroupModalDismissed, analyticsProps);
-        await AsyncStorage.setItem(SNOOZE_KEY, String(Date.now() + SNOOZE_DELAY_MS));
-        setVisible(false);
+        onSnooze();
     };
 
     const openWhatsapp = async () => {
         logEvent(UE.EdgePlayGroupModalOpenWhatsapp, analyticsProps);
-        await AsyncStorage.setItem(HIDE_KEY, 'true');
-        Linking.openURL(WHATSAPP_URL);
-        setVisible(false);
+        void Linking.openURL(WHATSAPP_URL);
+        onDismiss();
     };
 
     if (!visible) return null;

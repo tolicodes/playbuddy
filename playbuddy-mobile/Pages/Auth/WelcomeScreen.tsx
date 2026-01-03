@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     SafeAreaView,
     View,
@@ -7,6 +7,8 @@ import {
     Pressable,
     StyleSheet,
     Platform,
+    ScrollView,
+    Animated,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -15,6 +17,7 @@ import { UE } from '../../userEventTypes';
 import { useUserContext } from './hooks/UserContext';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
 
 const googleLogo = require('../../assets/auth/google-logo.png');
 const appleLogo = require('../../assets/auth/apple-logo.png');
@@ -23,6 +26,42 @@ const WelcomeScreen = () => {
     const navigation = useNavigation<NavStack>();
     const { authenticateWithGoogle, authenticateWithApple } = useUserContext();
     const analyticsProps = useEventAnalyticsProps();
+    const heroAnim = useRef(new Animated.Value(0)).current;
+    const cardAnim = useRef(new Animated.Value(0)).current;
+    const footerAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.stagger(120, [
+            Animated.timing(heroAnim, {
+                toValue: 1,
+                duration: 420,
+                useNativeDriver: true,
+            }),
+            Animated.timing(cardAnim, {
+                toValue: 1,
+                duration: 420,
+                useNativeDriver: true,
+            }),
+            Animated.timing(footerAnim, {
+                toValue: 1,
+                duration: 360,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [heroAnim, cardAnim, footerAnim]);
+
+    const heroTranslate = heroAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [18, 0],
+    });
+    const cardTranslate = cardAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [22, 0],
+    });
+    const footerTranslate = footerAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [12, 0],
+    });
 
     const handleGoogle = () => {
         logEvent(UE.LoginFormPressLoginWithGoogle, analyticsProps);
@@ -46,66 +85,110 @@ const WelcomeScreen = () => {
 
     return (
         <LinearGradient
-            colors={['#5B1FB8', '#8E2ACB', '#C04FD4']}
+            colors={gradients.welcome}
+            locations={[0, 0.45, 0.78, 1]}
             start={{ x: 0.1, y: 0 }}
             end={{ x: 0.9, y: 1 }}
             style={styles.gradient}
         >
             <View pointerEvents="none" style={styles.glowTop} />
+            <View pointerEvents="none" style={styles.glowMid} />
             <View pointerEvents="none" style={styles.glowBottom} />
             <SafeAreaView style={styles.safe}>
-                <View style={styles.content}>
-                    <Text style={styles.title}>Welcome to PlayBuddy</Text>
-                    <Text style={styles.subtitle}>
-                        Sign up to unlock play parties and favorite events
-                    </Text>
-                    <Pressable
-                        onPress={handleGoogle}
-                        style={({ pressed }) => [
-                            styles.googleButton,
-                            pressed && styles.buttonPressed,
+                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+                    <Animated.View
+                        style={[
+                            styles.hero,
+                            { opacity: heroAnim, transform: [{ translateY: heroTranslate }] },
                         ]}
-                        android_ripple={{ color: '#00000010' }}
-                        hitSlop={8}
                     >
-                        <Image source={googleLogo} style={styles.googleLogo} resizeMode="contain" />
-                        <Text style={styles.googleText}>Sign in with Google</Text>
-                    </Pressable>
-                    {Platform.OS === 'ios' && (
+                        <Text style={styles.kicker}>Find your people</Text>
+                        <Text style={styles.title}>Welcome to PlayBuddy</Text>
+                        <Text style={styles.subtitle}>
+                            Sign up to <Text style={styles.subtitleEmphasis}>favorite</Text> events and unlock{' '}
+                            <Text style={styles.subtitleEmphasis}>play parties</Text> and 17+ events.
+                        </Text>
+                    </Animated.View>
+
+                    <Animated.View
+                        style={[
+                            styles.cardWrap,
+                            { opacity: cardAnim, transform: [{ translateY: cardTranslate }] },
+                        ]}
+                    >
+                        <LinearGradient
+                            colors={['#FFFFFF', '#F7F2FF']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.card}
+                        >
+                            <Pressable
+                                onPress={handleGoogle}
+                                style={({ pressed }) => [
+                                    styles.socialButton,
+                                    styles.googleButton,
+                                    pressed && styles.buttonPressed,
+                                ]}
+                                android_ripple={{ color: '#00000010' }}
+                                hitSlop={8}
+                            >
+                                <Image source={googleLogo} style={styles.googleLogo} resizeMode="contain" />
+                                <Text style={styles.socialText}>Sign in with Google</Text>
+                            </Pressable>
+                            {Platform.OS === 'ios' && (
+                                <Pressable
+                                    onPress={handleApple}
+                                    style={({ pressed }) => [
+                                        styles.socialButton,
+                                        styles.appleButton,
+                                        pressed && styles.buttonPressed,
+                                    ]}
+                                    android_ripple={{ color: '#00000010' }}
+                                    hitSlop={8}
+                                >
+                                    <Image source={appleLogo} style={styles.appleLogo} resizeMode="contain" />
+                                    <Text style={styles.appleText}>Sign in with Apple</Text>
+                                </Pressable>
+                            )}
+                            <Pressable
+                                onPress={handleEmail}
+                                style={({ pressed }) => [
+                                    styles.emailButton,
+                                    pressed && styles.buttonPressed,
+                                ]}
+                                android_ripple={{ color: '#00000012' }}
+                                hitSlop={8}
+                            >
+                                <LinearGradient
+                                    colors={gradients.primaryButton}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.emailButtonGradient}
+                                >
+                                    <Text style={styles.emailText}>Sign up with email/phone</Text>
+                                </LinearGradient>
+                            </Pressable>
+                        </LinearGradient>
+                    </Animated.View>
+
+                    <Animated.View
+                        style={[
+                            styles.skipWrap,
+                            { opacity: footerAnim, transform: [{ translateY: footerTranslate }] },
+                        ]}
+                    >
                         <Pressable
-                            onPress={handleApple}
+                            onPress={handleSkip}
                             style={({ pressed }) => [
-                                styles.appleButton,
+                                styles.skipButton,
                                 pressed && styles.buttonPressed,
                             ]}
-                            android_ripple={{ color: '#00000010' }}
                             hitSlop={8}
                         >
-                            <Image source={appleLogo} style={styles.appleLogo} resizeMode="contain" />
-                            <Text style={styles.appleText}>Sign in with Apple</Text>
+                            <Text style={styles.skipText}>Skip for now</Text>
                         </Pressable>
-                    )}
-                    <Pressable
-                        onPress={handleEmail}
-                        style={({ pressed }) => [
-                            styles.emailButton,
-                            pressed && styles.buttonPressed,
-                        ]}
-                        hitSlop={8}
-                    >
-                        <Text style={styles.emailText}>Sign up with email/phone</Text>
-                    </Pressable>
-                    <Pressable
-                        onPress={handleSkip}
-                        style={({ pressed }) => [
-                            styles.skipButton,
-                            pressed && styles.buttonPressed,
-                        ]}
-                        hitSlop={8}
-                    >
-                        <Text style={styles.skipText}>Skip for now</Text>
-                    </Pressable>
-                </View>
+                    </Animated.View>
+                </ScrollView>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -120,127 +203,176 @@ const styles = StyleSheet.create({
     },
     glowTop: {
         position: 'absolute',
-        top: -60,
-        right: -70,
+        top: -70,
+        right: -80,
+        width: 240,
+        height: 240,
+        borderRadius: 120,
+        backgroundColor: colors.brandGlowTop,
+    },
+    glowMid: {
+        position: 'absolute',
+        top: 140,
+        left: -120,
         width: 220,
         height: 220,
         borderRadius: 110,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: colors.brandGlowMid,
     },
     glowBottom: {
         position: 'absolute',
-        bottom: -40,
-        left: -80,
-        width: 260,
-        height: 260,
-        borderRadius: 130,
-        backgroundColor: 'rgba(255,186,214,0.2)',
+        bottom: -70,
+        left: -90,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: colors.brandGlowWarm,
     },
     safe: {
         flex: 1,
     },
     content: {
-        flex: 1,
-        paddingHorizontal: 24,
+        flexGrow: 1,
+        paddingHorizontal: spacing.xxl,
+        paddingTop: spacing.xxxl,
+        paddingBottom: spacing.xxxl,
         justifyContent: 'center',
         alignItems: 'center',
     },
+    hero: {
+        alignItems: 'center',
+        marginBottom: spacing.xl,
+    },
+    kicker: {
+        fontSize: fontSizes.sm,
+        letterSpacing: 1.6,
+        textTransform: 'uppercase',
+        color: 'rgba(255,255,255,0.8)',
+        marginBottom: spacing.sm,
+        fontFamily: fontFamilies.body,
+    },
     title: {
-        fontSize: 28,
-        fontWeight: '800',
+        fontSize: 30,
+        fontWeight: '700',
         color: '#FFF',
         textAlign: 'center',
-        marginBottom: 6,
+        marginBottom: spacing.sm,
+        fontFamily: fontFamilies.display,
+        letterSpacing: 0.5,
     },
     subtitle: {
-        fontSize: 16,
-        color: 'rgba(255,255,255,0.85)',
+        fontSize: fontSizes.lg,
+        fontWeight: '600',
+        color: '#FFFFFF',
         textAlign: 'center',
-        marginBottom: 24,
+        fontFamily: fontFamilies.body,
+        maxWidth: 300,
+        lineHeight: 26,
+        marginTop: spacing.sm,
     },
-    googleButton: {
-        width: '90%',
-        maxWidth: 320,
-        height: 48,
-        borderRadius: 14,
+    subtitleEmphasis: {
+        fontWeight: '700',
+    },
+    cardWrap: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    card: {
+        width: '100%',
+        maxWidth: 360,
+        borderRadius: radius.hero,
+        padding: spacing.lgPlus,
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.8)',
+        ...shadows.brandCard,
+        elevation: 8,
+    },
+    socialButton: {
+        width: '100%',
+        alignSelf: 'center',
+        height: BUTTON_HEIGHT,
+        borderRadius: radius.lg,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
         backgroundColor: '#FFFFFF',
         borderColor: 'rgba(0,0,0,0.08)',
         borderWidth: 1,
-        shadowColor: '#000',
-        shadowOpacity: 0.12,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-        elevation: 4,
-        marginBottom: 10,
+        marginBottom: spacing.smPlus,
     },
     googleLogo: {
         width: 18,
         height: 18,
+        marginRight: spacing.smPlus,
     },
-    googleText: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#1F1A2E',
+    googleButton: {
+        backgroundColor: '#FFFFFF',
+        borderColor: 'rgba(0,0,0,0.08)',
     },
     appleButton: {
-        width: '90%',
-        maxWidth: 320,
-        height: 48,
-        borderRadius: 14,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 10,
         backgroundColor: '#111111',
         borderColor: '#111111',
-        borderWidth: 1,
-        shadowColor: '#000',
-        shadowOpacity: 0.12,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-        elevation: 4,
     },
     appleLogo: {
         width: 18,
         height: 18,
         tintColor: '#FFFFFF',
+        marginRight: spacing.smPlus,
+    },
+    socialText: {
+        fontSize: fontSizes.lg,
+        fontWeight: '600',
+        color: '#1F1A2E',
+        fontFamily: fontFamilies.body,
     },
     appleText: {
-        fontSize: 15,
+        fontSize: fontSizes.lg,
         fontWeight: '600',
         color: '#FFFFFF',
+        fontFamily: fontFamilies.body,
     },
     emailButton: {
-        width: '90%',
-        maxWidth: 320,
-        height: 44,
-        borderRadius: 12,
+        width: '100%',
+        alignSelf: 'center',
+        height: 48,
+        borderRadius: radius.md,
+        overflow: 'hidden',
+        marginTop: spacing.sm,
+        borderWidth: 1,
+        borderColor: colors.brandBright,
+    },
+    emailButtonGradient: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.6)',
-        marginTop: 12,
+        borderRadius: radius.md,
     },
     emailText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
         color: '#FFFFFF',
+        fontFamily: fontFamilies.body,
+        letterSpacing: 0.2,
+    },
+    skipWrap: {
+        marginTop: spacing.lgPlus,
+        alignItems: 'center',
     },
     skipButton: {
-        marginTop: 14,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.lg,
+        backgroundColor: 'rgba(255,255,255,0.18)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.35)',
     },
     skipText: {
-        color: 'rgba(255,255,255,0.8)',
-        fontSize: 16,
-        textDecorationLine: 'underline',
+        color: '#FFFFFF',
+        fontSize: fontSizes.base,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     buttonPressed: {
-        opacity: 0.88,
+        opacity: 0.85,
     },
 });

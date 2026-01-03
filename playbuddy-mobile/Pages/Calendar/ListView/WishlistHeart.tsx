@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { TouchableOpacity, Animated, StyleSheet, View, ViewStyle } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
+import { colors } from '../../../components/styles';
 
 export const WishlistHeart = ({
     itemIsOnWishlist,
@@ -16,6 +17,7 @@ export const WishlistHeart = ({
     containerStyle?: ViewStyle;
 }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const haloSize = size + 14;
 
     useEffect(() => {
         // Run animation whenever itemIsOnWishlist changes
@@ -36,7 +38,12 @@ export const WishlistHeart = ({
     return (
         <TouchableOpacity
             onPress={handleToggleEventWishlist}
-            style={[styles.heartContainer, containerStyle]}
+            style={[
+                styles.heartContainer,
+                styles.glassyCircle,
+                { width: haloSize, height: haloSize, borderRadius: haloSize / 2 },
+                containerStyle,
+            ]}
         >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <View style={styles.iconStack}>
@@ -62,7 +69,18 @@ export const WishlistHeart = ({
 
 const styles = StyleSheet.create({
     heartContainer: {
-        padding: 4,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    glassyCircle: {
+        backgroundColor: 'rgba(22, 16, 40, 0.45)',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.65)',
+        shadowColor: '#0b0b0b',
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 6,
+        elevation: 4,
     },
     iconStack: {
         alignItems: 'center',

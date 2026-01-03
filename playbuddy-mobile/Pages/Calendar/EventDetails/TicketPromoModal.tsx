@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../../components/styles';
 
 interface TicketPromoModalProps {
     visible: boolean;
@@ -45,7 +46,7 @@ export const TicketPromoModal: React.FC<TicketPromoModalProps> = ({
                     <TouchableOpacity onPress={handleCopyCode}>
                         <View style={styles.promoCodeContainer}>
                             <Text style={styles.promoCodeValue}>{promoCode}</Text>
-                            <Ionicons name="copy-outline" size={20} color="#333" style={styles.copyIcon} />
+                            <Ionicons name="copy-outline" size={20} color={colors.textPrimary} style={styles.copyIcon} />
                         </View>
                     </TouchableOpacity>
 
@@ -66,46 +67,49 @@ export const TicketPromoModal: React.FC<TicketPromoModalProps> = ({
 const styles = StyleSheet.create({
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: colors.overlay,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: spacing.xl,
     },
     modalContainer: {
-        backgroundColor: '#fff',
-        borderRadius: 12,
-        padding: 20,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        padding: spacing.xl,
         width: '100%',
         maxWidth: 400,
         alignItems: 'center',
     },
     modalTitle: {
-        fontSize: 20,
+        fontSize: fontSizes.xxxl,
         fontWeight: 'bold',
-        marginBottom: 12,
-        color: '#333',
+        marginBottom: spacing.md,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.display,
     },
     offerText: {
-        fontSize: 16,
-        color: '#555',
+        fontSize: fontSizes.xl,
+        color: colors.textMuted,
         textAlign: 'center',
-        marginBottom: 16,
-        lineHeight: 22,
+        marginBottom: spacing.lg,
+        lineHeight: lineHeights.lg,
+        fontFamily: fontFamilies.body,
     },
     promoCodeContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFD700',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-        borderRadius: 8,
-        marginBottom: 20,
+        backgroundColor: colors.gold,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.sm,
+        marginBottom: spacing.xl,
     },
     promoCodeValue: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         fontWeight: 'bold',
-        color: '#333',
-        marginRight: 8,
+        color: colors.textPrimary,
+        marginRight: spacing.sm,
+        fontFamily: fontFamilies.body,
     },
     copyIcon: {
         // Additional styling if needed
@@ -116,17 +120,18 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     actionButton: {
-        backgroundColor: '#EEE',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 8,
+        backgroundColor: colors.surfaceSubtle,
+        paddingVertical: spacing.smPlus,
+        paddingHorizontal: spacing.mdPlus,
+        borderRadius: radius.sm,
         flex: 1,
         alignItems: 'center',
-        marginHorizontal: 5,
+        marginHorizontal: spacing.xsPlus,
     },
     actionButtonText: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
-        color: '#333',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
 });

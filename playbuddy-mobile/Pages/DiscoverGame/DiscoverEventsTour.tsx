@@ -15,7 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
-import { LAVENDER_BACKGROUND } from '../../components/styles';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
@@ -154,7 +154,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
                                     { transform: [{ translateX: arrowX }] },
                                 ]}
                             >
-                                <Ionicons name="arrow-back" size={32} color="#FFF" />
+                                <Ionicons name="arrow-back" size={32} color={colors.white} />
                             </Animated.View>
                             <View style={[styles.banner, styles.skipBanner]}>
                                 <Text style={styles.bannerText}>SKIP</Text>
@@ -172,7 +172,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
                                     { transform: [{ translateX: arrowX }] },
                                 ]}
                             >
-                                <Ionicons name="arrow-forward" size={32} color="#FFF" />
+                                <Ionicons name="arrow-forward" size={32} color={colors.white} />
                             </Animated.View>
                             <View style={[styles.banner, styles.saveBanner]}>
                                 <Text style={styles.bannerText}>Save to My Calendar</Text>
@@ -192,7 +192,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
                     <Ionicons
                         name={authUserId ? 'checkmark-circle-outline' : 'person-add-outline'}
                         size={20}
-                        color="#FFF"
+                        color={colors.white}
                     />
                     <Text style={styles.primaryButtonText}>
                         {authUserId ? 'Got it!' : 'Create Account\nto save events'}
@@ -204,11 +204,11 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
             {stage === 'right' && (
                 <View style={styles.customHintContainer}>
                     <View style={styles.iconColumn}>
-                        <Ionicons name="heart" size={24} color="#FF3B30" />
+                        <Ionicons name="heart" size={24} color={colors.danger} />
                         <Animated.View
                             style={{ transform: [{ scale: downScale }], marginTop: 4 }}
                         >
-                            <Ionicons name="arrow-down" size={20} color="#6B46C1" />
+                            <Ionicons name="arrow-down" size={20} color={colors.brandBright} />
                         </Animated.View>
                     </View>
 
@@ -231,44 +231,46 @@ export const styles = StyleSheet.create({
     topContainer: {
         alignItems: 'center',
         marginTop: 60,
-        paddingHorizontal: 24,
+        paddingHorizontal: spacing.xxl,
     },
     header: {
         textAlign: 'center',
-        marginBottom: 4,
-        color: "black",
-        fontSize: 24,
-        fontWeight: "600"
+        marginBottom: spacing.xs,
+        color: colors.textPrimary,
+        fontSize: fontSizes.headline,
+        fontWeight: "600",
+        fontFamily: fontFamilies.display,
     },
 
     subheader: {
-        fontSize: 20,
-        color: '#555',
+        fontSize: fontSizes.xxxl,
+        color: colors.textMuted,
         textAlign: 'center',
-        lineHeight: 22,
+        lineHeight: lineHeights.lg,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 
     // ── Middle Container ─────────────────────────────────────────
     middleContainer: {
         alignItems: 'center',
-        marginTop: 40,
+        marginTop: spacing.jumbo,
     },
     card: {
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
-        backgroundColor: '#F5F5F5',
-        borderRadius: 10,
+        backgroundColor: colors.surfaceSubtle,
+        borderRadius: radius.smPlus,
         overflow: 'hidden',
-        padding: 16,
+        padding: spacing.lg,
         borderWidth: 1,
-        borderColor: '#DDD',
+        borderColor: colors.borderLight,
         shadowColor: '#000',
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 3 },
         shadowRadius: 6,
         elevation: 4,
-        marginBottom: 20,
+        marginBottom: spacing.xl,
     },
     half: {
         position: 'absolute',
@@ -281,24 +283,25 @@ export const styles = StyleSheet.create({
     rightHalf: { right: 0 },
     banner: {
         position: 'absolute',
-        top: 10,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 4,
+        top: spacing.smPlus,
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.xxs,
     },
     skipBanner: {
-        left: 10,
-        backgroundColor: '#FF3B30',
+        left: spacing.smPlus,
+        backgroundColor: colors.danger,
     },
     saveBanner: {
-        right: 10,
-        backgroundColor: '#34C759',
+        right: spacing.smPlus,
+        backgroundColor: colors.successBright,
     },
     bannerText: {
-        color: '#fff',
-        fontSize: 12,
+        color: colors.white,
+        fontSize: fontSizes.sm,
         fontWeight: '700',
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     arrowIcon: {
         position: 'absolute',
@@ -310,42 +313,43 @@ export const styles = StyleSheet.create({
     primaryButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 6,
+        paddingHorizontal: spacing.xxl,
+        paddingVertical: spacing.md,
+        borderRadius: radius.xs,
     },
     gotItButton: {
-        backgroundColor: '#6B46C1',
+        backgroundColor: colors.brandBright,
     },
     createAccountButton: {
-        backgroundColor: '#1976d2',
+        backgroundColor: colors.brandBlue,
     },
     primaryButtonText: {
-        color: '#fff',
-        fontSize: 18,
+        color: colors.white,
+        fontSize: fontSizes.xxl,
         fontWeight: '600',
-        marginLeft: 8,
+        marginLeft: spacing.sm,
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
 
     // ── Custom Bottom Hint ───────────────────────────────────────
     customHintContainer: {
         position: 'absolute',
-        bottom: 40,
+        bottom: spacing.jumbo,
         left: SCREEN_WIDTH / 4 + 37, // arrow + pill start
         flexDirection: 'row',
         alignItems: 'center',
     },
     iconColumn: {
         alignItems: 'center',
-        marginRight: 8,
+        marginRight: spacing.sm,
     },
     hintBox: {
         width: 150,
-        backgroundColor: 'lightgray',
-        borderRadius: 8,
-        paddingVertical: 8,
-        paddingHorizontal: 12,
+        backgroundColor: colors.surfaceSubtle,
+        borderRadius: radius.sm,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
         justifyContent: 'center',
         shadowColor: '#000',
         shadowOpacity: 0.05,
@@ -354,11 +358,12 @@ export const styles = StyleSheet.create({
         elevation: 3,
     },
     hintText: {
-        fontSize: 16,
-        color: '#333',
+        fontSize: fontSizes.xl,
+        color: colors.textPrimary,
         fontWeight: '600',
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
     },
 });
 

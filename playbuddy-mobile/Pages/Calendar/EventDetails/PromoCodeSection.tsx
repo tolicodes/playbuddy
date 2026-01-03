@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import * as Clipboard from 'expo-clipboard';
 import { PromoCode } from '../../../commonTypes';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 
 // Analytics handled in EventDetail
 const PromoCodeSection = ({ promoCode, onCopy }: { promoCode: PromoCode, onCopy: () => void }) => {
@@ -17,7 +18,7 @@ const PromoCodeSection = ({ promoCode, onCopy }: { promoCode: PromoCode, onCopy:
             <View style={styles.promoContent}>
                 <Text style={styles.promoText}>{promoCode.promo_code}</Text>
                 <TouchableOpacity style={styles.copyButton} onPress={handleCopy}>
-                    <MaterialIcons name="content-copy" size={18} color="black" style={styles.copyIcon} />
+                    <MaterialIcons name="content-copy" size={18} color={colors.textPrimary} style={styles.copyIcon} />
                     <Text style={styles.copyButtonText}>Copy</Text>
                 </TouchableOpacity>
             </View>
@@ -27,12 +28,12 @@ const PromoCodeSection = ({ promoCode, onCopy }: { promoCode: PromoCode, onCopy:
 
 const styles = StyleSheet.create({
     promoContainer: {
-        backgroundColor: '#fdf6e3',       // Light background color (you can change this to your preferred shade)
+        backgroundColor: colors.promoSurface,
         borderWidth: 1,
-        borderColor: '#e2c200',           // A subtle border color (gold tone)
-        borderRadius: 8,
-        padding: 16,
-        marginVertical: 10,
+        borderColor: colors.promoBorder,
+        borderRadius: radius.sm,
+        padding: spacing.lg,
+        marginVertical: spacing.smPlus,
 
     },
     promoContent: {
@@ -41,24 +42,25 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     promoText: {
-        color: '#000',                   // Black text for the promo code
-        fontSize: 16,
+        color: colors.textPrimary,
+        fontSize: fontSizes.xl,
         flex: 1,
+        fontFamily: fontFamilies.body,
     },
     copyButton: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     copyIcon: {
-        marginRight: 6,                  // Space between the icon and the "Copy" text
+        marginRight: spacing.xsPlus,
     },
     copyButtonText: {
-        fontSize: 16,
-        color: '#000',
+        fontSize: fontSizes.xl,
+        color: colors.textPrimary,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 });
 
 
 export default PromoCodeSection;
-

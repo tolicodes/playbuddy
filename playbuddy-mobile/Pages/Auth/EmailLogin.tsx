@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Input, Button, Icon } from '@rneui/themed';
+import { Input, Button } from '@rneui/themed';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useUserContext } from './hooks/UserContext';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
 const Tab = createMaterialTopTabNavigator();
 interface LoginProps {
@@ -46,10 +48,12 @@ const Login: React.FC<LoginProps> = ({
                 onChangeText={setEmail}
                 placeholder="Enter email"
                 containerStyle={styles.inputContainer}
+                inputContainerStyle={styles.inputInner}
                 inputStyle={styles.inputText}
-                placeholderTextColor="#A9A9A9"
+                placeholderTextColor="#9C8FB3"
                 errorStyle={styles.errorText}
-                leftIcon={{ type: 'font-awesome', name: 'envelope', color: '#007AFF' }}
+                leftIcon={{ type: 'font-awesome', name: 'envelope', color: colors.brandBright, size: 16 }}
+                leftIconContainerStyle={styles.leftIcon}
                 autoCapitalize='none'
             />
             <Input
@@ -58,10 +62,12 @@ const Login: React.FC<LoginProps> = ({
                 placeholder="Enter password"
                 secureTextEntry
                 containerStyle={styles.inputContainer}
+                inputContainerStyle={styles.inputInner}
                 inputStyle={styles.inputText}
-                placeholderTextColor="#A9A9A9"
+                placeholderTextColor="#9C8FB3"
                 errorStyle={styles.errorText}
-                leftIcon={{ type: 'font-awesome', name: 'lock', color: '#007AFF' }}
+                leftIcon={{ type: 'font-awesome', name: 'lock', color: colors.brandBright, size: 16 }}
+                leftIconContainerStyle={styles.leftIcon}
                 autoCapitalize='none'
             />
             {isSignUp && (
@@ -71,10 +77,12 @@ const Login: React.FC<LoginProps> = ({
                     placeholder="Re-enter password"
                     secureTextEntry
                     containerStyle={styles.inputContainer}
+                    inputContainerStyle={styles.inputInner}
                     inputStyle={styles.inputText}
-                    placeholderTextColor="#A9A9A9"
+                    placeholderTextColor="#9C8FB3"
                     errorStyle={styles.errorText}
-                    leftIcon={{ type: 'font-awesome', name: 'lock', color: '#007AFF' }}
+                    leftIcon={{ type: 'font-awesome', name: 'lock', color: colors.brandBright, size: 16 }}
+                    leftIconContainerStyle={styles.leftIcon}
                     autoCapitalize='none'
                 />
             )}
@@ -97,8 +105,24 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
 
     return (
         <View style={styles.emailContainer}>
-            <Text style={styles.header}>Email Login</Text>
-            <Tab.Navigator style={styles.tabNavigator}  >
+            <View style={styles.headerRow}>
+                <View style={styles.headerBadge}>
+                    <FAIcon name="envelope" size={14} color="#6B46C1" />
+                </View>
+                <Text style={styles.header}>Email</Text>
+            </View>
+            <Tab.Navigator
+                style={styles.tabNavigator}
+                screenOptions={{
+                    tabBarStyle: styles.tabBar,
+                    tabBarIndicatorStyle: styles.tabIndicator,
+                    tabBarLabelStyle: styles.tabLabel,
+                    tabBarItemStyle: styles.tabItem,
+                    tabBarActiveTintColor: colors.brandText,
+                    tabBarInactiveTintColor: colors.brandTextMuted,
+                    tabBarPressColor: 'transparent',
+                }}
+            >
                 <Tab.Screen name="Sign Up">
                     {() => <Login
                         email={email}
@@ -125,7 +149,7 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
 
             </Tab.Navigator>
             <TouchableOpacity onPress={onSwitchToPhone}>
-                <Text style={styles.switchText}>Login with Phone</Text>
+                <Text style={styles.switchText}>Use phone instead</Text>
             </TouchableOpacity>
         </View>
     );
@@ -133,59 +157,119 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
 
 const styles = StyleSheet.create({
     emailContainer: {
-        padding: 20,
-        flex: 1,
-        backgroundColor: 'white',
-        borderRadius: 10,
+        padding: spacing.xl,
+        backgroundColor: colors.white,
+        borderRadius: radius.xxl,
+        borderWidth: 1,
+        borderColor: 'rgba(107,70,193,0.12)',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
+        ...shadows.brandCard,
     },
     loginContainer: {
-        flex: 1,
-        backgroundColor: 'white',
-        paddingTop: 20,
+        paddingTop: spacing.mdPlus,
     },
     tabNavigator: {
-        flex: 1,
+        minHeight: 300,
+    },
+    tabBar: {
+        backgroundColor: colors.surfaceSoft,
+        borderRadius: radius.pill,
+        padding: spacing.xxs,
+        height: 40,
+        marginBottom: spacing.mdPlus,
+        borderWidth: 1,
+        borderColor: 'rgba(107,70,193,0.12)',
+    },
+    tabIndicator: {
+        top: spacing.xxs,
+        bottom: spacing.xxs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.white,
+    },
+    tabLabel: {
+        fontSize: fontSizes.smPlus,
+        fontWeight: '700',
+        textTransform: 'none',
+        textAlign: 'center',
+        textAlignVertical: 'center',
+        includeFontPadding: false,
+        paddingVertical: 0,
+        fontFamily: fontFamilies.body,
+    },
+    tabItem: {
+        height: 36,
+        paddingVertical: 0,
+        paddingHorizontal: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginBottom: spacing.smPlus,
+    },
+    headerBadge: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: colors.badgeBackground,
+        borderWidth: 1,
+        borderColor: colors.badgeBorder,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.sm,
     },
     header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
+        fontSize: fontSizes.xxxl,
+        fontWeight: '700',
         textAlign: 'center',
-        color: '#007AFF',
+        color: colors.brandText,
+        fontFamily: fontFamilies.display,
     },
     inputContainer: {
-        marginBottom: 15,
+        marginBottom: spacing.md,
+    },
+    inputInner: {
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.badgeBorder,
+        backgroundColor: colors.surfaceSoft,
+        paddingHorizontal: spacing.smPlus,
     },
     inputText: {
-        fontSize: 16,
-        color: '#000',
+        fontSize: fontSizes.lg,
+        color: colors.brandText,
+        fontFamily: fontFamilies.body,
+    },
+    leftIcon: {
+        marginRight: spacing.sm,
     },
     switchText: {
-        marginTop: 10,
-        color: '#007AFF',
+        marginTop: spacing.sm,
+        color: colors.brandBright,
         textAlign: 'center',
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
+        textDecorationLine: 'underline',
     },
     button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 10,
-        paddingVertical: 12,
+        backgroundColor: colors.brandBright,
+        borderRadius: radius.md,
+        paddingVertical: spacing.md,
+        ...shadows.button,
     },
     buttonTitle: {
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     buttonContainer: {
-        marginTop: 10,
+        marginTop: spacing.smPlus,
         marginBottom: 0,
     },
     errorText: {
-        color: 'red',
-        fontSize: 12,
+        color: '#C026D3',
+        fontSize: fontSizes.sm,
+        fontFamily: fontFamilies.body,
     },
 });

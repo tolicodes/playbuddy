@@ -20,6 +20,7 @@ import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
 import { UE } from "../../../Common/types/userEventTypes";
 import { getEventAnalyticsProps, useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
 import { ADMIN_EMAILS } from "../../../config";
+import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 
 const HEADER_HEIGHT = 34;
 
@@ -102,7 +103,7 @@ const EventList: React.FC<EventListProps> = ({
             ListEmptyComponent={
                 <View style={styles.emptyList}>
                     {isLoadingEvents ? (
-                        <ActivityIndicator size="large" color="#007AFF" />
+                        <ActivityIndicator size="large" color={colors.linkBlue} />
                     ) : (
                         <Text style={styles.emptyText}>No events found</Text>
                     )}
@@ -121,18 +122,18 @@ const styles = StyleSheet.create({
         marginTop: 4,
     },
     sectionHeaderOuterWrapper: {
-        paddingBottom: 12,
-        paddingTop: 12,
-        marginHorizontal: 16,
+        paddingBottom: spacing.md,
+        paddingTop: spacing.md,
+        marginHorizontal: spacing.lg,
     },
     sectionHeaderPill: {
         width: '100%',
-        backgroundColor: '#FFFFFF',
-        paddingHorizontal: 16,
+        backgroundColor: colors.white,
+        paddingHorizontal: spacing.lg,
         height: HEADER_HEIGHT,
         justifyContent: 'center',
         alignItems: 'center',
-        borderRadius: 16,
+        borderRadius: radius.lg,
         borderWidth: StyleSheet.hairlineWidth,
         borderColor: 'rgba(90,67,181,0.12)',
         alignSelf: 'stretch',
@@ -143,20 +144,22 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     sectionHeaderText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '700',
-        color: '#2F2A3A',
+        color: colors.textPrimary,
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     emptyList: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 40,
+        paddingVertical: spacing.jumbo,
     },
     emptyText: {
-        fontSize: 16,
-        color: '#6B7280',
+        fontSize: fontSizes.xl,
+        color: colors.textSlate,
+        fontFamily: fontFamilies.body,
     },
     eventItemWrapper: {
         backgroundColor: 'transparent',

@@ -18,12 +18,16 @@ import { DiscoverPage } from "../../Pages/DiscoverPage";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { ADMIN_EMAILS } from "../../config";
 import { ActionSheet } from "../../components/ActionSheet";
+import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
+import EventsLoadingScreen from "../../components/EventsLoadingScreen";
+import { colors, fontSizes, radius, spacing } from "../../components/styles";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
     const navigation = useNavigation<NavStack>();
     const analyticsProps = useAnalyticsProps();
-    const { userProfile } = useUserContext();
+    const { userProfile, authUserId } = useUserContext();
+    const { isLoadingEvents } = useCalendarContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const { data: events } = useFetchEvents({ includeApprovalPending: isAdmin });
     const { height: windowHeight } = useWindowDimensions();
@@ -34,6 +38,10 @@ export const TabNavigator = () => {
     }
 
     const moreSheetHeight = Math.min(windowHeight * 0.85, 680);
+
+    if (authUserId && isLoadingEvents) {
+        return <EventsLoadingScreen />;
+    }
 
     return (
         <>
@@ -119,7 +127,7 @@ export const TabNavigator = () => {
                             onPress={() => setIsMoreOpen(false)}
                             accessibilityLabel="Close more menu"
                         >
-                            <FAIcon name="times" size={18} color="#555" />
+                            <FAIcon name="times" size={18} color={colors.textMuted} />
                         </TouchableOpacity>
                     </View>
                     <DiscoverPage variant="modal" onRequestClose={() => setIsMoreOpen(false)} />
@@ -132,30 +140,30 @@ export const TabNavigator = () => {
 const styles = StyleSheet.create({
     moreSheet: {
         flex: 1,
-        backgroundColor: '#f6f7f9',
+        backgroundColor: colors.surfaceMuted,
     },
     moreHandle: {
         width: 36,
         height: 4,
-        borderRadius: 2,
-        backgroundColor: '#d0d0d0',
+        borderRadius: radius.xxs,
+        backgroundColor: colors.textDisabled,
         alignSelf: 'center',
-        marginTop: 8,
-        marginBottom: 4,
+        marginTop: spacing.sm,
+        marginBottom: spacing.xs,
     },
     moreHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 16,
-        paddingTop: 4,
-        paddingBottom: 8,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xs,
+        paddingBottom: spacing.sm,
         borderBottomWidth: 1,
-        borderBottomColor: '#e9e9e9',
+        borderBottomColor: colors.borderLight,
     },
     moreTitle: {
-        fontSize: 18,
+        fontSize: fontSizes.xxl,
         fontWeight: '600',
-        color: '#333',
+        color: colors.textPrimary,
     },
 });

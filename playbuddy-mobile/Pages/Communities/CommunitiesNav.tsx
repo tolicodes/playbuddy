@@ -7,6 +7,7 @@ import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../components/styles';
 
 type TabKey = 'favorite' | 'all';
 
@@ -88,25 +89,25 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'transparent',
-        paddingTop: 12,
+        paddingTop: spacing.md,
     },
     segmentedWrap: {
         flexDirection: 'row',
         alignSelf: 'center',
-        padding: 4,
-        borderRadius: 999,
+        padding: spacing.xs,
+        borderRadius: radius.pill,
         backgroundColor: 'rgba(255,255,255,0.18)',
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.35)',
-        marginBottom: 10,
+        marginBottom: spacing.smPlus,
     },
     segmentedButton: {
-        paddingVertical: 8,
-        paddingHorizontal: 16,
-        borderRadius: 999,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.pill,
     },
     segmentedButtonActive: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: colors.accentPurple,
         shadowColor: '#000',
         shadowOpacity: 0.18,
         shadowOffset: { width: 0, height: 2 },
@@ -114,14 +115,16 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     segmentedText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
         color: '#EAE6F8',
+        fontFamily: fontFamilies.body,
     },
     segmentedTextActive: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '700',
         color: '#FFFFFF',
+        fontFamily: fontFamilies.body,
     },
 });
 

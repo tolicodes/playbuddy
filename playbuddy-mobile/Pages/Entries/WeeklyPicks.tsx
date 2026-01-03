@@ -9,6 +9,7 @@ import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
 import { logEvent } from '@amplitude/analytics-react-native';
 import { useFetchEvents } from '../../Common/dist/db-axios/useEvents';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
 
 const NY_TIMEZONE = 'America/New_York';
 
@@ -141,13 +142,13 @@ export const WeeklyPicks = () => {
         <View style={styles.container} /* ensure nothing transparent sits on top */>
             <View style={styles.weekSelector}>
                 <Pressable onPress={handlePrevWeek} disabled={isFirst} hitSlop={8}>
-                    <Ionicons name="chevron-back" size={24} color={isFirst ? '#CCC' : '#6A1B9A'} />
+                    <Ionicons name="chevron-back" size={24} color={isFirst ? colors.textDisabled : colors.brandViolet} />
                 </Pressable>
 
                 <Text style={styles.weekText}>{weekDates[currentWeekOffset] ?? ''}</Text>
 
                 <Pressable onPress={handleNextWeek} disabled={isLast} hitSlop={8}>
-                    <Ionicons name="chevron-forward" size={24} color={isLast ? '#CCC' : '#6A1B9A'} />
+                    <Ionicons name="chevron-forward" size={24} color={isLast ? colors.textDisabled : colors.brandViolet} />
                 </Pressable>
             </View>
 
@@ -212,39 +213,41 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 20,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.xl,
     },
     weekText: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
-        color: 'white',
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
     eventsContainer: {},
     card: {
         flexDirection: 'row',
-        backgroundColor: '#FFF',
-        borderRadius: 16,
+        backgroundColor: colors.white,
+        borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: '#DDD',
-        marginHorizontal: 16,
-        marginBottom: 14,
+        borderColor: colors.borderLight,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.mdPlus,
         overflow: 'hidden',
     },
     dayWrapper: {
         width: 60,
-        backgroundColor: '#F4E1FF',
+        backgroundColor: colors.surfaceLavenderWarm,
         justifyContent: 'center',
         alignItems: 'center',
     },
     day: {
-        fontSize: 20,
+        fontSize: fontSizes.xxxl,
         fontWeight: '600',
-        color: '#6A1B9A',
+        color: colors.brandViolet,
+        fontFamily: fontFamilies.body,
     },
     detailsColumn: {
         flex: 1,
-        padding: 12,
+        padding: spacing.md,
     },
     eventRow: {
         flexDirection: 'row',
@@ -255,27 +258,30 @@ const styles = StyleSheet.create({
     },
     separator: {
         height: 1,
-        backgroundColor: '#CCC',
-        marginVertical: 15,
+        backgroundColor: colors.textDisabled,
+        marginVertical: spacing.mdPlus,
     },
     textContainer: {
         flex: 1,
-        paddingRight: 8,
+        paddingRight: spacing.sm,
     },
     eventTitle: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
-        color: '#2D005F',
+        color: colors.brandDeep,
+        fontFamily: fontFamilies.body,
     },
     organizer: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: fontSizes.base,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
     },
     description: {
-        fontSize: 13,
-        color: '#333',
-        marginTop: 4,
-        lineHeight: 16,
+        fontSize: fontSizes.smPlus,
+        color: colors.textPrimary,
+        marginTop: spacing.xs,
+        lineHeight: lineHeights.sm,
+        fontFamily: fontFamilies.body,
     },
     imageWrapper: {
         width: 80,
@@ -285,32 +291,34 @@ const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: '100%',
-        borderRadius: 12,
+        borderRadius: radius.md,
     },
     imagePlaceholder: {
         width: '100%',
         height: '100%',
-        borderRadius: 12,
-        backgroundColor: '#EEE',
+        borderRadius: radius.md,
+        backgroundColor: colors.surfaceSubtle,
     },
     discountBubble: {
         position: 'absolute',
-        bottom: 4,
-        right: 4,
-        backgroundColor: '#FFD700',
-        paddingVertical: 2,
-        paddingHorizontal: 6,
-        borderRadius: 8,
+        bottom: spacing.xs,
+        right: spacing.xs,
+        backgroundColor: colors.gold,
+        paddingVertical: spacing.xxs,
+        paddingHorizontal: spacing.xsPlus,
+        borderRadius: radius.sm,
     },
     discountText: {
-        color: '#000',
-        fontSize: 12,
+        color: colors.textPrimary,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     noEventsText: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         textAlign: 'center',
-        marginTop: 20,
-        color: 'white',
+        marginTop: spacing.xl,
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
 });

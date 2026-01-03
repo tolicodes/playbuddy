@@ -16,7 +16,7 @@ import { CommunitiesList } from './CommunitiesList';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
-import { LAVENDER_BACKGROUND } from '../../components/styles';
+import { colors } from '../../components/styles';
 import { UE } from '../../userEventTypes';
 
 export const JoinCommunitySection = ({
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'transparent',
         borderBottomWidth: 1,
-        borderBottomColor: '#E5E5E5',
+        borderBottomColor: colors.borderLight,
     },
     // ── Join Private Styles ─────────────────────────────────────────────────────
     joinContainer: {

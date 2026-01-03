@@ -13,6 +13,7 @@ import { logEvent } from '../../../../Common/hooks/logger';
 import { UE } from '../../../../userEventTypes';
 import { useEventAnalyticsProps } from '../../../../Common/hooks/useAnalytics';
 import { ActionSheet } from '../../../../components/ActionSheet';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../../components/styles';
 
 export type FilterState = {
     tags: string[];
@@ -288,7 +289,7 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                             <Ionicons
                                                 name={getEventTypeIcon(group.label)}
                                                 size={16}
-                                                color={selected ? '#FFFFFF' : '#5A43B5'}
+                                                color={selected ? colors.white : colors.brandPurpleDark}
                                             />
                                         </View>
                                         <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
@@ -334,7 +335,7 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                             <Ionicons
                                                 name={getExperienceIcon(group.label)}
                                                 size={16}
-                                                color={selected ? '#FFFFFF' : '#5A43B5'}
+                                                color={selected ? colors.white : colors.brandPurpleDark}
                                             />
                                         </View>
                                         <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
@@ -380,7 +381,7 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                             <Ionicons
                                                 name={getInteractivityIcon(group.label)}
                                                 size={16}
-                                                color={selected ? '#FFFFFF' : '#5A43B5'}
+                                                color={selected ? colors.white : colors.brandPurpleDark}
                                             />
                                         </View>
                                         <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
@@ -415,18 +416,18 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
 const styles = StyleSheet.create({
     sheetContainer: {
         height: '100%',
-        paddingHorizontal: 20,
-        paddingTop: 12,
-        paddingBottom: 20,
-        backgroundColor: '#fff',
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xl,
+        backgroundColor: colors.white,
     },
     scrollContent: {
         flex: 1,
-        marginTop: 12,
-        marginBottom: 20,
+        marginTop: spacing.md,
+        marginBottom: spacing.xl,
     },
     scrollInner: {
-        paddingBottom: 40,
+        paddingBottom: spacing.jumbo,
     },
     headerRow: {
         flexDirection: 'row',
@@ -435,10 +436,11 @@ const styles = StyleSheet.create({
     },
     headerText: {
         fontWeight: '600',
-        fontSize: 18,
+        fontSize: fontSizes.xxl,
+        fontFamily: fontFamilies.body,
     },
     searchSection: {
-        marginVertical: 16,
+        marginVertical: spacing.lg,
         position: 'relative',
         zIndex: 30,
         elevation: 6,
@@ -451,17 +453,19 @@ const styles = StyleSheet.create({
     searchInput: {
         borderWidth: 1,
         borderColor: '#ccc',
-        borderRadius: 12,
-        paddingHorizontal: 12,
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.md,
         height: 40,
+        fontFamily: fontFamilies.body,
+        color: colors.textDeep,
     },
     tagDropdown: {
         position: 'absolute',
         left: 0,
         right: 0,
         top: 46,
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
         borderWidth: 1,
         borderColor: '#E6E0F5',
         maxHeight: 200,
@@ -477,93 +481,99 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 12,
-        paddingVertical: 10,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.smPlus,
         borderBottomWidth: 1,
         borderBottomColor: '#F0EDF8',
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
     },
     tagDropdownText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#2C2C34',
+        color: colors.textDeep,
+        fontFamily: fontFamilies.body,
     },
     tagDropdownCount: {
         backgroundColor: '#F2ECFF',
-        borderRadius: 10,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
+        borderRadius: radius.smPlus,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
         borderWidth: 1,
         borderColor: '#E1DAF7',
     },
     tagDropdownCountText: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
-        color: '#5A43B5',
+        color: colors.brandPurpleDark,
+        fontFamily: fontFamilies.body,
     },
     tagsScroll: {
-        marginTop: 8,
+        marginTop: spacing.sm,
         flexDirection: 'row',
-        gap: 8,
+        gap: spacing.sm,
     },
     clearTags: {
         alignSelf: 'flex-end',
-        marginTop: 4,
+        marginTop: spacing.xs,
     },
     clearText: {
-        color: '#888',
-        fontSize: 12,
+        color: colors.textSecondary,
+        fontSize: fontSizes.sm,
+        fontFamily: fontFamilies.body,
     },
     sectionLabel: {
         fontWeight: '600',
-        fontSize: 16,
-        marginBottom: 6,
+        fontSize: fontSizes.xl,
+        marginBottom: spacing.xsPlus,
+        fontFamily: fontFamilies.body,
     },
     optionGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        marginBottom: 16,
+        marginBottom: spacing.lg,
     },
     optionButton: {
         width: '48%',
         minHeight: 56,
-        borderRadius: 14,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        backgroundColor: '#F6F2FF',
+        borderRadius: radius.md,
+        paddingVertical: spacing.smPlus,
+        paddingHorizontal: spacing.md,
+        backgroundColor: colors.lavenderBackground,
         borderWidth: 1,
         borderColor: '#E1DAF7',
         justifyContent: 'center',
-        marginBottom: 10,
+        marginBottom: spacing.smPlus,
     },
     optionButtonSelected: {
-        backgroundColor: '#7F5AF0',
-        borderColor: '#7F5AF0',
+        backgroundColor: colors.accentPurple,
+        borderColor: colors.accentPurple,
     },
     optionText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#2C2C34',
+        color: colors.textDeep,
+        fontFamily: fontFamilies.body,
     },
     optionTextSelected: {
-        color: '#FFFFFF',
+        color: colors.white,
     },
     optionCount: {
-        marginTop: 4,
-        fontSize: 12,
+        marginTop: spacing.xs,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
-        color: '#6B7280',
+        color: colors.textSlate,
+        fontFamily: fontFamilies.body,
     },
     optionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: spacing.sm,
     },
     optionIconWrap: {
         width: 26,
         height: 26,
-        borderRadius: 8,
+        borderRadius: radius.sm,
         backgroundColor: '#EFE9FF',
         borderWidth: 1,
         borderColor: '#DDD5FF',
@@ -580,30 +590,32 @@ const styles = StyleSheet.create({
     optionMoreButton: {
         width: '48%',
         minHeight: 52,
-        borderRadius: 14,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
+        borderRadius: radius.md,
+        paddingVertical: spacing.smPlus,
+        paddingHorizontal: spacing.md,
         backgroundColor: '#F0EDF8',
         borderWidth: 1,
         borderColor: '#E1DAF7',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: spacing.smPlus,
     },
     optionMoreText: {
-        fontSize: 13,
+        fontSize: fontSizes.smPlus,
         fontWeight: '600',
-        color: '#5A43B5',
+        color: colors.brandPurpleDark,
+        fontFamily: fontFamilies.body,
     },
     applyButton: {
         backgroundColor: '#000',
-        paddingVertical: 14,
-        borderRadius: 16,
+        paddingVertical: spacing.mdPlus,
+        borderRadius: radius.lg,
     },
     applyText: {
         textAlign: 'center',
-        color: 'white',
+        color: colors.white,
         fontWeight: '600',
-        fontSize: 16,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
     },
 });

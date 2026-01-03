@@ -12,7 +12,7 @@ import {
     NativeScrollEvent,
 } from "react-native";
 import moment from "moment-timezone";
-import { HORIZONTAL_PADDING } from "../../../components/styles";
+import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -160,18 +160,18 @@ const s = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: 10,
-        paddingHorizontal: HORIZONTAL_PADDING,
+        paddingVertical: spacing.smPlus,
+        paddingHorizontal: spacing.lg,
         backgroundColor: "transparent",
     },
     dayCell: {
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: 7,
-        paddingHorizontal: 10,
-        borderRadius: 14,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.smPlus,
+        borderRadius: radius.mdPlus,
         minWidth: 44,
-        gap: 2,
+        gap: spacing.xxs,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.3)",
         backgroundColor: "rgba(255,255,255,0.16)",
@@ -185,8 +185,8 @@ const s = StyleSheet.create({
         borderColor: "rgba(255,255,255,0.22)",
     },
     daySelected: {
-        backgroundColor: "#FFFFFF",
-        borderColor: "#E3D9FF",
+        backgroundColor: colors.white,
+        borderColor: colors.borderLavenderAlt,
         shadowColor: "#000",
         shadowOpacity: 0.12,
         shadowRadius: 6,
@@ -194,11 +194,11 @@ const s = StyleSheet.create({
         elevation: 3,
     },
     todayRing: { borderWidth: 1.5, borderColor: "rgba(255,255,255,0.85)" },
-    dowText: { fontSize: 12 },
-    dayNum: { fontSize: 16, fontWeight: "600" },
-    textOn: { color: "#3E2E72" },
-    textOff: { color: "#9B90B9" },
-    textSelected: { color: "#5A43B5" },
+    dowText: { fontSize: fontSizes.sm, fontFamily: fontFamilies.body },
+    dayNum: { fontSize: fontSizes.xl, fontWeight: "600", fontFamily: fontFamilies.body },
+    textOn: { color: colors.brandInk },
+    textOff: { color: colors.textLavenderMuted },
+    textSelected: { color: colors.brandPurpleDark },
 });
 
 export default WeekStrip;

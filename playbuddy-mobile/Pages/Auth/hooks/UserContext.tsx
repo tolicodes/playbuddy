@@ -30,6 +30,7 @@ interface UserContextType {
     isLoading: boolean;
     isLoadingAuth: boolean;
     isLoadingUserProfile: boolean;
+    hasFetchedSession: boolean;
     isError: boolean;
 
     signUpWithEmail: (email: string, password: string) => Promise<void>;
@@ -68,6 +69,7 @@ export const useUserContext = (): UserContextType => {
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [session, setSession] = useState<Session | null>(null);
     const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+    const [hasFetchedSession, setHasFetchedSession] = useState(false);
     const [currentDeepLink, setCurrentDeepLink] = useState<DeepLink | null>(null);
     const [fullNameFromOAuthedUser, setFullNameFromOAuthedUser] = useState<string | null>(null);
 
@@ -84,6 +86,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setSession(s ?? null);
             } finally {
                 setIsLoadingAuth(false);
+                setHasFetchedSession(true);
             }
         })();
     }, []);
@@ -150,6 +153,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             isLoading: isLoadingAuth || isLoadingUserProfile,
             isLoadingAuth,
             isLoadingUserProfile,
+            hasFetchedSession,
 
             isSkippingWelcomeScreen,
             updateSkippingWelcomeScreen,
@@ -181,6 +185,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             userProfile,
             isLoadingAuth,
             isLoadingUserProfile,
+            hasFetchedSession,
             isErrorUserProfile,
             isSkippingWelcomeScreen,
             updateSkippingWelcomeScreen,

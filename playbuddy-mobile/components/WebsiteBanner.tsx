@@ -8,6 +8,7 @@ import { logEvent } from '../Common/hooks/logger';
 import { useUserContext } from '../Pages/Auth/hooks/UserContext';
 import { UE } from '../userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
+import { colors, fontSizes, gradients, radius, spacing } from './styles';
 const Banner = () => {
     const navigation = useNavigation<NavStack>()
     const { authUserId } = useUserContext();
@@ -22,7 +23,7 @@ const Banner = () => {
     return (
         <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
             <LinearGradient
-                colors={['#5B1FB8', '#8E2ACB', '#C04FD4']}
+                colors={gradients.access}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.banner}
@@ -45,11 +46,11 @@ const styles = StyleSheet.create({
     banner: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        borderRadius: 16,
-        marginHorizontal: 16,
-        marginBottom: 12,
+        paddingVertical: spacing.smPlus,
+        paddingHorizontal: spacing.mdPlus,
+        borderRadius: radius.lg,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.25)',
         shadowColor: '#2b145a',
@@ -67,15 +68,15 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255,255,255,0.35)',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 10,
+        marginRight: spacing.smPlus,
     },
     text: {
-        color: '#fff',
-        fontSize: 16,
+        color: colors.white,
+        fontSize: fontSizes.xl,
         flex: 1,
     },
     link: {
-        color: '#fff',
+        color: colors.white,
         fontWeight: 'bold',
         textDecorationLine: 'underline',
     },

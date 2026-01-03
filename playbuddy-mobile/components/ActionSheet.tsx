@@ -5,6 +5,7 @@ import {
     StyleSheet,
     Pressable,
 } from 'react-native';
+import { colors, radius, shadows, spacing } from './styles';
 
 type Props = {
     children: React.ReactNode;
@@ -44,21 +45,17 @@ export const ActionSheet = ({
 const styles = StyleSheet.create({
     backdrop: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.35)',
+        backgroundColor: colors.overlay,
     },
     sheet: {
         position: 'absolute',
         bottom: 0,
         left: 0,
         right: 0,
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingBottom: 20,
-        shadowColor: '#000',
-        shadowOpacity: 0.12,
-        shadowOffset: { width: 0, height: -4 },
-        shadowRadius: 12,
-        elevation: 12,
+        backgroundColor: colors.white,
+        borderTopLeftRadius: radius.xl,
+        borderTopRightRadius: radius.xl,
+        paddingBottom: spacing.xl,
+        ...shadows.sheet,
     },
 });

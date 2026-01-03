@@ -25,6 +25,7 @@ import { DiscoverEventsCard } from './DiscoverEventsCard';
 import { useShowDiscoverEventsTour } from './DiscoverEventsTour';
 import { UE } from '../../userEventTypes';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { colors, fontSizes, radius, spacing } from '../../components/styles';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -185,14 +186,14 @@ export const DiscoverGame: React.FC = () => {
                         logEvent(UE.SwipeModeBottomPressLeft, analyticsProps);
                     }}
                 >
-                    <Icon name="close" size={32} color="#999" />
+                    <Icon name="close" size={32} color={colors.textSubtle} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.controlButton}
                     onPress={undoSwipe}
                 >
-                    <Icon name="undo" size={28} color="#666" />
+                    <Icon name="undo" size={28} color={colors.textMuted} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -203,7 +204,7 @@ export const DiscoverGame: React.FC = () => {
                         logEvent(UE.SwipeModeBottomPressRight, analyticsProps);
                     }}
                 >
-                    <Icon name="favorite" size={32} color="#FF2675" />
+                    <Icon name="favorite" size={32} color={colors.brandPink} />
                 </TouchableOpacity>
             </View>
         </View>
@@ -225,27 +226,27 @@ const styles = StyleSheet.create({
     },
     overlayLeft: {
         label: {
-            backgroundColor: '#FF3B30',
-            color: '#fff',
-            fontSize: 24,
-            borderRadius: 5,
-            padding: 10,
+            backgroundColor: colors.danger,
+            color: colors.white,
+            fontSize: fontSizes.headline,
+            borderRadius: radius.xs,
+            padding: spacing.smPlus,
             textAlign: 'center'
         }
     },
     overlayRight: {
         label: {
-            backgroundColor: '#34C759',
-            color: '#fff',
-            fontSize: 24,
-            borderRadius: 5,
-            padding: 10,
+            backgroundColor: colors.successBright,
+            color: colors.white,
+            fontSize: fontSizes.headline,
+            borderRadius: radius.xs,
+            padding: spacing.smPlus,
             textAlign: 'center'
         }
     },
     controlsRow: {
         position: 'absolute',
-        bottom: 40,
+        bottom: spacing.jumbo,
         width: SCREEN_WIDTH,
         flexDirection: 'row',
         justifyContent: 'center',
@@ -255,7 +256,7 @@ const styles = StyleSheet.create({
         width: BUTTON_SIZE,
         height: BUTTON_SIZE,
         borderRadius: BUTTON_SIZE / 2,
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         justifyContent: 'center',
         alignItems: 'center',
         marginHorizontal: BUTTON_SPACING / 2,
@@ -266,6 +267,6 @@ const styles = StyleSheet.create({
         elevation: 4
     },
     heartButton: {
-        backgroundColor: '#fff'
+        backgroundColor: colors.white
     }
 });

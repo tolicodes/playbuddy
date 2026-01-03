@@ -9,6 +9,7 @@ import { UE } from "../userEventTypes";
 import { useAnalyticsProps } from "../Common/hooks/useAnalytics";
 import { NavStack } from "../Common/Nav/NavStackType";
 import { useUserContext } from "../Pages/Auth/hooks/UserContext";
+import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from "./styles";
 
 export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) => {
     const analyticsProps = useAnalyticsProps();
@@ -32,7 +33,7 @@ export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) =>
 
     return (
         <LinearGradient
-            colors={['#5B1FB8', '#8E2ACB', '#C04FD4']}
+            colors={gradients.access}
             start={{ x: 0.1, y: 0 }}
             end={{ x: 0.9, y: 1 }}
             style={styles.gradient}
@@ -83,7 +84,7 @@ const styles = StyleSheet.create({
         width: 220,
         height: 220,
         borderRadius: 110,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: colors.brandGlowTop,
     },
     glowBottom: {
         position: 'absolute',
@@ -92,7 +93,7 @@ const styles = StyleSheet.create({
         width: 260,
         height: 260,
         borderRadius: 130,
-        backgroundColor: 'rgba(255,186,214,0.2)',
+        backgroundColor: colors.brandGlowBottom,
     },
     safe: {
         flex: 1,
@@ -101,28 +102,24 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 24,
+        paddingHorizontal: spacing.xxl,
     },
     card: {
         width: '100%',
         maxWidth: 380,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        paddingVertical: 28,
-        paddingHorizontal: 22,
+        backgroundColor: colors.white,
+        borderRadius: radius.xl,
+        paddingVertical: spacing.xxl,
+        paddingHorizontal: spacing.xl,
         borderWidth: 1,
         borderColor: 'rgba(107,70,193,0.15)',
-        shadowColor: '#2b145a',
-        shadowOpacity: 0.18,
-        shadowOffset: { width: 0, height: 10 },
-        shadowRadius: 18,
-        elevation: 6,
+        ...shadows.brandCard,
         alignItems: 'center',
     },
     badgeRow: {
         flexDirection: 'row',
-        marginBottom: 14,
-        gap: 8,
+        marginBottom: spacing.mdPlus,
+        gap: spacing.sm,
     },
     badge: {
         width: 30,
@@ -139,44 +136,43 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(192,79,212,0.25)',
     },
     title: {
-        fontSize: 20,
+        fontSize: fontSizes.xxxl,
         fontWeight: '700',
-        color: '#2C1A4A',
+        color: colors.brandText,
         textAlign: 'center',
+        fontFamily: fontFamilies.display,
     },
     subtitle: {
-        marginTop: 8,
-        fontSize: 14.5,
+        marginTop: spacing.sm,
+        fontSize: fontSizes.basePlus,
         color: '#5E4A78',
         textAlign: 'center',
         lineHeight: 20,
+        fontFamily: fontFamilies.body,
     },
     buttonWrap: {
         width: '100%',
-        marginTop: 18,
+        marginTop: spacing.lgPlus,
         alignItems: 'center',
     },
     loginButton: {
         width: '100%',
         flexDirection: 'row',
         justifyContent: 'center',
-        backgroundColor: '#6B46C1',
-        borderColor: '#6B46C1',
+        backgroundColor: colors.brandBright,
+        borderColor: colors.brandBright,
         borderWidth: 1,
-        paddingVertical: 12,
-        borderRadius: 14,
-        shadowColor: '#2b145a',
-        shadowOpacity: 0.2,
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 14,
-        elevation: 4,
+        paddingVertical: spacing.md,
+        borderRadius: radius.md,
+        ...shadows.button,
     },
     loginButtonText: {
-        color: '#FFFFFF',
-        fontSize: 15,
+        color: colors.white,
+        fontSize: fontSizes.lg,
         fontWeight: '700',
         marginTop: 0,
-        marginLeft: 10,
+        marginLeft: spacing.smPlus,
+        fontFamily: fontFamilies.body,
     },
     loginAvatar: {
         backgroundColor: 'rgba(255,255,255,0.18)',

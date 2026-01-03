@@ -12,7 +12,7 @@ import WebsiteBanner from "../../../components/WebsiteBanner";
 import { logEvent } from "../../../Common/hooks/logger";
 import { MISC_URLS } from "../../../config";
 import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
-import { EdgePlayGroupModal } from "../../EdgePlayGroupModal";
+import { PopupManager } from "../../PopupManager";
 import { TopBar, ChipTone, QuickFilterItem, TypeaheadSuggestion, ActiveFilterChip } from "./TopBar";
 import { DateStripHeader } from "./DateStripHeader";
 import { WeekStrip } from "./WeekStrip";
@@ -20,6 +20,7 @@ import { SECTION_DATE_FORMAT } from "../hooks/useGroupedEventsMain";
 import { getAllClassificationsFromEvents } from "../../../utils/getAllClassificationsFromEvents";
 import { UE } from "../../../userEventTypes";
 import { useEventAnalyticsProps } from "../../../Common/hooks/useAnalytics";
+import { radius, spacing } from "../../../components/styles";
 
 import {
     TZ,
@@ -664,9 +665,9 @@ const EventCalendarView: React.FC<Props> = ({
     const headerDate = isCalendarExpanded ? monthAnchorDate : nav.weekAnchorDate;
 
     return (
-        <View style={styles.container}>
+            <View style={styles.container}>
             {!authUserId && <WebsiteBanner />}
-            <EdgePlayGroupModal />
+            <PopupManager />
 
             <FiltersView
                 onApply={(f) => {
@@ -843,10 +844,10 @@ const styles = StyleSheet.create({
     calendarContainer: { width: "100%", backgroundColor: "transparent" },
     eventListContainer: {
         flex: 1,
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingTop: 8,
-        marginTop: 4,
+        borderTopLeftRadius: radius.hero,
+        borderTopRightRadius: radius.hero,
+        paddingTop: spacing.sm,
+        marginTop: spacing.xs,
         borderTopWidth: 1,
         borderTopColor: "rgba(122,74,215,0.16)",
         overflow: 'hidden',

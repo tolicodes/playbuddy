@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TextStyle, ViewStyle } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { Classification } from '../commonTypes';
+import { colors, fontFamilies, fontSizes, radius, spacing } from './styles';
 
 interface BadgeRowProps {
     vetted?: boolean;
@@ -23,8 +24,8 @@ export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, m
                 <FAIcon
                     name={'tag'}
                     size={10}
-                    color="#FFFFFF"
-                    style={{ marginRight: 6 }}
+                    color={colors.white}
+                    style={{ marginRight: spacing.xsPlus }}
                     solid
                 />
                 <Text style={styles.tagText} numberOfLines={1}>{classification.tags[0]}</Text>
@@ -49,18 +50,19 @@ export const BadgeRow: React.FC<BadgeRowProps> = ({ vetted, playParty, center, m
 );
 
 const baseBadge: ViewStyle = {
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginRight: 8,
+    borderRadius: radius.xxs,
+    paddingHorizontal: spacing.xsPlus,
+    paddingVertical: spacing.xxs,
+    marginRight: spacing.sm,
     flexDirection: 'row',
     alignItems: 'center',
 };
 
 const baseText: TextStyle = {
-    fontSize: 12,
-    color: 'white',
+    fontSize: fontSizes.sm,
+    color: colors.white,
     fontWeight: 'bold',
+    fontFamily: fontFamilies.body,
 };
 
 const styles = StyleSheet.create({
@@ -70,28 +72,28 @@ const styles = StyleSheet.create({
     },
     vettedBadge: {
         ...baseBadge,
-        backgroundColor: '#4CAF50',
+        backgroundColor: colors.badgeVetted,
     },
     vettedText: {
         ...baseText,
     },
     playPartyBadge: {
         ...baseBadge,
-        backgroundColor: '#8F00FF',
+        backgroundColor: colors.badgePlayParty,
     },
     playPartyText: {
         ...baseText,
     },
     munchBadge: {
         ...baseBadge,
-        backgroundColor: '#FFC107',
+        backgroundColor: colors.badgeMunch,
     },
     munchText: {
         ...baseText,
     },
     tagPill: {
         ...baseBadge,
-        backgroundColor: '#66BB6A',
+        backgroundColor: colors.badgeTag,
         maxWidth: 100,
     },
     tagText: {

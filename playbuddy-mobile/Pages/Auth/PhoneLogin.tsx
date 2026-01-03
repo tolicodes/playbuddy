@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Input, Button, Icon } from '@rneui/themed';
+import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useUserContext } from './hooks/UserContext';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
 export const PhoneLogin: React.FC<{ onSwitchToEmail: () => void; }> = ({ onSwitchToEmail }) => {
     const [phone, setPhone] = useState<string>('+1');
@@ -31,16 +33,22 @@ export const PhoneLogin: React.FC<{ onSwitchToEmail: () => void; }> = ({ onSwitc
 
     return (
         <View style={styles.phoneContainer}>
-            <Text style={styles.header}>Phone Login</Text>
+            <View style={styles.headerRow}>
+                <View style={styles.headerBadge}>
+                    <FAIcon name="phone-alt" size={14} color={colors.brandBright} />
+                </View>
+                <Text style={styles.header}>Phone</Text>
+            </View>
             <Input
                 value={phone}
                 onChangeText={setPhone}
                 placeholder="Enter phone number"
                 keyboardType="phone-pad"
                 containerStyle={styles.inputContainer}
+                inputContainerStyle={styles.inputInner}
                 inputStyle={styles.inputText}
-                leftIcon={<Icon name='phone' type='font-awesome' color='#007AFF' />}
-                placeholderTextColor="#A9A9A9"
+                leftIcon={<Icon name='phone' type='font-awesome' color={colors.brandBright} size={16} />}
+                placeholderTextColor="#9C8FB3"
                 errorStyle={styles.errorText}
             />
             {otpSent && (
@@ -50,8 +58,9 @@ export const PhoneLogin: React.FC<{ onSwitchToEmail: () => void; }> = ({ onSwitc
                     placeholder="Enter verification code"
                     keyboardType="number-pad"
                     containerStyle={styles.inputContainer}
+                    inputContainerStyle={styles.inputInner}
                     inputStyle={styles.inputText}
-                    placeholderTextColor="#A9A9A9"
+                    placeholderTextColor="#9C8FB3"
                     errorStyle={styles.errorText}
                 />
             )}
@@ -63,7 +72,7 @@ export const PhoneLogin: React.FC<{ onSwitchToEmail: () => void; }> = ({ onSwitc
                 containerStyle={styles.buttonContainer}
             />
             <TouchableOpacity onPress={onSwitchToEmail}>
-                <Text style={styles.switchText}>Login with Email</Text>
+                <Text style={styles.switchText}>Use email instead</Text>
             </TouchableOpacity>
         </View>
     );
@@ -71,49 +80,77 @@ export const PhoneLogin: React.FC<{ onSwitchToEmail: () => void; }> = ({ onSwitc
 
 const styles = StyleSheet.create({
     phoneContainer: {
-        padding: 20,
-        backgroundColor: '#f9f9f9',
-        borderRadius: 10,
+        padding: spacing.xl,
+        backgroundColor: colors.white,
+        borderRadius: radius.xxl,
+        borderWidth: 1,
+        borderColor: 'rgba(107,70,193,0.12)',
         justifyContent: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-        elevation: 5,
+        ...shadows.brandCard,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        alignSelf: 'center',
+        marginBottom: spacing.mdPlus,
+    },
+    headerBadge: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: colors.badgeBackground,
+        borderWidth: 1,
+        borderColor: colors.badgeBorder,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: spacing.sm,
     },
     header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
+        fontSize: fontSizes.xxxl,
+        fontWeight: '700',
         textAlign: 'center',
-        color: '#007AFF',
+        color: colors.brandText,
+        fontFamily: fontFamilies.display,
     },
     inputContainer: {
-        marginBottom: 15,
+        marginBottom: spacing.md,
+    },
+    inputInner: {
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.badgeBorder,
+        backgroundColor: colors.surfaceSoft,
+        paddingHorizontal: spacing.smPlus,
     },
     inputText: {
-        fontSize: 16,
-        color: '#000',
+        fontSize: fontSizes.lg,
+        color: colors.brandText,
+        fontFamily: fontFamilies.body,
     },
     switchText: {
-        marginTop: 10,
-        color: '#007AFF',
+        marginTop: spacing.sm,
+        color: colors.brandBright,
         textAlign: 'center',
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
+        textDecorationLine: 'underline',
     },
     button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 10,
-        paddingVertical: 12,
+        backgroundColor: colors.brandBright,
+        borderRadius: radius.md,
+        paddingVertical: spacing.md,
+        ...shadows.button,
     },
     buttonTitle: {
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     buttonContainer: {
-        marginVertical: 10,
+        marginVertical: spacing.smPlus,
     },
     errorText: {
-        color: 'red',
-        fontSize: 12,
+        color: '#C026D3',
+        fontSize: fontSizes.sm,
+        fontFamily: fontFamilies.body,
     },
 });

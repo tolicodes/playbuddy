@@ -137,6 +137,16 @@ export interface Event extends EventDataSource {
      */
     approval_status?: 'pending' | 'approved' | 'rejected' | null;
 
+    /**
+     * Whether hidden from listings (default false).
+     */
+    hidden?: boolean | null;
+
+    /**
+     * When true, prevents automated upserts from overwriting this event.
+     */
+    frozen?: boolean | null;
+
     // Only shows in facilitator profile
     facilitator_only?: boolean
 

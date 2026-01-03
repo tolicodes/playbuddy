@@ -11,6 +11,7 @@ import { UE } from '../userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { useCalendarContext } from './Calendar/hooks/CalendarContext';
 import type { NavStack } from '../Common/Nav/NavStackType';
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
 
 type LinkItem = {
     id: string;
@@ -149,14 +150,14 @@ const Moar: React.FC = () => {
                                         onPress={() => handlePress(item)}
                                     >
                                         <View style={styles.iconWrap}>
-                                            <FAIcon name={item.icon} size={18} color="#555" />
+                                            <FAIcon name={item.icon} size={18} color={colors.textMuted} />
                                         </View>
                                         <Text style={styles.menuText}>{item.title}</Text>
                                         <View style={styles.menuRight}>
                                             {showBadge && (
                                                 <Badge style={styles.badge}>{badgeCount}</Badge>
                                             )}
-                                            <FAIcon name="chevron-right" size={12} color="#b0b0b0" />
+                                            <FAIcon name="chevron-right" size={12} color={colors.textSubtle} />
                                         </View>
                                     </TouchableOpacity>
                                 );
@@ -177,11 +178,11 @@ const Moar: React.FC = () => {
                             onPress={handleEmailPress}
                         >
                             <View style={styles.iconWrap}>
-                                <FAIcon name="envelope" size={18} color="#555" />
+                                <FAIcon name="envelope" size={18} color={colors.textMuted} />
                             </View>
                             <Text style={[styles.menuText, styles.emailText]}>support@playbuddy.me</Text>
                             <View style={styles.menuRight}>
-                                <FAIcon name="chevron-right" size={12} color="#b0b0b0" />
+                                <FAIcon name="chevron-right" size={12} color={colors.textSubtle} />
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -194,43 +195,40 @@ const Moar: React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f6f7f9',
+        backgroundColor: colors.surfaceMuted,
     },
     content: {
-        padding: 16,
-        paddingBottom: 32,
+        padding: spacing.lg,
+        paddingBottom: spacing.xxxl,
     },
     group: {
-        marginBottom: 18,
+        marginBottom: spacing.lgPlus,
     },
     groupTitle: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         letterSpacing: 1,
         textTransform: 'uppercase',
-        color: '#7c7c7c',
-        marginBottom: 8,
+        color: colors.textSecondary,
+        marginBottom: spacing.sm,
         marginLeft: 4,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     groupCard: {
-        borderRadius: 12,
+        borderRadius: radius.md,
         overflow: 'hidden',
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#ececec',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 8,
+        borderColor: colors.borderLight,
+        ...shadows.card,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+        paddingVertical: spacing.mdPlus,
+        paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: colors.borderSubtle,
     },
     lastMenuItem: {
         borderBottomWidth: 0,
@@ -238,41 +236,43 @@ const styles = StyleSheet.create({
     iconWrap: {
         width: 34,
         height: 34,
-        borderRadius: 10,
-        backgroundColor: '#f2f4f7',
+        borderRadius: radius.smPlus,
+        backgroundColor: colors.surfaceSubtle,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
+        marginRight: spacing.md,
     },
     menuText: {
-        fontSize: 16,
-        color: '#333',
+        fontSize: fontSizes.xl,
+        color: colors.textPrimary,
         fontWeight: '500',
         flex: 1,
+        fontFamily: fontFamilies.body,
     },
     menuRight: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     badge: {
-        marginRight: 8,
+        marginRight: spacing.sm,
     },
     touchBody: {
-        paddingHorizontal: 16,
-        paddingTop: 14,
-        paddingBottom: 10,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.mdPlus,
+        paddingBottom: spacing.smPlus,
     },
     touchText: {
-        fontSize: 14,
-        color: '#666',
+        fontSize: fontSizes.base,
+        color: colors.textMuted,
         lineHeight: 20,
+        fontFamily: fontFamilies.body,
     },
     touchRow: {
         borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
+        borderTopColor: colors.borderSubtle,
     },
     emailText: {
-        color: '#2b5fd9',
+        color: colors.linkBlue,
         fontWeight: '600',
     },
 });

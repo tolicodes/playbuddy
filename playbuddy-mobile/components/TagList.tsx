@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { commonStyles, HEADER_PURPLE } from './styles';
+import { commonStyles, colors, fontSizes, radius, spacing } from './styles';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { logEvent } from '../Common/hooks/logger';
 import { UE } from '../userEventTypes';
@@ -56,20 +56,20 @@ export const tagStyles = StyleSheet.create({
     tag: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: HEADER_PURPLE,
-        borderRadius: 16,
-        paddingHorizontal: 12,
+        backgroundColor: colors.headerPurple,
+        borderRadius: radius.lg,
+        paddingHorizontal: spacing.md,
         margin: 4,
         height: 32,
         justifyContent: 'center',
     },
     tagText: {
-        color: '#fff',
-        fontSize: 14,
+        color: colors.white,
+        fontSize: fontSizes.base,
     },
 
     icon: {
-        marginRight: 4,
+        marginRight: spacing.xs,
     },
     tagsRow: {
         flexDirection: 'row',

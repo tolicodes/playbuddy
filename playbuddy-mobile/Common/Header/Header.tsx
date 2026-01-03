@@ -8,6 +8,7 @@ import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { Image } from "react-native";
 import { useRoute } from "@react-navigation/native";
+import { colors, fontFamilies, fontSizes, spacing } from "../../components/styles";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
@@ -56,7 +57,7 @@ const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean 
         <Animated.View style={{ opacity: fadeAnim }}>
             <Text
                 numberOfLines={1}
-                style={[styles.headerTitleText, { fontSize: isSmall ? 24 : 35 }]}
+                style={[styles.headerTitleText, { fontSize: isSmall ? fontSizes.headline : fontSizes.displayLg }]}
                 ellipsizeMode="tail"
                 adjustsFontSizeToFit
                 minimumFontScale={0.5}
@@ -142,8 +143,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: 10,
-        paddingBottom: 5,
+        paddingHorizontal: spacing.smPlus,
+        paddingBottom: spacing.xs,
     },
     leftContainer: {
         width: 50,
@@ -159,13 +160,14 @@ const styles = StyleSheet.create({
         alignItems: 'flex-end',
     },
     iconButton: {
-        padding: 10,
+        padding: spacing.smPlus,
     },
     headerTitleText: {
-        fontSize: 35,
+        fontSize: fontSizes.displayLg,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: colors.white,
         textAlign: 'center',
+        fontFamily: fontFamilies.display,
     },
 
     logo: {

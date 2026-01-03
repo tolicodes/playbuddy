@@ -21,6 +21,7 @@ import { MunchDetailsEventsTab } from "./MunchDetailsEventsTab";
 import { MunchDetailsMainTab } from "./MunchDetailsMainTab";
 import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 import TabBar from "../../components/TabBar";
+import { colors, fontFamilies, fontSizes, spacing } from "../../components/styles";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -61,7 +62,7 @@ export const MunchDetails = () => {
     if (isLoading) {
         return (
             <View style={styles.centeredContainer}>
-                <ActivityIndicator size="large" color="#666" />
+                <ActivityIndicator size="large" color={colors.textMuted} />
             </View>
         );
     }
@@ -96,9 +97,9 @@ export const MunchDetails = () => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: 'transparent' },
-    content: { paddingBottom: 40 },
+    content: { paddingBottom: spacing.jumbo },
     centeredContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: 'transparent' },
-    errorText: { fontSize: 16, color: "#E74C3C", textAlign: "center" },
+    errorText: { fontSize: fontSizes.xl, color: colors.badgeAlert, textAlign: "center", fontFamily: fontFamilies.body },
     headerCard: { backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 20, ...Platform.select({ ios: { shadowColor: "#000", shadowOpacity: 0.1, shadowOffset: { width: 0, height: 2 }, shadowRadius: 4 }, android: { elevation: 3 } }) },
     titleRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
     icon: { marginRight: 12 },

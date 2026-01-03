@@ -13,7 +13,7 @@ import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
-import { BORDER_LAVENDER } from '../../../components/styles';
+import { colors, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistHeart } from './WishlistHeart';
@@ -71,18 +71,6 @@ const TYPE_ICONS: Record<string, string> = {
     'performance': 'microphone',
     'discussion': 'comments',
     'event': 'calendar',
-};
-
-const EVENT_RAIL_COLORS: Record<string, string> = {
-    event: '#9B8FD4',
-    'play party': '#5A43B5',
-    munch: '#B45309',
-    retreat: '#2E6B4D',
-    festival: '#2F5DA8',
-    workshop: '#9A3D42',
-    performance: '#5D3FA3',
-    discussion: '#2D5E6F',
-    default: '#9B8FD4',
 };
 
 export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees, isAdmin }) => {
@@ -158,7 +146,15 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
         if (item.type && item.type !== 'event') return item.type.replace(/_/g, ' ').toLowerCase();
         return 'event';
     })();
-    const eventRailColor = EVENT_RAIL_COLORS[eventTypeKey] || EVENT_RAIL_COLORS.default;
+    const eventTypeLabel = (() => {
+        if (item.play_party) return 'Play Party';
+        if (item.is_munch) return 'Munch';
+        if (item.type && item.type !== 'event') {
+            return typeLabelMap[item.type] || item.type.replace(/_/g, ' ');
+        }
+        return 'Event';
+    })();
+    const typePillColors = tagChipColors[eventTypeKey] || TAG_TONES.default;
 
     const handlePressEvent = () => {
         // for attendee carousel scroll logic
@@ -200,7 +196,6 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                 noPadding && styles.noPadding,
                 showApprovalBorder && styles.pendingBorder
             ]}>
-                <View pointerEvents="none" style={[styles.typeRail, { backgroundColor: eventRailColor }]} />
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
                     <View style={styles.poster}>
                         {imageUrl ? (
@@ -218,18 +213,36 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                             </View>
                         )}
                         <LinearGradient
-                            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.7)']}
+                            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
                             style={styles.posterGradient}
                         />
-                        {promoCode && (
-                            <View style={styles.discountBadge}>
-                                <Text style={styles.discountText}>
-                                    {promoCode.discount_type === 'percent'
-                                        ? `${promoCode.discount}% off`
-                                        : `$${promoCode.discount} off`}
+                        <View style={styles.posterBadges}>
+                            <View
+                                style={[
+                                    styles.typePill,
+                                    { backgroundColor: typePillColors.background, borderColor: typePillColors.border },
+                                ]}
+                            >
+                                <FAIcon
+                                    name={TYPE_ICONS[eventTypeKey] || 'calendar'}
+                                    size={10}
+                                    color={typePillColors.text}
+                                    style={styles.typePillIcon}
+                                />
+                                <Text style={[styles.typePillText, { color: typePillColors.text }]}>
+                                    {eventTypeLabel}
                                 </Text>
                             </View>
-                        )}
+                            {promoCode && (
+                                <View style={styles.discountBadge}>
+                                    <Text style={styles.discountText}>
+                                        {promoCode.discount_type === 'percent'
+                                            ? `${promoCode.discount}% off`
+                                            : `$${promoCode.discount} off`}
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
                         <View style={styles.posterActions}>
                             <WishlistHeart
                                 itemIsOnWishlist={itemIsOnWishlist}
@@ -366,20 +379,16 @@ const styles = StyleSheet.create({
         height: ITEM_HEIGHT,
     },
     cardWrapper: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: BORDER_LAVENDER,
-        borderRadius: 16,
+        borderColor: colors.borderLavender,
+        borderRadius: radius.lg,
         overflow: 'hidden',
-        marginHorizontal: 16,
-        marginBottom: 16,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.lg,
         height: ITEM_HEIGHT - 16,
         position: 'relative',
-        shadowOpacity: 0.12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 10,
-        elevation: 4,
+        ...shadows.card,
     },
     noPadding: {
         marginHorizontal: 0,
@@ -389,19 +398,8 @@ const styles = StyleSheet.create({
         borderStyle: 'dotted',
         borderWidth: 3,
     },
-    typeRail: {
-        position: 'absolute',
-        left: 0,
-        top: 0,
-        bottom: 0,
-        width: 6,
-        borderTopLeftRadius: 16,
-        borderBottomLeftRadius: 16,
-        zIndex: 2,
-    },
-
     poster: {
-        height: 108,
+        height: 120,
         width: '100%',
         backgroundColor: '#f2f2f2',
     },
@@ -422,47 +420,66 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        height: 68,
+        height: 78,
+    },
+    posterBadges: {
+        position: 'absolute',
+        left: spacing.mdPlus,
+        top: spacing.mdPlus,
+        alignItems: 'flex-start',
+        gap: spacing.xs,
+    },
+    typePill: {
+        borderRadius: radius.pill,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xxs,
+        borderWidth: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    typePillIcon: {
+        marginRight: spacing.xs,
+    },
+    typePillText: {
+        fontSize: fontSizes.xsPlus,
+        fontWeight: '700',
     },
     posterFooter: {
         position: 'absolute',
-        left: 16,
-        right: 16,
-        bottom: 12,
+        left: spacing.lg,
+        right: spacing.lg,
+        bottom: spacing.md,
     },
     posterActions: {
         position: 'absolute',
-        right: 12,
-        top: 12,
+        right: spacing.md,
+        top: spacing.md,
     },
     eventTitle: {
-        fontSize: 18,
+        fontSize: fontSizes.xxl,
         fontWeight: '700',
-        color: '#fff',
+        color: colors.white,
     },
     organizerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 4,
+        marginTop: spacing.xs,
     },
     organizerDot: {
         width: 8,
         height: 8,
         borderRadius: 4,
-        marginRight: 6,
+        marginRight: spacing.sm,
     },
     organizerName: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         color: '#f2f2f2',
     },
     discountBadge: {
-        position: 'absolute',
-        left: 14,
-        top: 14,
         backgroundColor: '#FFD700',
         borderRadius: 8,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xs,
         shadowColor: '#000',
         shadowOpacity: 0.2,
         shadowRadius: 3,
@@ -470,14 +487,14 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     discountText: {
-        fontSize: 13,
+        fontSize: fontSizes.smPlus,
         fontWeight: 'bold',
         color: 'black',
     },
     metaRowScroll: {
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 8,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.sm,
     },
     metaRow: {
         flexDirection: 'row',
@@ -486,24 +503,24 @@ const styles = StyleSheet.create({
     metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: 10,
+        marginRight: spacing.smPlus,
     },
     metaIcon: {
-        marginRight: 6,
+        marginRight: spacing.sm,
     },
     metaText: {
-        fontSize: 11,
+        fontSize: fontSizes.xs,
         color: '#555',
         fontWeight: '600',
     },
     tagRowContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 4,
-        paddingBottom: 6,
-        marginTop: 2,
-        minHeight: 30,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xxs,
+        paddingBottom: spacing.xs,
+        marginTop: spacing.xxs,
+        minHeight: 24,
     },
     tagRowScroll: {
         flexGrow: 1,
@@ -518,23 +535,23 @@ const styles = StyleSheet.create({
         flexShrink: 1,
     },
     tagChip: {
-        borderRadius: 999,
-        paddingHorizontal: 12,
-        paddingVertical: 3,
-        marginRight: 6,
+        borderRadius: radius.pill,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xxs,
+        marginRight: spacing.sm,
         borderWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
     },
     tagChipIcon: {
-        marginRight: 4,
+        marginRight: spacing.xs,
     },
     tagChipText: {
-        fontSize: 11.5,
+        fontSize: fontSizes.xsPlus,
         fontWeight: '600',
     },
     attendeeWrap: {
-        marginLeft: 10,
+        marginLeft: spacing.smPlus,
         maxWidth: '33%',
         alignItems: 'flex-end',
         flexShrink: 0,

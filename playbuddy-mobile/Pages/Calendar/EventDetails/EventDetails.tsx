@@ -30,7 +30,7 @@ import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
-import { HORIZONTAL_PADDING } from '../../../components/styles';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../../components/styles';
 import SectionCard from './SectionCard';
 
 /* 
@@ -341,7 +341,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         />
                     ) : (
                         <View style={styles.heroPlaceholder}>
-                            <MaterialIcons name="event" size={56} color="#c7b9ff" />
+                            <MaterialIcons name="event" size={56} color={colors.borderAccent} />
                         </View>
                     )}
                     <LinearGradient
@@ -362,7 +362,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                                 <View
                                     style={[
                                         styles.organizerDot,
-                                        { backgroundColor: selectedEvent.organizerColor || '#fff' },
+                                        { backgroundColor: selectedEvent.organizerColor || colors.white },
                                     ]}
                                 />
                                 <Text style={styles.heroOrganizerText} numberOfLines={1}>
@@ -384,24 +384,24 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         onPress={handleTicketPress}
                         disabled={ticketDisabled}
                     >
-                        <MaterialIcons
-                            name={ticketDisabled ? 'schedule' : 'confirmation-number'}
-                            size={18}
-                            color="#fff"
-                            style={styles.ticketIcon}
-                        />
+                            <MaterialIcons
+                                name={ticketDisabled ? 'schedule' : 'confirmation-number'}
+                                size={18}
+                                color={colors.white}
+                                style={styles.ticketIcon}
+                            />
                         <Text style={styles.ticketText}>{ticketLabel}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.calendarButton} onPress={handleToggleWishlist}>
                         <FAIcon
                             name="heart"
                             size={22}
-                            color="#ef4444"
+                            color={colors.badgeAlert}
                             solid={isWishlisted}
                         />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                        <FAIcon name="share-square" size={18} color="#6B57D0" />
+                        <FAIcon name="share-square" size={18} color={colors.brandIndigo} />
                     </TouchableOpacity>
                 </View>
 
@@ -413,7 +413,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                                     <MaterialIcons
                                         name={item.icon}
                                         size={16}
-                                        color="#5D4BB7"
+                                        color={colors.brandPurpleDark}
                                     />
                                 </View>
                                 <Text style={styles.metaText} numberOfLines={2}>
@@ -436,7 +436,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                                 <FAIcon
                                     name={chip.icon}
                                     size={11}
-                                    color="#5A43B5"
+                                    color={colors.brandPurpleDark}
                                     style={styles.quickPillIcon}
                                 />
                                 <Text style={styles.quickPillText}>{chip.label}</Text>
@@ -546,7 +546,7 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                 <SectionCard title="Vetted" icon="verified-user" tone="info">
                     <Text style={styles.vettedInfoText}>
                         This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
-                        {event.vetting_url && <Text style={{ color: '#4a6ee0', fontWeight: 'bold' }}>
+                        {event.vetting_url && <Text style={{ color: colors.linkAccent, fontWeight: 'bold' }}>
                             <Text onPress={() => Linking.openURL(event.vetting_url || '')}>here</Text>
                         </Text>}
                     </Text>
@@ -637,7 +637,7 @@ export const EventDetails = ({ route }) => {
                 {enabledTabs.length > 1 && (
                     <View style={styles.tabBarWrap}>
                         <LinearGradient
-                            colors={['#6B57D0', '#7F5AF0']}
+                            colors={[colors.brandIndigo, colors.accentPurple]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={styles.tabBarGradient}
@@ -661,10 +661,10 @@ export const EventDetails = ({ route }) => {
 
 const styles = StyleSheet.create({
     scrollView: {
-        backgroundColor: '#f6f2ff',
+        backgroundColor: colors.lavenderBackground,
     },
     scrollContent: {
-        paddingBottom: 24,
+        paddingBottom: spacing.xxl,
     },
     heroWrapper: {
         marginBottom: 0,
@@ -672,9 +672,9 @@ const styles = StyleSheet.create({
     heroMedia: {
         height: 260,
         width: '100%',
-        backgroundColor: '#1f1b2e',
-        borderBottomLeftRadius: 24,
-        borderBottomRightRadius: 24,
+        backgroundColor: colors.heroDark,
+        borderBottomLeftRadius: radius.hero,
+        borderBottomRightRadius: radius.hero,
         overflow: 'hidden',
     },
     heroImage: {
@@ -689,7 +689,7 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#2a2438',
+        backgroundColor: colors.heroDarkMuted,
     },
     heroGradient: {
         position: 'absolute',
@@ -700,12 +700,12 @@ const styles = StyleSheet.create({
     },
     heroPromoBadge: {
         position: 'absolute',
-        left: 16,
-        top: 16,
-        backgroundColor: '#FFD700',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
+        left: spacing.lg,
+        top: spacing.lg,
+        backgroundColor: colors.gold,
+        borderRadius: radius.smPlus,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xsPlus,
         shadowColor: '#000',
         shadowOpacity: 0.2,
         shadowRadius: 3,
@@ -713,30 +713,31 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     heroPromoText: {
-        fontSize: 13,
+        fontSize: fontSizes.smPlus,
         fontWeight: '700',
-        color: '#1f1f1f',
+        color: colors.textPrimary,
     },
     heroFooter: {
         position: 'absolute',
-        left: 16,
-        right: 16,
-        bottom: 36,
+        left: spacing.lg,
+        right: spacing.lg,
+        bottom: spacing.xxxl,
     },
     heroTitle: {
-        fontSize: 22,
+        fontSize: fontSizes.title,
         fontWeight: '700',
-        color: '#fff',
+        color: colors.white,
+        fontFamily: fontFamilies.display,
     },
     heroOrganizer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 6,
+        marginTop: spacing.xsPlus,
         alignSelf: 'flex-start',
         backgroundColor: 'rgba(0,0,0,0.68)',
-        borderRadius: 999,
-        paddingVertical: 8,
-        paddingHorizontal: 14,
+        borderRadius: radius.pill,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.mdPlus,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.55)',
         shadowColor: '#000',
@@ -749,22 +750,23 @@ const styles = StyleSheet.create({
         width: 12,
         height: 12,
         borderRadius: 6,
-        marginRight: 10,
-        backgroundColor: '#fff',
+        marginRight: spacing.smPlus,
+        backgroundColor: colors.white,
     },
     heroOrganizerText: {
-        fontSize: 15,
+        fontSize: fontSizes.lg,
         fontWeight: '800',
         letterSpacing: 0.2,
-        color: '#fff',
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
     headerSheet: {
-        backgroundColor: '#fff',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
+        backgroundColor: colors.white,
+        borderTopLeftRadius: radius.hero,
+        borderTopRightRadius: radius.hero,
         marginTop: -18,
-        paddingTop: 16,
-        paddingBottom: 16,
+        paddingTop: spacing.lg,
+        paddingBottom: spacing.lg,
         shadowColor: '#000',
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: -2 },
@@ -772,9 +774,9 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     metaList: {
-        paddingHorizontal: 16,
-        paddingTop: 12,
-        gap: 6,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        gap: spacing.xsPlus,
     },
     metaLine: {
         flexDirection: 'row',
@@ -784,77 +786,80 @@ const styles = StyleSheet.create({
     metaIconWrap: {
         width: 20,
         alignItems: 'center',
-        marginRight: 8,
-        marginTop: 2,
+        marginRight: spacing.sm,
+        marginTop: spacing.xxs,
     },
     metaText: {
         flex: 1,
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#3b2f74',
-        lineHeight: 20,
+        color: colors.brandInk,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
     },
     quickRowScroll: {
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 8,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.smPlus,
+        paddingBottom: spacing.sm,
     },
     quickRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     quickPill: {
-        backgroundColor: '#F8F6FF',
-        borderRadius: 999,
-        paddingVertical: 4,
-        paddingHorizontal: 10,
-        marginRight: 6,
+        backgroundColor: colors.surfaceSoft,
+        borderRadius: radius.pill,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.smPlus,
+        marginRight: spacing.xsPlus,
         borderWidth: 1,
-        borderColor: '#E5DFF9',
+        borderColor: colors.borderLavender,
         flexDirection: 'row',
         alignItems: 'center',
     },
     quickPillIcon: {
-        marginRight: 6,
+        marginRight: spacing.xsPlus,
     },
     quickPillText: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
-        color: '#5A43B5',
+        color: colors.brandPurpleDark,
+        fontFamily: fontFamilies.body,
     },
     ctaRow: {
         flexDirection: 'row',
-        gap: 10,
-        paddingHorizontal: 16,
-        paddingTop: 6,
+        gap: spacing.smPlus,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xsPlus,
     },
     ticketButton: {
         flex: 1.2,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#6B57D0',
-        paddingVertical: 12,
-        borderRadius: 24,
+        backgroundColor: colors.brandIndigo,
+        paddingVertical: spacing.md,
+        borderRadius: radius.hero,
     },
     ticketButtonDisabled: {
-        backgroundColor: '#9A8ED8',
+        backgroundColor: colors.brandMuted,
     },
     ticketIcon: {
-        marginRight: 6,
+        marginRight: spacing.xsPlus,
     },
     ticketText: {
-        fontSize: 15,
+        fontSize: fontSizes.lg,
         fontWeight: '700',
-        color: '#fff',
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
     calendarButton: {
         width: 44,
         height: 44,
-        borderRadius: 22,
+        borderRadius: radius.xxl,
         borderWidth: 1.5,
-        borderColor: '#ef4444',
-        backgroundColor: '#FFF5F6',
+        borderColor: colors.badgeAlert,
+        backgroundColor: colors.surfaceRose,
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: '#000',
@@ -866,55 +871,58 @@ const styles = StyleSheet.create({
     shareButton: {
         width: 44,
         height: 44,
-        borderRadius: 22,
+        borderRadius: radius.xxl,
         borderWidth: 1,
-        borderColor: '#C9B8FF',
-        backgroundColor: '#fff',
+        borderColor: colors.borderAccent,
+        backgroundColor: colors.white,
         alignItems: 'center',
         justifyContent: 'center',
     },
     tabBarWrap: {
-        paddingHorizontal: 16,
-        marginTop: 12,
+        paddingHorizontal: spacing.lg,
+        marginTop: spacing.md,
     },
     tabBarGradient: {
-        borderRadius: 24,
-        paddingVertical: 6,
-        paddingHorizontal: 4,
+        borderRadius: radius.hero,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.xs,
     },
     contentContainer: {
         flex: 1,
-        paddingHorizontal: 16,
-        paddingTop: 4,
-        paddingBottom: 24,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.xs,
+        paddingBottom: spacing.xxl,
         backgroundColor: 'transparent',
     },
     bodyText: {
-        fontSize: 14,
-        color: '#2f2f2f',
-        lineHeight: 20,
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
     },
     mediaSection: {
-        paddingHorizontal: 16,
-        paddingTop: 8,
-        paddingBottom: 24,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.xxl,
     },
     vettedInfoText: {
-        fontSize: 14,
-        color: '#2E7D32',
+        fontSize: fontSizes.base,
+        color: colors.success,
         fontWeight: '500',
+        fontFamily: fontFamilies.body,
     },
     infoCardText: {
-        fontSize: 14,
-        color: '#333',
-        lineHeight: 20,
-        marginBottom: 8,
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
+        lineHeight: lineHeights.md,
+        marginBottom: spacing.sm,
+        fontFamily: fontFamilies.body,
     },
     infoCardButton: {
-        backgroundColor: '#6B57D0',
-        paddingVertical: 8,
-        paddingHorizontal: HORIZONTAL_PADDING,
-        borderRadius: 24,
+        backgroundColor: colors.brandIndigo,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.hero,
         alignSelf: 'flex-start',
         shadowColor: '#000',
         shadowOpacity: 0.1,
@@ -923,53 +931,55 @@ const styles = StyleSheet.create({
         elevation: 2,
     },
     infoCardButtonText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#fff',
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
     tagPill: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 3,
-        paddingHorizontal: 12,
-        borderRadius: 999,
-        marginRight: 8,
-        marginBottom: 8,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.pill,
+        marginRight: spacing.sm,
+        marginBottom: spacing.sm,
         borderWidth: 1,
     },
     tagWrap: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        paddingTop: 6,
+        paddingTop: spacing.xsPlus,
     },
     tagText: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     tagMorePill: {
-        backgroundColor: '#F4F4F7',
-        borderColor: '#DADAE6',
+        backgroundColor: colors.surfaceSubtle,
+        borderColor: colors.borderMuted,
     },
     tagMoreText: {
-        color: '#6B7280',
+        color: colors.textSlate,
     },
 });
 
 const markdownStyles = {
     heading1: {
-        marginTop: 20,
+        marginTop: spacing.xl,
     },
     heading2: {
-        marginTop: 20,
+        marginTop: spacing.xl,
     },
     bullet_list: {
-        marginTop: 8,
+        marginTop: spacing.sm,
     },
     list_item: {
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
     paragraph: {
-        marginBottom: 12,
+        marginBottom: spacing.md,
     },
 };
 

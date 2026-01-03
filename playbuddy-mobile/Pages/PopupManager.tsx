@@ -12,10 +12,11 @@ const LEGACY_SNOOZE_KEY = 'edgeplay_modal_snooze';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_SNOOZE_MS = 14 * DAY_MS;
+const RATE_APP_MIN_DELAY_MS = __DEV__ ? 5 * 1000 : 5 * DAY_MS; // dev-only fast path for testing
 
 const POPUP_SETTINGS = {
     whatsapp_group: { minDelayMs: 3 * DAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
-    rate_app: { minDelayMs: 5 * DAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
+    rate_app: { minDelayMs: RATE_APP_MIN_DELAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
     newsletter_signup: { minDelayMs: 7 * DAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
 } as const;
 

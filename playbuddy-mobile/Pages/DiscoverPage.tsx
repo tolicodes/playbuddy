@@ -15,6 +15,7 @@ import { Badge } from 'react-native-paper';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { UE } from '../userEventTypes';
 import { logEvent } from '../Common/hooks/logger';
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
 
 type MenuItem = { title: string; icon: string; route: string; badge?: boolean };
 type MenuGroup = { title: string; items: MenuItem[]; variant?: 'default' | 'evenMore' };
@@ -107,7 +108,7 @@ export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPag
                                         <FAIcon
                                             name={item.icon}
                                             size={20}
-                                            color={isDeals ? '#333' : '#555'}
+                                            color={isDeals ? colors.textPrimary : colors.textMuted}
                                         />
                                     </View>
                                     <Text style={[styles.menuText, isDeals && styles.dealsText]}>{item.title}</Text>
@@ -120,7 +121,7 @@ export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPag
                                         <FAIcon
                                             name="chevron-right"
                                             size={12}
-                                            color={isDeals ? '#b08a00' : '#b0b0b0'}
+                                            color={isDeals ? '#b08a00' : colors.textSubtle}
                                         />
                                     </View>
                                 </TouchableOpacity>
@@ -146,9 +147,9 @@ export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPag
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f6f7f9',
-        paddingTop: 40,
-        paddingHorizontal: 16,
+        backgroundColor: colors.surfaceMuted,
+        paddingTop: spacing.jumbo,
+        paddingHorizontal: spacing.lg,
     },
     title: {
         fontSize: 18,
@@ -158,32 +159,29 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     group: {
-        marginBottom: 18,
+        marginBottom: spacing.lgPlus,
     },
     groupTitle: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         letterSpacing: 1,
         textTransform: 'uppercase',
-        color: '#7c7c7c',
-        marginBottom: 8,
+        color: colors.textSecondary,
+        marginBottom: spacing.sm,
         marginLeft: 4,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     groupTitleEvenMore: {
         color: '#8a6d2f',
         letterSpacing: 1.2,
     },
     groupCard: {
-        borderRadius: 12,
+        borderRadius: radius.md,
         overflow: 'hidden',
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#ececec',
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 8,
+        borderColor: colors.borderLight,
+        ...shadows.card,
     },
     groupCardEvenMore: {
         backgroundColor: '#fffaf0',
@@ -194,10 +192,10 @@ const styles = StyleSheet.create({
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+        paddingVertical: spacing.mdPlus,
+        paddingHorizontal: spacing.lg,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: colors.borderSubtle,
     },
     menuItemEvenMore: {
         borderBottomColor: '#f3e6cf',
@@ -209,20 +207,21 @@ const styles = StyleSheet.create({
     iconWrap: {
         width: 34,
         height: 34,
-        borderRadius: 10,
-        backgroundColor: '#f2f4f7',
+        borderRadius: radius.smPlus,
+        backgroundColor: colors.surfaceSubtle,
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 12,
+        marginRight: spacing.md,
     },
     iconWrapEvenMore: {
         backgroundColor: '#f7efe1',
     },
     menuText: {
-        fontSize: 16,
-        color: '#333',
+        fontSize: fontSizes.xl,
+        color: colors.textPrimary,
         fontWeight: '500',
         flex: 1,
+        fontFamily: fontFamilies.body,
     },
     dealsItem: {
         backgroundColor: '#fff8d6',
@@ -239,16 +238,16 @@ const styles = StyleSheet.create({
     },
     badge: {
         alignSelf: 'flex-end',
-        marginRight: 8,
+        marginRight: spacing.sm,
     },
     modalScroll: {
         flex: 1,
-        backgroundColor: '#f6f7f9',
+        backgroundColor: colors.surfaceMuted,
     },
     modalContent: {
-        paddingTop: 12,
-        paddingHorizontal: 16,
-        paddingBottom: 24,
+        paddingTop: spacing.md,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.xxl,
     },
 
 });

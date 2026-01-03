@@ -19,6 +19,7 @@ import { logEvent } from '../../Common/hooks/logger';
 import type { Event } from '../../commonTypes';
 import { BadgeRow } from '../../components/EventBadgesRow';
 import { UE } from '../../Common/types/userEventTypes';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
 
 export const CARD_HEIGHT = 500;
 const IMAGE_HEIGHT = CARD_HEIGHT * 0.4;
@@ -33,12 +34,12 @@ const cardWrapperStyles = StyleSheet.create({
     container: {
         width: '100%',
         height: CARD_HEIGHT,
-        borderRadius: 12,
-        backgroundColor: '#fff',
-        marginBottom: 20,
+        borderRadius: radius.md,
+        backgroundColor: colors.white,
+        marginBottom: spacing.xl,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: '#DDD',
+        borderColor: colors.borderLight,
         shadowColor: '#000',
         shadowOpacity: 0.3,
         shadowOffset: { width: 0, height: 12 },
@@ -64,7 +65,7 @@ const cardImageStyles = StyleSheet.create({
 /** ─── DatePill ─────────────────────────────────────────────────────────────── */
 const DatePill: React.FC<{ date: string }> = ({ date }) => (
     <View style={datePillStyles.container}>
-        <Icon name="event" size={16} color="#FFF" />
+        <Icon name="event" size={16} color={colors.white} />
         <Text style={datePillStyles.text}>  {date}</Text>
     </View>
 );
@@ -76,16 +77,17 @@ const datePillStyles = StyleSheet.create({
         alignSelf: 'center',
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#6B46C1',
-        borderRadius: 14,
-        paddingVertical: 6,
-        paddingHorizontal: 16,
+        backgroundColor: colors.brandBright,
+        borderRadius: radius.md,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.lg,
         height: DATE_PILL_HEIGHT,
     },
     text: {
-        color: '#FFF',
-        fontSize: 14,
+        color: colors.white,
+        fontSize: fontSizes.base,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 });
 
@@ -97,9 +99,9 @@ const CardContent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const cardContentStyles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingHorizontal: 16,
-        paddingTop: DATE_PILL_HEIGHT / 2 + 16, // push content below pill
-        paddingBottom: 16,
+        paddingHorizontal: spacing.lg,
+        paddingTop: DATE_PILL_HEIGHT / 2 + spacing.lg, // push content below pill
+        paddingBottom: spacing.lg,
         justifyContent: 'space-between',
     },
 });
@@ -111,10 +113,11 @@ const TimeLine: React.FC<{ date: string }> = ({ date }) => (
 
 const timeLineStyles = StyleSheet.create({
     text: {
-        fontSize: 14,
-        color: '#333',
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
         textAlign: 'center',
-        marginTop: 8,
+        marginTop: spacing.sm,
+        fontFamily: fontFamilies.body,
     },
 });
 
@@ -127,11 +130,12 @@ const Title: React.FC<{ text: string }> = ({ text }) => (
 
 const titleStyles = StyleSheet.create({
     text: {
-        fontSize: 20,
+        fontSize: fontSizes.xxxl,
         fontWeight: '600',
-        color: '#111',
+        color: colors.textDeep,
         textAlign: 'center',
-        marginTop: 12,
+        marginTop: spacing.md,
+        fontFamily: fontFamilies.display,
     },
 });
 
@@ -145,11 +149,12 @@ const Subtitle: React.FC<{ text?: string }> = ({ text }) =>
 
 const subtitleStyles = StyleSheet.create({
     text: {
-        fontSize: 16,
-        color: '#666',
+        fontSize: fontSizes.xl,
+        color: colors.textMuted,
         textAlign: 'center',
-        marginTop: 4,
-        marginBottom: 12,
+        marginTop: spacing.xs,
+        marginBottom: spacing.md,
+        fontFamily: fontFamilies.body,
     },
 });
 
@@ -162,17 +167,18 @@ const PromoBadge: React.FC<{ label: string }> = ({ label }) => (
 
 const promoBadgeStyles = StyleSheet.create({
     container: {
-        backgroundColor: '#FFD700',
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
+        backgroundColor: colors.gold,
+        borderRadius: radius.sm,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
         alignSelf: 'center',
-        marginVertical: 8,
+        marginVertical: spacing.sm,
     },
     text: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         fontWeight: 'bold',
-        color: 'black',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
 });
 
@@ -185,10 +191,11 @@ const Description: React.FC<{ text: string }> = ({ text }) => (
 
 const descriptionStyles = StyleSheet.create({
     text: {
-        fontSize: 14,
-        color: '#333',
-        lineHeight: 20,
-        marginVertical: 8,
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
+        lineHeight: lineHeights.md,
+        marginVertical: spacing.sm,
+        fontFamily: fontFamilies.body,
     },
 });
 
@@ -204,16 +211,17 @@ const CTAButton: React.FC<{ label: string; onPress: () => void }> = ({
 
 const ctaButtonStyles = StyleSheet.create({
     container: {
-        backgroundColor: '#6B46C1',
-        borderRadius: 25,
-        paddingVertical: 12,
+        backgroundColor: colors.brandBright,
+        borderRadius: radius.hero,
+        paddingVertical: spacing.md,
         alignItems: 'center',
-        marginTop: 16,
+        marginTop: spacing.lg,
     },
     text: {
-        color: '#FFF',
-        fontSize: 16,
+        color: colors.white,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 });
 

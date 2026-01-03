@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../../components/styles';
 
 export const TagPill = ({ label, onRemove, variant = 'selected' }: {
     label: string;
@@ -11,7 +12,7 @@ export const TagPill = ({ label, onRemove, variant = 'selected' }: {
         <Text style={styles.tagText}>{label}</Text>
         {onRemove && (
             <TouchableOpacity onPress={onRemove} style={styles.removeIcon}>
-                <Ionicons name="close-circle" size={16} color="#999" />
+                <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
             </TouchableOpacity>
         )}
     </View>
@@ -34,79 +35,83 @@ export const Pill = ({ label, selected, onPress }: {
 const styles = StyleSheet.create({
     tagPill: {
         flexDirection: 'row',
-        backgroundColor: '#e2e2f0',
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderRadius: 20,
-        marginRight: 6,
+        backgroundColor: colors.surfaceSubtle,
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.xl,
+        marginRight: spacing.xsPlus,
         alignItems: 'center',
     },
     suggestionPill: {
         backgroundColor: '#dce5ff',
     },
     tagText: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         fontWeight: '500',
-        color: '#333',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
     removeIcon: {
-        marginLeft: 6,
+        marginLeft: spacing.xsPlus,
     },
     pillList: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: spacing.sm,
     },
     pill: {
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: '#EEE',
-        marginRight: 8,
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.xsPlus,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceSubtle,
+        marginRight: spacing.sm,
     },
     pillSelected: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: colors.accentPurple,
     },
     pillText: {
-        color: '#444',
-        fontSize: 13,
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
         fontWeight: '500',
+        fontFamily: fontFamilies.body,
     },
     pillTextSelected: {
-        color: '#FFF',
+        color: colors.white,
     },
     dropdownContainer: {
         flex: 1,
-        marginVertical: 12,
+        marginVertical: spacing.md,
     },
     dropdownLabel: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '600',
-        marginBottom: 6,
-        color: '#333',
+        marginBottom: spacing.xsPlus,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
     dropdownPillContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        gap: spacing.sm,
     },
     dropdownPill: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 999,
-        backgroundColor: '#EEE',
-        marginBottom: 8,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xsPlus,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceSubtle,
+        marginBottom: spacing.sm,
     },
     dropdownPillSelected: {
-        backgroundColor: '#7F5AF0',
+        backgroundColor: colors.accentPurple,
     },
     dropdownPillText: {
-        fontSize: 13,
+        fontSize: fontSizes.smPlus,
         fontWeight: '500',
-        color: '#444',
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
     },
     dropdownPillTextSelected: {
-        color: '#FFF',
+        color: colors.white,
     },
 });
 

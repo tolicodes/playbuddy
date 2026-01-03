@@ -3,7 +3,7 @@ import React from "react";
 import { View, TouchableOpacity, StyleSheet, Text } from "react-native";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import moment from "moment-timezone";
-import { HORIZONTAL_PADDING } from "../../../components/styles";
+import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 
 const TZ = "America/New_York";
 
@@ -67,7 +67,7 @@ export const DateStripHeader: React.FC<Props> = ({
                     accessibilityState={{ disabled: disabledPrev }}
                     testID="dateStrip-prev"
                 >
-                    <FAIcon name="chevron-left" size={18} color="#fff" />
+                    <FAIcon name="chevron-left" size={18} color={colors.white} />
                 </TouchableOpacity>
 
                 <Text style={styles.centerText} numberOfLines={1} ellipsizeMode="tail">
@@ -81,7 +81,7 @@ export const DateStripHeader: React.FC<Props> = ({
                     accessibilityLabel="Next week"
                     testID="dateStrip-next"
                 >
-                    <FAIcon name="chevron-right" size={18} color="#fff" />
+                    <FAIcon name="chevron-right" size={18} color={colors.white} />
                 </TouchableOpacity>
                 </View>
             </View>
@@ -94,7 +94,7 @@ export const DateStripHeader: React.FC<Props> = ({
                     accessibilityLabel="Jump to today"
                     testID="dateStrip-today"
                 >
-                    <FAIcon name="calendar-day" size={14} color="#fff" />
+                    <FAIcon name="calendar-day" size={14} color={colors.white} />
                     <Text style={styles.todayText}>Today</Text>
                 </TouchableOpacity>
 
@@ -106,7 +106,7 @@ export const DateStripHeader: React.FC<Props> = ({
                     <FAIcon
                         name={isExpanded ? "chevron-up" : "chevron-down"}
                         size={14}
-                        color="#fff"
+                        color={colors.white}
                     />
                 </TouchableOpacity>
             </View>
@@ -119,28 +119,28 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        paddingHorizontal: HORIZONTAL_PADDING,
-        paddingVertical: 6,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.xsPlus,
     },
     leftGroup: {
         flex: 1,
-        marginRight: 10,
+        marginRight: spacing.smPlus,
     },
     centerGroup: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
         backgroundColor: "rgba(255,255,255,0.18)",
-        borderRadius: 18,
+        borderRadius: radius.xl,
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.3)",
-        paddingHorizontal: 10,
+        paddingHorizontal: spacing.smPlus,
         height: 36,
     },
     expandButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: spacing.xxxl,
+        height: spacing.xxxl,
+        borderRadius: radius.lg,
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "rgba(255,255,255,0.2)",
@@ -148,35 +148,37 @@ const styles = StyleSheet.create({
         borderColor: "rgba(255,255,255,0.35)",
     },
     centerText: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         fontWeight: "700",
-        color: "#fff",
+        color: colors.white,
         flexShrink: 1,
         textAlign: "center",
+        fontFamily: fontFamilies.body,
     },
-    arrowBtn: { padding: 4, opacity: 1 },
+    arrowBtn: { padding: spacing.xs, opacity: 1 },
     arrowDisabled: { opacity: 0.35 },
     rightGroup: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 8,
+        gap: spacing.sm,
     },
     todayPill: {
         flexDirection: "row",
         alignItems: "center",
-        gap: 6,
-        paddingHorizontal: 10,
-        paddingVertical: 6,
-        borderRadius: 999,
+        gap: spacing.xsPlus,
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xsPlus,
+        borderRadius: radius.pill,
         backgroundColor: "rgba(255,255,255,0.2)",
         borderWidth: 1,
         borderColor: "rgba(255,255,255,0.35)",
     },
     todayText: {
-        color: "#fff",
-        fontSize: 12,
+        color: colors.white,
+        fontSize: fontSizes.sm,
         fontWeight: "600",
         letterSpacing: 0.3,
+        fontFamily: fontFamilies.body,
     },
 });
 

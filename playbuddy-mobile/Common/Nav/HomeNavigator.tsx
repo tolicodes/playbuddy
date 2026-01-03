@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { View, ActivityIndicator } from 'react-native';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { TabNavigator } from './TabNavigator';
 import { PromosEntryScreen } from '../../Pages/Entries/PromosEntryScreen';
@@ -12,6 +11,7 @@ import { NavStack } from './NavStackType';
 import AuthNav from '../../Pages/Auth/AuthNav';
 import { headerOptions } from '../Header/Header';
 import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile';
+import EventsLoadingScreen from '../../components/EventsLoadingScreen';
 
 const HomeStack = createStackNavigator();
 /**
@@ -46,6 +46,7 @@ export function HomeStackNavigator() {
         isLoading,
         isError,
         currentDeepLink,
+        hasFetchedSession,
     } = useUserContext();
 
     useEffect(() => {
@@ -100,19 +101,24 @@ export function HomeStackNavigator() {
         <PromosEntryScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
     );
 
-    if (isLoadingUserProfile) {
+    if (!hasFetchedSession || isLoadingUserProfile) {
+        const isLoggedIn = !!authUserId;
         return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                <ActivityIndicator />
-            </View>
+            <EventsLoadingScreen
+                title={isLoggedIn ? 'Loading events' : 'Loading PlayBuddy'}
+                subtitle={isLoggedIn ? 'Curating your calendar' : 'Checking your account'}
+            />
         );
     }
 
     return (
-        <HomeStack.Navigator screenOptions={{
-            headerShown: false,
-            animationEnabled: false,
-        }}>
+        <HomeStack.Navigator
+            initialRouteName={authUserId ? 'Home' : 'AuthNav'}
+            screenOptions={{
+                headerShown: false,
+                animationEnabled: false,
+            }}
+        >
             <HomeStack.Screen name="Home"
                 component={TabNavigator} />
             <HomeStack.Screen name="AuthNav"

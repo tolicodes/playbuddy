@@ -18,6 +18,7 @@ import { Image } from 'expo-image';
 import { logEvent } from "../../../Common/hooks/logger";
 import { UE } from "../../../userEventTypes";
 import { useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
+import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 
 const HeaderLoginButton = ({
     showLoginText = false,
@@ -71,7 +72,7 @@ const HeaderLoginButton = ({
         return <ActivityIndicator />;
     }
 
-    const resolvedIconColor = iconColor ?? '#007AFF';
+    const resolvedIconColor = iconColor ?? colors.linkBlue;
     const sizeValue = showLoginText ? 50 : size;
     const containerStyle = headerButton ? styles.headerButtonContainer : styles.buttonContainer;
 
@@ -112,18 +113,18 @@ const styles = StyleSheet.create({
     buttonContainer: {
         alignSelf: 'center',
         justifyContent: 'center',
-        paddingHorizontal: 20,
+        paddingHorizontal: spacing.xl,
         alignItems: 'center',
-        backgroundColor: '#007AFF',
-        padding: 10,
-        borderRadius: 10,
+        backgroundColor: colors.linkBlue,
+        padding: spacing.smPlus,
+        borderRadius: radius.smPlus,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 2,
         elevation: 3,
         // width: '100%',
-        borderColor: '#007AFF',
+        borderColor: colors.linkBlue,
         borderWidth: 2,
     },
     headerButtonContainer: {
@@ -132,8 +133,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     avatarContainer: {
-        backgroundColor: 'white',
-        borderColor: '#007AFF',
+        backgroundColor: colors.white,
+        borderColor: colors.linkBlue,
         borderWidth: 1,
         justifyContent: 'center',
         alignItems: 'center',
@@ -144,14 +145,16 @@ const styles = StyleSheet.create({
         borderRadius: 15,
     },
     initialsText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: 'bold',
-        color: '#007AFF',
+        color: colors.linkBlue,
+        fontFamily: fontFamilies.body,
     },
     loginText: {
-        color: 'white',
+        color: colors.white,
         fontWeight: 'bold',
         marginTop: 5,
+        fontFamily: fontFamilies.body,
     }
 });
 

@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, TextInput, TouchableOpacity, StyleSheet, ScrollView, Text } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
-import { HORIZONTAL_PADDING } from '../../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 
 // All analytics in EventCalendarView
 
@@ -144,12 +144,12 @@ export const TopBar = ({
                                 : topBarStyles.searchBubbleCollapsed,
                         ]}
                     >
-                        <Ionicons name="search" size={20} color="#6b6b6b" style={topBarStyles.searchIcon} />
+                        <Ionicons name="search" size={20} color={colors.textMuted} style={topBarStyles.searchIcon} />
                         <TextInput
                             ref={searchInputRef}
                             style={topBarStyles.searchInput}
                             placeholder="Search by tag or organizer"
-                            placeholderTextColor="#8a8a8a"
+                            placeholderTextColor={colors.textSecondary}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                             onFocus={handleFocus}
@@ -193,7 +193,7 @@ export const TopBar = ({
                                         <FAIcon
                                             name={iconName}
                                             size={11}
-                                            color={tone ? tone.text : '#6b6b6b'}
+                                            color={tone ? tone.text : colors.textMuted}
                                         />
                                     </View>
                                     <Text style={topBarStyles.typeaheadText}>{suggestion.label}</Text>
@@ -224,7 +224,7 @@ export const TopBar = ({
                                         borderWidth: 2,
                                     },
                                 ];
-                                const textColor = tone?.text || '#fff';
+                                const textColor = tone?.text || colors.white;
                                 return (
                                     <TouchableOpacity
                                         key={filter.id}
@@ -275,7 +275,7 @@ export const TopBar = ({
                                         borderWidth: 2,
                                     },
                                 ];
-                                const textColor = selected && !tone ? '#fff' : tone?.text || '#444';
+                                const textColor = selected && !tone ? colors.white : tone?.text || colors.textMuted;
                                 return (
                                     <TouchableOpacity
                                         key={filter.id}
@@ -327,17 +327,17 @@ export const TopBar = ({
 const topBarStyles = StyleSheet.create({
     topBar: {
         flexDirection: 'column',
-        paddingHorizontal: HORIZONTAL_PADDING,
-        paddingBottom: 10,
-        paddingTop: 10,
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.smPlus,
+        paddingTop: spacing.smPlus,
         backgroundColor: 'transparent',
     },
     filterPanel: {
-        backgroundColor: '#F6F2FF',
-        borderRadius: 20,
-        padding: 12,
+        backgroundColor: colors.lavenderBackground,
+        borderRadius: radius.xl,
+        padding: spacing.md,
         borderWidth: 1,
-        borderColor: '#E5DFF9',
+        borderColor: colors.borderLavender,
         shadowColor: '#000',
         shadowOpacity: 0.06,
         shadowOffset: { width: 0, height: 2 },
@@ -358,11 +358,11 @@ const topBarStyles = StyleSheet.create({
         justifyContent: 'center',
     },
     typeahead: {
-        marginTop: 8,
-        backgroundColor: '#fff',
-        borderRadius: 12,
+        marginTop: spacing.sm,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
         borderWidth: 1,
-        borderColor: '#ececec',
+        borderColor: colors.borderLight,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOpacity: 0.08,
@@ -371,10 +371,10 @@ const topBarStyles = StyleSheet.create({
         elevation: 4,
     },
     typeaheadItem: {
-        paddingHorizontal: 12,
-        paddingVertical: 10,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.smPlus,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: colors.borderSubtle,
         flexDirection: 'row',
         alignItems: 'center',
     },
@@ -384,26 +384,27 @@ const topBarStyles = StyleSheet.create({
     typeaheadIconWrap: {
         width: 24,
         height: 24,
-        borderRadius: 12,
-        backgroundColor: '#f3f4f7',
+        borderRadius: radius.md,
+        backgroundColor: colors.surfaceSubtle,
         borderWidth: 1,
         borderColor: '#e3e6ee',
         alignItems: 'center',
         justifyContent: 'center',
-        marginRight: 8,
+        marginRight: spacing.sm,
     },
     typeaheadText: {
-        fontSize: 14,
+        fontSize: fontSizes.base,
         fontWeight: '500',
-        color: '#333',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
     searchBubble: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'white',
-        borderRadius: 25,
-        paddingHorizontal: 12,
-        paddingVertical: 8,
+        backgroundColor: colors.white,
+        borderRadius: radius.hero,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
         borderWidth: 1,
         borderColor: '#e7e7ef',
     },
@@ -412,51 +413,52 @@ const topBarStyles = StyleSheet.create({
     },
     searchBubbleCollapsed: {
         width: '100%',
-        paddingVertical: 6,
+        paddingVertical: spacing.xsPlus,
     },
-    searchIcon: { marginRight: 8 },
-    searchInput: { flex: 1, fontSize: 16, color: '#333' },
+    searchIcon: { marginRight: spacing.sm },
+    searchInput: { flex: 1, fontSize: fontSizes.xl, color: colors.textPrimary, fontFamily: fontFamilies.body },
     quickFiltersRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: 8,
+        marginTop: spacing.sm,
     },
     quickFiltersScroll: {
         flex: 1,
     },
     quickFiltersContent: {
         alignItems: 'center',
-        paddingRight: 8,
+        paddingRight: spacing.sm,
     },
     chip: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 999,
-        backgroundColor: '#fff',
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xsPlus,
+        borderRadius: radius.pill,
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#e6e6e6',
-        marginRight: 8,
+        borderColor: colors.borderLight,
+        marginRight: spacing.sm,
         flexDirection: 'row',
         alignItems: 'center',
     },
     chipText: {
-        fontSize: 12,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
-        color: '#444',
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
     },
     chipSelected: {
-        backgroundColor: '#7F5AF0',
-        borderColor: '#7F5AF0',
+        backgroundColor: colors.accentPurple,
+        borderColor: colors.accentPurple,
     },
     chipIcon: {
-        marginRight: 6,
+        marginRight: spacing.xsPlus,
     },
     chipRemoveIcon: {
-        marginLeft: 6,
+        marginLeft: spacing.xsPlus,
     },
     chipMore: {
-        backgroundColor: '#f3f4f7',
+        backgroundColor: colors.surfaceSubtle,
         borderColor: '#d8dbe2',
-        marginLeft: 8,
+        marginLeft: spacing.sm,
     },
 });

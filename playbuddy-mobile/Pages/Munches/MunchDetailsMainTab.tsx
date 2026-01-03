@@ -1,6 +1,6 @@
 import React from 'react';
 import { ScrollView, View, Text, StyleSheet, Platform } from 'react-native';
-import { LAVENDER_BACKGROUND } from '../../components/styles';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
 import { LinkifyText } from './LinkifyText';
 import type { Munch } from '../../commonTypes';
 
@@ -95,12 +95,12 @@ export const MunchDetailsMainTab = ({ munch }: { munch: Munch }) => {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: 'transparent' },
-    content: { padding: 16, paddingBottom: 40 },
+    content: { padding: spacing.lg, paddingBottom: spacing.jumbo },
     headerCard: {
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
         ...Platform.select({
             ios: {
                 shadowColor: '#000',
@@ -111,40 +111,40 @@ const styles = StyleSheet.create({
             android: { elevation: 3 },
         }),
     },
-    title: { fontSize: 22, fontWeight: '700', color: '#333', marginBottom: 8 },
-    scheduleText: { fontSize: 16, color: '#4E342E' },
+    title: { fontSize: fontSizes.title, fontWeight: '700', color: colors.textPrimary, marginBottom: spacing.sm, fontFamily: fontFamilies.display },
+    scheduleText: { fontSize: fontSizes.xl, color: colors.textBrown, fontFamily: fontFamilies.body },
     descriptionCard: {
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
     },
-    sectionHeader: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 8 },
-    descriptionText: { fontSize: 16, color: '#333', lineHeight: 24 },
+    sectionHeader: { fontSize: fontSizes.xxl, fontWeight: '600', color: colors.textPrimary, marginBottom: spacing.sm, fontFamily: fontFamilies.body },
+    descriptionText: { fontSize: fontSizes.xl, color: colors.textPrimary, lineHeight: lineHeights.xl, fontFamily: fontFamilies.body },
     instructionsCard: {
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
     },
-    numberedContainer: { marginTop: 8 },
-    numberedLine: { fontSize: 16, color: '#333', lineHeight: 24, marginBottom: 6 },
-    fieldRow: { marginBottom: 12 },
-    fieldLabel: { fontSize: 14, fontWeight: '600', color: '#555', marginBottom: 4 },
-    fieldValue: { fontSize: 16, color: '#333', lineHeight: 22 },
+    numberedContainer: { marginTop: spacing.sm },
+    numberedLine: { fontSize: fontSizes.xl, color: colors.textPrimary, lineHeight: lineHeights.xl, marginBottom: spacing.xsPlus, fontFamily: fontFamilies.body },
+    fieldRow: { marginBottom: spacing.md },
+    fieldLabel: { fontSize: fontSizes.base, fontWeight: '600', color: colors.textMuted, marginBottom: spacing.xs, fontFamily: fontFamilies.body },
+    fieldValue: { fontSize: fontSizes.xl, color: colors.textPrimary, lineHeight: lineHeights.lg, fontFamily: fontFamilies.body },
     detailCard: {
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
     },
     thanksCard: {
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        padding: spacing.lg,
+        marginBottom: spacing.xl,
     },
-    thanksText: { fontSize: 16, color: '#333', lineHeight: 22, marginBottom: 8 },
-    thanksMessage: { fontSize: 16, color: '#333', lineHeight: 22 },
+    thanksText: { fontSize: fontSizes.xl, color: colors.textPrimary, lineHeight: lineHeights.lg, marginBottom: spacing.sm, fontFamily: fontFamilies.body },
+    thanksMessage: { fontSize: fontSizes.xl, color: colors.textPrimary, lineHeight: lineHeights.lg, fontFamily: fontFamilies.body },
     boldText: { fontWeight: '600' },
 });
