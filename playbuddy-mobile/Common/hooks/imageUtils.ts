@@ -11,9 +11,6 @@ export const isGifUrl = (url?: string) => {
 export const getSafeImageUrl = (url?: string) => {
     if (!url) return null;
     if (Platform.OS === 'android' && isGifUrl(url)) {
-        if (__DEV__) {
-            console.warn(`[image] skipping gif on android: ${url}`);
-        }
         return null;
     }
     return url;
@@ -28,4 +25,3 @@ export const getSmallAvatarUrl = (avatarUrl: string, size: number = 50) => {
 
     return newUrl;
 }
-
