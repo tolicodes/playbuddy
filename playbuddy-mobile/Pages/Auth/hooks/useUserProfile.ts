@@ -7,8 +7,6 @@ import { UserProfile } from './UserTypes';
 import { useOptimisticMutation } from '../../../Common/hooks/useOptimisticMutation';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect } from 'react';
 
 // We have to manually pass authUserId to avoid circular dependency
 // we need authUserId to check if user is logged in and not fetch otherwise
@@ -88,20 +86,8 @@ export const useUpdateUserProfile = (authUserId: string) => {
 export const useSkippingWelcomeScreen = () => {
     const [isSkippingWelcomeScreen, setIsSkippingWelcomeScreen] = useState<boolean>(false);
 
-    useEffect(() => {
-        const loadSkippingWelcomeScreen = async () => {
-            const savedValue = await AsyncStorage.getItem('isSkippingWelcomeScreen');
-            if (savedValue !== null) {
-                setIsSkippingWelcomeScreen(JSON.parse(savedValue));
-            }
-        };
-
-        loadSkippingWelcomeScreen();
-    }, []);
-
-    const updateSkippingWelcomeScreen = async (value: boolean) => {
+    const updateSkippingWelcomeScreen = (value: boolean) => {
         setIsSkippingWelcomeScreen(value);
-        await AsyncStorage.setItem('isSkippingWelcomeScreen', JSON.stringify(value));
     };
 
     return { isSkippingWelcomeScreen, updateSkippingWelcomeScreen };

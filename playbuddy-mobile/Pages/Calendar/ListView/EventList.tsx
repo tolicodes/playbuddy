@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     },
     sectionHeaderPill: {
         width: '100%',
-        backgroundColor: 'rgba(255,255,255,0.95)',
+        backgroundColor: '#FFFFFF',
         paddingHorizontal: 16,
         height: HEADER_HEIGHT,
         justifyContent: 'center',
