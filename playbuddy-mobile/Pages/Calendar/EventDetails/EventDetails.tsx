@@ -29,6 +29,7 @@ import { useCalendarContext } from '../hooks/CalendarContext';
 import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
 import { HORIZONTAL_PADDING } from '../../../components/styles';
 import SectionCard from './SectionCard';
 
@@ -321,17 +322,22 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         handleGetTickets();
     };
 
+    const heroImageUrl = getSafeImageUrl(selectedEvent.image_url);
+
     return (
         <>
             <View style={styles.heroWrapper}>
                 <View style={styles.heroMedia}>
                     {selectedEvent.video_url ? (
                         <VideoPlayer uri={selectedEvent.video_url} />
-                    ) : selectedEvent.image_url ? (
+                    ) : heroImageUrl ? (
                         <Image
-                            source={{ uri: selectedEvent.image_url }}
+                            source={{ uri: heroImageUrl }}
                             style={styles.heroImage}
                             contentFit="cover"
+                            cachePolicy="disk"
+                            allowDownscaling
+                            decodeFormat="rgb"
                         />
                     ) : (
                         <View style={styles.heroPlaceholder}>

@@ -30,7 +30,7 @@ import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
 import { useFetchOrganizers } from "../../Common/db-axios/useOrganizers";
 import { WishlistHeart } from "../Calendar/ListView/WishlistHeart";
-import { getSmallAvatarUrl } from "../../Common/hooks/imageUtils";
+import { getSafeImageUrl, getSmallAvatarUrl } from "../../Common/hooks/imageUtils";
 import type { Organizer } from "../../Common/types/commonTypes";
 
 type CommunityMeta = {
@@ -414,7 +414,7 @@ export const CommunitiesList = ({
     ) => {
         const isJoined = isEntityJoined(entity);
         const canFollow = entity.communityIds.length > 0;
-        const imageUrl = meta.imageUrl ? getSmallAvatarUrl(meta.imageUrl) : null;
+        const imageUrl = getSafeImageUrl(meta.imageUrl ? getSmallAvatarUrl(meta.imageUrl) : undefined);
         const badgeLabel = options.badgeLabel || getEventCountLabel(meta.eventCount);
         return (
             <TouchableOpacity
@@ -428,7 +428,14 @@ export const CommunitiesList = ({
                 onPress={() => handlePressEntity(entity)}
             >
                 {imageUrl ? (
-                    <Image source={{ uri: imageUrl }} style={styles.imageTileImage} contentFit="cover" />
+                    <Image
+                        source={{ uri: imageUrl }}
+                        style={styles.imageTileImage}
+                        contentFit="cover"
+                        cachePolicy="disk"
+                        allowDownscaling
+                        decodeFormat="rgb"
+                    />
                 ) : isOrganizer ? (
                     <LinearGradient
                         colors={["#F1ECFF", "#D7CCFF"]}

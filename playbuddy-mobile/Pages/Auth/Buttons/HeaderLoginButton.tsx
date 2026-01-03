@@ -1,6 +1,15 @@
 import { useNavigation } from "@react-navigation/native";
 import React from "react";
-import { TouchableOpacity, View, Text, StyleSheet, ActivityIndicator } from "react-native";
+import {
+    TouchableOpacity,
+    View,
+    Text,
+    StyleSheet,
+    ActivityIndicator,
+    StyleProp,
+    ViewStyle,
+    TextStyle,
+} from "react-native";
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { NavStack } from "../../../Common/Nav/NavStackType";
 import { useUserContext } from "../hooks/UserContext";
@@ -16,7 +25,11 @@ const HeaderLoginButton = ({
     headerButton = false,
     register = false,
     onPressButton,
-    entityToAccess = 'events'
+    entityToAccess = 'events',
+    buttonStyle,
+    textStyle,
+    iconColor,
+    avatarStyle,
 }: {
     showLoginText?: boolean;
     size?: number;
@@ -24,6 +37,10 @@ const HeaderLoginButton = ({
     register?: boolean;
     onPressButton?: () => void;
     entityToAccess?: string;
+    buttonStyle?: StyleProp<ViewStyle>;
+    textStyle?: StyleProp<TextStyle>;
+    iconColor?: string;
+    avatarStyle?: StyleProp<ViewStyle>;
 }) => {
     const { navigate } = useNavigation<NavStack>();
     const { authUserId, userProfile, isLoadingUserProfile, isLoadingAuth, isProfileComplete } = useUserContext();
@@ -54,31 +71,36 @@ const HeaderLoginButton = ({
         return <ActivityIndicator />;
     }
 
+    const resolvedIconColor = iconColor ?? '#007AFF';
+    const sizeValue = showLoginText ? 50 : size;
+    const containerStyle = headerButton ? styles.headerButtonContainer : styles.buttonContainer;
+
     return (
         <TouchableOpacity
-            style={headerButton ? styles.headerButtonContainer : styles.buttonContainer}
+            style={[containerStyle, buttonStyle]}
             onPress={handlePressHeaderButton}
         >
             <View style={[
                 styles.avatarContainer,
                 {
-                    width: showLoginText ? 50 : size,
-                    height: showLoginText ? 50 : size,
-                    borderRadius: size / 2
-                }
+                    width: sizeValue,
+                    height: sizeValue,
+                    borderRadius: sizeValue / 2,
+                },
+                avatarStyle,
             ]}>
                 {authUserId ? (
                     avatarUrl ? (
                         <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
                     ) : (
-                        <Text style={styles.initialsText}>{initials}</Text>
+                        <Text style={[styles.initialsText, { color: resolvedIconColor }]}>{initials}</Text>
                     )
                 ) : (
-                    <FAIcon name="user" size={showLoginText ? 40 : 20} color="#007AFF" />
+                    <FAIcon name="user" size={showLoginText ? 40 : 20} color={resolvedIconColor} />
                 )}
             </View>
             {showLoginText && (
-                <Text style={styles.loginText}>
+                <Text style={[styles.loginText, textStyle]}>
                     {register ? 'Register or Login' : 'Login'}
                 </Text>
             )}

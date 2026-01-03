@@ -10,7 +10,7 @@ import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
 import { useCalendarContext } from '../hooks/CalendarContext';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { formatDate } from '../hooks/calendarUtils';
-import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
+import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
 import { BORDER_LAVENDER } from '../../../components/styles';
@@ -94,7 +94,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
     const promoCode = getEventPromoCodes(item)?.[0];
     const formattedDate = formatDate(item, fullDate);
     const itemIsOnWishlist = isOnWishlist(item.id);
-    const imageUrl = item.image_url && getSmallAvatarUrl(item.image_url);
+    const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const vetted = item.vetted;
     const locationLabel = item.location || item.city || item.region || '';
     type TagChip = { label: string; kind: 'type' | 'level' | 'vetted' | 'tag' };
@@ -204,7 +204,14 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
                     <View style={styles.poster}>
                         {imageUrl ? (
-                            <Image source={{ uri: imageUrl }} style={styles.posterImage} contentFit="cover" />
+                            <Image
+                                source={{ uri: imageUrl }}
+                                style={styles.posterImage}
+                                contentFit="cover"
+                                cachePolicy="disk"
+                                allowDownscaling
+                                decodeFormat="rgb"
+                            />
                         ) : (
                             <View style={styles.posterPlaceholder}>
                                 {placeHolderImage}
