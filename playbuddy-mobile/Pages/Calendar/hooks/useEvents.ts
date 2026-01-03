@@ -47,6 +47,7 @@ export const useFetchPrivateEvents = () => {
     const { data: privateEvents = [], isLoading: isLoadingPrivateEvents } = useQuery({
         queryKey: ['events', authUserId],
         queryFn: async () => {
+            console.log('[events] GET', API_URL.events, 'visibility=private');
             return axios.get<Event[]>(API_URL.events, { params: { visibility: 'private' } }).then(response => response.data);
         },
         enabled: !!authUserId,

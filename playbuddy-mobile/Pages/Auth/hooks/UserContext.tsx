@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
     signOut,
     phoneSendOtp,
@@ -124,6 +124,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         !!userProfile?.selected_location_area_id && !!userProfile?.selected_community_id;
 
     const { isSkippingWelcomeScreen, updateSkippingWelcomeScreen } = useSkippingWelcomeScreen();
+    const prevSessionRef = useRef<Session | null>(null);
+
+    useEffect(() => {
+        if (prevSessionRef.current && !session) {
+            updateSkippingWelcomeScreen(false);
+        }
+        prevSessionRef.current = session;
+    }, [session, updateSkippingWelcomeScreen]);
 
     const analyticsProps = {
         auth_user_id: session?.user?.id || null,

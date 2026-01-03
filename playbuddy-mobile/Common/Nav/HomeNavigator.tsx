@@ -45,7 +45,6 @@ export function HomeStackNavigator() {
         isProfileComplete,
         isLoading,
         isError,
-        isSkippingWelcomeScreen,
         currentDeepLink,
     } = useUserContext();
 
@@ -84,12 +83,6 @@ export function HomeStackNavigator() {
             return;
         }
 
-        // Whether or not they have a profile, if they skipped the welcome screen, navigate to Home
-        if (isSkippingWelcomeScreen) {
-            navigation.navigate('Home');
-            return;
-        }
-
         // If the user doesn't have a profile, navigate to Welcome
         if (!authUserId) {
             navigation.navigate('AuthNav', { screen: 'Welcome' });
@@ -101,7 +94,7 @@ export function HomeStackNavigator() {
         // important: we do NOT include isPromoScreenViewed in the dependency array
         // because we want to navigate to Home only if it starts out that way
         // not if it's transitioning from promo by an "Event Details" click
-    }, [isLoadingUserProfile, authUserId, isProfileComplete, isLoading, isError, isSkippingWelcomeScreen, currentDeepLink, navigation]);
+    }, [isLoadingUserProfile, authUserId, isProfileComplete, isLoading, isError, currentDeepLink, navigation]);
 
     const PromoScreenWrap = () => (
         <PromosEntryScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />

@@ -7,7 +7,8 @@ export const API_BASE_URL_LOCAL = 'http://localhost:8080'
 export const API_BASE_URL_LOCAL_ANDROID = 'http://10.0.2.2:8080'
 
 
-export const API_BASE_URL = process.env.NODE_ENV === 'production' ? API_BASE_URL_PROD : API_BASE_URL_LOCAL;
+// export const API_BASE_URL = process.env.NODE_ENV === 'production' ? API_BASE_URL_PROD : API_BASE_URL_LOCAL;
+export const API_BASE_URL = process.env.NODE_ENV === 'production' ? API_BASE_URL_PROD : API_BASE_URL_LOCAL_ANDROID;
 
 
 const API_BASE_URL_PROD_HTTP = API_BASE_URL_PROD.replace('https://', 'http://')
