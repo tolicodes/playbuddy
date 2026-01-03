@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 
 import { MyCommunitiesSection } from './MyCommunitiesSection';
@@ -6,17 +6,38 @@ import { JoinCommunitySection } from './JoinCommunitySection';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { useCommonContext } from '../../Common/hooks/CommonContext';
 
 type TabKey = 'favorite' | 'all';
 
 const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }) => {
-    const [activeTab, setActiveTab] = useState<TabKey>('favorite');
+    const { myCommunities, isLoadingCommunities } = useCommonContext();
+    const hasMyCommunities = useMemo(() => {
+        if (type === 'organizer') {
+            return myCommunities.myOrganizerPublicCommunities.length > 0;
+        }
+        return (
+            myCommunities.myPrivateCommunities.length +
+            myCommunities.myOrganizerPrivateCommunities.length
+        ) > 0;
+    }, [myCommunities, type]);
+    const [activeTab, setActiveTab] = useState<TabKey>(() => (
+        !isLoadingCommunities && !hasMyCommunities ? 'all' : 'favorite'
+    ));
+    const [hasUserSelectedTab, setHasUserSelectedTab] = useState(false);
     const analyticsProps = useAnalyticsProps();
 
     const tabs = [
         { name: 'My Communities', value: 'favorite' },
         { name: 'All Communities', value: 'all' },
     ];
+
+    useEffect(() => {
+        if (hasUserSelectedTab || isLoadingCommunities) return;
+        if (!hasMyCommunities && activeTab === 'favorite') {
+            setActiveTab('all');
+        }
+    }, [activeTab, hasMyCommunities, hasUserSelectedTab, isLoadingCommunities]);
 
     return (
         <View style={[styles.container]}>
@@ -27,6 +48,7 @@ const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }
                         <TouchableOpacity
                             key={tab.value}
                             onPress={() => {
+                                setHasUserSelectedTab(true);
                                 setActiveTab(tab.value as TabKey);
                                 logEvent(UE.CommunityTabNavigatorTabClicked, {
                                     ...analyticsProps,

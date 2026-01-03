@@ -22,7 +22,6 @@ import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import type { DeepLink } from '../../commonTypes';
 import DeepLinkNow from '@deeplinknow/react-native';
-import { useAnalyticsProps } from '../hooks/useAnalytics';
 
 
 const CLIPBOARD_CHECK_KEY = 'hasCheckedDeepLinkClipboard';
@@ -64,8 +63,6 @@ const deepLinkNowInit = async () => {
 }
 
 export default function DeepLinkHandler() {
-    const analyticsProps = useAnalyticsProps();
-
     // useEffect(() => {
     //     deepLinkNowInit();
     // }, []);
@@ -97,9 +94,10 @@ export default function DeepLinkHandler() {
             }
             const normalizedUrl = url.trim();
             const dl = matchDeepLink(normalizedUrl);
-            console.log(`DeepLinkHandler: ${url} -> ${dl?.slug}`);
 
             if (!dl) return;
+
+            console.log(`DeepLinkHandler: ${normalizedUrl} -> ${dl.slug}`);
 
             queue.current = null;
 
@@ -116,8 +114,14 @@ export default function DeepLinkHandler() {
             handledUrls.current.add(normalizedUrl);
             handledDeepLinks.current.add(dl.id);
 
+            const deepLinkAnalyticsProps = {
+                auth_user_id: authUserId || null,
+                deep_link_id: dl.id,
+                promo_code_id: dl.featured_promo_code?.id ?? null,
+            };
+
             logEvent(UE.DeepLinkDetected, {
-                ...analyticsProps,
+                ...deepLinkAnalyticsProps,
                 url: normalizedUrl,
                 source,
             });
@@ -126,7 +130,7 @@ export default function DeepLinkHandler() {
                 if (!attributedDeepLinks.current.has(dl.id)) {
                     attributedDeepLinks.current.add(dl.id);
                     addDeepLink.mutate(dl.id);
-                    logEvent(UE.DeepLinkAttributed, analyticsProps);
+                    logEvent(UE.DeepLinkAttributed, deepLinkAnalyticsProps);
                 }
             }
         },

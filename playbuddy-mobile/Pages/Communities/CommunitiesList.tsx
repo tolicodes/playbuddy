@@ -37,6 +37,8 @@ type CommunityMeta = {
     eventCount: number;
     upcomingWeekCount: number;
     imageUrl?: string;
+    hasOrganizerPromo: boolean;
+    hasEventPromo: boolean;
 };
 
 type CommunityEntity = {
@@ -68,6 +70,16 @@ const getEventCountLabel = (count: number) => {
     if (count === 0) return "No events";
     return `${count} ${count === 1 ? "event" : "events"}`;
 };
+
+const hasOrganizerPromo = (events: Event[]) =>
+    events.some((event) =>
+        event.organizer?.promo_codes?.some((code) => code.scope === "organizer")
+    );
+
+const hasEventPromo = (events: Event[]) =>
+    events.some((event) =>
+        event.promo_codes?.some((code) => code.scope === "event")
+    );
 
 export const CommunitiesList = ({
     title,
@@ -296,6 +308,8 @@ export const CommunitiesList = ({
                 eventCount: events.length,
                 upcomingWeekCount,
                 imageUrl,
+                hasOrganizerPromo: hasOrganizerPromo(events),
+                hasEventPromo: hasEventPromo(events),
             });
         }
 
@@ -335,23 +349,57 @@ export const CommunitiesList = ({
 
     const spotlightCommunities = useMemo(() => {
         if (!isOrganizer) return [];
-        return [...filteredEntities]
+        const candidates = [...filteredEntities]
             .map((entity) => ({
                 entity,
                 meta: entityMeta.get(entity.id),
             }))
             .filter((entry): entry is { entity: CommunityEntity; meta: CommunityMeta } => !!entry.meta)
-            .filter((entry) => !SPOTLIGHT_EXCLUDED.has(normalizeOrganizerName(entry.entity.name)))
-            .sort((a, b) => {
-                if (b.meta.upcomingWeekCount !== a.meta.upcomingWeekCount) {
-                    return b.meta.upcomingWeekCount - a.meta.upcomingWeekCount;
+            .filter((entry) => !SPOTLIGHT_EXCLUDED.has(normalizeOrganizerName(entry.entity.name)));
+
+        const sortedCandidates = [...candidates].sort((a, b) => {
+            if (b.meta.upcomingWeekCount !== a.meta.upcomingWeekCount) {
+                return b.meta.upcomingWeekCount - a.meta.upcomingWeekCount;
+            }
+            if (b.meta.eventCount !== a.meta.eventCount) {
+                return b.meta.eventCount - a.meta.eventCount;
+            }
+            return a.entity.name.localeCompare(b.entity.name);
+        });
+
+        const organizerPromoCandidates = sortedCandidates.filter(
+            (entry) => entry.meta.hasOrganizerPromo
+        );
+        const spotlight = organizerPromoCandidates.slice(0, 5);
+        const selectedIds = new Set(spotlight.map((entry) => entry.entity.id));
+
+        if (spotlight.length < 5) {
+            for (const entry of sortedCandidates) {
+                if (spotlight.length >= 5) break;
+                if (selectedIds.has(entry.entity.id)) continue;
+                spotlight.push(entry);
+                selectedIds.add(entry.entity.id);
+            }
+        }
+
+        if (!spotlight.some((entry) => entry.meta.hasEventPromo)) {
+            const eventPromoCandidate =
+                organizerPromoCandidates.find((entry) => entry.meta.hasEventPromo) ||
+                sortedCandidates.find((entry) => entry.meta.hasEventPromo);
+            if (eventPromoCandidate && !selectedIds.has(eventPromoCandidate.entity.id)) {
+                if (spotlight.length < 5) {
+                    spotlight.push(eventPromoCandidate);
+                } else {
+                    const replaceIndex = spotlight.findIndex(
+                        (entry) => !entry.meta.hasOrganizerPromo
+                    );
+                    spotlight[replaceIndex >= 0 ? replaceIndex : spotlight.length - 1] =
+                        eventPromoCandidate;
                 }
-                if (b.meta.eventCount !== a.meta.eventCount) {
-                    return b.meta.eventCount - a.meta.eventCount;
-                }
-                return a.entity.name.localeCompare(b.entity.name);
-            })
-            .slice(0, 3);
+            }
+        }
+
+        return spotlight;
     }, [entityMeta, filteredEntities, isOrganizer]);
 
     const getMetaForEntity = useCallback(
@@ -361,6 +409,8 @@ export const CommunitiesList = ({
                     eventCount: 0,
                     upcomingWeekCount: 0,
                     imageUrl: undefined,
+                    hasOrganizerPromo: false,
+                    hasEventPromo: false,
                 }
             );
         },
