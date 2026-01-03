@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useRef } from "react";
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, SafeAreaView } from "react-native";
+import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, SafeAreaView, Platform, StatusBar } from "react-native";
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import HeaderLoginButton from "../../Pages/Auth/Buttons/HeaderLoginButton";
 import { NavStack } from "../Nav/NavStackType";
@@ -136,6 +136,7 @@ export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack 
 const styles = StyleSheet.create({
     headerContainer: {
         backgroundColor: 'transparent',
+        paddingTop: Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0,
     },
     headerInnerContainer: {
         flexDirection: 'row',
