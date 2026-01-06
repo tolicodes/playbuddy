@@ -38,7 +38,12 @@ export type NavStackProps = {
     // Promotional & Events
     'PromoScreen': undefined;
     'Weekly Picks': undefined;
+    'Weekly Picks Admin': undefined;
     'Popular Events': undefined;
+    'Admin': undefined;
+    'Import URLs': undefined;
+    'Organizer Admin': undefined;
+    'Event Admin': undefined;
     'Event Details': {
         selectedEvent: EventWithMetadata;
         title: string;

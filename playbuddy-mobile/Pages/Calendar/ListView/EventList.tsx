@@ -114,13 +114,13 @@ const styles = StyleSheet.create({
         marginTop: spacing.xs,
     },
     sectionHeaderOuterWrapper: {
-        paddingBottom: spacing.md,
+        paddingBottom: spacing.lg,
         paddingTop: spacing.md,
         marginHorizontal: spacing.lg,
     },
     sectionHeaderPill: {
         width: '100%',
-        backgroundColor: colors.white,
+        backgroundColor: colors.surfaceWhiteFrosted,
         paddingHorizontal: spacing.lg,
         height: HEADER_HEIGHT,
         justifyContent: 'center',

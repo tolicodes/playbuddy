@@ -5,7 +5,6 @@ import moment from 'moment-timezone';
 import { useFetchWishlistByCode } from "../../common/db-axios/useWishlist";
 import { useFetchEvents, useToggleWeeklyPickEvent } from "../../common/db-axios/useEvents";
 import { Event } from "../../common/types/commonTypes";
-import WeeklyPickWhatsappMessage from "./WeeklyPicksWhasappMessage";
 
 // Base URLs
 const PB_SHARE_CODE = "DCK9PD";
@@ -86,7 +85,6 @@ export default function WeeklyPicksScreen() {
 
             {/* Scrollable list of weeks */}
             <div style={styles.content}>
-                <WeeklyPickWhatsappMessage events={events!} />
                 {sortedWeekKeys.length === 0 ? (
                     <p style={styles.noEventsText}>No events available.</p>
                 ) : (

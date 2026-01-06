@@ -14,16 +14,25 @@ import { MunchesScreen } from '../../Pages/Munches/MunchesScreen'
 import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
 import { Facilitators } from "../../Pages/Facilitators/Facilitators";
 import PopularEvents from "../../Pages/EventLists/PopularEvents";
+import { AdminScreen } from "../../Pages/Admin/AdminScreen";
+import ImportEventURLsScreen from "../../Pages/Admin/ImportEventURLsScreen";
+import WeeklyPicksAdminScreen from "../../Pages/Admin/WeeklyPicksAdminScreen";
+import OrganizerAdminScreen from "../../Pages/Admin/OrganizerAdminScreen";
+import EventAdminScreen from "../../Pages/Admin/EventAdminScreen";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { colors } from "../../components/styles";
 import { navigateToHome } from "./navigationHelpers";
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { ADMIN_EMAILS } from "../../config";
 
 const Drawer = createDrawerNavigator();
 
 export const DrawerNav = () => {
     const analyticsProps = useAnalyticsProps();
+    const { userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
     const getIcon = (name: string) => {
         const getter = ({ color, size }: { color: string, size: number }) => {
@@ -160,6 +169,56 @@ export const DrawerNav = () => {
                 })}
                 listeners={onPressItemLogEventListener('Moar')}
             />
+
+            {isAdmin && (
+                <>
+                    <Drawer.Screen
+                        name="Admin"
+                        component={AdminScreen}
+                        options={({ navigation }) => ({
+                            drawerIcon: getIcon('user-shield'),
+                            ...headerOptions({ navigation, title: 'Admin' }),
+                        })}
+                        listeners={onPressItemLogEventListener('Admin')}
+                    />
+                    <Drawer.Screen
+                        name="Import URLs"
+                        component={ImportEventURLsScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Import URLs' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                    />
+                    <Drawer.Screen
+                        name="Weekly Picks Admin"
+                        component={WeeklyPicksAdminScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Weekly Picks Admin' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                    />
+                    <Drawer.Screen
+                        name="Organizer Admin"
+                        component={OrganizerAdminScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Organizer Admin' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                    />
+                    <Drawer.Screen
+                        name="Event Admin"
+                        component={EventAdminScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Event Admin' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                    />
+                </>
+            )}
 
 
         </Drawer.Navigator>

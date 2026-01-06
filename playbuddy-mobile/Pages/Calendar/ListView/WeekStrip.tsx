@@ -1,22 +1,25 @@
 // screens/Calendar/WeekStrip.tsx
-import React, { useMemo, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
     View,
     TouchableOpacity,
     Text,
     StyleSheet,
     Dimensions,
-    PanResponder,
+    ScrollView,
+    NativeSyntheticEvent,
+    NativeScrollEvent,
 } from "react-native";
 import moment from "moment-timezone";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const SWIPE_TRIGGER_PX = 28;
 
 type Props = {
+    prevWeekDays: Date[];
     weekDays: Date[];   // visible week
+    nextWeekDays: Date[];
 
     selectedDay: Date;
     onChangeSelectedDay: (d: Date) => void;
@@ -32,7 +35,9 @@ type Props = {
 };
 
 export const WeekStrip: React.FC<Props> = ({
+    prevWeekDays,
     weekDays,
+    nextWeekDays,
     selectedDay,
     onChangeSelectedDay,
     isDaySelectable,
@@ -43,6 +48,8 @@ export const WeekStrip: React.FC<Props> = ({
 }) => {
     const pageWidth = containerWidth || SCREEN_WIDTH;
     const longPressTriggeredRef = useRef(false);
+    const scrollRef = useRef<ScrollView>(null);
+    const weekAnchor = weekDays[0]?.getTime() ?? 0;
 
     const isSameDayNY = (a: Date, b: Date) =>
         moment(a).tz(TZ).isSame(moment(b).tz(TZ), "day");
@@ -50,28 +57,19 @@ export const WeekStrip: React.FC<Props> = ({
     const isTodayNY = (d: Date) =>
         moment(d).tz(TZ).isSame(moment().tz(TZ), "day");
 
-    const panResponder = useMemo(() => {
-        if (!onSwipePrevDay && !onSwipeNextDay) return null;
-        return PanResponder.create({
-            onMoveShouldSetPanResponder: (_evt, gesture) => {
-                const { dx, dy } = gesture;
-                if (Math.abs(dx) < 12) return false;
-                return Math.abs(dx) > Math.abs(dy);
-            },
-            onMoveShouldSetPanResponderCapture: (_evt, gesture) => {
-                const { dx, dy } = gesture;
-                if (Math.abs(dx) < 12) return false;
-                return Math.abs(dx) > Math.abs(dy);
-            },
-            onPanResponderRelease: (_evt, gesture) => {
-                if (gesture.dx <= -SWIPE_TRIGGER_PX) {
-                    onSwipeNextDay?.();
-                } else if (gesture.dx >= SWIPE_TRIGGER_PX) {
-                    onSwipePrevDay?.();
-                }
-            },
-        });
-    }, [onSwipeNextDay, onSwipePrevDay]);
+    useEffect(() => {
+        scrollRef.current?.scrollTo({ x: pageWidth, animated: false });
+    }, [pageWidth, weekAnchor]);
+
+    const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const offsetX = event.nativeEvent.contentOffset.x;
+        const pageIndex = Math.round(offsetX / pageWidth);
+        if (pageIndex === 0) {
+            onSwipePrevDay?.();
+        } else if (pageIndex === 2) {
+            onSwipeNextDay?.();
+        }
+    };
 
     const renderWeek = (days: Date[]) => (
         <View style={[s.weekStrip, { width: pageWidth }]}>
@@ -136,33 +134,51 @@ export const WeekStrip: React.FC<Props> = ({
     );
 
     return (
-        <View
-            style={{ width: pageWidth, backgroundColor: "transparent" }}
-            {...(panResponder ? panResponder.panHandlers : {})}
-        >
-            {renderWeek(weekDays)}
+        <View style={{ width: pageWidth, backgroundColor: "transparent", alignSelf: "center" }}>
+            <ScrollView
+                ref={scrollRef}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                onMomentumScrollEnd={handleMomentumEnd}
+                contentOffset={{ x: pageWidth, y: 0 }}
+                contentContainerStyle={s.scrollContainer}
+            >
+                {renderWeek(prevWeekDays)}
+                {renderWeek(weekDays)}
+                {renderWeek(nextWeekDays)}
+            </ScrollView>
         </View>
     );
 };
 
 const s = StyleSheet.create({
+    scrollContainer: {
+        alignItems: "center",
+    },
     weekStrip: {
-        width: SCREEN_WIDTH,
+        width: "100%",
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingTop: spacing.smPlus,
-        paddingBottom: 0,
-        paddingHorizontal: spacing.lg,
-        backgroundColor: "transparent",
+        alignSelf: "center",
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.xxs,
+        paddingHorizontal: spacing.xs,
+        backgroundColor: colors.surfaceWhiteStrong,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
     },
     dayCell: {
+        flex: 1,
+        minWidth: 0,
         alignItems: "center",
         justifyContent: "center",
-        paddingVertical: spacing.xsPlus,
-        paddingHorizontal: spacing.xsPlus,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.xs,
+        marginHorizontal: spacing.xxs,
         borderRadius: radius.mdPlus,
-        minWidth: 44,
         gap: spacing.xxs,
         backgroundColor: "transparent",
     },
@@ -175,18 +191,23 @@ const s = StyleSheet.create({
     daySelected: {
         backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: colors.borderLavenderAlt,
+        borderColor: colors.borderLavenderStrong,
         shadowColor: colors.black,
-        shadowOpacity: 0.12,
-        shadowRadius: 6,
-        shadowOffset: { width: 0, height: 3 },
-        elevation: 3,
+        shadowOpacity: 0.06,
+        shadowRadius: 4,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 2,
     },
-    todayRing: { borderWidth: 1, borderColor: colors.borderOnDarkBright },
-    dowText: { fontSize: fontSizes.xs, letterSpacing: 0.6, fontFamily: fontFamilies.body },
+    todayRing: { borderWidth: 1, borderColor: colors.brandPurpleDark },
+    dowText: {
+        fontSize: fontSizes.xs,
+        letterSpacing: 0.8,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+    },
     dayNum: { fontSize: fontSizes.lg, fontWeight: "600", fontFamily: fontFamilies.body },
-    textOn: { color: colors.textOnDarkStrong },
-    textOff: { color: colors.textOnDarkSubtle },
+    textOn: { color: colors.textPrimary },
+    textOff: { color: colors.textSubtle },
     textSelected: { color: colors.brandPurpleDark },
 });
 

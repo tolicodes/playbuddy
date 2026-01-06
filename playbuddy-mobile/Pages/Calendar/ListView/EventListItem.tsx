@@ -25,6 +25,9 @@ interface ListItemProps {
     fullDate?: boolean;
     attendees: Attendee[];
     isAdmin?: boolean;
+    footerContent?: React.ReactNode;
+    cardHeight?: number;
+    autoHeight?: boolean;
 }
 
 const TAG_TONES = calendarTagTones;
@@ -67,7 +70,17 @@ const TYPE_ICONS: Record<string, string> = {
     'event': 'calendar',
 };
 
-export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPadding, fullDate, attendees, isAdmin }) => {
+export const EventListItem: React.FC<ListItemProps> = ({
+    item,
+    onPress,
+    noPadding,
+    fullDate,
+    attendees,
+    isAdmin,
+    footerContent,
+    cardHeight,
+    autoHeight,
+}) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
     const [scrolling, setScrolling] = useState(false);
@@ -163,13 +176,20 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
 
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
 
+    const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
+    const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
+    const useAutoHeight = autoHeight === true;
+
     return (
-        <View style={styles.wrapper}>
-            <View style={[
-                styles.cardWrapper,
-                noPadding && styles.noPadding,
-                showApprovalBorder && styles.pendingBorder
-            ]}>
+        <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
+            <View
+                style={[
+                    styles.cardWrapper,
+                    !useAutoHeight && { height: resolvedCardHeight },
+                    noPadding && styles.noPadding,
+                    showApprovalBorder && styles.pendingBorder,
+                ]}
+            >
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
                     <View style={styles.poster}>
                         {imageUrl ? (
@@ -314,30 +334,34 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                         </View>
                     )}
                 </TouchableOpacity>
+                {footerContent && (
+                    <View style={styles.footer}>{footerContent}</View>
+                )}
             </View>
         </View>
     );
 };
 
 
-export const ITEM_HEIGHT = 288;
+export const ITEM_HEIGHT = 285;
 
 const styles = StyleSheet.create({
     // Container
-    wrapper: {
-        height: ITEM_HEIGHT,
-    },
+    wrapper: {},
     cardWrapper: {
         backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: colors.borderLavender,
+        borderColor: colors.borderLavenderSoft,
         borderRadius: radius.lg,
         overflow: 'hidden',
         marginHorizontal: spacing.lg,
         marginBottom: spacing.lg,
-        height: ITEM_HEIGHT - 16,
         position: 'relative',
         ...shadows.card,
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 3 },
+        shadowRadius: 8,
+        elevation: 3,
     },
     noPadding: {
         marginHorizontal: 0,
@@ -346,6 +370,13 @@ const styles = StyleSheet.create({
         borderColor: colors.warning,
         borderStyle: 'dotted',
         borderWidth: 3,
+    },
+    footer: {
+        borderTopWidth: 1,
+        borderTopColor: colors.borderSubtle,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        backgroundColor: colors.white,
     },
     poster: {
         height: 192,
@@ -368,13 +399,16 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        height: 90,
+        height: 110,
     },
     posterFooter: {
         position: 'absolute',
-        left: spacing.lg,
-        right: spacing.lg,
-        bottom: spacing.md,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.lg,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     posterActions: {
         position: 'absolute',
@@ -423,16 +457,16 @@ const styles = StyleSheet.create({
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         flexGrow: 1,
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.md,
+        paddingTop: spacing.sm,
         paddingBottom: spacing.sm,
     },
     metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
     },
     metaIcon: {
         marginRight: spacing.xs,
@@ -448,7 +482,7 @@ const styles = StyleSheet.create({
         color: colors.textMuted,
         fontWeight: '600',
         flexShrink: 1,
-        textAlign: 'center',
+        textAlign: 'left',
     },
     tagRowContainer: {
         flexDirection: 'row',

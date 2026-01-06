@@ -47,6 +47,8 @@ export const HomeButton = ({ navigation }: { navigation: NavigationProp<ParamLis
 // Header Title Text with Animation
 const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    const fontSize = isSmall ? fontSizes.title : fontSizes.display;
+    const lineHeight = isSmall ? fontSizes.title + 2 : fontSizes.display + 2;
 
     useEffect(() => {
         Animated.timing(fadeAnim, {
@@ -60,7 +62,7 @@ const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean 
         <Animated.View style={{ opacity: fadeAnim }}>
             <Text
                 numberOfLines={1}
-                style={[styles.headerTitleText, { fontSize: isSmall ? fontSizes.headline : fontSizes.displayLg }]}
+                style={[styles.headerTitleText, { fontSize, lineHeight }]}
                 ellipsizeMode="tail"
                 adjustsFontSizeToFit
                 minimumFontScale={0.5}
@@ -75,7 +77,7 @@ const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean 
 export const HeaderRight = () => (
     <View style={styles.rightContainer}>
         <Suspense fallback={<ActivityIndicator color={colors.white} />}>
-            <HeaderLoginButton headerButton />
+            <HeaderLoginButton headerButton size={28} />
         </Suspense>
     </View>
 );
@@ -169,13 +171,14 @@ const styles = StyleSheet.create({
     },
     headerInnerContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: 'flex-end',
         justifyContent: 'space-between',
-        paddingHorizontal: spacing.smPlus,
-        paddingBottom: spacing.xs,
+        paddingHorizontal: spacing.md,
+        paddingTop: 0,
+        paddingBottom: spacing.md,
     },
     leftContainer: {
-        width: 50,
+        width: 44,
         justifyContent: 'center',
     },
     titleWrapper: {
@@ -183,24 +186,25 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     rightContainer: {
-        width: 50,
+        width: 44,
         justifyContent: 'center',
         alignItems: 'flex-end',
     },
     iconButton: {
-        padding: spacing.smPlus,
+        padding: spacing.sm,
     },
     headerTitleText: {
-        fontSize: fontSizes.displayLg,
+        fontSize: fontSizes.display,
         fontWeight: '600',
         color: colors.white,
         textAlign: 'center',
         fontFamily: fontFamilies.display,
+        includeFontPadding: false,
     },
 
     logo: {
-        width: 50,
-        height: 50,
+        width: 40,
+        height: 40,
     },
 });
 

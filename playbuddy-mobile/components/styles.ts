@@ -328,7 +328,7 @@ export const shadows = {
 };
 
 export const gradients = {
-    welcome: ['#4A117D', '#7C2DD6', '#FF73A8', '#FFC089'] as const,
+    welcome: ['#5A1D8A', '#7E39C8', '#F38AB2', '#FFC7A1'] as const,
     auth: ['#2C0B63', '#5B1FB8', '#D65CCE'] as const,
     access: ['#5B1FB8', '#8E2ACB', '#C04FD4'] as const,
     primaryButton: ['#6B46C1', '#8E3BD9'] as const,

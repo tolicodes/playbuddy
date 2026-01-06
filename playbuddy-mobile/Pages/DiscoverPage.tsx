@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     View,
     Text,
@@ -16,11 +16,13 @@ import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { UE } from '../userEventTypes';
 import { logEvent } from '../Common/hooks/logger';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
+import { useUserContext } from './Auth/hooks/UserContext';
+import { ADMIN_EMAILS } from '../config';
 
 type MenuItem = { title: string; icon: string; route: string; badge?: boolean };
 type MenuGroup = { title: string; items: MenuItem[]; variant?: 'default' | 'evenMore' };
 
-const menuGroups: MenuGroup[] = [
+const baseMenuGroups: MenuGroup[] = [
     {
         title: 'Highlights',
         items: [
@@ -53,11 +55,25 @@ type DiscoverPageProps = {
 
 export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPageProps) => {
     const analyticsProps = useAnalyticsProps();
+    const { userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
     const navigation = useNavigation<NavStack>();
     const { availableCardsToSwipe } = useCalendarContext();
 
     useBadgeNotifications({ availableCardsToSwipe });
+
+    const menuGroups = useMemo(() => {
+        if (!isAdmin) return baseMenuGroups;
+
+        return [
+            ...baseMenuGroups,
+            {
+                title: 'Admin',
+                items: [{ title: 'Admin', icon: 'user-shield', route: 'Admin' }],
+            },
+        ];
+    }, [isAdmin]);
 
     const content = (
         <>

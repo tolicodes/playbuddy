@@ -94,7 +94,13 @@ const HeaderLoginButton = ({
             ]}>
                 {authUserId ? (
                     avatarUrl ? (
-                        <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+                        <Image
+                            source={{ uri: avatarUrl }}
+                            style={[
+                                styles.avatarImage,
+                                { width: sizeValue, height: sizeValue, borderRadius: sizeValue / 2 },
+                            ]}
+                        />
                     ) : (
                         <Text style={[styles.initialsText, { color: resolvedIconColor }]}>{initials}</Text>
                     )
@@ -154,9 +160,7 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     avatarImage: {
-        width: 30,
-        height: 30,
-        borderRadius: 15,
+        resizeMode: 'cover',
     },
     initialsText: {
         fontSize: fontSizes.base,

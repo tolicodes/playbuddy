@@ -613,7 +613,7 @@ const EventCalendarView: React.FC<Props> = ({
         setMonthAnchorDate(moment(recomputed.weekAnchorDate).startOf("month").toDate());
     }, [filteredEvents]);
 
-    const { weekDays } = useMemo(
+    const { prevWeekDays, weekDays, nextWeekDays } = useMemo(
         () => deriveWeekArrays(nav.weekAnchorDate),
         [nav.weekAnchorDate]
     );
@@ -698,6 +698,24 @@ const EventCalendarView: React.FC<Props> = ({
         scrollToDate(nextDay);
     };
 
+    const shiftWeek = (direction: 1 | -1) => {
+        const nextWeekAnchor = ny.addWeeks(nav.weekAnchorDate, direction).toDate();
+        const selectedDow = moment(nav.selectedDate).tz(TZ).day();
+        const nextSelected = ny.addDays(nextWeekAnchor, selectedDow).toDate();
+        const next = { weekAnchorDate: nextWeekAnchor, selectedDate: nextSelected };
+        setNav(next);
+        setMonthAnchorDate(moment(nextWeekAnchor).startOf("month").toDate());
+        scrollToDate(nextSelected);
+    };
+
+    const goToPrevWeek = () => {
+        shiftWeek(-1);
+    };
+
+    const goToNextWeek = () => {
+        shiftWeek(1);
+    };
+
     const goToToday = () => {
         const today = moment().tz(TZ).toDate();
         if (!isDaySelectable(today)) return;
@@ -732,12 +750,12 @@ const EventCalendarView: React.FC<Props> = ({
     };
 
     const handleStripSwipePrevDay = () => {
-        goToPrevDay();
+        goToPrevWeek();
         triggerDateToast();
     };
 
     const handleStripSwipeNextDay = () => {
-        goToNextDay();
+        goToNextWeek();
         triggerDateToast();
     };
 
@@ -780,113 +798,117 @@ const EventCalendarView: React.FC<Props> = ({
                 filterOptions={allClassifications}
             />
 
-            <TopBar
-                searchQuery={searchQuery}
-                setSearchQuery={(q) => {
-                    logEvent(UE.EventCalendarViewSearchChanged, { ...analyticsPropsPlusEntity, search_text: q });
-                    setSearchQuery(q);
-                    if (typeaheadSelection && q.trim().length > 0) {
-                        setTypeaheadSelection(null);
-                        if (
-                            quickFilter?.type === 'tag' ||
-                            quickFilter?.type === 'organizer' ||
-                            quickFilter?.type === 'event_type' ||
-                            quickFilter?.type === 'experience' ||
-                            quickFilter?.type === 'interactivity'
-                        ) {
-                            setQuickFilter(null);
+            <View style={styles.headerSurface}>
+                <TopBar
+                    searchQuery={searchQuery}
+                    setSearchQuery={(q) => {
+                        logEvent(UE.EventCalendarViewSearchChanged, { ...analyticsPropsPlusEntity, search_text: q });
+                        setSearchQuery(q);
+                        if (typeaheadSelection && q.trim().length > 0) {
+                            setTypeaheadSelection(null);
+                            if (
+                                quickFilter?.type === 'tag' ||
+                                quickFilter?.type === 'organizer' ||
+                                quickFilter?.type === 'event_type' ||
+                                quickFilter?.type === 'experience' ||
+                                quickFilter?.type === 'interactivity'
+                            ) {
+                                setQuickFilter(null);
+                            }
                         }
-                    }
-                }}
-                onPressFilters={() => {
-                    if (Object.values(filters).some((a) => a.length > 0)) {
-                        logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
-                        setFilters({ tags: [], event_types: [], experience_levels: [], interactivity_levels: [] });
-                    } else {
-                        logEvent(UE.EventCalendarViewFiltersEnabled, analyticsPropsPlusEntity);
-                        setFiltersVisible(true);
-                    }
-                }}
-                onPressGoogleCalendar={() => {
-                    logEvent(UE.EventCalendarViewGoogleCalendar, analyticsPropsPlusEntity);
-                    Linking.openURL(MISC_URLS.addGoogleCalendar());
-                }}
-                showGoogleCalendar={showGoogleCalendar}
-                filtersEnabled={Object.values(filters).some((a) => a.length > 0)}
-                quickFilters={quickFilters}
-                activeFilters={activeFilterChips}
-                selectedQuickFilterId={selectedQuickFilterId}
-                onSelectQuickFilter={(filterId) => {
-                    if (filterId === selectedQuickFilterId) {
-                        setQuickFilter(null);
-                        setTypeaheadSelection(null);
-                        return;
-                    }
-                    if (filterId.startsWith('category:')) {
-                        setTypeaheadSelection(null);
-                        const key = filterId.replace('category:', '') as QuickFilterCategory;
-                        setQuickFilter({ type: 'category', key });
-                        return;
-                    }
-                    if (filterId.startsWith('tag:')) {
-                        setTypeaheadSelection(null);
-                        const tag = filterId.replace('tag:', '');
-                        setQuickFilter({ type: 'tag', tag });
-                        return;
-                    }
-                    if (filterId.startsWith('organizer:')) {
-                        setTypeaheadSelection(null);
-                        const organizer = filterId.replace('organizer:', '');
-                        setQuickFilter({ type: 'organizer', organizer });
-                        return;
-                    }
-                    if (filterId.startsWith('event_type:')) {
-                        setTypeaheadSelection(null);
-                        const eventType = filterId.replace('event_type:', '');
-                        setQuickFilter({ type: 'event_type', eventType });
-                        return;
-                    }
-                    if (filterId.startsWith('experience:')) {
-                        setTypeaheadSelection(null);
-                        const level = filterId.replace('experience:', '');
-                        setQuickFilter({ type: 'experience', level });
-                        return;
-                    }
-                    if (filterId.startsWith('interactivity:')) {
-                        setTypeaheadSelection(null);
-                        const level = filterId.replace('interactivity:', '');
-                        setQuickFilter({ type: 'interactivity', level });
-                    }
-                }}
-                onPressQuickFilterMore={() => setFiltersVisible(true)}
-                typeaheadSuggestions={typeaheadSuggestions}
-                onSelectTypeaheadSuggestion={(suggestion) => {
-                    setTypeaheadSelection(suggestion);
-                    if (suggestion.type === 'organizer') {
-                        setQuickFilter({ type: 'organizer', organizer: suggestion.label });
-                    } else if (suggestion.type === 'event_type') {
-                        setQuickFilter({ type: 'event_type', eventType: suggestion.value || suggestion.label });
-                    } else if (suggestion.type === 'experience') {
-                        setQuickFilter({ type: 'experience', level: suggestion.value || suggestion.label });
-                    } else if (suggestion.type === 'interactivity') {
-                        setQuickFilter({ type: 'interactivity', level: suggestion.value || suggestion.label });
-                    } else {
-                        setQuickFilter({ type: 'tag', tag: suggestion.label });
-                    }
-                    setSearchQuery('');
-                }}
-            />
+                    }}
+                    onPressFilters={() => {
+                        if (Object.values(filters).some((a) => a.length > 0)) {
+                            logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
+                            setFilters({ tags: [], event_types: [], experience_levels: [], interactivity_levels: [] });
+                        } else {
+                            logEvent(UE.EventCalendarViewFiltersEnabled, analyticsPropsPlusEntity);
+                            setFiltersVisible(true);
+                        }
+                    }}
+                    onPressGoogleCalendar={() => {
+                        logEvent(UE.EventCalendarViewGoogleCalendar, analyticsPropsPlusEntity);
+                        Linking.openURL(MISC_URLS.addGoogleCalendar());
+                    }}
+                    showGoogleCalendar={showGoogleCalendar}
+                    filtersEnabled={Object.values(filters).some((a) => a.length > 0)}
+                    quickFilters={quickFilters}
+                    activeFilters={activeFilterChips}
+                    selectedQuickFilterId={selectedQuickFilterId}
+                    onSelectQuickFilter={(filterId) => {
+                        if (filterId === selectedQuickFilterId) {
+                            setQuickFilter(null);
+                            setTypeaheadSelection(null);
+                            return;
+                        }
+                        if (filterId.startsWith('category:')) {
+                            setTypeaheadSelection(null);
+                            const key = filterId.replace('category:', '') as QuickFilterCategory;
+                            setQuickFilter({ type: 'category', key });
+                            return;
+                        }
+                        if (filterId.startsWith('tag:')) {
+                            setTypeaheadSelection(null);
+                            const tag = filterId.replace('tag:', '');
+                            setQuickFilter({ type: 'tag', tag });
+                            return;
+                        }
+                        if (filterId.startsWith('organizer:')) {
+                            setTypeaheadSelection(null);
+                            const organizer = filterId.replace('organizer:', '');
+                            setQuickFilter({ type: 'organizer', organizer });
+                            return;
+                        }
+                        if (filterId.startsWith('event_type:')) {
+                            setTypeaheadSelection(null);
+                            const eventType = filterId.replace('event_type:', '');
+                            setQuickFilter({ type: 'event_type', eventType });
+                            return;
+                        }
+                        if (filterId.startsWith('experience:')) {
+                            setTypeaheadSelection(null);
+                            const level = filterId.replace('experience:', '');
+                            setQuickFilter({ type: 'experience', level });
+                            return;
+                        }
+                        if (filterId.startsWith('interactivity:')) {
+                            setTypeaheadSelection(null);
+                            const level = filterId.replace('interactivity:', '');
+                            setQuickFilter({ type: 'interactivity', level });
+                        }
+                    }}
+                    onPressQuickFilterMore={() => setFiltersVisible(true)}
+                    typeaheadSuggestions={typeaheadSuggestions}
+                    onSelectTypeaheadSuggestion={(suggestion) => {
+                        setTypeaheadSelection(suggestion);
+                        if (suggestion.type === 'organizer') {
+                            setQuickFilter({ type: 'organizer', organizer: suggestion.label });
+                        } else if (suggestion.type === 'event_type') {
+                            setQuickFilter({ type: 'event_type', eventType: suggestion.value || suggestion.label });
+                        } else if (suggestion.type === 'experience') {
+                            setQuickFilter({ type: 'experience', level: suggestion.value || suggestion.label });
+                        } else if (suggestion.type === 'interactivity') {
+                            setQuickFilter({ type: 'interactivity', level: suggestion.value || suggestion.label });
+                        } else {
+                            setQuickFilter({ type: 'tag', tag: suggestion.label });
+                        }
+                        setSearchQuery('');
+                    }}
+                />
 
-            <View style={styles.calendarContainer}>
                 <WeekStrip
+                    prevWeekDays={prevWeekDays}
                     weekDays={weekDays}
+                    nextWeekDays={nextWeekDays}
                     selectedDay={nav.selectedDate}
                     onChangeSelectedDay={handleStripSelectDay}
                     isDaySelectable={isDaySelectable}
                     onSwipePrevDay={handleStripSwipePrevDay}
                     onSwipeNextDay={handleStripSwipeNextDay}
                     onLongPress={handleStripLongPress}
+                    containerWidth={Math.max(0, windowWidth - spacing.lg * 2)}
                 />
+                <View style={styles.headerDivider} />
             </View>
 
             <Modal
@@ -1018,7 +1040,27 @@ const styles = StyleSheet.create({
         backgroundColor: colors.brandGlowWarm,
     },
     container: { flex: 1, backgroundColor: "transparent" },
-    calendarContainer: { width: "100%", backgroundColor: "transparent", paddingTop: 0 },
+    headerSurface: {
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.sm,
+        marginBottom: spacing.xs,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        shadowColor: colors.black,
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 5 },
+        shadowRadius: 12,
+        elevation: 4,
+    },
+    headerDivider: {
+        height: StyleSheet.hairlineWidth,
+        backgroundColor: colors.borderLavenderSoft,
+        marginTop: spacing.xs,
+        marginHorizontal: spacing.lg,
+        opacity: 0.8,
+    },
     eventListContainer: {
         flex: 1,
         paddingTop: 0,
