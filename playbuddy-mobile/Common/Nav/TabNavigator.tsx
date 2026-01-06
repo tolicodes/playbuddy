@@ -7,16 +7,12 @@ import { BottomTabBarButtonProps } from "@react-navigation/bottom-tabs";
 import EventCalendarView from "../../Pages/Calendar/ListView/EventCalendarView";
 import MyCalendar from "../../Pages/EventLists/MyCalendar";
 import { OrganizersNav } from "../../Pages/Organizers/OrganizersNav";
-import { useNavigation } from "@react-navigation/native";
 import { headerOptions } from "../Header/Header";
-import { NavStack } from "./NavStackType";
-import { useFetchEvents } from "../db-axios/useEvents";
 import { UE } from "../../userEventTypes";
 import { logEvent } from "../hooks/logger";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { DiscoverPage } from "../../Pages/DiscoverPage";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
-import { ADMIN_EMAILS } from "../../config";
 import { ActionSheet } from "../../components/ActionSheet";
 import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
 import EventsLoadingScreen from "../../components/EventsLoadingScreen";
@@ -24,18 +20,11 @@ import { colors, fontSizes, radius, spacing } from "../../components/styles";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
-    const navigation = useNavigation<NavStack>();
     const analyticsProps = useAnalyticsProps();
-    const { userProfile, authUserId } = useUserContext();
+    const { authUserId } = useUserContext();
     const { isLoadingEvents } = useCalendarContext();
-    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
-    const { data: events } = useFetchEvents({ includeApprovalPending: isAdmin });
     const { height: windowHeight } = useWindowDimensions();
     const [isMoreOpen, setIsMoreOpen] = useState(false);
-
-    const WrappedEventCalendarView = () => {
-        return <EventCalendarView events={events || []} />
-    }
 
     const moreSheetHeight = Math.min(windowHeight * 0.85, 680);
 
@@ -70,39 +59,39 @@ export const TabNavigator = () => {
             >
                 <Tab.Screen
                     name="Calendar"
-                    component={WrappedEventCalendarView}
-                    options={{
+                    component={EventCalendarView}
+                    options={({ navigation }) => ({
                         tabBarIcon: ({ color, size }) => (
                             <FAIcon name="calendar" size={size} color={color} />
                         ),
                         ...headerOptions({ navigation, title: 'Calendar', isRootScreen: true }),
-                    }}
+                    })}
                 />
                 <Tab.Screen
                     name="My Calendar"
                     component={MyCalendar}
-                    options={{
+                    options={({ navigation }) => ({
                         tabBarIcon: ({ color, size }) => (
                             <FAIcon name="heart" size={size} color={color} />
                         ),
                         ...headerOptions({ navigation, title: 'My Calendar', isRootScreen: true }),
-                    }}
+                    })}
                 />
                 <Tab.Screen
                     name="Organizers"
                     component={OrganizersNav}
-                    options={{
+                    options={({ navigation }) => ({
                         tabBarIcon: ({ color, size }) => (
                             <FAIcon name="user-friends" size={size} color={color} />
                         ),
                         tabBarLabel: 'Communities',
                         ...headerOptions({ navigation, title: 'Communities', isRootScreen: true }),
-                    }}
+                    })}
                 />
                 <Tab.Screen
                     name="More"
                     component={DiscoverPage}
-                    options={{
+                    options={({ navigation }) => ({
                         tabBarIcon: ({ color, size }) => (
                             <View>
                                 <FAIcon name="ellipsis-h" size={size} color={color} />
@@ -110,7 +99,7 @@ export const TabNavigator = () => {
                             </View>
                         ),
                         ...headerOptions({ navigation, title: 'More', isRootScreen: true }),
-                    }}
+                    })}
                 />
             </Tab.Navigator>
             <ActionSheet

@@ -19,7 +19,7 @@ const Tag: React.FC<{ tag: TagType }> = ({ tag }) => {
     const analyticsProps = useAnalyticsProps();
     const content = (
         <View style={[tagStyles.tag, tag.color ? { backgroundColor: tag.color } : null]}>
-            {tag.icon && <MaterialIcons name={tag.icon} size={14} color="#fff" style={tagStyles.icon} />}
+            {tag.icon && <MaterialIcons name={tag.icon} size={14} color={colors.white} style={tagStyles.icon} />}
             <Text style={tagStyles.tagText}>{tag.name}</Text>
         </View>
     );
@@ -45,7 +45,7 @@ const Tag: React.FC<{ tag: TagType }> = ({ tag }) => {
 };
 
 export const TagList: React.FC<{ tags: TagType[] }> = ({ tags }) => (
-    <View style={[commonStyles.paddedHorizontalMedium, { paddingBottom: 8 }, tagStyles.tagsRow]}>
+    <View style={[commonStyles.paddedHorizontalMedium, { paddingBottom: spacing.sm }, tagStyles.tagsRow]}>
         {tags.map(t => (
             <Tag key={t.id} tag={t} />
         ))}

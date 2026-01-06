@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TextInput, ScrollView, TouchableOpacity } from 'react-native';
 import QRCodeStyled from 'react-native-qrcode-styled';
 
 import { useUserContext } from '../../../Auth/hooks/UserContext';
@@ -7,7 +7,6 @@ import CameraScanner from './CameraScanner';
 import BuddyAddedConfirmation from './AddBuddyConfirmation';
 import { LoginToAccess } from '../../../../components/LoginToAccess';
 import { useBuddiesContext } from '../../../../Common/hooks/BuddiesContext';
-import { Button } from '@rneui/themed';
 import { logEvent } from '../../../../Common/hooks/logger';
 
 const AddBuddy: React.FC = () => {
@@ -51,11 +50,12 @@ const AddBuddy: React.FC = () => {
                             onChangeText={setShareCode}
                             placeholder="Enter share code"
                         />
-                        <Button
-                            title="Add Buddy"
-                            buttonStyle={styles.button}
+                        <TouchableOpacity
+                            style={styles.button}
                             onPress={() => handleAddBuddy(undefined, shareCode)}
-                        />
+                        >
+                            <Text style={styles.buttonText}>Add Buddy</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
             )}
@@ -165,6 +165,12 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 6,
+    },
+    buttonText: {
+        color: '#FFFFFF',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
     },
     buddyShareCodeInputContainer: {
         flexDirection: 'row',

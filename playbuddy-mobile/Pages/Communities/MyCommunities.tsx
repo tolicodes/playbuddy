@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, SafeAreaView, TextInput } from "react-native";
+import { Text, TouchableOpacity, FlatList, StyleSheet, View, Button, TextInput } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Community, useCommonContext } from "../../Common/hooks/CommonContext";
 import { useNavigation } from "@react-navigation/native";
 import { UseMutationResult } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import { NavStack } from "../../Common/Nav/NavStackType";
 import { useLeaveCommunity } from "../../Common/hooks/useCommunities";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from "../../components/styles";
 
 const CommunityList = ({
     title,
@@ -99,26 +101,25 @@ export const CommunitiesList: React.FC = () => {
 
 const styles = StyleSheet.create({
     section: {
-        padding: 16,
+        padding: spacing.lg,
         paddingVertical: 0
     },
     sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginVertical: 10,
-        textAlign: 'center'
+        fontSize: fontSizes.xxxl,
+        fontWeight: '700',
+        marginVertical: spacing.smPlus,
+        textAlign: 'center',
+        color: colors.brandText,
+        fontFamily: fontFamilies.display,
     },
     communityItem: {
-        padding: 15,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        margin: 16,
+        padding: spacing.mdPlus,
+        backgroundColor: colors.white,
+        borderRadius: radius.sm,
+        margin: spacing.lg,
         marginTop: 0,
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        ...shadows.card,
     },
     communityItemContent: {
         flexDirection: 'row',
@@ -126,61 +127,65 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     communityName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#333',
+        fontSize: fontSizes.xxl,
+        fontWeight: '700',
+        color: colors.textPrimary,
         flex: 1,
-        marginRight: 10
+        marginRight: spacing.smPlus,
+        fontFamily: fontFamilies.body,
     },
     emptyText: {
         textAlign: 'center',
-        color: '#999',
-        marginTop: 20
+        color: colors.textSecondary,
+        marginTop: spacing.xl,
+        fontFamily: fontFamilies.body,
     },
     buttonText: {
-        color: '#fff',
-        fontSize: 16,
+        color: colors.white,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
     },
     centeredView: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: spacing.xl,
     },
     container: {
         flex: 1,
-        backgroundColor: '#f2f2f7',
-        marginTop: 20,
+        backgroundColor: colors.surfaceSubtle,
+        marginTop: spacing.xl,
     },
     content: {
         flex: 1,
         flexDirection: 'column',
     },
     unfollowButton: {
-        backgroundColor: '#ff3b30',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 5,
+        backgroundColor: colors.danger,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.xs,
         minWidth: 80,
         alignItems: 'center',
     },
     followButton: {
-        backgroundColor: '#007aff',
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 5,
+        backgroundColor: colors.linkBlue,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.xs,
         minWidth: 80,
         alignItems: 'center',
     },
     searchInput: {
-        height: 40,
-        margin: 15,
+        height: spacing.jumbo,
+        margin: spacing.lg,
         marginTop: 0,
-        padding: 10,
-        borderRadius: 10,
-        backgroundColor: 'white',
-        borderColor: '#e0e0e0',
+        padding: spacing.smPlus,
+        borderRadius: radius.smPlus,
+        backgroundColor: colors.white,
+        borderColor: colors.borderMutedAlt,
         borderWidth: 1,
-        fontSize: 16,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
     },
 });

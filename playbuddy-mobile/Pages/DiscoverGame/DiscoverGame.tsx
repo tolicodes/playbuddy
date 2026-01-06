@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         marginHorizontal: BUTTON_SPACING / 2,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,

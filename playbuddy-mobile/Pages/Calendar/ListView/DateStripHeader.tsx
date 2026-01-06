@@ -16,6 +16,7 @@ type Props = {
     showWeekRange?: boolean;           // If true, show "Aug 24 – 30, 2025"
     isExpanded?: boolean;              // Month view vs week view
     onToggleExpand?: () => void;       // Toggle between week/month
+    showExpandButton?: boolean;
 };
 
 export const DateStripHeader: React.FC<Props> = ({
@@ -27,6 +28,7 @@ export const DateStripHeader: React.FC<Props> = ({
     showWeekRange = false,
     isExpanded = false,
     onToggleExpand,
+    showExpandButton = true,
 }) => {
     const m = moment(currentDate).tz(TZ);
 
@@ -98,17 +100,19 @@ export const DateStripHeader: React.FC<Props> = ({
                     <Text style={styles.todayText}>Today</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity
-                    style={styles.expandButton}
-                    onPress={() => onToggleExpand?.()}
-                    accessibilityLabel={isExpanded ? "Collapse calendar" : "Expand calendar"}
-                >
-                    <FAIcon
-                        name={isExpanded ? "chevron-up" : "chevron-down"}
-                        size={14}
-                        color={colors.white}
-                    />
-                </TouchableOpacity>
+                {showExpandButton && (
+                    <TouchableOpacity
+                        style={styles.expandButton}
+                        onPress={() => onToggleExpand?.()}
+                        accessibilityLabel={isExpanded ? "Collapse calendar" : "Expand calendar"}
+                    >
+                        <FAIcon
+                            name={isExpanded ? "chevron-up" : "chevron-down"}
+                            size={14}
+                            color={colors.white}
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );
@@ -130,10 +134,10 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "rgba(255,255,255,0.18)",
+        backgroundColor: colors.surfaceGlass,
         borderRadius: radius.xl,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.3)",
+        borderColor: colors.borderOnDark,
         paddingHorizontal: spacing.smPlus,
         height: 36,
     },
@@ -143,9 +147,9 @@ const styles = StyleSheet.create({
         borderRadius: radius.lg,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(255,255,255,0.2)",
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.35)",
+        borderColor: colors.borderOnDark,
     },
     centerText: {
         fontSize: fontSizes.xl,
@@ -169,9 +173,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.smPlus,
         paddingVertical: spacing.xsPlus,
         borderRadius: radius.pill,
-        backgroundColor: "rgba(255,255,255,0.2)",
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.35)",
+        borderColor: colors.borderOnDark,
     },
     todayText: {
         color: colors.white,

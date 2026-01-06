@@ -4,6 +4,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import moment from 'moment';
 import { Event } from '../../../commonTypes';
 import { formatDate } from '../../../utils/formatDate'
+import { calendarOrganizerPalette } from '../../../components/styles';
 
 export type OrganizerFilterOption = {
     id: string
@@ -11,12 +12,6 @@ export type OrganizerFilterOption = {
     count: number
     color: string
 }
-
-export const colors = [
-    '#7986CB', '#33B679', '#8E24AA', '#E67C73', '#F6BF26', '#F4511E', '#039BE5', '#616161',
-    '#3F51B5', '#0B8043', '#D50000', '#F09300', '#F6BF26', '#33B679', '#0B8043', '#E4C441',
-    '#FF7043', '#795548', '#8D6E63', '#9E9E9E'
-];
 
 export const getAvailableOrganizers = (events: Event[]): OrganizerFilterOption[] => {
     const organizers = events.reduce((acc, event, index) => {
@@ -31,7 +26,7 @@ export const getAvailableOrganizers = (events: Event[]): OrganizerFilterOption[]
                 name: event.organizer.name,
                 id: event.organizer.id,
                 count: 1,
-                color: colors[acc.length % colors.length],
+                color: calendarOrganizerPalette[acc.length % calendarOrganizerPalette.length],
             });
         }
 

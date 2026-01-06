@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, TouchableOpacity, StyleSheet, Alert, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
-import { HEADER_PURPLE } from '../../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useFollows';
 import { logEvent } from '@amplitude/analytics-react-native';
@@ -54,9 +54,9 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
             <View style={styles.iconRow}>
                 <FontAwesome
                     name={isFollowed ? 'heart' : 'heart-o'}
-                    size={14}
-                    color={isFollowed ? '#fff' : HEADER_PURPLE}
-                    style={{ marginRight: 6 }}
+                    size={fontSizes.base}
+                    color={isFollowed ? colors.white : colors.headerPurple}
+                    style={{ marginRight: spacing.xsPlus }}
                 />
                 <Text style={[styles.followButtonText, isFollowed ? styles.unfollowButtonText : styles.followText]}>
                     {isFollowed ? 'Following' : 'Follow'}
@@ -69,30 +69,31 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
 const styles = StyleSheet.create({
     unfollowButton: {
         backgroundColor: 'transparent',
-        borderColor: '#fff',
+        borderColor: colors.white,
     },
     unfollowButtonText: {
-        color: '#fff',
+        color: colors.white,
     },
     followButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 18,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.lgPlus,
         borderWidth: 1,
-        marginRight: 4,
-        marginBottom: 8,
+        marginRight: spacing.xs,
+        marginBottom: spacing.sm,
     },
     followButtonText: {
         fontWeight: '600',
-        fontSize: 14,
-        color: '#fff'
+        fontSize: fontSizes.base,
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
     followButtonActive: {
-        backgroundColor: '#fff',
-        borderColor: '#fff',
+        backgroundColor: colors.white,
+        borderColor: colors.white,
     },
     followText: {
-        color: HEADER_PURPLE,
+        color: colors.headerPurple,
     },
     iconRow: {
         flexDirection: 'row',

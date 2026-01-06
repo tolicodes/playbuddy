@@ -4,6 +4,7 @@ import { DrawerNav } from "./DrawerNav";
 import { tagScreenName } from "../hooks/uxCam";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
+import { gradients } from "../../components/styles";
 
 const navTheme = {
     ...DefaultTheme,
@@ -36,7 +37,7 @@ export default function AppNavigator() {
 
             <View style={styles.root}>
                 <LinearGradient
-                    colors={['#7C3BD6', '#C248CE', '#FF5293']}
+                    colors={gradients.nav}
                     locations={[0, 0.55, 1]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}

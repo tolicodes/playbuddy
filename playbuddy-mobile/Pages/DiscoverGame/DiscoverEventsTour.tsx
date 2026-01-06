@@ -15,6 +15,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
+import { navigateToAuth } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
@@ -125,7 +126,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 
             logEvent(UE.DiscoverGameCreateAccountPressed, analyticsProps)
 
-            navigation.navigate('AuthNav', { screen: 'Login Form' });
+            navigateToAuth(navigation, 'Login Form');
         }
     };
 
@@ -265,7 +266,7 @@ export const styles = StyleSheet.create({
         padding: spacing.lg,
         borderWidth: 1,
         borderColor: colors.borderLight,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 3 },
         shadowRadius: 6,
@@ -277,7 +278,7 @@ export const styles = StyleSheet.create({
         top: 0,
         width: CARD_WIDTH / 2,
         height: CARD_HEIGHT,
-        backgroundColor: 'rgba(0,0,0,0.15)',
+        backgroundColor: colors.overlayLight,
     },
     leftHalf: { left: 0 },
     rightHalf: { right: 0 },
@@ -351,7 +352,7 @@ export const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         justifyContent: 'center',
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.05,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,

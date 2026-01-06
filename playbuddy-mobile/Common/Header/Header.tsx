@@ -1,38 +1,41 @@
 import React, { Suspense, useEffect, useRef } from "react";
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, SafeAreaView, Platform, StatusBar } from "react-native";
+import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, Platform, StatusBar } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import HeaderLoginButton from "../../Pages/Auth/Buttons/HeaderLoginButton";
-import { NavStack } from "../Nav/NavStackType";
+import { navigateToAuth, navigateToTab } from "../Nav/navigationHelpers";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { Image } from "react-native";
-import { useRoute } from "@react-navigation/native";
+import { NavigationProp, ParamListBase, useRoute } from "@react-navigation/native";
 import { colors, fontFamilies, fontSizes, spacing } from "../../components/styles";
 
 // Custom Back Button
-export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavStack, backToWelcome?: boolean }) => {
+export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavigationProp<ParamListBase>, backToWelcome?: boolean }) => {
     const analyticsProps = useAnalyticsProps();
     const onPress = () => {
         if (backToWelcome) {
-            navigation.navigate('AuthNav', { screen: 'Welcome' });
-        } else {
+            navigateToAuth(navigation, 'Welcome');
+        } else if (navigation.canGoBack?.()) {
             navigation.goBack();
+        } else {
+            navigateToTab(navigation, 'Calendar');
         }
         logEvent(UE.HeaderBackButtonClicked, analyticsProps);
     };
 
     return (
         <TouchableOpacity onPress={onPress} style={styles.iconButton} accessibilityRole="button" accessibilityLabel="Back">
-            <IonIcon name="chevron-back" size={24} color="#FFFFFF" />
+            <IonIcon name="chevron-back" size={24} color={colors.white} />
         </TouchableOpacity>
     );
 };
 
 // Custom Drawer Button
-export const HomeButton = ({ navigation }: { navigation: NavStack }) => {
+export const HomeButton = ({ navigation }: { navigation: NavigationProp<ParamListBase> }) => {
     const onPressHomeButton = () => {
-        navigation.navigate('Calendar');
+        navigateToTab(navigation, 'Calendar');
     };
     return (
         <TouchableOpacity onPress={onPressHomeButton} accessibilityRole="button" accessibilityLabel="Menu">
@@ -71,18 +74,33 @@ const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean 
 // Header Right (Login)
 export const HeaderRight = () => (
     <View style={styles.rightContainer}>
-        <Suspense fallback={<ActivityIndicator color="#FFFFFF" />}>
+        <Suspense fallback={<ActivityIndicator color={colors.white} />}>
             <HeaderLoginButton headerButton />
         </Suspense>
     </View>
 );
 
 // Main Header Component
-const Header = ({ navigation, title, isRootScreen = false, backToWelcome = false }: { navigation: NavStack, title: string, isRootScreen?: boolean, backToWelcome?: boolean }) => {
+const Header = ({
+    navigation,
+    title,
+    isRootScreen = false,
+    backToWelcome = false,
+    backgroundColor,
+}: {
+    navigation: NavigationProp<ParamListBase>;
+    title: string;
+    isRootScreen?: boolean;
+    backToWelcome?: boolean;
+    backgroundColor?: string;
+}) => {
     const route = useRoute();
     const routeTitle = route.params?.title;
     return (
-        <SafeAreaView style={styles.headerContainer}>
+        <SafeAreaView
+            style={[styles.headerContainer, backgroundColor ? { backgroundColor } : null]}
+            edges={['top', 'left', 'right']}
+        >
             <View style={styles.headerInnerContainer}>
                 <View style={styles.leftContainer}>
                     {isRootScreen
@@ -111,14 +129,24 @@ export const headerOptions = ({
     isRootScreen = false,
     backToWelcome = false,
     analyticsProps,
+    backgroundColor,
 }: {
-    navigation: NavStack,
+    navigation: NavigationProp<ParamListBase>,
     title: string,
     isRootScreen?: boolean,
     backToWelcome?: boolean,
     analyticsProps?: any,
+    backgroundColor?: string,
 }) => ({
-    header: () => <Header navigation={navigation} title={title} isRootScreen={isRootScreen} backToWelcome={backToWelcome} />,
+    header: () => (
+        <Header
+            navigation={navigation}
+            title={title}
+            isRootScreen={isRootScreen}
+            backToWelcome={backToWelcome}
+            backgroundColor={backgroundColor}
+        />
+    ),
     headerShown: true,
     onPress: () => {
         logEvent(UE.HeaderBackButtonClicked, {
@@ -129,7 +157,7 @@ export const headerOptions = ({
 });
 
 // Simple Header Options for Details Pages
-export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavStack }) => ({
+export const detailsPageHeaderOptions = ({ navigation }: { navigation: NavigationProp<ParamListBase> }) => ({
     headerLeft: () => <CustomBackButton navigation={navigation} />,
 });
 

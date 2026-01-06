@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Input, Button } from '@rneui/themed';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useUserContext } from './hooks/UserContext';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
@@ -43,57 +42,58 @@ const Login: React.FC<LoginProps> = ({
 
     return (
         <View style={styles.loginContainer} >
-            <Input
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter email"
-                containerStyle={styles.inputContainer}
-                inputContainerStyle={styles.inputInner}
-                inputStyle={styles.inputText}
-                placeholderTextColor="#9C8FB3"
-                errorStyle={styles.errorText}
-                leftIcon={{ type: 'font-awesome', name: 'envelope', color: colors.brandBright, size: 16 }}
-                leftIconContainerStyle={styles.leftIcon}
-                autoCapitalize='none'
-            />
-            <Input
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter password"
-                secureTextEntry
-                containerStyle={styles.inputContainer}
-                inputContainerStyle={styles.inputInner}
-                inputStyle={styles.inputText}
-                placeholderTextColor="#9C8FB3"
-                errorStyle={styles.errorText}
-                leftIcon={{ type: 'font-awesome', name: 'lock', color: colors.brandBright, size: 16 }}
-                leftIconContainerStyle={styles.leftIcon}
-                autoCapitalize='none'
-            />
+            <View style={styles.inputContainer}>
+                <View style={styles.inputInner}>
+                    <FAIcon name="envelope" size={16} color={colors.brandBright} style={styles.leftIcon} />
+                    <TextInput
+                        value={email}
+                        onChangeText={setEmail}
+                        placeholder="Enter email"
+                        placeholderTextColor={colors.brandTextMuted}
+                        style={styles.inputText}
+                        autoCapitalize="none"
+                    />
+                </View>
+            </View>
+            <View style={styles.inputContainer}>
+                <View style={styles.inputInner}>
+                    <FAIcon name="lock" size={16} color={colors.brandBright} style={styles.leftIcon} />
+                    <TextInput
+                        value={password}
+                        onChangeText={setPassword}
+                        placeholder="Enter password"
+                        placeholderTextColor={colors.brandTextMuted}
+                        secureTextEntry
+                        style={styles.inputText}
+                        autoCapitalize="none"
+                    />
+                </View>
+            </View>
             {isSignUp && (
-                <Input
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    placeholder="Re-enter password"
-                    secureTextEntry
-                    containerStyle={styles.inputContainer}
-                    inputContainerStyle={styles.inputInner}
-                    inputStyle={styles.inputText}
-                    placeholderTextColor="#9C8FB3"
-                    errorStyle={styles.errorText}
-                    leftIcon={{ type: 'font-awesome', name: 'lock', color: colors.brandBright, size: 16 }}
-                    leftIconContainerStyle={styles.leftIcon}
-                    autoCapitalize='none'
-                />
+                <View style={styles.inputContainer}>
+                    <View style={styles.inputInner}>
+                        <FAIcon name="lock" size={16} color={colors.brandBright} style={styles.leftIcon} />
+                        <TextInput
+                            value={confirmPassword}
+                            onChangeText={setConfirmPassword}
+                            placeholder="Re-enter password"
+                            placeholderTextColor={colors.brandTextMuted}
+                            secureTextEntry
+                            style={styles.inputText}
+                            autoCapitalize="none"
+                        />
+                    </View>
+                </View>
             )}
-            <Button
-                title={isSignUp ? "Sign Up" : "Sign In"}
-                onPress={isSignUp ? handleSignUp : handleSignIn}
-                buttonStyle={styles.button}
-                titleStyle={styles.buttonTitle}
-                containerStyle={styles.buttonContainer}
-                raised
-            />
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={isSignUp ? handleSignUp : handleSignIn}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.buttonTitle}>{isSignUp ? "Sign Up" : "Sign In"}</Text>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -107,7 +107,7 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
         <View style={styles.emailContainer}>
             <View style={styles.headerRow}>
                 <View style={styles.headerBadge}>
-                    <FAIcon name="envelope" size={14} color="#6B46C1" />
+                    <FAIcon name="envelope" size={14} color={colors.brandBright} />
                 </View>
                 <Text style={styles.header}>Email</Text>
             </View>
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.xxl,
         borderWidth: 1,
-        borderColor: 'rgba(107,70,193,0.12)',
+        borderColor: colors.badgeBackground,
         justifyContent: 'center',
         ...shadows.brandCard,
     },
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
         height: 40,
         marginBottom: spacing.mdPlus,
         borderWidth: 1,
-        borderColor: 'rgba(107,70,193,0.12)',
+        borderColor: colors.badgeBackground,
     },
     tabIndicator: {
         top: spacing.xxs,
@@ -236,11 +236,15 @@ const styles = StyleSheet.create({
         borderColor: colors.badgeBorder,
         backgroundColor: colors.surfaceSoft,
         paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.sm,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     inputText: {
         fontSize: fontSizes.lg,
         color: colors.brandText,
         fontFamily: fontFamilies.body,
+        flex: 1,
     },
     leftIcon: {
         marginRight: spacing.sm,
@@ -268,7 +272,7 @@ const styles = StyleSheet.create({
         marginBottom: 0,
     },
     errorText: {
-        color: '#C026D3',
+        color: colors.danger,
         fontSize: fontSizes.sm,
         fontFamily: fontFamilies.body,
     },

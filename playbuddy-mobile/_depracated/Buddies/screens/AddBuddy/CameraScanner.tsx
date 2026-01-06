@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Button } from '@rneui/themed';
 import { logEvent } from '../../../../Common/hooks/logger';
 
 export default function CameraScanner({ onBarcodeScanned, scanning, setScanning }: { onBarcodeScanned: (barcode: string) => void, scanning: boolean, setScanning: (scanning: boolean) => void }) {
@@ -44,13 +43,15 @@ export default function CameraScanner({ onBarcodeScanned, scanning, setScanning 
                         }}
                         onBarcodeScanned={handleBarCodeScanned}
                     />
-                    <Button
-                        title="Cancel"
+                    <TouchableOpacity
+                        style={styles.button}
                         onPress={() => {
                             setScanning(false);
                             logEvent('add_buddy_scan_qr_code_cancel');
                         }}
-                    />
+                    >
+                        <Text style={styles.buttonText}>Cancel</Text>
+                    </TouchableOpacity>
                 </>
             )}
         </View>

@@ -1,8 +1,8 @@
-import { View, StyleSheet, Text, TouchableOpacity, Button } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { Image } from 'expo-image';
 import { MaterialIcons, FontAwesome } from '@expo/vector-icons';
 import { Linking, Alert } from 'react-native';
-import { HEADER_PURPLE } from '../../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, spacing, sizes } from '../../../components/styles';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useFollows';
 import { FollowButton } from './FollowButton';
@@ -61,7 +61,7 @@ export const ProfileHeader = ({
 
                         {instagram && (
                             <TouchableOpacity style={styles.socialItem} onPress={() => openLink(`https://instagram.com/${instagram}`)}>
-                                <FontAwesome name="instagram" size={SOCIAL_ITEM_HEIGHT} color="white" />
+                                <FontAwesome name="instagram" size={SOCIAL_ITEM_HEIGHT} color={colors.white} />
                             </TouchableOpacity>
                         )}
                         {fetlife && (
@@ -93,7 +93,7 @@ export const ProfileHeader = ({
                                     facilitator_id: facilitatorId,
                                 });
                             }}>
-                                <FontAwesome name="globe" size={SOCIAL_ITEM_HEIGHT} color="white" />
+                                <FontAwesome name="globe" size={SOCIAL_ITEM_HEIGHT} color={colors.white} />
                             </TouchableOpacity>
                         )}
                         {email && (
@@ -105,7 +105,7 @@ export const ProfileHeader = ({
                                     facilitator_id: facilitatorId,
                                 });
                             }}>
-                                <FontAwesome name="envelope" size={SOCIAL_ITEM_HEIGHT} color="white" />
+                                <FontAwesome name="envelope" size={SOCIAL_ITEM_HEIGHT} color={colors.white} />
                             </TouchableOpacity>
                         )}
                     </View>
@@ -115,75 +115,94 @@ export const ProfileHeader = ({
     );
 };
 
-const SOCIAL_ITEM_HEIGHT = 30;
+const SOCIAL_ITEM_HEIGHT = sizes.socialIcon;
 
 const styles = StyleSheet.create({
     header: {
         backgroundColor: 'transparent',
-        paddingHorizontal: 16,
+        paddingHorizontal: spacing.lg,
         zIndex: 1,
-        paddingTop: 10
+        paddingTop: spacing.smPlus
     },
     headerTop: { flexDirection: 'row', alignItems: 'flex-start' },
-    photo: { width: 100, height: 100, borderRadius: 50, borderWidth: 2, borderColor: '#fff' },
-    infoSection: { marginLeft: 16, flex: 1 },
+    photo: {
+        width: sizes.avatarLg,
+        height: sizes.avatarLg,
+        borderRadius: sizes.avatarLg / 2,
+        borderWidth: spacing.xxs,
+        borderColor: colors.white,
+    },
+    infoSection: { marginLeft: spacing.lg, flex: 1 },
     nameRow: { flexDirection: 'row', alignItems: 'center' },
-    name: { color: '#fff', fontSize: 24, fontWeight: '700' },
-    title: { color: '#fff', fontSize: 16, fontWeight: '600', marginTop: 4 },
+    name: {
+        color: colors.white,
+        fontSize: fontSizes.headline,
+        fontWeight: '700',
+        fontFamily: fontFamilies.display,
+    },
+    title: {
+        color: colors.white,
+        fontSize: fontSizes.xl,
+        fontWeight: '600',
+        marginTop: spacing.xs,
+        fontFamily: fontFamilies.body,
+    },
     socialRow: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         alignItems: 'flex-start',
-        gap: 8,
-        marginTop: 12,
+        gap: spacing.sm,
+        marginTop: spacing.md,
     },
-    socialItem: { marginRight: 4 },
+    socialItem: { marginRight: spacing.xs },
     bookButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 20,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.xl,
         alignSelf: 'flex-start',
         justifyContent: 'center',
         borderWidth: 1,
-        borderColor: '#fff',
+        borderColor: colors.white,
 
     },
     bookButtonText: {
-        color: '#fff',
+        color: colors.white,
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: fontSizes.base,
+        fontFamily: fontFamilies.body,
     },
 
     // FOLLOW BUTTON
     followButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 18,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.lgPlus,
         borderWidth: 1,
         alignSelf: 'flex-start',
-        marginRight: 4,
+        marginRight: spacing.xs,
     },
 
     followButtonActive: {
-        backgroundColor: '#fff',
-        borderColor: '#fff',
+        backgroundColor: colors.white,
+        borderColor: colors.white,
     },
 
     unfollowButton: {
         backgroundColor: 'transparent',
-        borderColor: '#fff',
+        borderColor: colors.white,
     },
 
     followButtonText: {
         fontWeight: '600',
-        fontSize: 14,
+        fontSize: fontSizes.base,
+        fontFamily: fontFamilies.body,
     },
 
     followText: {
-        color: HEADER_PURPLE,
+        color: colors.headerPurple,
     },
 
     unfollowText: {
-        color: '#fff',
+        color: colors.white,
     },
 });

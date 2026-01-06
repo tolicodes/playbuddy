@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Input, Button, Icon } from '@rneui/themed';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useUserContext } from './hooks/UserContext';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
@@ -39,38 +38,42 @@ export const PhoneLogin: React.FC<{ onSwitchToEmail: () => void; }> = ({ onSwitc
                 </View>
                 <Text style={styles.header}>Phone</Text>
             </View>
-            <Input
-                value={phone}
-                onChangeText={setPhone}
-                placeholder="Enter phone number"
-                keyboardType="phone-pad"
-                containerStyle={styles.inputContainer}
-                inputContainerStyle={styles.inputInner}
-                inputStyle={styles.inputText}
-                leftIcon={<Icon name='phone' type='font-awesome' color={colors.brandBright} size={16} />}
-                placeholderTextColor="#9C8FB3"
-                errorStyle={styles.errorText}
-            />
+            <View style={styles.inputContainer}>
+                <View style={styles.inputInner}>
+                    <FAIcon name="phone" size={16} color={colors.brandBright} style={styles.leftIcon} />
+                    <TextInput
+                        value={phone}
+                        onChangeText={setPhone}
+                        placeholder="Enter phone number"
+                        placeholderTextColor={colors.brandTextMuted}
+                        keyboardType="phone-pad"
+                        style={styles.inputText}
+                    />
+                </View>
+            </View>
             {otpSent && (
-                <Input
-                    value={otp}
-                    onChangeText={setOtp}
-                    placeholder="Enter verification code"
-                    keyboardType="number-pad"
-                    containerStyle={styles.inputContainer}
-                    inputContainerStyle={styles.inputInner}
-                    inputStyle={styles.inputText}
-                    placeholderTextColor="#9C8FB3"
-                    errorStyle={styles.errorText}
-                />
+                <View style={styles.inputContainer}>
+                    <View style={styles.inputInner}>
+                        <TextInput
+                            value={otp}
+                            onChangeText={setOtp}
+                            placeholder="Enter verification code"
+                            placeholderTextColor={colors.brandTextMuted}
+                            keyboardType="number-pad"
+                            style={styles.inputText}
+                        />
+                    </View>
+                </View>
             )}
-            <Button
-                title={otpSent ? "Sign In" : "Send Verification Code"}
-                onPress={otpSent ? handleLogin : handleSendOtp}
-                buttonStyle={styles.button}
-                titleStyle={styles.buttonTitle}
-                containerStyle={styles.buttonContainer}
-            />
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                    style={styles.button}
+                    onPress={otpSent ? handleLogin : handleSendOtp}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.buttonTitle}>{otpSent ? "Sign In" : "Send Verification Code"}</Text>
+                </TouchableOpacity>
+            </View>
             <TouchableOpacity onPress={onSwitchToEmail}>
                 <Text style={styles.switchText}>Use email instead</Text>
             </TouchableOpacity>
@@ -84,7 +87,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.xxl,
         borderWidth: 1,
-        borderColor: 'rgba(107,70,193,0.12)',
+        borderColor: colors.badgeBackground,
         justifyContent: 'center',
         ...shadows.brandCard,
     },
@@ -121,11 +124,18 @@ const styles = StyleSheet.create({
         borderColor: colors.badgeBorder,
         backgroundColor: colors.surfaceSoft,
         paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.sm,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     inputText: {
         fontSize: fontSizes.lg,
         color: colors.brandText,
         fontFamily: fontFamilies.body,
+        flex: 1,
+    },
+    leftIcon: {
+        marginRight: spacing.sm,
     },
     switchText: {
         marginTop: spacing.sm,
@@ -149,7 +159,7 @@ const styles = StyleSheet.create({
         marginVertical: spacing.smPlus,
     },
     errorText: {
-        color: '#C026D3',
+        color: colors.danger,
         fontSize: fontSizes.sm,
         fontFamily: fontFamilies.body,
     },

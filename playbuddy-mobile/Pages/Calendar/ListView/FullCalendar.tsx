@@ -2,12 +2,21 @@ import React from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { TouchableOpacity, Text } from 'react-native';
 import moment from 'moment-timezone';
+import { colors, fontSizes } from '../../../components/styles';
 
 const isSameDayNY = (d1: Date | string, d2: Date | string) =>
     moment(d1).tz('America/New_York').isSame(moment(d2).tz('America/New_York'), 'day');
 
 
-export const FullCalendar = ({ currentDate, markedDates, onSelectDay, hasEventsOnDay, selectedDate }: any) => {
+export const FullCalendar = ({
+    currentDate,
+    markedDates,
+    onSelectDay,
+    hasEventsOnDay,
+    selectedDate,
+    onMonthChange,
+    enableSwipeMonths = true,
+}: any) => {
     return (
         <Calendar
             current={currentDate.toISOString()}
@@ -15,16 +24,22 @@ export const FullCalendar = ({ currentDate, markedDates, onSelectDay, hasEventsO
             onDayPress={(day: any) =>
                 onSelectDay(moment.tz(day.dateString, 'America/New_York').toDate())
             }
+            onMonthChange={(month: any) => {
+                if (!onMonthChange) return;
+                const next = moment.tz(month.dateString, 'America/New_York').toDate();
+                onMonthChange(next);
+            }}
             hideExtraDays={false}
             hideArrows
+            enableSwipeMonths={enableSwipeMonths}
             renderHeader={() => <></>}
             dayComponent={({ date, state }: any) => {
                 const iso = date.dateString;
                 const selected = isSameDayNY(iso, selectedDate);
                 const isDisabled = state === 'disabled';
                 const hasEvent = hasEventsOnDay(iso);
-                const bg = selected ? '#FFFFFF' : hasEvent ? 'rgba(156,106,222,0.7)' : 'transparent';
-                const textColor = selected ? '#6A4BD8' : isDisabled ? 'rgba(255,255,255,0.5)' : '#FFFFFF';
+                const bg = selected ? colors.white : hasEvent ? colors.accentPurpleSoft : 'transparent';
+                const textColor = selected ? colors.brandIndigo : isDisabled ? colors.textOnDarkSubtle : colors.white;
                 return (
                     <TouchableOpacity
                         disabled={false}
@@ -43,7 +58,7 @@ export const FullCalendar = ({ currentDate, markedDates, onSelectDay, hasEventsO
                             style={{
                                 color: textColor,
                                 fontWeight: '700',
-                                fontSize: 12,
+                                fontSize: fontSizes.sm,
                             }}
                         >
                             {date.day}
@@ -58,25 +73,25 @@ export const FullCalendar = ({ currentDate, markedDates, onSelectDay, hasEventsO
 
 // The full calendar
 const calendarTheme = {
-    backgroundColor: 'red',
+    backgroundColor: colors.danger,
     calendarBackground: 'transparent',
-    textSectionTitleColor: '#FFFFFF',
-    textSectionTitleDisabledColor: 'rgba(255,255,255,0.5)',
-    selectedDayBackgroundColor: '#FFFFFF',
-    selectedDayTextColor: '#6A4BD8',
-    todayTextColor: '#FFFFFF',
-    dayTextColor: '#FFFFFF',
-    textDisabledColor: 'rgba(255,255,255,0.45)',
-    dotColor: 'rgba(255,255,255,0.9)',
-    selectedDotColor: '#6A4BD8',
-    arrowColor: '#FFFFFF',
-    disabledArrowColor: 'rgba(255,255,255,0.35)',
-    monthTextColor: '#FFFFFF',
-    indicatorColor: '#FFFFFF',
+    textSectionTitleColor: colors.white,
+    textSectionTitleDisabledColor: colors.textOnDarkSubtle,
+    selectedDayBackgroundColor: colors.white,
+    selectedDayTextColor: colors.brandIndigo,
+    todayTextColor: colors.white,
+    dayTextColor: colors.white,
+    textDisabledColor: colors.textOnDarkSubtle,
+    dotColor: colors.textOnDarkStrong,
+    selectedDotColor: colors.brandIndigo,
+    arrowColor: colors.white,
+    disabledArrowColor: colors.borderOnDark,
+    monthTextColor: colors.white,
+    indicatorColor: colors.white,
     textDayFontWeight: '600',
     textMonthFontWeight: '700',
     textDayHeaderFontWeight: '600',
-    textDayFontSize: 12,
-    textMonthFontSize: 16,
-    textDayHeaderFontSize: 11,
+    textDayFontSize: fontSizes.sm,
+    textMonthFontSize: fontSizes.xl,
+    textDayHeaderFontSize: fontSizes.xs,
 };

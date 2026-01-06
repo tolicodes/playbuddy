@@ -5,7 +5,6 @@ import {
     View,
     StyleSheet,
     Text,
-    SafeAreaView,
     Pressable,
     Image,
     Platform,
@@ -13,6 +12,7 @@ import {
     ViewStyle,
     ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserContext } from './hooks/UserContext';
 import { EmailLogin } from './EmailLogin';
@@ -20,7 +20,7 @@ import { PhoneLogin } from './PhoneLogin';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
-import { colors, fontFamilies, fontSizes, gradients, radius, spacing } from '../../components/styles';
+import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
 
 const googleLogo = require('../../assets/auth/google-logo.png');
 const appleLogo = require('../../assets/auth/apple-logo.png');
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
         width: 320,
         height: 320,
         borderRadius: 160,
-        backgroundColor: 'rgba(255,255,255,0.16)',
+        backgroundColor: colors.brandGlowTop,
     },
     glowBottom: {
         position: 'absolute',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
         width: 340,
         height: 340,
         borderRadius: 170,
-        backgroundColor: 'rgba(255,186,214,0.22)',
+        backgroundColor: colors.brandGlowBottom,
     },
     safe: {
         flex: 1,
@@ -205,9 +205,9 @@ const styles = StyleSheet.create({
         width: 74,
         height: 74,
         borderRadius: 37,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.4)',
+        borderColor: colors.borderOnDark,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 0,
@@ -221,16 +221,12 @@ const styles = StyleSheet.create({
         maxWidth: 360,
     },
     ssoCard: {
-        backgroundColor: 'rgba(255,255,255,0.96)',
+        backgroundColor: colors.white,
         borderRadius: radius.xxl,
         padding: spacing.lgPlus,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.7)',
-        shadowColor: '#1E0B3D',
-        shadowOpacity: 0.18,
-        shadowOffset: { width: 0, height: 10 },
-        shadowRadius: 16,
-        elevation: 6,
+        borderColor: colors.borderOnDarkStrong,
+        ...shadows.brandCard,
         width: '100%',
     },
     ssoHeader: {
@@ -242,7 +238,7 @@ const styles = StyleSheet.create({
     ssoTitle: {
         fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#2C1A4A',
+        color: colors.brandText,
         fontFamily: fontFamilies.body,
         letterSpacing: 0.2,
     },
@@ -250,14 +246,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.smPlus,
         paddingVertical: spacing.xs,
         borderRadius: radius.pill,
-        backgroundColor: 'rgba(91,31,184,0.12)',
+        backgroundColor: colors.badgeBackground,
         borderWidth: 1,
-        borderColor: 'rgba(91,31,184,0.22)',
+        borderColor: colors.badgeBorder,
     },
     ssoBadgeText: {
         fontSize: fontSizes.xs,
         fontWeight: '600',
-        color: '#5B1FB8',
+        color: colors.brandMid,
         fontFamily: fontFamilies.body,
         letterSpacing: 0.4,
     },
@@ -271,13 +267,13 @@ const styles = StyleSheet.create({
     orLine: {
         flex: 1,
         height: 1,
-        backgroundColor: 'rgba(255,255,255,0.45)',
+        backgroundColor: colors.borderOnDark,
     },
     orText: {
         marginHorizontal: spacing.smPlus,
         fontSize: fontSizes.sm,
         fontWeight: '600',
-        color: 'rgba(255,255,255,0.78)',
+        color: colors.textOnDarkMuted,
         textTransform: 'uppercase',
         letterSpacing: 1,
         fontFamily: fontFamilies.body,
@@ -306,12 +302,12 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     googleButton: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: colors.white,
         borderColor: colors.borderLavender,
     },
     appleButton: {
-        backgroundColor: '#111111',
-        borderColor: '#111111',
+        backgroundColor: colors.black,
+        borderColor: colors.black,
     },
     socialIcon: {
         width: 18,
@@ -319,16 +315,16 @@ const styles = StyleSheet.create({
         marginRight: spacing.smPlus,
     },
     appleIcon: {
-        tintColor: '#FFFFFF',
+        tintColor: colors.white,
     },
     socialText: {
         fontSize: fontSizes.basePlus,
         fontWeight: '600',
-        color: '#1F1A2E',
+        color: colors.heroDark,
         fontFamily: fontFamilies.body,
     },
     appleText: {
-        color: '#FFFFFF',
+        color: colors.white,
     },
 });
 

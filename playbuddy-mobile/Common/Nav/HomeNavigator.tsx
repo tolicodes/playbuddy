@@ -6,12 +6,13 @@ import { PromosEntryScreen } from '../../Pages/Entries/PromosEntryScreen';
 import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
 import { MunchDetails } from '../../Pages/Munches/MunchDetails';
 import EventDetails from '../../Pages/Calendar/EventDetails/EventDetails';
-import { useNavigation } from '@react-navigation/native';
-import { NavStack } from './NavStackType';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
 import AuthNav from '../../Pages/Auth/AuthNav';
 import { headerOptions } from '../Header/Header';
 import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile';
 import EventsLoadingScreen from '../../components/EventsLoadingScreen';
+import { navigateToAuth, navigateToHome, navigateToHomeStackScreen } from './navigationHelpers';
+import { colors, gradients } from '../../components/styles';
 
 const HomeStack = createStackNavigator();
 /**
@@ -36,7 +37,7 @@ const HomeStack = createStackNavigator();
  * - Buddy Events: Events for a buddy's wishlist
  */
 export function HomeStackNavigator() {
-    const navigation = useNavigation<NavStack>();
+    const navigation = useNavigation<NavigationProp<ParamListBase>>();
     const [isPromoScreenViewed, setIsPromoScreenViewed] = useState(false);
 
     const {
@@ -62,36 +63,36 @@ export function HomeStackNavigator() {
                 currentDeepLink.type === 'organizer_promo_code' ||
                 currentDeepLink.type === 'event_promo_code'
             ) {
-                navigation.navigate('PromoScreen');
+                navigateToHomeStackScreen(navigation, 'PromoScreen');
                 return;
             }
 
             // Weekly Picks
             if (currentDeepLink.type === 'weekly_picks') {
-                navigation.navigate('Weekly Picks');
+                navigateToHomeStackScreen(navigation, 'Weekly Picks');
                 return;
             }
 
             if (currentDeepLink.type === 'facilitator_profile') {
-                navigation.navigate('Facilitator Profile', { facilitatorId: currentDeepLink.facilitator_id });
+                navigateToHomeStackScreen(navigation, 'Facilitator Profile', { facilitatorId: currentDeepLink.facilitator_id });
                 return;
             }
         }
 
         // If the user has a profile but it's incomplete, navigate to ProfileDetails
         if (authUserId && !isProfileComplete) {
-            navigation.navigate('AuthNav', { screen: 'Profile Details' });
+            navigateToAuth(navigation, 'Profile Details');
             return;
         }
 
         // If the user doesn't have a profile, navigate to Welcome
         if (!authUserId) {
-            navigation.navigate('AuthNav', { screen: 'Welcome' });
+            navigateToAuth(navigation, 'Welcome');
             return;
         }
 
         // Otherwise, we can go home
-        navigation.navigate('Home');
+        navigateToHome(navigation);
         // important: we do NOT include isPromoScreenViewed in the dependency array
         // because we want to navigate to Home only if it starts out that way
         // not if it's transitioning from promo by an "Event Details" click
@@ -116,7 +117,7 @@ export function HomeStackNavigator() {
             initialRouteName={authUserId ? 'Home' : 'AuthNav'}
             screenOptions={{
                 headerShown: false,
-                animationEnabled: false,
+                animation: 'none',
             }}
         >
             <HomeStack.Screen name="Home"
@@ -125,25 +126,32 @@ export function HomeStackNavigator() {
                 component={AuthNav} />
             <HomeStack.Screen name="PromoScreen"
                 component={PromoScreenWrap}
-                options={headerOptions({ navigation, title: 'Welcome!', backToWelcome: true })}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Welcome!', backToWelcome: true })}
             />
 
             <HomeStack.Screen name="Event Details"
-                options={headerOptions({ navigation, title: 'Event Details' })}
+                options={({ navigation }) => ({
+                    ...headerOptions({
+                        navigation,
+                        title: 'Event Details',
+                        backgroundColor: gradients.nav[0],
+                    }),
+                    cardStyle: { backgroundColor: colors.lavenderBackground },
+                })}
                 component={EventDetails} />
 
             {/* Detail Screens */}
             <HomeStack.Screen name="Community Events"
-                options={headerOptions({ navigation, title: 'Events' })}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Events' })}
                 component={CommunityEvents} />
 
             <HomeStack.Screen name="Munch Details"
-                options={headerOptions({ navigation, title: 'Munch Details' })}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Munch Details' })}
                 component={MunchDetails} />
 
 
             <HomeStack.Screen name="Facilitator Profile"
-                options={headerOptions({ navigation, title: 'Facilitator Profile' })}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Facilitator Profile' })}
                 component={FacilitatorProfile} />
         </HomeStack.Navigator >
     );

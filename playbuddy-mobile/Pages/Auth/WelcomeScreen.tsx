@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import {
-    SafeAreaView,
     View,
     Text,
     Image,
@@ -10,6 +9,7 @@ import {
     ScrollView,
     Animated,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { logEvent } from '../../Common/hooks/logger';
@@ -17,7 +17,8 @@ import { UE } from '../../userEventTypes';
 import { useUserContext } from './hooks/UserContext';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
-import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
+import { navigateToAuth, navigateToHome } from '../../Common/Nav/navigationHelpers';
+import { colors, fontFamilies, fontSizes, gradients, lineHeights, radius, shadows, spacing } from '../../components/styles';
 
 const googleLogo = require('../../assets/auth/google-logo.png');
 const appleLogo = require('../../assets/auth/apple-logo.png');
@@ -75,12 +76,12 @@ const WelcomeScreen = () => {
 
     const handleEmail = () => {
         logEvent(UE.WelcomeScreenRegisterClicked, analyticsProps);
-        navigation.navigate('AuthNav', { screen: 'Login Form' });
+        navigateToAuth(navigation, 'Login Form');
     };
 
     const handleSkip = () => {
         logEvent(UE.WelcomeScreenSkipped, analyticsProps);
-        navigation.replace('Home');
+        navigateToHome(navigation);
     };
 
     return (
@@ -117,7 +118,7 @@ const WelcomeScreen = () => {
                         ]}
                     >
                         <LinearGradient
-                            colors={['#FFFFFF', '#F7F2FF']}
+                            colors={[colors.white, colors.surfaceLavenderLight]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 1, y: 1 }}
                             style={styles.card}
@@ -129,7 +130,7 @@ const WelcomeScreen = () => {
                                     styles.googleButton,
                                     pressed && styles.buttonPressed,
                                 ]}
-                                android_ripple={{ color: '#00000010' }}
+                                android_ripple={{ color: colors.shadowSoft }}
                                 hitSlop={8}
                             >
                                 <Image source={googleLogo} style={styles.googleLogo} resizeMode="contain" />
@@ -143,7 +144,7 @@ const WelcomeScreen = () => {
                                         styles.appleButton,
                                         pressed && styles.buttonPressed,
                                     ]}
-                                    android_ripple={{ color: '#00000010' }}
+                                    android_ripple={{ color: colors.shadowSoft }}
                                     hitSlop={8}
                                 >
                                     <Image source={appleLogo} style={styles.appleLogo} resizeMode="contain" />
@@ -156,7 +157,7 @@ const WelcomeScreen = () => {
                                     styles.emailButton,
                                     pressed && styles.buttonPressed,
                                 ]}
-                                android_ripple={{ color: '#00000012' }}
+                                android_ripple={{ color: colors.shadowSoft }}
                                 hitSlop={8}
                             >
                                 <LinearGradient
@@ -247,14 +248,14 @@ const styles = StyleSheet.create({
         fontSize: fontSizes.sm,
         letterSpacing: 1.6,
         textTransform: 'uppercase',
-        color: 'rgba(255,255,255,0.8)',
+        color: colors.textOnDarkMuted,
         marginBottom: spacing.sm,
         fontFamily: fontFamilies.body,
     },
     title: {
-        fontSize: 30,
+        fontSize: fontSizes.display,
         fontWeight: '700',
-        color: '#FFF',
+        color: colors.white,
         textAlign: 'center',
         marginBottom: spacing.sm,
         fontFamily: fontFamilies.display,
@@ -263,11 +264,11 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: fontSizes.lg,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: colors.white,
         textAlign: 'center',
         fontFamily: fontFamilies.body,
         maxWidth: 300,
-        lineHeight: 26,
+        lineHeight: lineHeights.lg,
         marginTop: spacing.sm,
     },
     subtitleEmphasis: {
@@ -282,8 +283,9 @@ const styles = StyleSheet.create({
         maxWidth: 360,
         borderRadius: radius.hero,
         padding: spacing.lgPlus,
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.8)',
+        borderColor: colors.borderOnDarkStrong,
         ...shadows.brandCard,
         elevation: 8,
     },
@@ -295,8 +297,8 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
-        borderColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: colors.white,
+        borderColor: colors.borderSubtle,
         borderWidth: 1,
         marginBottom: spacing.smPlus,
     },
@@ -306,29 +308,29 @@ const styles = StyleSheet.create({
         marginRight: spacing.smPlus,
     },
     googleButton: {
-        backgroundColor: '#FFFFFF',
-        borderColor: 'rgba(0,0,0,0.08)',
+        backgroundColor: colors.white,
+        borderColor: colors.borderSubtle,
     },
     appleButton: {
-        backgroundColor: '#111111',
-        borderColor: '#111111',
+        backgroundColor: colors.black,
+        borderColor: colors.black,
     },
     appleLogo: {
         width: 18,
         height: 18,
-        tintColor: '#FFFFFF',
+        tintColor: colors.white,
         marginRight: spacing.smPlus,
     },
     socialText: {
         fontSize: fontSizes.lg,
         fontWeight: '600',
-        color: '#1F1A2E',
+        color: colors.heroDark,
         fontFamily: fontFamilies.body,
     },
     appleText: {
         fontSize: fontSizes.lg,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: colors.white,
         fontFamily: fontFamilies.body,
     },
     emailButton: {
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
     emailText: {
         fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#FFFFFF',
+        color: colors.white,
         fontFamily: fontFamilies.body,
         letterSpacing: 0.2,
     },
@@ -362,12 +364,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.sm,
         borderRadius: radius.lg,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.35)',
+        borderColor: colors.borderOnDark,
     },
     skipText: {
-        color: '#FFFFFF',
+        color: colors.white,
         fontSize: fontSizes.base,
         fontWeight: '600',
         fontFamily: fontFamilies.body,

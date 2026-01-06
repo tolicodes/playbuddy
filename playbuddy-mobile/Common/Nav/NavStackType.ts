@@ -23,6 +23,7 @@ export type NavStackProps = {
         communityId: string;
         communityIds?: string[];
         displayName?: string;
+        title?: string;
         organizerId?: string;
     };
 

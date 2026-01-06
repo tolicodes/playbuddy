@@ -13,7 +13,7 @@ import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
-import { colors, fontSizes, radius, shadows, spacing } from '../../../components/styles';
+import { calendarExperienceTone, calendarTagTones, calendarTypeChips, colors, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistHeart } from './WishlistHeart';
@@ -27,13 +27,7 @@ interface ListItemProps {
     isAdmin?: boolean;
 }
 
-const TAG_TONES = {
-    spiritual: { background: '#FFF4E6', text: '#B45309', border: '#FFD7A8' },
-    social: { background: '#E9FBF3', text: '#1F8A5B', border: '#BDEDD8' },
-    skill: { background: '#EEF5FF', text: '#2B5AD7', border: '#CFE0FF' },
-    scene: { background: '#F6EEFF', text: '#6B35C6', border: '#DEC8FF' },
-    default: { background: '#F5F1FF', text: '#4B2ABF', border: '#E3DBFF' },
-};
+const TAG_TONES = calendarTagTones;
 
 const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
     {
@@ -85,6 +79,11 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const vetted = item.vetted;
     const locationLabel = item.location || item.city || item.region || '';
+    const metaItems = [
+        { key: 'date', label: formattedDate, icon: 'clock-o' },
+        ...(locationLabel ? [{ key: 'location', label: locationLabel, icon: 'map-marker' }] : []),
+        ...(item.price ? [{ key: 'price', label: item.price, icon: 'tag' }] : []),
+    ];
     type TagChip = { label: string; kind: 'type' | 'level' | 'vetted' | 'tag' };
     const tagChips: TagChip[] = [];
     const seenTags = new Set<string>();
@@ -108,7 +107,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
         if (!clean) return;
         const key = clean.toLowerCase();
         if (seenTags.has(key)) return;
-        if (tagChips.length >= 6) return;
+        if (tagChips.length >= 3) return;
         seenTags.add(key);
         tagChips.push({ label: clean, kind });
     };
@@ -129,33 +128,8 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
         pushTag(tag, 'tag');
     }
 
-    const tagChipColors: Record<string, { background: string; text: string; border: string }> = {
-        'play party': { background: '#EFE9FF', text: '#5A43B5', border: '#DED7FF' },
-        'munch': { background: '#FFE2B6', text: '#8A5200', border: '#F1C07A' },
-        'retreat': { background: '#EAF6EE', text: '#2E6B4D', border: '#D6EBDC' },
-        'festival': { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
-        'workshop': { background: '#FDEBEC', text: '#9A3D42', border: '#F6D7DA' },
-        'performance': { background: '#F1E9FF', text: '#5D3FA3', border: '#E2D6FB' },
-        'discussion': { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
-        'vetted': { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
-    };
-    const levelChipColors = { background: '#E7F0FF', text: '#2F5DA8', border: '#D6E4FB' };
-    const eventTypeKey = (() => {
-        if (item.play_party) return 'play party';
-        if (item.is_munch) return 'munch';
-        if (item.type && item.type !== 'event') return item.type.replace(/_/g, ' ').toLowerCase();
-        return 'event';
-    })();
-    const eventTypeLabel = (() => {
-        if (item.play_party) return 'Play Party';
-        if (item.is_munch) return 'Munch';
-        if (item.type && item.type !== 'event') {
-            return typeLabelMap[item.type] || item.type.replace(/_/g, ' ');
-        }
-        return 'Event';
-    })();
-    const typePillColors = tagChipColors[eventTypeKey] || TAG_TONES.default;
-
+    const tagChipColors = calendarTypeChips;
+    const levelChipColors = calendarExperienceTone;
     const handlePressEvent = () => {
         // for attendee carousel scroll logic
         if (!scrolling) {
@@ -182,9 +156,9 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
     };
 
     const placeHolderImage = item.munch_id ? (
-        <FAIcon name="cutlery" size={42} color="#666" />
+        <FAIcon name="cutlery" size={42} color={colors.textSlate} />
     ) : (
-        <FAIcon name="calendar" size={42} color="#666" />
+        <FAIcon name="calendar" size={42} color={colors.textSlate} />
     );
 
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
@@ -213,42 +187,23 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                             </View>
                         )}
                         <LinearGradient
-                            colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.85)']}
+                            colors={[colors.overlayNone, colors.overlayDeep]}
                             style={styles.posterGradient}
                         />
-                        <View style={styles.posterBadges}>
-                            <View
-                                style={[
-                                    styles.typePill,
-                                    { backgroundColor: typePillColors.background, borderColor: typePillColors.border },
-                                ]}
-                            >
-                                <FAIcon
-                                    name={TYPE_ICONS[eventTypeKey] || 'calendar'}
-                                    size={10}
-                                    color={typePillColors.text}
-                                    style={styles.typePillIcon}
-                                />
-                                <Text style={[styles.typePillText, { color: typePillColors.text }]}>
-                                    {eventTypeLabel}
+                        {promoCode && (
+                            <View style={styles.discountBadge}>
+                                <Text style={styles.discountText}>
+                                    {promoCode.discount_type === 'percent'
+                                        ? `${promoCode.discount}% off`
+                                        : `$${promoCode.discount} off`}
                                 </Text>
                             </View>
-                            {promoCode && (
-                                <View style={styles.discountBadge}>
-                                    <Text style={styles.discountText}>
-                                        {promoCode.discount_type === 'percent'
-                                            ? `${promoCode.discount}% off`
-                                            : `$${promoCode.discount} off`}
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
+                        )}
                         <View style={styles.posterActions}>
                             <WishlistHeart
                                 itemIsOnWishlist={itemIsOnWishlist}
                                 handleToggleEventWishlist={handleToggleEventWishlist}
-                                backgroundColor="#9ca3af"
-                                size={32}
+                                size={24}
                             />
                         </View>
                         <View style={styles.posterFooter}>
@@ -256,7 +211,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                 {item.name}
                             </Text>
                             <View style={styles.organizerRow}>
-                                <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || '#ccc' }]} />
+                                <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || colors.textDisabled }]} />
                                 <Text style={styles.organizerName} numberOfLines={1}>
                                     {item.organizer?.name}
                                 </Text>
@@ -267,27 +222,21 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                     <ScrollView
                         horizontal
                         showsHorizontalScrollIndicator={false}
-                        style={styles.metaRowScroll}
                         contentContainerStyle={styles.metaRow}
                         onScrollBeginDrag={() => setScrolling(true)}
                         onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
                     >
-                        <View style={styles.metaItem}>
-                            <FAIcon name="calendar" size={12} color="#555" style={styles.metaIcon} />
-                            <Text style={styles.metaText} numberOfLines={1}>{formattedDate}</Text>
-                        </View>
-                        {locationLabel ? (
-                            <View style={styles.metaItem}>
-                                <FAIcon name="map-marker" size={12} color="#555" style={styles.metaIcon} />
-                                <Text style={styles.metaText} numberOfLines={1}>{locationLabel}</Text>
+                        {metaItems.map((meta, index) => (
+                            <View key={meta.key} style={styles.metaItem}>
+                                {meta.icon && (
+                                    <FAIcon name={meta.icon} size={12} color={colors.textMuted} style={styles.metaIcon} />
+                                )}
+                                <Text style={styles.metaText} numberOfLines={1}>{meta.label}</Text>
+                                {index < metaItems.length - 1 && (
+                                    <Text style={styles.metaSeparator}>.</Text>
+                                )}
                             </View>
-                        ) : null}
-                        {item.price ? (
-                            <View style={styles.metaItem}>
-                                <FAIcon name="tag" size={11} color="#555" style={styles.metaIcon} />
-                                <Text style={styles.metaText} numberOfLines={1}>{item.price}</Text>
-                            </View>
-                        ) : null}
+                        ))}
                     </ScrollView>
 
                     {(tagChips.length > 0 || attendees.length > 0) && (
@@ -320,7 +269,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                                 {tag.kind === 'type' && (
                                                     <FAIcon
                                                         name={TYPE_ICONS[key] || 'calendar'}
-                                                        size={10}
+                                                        size={11}
                                                         color={colors.text}
                                                         style={styles.tagChipIcon}
                                                     />
@@ -328,7 +277,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                                 {tag.kind === 'tag' && (
                                                     <FAIcon
                                                         name="tag"
-                                                        size={10}
+                                                        size={11}
                                                         color={colors.text}
                                                         style={styles.tagChipIcon}
                                                     />
@@ -336,7 +285,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
                                                 {tag.kind === 'level' && (
                                                     <FAIcon
                                                         name="signal"
-                                                        size={10}
+                                                        size={11}
                                                         color={colors.text}
                                                         style={styles.tagChipIcon}
                                                     />
@@ -371,7 +320,7 @@ export const EventListItem: React.FC<ListItemProps> = ({ item, onPress, noPaddin
 };
 
 
-export const ITEM_HEIGHT = 196;
+export const ITEM_HEIGHT = 288;
 
 const styles = StyleSheet.create({
     // Container
@@ -394,14 +343,14 @@ const styles = StyleSheet.create({
         marginHorizontal: 0,
     },
     pendingBorder: {
-        borderColor: '#d97706',
+        borderColor: colors.warning,
         borderStyle: 'dotted',
         borderWidth: 3,
     },
     poster: {
-        height: 120,
+        height: 192,
         width: '100%',
-        backgroundColor: '#f2f2f2',
+        backgroundColor: colors.surfaceSubtle,
     },
     posterImage: {
         width: '100%',
@@ -410,39 +359,16 @@ const styles = StyleSheet.create({
     posterPlaceholder: {
         width: '100%',
         height: '100%',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#e9e9e9',
-        paddingTop: 10,
+        backgroundColor: colors.borderLight,
     },
     posterGradient: {
         position: 'absolute',
         left: 0,
         right: 0,
         bottom: 0,
-        height: 78,
-    },
-    posterBadges: {
-        position: 'absolute',
-        left: spacing.mdPlus,
-        top: spacing.mdPlus,
-        alignItems: 'flex-start',
-        gap: spacing.xs,
-    },
-    typePill: {
-        borderRadius: radius.pill,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xxs,
-        borderWidth: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    typePillIcon: {
-        marginRight: spacing.xs,
-    },
-    typePillText: {
-        fontSize: fontSizes.xsPlus,
-        fontWeight: '700',
+        height: 90,
     },
     posterFooter: {
         position: 'absolute',
@@ -473,14 +399,17 @@ const styles = StyleSheet.create({
     },
     organizerName: {
         fontSize: fontSizes.sm,
-        color: '#f2f2f2',
+        color: colors.textOnDarkStrong,
     },
     discountBadge: {
-        backgroundColor: '#FFD700',
+        position: 'absolute',
+        left: spacing.mdPlus,
+        top: spacing.sm,
+        backgroundColor: colors.gold,
         borderRadius: 8,
         paddingHorizontal: spacing.smPlus,
         paddingVertical: spacing.xs,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.2,
         shadowRadius: 3,
         shadowOffset: { width: 0, height: 1 },
@@ -489,38 +418,46 @@ const styles = StyleSheet.create({
     discountText: {
         fontSize: fontSizes.smPlus,
         fontWeight: 'bold',
-        color: 'black',
-    },
-    metaRowScroll: {
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.sm,
+        color: colors.black,
     },
     metaRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        flexGrow: 1,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.sm,
     },
     metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginRight: spacing.smPlus,
+        justifyContent: 'center',
     },
     metaIcon: {
-        marginRight: spacing.sm,
+        marginRight: spacing.xs,
+    },
+    metaSeparator: {
+        marginHorizontal: spacing.xs,
+        fontSize: fontSizes.sm,
+        fontWeight: '600',
+        color: colors.textMuted,
     },
     metaText: {
-        fontSize: fontSizes.xs,
-        color: '#555',
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
         fontWeight: '600',
+        flexShrink: 1,
+        textAlign: 'center',
     },
     tagRowContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xxs,
+        paddingTop: spacing.xs,
         paddingBottom: spacing.xs,
-        marginTop: spacing.xxs,
-        minHeight: 24,
+        marginTop: 0,
+        minHeight: 44,
     },
     tagRowScroll: {
         flexGrow: 1,
@@ -536,8 +473,8 @@ const styles = StyleSheet.create({
     },
     tagChip: {
         borderRadius: radius.pill,
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xxs,
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.xs,
         marginRight: spacing.sm,
         borderWidth: 1,
         flexDirection: 'row',
@@ -547,7 +484,7 @@ const styles = StyleSheet.create({
         marginRight: spacing.xs,
     },
     tagChipText: {
-        fontSize: fontSizes.xsPlus,
+        fontSize: fontSizes.sm,
         fontWeight: '600',
     },
     attendeeWrap: {

@@ -16,7 +16,7 @@ import { CommunitiesList } from './CommunitiesList';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
-import { colors } from '../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../components/styles';
 import { UE } from '../../userEventTypes';
 
 export const JoinCommunitySection = ({
@@ -78,7 +78,7 @@ export const JoinCommunitySection = ({
                         value={communityCode}
                         onChangeText={setCommunityCode}
                         placeholder="Enter community code"
-                        placeholderTextColor="#999"
+                        placeholderTextColor={colors.textSubtle}
                         autoCapitalize="none"
                         autoCorrect={false}
                     />
@@ -116,55 +116,59 @@ const styles = StyleSheet.create({
     // ── Join Private Styles ─────────────────────────────────────────────────────
     joinContainer: {
         flex: 1,
-        paddingHorizontal: 24,
-        paddingTop: 40,
-        paddingBottom: 60,
+        paddingHorizontal: spacing.xxl,
+        paddingTop: spacing.jumbo,
+        paddingBottom: spacing.jumbo + spacing.xl,
         justifyContent: 'center',
     },
     joinTitle: {
-        fontSize: 22,
+        fontSize: fontSizes.title,
         fontWeight: '700',
         textAlign: 'center',
-        marginBottom: 8,
-        color: '#333',
+        marginBottom: spacing.sm,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.display,
     },
     joinSubtitle: {
-        fontSize: 15,
-        color: '#666',
+        fontSize: fontSizes.lg,
+        color: colors.textSlate,
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: spacing.xl,
+        fontFamily: fontFamilies.body,
     },
     input: {
-        height: 48,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 12,
-        paddingHorizontal: 16,
-        fontSize: 16,
-        marginBottom: 20,
+        height: spacing.jumbo + spacing.sm,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.lg,
+        fontSize: fontSizes.xl,
+        marginBottom: spacing.xl,
         borderWidth: 1,
-        borderColor: '#DDD',
-        shadowColor: '#000',
+        borderColor: colors.borderMuted,
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 2,
         elevation: 2,
+        fontFamily: fontFamilies.body,
     },
     button: {
-        backgroundColor: '#007AFF',
-        height: 48,
-        borderRadius: 12,
+        backgroundColor: colors.linkBlue,
+        height: spacing.jumbo + spacing.sm,
+        borderRadius: radius.md,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#007AFF',
+        shadowColor: colors.linkBlue,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 3,
     },
     buttonText: {
-        color: '#FFFFFF',
-        fontSize: 17,
+        color: colors.white,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 
     // ── Organizer Styles (removed header & top padding) ─────────────────────────

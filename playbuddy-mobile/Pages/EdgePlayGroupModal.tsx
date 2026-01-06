@@ -4,6 +4,7 @@ import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { logEvent } from '../Common/hooks/logger';
 import { UE } from '../userEventTypes';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../components/styles';
 
 const WHATSAPP_URL = 'https://chat.whatsapp.com/KQrj1IBURWdEQrHVLZ23vM';
 
@@ -73,7 +74,7 @@ export function EdgePlayGroupModal({ visible, onDismiss, onSnooze }: EdgePlayGro
 
                     <View style={styles.titleRow}>
                         <Animated.View style={[styles.fireBadge, { transform: [{ scale: firePulse }] }]}>
-                            <FontAwesome5 name="fire" size={32} color="#f97316" />
+                            <FontAwesome5 name="fire" size={32} color={colors.accentOrange} />
                         </Animated.View>
                     </View>
                     <Text style={styles.title}>Interested in Edgy Events?</Text>
@@ -113,7 +114,7 @@ export function EdgePlayGroupModal({ visible, onDismiss, onSnooze }: EdgePlayGro
                     <View style={styles.buttonContainer}>
                         <TouchableOpacity style={styles.primaryBtn} onPress={openWhatsapp} activeOpacity={0.85}>
                             <View style={styles.primaryContent}>
-                                <FontAwesome5 name="whatsapp" size={18} color="#fff" />
+                                <FontAwesome5 name="whatsapp" size={18} color={colors.white} />
                                 <Text style={styles.primaryText}>Join WhatsApp group</Text>
                             </View>
                         </TouchableOpacity>
@@ -130,19 +131,19 @@ export function EdgePlayGroupModal({ visible, onDismiss, onSnooze }: EdgePlayGro
 const styles = StyleSheet.create({
     backdrop: {
         flex: 1,
-        backgroundColor: 'rgba(8, 7, 20, 0.7)',
+        backgroundColor: colors.backdropNight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     card: {
         width: '90%',
-        backgroundColor: '#0f172a',
-        borderRadius: 20,
-        padding: 20,
+        backgroundColor: colors.surfaceNight,
+        borderRadius: radius.xl,
+        padding: spacing.xl,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        shadowColor: '#000',
+        borderColor: colors.borderNight,
+        shadowColor: colors.black,
         shadowOpacity: 0.25,
         shadowOffset: { width: 0, height: 8 },
         shadowRadius: 16,
@@ -151,19 +152,21 @@ const styles = StyleSheet.create({
     },
     close: {
         alignSelf: 'flex-end',
-        padding: 4,
+        padding: spacing.xs,
     },
     closeText: {
-        color: '#94a3b8',
-        fontSize: 16,
+        color: colors.textNightSubtle,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
     },
     title: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: fontSizes.xxxl,
+        fontWeight: '700',
         textAlign: 'center',
-        color: '#fff',
+        color: colors.white,
         width: '100%',
-        marginBottom: 10,
+        marginBottom: spacing.smPlus,
+        fontFamily: fontFamilies.display,
     },
     titleRow: {
         flexDirection: 'row',
@@ -171,106 +174,110 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         gap: 8,
         width: '100%',
-        marginBottom: 6,
+        marginBottom: spacing.xsPlus,
         position: 'relative',
     },
     fireBadge: {
-        backgroundColor: 'rgba(249, 115, 22, 0.12)',
-        borderRadius: 999,
-        padding: 10,
-        shadowColor: '#f97316',
+        backgroundColor: colors.accentOrangeSoft,
+        borderRadius: radius.pill,
+        padding: spacing.smPlus,
+        shadowColor: colors.accentOrange,
         shadowOpacity: 0.35,
         shadowOffset: { width: 0, height: 10 },
         shadowRadius: 16,
         elevation: 10,
     },
     subtitle: {
-        fontSize: 16,
-        marginBottom: 15,
-        color: '#cbd5e1',
+        fontSize: fontSizes.xl,
+        marginBottom: spacing.lg,
+        color: colors.textNightMuted,
         width: '100%',
         textAlign: 'center',
-        lineHeight: 24,
+        lineHeight: lineHeights.xl,
+        fontFamily: fontFamilies.body,
     },
     bold: {
         fontWeight: '700',
     },
     highlightBox: {
         width: '100%',
-        backgroundColor: 'rgba(59, 130, 246, 0.06)',
-        borderRadius: 14,
-        padding: 14,
+        backgroundColor: colors.accentBlueSoft,
+        borderRadius: radius.mdPlus,
+        padding: spacing.mdPlus,
         borderWidth: 1,
-        borderColor: 'rgba(59, 130, 246, 0.25)',
-        marginBottom: 16,
-        shadowColor: '#3b82f6',
+        borderColor: colors.accentBlueBorder,
+        marginBottom: spacing.lg,
+        shadowColor: colors.accentBlue,
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 6 },
         shadowRadius: 12,
         elevation: 6,
     },
     highlightLabel: {
-        color: '#93c5fd',
-        fontSize: 13,
+        color: colors.accentBlueLight,
+        fontSize: fontSizes.smPlus,
         fontWeight: '700',
-        marginBottom: 8,
+        marginBottom: spacing.sm,
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     bulletContainer: {
         alignItems: 'flex-start',
-        gap: 10,
+        gap: spacing.smPlus,
     },
     bulletRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: spacing.sm,
     },
     bulletDot: {
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: '#f97316',
+        backgroundColor: colors.accentOrange,
     },
     bulletPoint: {
-        fontSize: 14,
-        color: '#e2e8f0',
+        fontSize: fontSizes.base,
+        color: colors.textNight,
         flex: 1,
-        lineHeight: 20,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
     },
     pastEventsBox: {
         width: '100%',
-        backgroundColor: 'rgba(15, 23, 42, 0.8)',
-        borderRadius: 12,
-        padding: 12,
+        backgroundColor: colors.surfaceNightOverlay,
+        borderRadius: radius.md,
+        padding: spacing.md,
         borderWidth: 1,
-        borderColor: 'rgba(148, 163, 184, 0.25)',
-        marginBottom: 16,
-        shadowColor: '#0ea5e9',
+        borderColor: colors.borderNightMuted,
+        marginBottom: spacing.lg,
+        shadowColor: colors.accentSkyDeep,
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 6 },
         shadowRadius: 10,
         elevation: 5,
     },
     pastEventsText: {
-        color: '#e2e8f0',
-        fontSize: 14,
-        lineHeight: 20,
+        color: colors.textNight,
+        fontSize: fontSizes.base,
+        lineHeight: lineHeights.md,
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     buttonContainer: {
         alignItems: 'stretch',
         width: '100%',
-        marginTop: 6,
-        gap: 10,
+        marginTop: spacing.xsPlus,
+        gap: spacing.smPlus,
     },
     primaryBtn: {
-        backgroundColor: '#16a34a',
-        borderRadius: 14,
-        paddingVertical: 14,
-        paddingHorizontal: 20,
+        backgroundColor: colors.accentGreen,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.mdPlus,
+        paddingHorizontal: spacing.xl,
         width: '100%',
         alignItems: 'center',
-        shadowColor: '#16a34a',
+        shadowColor: colors.accentGreen,
         shadowOpacity: 0.4,
         shadowOffset: { width: 0, height: 8 },
         shadowRadius: 16,
@@ -279,25 +286,27 @@ const styles = StyleSheet.create({
     primaryContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: spacing.sm,
     },
     primaryText: {
-        color: '#fff',
-        fontSize: 16,
+        color: colors.white,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     secondaryBtn: {
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
         width: '100%',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(148, 163, 184, 0.4)',
+        borderColor: colors.borderNightMuted,
     },
     secondaryText: {
-        color: '#cbd5e1',
-        fontSize: 14,
+        color: colors.textNightMuted,
+        fontSize: fontSizes.base,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 });

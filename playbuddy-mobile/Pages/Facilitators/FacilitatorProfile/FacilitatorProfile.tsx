@@ -24,6 +24,7 @@ import { logEvent } from '../../../Common/hooks/logger';
 import { UE } from '../../../userEventTypes';
 import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import TabBar from '../../../components/TabBar';
+import { colors, spacing } from '../../../components/styles';
 
 type Tab = { name: string; value: 'bio' | 'events' | 'media' };
 const TABS: Tab[] = [
@@ -157,13 +158,13 @@ const styles = StyleSheet.create({
     bioScroll: { flex: 1, backgroundColor: 'transparent', },
     bioScrollContent: {},
 
-    videoContainer: { backgroundColor: '#000' },
+    videoContainer: { backgroundColor: colors.black },
 
     // Sticky wrapper for TabBar — transparent to keep your gradient/background
     stickyHeader: {
-        paddingHorizontal: 16,
-        paddingBottom: 8,
-        shadowColor: '#000',
+        paddingHorizontal: spacing.lg,
+        paddingBottom: spacing.sm,
+        shadowColor: colors.black,
         shadowOpacity: 0.15,
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },

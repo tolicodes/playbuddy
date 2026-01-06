@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView, Alert, ActivityIndicator } from "react-native";
-import { Input } from "@rneui/themed";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserContext } from "./hooks/UserContext";
 import { Avatar } from './Buttons/Avatar';
 import { logEvent } from '../../Common/hooks/logger';
@@ -10,6 +10,8 @@ import { useNavigation } from "@react-navigation/native";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
+import { navigateToTab } from "../../Common/Nav/navigationHelpers";
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
 export const ProfileDetailsForm = () => {
     const { authUserId, userProfile, isLoadingUserProfile, session, currentDeepLink } = useUserContext()
@@ -43,17 +45,17 @@ export const ProfileDetailsForm = () => {
             initial_deep_link_id: currentDeepLink?.id || undefined,
         });
     }
-    const { navigate } = useNavigation<NavStack>();
+    const navigation = useNavigation<NavStack>();
 
     const onPressSignOut = async () => {
         logEvent(UE.AccountProfileDetailsFormPressSignOut, analyticsProps);
         signOut();
-        navigate('Calendar');
+        navigateToTab(navigation, 'Calendar');
     }
 
 
     if (isLoadingUserProfile) {
-        return <ActivityIndicator />
+        return <ActivityIndicator color={colors.brandIndigo} />
     }
 
     return (
@@ -63,14 +65,16 @@ export const ProfileDetailsForm = () => {
                     <Text style={styles.headerText}>Create Your Account</Text>
                     <Text style={styles.subHeaderText}>This is how your buddies will identify you</Text>
 
-                    <Input
-                        label="Display Name"
-                        labelStyle={styles.inputLabel}
-                        inputStyle={styles.inputText}
-                        onChangeText={setName}
-                        value={name}
-                        placeholder="Your Display Name"
-                    />
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Display Name</Text>
+                        <TextInput
+                            style={styles.inputText}
+                            onChangeText={setName}
+                            value={name}
+                            placeholder="Your Display Name"
+                            placeholderTextColor={colors.brandTextMuted}
+                        />
+                    </View>
 
                     <View style={{ marginVertical: 20 }}>
                         <Avatar name={name} />
@@ -92,7 +96,7 @@ export const ProfileDetailsForm = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F2F2F7',
+        backgroundColor: colors.surfaceSubtle,
     },
     scrollViewContent: {
         flexGrow: 1,
@@ -100,61 +104,65 @@ const styles = StyleSheet.create({
     },
     centeredContent: {
         alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 40,
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.jumbo,
     },
     headerText: {
-        fontSize: 34,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#000',
+        fontSize: fontSizes.displayLg,
+        fontWeight: '700',
+        marginBottom: spacing.xl,
+        color: colors.brandText,
         textAlign: 'center',
+        fontFamily: fontFamilies.display,
     },
     subHeaderText: {
-        fontSize: 17,
-        marginBottom: 100,
-        color: '#000',
+        fontSize: fontSizes.xxl,
+        marginBottom: spacing.jumbo * 2 + spacing.xl,
+        color: colors.brandTextMuted,
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     button: {
-        backgroundColor: '#007AFF',
-        borderRadius: 10,
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        marginBottom: 16,
+        backgroundColor: colors.brandIndigo,
+        borderRadius: radius.smPlus,
+        paddingVertical: spacing.mdPlus,
+        paddingHorizontal: spacing.xl,
+        marginBottom: spacing.lg,
         width: '100%',
     },
     buttonText: {
-        color: '#FFFFFF',
-        fontSize: 17,
+        color: colors.white,
+        fontSize: fontSizes.xxl,
         fontWeight: '600',
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     signOutButton: {
-        backgroundColor: '#FF3B30',
+        backgroundColor: colors.danger,
     },
     inputLabel: {
-        color: 'black',
+        color: colors.textDeep,
         textAlign: 'center',
         fontWeight: '500',
-        fontSize: 20,
-        marginBottom: 10,
+        fontSize: fontSizes.xxxl,
+        marginBottom: spacing.smPlus,
         // display: 'none',
+        fontFamily: fontFamilies.body,
+    },
+    inputContainer: {
+        alignSelf: 'stretch',
+        marginBottom: spacing.xl,
     },
     inputText: {
-        color: '#000',
-        borderColor: '#007AFF', // iOS blue color for visibility
-        borderWidth: 2, // Increased border width for better visibility
-        borderRadius: 8,
-        padding: 12, // Increased padding for a more comfortable touch
-        backgroundColor: '#FFFFFF',
-        shadowColor: '#000', // Adding shadow for depth
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 2, // For Android compatibility
+        color: colors.textDeep,
+        borderColor: colors.borderAccent,
+        borderWidth: 2,
+        borderRadius: radius.sm,
+        padding: spacing.md,
+        backgroundColor: colors.white,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
+        ...shadows.card,
+        width: '100%',
     },
 });

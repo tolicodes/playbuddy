@@ -328,7 +328,7 @@ const topBarStyles = StyleSheet.create({
     topBar: {
         flexDirection: 'column',
         paddingHorizontal: spacing.lg,
-        paddingBottom: spacing.smPlus,
+        paddingBottom: spacing.xs,
         paddingTop: spacing.smPlus,
         backgroundColor: 'transparent',
     },
@@ -338,7 +338,7 @@ const topBarStyles = StyleSheet.create({
         padding: spacing.md,
         borderWidth: 1,
         borderColor: colors.borderLavender,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.06,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 6,
@@ -364,7 +364,7 @@ const topBarStyles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.borderLight,
         overflow: 'hidden',
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 8,
@@ -387,7 +387,7 @@ const topBarStyles = StyleSheet.create({
         borderRadius: radius.md,
         backgroundColor: colors.surfaceSubtle,
         borderWidth: 1,
-        borderColor: '#e3e6ee',
+        borderColor: colors.borderMutedLight,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.sm,
@@ -406,7 +406,7 @@ const topBarStyles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderWidth: 1,
-        borderColor: '#e7e7ef',
+        borderColor: colors.borderMutedLight,
     },
     searchBubbleExpanded: {
         width: '100%',
@@ -458,7 +458,7 @@ const topBarStyles = StyleSheet.create({
     },
     chipMore: {
         backgroundColor: colors.surfaceSubtle,
-        borderColor: '#d8dbe2',
+        borderColor: colors.borderMuted,
         marginLeft: spacing.sm,
     },
 });

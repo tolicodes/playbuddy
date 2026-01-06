@@ -1,6 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Linking } from 'react-native';
+import { View, Text, StyleSheet, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesome } from '@expo/vector-icons';
+import { colors, fontFamilies, fontSizes, spacing } from '../../components/styles';
 
 const ErrorScreen = () => {
     const handleEmailPress = () => {
@@ -10,7 +12,7 @@ const ErrorScreen = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
-                <FontAwesome name="exclamation-triangle" size={100} color="red" />
+                <FontAwesome name="exclamation-triangle" size={100} color={colors.danger} />
                 <Text style={styles.title}>App is failing to load.</Text>
                 <Text style={styles.message}>
                     This may be temporary...or a real problem :/ {'\n'}
@@ -26,27 +28,31 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
     },
     content: {
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: spacing.xl,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginVertical: 20,
+        fontSize: fontSizes.headline,
+        fontWeight: '700',
+        marginVertical: spacing.xl,
         textAlign: 'center',
+        color: colors.textDeep,
+        fontFamily: fontFamilies.display,
     },
     message: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         textAlign: 'center',
-        color: '#333',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
     email: {
-        color: 'blue',
+        color: colors.linkBlue,
         textDecorationLine: 'underline',
+        fontFamily: fontFamilies.body,
     },
 });
 

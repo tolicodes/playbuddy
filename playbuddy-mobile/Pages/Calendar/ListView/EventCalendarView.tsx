@@ -1,6 +1,19 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { View, StyleSheet, SectionList, Linking } from "react-native";
+import {
+    Animated,
+    View,
+    StyleSheet,
+    SectionList,
+    Linking,
+    Modal,
+    Pressable,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+} from "react-native";
 import moment from "moment-timezone";
+import FAIcon from "react-native-vector-icons/FontAwesome5";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useCalendarContext } from "../hooks/CalendarContext";
@@ -8,31 +21,36 @@ import { useGroupedEvents } from "../hooks/useGroupedEvents";
 import { useUserContext } from "../../Auth/hooks/UserContext";
 import { FiltersView, FilterState } from "./Filters/FiltersView";
 import EventList from "./EventList";
-import WebsiteBanner from "../../../components/WebsiteBanner";
 import { logEvent } from "../../../Common/hooks/logger";
 import { MISC_URLS } from "../../../config";
 import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
 import { PopupManager } from "../../PopupManager";
 import { TopBar, ChipTone, QuickFilterItem, TypeaheadSuggestion, ActiveFilterChip } from "./TopBar";
-import { DateStripHeader } from "./DateStripHeader";
 import { WeekStrip } from "./WeekStrip";
 import { SECTION_DATE_FORMAT } from "../hooks/useGroupedEventsMain";
 import { getAllClassificationsFromEvents } from "../../../utils/getAllClassificationsFromEvents";
 import { UE } from "../../../userEventTypes";
 import { useEventAnalyticsProps } from "../../../Common/hooks/useAnalytics";
-import { radius, spacing } from "../../../components/styles";
+import {
+    calendarExperienceTone,
+    calendarInteractivityTones,
+    calendarOrganizerTone,
+    calendarTypeChips,
+    colors,
+    eventListThemes,
+    fontFamilies,
+    fontSizes,
+    radius,
+    spacing,
+} from "../../../components/styles";
 
 import {
     TZ,
     NavState,
     ny,
-    hasEventsOnOrAfterTodayNY,
+    hasEventsOnDayNY,
     computeInitialState,
     deriveWeekArrays,
-    goToPrevWeekNav,
-    goToNextWeekNav,
-    goToTodayNav,
-    canGoPrev as canGoPrevWeek,
 } from "./calendarNavUtils";
 import { FullCalendar } from "./FullCalendar";
 
@@ -44,6 +62,11 @@ interface Props {
     entityId?: string;
 }
 
+const DATE_COACH_COUNT_KEY = "dateCoachShownCount";
+const DATE_COACH_LAST_SHOWN_KEY = "dateCoachLastShownAt";
+const DATE_COACH_MAX_SHOWS = 3;
+const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+
 const EventCalendarView: React.FC<Props> = ({
     events,
     showGoogleCalendar = false,
@@ -51,9 +74,16 @@ const EventCalendarView: React.FC<Props> = ({
     entity = "events",
     entityId,
 }) => {
-    const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
-    const { isLoadingEvents } = useCalendarContext();
+    type DateCoachMeta = { count: number; lastShownAt: number | null };
+    const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
+    const [showDateToast, setShowDateToast] = useState(false);
+    const [dateCoachMeta, setDateCoachMeta] = useState<DateCoachMeta | null>(null);
+    const pendingCoachRef = useRef(false);
+    const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const toastAnim = useRef(new Animated.Value(0)).current;
+    const { isLoadingEvents, allEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
+    const sourceEvents = events ?? allEvents;
 
     const [searchQuery, setSearchQuery] = useState("");
     const [filtersVisible, setFiltersVisible] = useState(false);
@@ -75,38 +105,72 @@ const EventCalendarView: React.FC<Props> = ({
     const [quickFilter, setQuickFilter] = useState<QuickFilterSelection | null>(null);
     const [typeaheadSelection, setTypeaheadSelection] = useState<TypeaheadSuggestion | null>(null);
 
+    useEffect(() => {
+        let isActive = true;
+        AsyncStorage.multiGet([DATE_COACH_COUNT_KEY, DATE_COACH_LAST_SHOWN_KEY]).then(
+            (entries) => {
+                if (!isActive) return;
+                const countValue = entries.find(([key]) => key === DATE_COACH_COUNT_KEY)?.[1];
+                const lastValue = entries.find(([key]) => key === DATE_COACH_LAST_SHOWN_KEY)?.[1];
+                const parsedCount = countValue ? parseInt(countValue, 10) : 0;
+                const count = Number.isNaN(parsedCount) ? 0 : parsedCount;
+                const parsedLast = lastValue ? Number(lastValue) : Number.NaN;
+                const lastShownAt = Number.isNaN(parsedLast) ? null : parsedLast;
+                const meta = { count, lastShownAt };
+                setDateCoachMeta(meta);
+                if (pendingCoachRef.current) {
+                    pendingCoachRef.current = false;
+                    if (shouldShowDateToast(meta)) {
+                        showDateToastNow(meta);
+                    }
+                }
+            }
+        );
+        return () => {
+            isActive = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        return () => {
+            if (toastTimeoutRef.current) {
+                clearTimeout(toastTimeoutRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (showDateToast) {
+            toastAnim.setValue(0);
+            Animated.spring(toastAnim, {
+                toValue: 1,
+                friction: 7,
+                tension: 120,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            Animated.timing(toastAnim, {
+                toValue: 0,
+                duration: 180,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [showDateToast, toastAnim]);
+
     const allClassifications = useMemo(() => {
-        if (!events)
+        if (!sourceEvents)
             return { tags: [], experience_levels: [], interactivity_levels: [], event_types: [] };
-        return getAllClassificationsFromEvents(events);
-    }, [events]);
+        return getAllClassificationsFromEvents(sourceEvents);
+    }, [sourceEvents]);
 
     const analyticsProps = useEventAnalyticsProps();
     const analyticsPropsPlusEntity = { ...analyticsProps, entity, entityId };
 
-    const eventListTheme = 'aurora' as const;
-    const eventListThemes = {
-        aurora: {
-            colors: ['rgba(122,74,215,0.22)', '#F7F2FF', '#FCEAF2', '#FFF1D6'],
-            locations: [0, 0.2, 0.62, 1],
-            glows: ['rgba(128,90,255,0.16)', 'rgba(255,120,180,0.14)', 'rgba(255,210,140,0.18)'],
-            blend: 'rgba(122,74,215,0.2)',
-        },
-        velvet: {
-            colors: ['rgba(98,68,190,0.2)', '#F0EBFF', '#EFE6FF', '#F7EAF8'],
-            locations: [0, 0.22, 0.58, 1],
-            glows: ['rgba(90,67,181,0.16)', 'rgba(144,97,255,0.14)', 'rgba(255,162,210,0.14)'],
-            blend: 'rgba(98,68,190,0.18)',
-        },
-        citrus: {
-            colors: ['rgba(255,178,102,0.18)', '#FFF3E2', '#FFE7F1', '#F3F2FF'],
-            locations: [0, 0.24, 0.6, 1],
-            glows: ['rgba(255,186,128,0.18)', 'rgba(255,124,146,0.14)', 'rgba(120,150,255,0.12)'],
-            blend: 'rgba(255,178,102,0.16)',
-        },
-    };
+    const eventListTheme = 'welcome' as const;
     const eventListConfig = eventListThemes[eventListTheme];
     const eventListColors = eventListConfig.colors;
+    const { width: windowWidth } = useWindowDimensions();
+    const monthModalWidth = Math.max(0, windowWidth - spacing.lg * 2);
 
     const sectionListRef = useRef<SectionList>(null);
 
@@ -184,38 +248,10 @@ const EventCalendarView: React.FC<Props> = ({
         return organizerName === quickFilter.organizer.toLowerCase();
     };
 
-    const chipTones: Record<string, ChipTone> = {
-        'play party': { background: '#EFE9FF', text: '#5A43B5', border: '#DED7FF' },
-        'munch': { background: '#FFE2B6', text: '#8A5200', border: '#F1C07A' },
-        'retreat': { background: '#EAF6EE', text: '#2E6B4D', border: '#D6EBDC' },
-        'festival': { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
-        'workshop': { background: '#FDEBEC', text: '#9A3D42', border: '#F6D7DA' },
-        'performance': { background: '#F1E9FF', text: '#5D3FA3', border: '#E2D6FB' },
-        'discussion': { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
-        'rope': { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
-    };
-    const organizerTone: ChipTone = {
-        background: '#E8F1FF',
-        text: '#2F5DA8',
-        border: '#D6E4FB',
-    };
-    const experienceTone: ChipTone = {
-        background: '#E7F0FF',
-        text: '#2F5DA8',
-        border: '#D6E4FB',
-    };
-    const interactivityTones: Record<string, ChipTone> = {
-        social: { background: '#E9FBF3', text: '#1F8A5B', border: '#BDEDD8' },
-        discussion: { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
-        intimate: { background: '#FFE9F1', text: '#A6456A', border: '#F6CADB' },
-        sensual: { background: '#FDEBEC', text: '#9A3D42', border: '#F6D7DA' },
-        erotic: { background: '#FDE3E3', text: '#B42318', border: '#F3C8C8' },
-        sexual: { background: '#FEE2E2', text: '#B42318', border: '#F6C9C9' },
-        extreme: { background: '#FEE2E2', text: '#B42318', border: '#F6C9C9' },
-        hands_on: { background: '#E7F9F6', text: '#197769', border: '#CFEFE9' },
-        performance: { background: '#F1E9FF', text: '#5D3FA3', border: '#E2D6FB' },
-        observational: { background: '#EEF2FF', text: '#4C55A6', border: '#D9DEFF' },
-    };
+    const chipTones: Record<string, ChipTone> = calendarTypeChips;
+    const organizerTone: ChipTone = calendarOrganizerTone;
+    const experienceTone: ChipTone = calendarExperienceTone;
+    const interactivityTones: Record<string, ChipTone> = calendarInteractivityTones;
     const toneAliases: Record<string, string> = {
         'play parties': 'play party',
         'munches': 'munch',
@@ -277,9 +313,9 @@ const EventCalendarView: React.FC<Props> = ({
     );
 
     const filteredEvents = useMemo(() => {
-        if (!events) return [];
+        if (!sourceEvents) return [];
         const normalize = (str?: string) => str?.toLowerCase().replace(/ /g, "_");
-        const baseEvents = quickFilter ? events.filter(matchesQuickFilter) : events;
+        const baseEvents = quickFilter ? sourceEvents.filter(matchesQuickFilter) : sourceEvents;
 
         const normalizedQuery = normalizeSearchText(searchQuery);
         if (normalizedQuery.length > 0) {
@@ -323,7 +359,7 @@ const EventCalendarView: React.FC<Props> = ({
                 filters.event_types.length === 0 || filters.event_types.includes("events") || filters.event_types.includes(event.type);
             return matchesTags && matchesExp && matchesInter && matchesType;
         });
-    }, [events, searchQuery, filters, quickFilter]);
+    }, [sourceEvents, searchQuery, filters, quickFilter]);
 
     const selectedQuickFilterId = quickFilter
         ? quickFilter.type === 'category'
@@ -563,7 +599,7 @@ const EventCalendarView: React.FC<Props> = ({
     useEffect(() => {
         const recomputed = computeInitialState(filteredEvents);
         setNav((prev) => {
-            const selectedStillOk = hasEventsOnOrAfterTodayNY(filteredEvents, prev.selectedDate);
+            const selectedStillOk = !ny.isBeforeToday(prev.selectedDate);
             if (selectedStillOk) {
                 const correctAnchor = ny.startOfWeek(prev.selectedDate).toDate();
                 if (!ny.startOfWeek(prev.weekAnchorDate).isSame(correctAnchor, "day")) {
@@ -577,13 +613,14 @@ const EventCalendarView: React.FC<Props> = ({
         setMonthAnchorDate(moment(recomputed.weekAnchorDate).startOf("month").toDate());
     }, [filteredEvents]);
 
-    const { prevWeekDays, weekDays, nextWeekDays } = useMemo(
+    const { weekDays } = useMemo(
         () => deriveWeekArrays(nav.weekAnchorDate),
         [nav.weekAnchorDate]
     );
 
-    // Treat all days before today as disabled/grey (even if historical events exist)
-    const hasEventsOnDay = (d: Date | string) => hasEventsOnOrAfterTodayNY(filteredEvents, d);
+    // Treat all days before today as disabled/grey.
+    const isDaySelectable = (d: Date | string) => !ny.isBeforeToday(d);
+    const hasEventsOnDay = (d: Date | string) => hasEventsOnDayNY(filteredEvents, d);
 
     const scrollToDate = (date: Date) => {
         const formatted = moment(date).tz(TZ).format(SECTION_DATE_FORMAT);
@@ -597,8 +634,42 @@ const EventCalendarView: React.FC<Props> = ({
         }
     };
 
+    const shouldShowDateToast = (meta: DateCoachMeta) => {
+        if (meta.count >= DATE_COACH_MAX_SHOWS) return false;
+        if (!meta.lastShownAt) return true;
+        return Date.now() - meta.lastShownAt >= DATE_COACH_INTERVAL_MS;
+    };
+
+    const showDateToastNow = (currentMeta?: DateCoachMeta) => {
+        const now = Date.now();
+        setShowDateToast(true);
+        if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+        }
+        toastTimeoutRef.current = setTimeout(() => setShowDateToast(false), 7800);
+        setDateCoachMeta((prev) => {
+            const base = currentMeta ?? prev ?? { count: 0, lastShownAt: null };
+            const next = { count: Math.min(base.count + 1, DATE_COACH_MAX_SHOWS), lastShownAt: now };
+            void AsyncStorage.multiSet([
+                [DATE_COACH_COUNT_KEY, String(next.count)],
+                [DATE_COACH_LAST_SHOWN_KEY, String(now)],
+            ]);
+            return next;
+        });
+    };
+
+    const triggerDateToast = () => {
+        if (!dateCoachMeta) {
+            pendingCoachRef.current = true;
+            return;
+        }
+        if (shouldShowDateToast(dateCoachMeta)) {
+            showDateToastNow(dateCoachMeta);
+        }
+    };
+
     const onSelectDay = (day: Date) => {
-        if (!hasEventsOnDay(day)) {
+        if (!isDaySelectable(day)) {
             return;
         }
         const next = { weekAnchorDate: ny.startOfWeek(day).toDate(), selectedDate: day };
@@ -606,67 +677,95 @@ const EventCalendarView: React.FC<Props> = ({
         setNav(next);
         setMonthAnchorDate(moment(day).startOf("month").toDate());
         scrollToDate(day);
-        setIsCalendarExpanded(false);
+        setIsMonthModalOpen(false);
     };
 
-    const prevDisabled = !isCalendarExpanded && !canGoPrevWeek(nav.weekAnchorDate);
-
-    const shiftMonth = (delta: number) => {
-        const nextMonth = moment(monthAnchorDate).add(delta, "month").startOf("month").toDate();
-        setMonthAnchorDate(nextMonth);
-        const nextNav = { weekAnchorDate: ny.startOfWeek(nextMonth).toDate(), selectedDate: nextMonth };
-        setNav(nextNav);
-        scrollToDate(nextMonth);
-    };
-
-    const goToPrev = () => {
-        if (isCalendarExpanded) {
-            shiftMonth(-1);
-            return;
-        }
-        if (prevDisabled) return;
-        const next = goToPrevWeekNav(nav, filteredEvents);
-        if (next !== nav) {
-            setNav(next);
-            scrollToDate(next.selectedDate);
-        }
-    };
-
-    const goToNext = () => {
-        if (isCalendarExpanded) {
-            shiftMonth(1);
-            return;
-        }
-        const next = goToNextWeekNav(nav, filteredEvents);
+    const goToPrevDay = () => {
+        const prevDay = ny.addDays(nav.selectedDate, -1).toDate();
+        if (!isDaySelectable(prevDay)) return;
+        const next = { weekAnchorDate: ny.startOfWeek(prevDay).toDate(), selectedDate: prevDay };
         setNav(next);
-        if (!ny.isSameDay(next.selectedDate, nav.selectedDate)) {
-            scrollToDate(next.selectedDate);
-        }
+        setMonthAnchorDate(moment(prevDay).startOf("month").toDate());
+        scrollToDate(prevDay);
+    };
+
+    const goToNextDay = () => {
+        const nextDay = ny.addDays(nav.selectedDate, 1).toDate();
+        if (!isDaySelectable(nextDay)) return;
+        const next = { weekAnchorDate: ny.startOfWeek(nextDay).toDate(), selectedDate: nextDay };
+        setNav(next);
+        setMonthAnchorDate(moment(nextDay).startOf("month").toDate());
+        scrollToDate(nextDay);
     };
 
     const goToToday = () => {
-        const next = goToTodayNav(nav, filteredEvents);
+        const today = moment().tz(TZ).toDate();
+        if (!isDaySelectable(today)) return;
+        const next = { weekAnchorDate: ny.startOfWeek(today).toDate(), selectedDate: today };
         setNav(next);
-        const nextMonth = moment(next.selectedDate).startOf("month").toDate();
-        setMonthAnchorDate(nextMonth);
-        scrollToDate(next.selectedDate);
+        setMonthAnchorDate(moment(today).startOf("month").toDate());
+        scrollToDate(today);
     };
 
-    const onPressExpand = () => {
-        setIsCalendarExpanded((prev) => {
-            const next = !prev;
-            if (next) {
-                setMonthAnchorDate(moment(nav.selectedDate).startOf("month").toDate());
-            }
-            return next;
-        });
+    const openMonthModal = (day?: Date) => {
+        const anchor = day ?? nav.selectedDate;
+        setMonthAnchorDate(moment(anchor).startOf("month").toDate());
+        setIsMonthModalOpen(true);
+    };
+    const closeMonthModal = () => setIsMonthModalOpen(false);
+
+    const goToPrevMonth = () =>
+        setMonthAnchorDate((prev) => moment(prev).subtract(1, "month").startOf("month").toDate());
+    const goToNextMonth = () =>
+        setMonthAnchorDate((prev) => moment(prev).add(1, "month").startOf("month").toDate());
+    const onMonthChange = (date: Date) =>
+        setMonthAnchorDate(moment(date).startOf("month").toDate());
+
+    const monthLabel = useMemo(
+        () => moment(monthAnchorDate).tz(TZ).format("MMMM YYYY"),
+        [monthAnchorDate]
+    );
+
+    const handleStripSelectDay = (day: Date) => {
+        onSelectDay(day);
+        triggerDateToast();
     };
 
-    const headerDate = isCalendarExpanded ? monthAnchorDate : nav.weekAnchorDate;
+    const handleStripSwipePrevDay = () => {
+        goToPrevDay();
+        triggerDateToast();
+    };
+
+    const handleStripSwipeNextDay = () => {
+        goToNextDay();
+        triggerDateToast();
+    };
+
+    const handleStripLongPress = (day: Date) => {
+        openMonthModal(day);
+    };
+
+    const toastTranslateY = toastAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [24, 0],
+    });
+    const toastScale = toastAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.96, 1],
+    });
 
     return (
+        <LinearGradient
+            colors={eventListColors}
+            locations={eventListConfig.locations}
+            start={{ x: 0.1, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={styles.screenGradient}
+        >
+            <View pointerEvents="none" style={styles.screenGlowTop} />
+            <View pointerEvents="none" style={styles.screenGlowMid} />
+            <View pointerEvents="none" style={styles.screenGlowBottom} />
             <View style={styles.container}>
-            {!authUserId && <WebsiteBanner />}
             <PopupManager />
 
             <FiltersView
@@ -778,115 +877,279 @@ const EventCalendarView: React.FC<Props> = ({
                 }}
             />
 
-            <DateStripHeader
-                currentDate={headerDate}
-                goToPrev={goToPrev}
-                goToNext={goToNext}
-                goToToday={goToToday}
-                disabledPrev={prevDisabled}
-                showWeekRange={!isCalendarExpanded}
-                isExpanded={isCalendarExpanded}
-                onToggleExpand={onPressExpand}
-            />
-            {!isCalendarExpanded && (
-                <View style={styles.calendarContainer}>
-                    <WeekStrip
-                        prevWeekDays={prevWeekDays}
-                        weekDays={weekDays}
-                        nextWeekDays={nextWeekDays}
-                        selectedDay={nav.selectedDate}
-                        onChangeSelectedDay={onSelectDay}
-                        hasEventsOnDay={hasEventsOnDay}
-                        goToPrev={goToPrev}
-                        goToNext={goToNext}
-                        canGoPrev={!prevDisabled}
-                    />
-                </View>
-            )}
-
-            {isCalendarExpanded && (
-                <FullCalendar
-                    currentDate={monthAnchorDate}
-                    onSelectDay={onSelectDay}
-                    hasEventsOnDay={hasEventsOnDay}
-                    selectedDate={nav.selectedDate}
+            <View style={styles.calendarContainer}>
+                <WeekStrip
+                    weekDays={weekDays}
+                    selectedDay={nav.selectedDate}
+                    onChangeSelectedDay={handleStripSelectDay}
+                    isDaySelectable={isDaySelectable}
+                    onSwipePrevDay={handleStripSwipePrevDay}
+                    onSwipeNextDay={handleStripSwipeNextDay}
+                    onLongPress={handleStripLongPress}
                 />
-            )}
+            </View>
 
-            <LinearGradient
-                colors={eventListColors}
-                locations={eventListConfig.locations}
-                style={styles.eventListContainer}
+            <Modal
+                transparent
+                animationType="fade"
+                visible={isMonthModalOpen}
+                onRequestClose={closeMonthModal}
             >
-                <View pointerEvents="none" style={styles.eventListBackdrop}>
-                    <LinearGradient
-                        colors={[eventListConfig.blend, 'rgba(255,255,255,0)']}
-                        style={styles.eventListBlend}
-                    />
-                    <View style={[styles.eventListGlow, styles.eventListGlowOne, { backgroundColor: eventListConfig.glows[0] }]} />
-                    <View style={[styles.eventListGlow, styles.eventListGlowTwo, { backgroundColor: eventListConfig.glows[1] }]} />
-                    <View style={[styles.eventListGlow, styles.eventListGlowThree, { backgroundColor: eventListConfig.glows[2] }]} />
+                <View style={styles.monthModalBackdrop}>
+                    <Pressable style={StyleSheet.absoluteFillObject} onPress={closeMonthModal} />
+                    <View style={[styles.monthModalCard, { width: monthModalWidth }]}>
+                        <TouchableOpacity
+                            style={styles.monthModalClose}
+                            onPress={closeMonthModal}
+                            accessibilityLabel="Close month picker"
+                        >
+                            <Text style={styles.monthModalCloseText}>X</Text>
+                        </TouchableOpacity>
+
+                        <View style={styles.monthModalHeader}>
+                            <TouchableOpacity
+                                style={styles.monthNavButton}
+                                onPress={goToPrevMonth}
+                                accessibilityLabel="Previous month"
+                            >
+                                <FAIcon name="chevron-left" size={16} color={colors.white} />
+                            </TouchableOpacity>
+                            <Text style={styles.monthModalTitle} numberOfLines={1} ellipsizeMode="tail">
+                                {monthLabel}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.monthNavButton}
+                                onPress={goToNextMonth}
+                                accessibilityLabel="Next month"
+                            >
+                                <FAIcon name="chevron-right" size={16} color={colors.white} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity
+                            style={styles.monthModalToday}
+                            onPress={() => onSelectDay(moment().tz(TZ).toDate())}
+                            accessibilityLabel="Select today"
+                        >
+                            <FAIcon name="calendar-day" size={12} color={colors.white} />
+                            <Text style={styles.monthModalTodayText}>Today</Text>
+                        </TouchableOpacity>
+
+                        <FullCalendar
+                            currentDate={monthAnchorDate}
+                            onSelectDay={onSelectDay}
+                            hasEventsOnDay={hasEventsOnDay}
+                            selectedDate={nav.selectedDate}
+                            onMonthChange={onMonthChange}
+                        />
+                    </View>
                 </View>
+            </Modal>
+            <View
+                pointerEvents="none"
+                accessibilityElementsHidden={!showDateToast}
+                importantForAccessibility={showDateToast ? "yes" : "no-hide-descendants"}
+                style={styles.dateToastBackdrop}
+            >
+                <Animated.View
+                    style={[
+                        styles.dateToastCard,
+                        {
+                            opacity: toastAnim,
+                            transform: [{ translateY: toastTranslateY }, { scale: toastScale }],
+                        },
+                    ]}
+                >
+                    <LinearGradient
+                        colors={[colors.brandIndigo, colors.brandPurple, colors.brandPink]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.dateToastGradient}
+                    >
+                        <View style={styles.dateToastIcon}>
+                            <FAIcon name="calendar-day" size={12} color={colors.white} />
+                        </View>
+                        <Text style={styles.dateToastText}>long press for month view</Text>
+                    </LinearGradient>
+                </Animated.View>
+            </View>
+
+            <View style={styles.eventListContainer}>
                 <EventList
                     sections={sections}
                     sectionListRef={sectionListRef}
                     isLoadingEvents={isLoadingEvents}
                 />
-            </LinearGradient>
-        </View>
+            </View>
+            </View>
+        </LinearGradient>
     );
 };
 
 export default EventCalendarView;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "transparent" },
-    calendarContainer: { width: "100%", backgroundColor: "transparent" },
-    eventListContainer: {
-        flex: 1,
-        borderTopLeftRadius: radius.hero,
-        borderTopRightRadius: radius.hero,
-        paddingTop: spacing.sm,
-        marginTop: spacing.xs,
-        borderTopWidth: 1,
-        borderTopColor: "rgba(122,74,215,0.16)",
-        overflow: 'hidden',
-        shadowColor: "#000",
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: -2 },
-        shadowRadius: 8,
-        elevation: 5,
-    },
-    eventListBackdrop: {
-        ...StyleSheet.absoluteFillObject,
-    },
-    eventListGlow: {
+    screenGradient: { flex: 1 },
+    screenGlowTop: {
         position: 'absolute',
-        borderRadius: 200,
+        top: -70,
+        right: -80,
+        width: 240,
+        height: 240,
+        borderRadius: 120,
+        backgroundColor: colors.brandGlowTop,
     },
-    eventListBlend: {
+    screenGlowMid: {
         position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 120,
-    },
-    eventListGlowOne: {
-        width: 260,
-        height: 260,
-        left: 20,
-        top: 90,
-    },
-    eventListGlowTwo: {
+        top: 140,
+        left: -120,
         width: 220,
         height: 220,
-        right: 6,
-        top: 190,
+        borderRadius: 110,
+        backgroundColor: colors.brandGlowMid,
     },
-    eventListGlowThree: {
-        width: 280,
-        height: 280,
-        left: 50,
-        bottom: 60,
+    screenGlowBottom: {
+        position: 'absolute',
+        bottom: -70,
+        left: -90,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
+        backgroundColor: colors.brandGlowWarm,
+    },
+    container: { flex: 1, backgroundColor: "transparent" },
+    calendarContainer: { width: "100%", backgroundColor: "transparent", paddingTop: 0 },
+    eventListContainer: {
+        flex: 1,
+        paddingTop: 0,
+        marginTop: 0,
+        backgroundColor: 'transparent',
+    },
+    monthModalBackdrop: {
+        flex: 1,
+        backgroundColor: colors.backdropNight,
+        alignItems: "center",
+        justifyContent: "center",
+        paddingVertical: spacing.xl,
+        paddingHorizontal: spacing.lg,
+    },
+    monthModalCard: {
+        backgroundColor: colors.surfaceNight,
+        borderRadius: radius.lgPlus,
+        paddingVertical: spacing.lg,
+        paddingHorizontal: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.borderNight,
+        shadowColor: colors.black,
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 10 },
+        shadowRadius: 18,
+        elevation: 12,
+    },
+    monthModalClose: {
+        position: "absolute",
+        top: spacing.sm,
+        right: spacing.sm,
+        padding: spacing.xs,
+        zIndex: 2,
+    },
+    monthModalCloseText: {
+        color: colors.textNightSubtle,
+        fontSize: fontSizes.xxl,
+        fontFamily: fontFamilies.body,
+    },
+    monthModalHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingHorizontal: spacing.smPlus,
+        marginBottom: spacing.sm,
+        gap: spacing.sm,
+    },
+    monthNavButton: {
+        width: spacing.xxxl,
+        height: spacing.xxxl,
+        borderRadius: radius.lg,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: colors.surfaceGlass,
+        borderWidth: 1,
+        borderColor: colors.borderOnDark,
+    },
+    monthModalTitle: {
+        color: colors.white,
+        fontSize: fontSizes.xxl,
+        fontWeight: "700",
+        fontFamily: fontFamilies.display,
+        flexShrink: 1,
+        textAlign: "center",
+    },
+    monthModalToday: {
+        alignSelf: "center",
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.xsPlus,
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.xsPlus,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceGlass,
+        borderWidth: 1,
+        borderColor: colors.borderOnDark,
+        marginBottom: spacing.md,
+    },
+    monthModalTodayText: {
+        color: colors.white,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+        letterSpacing: 0.3,
+    },
+    dateToastBackdrop: {
+        position: "absolute",
+        bottom: spacing.xxxl,
+        left: 0,
+        right: 0,
+        alignItems: "center",
+        paddingHorizontal: spacing.lg,
+        zIndex: 20,
+    },
+    dateToastCard: {
+        maxWidth: 420,
+        width: "100%",
+        backgroundColor: colors.brandPurple,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkStrong,
+        overflow: "hidden",
+        shadowColor: colors.black,
+        shadowOpacity: 0.3,
+        shadowOffset: { width: 0, height: 12 },
+        shadowRadius: 20,
+        elevation: 12,
+    },
+    dateToastGradient: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: spacing.sm,
+        paddingHorizontal: spacing.lgPlus,
+        paddingVertical: spacing.mdPlus,
+    },
+    dateToastIcon: {
+        width: spacing.xxl,
+        height: spacing.xxl,
+        borderRadius: spacing.xxl / 2,
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    dateToastText: {
+        color: colors.white,
+        fontSize: fontSizes.xxl,
+        fontWeight: "700",
+        fontFamily: fontFamilies.display,
+        letterSpacing: 0.4,
+        textAlign: "center",
+        flexShrink: 1,
     },
 });

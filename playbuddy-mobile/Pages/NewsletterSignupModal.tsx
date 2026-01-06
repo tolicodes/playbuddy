@@ -6,6 +6,7 @@ import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { logEvent } from '../Common/hooks/logger';
 import { MISC_URLS } from '../config';
 import { UE } from '../userEventTypes';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../components/styles';
 
 type NewsletterSignupModalProps = {
     visible: boolean;
@@ -43,7 +44,7 @@ export function NewsletterSignupModal({ visible, onDismiss, onSnooze }: Newslett
                     </TouchableOpacity>
 
                     <View style={styles.iconWrap}>
-                        <FontAwesome5 name="envelope-open-text" size={26} color="#38bdf8" />
+                        <FontAwesome5 name="envelope-open-text" size={26} color={colors.accentSky} />
                     </View>
                     <Text style={styles.title}>Stay in the loop</Text>
                     <Text style={styles.subtitle}>
@@ -67,19 +68,19 @@ export function NewsletterSignupModal({ visible, onDismiss, onSnooze }: Newslett
 const styles = StyleSheet.create({
     backdrop: {
         flex: 1,
-        backgroundColor: 'rgba(8, 7, 20, 0.7)',
+        backgroundColor: colors.backdropNight,
         justifyContent: 'center',
         alignItems: 'center',
     },
     card: {
         width: '88%',
-        backgroundColor: '#0f172a',
-        borderRadius: 18,
-        padding: 20,
+        backgroundColor: colors.surfaceNight,
+        borderRadius: radius.lgPlus,
+        padding: spacing.xl,
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
-        shadowColor: '#000',
+        borderColor: colors.borderNight,
+        shadowColor: colors.black,
         shadowOpacity: 0.25,
         shadowOffset: { width: 0, height: 8 },
         shadowRadius: 16,
@@ -87,61 +88,66 @@ const styles = StyleSheet.create({
     },
     close: {
         alignSelf: 'flex-end',
-        padding: 4,
+        padding: spacing.xs,
     },
     closeText: {
-        color: '#94a3b8',
-        fontSize: 16,
+        color: colors.textNightSubtle,
+        fontSize: fontSizes.xl,
+        fontFamily: fontFamilies.body,
     },
     iconWrap: {
-        backgroundColor: 'rgba(56, 189, 248, 0.12)',
-        borderRadius: 999,
-        padding: 12,
-        marginBottom: 10,
+        backgroundColor: colors.accentSkySoft,
+        borderRadius: radius.pill,
+        padding: spacing.md,
+        marginBottom: spacing.smPlus,
     },
     title: {
-        fontSize: 20,
+        fontSize: fontSizes.xxxl,
         fontWeight: '700',
         textAlign: 'center',
-        color: '#fff',
-        marginBottom: 8,
+        color: colors.white,
+        marginBottom: spacing.sm,
+        fontFamily: fontFamilies.display,
     },
     subtitle: {
-        fontSize: 15,
-        color: '#cbd5e1',
+        fontSize: fontSizes.lg,
+        color: colors.textNightMuted,
         textAlign: 'center',
-        lineHeight: 22,
-        marginBottom: 16,
+        lineHeight: lineHeights.lg,
+        marginBottom: spacing.lg,
+        fontFamily: fontFamilies.body,
     },
     buttonContainer: {
         width: '100%',
-        gap: 10,
+        gap: spacing.smPlus,
     },
     primaryBtn: {
-        backgroundColor: '#38bdf8',
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        backgroundColor: colors.accentSky,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
         alignItems: 'center',
         width: '100%',
     },
     primaryText: {
-        color: '#0f172a',
-        fontSize: 16,
+        color: colors.surfaceNight,
+        fontSize: fontSizes.xl,
         fontWeight: '700',
+        fontFamily: fontFamilies.body,
     },
     secondaryBtn: {
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
         width: '100%',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: 'rgba(148, 163, 184, 0.4)',
+        borderColor: colors.borderNightMuted,
     },
     secondaryText: {
-        color: '#cbd5e1',
-        fontSize: 14,
+        color: colors.textNightMuted,
+        fontSize: fontSizes.base,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 });

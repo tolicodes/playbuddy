@@ -9,6 +9,7 @@ import { FacilitatorsList } from './FacilitatorsList'; // You’ll need to extra
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
+import { colors, fontFamilies, fontSizes, spacing } from '../../components/styles';
 
 type TabKey = 'my' | 'all';
 
@@ -82,12 +83,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'transparent',
-        paddingTop: 12,
+        paddingTop: spacing.md,
     },
     emptyMessage: {
-        fontSize: 16,
-        color: '#666',
+        fontSize: fontSizes.xl,
+        color: colors.textMuted,
         textAlign: 'center',
-        padding: 32,
+        padding: spacing.xxxl,
+        fontFamily: fontFamilies.body,
     },
 });

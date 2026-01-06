@@ -24,7 +24,6 @@
         "applinks:playbuddy.me",
         "applinks:playbuddy.onelink.me",
         "applinks:l.playbuddy.me",
-        "applinks:playbuddy.deeplinknow.com",
         "applinks:b.playbuddy.me"
       ],
       "bundleIdentifier": "com.tolicodes1.kinkbuddyios",
@@ -61,20 +60,6 @@
         "android.permission.RECEIVE_BOOT_COMPLETED"
       ],
       "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "playbuddy.deeplinknow.com"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        },
         {
           "action": "VIEW",
           "autoVerify": true,
@@ -179,13 +164,16 @@
       ],
       ["expo-build-properties", {
         "android": {
-          "compileSdkVersion": 34,
+          "compileSdkVersion": 35,
           "targetSdkVersion": 35,
           "buildToolsVersion": "35.0.0",
-          "kotlinVersion": "1.9.24",
+          "ndkVersion": "26.1.10909125",
+          "newArchEnabled": true,
+          "kotlinVersion": "2.1.20",
           "gradlePluginVersion": "8.3.2"
         }
-      }]
+      }],
+      "./plugins/with-android-16k-page-size"
     ],
     "owner": "tolicodes1",
     "runtimeVersion": "4.16.1"

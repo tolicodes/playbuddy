@@ -1,5 +1,6 @@
 import React from "react";
 import { Text, Linking, StyleSheet, TextProps } from "react-native";
+import { colors } from "../../components/styles";
 
 type LinkifyProps = TextProps & {
     children: string;
@@ -104,6 +105,6 @@ export const LinkifyText: React.FC<LinkifyProps> = ({
 
 const styles = StyleSheet.create({
     link: {
-        color: "#007AFF",
+        color: colors.linkBlue,
     },
 });

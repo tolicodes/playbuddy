@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     suggestionPill: {
-        backgroundColor: '#dce5ff',
+        backgroundColor: colors.surfaceInfoStrong,
     },
     tagText: {
         fontSize: fontSizes.sm,

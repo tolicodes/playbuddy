@@ -22,6 +22,7 @@ import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
 import { WishlistHeart } from '../Calendar/ListView/WishlistHeart';
+import { colors, fontFamilies, fontSizes, radius, spacing, sizes } from '../../components/styles';
 
 const ADMIN_EMAIL = 'toli@toli.me';
 
@@ -98,7 +99,7 @@ export const FacilitatorsList = ({
                 <TextInput
                     style={styles.searchInput}
                     placeholder="Search facilitators..."
-                    placeholderTextColor="#999"
+                    placeholderTextColor={colors.textSubtle}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
                     autoCorrect={false}
@@ -118,10 +119,7 @@ export const FacilitatorsList = ({
 
                     return (
                         <TouchableOpacity
-                            style={[
-                                styles.item,
-                                { backgroundColor: '#fff' }
-                            ]}
+                            style={styles.item}
                             activeOpacity={0.8}
                             onPress={() => {
                                 logEvent(UE.FacilitatorListOpenFacilitatorProfile, {
@@ -137,7 +135,7 @@ export const FacilitatorsList = ({
                             <View style={styles.row}>
                                 {item.profile_image_url
                                     ? <Image source={{ uri: item.profile_image_url }} style={styles.avatar} />
-                                    : <FAIcon name="user-circle" size={40} color="#666" style={styles.avatar} />
+                                    : <FAIcon name="user-circle" size={sizes.avatarSm} color={colors.textMuted} style={styles.avatar} />
                                 }
 
                                 <View style={styles.info}>
@@ -148,9 +146,9 @@ export const FacilitatorsList = ({
                                         {item.verified && (
                                             <MaterialIcons
                                                 name="check-circle"
-                                                size={18}
-                                                color="#1DA1F2"
-                                                style={{ marginLeft: 6, alignSelf: 'flex-end' }}
+                                                size={fontSizes.xxl}
+                                                color={colors.accentSkyDeep}
+                                                style={{ marginLeft: spacing.xsPlus, alignSelf: 'flex-end' }}
                                             />
                                         )}
                                     </View>
@@ -186,7 +184,7 @@ export const FacilitatorsList = ({
                         </TouchableOpacity>
                     );
                 }}
-                contentContainerStyle={{ paddingBottom: 20 }}
+                contentContainerStyle={{ paddingBottom: spacing.xl }}
                 showsVerticalScrollIndicator={false}
             />
         </View>
@@ -197,26 +195,28 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'transparent',
-        paddingTop: 12
+        paddingTop: spacing.md
     },
     searchInput: {
-        height: 44,
-        marginHorizontal: 16,
-        marginBottom: 12,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-        backgroundColor: '#fff',
+        height: sizes.controlHeight,
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.smPlus,
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: '#DDD',
-        fontSize: 16,
-        color: '#333'
+        borderColor: colors.borderMuted,
+        fontSize: fontSizes.xl,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body
     },
     item: {
-        marginHorizontal: 16,
-        marginBottom: 12,
-        borderRadius: 12,
-        padding: 12,
-        shadowColor: '#000',
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+        borderRadius: radius.md,
+        padding: spacing.md,
+        backgroundColor: colors.white,
+        shadowColor: colors.black,
         shadowOpacity: 0.05,
         shadowOffset: { width: 0, height: 1 },
         shadowRadius: 2,
@@ -227,10 +227,10 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 8,
-        marginRight: 12
+        width: sizes.avatarSm,
+        height: sizes.avatarSm,
+        borderRadius: radius.sm,
+        marginRight: spacing.md
     },
     info: {
         flex: 1,
@@ -241,31 +241,34 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     },
     name: {
-        fontSize: 16,
+        fontSize: fontSizes.xl,
         fontWeight: '600',
-        color: '#333'
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
     tagRow: {
         flexDirection: 'row',
-        marginTop: 4,
+        marginTop: spacing.xs,
         flexWrap: 'wrap'
     },
     tag: {
-        backgroundColor: '#EAEAFF',
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        borderRadius: 6,
-        marginRight: 4,
-        marginTop: 2
+        backgroundColor: colors.surfaceLavenderStrong,
+        paddingHorizontal: spacing.xsPlus,
+        paddingVertical: spacing.xxs,
+        borderRadius: radius.xs,
+        marginRight: spacing.xs,
+        marginTop: spacing.xxs
     },
     tagText: {
-        fontSize: 10,
-        color: '#7F3FFF'
+        fontSize: fontSizes.xxs,
+        color: colors.headerPurple,
+        fontFamily: fontFamilies.body,
     },
     sub: {
-        fontSize: 12,
-        color: '#666',
-        marginTop: 2
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
+        marginTop: spacing.xxs,
+        fontFamily: fontFamilies.body,
     },
     heartBtn: {
         padding: 8
@@ -274,11 +277,12 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingHorizontal: 24
+        paddingHorizontal: spacing.xxl
     },
     emptyMessage: {
-        fontSize: 16,
-        color: '#666',
-        textAlign: 'center'
+        fontSize: fontSizes.xl,
+        color: colors.textMuted,
+        textAlign: 'center',
+        fontFamily: fontFamilies.body,
     }
 });

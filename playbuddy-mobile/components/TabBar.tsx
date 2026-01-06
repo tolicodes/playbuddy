@@ -49,18 +49,18 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.lg,
         borderRadius: radius.xl,
-        backgroundColor: 'rgba(255,255,255,0.18)', // subtle glass for inactive
+        backgroundColor: colors.surfaceGlass, // subtle glass for inactive
     },
     tabText: {
         fontSize: fontSizes.lg,
         fontWeight: '500',
-        color: '#E8E8E8', // soft light over purple
+        color: colors.textOnDarkMuted, // soft light over purple
     },
     activeTab: {
         backgroundColor: colors.accentPurple,
         ...Platform.select({
             ios: {
-                shadowColor: '#000',
+                shadowColor: colors.black,
                 shadowOffset: { width: 0, height: 2 },
                 shadowOpacity: 0.15,
                 shadowRadius: 3,

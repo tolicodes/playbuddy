@@ -7,6 +7,7 @@ import { PreferencesScreen } from '../../_depracated/PreferencesScreen';
 import ErrorScreen from './ErrorScreen';
 import WelcomeScreen from './WelcomeScreen';
 import { ProfileDetailsForm } from './AuthProfileDetailsFormScreen';
+import { navigateToTab } from '../../Common/Nav/navigationHelpers';
 
 type AuthStep = 'welcome' | 'auth' | 'details' | 'preferences' | 'error';
 
@@ -26,7 +27,7 @@ const AuthMainScreen = () => {
         }
 
         if (isDefaultsComplete) {
-            navigation.navigate('Calendar');
+            navigateToTab(navigation, 'Calendar');
             return;
         }
 

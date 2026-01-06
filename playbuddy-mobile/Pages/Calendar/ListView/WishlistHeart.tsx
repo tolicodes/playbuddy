@@ -6,18 +6,17 @@ import { colors } from '../../../components/styles';
 export const WishlistHeart = ({
     itemIsOnWishlist,
     handleToggleEventWishlist,
-    backgroundColor,
     size = 28,
     containerStyle,
 }: {
     itemIsOnWishlist: boolean;
     handleToggleEventWishlist: () => void;
-    backgroundColor?: string;
     size?: number;
     containerStyle?: ViewStyle;
 }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const haloSize = size + 14;
+    const outlineColor = colors.danger;
 
     useEffect(() => {
         // Run animation whenever itemIsOnWishlist changes
@@ -37,28 +36,34 @@ export const WishlistHeart = ({
 
     return (
         <TouchableOpacity
-            onPress={handleToggleEventWishlist}
+            onPress={(event) => {
+                event.stopPropagation?.();
+                handleToggleEventWishlist();
+            }}
             style={[
                 styles.heartContainer,
-                styles.glassyCircle,
                 { width: haloSize, height: haloSize, borderRadius: haloSize / 2 },
                 containerStyle,
             ]}
         >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <View style={styles.iconStack}>
-                    {backgroundColor && itemIsOnWishlist && (
-                        <FAIcon
-                            name="heart"
-                            size={size}
-                            color={backgroundColor}
-                            style={styles.iconBase}
-                        />
-                    )}
                     <FAIcon
-                        name={itemIsOnWishlist ? 'heart' : 'heart-o'}
+                        name="heart"
                         size={size}
-                        color="red"
+                        color="rgba(255, 255, 255, 0.8)"
+                        style={styles.iconBase}
+                    />
+                    <FAIcon
+                        name="heart-o"
+                        size={size + 2}
+                        color={outlineColor}
+                        style={styles.iconOutlineBase}
+                    />
+                    <FAIcon
+                        name="heart-o"
+                        size={size}
+                        color={outlineColor}
                         style={styles.iconTop}
                     />
                 </View>
@@ -72,16 +77,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    glassyCircle: {
-        backgroundColor: 'rgba(22, 16, 40, 0.45)',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.65)',
-        shadowColor: '#0b0b0b',
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 6,
-        elevation: 4,
-    },
     iconStack: {
         alignItems: 'center',
         justifyContent: 'center',
@@ -89,9 +84,12 @@ const styles = StyleSheet.create({
     iconBase: {
         position: 'absolute',
     },
+    iconOutlineBase: {
+        position: 'absolute',
+    },
     iconTop: {
         position: 'relative',
-        textShadowColor: 'rgba(0, 0, 0, 0.25)',
+        textShadowColor: colors.shadowMedium,
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 2,
     },

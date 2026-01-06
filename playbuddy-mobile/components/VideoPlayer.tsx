@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Modal, StyleSheet } from 'react-native';
 import Video from 'react-native-video';
+import { colors } from './styles';
 
 export const VideoPlayer = ({ mediaUrl, onClose }: { mediaUrl: string; onClose: () => void }) => {
     return (
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: colors.overlayStrong,
     },
     video: {
         width: '100%',

@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from 'react-native-markdown-display';
-import { HEADER_PURPLE } from '../../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 import type { Facilitator } from '../../../Common/types/commonTypes';
 
 const Separator = () => <View style={styles.separator} />;
@@ -10,7 +10,7 @@ const Separator = () => <View style={styles.separator} />;
 const TagsLocation = ({ facilitator }: { facilitator: Facilitator }) => (
     facilitator.location ? (
         <View style={styles.locationRowWhite}>
-            <MaterialIcons name="location-on" size={18} color="#888" />
+            <MaterialIcons name="location-on" size={fontSizes.xxl} color={colors.textSecondary} />
             <Text style={styles.locationWhite}>From {facilitator.location}</Text>
         </View>
     ) : null
@@ -38,15 +38,22 @@ const BioTab = ({ bio, facilitator }: { bio: string; facilitator: Facilitator })
 );
 
 const styles = StyleSheet.create({
-    container: { flex: 1, paddingTop: 16, backgroundColor: 'white' },
-    separator: { height: 1, backgroundColor: '#EEE', marginVertical: 8 },
-    locationRowWhite: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16 },
-    locationWhite: { color: '#555', marginLeft: 6 },
-    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 16, paddingBottom: 8 },
-    pill: { backgroundColor: HEADER_PURPLE, borderRadius: 16, paddingHorizontal: 12, margin: 4, height: 32, justifyContent: 'center' },
-    pillText: { color: '#fff', fontSize: 14 },
+    container: { flex: 1, paddingTop: spacing.lg, backgroundColor: colors.white },
+    separator: { height: 1, backgroundColor: colors.borderLight, marginVertical: spacing.sm },
+    locationRowWhite: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg },
+    locationWhite: { color: colors.textMuted, marginLeft: spacing.xsPlus, fontFamily: fontFamilies.body },
+    tagsRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
+    pill: {
+        backgroundColor: colors.headerPurple,
+        borderRadius: radius.lg,
+        paddingHorizontal: spacing.md,
+        margin: spacing.xs,
+        height: spacing.xxxl,
+        justifyContent: 'center',
+    },
+    pillText: { color: colors.white, fontSize: fontSizes.base, fontFamily: fontFamilies.body },
 
-    bioContainer: { padding: 16, paddingTop: 0 },
+    bioContainer: { padding: spacing.lg, paddingTop: 0 },
 });
 
 export { Separator, TagsLocation, BioTab };

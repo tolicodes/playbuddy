@@ -121,7 +121,7 @@ export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPag
                                         <FAIcon
                                             name="chevron-right"
                                             size={12}
-                                            color={isDeals ? '#b08a00' : colors.textSubtle}
+                                            color={isDeals ? colors.textGold : colors.textSubtle}
                                         />
                                     </View>
                                 </TouchableOpacity>
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 18,
-        color: '#333',
+        color: colors.textPrimary,
         marginBottom: 20,
         alignSelf: 'center',
         fontWeight: '600',
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     groupTitleEvenMore: {
-        color: '#8a6d2f',
+        color: colors.textGoldMuted,
         letterSpacing: 1.2,
     },
     groupCard: {
@@ -184,8 +184,8 @@ const styles = StyleSheet.create({
         ...shadows.card,
     },
     groupCardEvenMore: {
-        backgroundColor: '#fffaf0',
-        borderColor: '#f1e2c6',
+        backgroundColor: colors.surfaceGoldLight,
+        borderColor: colors.borderGoldSoft,
         shadowOpacity: 0.12,
         shadowRadius: 10,
     },
@@ -198,8 +198,8 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.borderSubtle,
     },
     menuItemEvenMore: {
-        borderBottomColor: '#f3e6cf',
-        backgroundColor: 'rgba(255, 255, 255, 0.7)',
+        borderBottomColor: colors.borderGoldLight,
+        backgroundColor: colors.surfaceWhiteSoft,
     },
     lastMenuItem: {
         borderBottomWidth: 0,
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
         marginRight: spacing.md,
     },
     iconWrapEvenMore: {
-        backgroundColor: '#f7efe1',
+        backgroundColor: colors.surfaceGoldMuted,
     },
     menuText: {
         fontSize: fontSizes.xl,
@@ -224,10 +224,10 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     dealsItem: {
-        backgroundColor: '#fff8d6',
+        backgroundColor: colors.surfaceGoldWarm,
     },
     dealsIconWrap: {
-        backgroundColor: '#FFD700',
+        backgroundColor: colors.gold,
     },
     dealsText: {
         fontWeight: '600',

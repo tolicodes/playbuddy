@@ -62,7 +62,6 @@ export function getAnalyticsPropsFeaturedPromoCode(pc: PromoCode) {
     };
 }
 
-
 /**
  * Logs a user event to Amplitude, UXCam, and your backend.
  * Supports passing in analytics props built by the above helpers.

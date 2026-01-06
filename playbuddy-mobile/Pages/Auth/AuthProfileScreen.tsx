@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUserContext } from './hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import { Avatar } from './Buttons/Avatar';
@@ -11,22 +12,24 @@ import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
+import { navigateToHome, navigateToTab } from '../../Common/Nav/navigationHelpers';
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
 export default function AccountDetails() {
     const { userProfile, signOut, fullNameFromOAuthedUser } = useUserContext();
-    const { navigate } = useNavigation<NavStack>();
+    const navigation = useNavigation<NavStack>();
     const analyticsProps = useAnalyticsProps();
 
 
     const onPressSignOut = async () => {
         logEvent(UE.AuthProfilePressSignOut, analyticsProps);
         signOut();
-        navigate('Home');
+        navigateToHome(navigation);
     }
 
     const onPressHome = () => {
         logEvent(UE.AuthProfilePressHome, analyticsProps);
-        navigate('Calendar');
+        navigateToTab(navigation, 'Calendar');
     }
 
     const onPressDeleteAccount = async () => {
@@ -39,7 +42,7 @@ export default function AccountDetails() {
                     text: 'Delete',
                     onPress: () => {
                         signOut();
-                        navigate('Calendar');
+                        navigateToTab(navigation, 'Calendar');
                     },
                     style: 'destructive',
                 },
@@ -58,7 +61,7 @@ export default function AccountDetails() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <LinearGradient colors={['#7B57E8', '#A757E8']} style={styles.gradient}>
+            <LinearGradient colors={[colors.brandIndigo, colors.accentPurple]} style={styles.gradient}>
                 <ScrollView contentContainerStyle={styles.scrollViewContent}>
                     <View style={styles.sectionCard}>
                         {!userProfile?.avatar_url && (
@@ -89,7 +92,7 @@ export default function AccountDetails() {
                         <Text style={styles.sectionTitle}>Actions</Text>
                         <TouchableOpacity style={styles.primaryButton} onPress={onPressHome}>
                             <View style={styles.iconTextContainer}>
-                                <Icon name="home" size={20} color="#fff" />
+                                <Icon name="home" size={20} color={colors.white} />
                                 <Text style={styles.primaryButtonText}>Go to Home</Text>
                             </View>
                         </TouchableOpacity>
@@ -123,131 +126,136 @@ const InfoItem = ({ label, value }: { label: string, value?: string }) => (
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#7B57E8',
+        backgroundColor: colors.brandIndigo,
     },
     gradient: {
         flex: 1,
     },
     scrollViewContent: {
         flexGrow: 1,
-        paddingHorizontal: 20,
-        paddingTop: 12,
-        paddingBottom: 40,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.jumbo,
     },
     sectionCard: {
-        backgroundColor: 'rgba(255,255,255,0.96)',
-        borderRadius: 20,
-        padding: 18,
-        marginBottom: 16,
+        backgroundColor: colors.white,
+        borderRadius: radius.xl,
+        padding: spacing.lgPlus,
+        marginBottom: spacing.lg,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.5)',
-        shadowColor: '#000',
-        shadowOpacity: 0.12,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 4,
+        borderColor: colors.borderLavenderSoft,
+        ...shadows.card,
     },
     sectionTitle: {
-        fontSize: 15,
+        fontSize: fontSizes.lg,
         fontWeight: '700',
-        color: '#4C2FA8',
-        marginBottom: 12,
+        color: colors.brandPurple,
+        marginBottom: spacing.md,
         textTransform: 'uppercase',
         letterSpacing: 1,
+        fontFamily: fontFamilies.body,
     },
     tipBanner: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 10,
-        padding: 12,
-        backgroundColor: '#EFE9FF',
-        borderRadius: 14,
+        gap: spacing.smPlus,
+        padding: spacing.md,
+        backgroundColor: colors.surfaceLavender,
+        borderRadius: radius.mdPlus,
         borderWidth: 1,
-        borderColor: '#DED7FF',
-        marginBottom: 12,
+        borderColor: colors.borderLavenderAlt,
+        marginBottom: spacing.md,
     },
     tipIcon: {
-        width: 24,
-        height: 24,
+        width: spacing.xxl,
+        height: spacing.xxl,
     },
     tipText: {
         flex: 1,
-        fontSize: 14,
-        color: '#4C2FA8',
+        fontSize: fontSizes.base,
+        color: colors.brandPurple,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     infoItem: {
-        marginBottom: 14,
+        marginBottom: spacing.mdPlus,
     },
     iconTextContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 8,
+        gap: spacing.sm,
     },
     label: {
-        fontSize: 12,
-        color: '#7E7A8D',
-        marginBottom: 4,
+        fontSize: fontSizes.sm,
+        color: colors.brandTextMuted,
+        marginBottom: spacing.xs,
+        fontFamily: fontFamilies.body,
     },
     value: {
-        fontSize: 16,
-        color: '#1F1A2B',
+        fontSize: fontSizes.xl,
+        color: colors.heroDark,
         fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
     primaryButton: {
-        backgroundColor: '#6B4CE6',
-        borderRadius: 14,
-        paddingVertical: 14,
-        paddingHorizontal: 16,
-        marginBottom: 12,
+        backgroundColor: colors.brandIndigo,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.mdPlus,
+        paddingHorizontal: spacing.lg,
+        marginBottom: spacing.md,
     },
     primaryButtonText: {
-        color: '#FFFFFF',
-        fontSize: 16,
+        color: colors.white,
+        fontSize: fontSizes.xl,
         fontWeight: '700',
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     secondaryButton: {
-        backgroundColor: '#F3F0FF',
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        backgroundColor: colors.surfaceLavenderAlt,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
         borderWidth: 1,
-        borderColor: '#DDD5FF',
-        marginBottom: 10,
+        borderColor: colors.borderLavenderAlt,
+        marginBottom: spacing.smPlus,
     },
     secondaryButtonText: {
-        color: '#5A43B5',
-        fontSize: 15,
+        color: colors.brandPurpleDark,
+        fontSize: fontSizes.lg,
         fontWeight: '700',
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     dangerButton: {
-        backgroundColor: '#FFF1F2',
-        borderRadius: 14,
-        paddingVertical: 12,
-        paddingHorizontal: 16,
+        backgroundColor: colors.surfaceRoseSoft,
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
         borderWidth: 1,
-        borderColor: '#FBC6CC',
+        borderColor: colors.borderRose,
     },
     dangerButtonText: {
-        color: '#C0363C',
-        fontSize: 15,
+        color: colors.danger,
+        fontSize: fontSizes.lg,
         fontWeight: '700',
         textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     supportLink: {
         alignItems: 'center',
-        paddingVertical: 6,
+        paddingVertical: spacing.xsPlus,
     },
     supportText: {
-        color: '#FFFFFF',
-        fontSize: 14,
+        color: colors.white,
+        fontSize: fontSizes.base,
         fontWeight: '700',
+        fontFamily: fontFamilies.body,
     },
     supportSubText: {
-        color: 'rgba(255,255,255,0.75)',
-        fontSize: 12,
+        color: colors.textOnDarkMuted,
+        fontSize: fontSizes.sm,
+        fontFamily: fontFamilies.body,
     },
 });

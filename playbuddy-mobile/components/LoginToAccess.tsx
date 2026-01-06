@@ -1,5 +1,6 @@
 import React from "react";
-import { View, Text, StyleSheet, SafeAreaView } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import { useNavigation } from "@react-navigation/native";
@@ -8,8 +9,9 @@ import { logEvent } from "../Common/hooks/logger";
 import { UE } from "../userEventTypes";
 import { useAnalyticsProps } from "../Common/hooks/useAnalytics";
 import { NavStack } from "../Common/Nav/NavStackType";
+import { navigateToAuth } from "../Common/Nav/navigationHelpers";
 import { useUserContext } from "../Pages/Auth/hooks/UserContext";
-import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from "./styles";
+import { colors, fontFamilies, fontSizes, gradients, lineHeights, radius, shadows, spacing } from "./styles";
 
 export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) => {
     const analyticsProps = useAnalyticsProps();
@@ -23,9 +25,9 @@ export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) =>
         });
 
         if (isProfileComplete) {
-            navigation.navigate('AuthNav', { screen: 'Profile' });
+            navigateToAuth(navigation, 'Profile');
         } else {
-            navigation.navigate('AuthNav', { screen: 'Login Form' });
+            navigateToAuth(navigation, 'Login Form');
         }
     };
 
@@ -45,10 +47,10 @@ export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) =>
                     <View style={styles.card}>
                         <View style={styles.badgeRow}>
                             <View style={styles.badge}>
-                                <FAIcon name="heart" size={14} color="#5B1FB8" />
+                                <FAIcon name="heart" size={14} color={colors.brandMid} />
                             </View>
                             <View style={[styles.badge, styles.badgeSecondary]}>
-                                <FAIcon name="calendar-alt" size={14} color="#5B1FB8" />
+                                <FAIcon name="calendar-alt" size={14} color={colors.brandMid} />
                             </View>
                         </View>
                         <Text style={styles.title}>{title}</Text>
@@ -62,7 +64,7 @@ export const LoginToAccess = ({ entityToAccess }: { entityToAccess: string }) =>
                                 entityToAccess={entityToAccess}
                                 buttonStyle={styles.loginButton}
                                 textStyle={styles.loginButtonText}
-                                iconColor="#FFFFFF"
+                                iconColor={colors.white}
                                 avatarStyle={styles.loginAvatar}
                             />
                         </View>
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.xxl,
         paddingHorizontal: spacing.xl,
         borderWidth: 1,
-        borderColor: 'rgba(107,70,193,0.15)',
+        borderColor: colors.borderLavenderSoft,
         ...shadows.brandCard,
         alignItems: 'center',
     },
@@ -125,15 +127,15 @@ const styles = StyleSheet.create({
         width: 30,
         height: 30,
         borderRadius: 15,
-        backgroundColor: 'rgba(91,31,184,0.12)',
+        backgroundColor: colors.badgeBackground,
         borderWidth: 1,
-        borderColor: 'rgba(91,31,184,0.2)',
+        borderColor: colors.badgeBorder,
         alignItems: 'center',
         justifyContent: 'center',
     },
     badgeSecondary: {
-        backgroundColor: 'rgba(192,79,212,0.12)',
-        borderColor: 'rgba(192,79,212,0.25)',
+        backgroundColor: colors.surfaceLavenderAlt,
+        borderColor: colors.borderLavenderAlt,
     },
     title: {
         fontSize: fontSizes.xxxl,
@@ -145,9 +147,9 @@ const styles = StyleSheet.create({
     subtitle: {
         marginTop: spacing.sm,
         fontSize: fontSizes.basePlus,
-        color: '#5E4A78',
+        color: colors.brandTextMuted,
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: lineHeights.md,
         fontFamily: fontFamilies.body,
     },
     buttonWrap: {
@@ -175,7 +177,7 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     loginAvatar: {
-        backgroundColor: 'rgba(255,255,255,0.18)',
-        borderColor: 'rgba(255,255,255,0.35)',
+        backgroundColor: colors.surfaceGlass,
+        borderColor: colors.borderOnDark,
     },
 });

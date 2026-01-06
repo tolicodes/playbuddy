@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { logEvent } from '../../../Common/hooks/logger';
 import { UE } from '../../../userEventTypes';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 
 export const IntroVideo = ({
     url,
@@ -105,24 +106,25 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
+        backgroundColor: colors.overlayMedium,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
     },
     playText: {
-        color: 'white',
-        fontSize: 18,
+        color: colors.white,
+        fontSize: fontSizes.xxl,
         fontWeight: 'bold',
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 8,
-        marginRight: 16,
+        fontFamily: fontFamilies.body,
+        backgroundColor: colors.overlayHeavy,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.smPlus,
+        borderRadius: radius.sm,
+        marginRight: spacing.lg,
     },
     fullscreenContainer: {
         flex: 1,
-        backgroundColor: 'black',
+        backgroundColor: colors.black,
         justifyContent: 'center',
     },
     fullscreenVideo: {

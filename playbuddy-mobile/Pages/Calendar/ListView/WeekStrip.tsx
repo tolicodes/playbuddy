@@ -1,71 +1,48 @@
 // screens/Calendar/WeekStrip.tsx
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import {
     View,
     TouchableOpacity,
     Text,
     StyleSheet,
-    Animated,
     Dimensions,
-    ScrollView,
-    NativeSyntheticEvent,
-    NativeScrollEvent,
+    PanResponder,
 } from "react-native";
 import moment from "moment-timezone";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const TRIGGER_PX = 40; // how far past center to count as a page change
+const SWIPE_TRIGGER_PX = 28;
 
 type Props = {
-    prevWeekDays: Date[];
-    weekDays: Date[];   // center (visible) week
-    nextWeekDays: Date[];
+    weekDays: Date[];   // visible week
 
     selectedDay: Date;
     onChangeSelectedDay: (d: Date) => void;
 
-    // Should be false for all days before today (you pass hasEventsOnOrAfterTodayNY)
-    hasEventsOnDay: (d: Date | string) => boolean;
+    // Should be false for any day you want disabled (e.g., before today)
+    isDaySelectable: (d: Date | string) => boolean;
 
-    // Header parity: RIGHT swipe → next week (forward), LEFT swipe → prev week (back)
-    goToPrev: () => void;
-    goToNext: () => void;
+    onSwipePrevDay?: () => void;
+    onSwipeNextDay?: () => void;
+    onLongPress?: (day: Date) => void;
 
-    // If false, prevent going to previous week (used for greying past)
-    canGoPrev?: boolean;
-
-    // Constrain width to container size (for docked layout)
     containerWidth?: number;
 };
 
 export const WeekStrip: React.FC<Props> = ({
-    prevWeekDays,
     weekDays,
-    nextWeekDays,
     selectedDay,
     onChangeSelectedDay,
-    hasEventsOnDay,
-    goToPrev,
-    goToNext,
-    canGoPrev = true,
+    isDaySelectable,
+    onSwipePrevDay,
+    onSwipeNextDay,
+    onLongPress,
     containerWidth,
 }) => {
     const pageWidth = containerWidth || SCREEN_WIDTH;
-    const scrollRef = useRef<ScrollView>(null);
-    const offsetX = useRef(new Animated.Value(pageWidth)).current; // center page
-
-    const scrollToCenter = (animated: boolean) => {
-        scrollRef.current?.scrollTo({ x: pageWidth, y: 0, animated });
-    };
-
-    // Keep the scroller centered whenever the week arrays change
-    useEffect(() => {
-        // wait a frame so ScrollView has its content
-        const id = requestAnimationFrame(() => scrollToCenter(false));
-        return () => cancelAnimationFrame(id);
-    }, [prevWeekDays, weekDays, nextWeekDays]);
+    const longPressTriggeredRef = useRef(false);
 
     const isSameDayNY = (a: Date, b: Date) =>
         moment(a).tz(TZ).isSame(moment(b).tz(TZ), "day");
@@ -73,34 +50,84 @@ export const WeekStrip: React.FC<Props> = ({
     const isTodayNY = (d: Date) =>
         moment(d).tz(TZ).isSame(moment().tz(TZ), "day");
 
-    const renderWeek = (days: Date[], isCenter: boolean) => (
+    const panResponder = useMemo(() => {
+        if (!onSwipePrevDay && !onSwipeNextDay) return null;
+        return PanResponder.create({
+            onMoveShouldSetPanResponder: (_evt, gesture) => {
+                const { dx, dy } = gesture;
+                if (Math.abs(dx) < 12) return false;
+                return Math.abs(dx) > Math.abs(dy);
+            },
+            onMoveShouldSetPanResponderCapture: (_evt, gesture) => {
+                const { dx, dy } = gesture;
+                if (Math.abs(dx) < 12) return false;
+                return Math.abs(dx) > Math.abs(dy);
+            },
+            onPanResponderRelease: (_evt, gesture) => {
+                if (gesture.dx <= -SWIPE_TRIGGER_PX) {
+                    onSwipeNextDay?.();
+                } else if (gesture.dx >= SWIPE_TRIGGER_PX) {
+                    onSwipePrevDay?.();
+                }
+            },
+        });
+    }, [onSwipeNextDay, onSwipePrevDay]);
+
+    const renderWeek = (days: Date[]) => (
         <View style={[s.weekStrip, { width: pageWidth }]}>
             {days.map((day) => {
+                const dayMoment = moment(day).tz(TZ);
                 const key = String(day instanceof Date ? day.getTime() : +new Date(day));
-                const selectable = hasEventsOnDay(day);
-                const selected = isCenter && isSameDayNY(day, selectedDay);
+                const selectable = isDaySelectable(day);
+                const selected = isSameDayNY(day, selectedDay);
                 const today = isTodayNY(day);
+                const showTodayRing = today && !selected;
 
                 return (
                     <TouchableOpacity
                         key={key}
-                        disabled={!selectable}
-                        onPress={() => selectable && onChangeSelectedDay(day)}
+                        disabled={!selectable && !onLongPress}
+                        onPress={() => {
+                            if (longPressTriggeredRef.current) {
+                                longPressTriggeredRef.current = false;
+                                return;
+                            }
+                            if (!selectable) return;
+                            onChangeSelectedDay(day);
+                        }}
+                        onLongPress={() => {
+                            if (!onLongPress) return;
+                            longPressTriggeredRef.current = true;
+                            onLongPress(day);
+                        }}
+                        delayLongPress={280}
                         activeOpacity={0.85}
                         style={[
                             s.dayCell,
                             selectable ? s.dayHasEvent : s.dayNoEvent,
                             selected && s.daySelected,
-                            today && s.todayRing,
+                            showTodayRing && s.todayRing,
                         ]}
                         accessibilityState={{ disabled: !selectable, selected }}
-                        accessibilityLabel={`${moment(day).tz(TZ).format("dddd, MMM D")}${selectable ? "" : " (unavailable)"}`}
+                        accessibilityLabel={`${dayMoment.format("dddd, MMM D")}${selectable ? "" : " (unavailable)"}`}
                     >
-                        <Text style={[s.dowText, selectable ? s.textOn : s.textOff, selected && s.textSelected]}>
-                            {moment(day).tz(TZ).format("ddd")}
+                        <Text
+                            style={[
+                                s.dowText,
+                                selectable ? s.textOn : s.textOff,
+                                selected && s.textSelected,
+                            ]}
+                        >
+                            {dayMoment.format("dd").toUpperCase()}
                         </Text>
-                        <Text style={[s.dayNum, selectable ? s.textOn : s.textOff, selected && s.textSelected]}>
-                            {moment(day).tz(TZ).format("D")}
+                        <Text
+                            style={[
+                                s.dayNum,
+                                selectable ? s.textOn : s.textOff,
+                                selected && s.textSelected,
+                            ]}
+                        >
+                            {dayMoment.format("D")}
                         </Text>
                     </TouchableOpacity>
                 );
@@ -108,49 +135,13 @@ export const WeekStrip: React.FC<Props> = ({
         </View>
     );
 
-    const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-        const x = e.nativeEvent.contentOffset.x;
-        // pages: 0 = prev, pageWidth = center, 2*pageWidth = next
-        if (x > pageWidth + TRIGGER_PX) {
-            // went to NEXT (forward in time)
-            scrollToCenter(false);
-            goToNext();
-        } else if (x < pageWidth - TRIGGER_PX) {
-            // went to PREV (back in time)
-            scrollToCenter(false);
-            if (canGoPrev) {
-                goToPrev();
-            } else {
-                // not allowed to go prev → snap back
-                scrollToCenter(true);
-            }
-        } else {
-            // not far enough → snap back to center
-            scrollToCenter(true);
-        }
-    };
-
     return (
-        <Animated.View style={{ width: pageWidth, backgroundColor: "transparent" }}>
-            <ScrollView
-                ref={scrollRef}
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-                bounces
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={{ width: pageWidth * 3 }}
-                contentOffset={{ x: pageWidth, y: 0 }} // start centered
-                onMomentumScrollEnd={onMomentumEnd}
-                // keep taps working smoothly on emulators
-                scrollEventThrottle={16}
-                alwaysBounceHorizontal
-            >
-                {renderWeek(prevWeekDays, false)}
-                {renderWeek(weekDays, true)}
-                {renderWeek(nextWeekDays, false)}
-            </ScrollView>
-        </Animated.View>
+        <View
+            style={{ width: pageWidth, backgroundColor: "transparent" }}
+            {...(panResponder ? panResponder.panHandlers : {})}
+        >
+            {renderWeek(weekDays)}
+        </View>
     );
 };
 
@@ -160,7 +151,8 @@ const s = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: spacing.smPlus,
+        paddingTop: spacing.smPlus,
+        paddingBottom: 0,
         paddingHorizontal: spacing.lg,
         backgroundColor: "transparent",
     },
@@ -168,36 +160,33 @@ const s = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         paddingVertical: spacing.xsPlus,
-        paddingHorizontal: spacing.smPlus,
+        paddingHorizontal: spacing.xsPlus,
         borderRadius: radius.mdPlus,
         minWidth: 44,
         gap: spacing.xxs,
-        borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.3)",
-        backgroundColor: "rgba(255,255,255,0.16)",
+        backgroundColor: "transparent",
     },
     dayHasEvent: {
-        backgroundColor: "rgba(255,255,255,0.28)",
-        borderColor: "rgba(255,255,255,0.45)",
+        backgroundColor: "transparent",
     },
     dayNoEvent: {
-        backgroundColor: "rgba(255,255,255,0.12)",
-        borderColor: "rgba(255,255,255,0.22)",
+        backgroundColor: "transparent",
     },
     daySelected: {
         backgroundColor: colors.white,
+        borderWidth: 1,
         borderColor: colors.borderLavenderAlt,
-        shadowColor: "#000",
+        shadowColor: colors.black,
         shadowOpacity: 0.12,
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 3 },
         elevation: 3,
     },
-    todayRing: { borderWidth: 1.5, borderColor: "rgba(255,255,255,0.85)" },
-    dowText: { fontSize: fontSizes.sm, fontFamily: fontFamilies.body },
-    dayNum: { fontSize: fontSizes.xl, fontWeight: "600", fontFamily: fontFamilies.body },
-    textOn: { color: colors.brandInk },
-    textOff: { color: colors.textLavenderMuted },
+    todayRing: { borderWidth: 1, borderColor: colors.borderOnDarkBright },
+    dowText: { fontSize: fontSizes.xs, letterSpacing: 0.6, fontFamily: fontFamilies.body },
+    dayNum: { fontSize: fontSizes.lg, fontWeight: "600", fontFamily: fontFamilies.body },
+    textOn: { color: colors.textOnDarkStrong },
+    textOff: { color: colors.textOnDarkSubtle },
     textSelected: { color: colors.brandPurpleDark },
 });
 

@@ -32,7 +32,7 @@ import { useFetchOrganizers } from "../../Common/db-axios/useOrganizers";
 import { WishlistHeart } from "../Calendar/ListView/WishlistHeart";
 import { getSafeImageUrl, getSmallAvatarUrl } from "../../Common/hooks/imageUtils";
 import type { Organizer } from "../../Common/types/commonTypes";
-import { colors, fontFamilies, fontSizes, radius, spacing } from "../../components/styles";
+import { colors, fontFamilies, fontSizes, gradients, radius, spacing } from "../../components/styles";
 
 type CommunityMeta = {
     eventCount: number;
@@ -489,23 +489,23 @@ export const CommunitiesList = ({
                     />
                 ) : isOrganizer ? (
                     <LinearGradient
-                        colors={["#F1ECFF", "#D7CCFF"]}
+                        colors={gradients.communityOrganizer}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={[styles.imageTileImage, styles.imageTilePlaceholder]}
                     >
-                        <FAIcon name={COMMUNITY_ICON} size={32} color="#6B57D0" />
+                        <FAIcon name={COMMUNITY_ICON} size={spacing.xxxl} color={colors.brandIndigo} />
                     </LinearGradient>
                 ) : (
                     <LinearGradient
-                        colors={["#E5E7EB", "#C7CBD6"]}
+                        colors={gradients.communityNeutral}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.imageTileImage}
                     />
                 )}
                 <LinearGradient
-                    colors={["rgba(0,0,0,0.05)", "rgba(0,0,0,0.6)"]}
+                    colors={[colors.overlaySoft, colors.overlayHeavy]}
                     style={styles.imageTileOverlay}
                 />
                 <View style={styles.imageTileBadge}>
@@ -517,7 +517,7 @@ export const CommunitiesList = ({
                         handleToggleEventWishlist={() => {
                             toggleMembership(entity.communityIds, !isJoined);
                         }}
-                        size={20}
+                        size={fontSizes.xxxl}
                         containerStyle={styles.imageTileHeart}
                     />
                 )}
@@ -562,11 +562,11 @@ export const CommunitiesList = ({
         <View style={styles.controlsCard}>
             {showSearch && (
                 <View style={styles.searchRow}>
-                    <FAIcon name="search" size={14} color="#7B7B88" style={styles.searchIcon} />
+                    <FAIcon name="search" size={fontSizes.base} color={colors.textSlate} style={styles.searchIcon} />
                     <TextInput
                         style={styles.searchInput}
                         placeholder={searchPlaceholder}
-                        placeholderTextColor="#8B8B97"
+                        placeholderTextColor={colors.textNightSubtle}
                         value={searchQuery}
                         onChangeText={setSearchQuery}
                         autoCorrect={false}
@@ -586,7 +586,7 @@ export const CommunitiesList = ({
                     onPress={() => setShowNoEventOrganizers((prev) => !prev)}
                 >
                     {showNoEventOrganizers && (
-                        <FAIcon name="check" size={10} color="#5A43B5" style={styles.filterChipIcon} />
+                        <FAIcon name="check" size={fontSizes.xxs} color={colors.brandPurpleDark} style={styles.filterChipIcon} />
                     )}
                     <Text
                         style={[
@@ -672,8 +672,8 @@ export const CommunitiesList = ({
                         <View style={[styles.iconBadge, !hasEvents && styles.iconBadgeMuted]}>
                             <FAIcon
                                 name={COMMUNITY_ICON}
-                                size={18}
-                                color={hasEvents ? "#6B57D0" : "#8E8E9B"}
+                                size={fontSizes.xxl}
+                                color={hasEvents ? colors.brandIndigo : colors.textNightSubtle}
                             />
                         </View>
 
@@ -753,11 +753,11 @@ const styles = StyleSheet.create({
         marginHorizontal: spacing.lg,
         marginBottom: spacing.mdPlus,
         padding: spacing.md,
-        backgroundColor: "rgba(255,255,255,0.92)",
+        backgroundColor: colors.surfaceWhiteFrosted,
         borderRadius: radius.lg,
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
-        shadowColor: "#000",
+        shadowColor: colors.black,
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 6,
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
     sectionSubHeaderLight: {
         fontSize: fontSizes.sm,
         fontWeight: "600",
-        color: "rgba(255,255,255,0.8)",
+        color: colors.textOnDarkMuted,
         fontFamily: fontFamilies.body,
     },
     sectionCount: {
@@ -867,7 +867,7 @@ const styles = StyleSheet.create({
     sectionCountLight: {
         fontSize: fontSizes.sm,
         fontWeight: "600",
-        color: "rgba(255,255,255,0.8)",
+        color: colors.textOnDarkMuted,
         fontFamily: fontFamilies.body,
     },
     spotlightRow: {
@@ -885,8 +885,8 @@ const styles = StyleSheet.create({
         overflow: "hidden",
         marginBottom: 0,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.2)",
-        shadowColor: "#000",
+        borderColor: colors.borderOnDarkSoft,
+        shadowColor: colors.black,
         shadowOpacity: 0.15,
         shadowOffset: { width: 0, height: 3 },
         shadowRadius: 8,
@@ -910,7 +910,7 @@ const styles = StyleSheet.create({
         position: "absolute",
         left: spacing.md,
         top: spacing.md,
-        backgroundColor: "rgba(255,255,255,0.9)",
+        backgroundColor: colors.surfaceWhiteFrosted,
         borderRadius: radius.pill,
         paddingHorizontal: spacing.smPlus,
         paddingVertical: spacing.xs,
@@ -928,9 +928,9 @@ const styles = StyleSheet.create({
         width: spacing.xxxl,
         height: spacing.xxxl,
         borderRadius: radius.lg,
-        backgroundColor: "rgba(255,255,255,0.9)",
+        backgroundColor: colors.surfaceWhiteFrosted,
         borderWidth: 1,
-        borderColor: "rgba(255,255,255,0.8)",
+        borderColor: colors.borderOnDarkStrong,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -978,7 +978,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
-        shadowColor: "#000",
+        shadowColor: colors.black,
         shadowOpacity: 0.12,
         shadowOffset: { width: 0, height: 3 },
         shadowRadius: 6,

@@ -3,7 +3,7 @@ import React, { ReactNode } from 'react';
 import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import { colors, fontFamilies, radius, spacing } from '../../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 
 type Props = {
     title?: string;
@@ -15,10 +15,10 @@ type Props = {
 };
 
 const TONES = {
-    default: { surface: colors.white, tint: 'rgba(106,27,154,0.10)' },
-    tint: { surface: colors.white, tint: 'rgba(106,27,154,0.12)' },
-    warning: { surface: '#FFF9E8', tint: 'rgba(255,176,0,0.25)' },
-    info: { surface: '#F3F7FF', tint: 'rgba(36,112,255,0.18)' },
+    default: { surface: colors.white, tint: colors.tintVioletSoft },
+    tint: { surface: colors.white, tint: colors.tintViolet },
+    warning: { surface: colors.surfaceWarning, tint: colors.tintWarning },
+    info: { surface: colors.surfaceInfo, tint: colors.tintInfo },
 };
 
 export default function SectionCard({
@@ -29,20 +29,20 @@ export default function SectionCard({
     titleStyle,
     tone = 'tint',
 }: Props) {
-    const colors = TONES[tone];
+    const toneColors = TONES[tone];
     return (
-        <View style={[styles.outer, { backgroundColor: colors.tint }, style]}>
+        <View style={[styles.outer, { backgroundColor: toneColors.tint }, style]}>
             {/* gradient “hairline” */}
             <LinearGradient
-                colors={['rgba(255,255,255,0.35)', 'rgba(0,0,0,0.06)']}
+                colors={[colors.borderOnDark, colors.shadowSoft]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.border}
             />
-            <View style={[styles.inner, { backgroundColor: colors.surface }]}>
+            <View style={[styles.inner, { backgroundColor: toneColors.surface }]}>
                 {title ? (
                     <View style={styles.header}>
-                        {icon ? <MaterialIcons name={icon} size={16} color="#6A1B9A" style={{ marginRight: 6 }} /> : null}
+                        {icon ? <MaterialIcons name={icon} size={16} color={colors.brandViolet} style={{ marginRight: 6 }} /> : null}
                         <Text style={[styles.title, titleStyle]}>{title.toUpperCase()}</Text>
                     </View>
                 ) : null}
@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     inner: {
         borderRadius: radius.md,
         padding: spacing.mdPlus,
-        shadowColor: 'rgba(0,0,0,0.15)',
+        shadowColor: colors.shadowLight,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
         shadowRadius: 8,
@@ -77,10 +77,10 @@ const styles = StyleSheet.create({
         marginBottom: spacing.sm,
     },
     title: {
-        fontSize: 12.5,
+        fontSize: fontSizes.smPlus,
         fontWeight: '800',
         letterSpacing: 0.5,
-        color: '#6A1B9A',
+        color: colors.brandViolet,
         fontFamily: fontFamilies.body,
     },
 });

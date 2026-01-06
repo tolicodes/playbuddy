@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
     SectionList,
     View,
@@ -42,19 +42,9 @@ const EventList: React.FC<EventListProps> = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const { currentDeepLink, userProfile } = useUserContext();
-    const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
     const { data: attendees } = useFetchAttendees();
     const analyticsProps = useAnalyticsProps();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
-
-    useEffect(() => {
-        if (selectedEvent) {
-            navigation.navigate('Event Details', {
-                selectedEvent,
-                title: selectedEvent.name,
-            });
-        }
-    }, [selectedEvent]);
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
         const attendeesForEvent = attendees?.find((a) => a.event_id === event.id)?.attendees || [];
@@ -65,8 +55,10 @@ const EventList: React.FC<EventListProps> = ({
                     onPress={(e) => {
                         const eventAnalyticsProps = getEventAnalyticsProps(e, currentDeepLink);
 
-                        // in case we navigate back to the same event, we need to trigger a re-render
-                        setSelectedEvent({ ...e });
+                        navigation.push('Event Details', {
+                            selectedEvent: e,
+                            title: e.name,
+                        });
                         logEvent(UE.EventListItemClicked, {
                             ...analyticsProps,
                             ...eventAnalyticsProps,
@@ -92,7 +84,7 @@ const EventList: React.FC<EventListProps> = ({
             ref={sectionListRef}
             style={styles.sectionList}
             sections={sections}
-            keyExtractor={(item, i) => `${i}_${item.id}`}
+            keyExtractor={(item) => String(item.id)}
             stickySectionHeadersEnabled={true}
             renderItem={renderItem}
             renderSectionHeader={renderSectionHeader}
@@ -119,7 +111,7 @@ export default EventList;
 
 const styles = StyleSheet.create({
     sectionList: {
-        marginTop: 4,
+        marginTop: spacing.xs,
     },
     sectionHeaderOuterWrapper: {
         paddingBottom: spacing.md,
@@ -135,9 +127,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: radius.lg,
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: 'rgba(90,67,181,0.12)',
+        borderColor: colors.borderLavenderSoft,
         alignSelf: 'stretch',
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.08,
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 3 },

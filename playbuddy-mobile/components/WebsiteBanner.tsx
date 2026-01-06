@@ -8,7 +8,8 @@ import { logEvent } from '../Common/hooks/logger';
 import { useUserContext } from '../Pages/Auth/hooks/UserContext';
 import { UE } from '../userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
-import { colors, fontSizes, gradients, radius, spacing } from './styles';
+import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from './styles';
+import { navigateToAuth } from '../Common/Nav/navigationHelpers';
 const Banner = () => {
     const navigation = useNavigation<NavStack>()
     const { authUserId } = useUserContext();
@@ -18,24 +19,24 @@ const Banner = () => {
 
     const handlePress = () => {
         logEvent(UE.LoginBannerClicked, analyticsProps);
-        navigation.navigate('AuthNav', { screen: isLoggedIn ? 'Profile' : 'Login Form' });
+        navigateToAuth(navigation, isLoggedIn ? 'Profile' : 'Login Form');
     };
     return (
         <TouchableOpacity onPress={handlePress} activeOpacity={0.9}>
             <LinearGradient
-                colors={gradients.access}
+                colors={[colors.surfaceWhiteOpaque, colors.surfaceLavenderOpaque]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.banner}
             >
                 <View style={styles.iconBadge}>
-                    <FAIcon name="lock" size={12} color="#fff" />
+                    <FAIcon name="lock" size={12} color={colors.brandPurpleDark} />
                 </View>
                 <Text style={styles.text}>
                     <Text style={styles.link}>Login</Text>
                     {' '}to unlock more events and features!
                 </Text>
-                <FAIcon name="chevron-right" size={12} color="rgba(255,255,255,0.85)" />
+                <FAIcon name="chevron-right" size={12} color={colors.brandInk} />
             </LinearGradient>
         </TouchableOpacity>
 
@@ -46,39 +47,40 @@ const styles = StyleSheet.create({
     banner: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: spacing.smPlus,
+        paddingTop: spacing.mdPlus,
+        paddingBottom: spacing.smPlus,
         paddingHorizontal: spacing.mdPlus,
         borderRadius: radius.lg,
         marginHorizontal: spacing.lg,
+        marginTop: spacing.md,
         marginBottom: spacing.md,
+        backgroundColor: colors.white,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.25)',
-        shadowColor: '#2b145a',
-        shadowOpacity: 0.25,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-        elevation: 4,
+        borderColor: colors.borderLavenderAlt,
+        ...shadows.card,
     },
     iconBadge: {
         width: 26,
         height: 26,
         borderRadius: 13,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+        backgroundColor: colors.badgeBackground,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.35)',
+        borderColor: colors.borderLavenderStrong,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.smPlus,
     },
     text: {
-        color: colors.white,
+        color: colors.brandText,
         fontSize: fontSizes.xl,
         flex: 1,
+        fontFamily: fontFamilies.body,
     },
     link: {
-        color: colors.white,
-        fontWeight: 'bold',
+        color: colors.brandPurpleDark,
+        fontWeight: '700',
         textDecorationLine: 'underline',
+        fontFamily: fontFamilies.body,
     },
 });
 

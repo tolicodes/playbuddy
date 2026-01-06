@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { NavStack } from "../../../Common/Nav/NavStackType";
+import { navigateToAuth } from "../../../Common/Nav/navigationHelpers";
 import { useUserContext } from "../hooks/UserContext";
 import { getSmallAvatarUrl } from "../../../Common/hooks/imageUtils";
 import { Image } from 'expo-image';
@@ -43,7 +44,7 @@ const HeaderLoginButton = ({
     iconColor?: string;
     avatarStyle?: StyleProp<ViewStyle>;
 }) => {
-    const { navigate } = useNavigation<NavStack>();
+    const navigation = useNavigation<NavStack>();
     const { authUserId, userProfile, isLoadingUserProfile, isLoadingAuth, isProfileComplete } = useUserContext();
 
     const analyticsProps = useAnalyticsProps();
@@ -61,9 +62,9 @@ const HeaderLoginButton = ({
             onPressButton();
         } else {
             if (isProfileComplete) {
-                navigate('AuthNav', { screen: 'Profile' });
+                navigateToAuth(navigation, 'Profile');
             } else {
-                navigate('AuthNav', { screen: 'Login Form' });
+                navigateToAuth(navigation, 'Login Form');
             }
         }
     };
@@ -72,9 +73,10 @@ const HeaderLoginButton = ({
         return <ActivityIndicator />;
     }
 
-    const resolvedIconColor = iconColor ?? colors.linkBlue;
+    const resolvedIconColor = iconColor ?? (headerButton ? colors.textOnDarkStrong : colors.linkBlue);
     const sizeValue = showLoginText ? 50 : size;
     const containerStyle = headerButton ? styles.headerButtonContainer : styles.buttonContainer;
+    const avatarContainerStyle = headerButton ? styles.headerAvatarContainer : styles.avatarContainer;
 
     return (
         <TouchableOpacity
@@ -82,7 +84,7 @@ const HeaderLoginButton = ({
             onPress={handlePressHeaderButton}
         >
             <View style={[
-                styles.avatarContainer,
+                avatarContainerStyle,
                 {
                     width: sizeValue,
                     height: sizeValue,
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.linkBlue,
         padding: spacing.smPlus,
         borderRadius: radius.smPlus,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,
         shadowRadius: 2,
@@ -138,6 +140,18 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    headerAvatarContainer: {
+        backgroundColor: colors.surfaceGlassStrong,
+        borderColor: colors.borderOnDark,
+        borderWidth: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: colors.black,
+        shadowOpacity: 0.18,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 3,
     },
     avatarImage: {
         width: 30,

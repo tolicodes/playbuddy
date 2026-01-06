@@ -3,6 +3,7 @@ import { View, StyleSheet, Text } from "react-native"
 import { Image } from "expo-image"
 import { getSmallAvatarUrl } from "../../../Common/hooks/imageUtils";
 import { Attendee } from "../../../Common/types/commonTypes";
+import { colors } from '../../../components/styles';
 
 export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfile: Attendee, size?: number, name?: string }) => {
     const styles = useMemo(() => StyleSheet.create({
@@ -10,8 +11,8 @@ export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfil
             width: size,
             height: size,
             borderRadius: size / 2, // Ensure it's fully rounded (half of width/height)
-            backgroundColor: 'white',
-            borderColor: '#007AFF',
+            backgroundColor: colors.white,
+            borderColor: colors.brandIndigo,
             borderWidth: 1,
             justifyContent: 'center', // Centers vertically
             alignItems: 'center',     // Centers horizontally
@@ -19,7 +20,7 @@ export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfil
         avatarText: {
             fontSize: size / 2,
             fontWeight: 'bold',
-            color: '#007AFF',
+            color: colors.brandIndigo,
         },
         avatarImage: {
             width: size,
@@ -45,4 +46,3 @@ export const AvatarCircle = ({ userProfile, size = 50, name = '' }: { userProfil
 
 
 }
-

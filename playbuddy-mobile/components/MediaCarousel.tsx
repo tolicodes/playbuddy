@@ -15,6 +15,7 @@ import type { Media } from '../Common/types/commonTypes.js';
 import { logEvent } from '@amplitude/analytics-react-native';
 import { UE } from '../Common/types/userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
+import { colors, fontFamilies, fontSizes, radius, spacing } from './styles';
 const { width, height } = Dimensions.get('window');
 const DOT_SIZE = 8;
 const DOT_SPACING = 8;
@@ -93,7 +94,7 @@ export const MediaCarousel = ({
             <View style={styles.slide} key={index}>
                 {!isLoaded && (
                     <View style={styles.loaderContainer}>
-                        <ActivityIndicator size="large" color="#fff" />
+                        <ActivityIndicator size="large" color={colors.white} />
                     </View>
                 )}
 
@@ -193,16 +194,16 @@ export const MediaCarousel = ({
 
 const styles = StyleSheet.create({
     gridList: { flex: 1 },
-    grid: { padding: 4 },
-    thumbContainer: { width: width / 3 - 8, margin: 4 },
-    thumb: { width: '100%', aspectRatio: 1, borderRadius: 8 },
+    grid: { padding: spacing.xs },
+    thumbContainer: { width: width / 3 - 8, margin: spacing.xs },
+    thumb: { width: '100%', aspectRatio: 1, borderRadius: radius.sm },
 
-    modal: { flex: 1, backgroundColor: 'black' },
+    modal: { flex: 1, backgroundColor: colors.black },
     slide: { width, height, justifyContent: 'center', alignItems: 'center' },
     media: { width, height },
     loaderContainer: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: colors.overlayStrong,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1,
@@ -210,27 +211,27 @@ const styles = StyleSheet.create({
 
     audioButton: {
         position: 'absolute',
-        bottom: 80,
-        right: 20,
-        backgroundColor: '#6200EE', // purple accent
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        borderRadius: 24,
+        bottom: spacing.jumbo * 2,
+        right: spacing.xl,
+        backgroundColor: colors.accentElectric,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.hero,
         zIndex: 2,
     },
-    audioButtonText: { color: 'white', fontSize: 14, fontWeight: '600' },
+    audioButtonText: { color: colors.white, fontSize: fontSizes.base, fontWeight: '600', fontFamily: fontFamilies.body },
 
     pagination: {
         position: 'absolute',
-        bottom: 20,
+        bottom: spacing.xl,
         left: 0,
         width,
         flexDirection: 'row',
         justifyContent: 'center',
     },
-    dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, backgroundColor: 'gray', marginHorizontal: DOT_SPACING / 2 },
-    activeDot: { backgroundColor: 'white', width: DOT_SIZE * 1.5, height: DOT_SIZE * 1.5, borderRadius: (DOT_SIZE * 1.5) / 2 },
+    dot: { width: DOT_SIZE, height: DOT_SIZE, borderRadius: DOT_SIZE / 2, backgroundColor: colors.textSecondary, marginHorizontal: DOT_SPACING / 2 },
+    activeDot: { backgroundColor: colors.white, width: DOT_SIZE * 1.5, height: DOT_SIZE * 1.5, borderRadius: (DOT_SIZE * 1.5) / 2 },
 
-    closeButton: { position: 'absolute', top: 40, right: 20, padding: 8 },
-    closeText: { color: 'white', fontSize: 24 },
+    closeButton: { position: 'absolute', top: spacing.jumbo, right: spacing.xl, padding: spacing.sm },
+    closeText: { color: colors.white, fontSize: fontSizes.headline, fontFamily: fontFamilies.display },
 });

@@ -40,7 +40,7 @@ const cardWrapperStyles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: colors.borderLight,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.3,
         shadowOffset: { width: 0, height: 12 },
         shadowRadius: 24,

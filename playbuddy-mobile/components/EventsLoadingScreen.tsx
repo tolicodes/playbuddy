@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { colors, fontFamilies, fontSizes, gradients, radius, spacing } from './styles';
+import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from './styles';
 
 const logoMark = require('../assets/logo-transparent.png');
 
@@ -30,7 +30,7 @@ const EventsLoadingScreen = ({
                 </View>
                 <Text style={styles.title}>{title}</Text>
                 <Text style={styles.subtitle}>{subtitle}</Text>
-                <ActivityIndicator size="large" color="#FFFFFF" style={styles.spinner} />
+                <ActivityIndicator size="large" color={colors.white} style={styles.spinner} />
             </View>
         </LinearGradient>
     );
@@ -67,22 +67,18 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.xxl,
         paddingHorizontal: spacing.xxxl,
         borderRadius: radius.hero,
-        backgroundColor: 'rgba(255,255,255,0.16)',
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.35)',
-        shadowColor: '#220b3d',
-        shadowOpacity: 0.25,
-        shadowOffset: { width: 0, height: 12 },
-        shadowRadius: 20,
-        elevation: 6,
+        borderColor: colors.borderOnDark,
+        ...shadows.brandCard,
     },
     logoHalo: {
         width: 82,
         height: 82,
         borderRadius: 41,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.5)',
+        borderColor: colors.borderOnDark,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: spacing.mdPlus,
@@ -94,13 +90,13 @@ const styles = StyleSheet.create({
     title: {
         fontSize: fontSizes.title,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: colors.white,
         fontFamily: fontFamilies.display,
     },
     subtitle: {
         marginTop: spacing.sm,
         fontSize: fontSizes.base,
-        color: 'rgba(255,255,255,0.85)',
+        color: colors.textOnDarkMuted,
         fontFamily: fontFamilies.body,
     },
     spinner: {

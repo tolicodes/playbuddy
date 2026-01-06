@@ -30,7 +30,7 @@ import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
-import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../../components/styles';
+import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../../components/styles';
 import SectionCard from './SectionCard';
 
 /* 
@@ -80,13 +80,7 @@ const buildTicketUrl = (rawUrl: string, opts?: { promoCode?: string }) => {
     }
 };
 
-const TAG_TONES = {
-    spiritual: { backgroundColor: '#FFF4E6', borderColor: '#FFD7A8', textColor: '#B45309' },
-    social: { backgroundColor: '#E9FBF3', borderColor: '#BDEDD8', textColor: '#1F8A5B' },
-    skill: { backgroundColor: '#EEF5FF', borderColor: '#CFE0FF', textColor: '#2B5AD7' },
-    scene: { backgroundColor: '#F6EEFF', borderColor: '#DEC8FF', textColor: '#6B35C6' },
-    default: { backgroundColor: '#F5F1FF', borderColor: '#E3DBFF', textColor: '#4B2ABF' },
-};
+const TAG_TONES = calendarTagTones;
 
 const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
     {
@@ -345,7 +339,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         </View>
                     )}
                     <LinearGradient
-                        colors={['rgba(0,0,0,0.0)', 'rgba(0,0,0,0.75)']}
+                        colors={[colors.overlayNone, colors.overlayDeep]}
                         style={styles.heroGradient}
                     />
                     {promoBadgeLabel && (
@@ -512,10 +506,10 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
                                     key={`theme-${i}`}
                                     style={[
                                         styles.tagPill,
-                                        { backgroundColor: tone.backgroundColor, borderColor: tone.borderColor },
+                                        { backgroundColor: tone.background, borderColor: tone.border },
                                     ]}
                                 >
-                                    <Text style={[styles.tagText, { color: tone.textColor }]}>{theme}</Text>
+                                    <Text style={[styles.tagText, { color: tone.text }]}>{theme}</Text>
                                 </View>
                             );
                         })}
@@ -661,6 +655,7 @@ export const EventDetails = ({ route }) => {
 
 const styles = StyleSheet.create({
     scrollView: {
+        flex: 1,
         backgroundColor: colors.lavenderBackground,
     },
     scrollContent: {
@@ -706,7 +701,7 @@ const styles = StyleSheet.create({
         borderRadius: radius.smPlus,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.xsPlus,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.2,
         shadowRadius: 3,
         shadowOffset: { width: 0, height: 1 },
@@ -734,13 +729,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: spacing.xsPlus,
         alignSelf: 'flex-start',
-        backgroundColor: 'rgba(0,0,0,0.68)',
+        backgroundColor: colors.overlayHero,
         borderRadius: radius.pill,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.mdPlus,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.55)',
-        shadowColor: '#000',
+        borderColor: colors.borderOnDarkMedium,
+        shadowColor: colors.black,
         shadowOpacity: 0.25,
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
@@ -767,7 +762,7 @@ const styles = StyleSheet.create({
         marginTop: -18,
         paddingTop: spacing.lg,
         paddingBottom: spacing.lg,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: -2 },
         shadowRadius: 10,
@@ -862,7 +857,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.surfaceRose,
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.12,
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
@@ -924,7 +919,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         borderRadius: radius.hero,
         alignSelf: 'flex-start',
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 5,

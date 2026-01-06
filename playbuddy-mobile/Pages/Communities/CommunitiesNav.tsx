@@ -96,9 +96,9 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         padding: spacing.xs,
         borderRadius: radius.pill,
-        backgroundColor: 'rgba(255,255,255,0.18)',
+        backgroundColor: colors.surfaceGlass,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.35)',
+        borderColor: colors.borderOnDark,
         marginBottom: spacing.smPlus,
     },
     segmentedButton: {
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     },
     segmentedButtonActive: {
         backgroundColor: colors.accentPurple,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOpacity: 0.18,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,
@@ -117,13 +117,13 @@ const styles = StyleSheet.create({
     segmentedText: {
         fontSize: fontSizes.base,
         fontWeight: '600',
-        color: '#EAE6F8',
+        color: colors.textOnDarkMuted,
         fontFamily: fontFamilies.body,
     },
     segmentedTextActive: {
         fontSize: fontSizes.base,
         fontWeight: '700',
-        color: '#FFFFFF',
+        color: colors.white,
         fontFamily: fontFamilies.body,
     },
 });

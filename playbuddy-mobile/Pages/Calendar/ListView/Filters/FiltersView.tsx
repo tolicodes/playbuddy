@@ -13,7 +13,7 @@ import { logEvent } from '../../../../Common/hooks/logger';
 import { UE } from '../../../../userEventTypes';
 import { useEventAnalyticsProps } from '../../../../Common/hooks/useAnalytics';
 import { ActionSheet } from '../../../../components/ActionSheet';
-import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../../components/styles';
+import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../../components/styles';
 
 export type FilterState = {
     tags: string[];
@@ -452,7 +452,7 @@ const styles = StyleSheet.create({
     },
     searchInput: {
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: colors.borderMuted,
         borderRadius: radius.md,
         paddingHorizontal: spacing.md,
         height: 40,
@@ -467,13 +467,10 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.md,
         borderWidth: 1,
-        borderColor: '#E6E0F5',
+        borderColor: colors.borderLavenderSoft,
         maxHeight: 200,
         zIndex: 20,
-        shadowColor: '#000',
-        shadowOpacity: 0.12,
-        shadowRadius: 8,
-        shadowOffset: { width: 0, height: 3 },
+        ...shadows.card,
         elevation: 8,
         overflow: 'hidden',
     },
@@ -484,7 +481,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.smPlus,
         borderBottomWidth: 1,
-        borderBottomColor: '#F0EDF8',
+        borderBottomColor: colors.borderLavenderSoft,
         backgroundColor: colors.white,
     },
     tagDropdownText: {
@@ -494,12 +491,12 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     tagDropdownCount: {
-        backgroundColor: '#F2ECFF',
+        backgroundColor: colors.surfaceLavenderAlt,
         borderRadius: radius.smPlus,
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xxs,
         borderWidth: 1,
-        borderColor: '#E1DAF7',
+        borderColor: colors.borderLavenderStrong,
     },
     tagDropdownCountText: {
         fontSize: fontSizes.sm,
@@ -541,7 +538,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.md,
         backgroundColor: colors.lavenderBackground,
         borderWidth: 1,
-        borderColor: '#E1DAF7',
+        borderColor: colors.borderLavenderStrong,
         justifyContent: 'center',
         marginBottom: spacing.smPlus,
     },
@@ -574,18 +571,18 @@ const styles = StyleSheet.create({
         width: 26,
         height: 26,
         borderRadius: radius.sm,
-        backgroundColor: '#EFE9FF',
+        backgroundColor: colors.surfaceLavender,
         borderWidth: 1,
-        borderColor: '#DDD5FF',
+        borderColor: colors.borderLavenderAlt,
         alignItems: 'center',
         justifyContent: 'center',
     },
     optionIconWrapSelected: {
-        backgroundColor: 'rgba(255,255,255,0.18)',
-        borderColor: 'rgba(255,255,255,0.4)',
+        backgroundColor: colors.surfaceGlass,
+        borderColor: colors.borderOnDark,
     },
     optionCountSelected: {
-        color: '#EDE9FF',
+        color: colors.surfaceLavenderAlt,
     },
     optionMoreButton: {
         width: '48%',
@@ -593,9 +590,9 @@ const styles = StyleSheet.create({
         borderRadius: radius.md,
         paddingVertical: spacing.smPlus,
         paddingHorizontal: spacing.md,
-        backgroundColor: '#F0EDF8',
+        backgroundColor: colors.surfaceLavender,
         borderWidth: 1,
-        borderColor: '#E1DAF7',
+        borderColor: colors.borderLavenderStrong,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: spacing.smPlus,
@@ -607,7 +604,7 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     applyButton: {
-        backgroundColor: '#000',
+        backgroundColor: colors.black,
         paddingVertical: spacing.mdPlus,
         borderRadius: radius.lg,
     },

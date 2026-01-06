@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import {
-    SafeAreaView,
     ScrollView,
     View,
     Text,
@@ -9,6 +8,7 @@ import {
     Alert,
     Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import Svg, { Circle } from 'react-native-svg';
@@ -19,6 +19,7 @@ import { usePromoCode } from '../../Pages/Auth/usePromoCode';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { navigateToHome } from '../../Common/Nav/navigationHelpers';
 import { formatDate } from '../../utils/formatDate';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { colors, fontFamilies, fontSizes, radius, spacing } from '../../components/styles';
@@ -34,7 +35,7 @@ export const PromosEntryScreen = ({
 
     useEffect(() => {
         if (!eventProps.event_id) {
-            navigation.replace('Home');
+            navigateToHome(navigation);
             return;
         };
 
@@ -62,22 +63,21 @@ export const PromosEntryScreen = ({
     const onClickLink = (link: 'event_details' | 'community_events') => {
         if (!eventProps.event_id) return;
 
+        onPromoScreenViewed();
+
         if (link === 'community_events') {
             logEvent(UE.PromoScreenExploreClicked, eventProps);
-
-            navigation.navigate('Community Events', { communityId: organizer.communities[0].id });
-        } else {
-            logEvent(UE.PromoScreenEventDetailsClicked, eventProps);
-
-            navigation.navigate('Event Details', { selectedEvent: fullEvent, title: fullEvent?.name });
+            navigation.replace('Community Events', { communityId: organizer.communities[0].id });
+            return;
         }
 
-        onPromoScreenViewed();
+        logEvent(UE.PromoScreenEventDetailsClicked, eventProps);
+        navigation.replace('Event Details', { selectedEvent: fullEvent, title: fullEvent?.name });
     };
 
     if (!fullEvent) {
         console.log('no event')
-        navigation.replace('Home');
+        navigateToHome(navigation);
         return;
     }
 
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderRadius: radius.md,
         padding: spacing.lg,
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.05,
         shadowRadius: 6,
