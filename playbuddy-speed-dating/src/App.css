@@ -12,18 +12,18 @@
   inset: -20% -20% -20% -20%;
   z-index: -1;
   background: radial-gradient(
-      circle at 10% 10%,
-      rgba(198, 182, 246, 0.35),
+      circle at 90% 8%,
+      rgba(255, 255, 255, 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      circle at 8% 35%,
+      rgba(255, 193, 230, 0.2),
       transparent 60%
     ),
     radial-gradient(
-      circle at 85% 20%,
-      rgba(202, 186, 245, 0.28),
-      transparent 62%
-    ),
-    radial-gradient(
-      circle at 70% 85%,
-      rgba(183, 206, 255, 0.22),
+      circle at 5% 90%,
+      rgba(255, 188, 143, 0.2),
       transparent 60%
     );
   pointer-events: none;
@@ -36,6 +36,9 @@
   flex-wrap: wrap;
   margin-bottom: 18px;
   animation: fadeUp 600ms ease-out both;
+  color: #fff;
+  justify-content: center;
+  text-align: center;
 }
 
 .screen {
@@ -43,17 +46,25 @@
   gap: 18px;
 }
 
+.confirmation-screen {
+  text-align: center;
+  justify-items: center;
+}
+
 .contact-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   animation: fadeUp 600ms ease-out both;
+  color: #fff;
+  justify-content: center;
+  text-align: center;
 }
 
 .subtitle {
   margin: 6px 0 0;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.86);
   max-width: 520px;
   font-size: 0.95rem;
 }
@@ -69,7 +80,7 @@
   font-size: 0.62rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.78);
   font-weight: 600;
 }
 
@@ -79,24 +90,25 @@ h1 {
   font-weight: 700;
   font-size: clamp(1.6rem, 3.2vw, 2.3rem);
   letter-spacing: -0.01em;
+  color: #fff;
 }
 
 .number-card {
-  background: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(140deg, #ffffff, #f7f5ff);
   border-radius: 16px;
   padding: 18px 20px;
   border: 1px solid var(--stroke);
-  box-shadow: 0 10px 20px rgba(38, 24, 60, 0.08);
+  box-shadow: 0 16px 32px rgba(43, 20, 90, 0.18);
   animation: fadeUp 640ms ease-out both;
   animation-delay: 80ms;
 }
 
 .contact-card {
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(150deg, #ffffff, #f7f5ff);
   border-radius: 16px;
   padding: 18px 20px 22px;
   border: 1px solid var(--stroke);
-  box-shadow: 0 10px 20px rgba(38, 24, 60, 0.08);
+  box-shadow: 0 16px 32px rgba(43, 20, 90, 0.18);
   display: grid;
   gap: 16px;
   animation: fadeUp 640ms ease-out both;
@@ -137,8 +149,8 @@ h1 {
 
 .text-input:focus {
   outline: none;
-  border-color: #7f5bf5;
-  box-shadow: 0 0 0 2px rgba(127, 91, 245, 0.18);
+  border-color: #7e5bef;
+  box-shadow: 0 0 0 2px rgba(126, 91, 239, 0.2);
 }
 
 .text-input.has-error {
@@ -156,8 +168,8 @@ h1 {
 }
 
 .input-row:focus-within {
-  border-color: #7f5bf5;
-  box-shadow: 0 0 0 2px rgba(127, 91, 245, 0.18);
+  border-color: #7e5bef;
+  box-shadow: 0 0 0 2px rgba(126, 91, 239, 0.2);
 }
 
 .input-row .text-input {
@@ -178,10 +190,10 @@ h1 {
 
 .input-prefix {
   padding: 12px 14px;
-  background: rgba(232, 224, 255, 0.65);
-  border-right: 1px solid rgba(160, 128, 220, 0.22);
+  background: rgba(156, 106, 222, 0.14);
+  border-right: 1px solid rgba(107, 70, 193, 0.22);
   font-weight: 600;
-  color: #5a3db9;
+  color: #6b46c1;
 }
 
 .contact-methods {
@@ -212,8 +224,8 @@ h1 {
 }
 
 .radio-pill.is-selected {
-  border-color: rgba(127, 91, 245, 0.45);
-  background: rgba(127, 91, 245, 0.14);
+  border-color: rgba(156, 106, 222, 0.5);
+  background: rgba(156, 106, 222, 0.16);
   box-shadow: none;
   transform: translateY(0);
 }
@@ -254,10 +266,11 @@ h1 {
   align-items: center;
   padding: 10px 8px;
   gap: 0;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.8);
   border-radius: 14px;
-  box-shadow: none;
+  box-shadow: 0 10px 20px rgba(43, 20, 90, 0.12);
+  backdrop-filter: blur(8px);
 }
 
 .grid-spacer {
@@ -291,16 +304,16 @@ h1 {
   align-items: center;
   padding: 4px 6px;
   border-radius: 12px;
-  border: 1px solid rgba(114, 90, 148, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   animation: fadeUp 420ms ease-out both;
 }
 
 .row-even {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.9);
 }
 
 .row-odd {
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.82);
 }
 
 .row-number {
@@ -315,7 +328,7 @@ h1 {
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  border-left: 1px solid rgba(114, 90, 148, 0.12);
+  border-left: 1px solid rgba(226, 217, 255, 0.8);
   border-radius: 10px;
   cursor: pointer;
   color: var(--muted);
@@ -384,31 +397,31 @@ h1 {
 
 .is-flirt {
   --accent: var(--flirt);
-  --accent-rgb: 232, 88, 136;
+  --accent-rgb: 255, 38, 117;
 }
 
 .is-bud {
   --accent: var(--bud);
-  --accent-rgb: 45, 173, 165;
+  --accent-rgb: 56, 189, 248;
 }
 
 .is-both {
   --accent: var(--both);
-  --accent-rgb: 118, 103, 211;
+  --accent-rgb: 107, 87, 208;
 }
 
 .is-none {
   --accent: var(--none);
-  --accent-rgb: 126, 130, 140;
+  --accent-rgb: 156, 163, 175;
 }
 
 .action-bar {
   margin-top: 22px;
   padding: 18px 20px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(150deg, #ffffff, #f7f5ff);
   border: 1px solid var(--stroke);
-  box-shadow: 0 10px 20px rgba(38, 24, 60, 0.08);
+  box-shadow: 0 16px 32px rgba(43, 20, 90, 0.18);
   display: grid;
   gap: 14px;
   animation: fadeUp 620ms ease-out both;
@@ -452,9 +465,9 @@ h1 {
 }
 
 .btn.primary {
-  background: linear-gradient(120deg, #7f5bf5, #a98bff);
-  color: #1d0d32;
-  box-shadow: 0 8px 16px rgba(127, 91, 245, 0.28);
+  background: linear-gradient(120deg, #6b46c1, #8e3bd9);
+  color: #fff;
+  box-shadow: 0 10px 18px rgba(43, 20, 90, 0.28);
 }
 
 .btn.primary:hover {
@@ -462,7 +475,7 @@ h1 {
 }
 
 .btn.ghost {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
   color: var(--ink);
   border: 1px solid var(--stroke);
 }
@@ -486,17 +499,17 @@ h1 {
   cursor: pointer;
   text-decoration: underline;
   text-decoration-thickness: 2px;
-  text-decoration-color: rgba(127, 91, 245, 0.4);
+  text-decoration-color: rgba(107, 70, 193, 0.45);
 }
 
 .link-button:hover {
-  color: #5a3db9;
+  color: #6b46c1;
 }
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(33, 18, 44, 0.35);
+  background: rgba(44, 11, 99, 0.35);
   display: grid;
   place-items: center;
   z-index: 20;
@@ -505,13 +518,13 @@ h1 {
 }
 
 .modal {
-  background: rgba(255, 255, 255, 0.98);
+  background: linear-gradient(160deg, #ffffff, #f7f5ff);
   border-radius: 16px;
   padding: 24px;
   max-width: 420px;
   width: 100%;
   border: 1px solid var(--stroke);
-  box-shadow: 0 16px 28px rgba(24, 12, 33, 0.18);
+  box-shadow: 0 16px 32px rgba(43, 20, 90, 0.18);
   display: grid;
   gap: 16px;
 }
@@ -531,12 +544,60 @@ h1 {
   margin-top: 22px;
   padding: 16px 18px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
+  background: linear-gradient(150deg, #ffffff, #f7f5ff);
   border: 1px solid var(--stroke);
   color: var(--ink);
   font-size: 0.95rem;
   animation: fadeUp 620ms ease-out both;
   animation-delay: 220ms;
+}
+
+.confirmation-card {
+  width: 100%;
+  max-width: 520px;
+  background: linear-gradient(150deg, #ffffff, #f7f5ff);
+  border-radius: 18px;
+  padding: 26px 24px;
+  border: 1px solid var(--stroke);
+  box-shadow: 0 16px 32px rgba(43, 20, 90, 0.18);
+  animation: fadeUp 620ms ease-out both;
+  animation-delay: 120ms;
+}
+
+.confirmation-title {
+  margin: 0;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.promo-card {
+  width: 100%;
+  max-width: 360px;
+  background: linear-gradient(160deg, #ffffff, #f7f5ff);
+  border-radius: 18px;
+  padding: 20px 22px 24px;
+  border: 1px solid var(--stroke);
+  box-shadow: 0 16px 32px rgba(43, 20, 90, 0.18);
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  animation: fadeUp 620ms ease-out both;
+  animation-delay: 180ms;
+}
+
+.promo-kicker {
+  margin: 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.promo-logo {
+  width: 110px;
+  height: auto;
 }
 
 .toast {
@@ -545,10 +606,10 @@ h1 {
   bottom: 16px;
   padding: 8px 16px;
   border-radius: 999px;
-  background: rgba(39, 20, 52, 0.92);
+  background: rgba(44, 11, 99, 0.92);
   color: #fff;
   font-weight: 600;
-  box-shadow: 0 10px 20px rgba(18, 8, 24, 0.28);
+  box-shadow: 0 12px 22px rgba(18, 8, 24, 0.3);
   animation: toastIn 160ms ease-out;
 }
 
@@ -596,10 +657,17 @@ h1 {
 
   .top-bar {
     margin-bottom: 14px;
+    flex-direction: column;
+    text-align: center;
   }
 
   .subtitle {
     font-size: 0.92rem;
+  }
+
+  .contact-header {
+    flex-direction: column;
+    align-items: center;
   }
 
   .logo {
@@ -617,6 +685,18 @@ h1 {
 
   .grid {
     margin-top: 18px;
+  }
+
+  .confirmation-card {
+    padding: 22px 18px;
+  }
+
+  .promo-card {
+    padding: 18px;
+  }
+
+  .promo-logo {
+    width: 96px;
   }
 
   .grid-header {

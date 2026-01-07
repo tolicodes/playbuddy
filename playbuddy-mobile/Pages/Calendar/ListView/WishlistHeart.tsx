@@ -8,15 +8,19 @@ export const WishlistHeart = ({
     handleToggleEventWishlist,
     size = 28,
     containerStyle,
+    variant = 'outline',
 }: {
     itemIsOnWishlist: boolean;
     handleToggleEventWishlist: () => void;
     size?: number;
     containerStyle?: ViewStyle;
+    variant?: 'outline' | 'solid';
 }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const haloSize = size + 14;
     const outlineColor = colors.danger;
+    const isSolid = variant === 'solid';
+    const solidColor = itemIsOnWishlist ? colors.danger : 'rgba(255, 255, 255, 0.9)';
 
     useEffect(() => {
         // Run animation whenever itemIsOnWishlist changes
@@ -47,26 +51,35 @@ export const WishlistHeart = ({
             ]}
         >
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                <View style={styles.iconStack}>
+                {isSolid ? (
                     <FAIcon
                         name="heart"
                         size={size}
-                        color="rgba(255, 255, 255, 0.8)"
-                        style={styles.iconBase}
+                        color={solidColor}
+                        style={styles.iconSolid}
                     />
-                    <FAIcon
-                        name="heart-o"
-                        size={size + 2}
-                        color={outlineColor}
-                        style={styles.iconOutlineBase}
-                    />
-                    <FAIcon
-                        name="heart-o"
-                        size={size}
-                        color={outlineColor}
-                        style={styles.iconTop}
-                    />
-                </View>
+                ) : (
+                    <View style={styles.iconStack}>
+                        <FAIcon
+                            name="heart"
+                            size={size}
+                            color="rgba(255, 255, 255, 0.8)"
+                            style={styles.iconBase}
+                        />
+                        <FAIcon
+                            name="heart-o"
+                            size={size + 2}
+                            color={outlineColor}
+                            style={styles.iconOutlineBase}
+                        />
+                        <FAIcon
+                            name="heart-o"
+                            size={size}
+                            color={outlineColor}
+                            style={styles.iconTop}
+                        />
+                    </View>
+                )}
             </Animated.View>
         </TouchableOpacity>
     );
@@ -92,5 +105,10 @@ const styles = StyleSheet.create({
         textShadowColor: colors.shadowMedium,
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 2,
+    },
+    iconSolid: {
+        textShadowColor: colors.shadowMedium,
+        textShadowOffset: { width: 0, height: 2 },
+        textShadowRadius: 4,
     },
 });

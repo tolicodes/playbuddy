@@ -1,16 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Space+Grotesk:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap');
 
 :root {
-  --display-font: 'Fraunces', 'Times New Roman', serif;
-  --body-font: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
-  --ink: #241433;
-  --muted: #6f5f80;
-  --stroke: rgba(114, 90, 148, 0.18);
-  --radio: #b8aec8;
-  --flirt: #d84b8f;
-  --bud: #3aa5b0;
-  --both: #7355e6;
-  --none: #7e7f89;
+  --display-font: 'Avenir Next', 'Avenir', 'Nunito Sans', sans-serif;
+  --body-font: 'Avenir Next', 'Avenir', 'Nunito Sans', sans-serif;
+  --ink: #2c1a4a;
+  --muted: #7d6d9f;
+  --stroke: #e2d9ff;
+  --radio: #cfc2ff;
+  --flirt: #ff2675;
+  --bud: #38bdf8;
+  --both: #6b57d0;
+  --none: #9ca3af;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -27,7 +27,7 @@ body {
   min-height: 100vh;
   font-family: var(--body-font);
   color: var(--ink);
-  background: linear-gradient(135deg, #f4f1ff 0%, #f7ecf6 55%, #eef2ff 100%);
+  background: linear-gradient(145deg, #5a1d8a 0%, #7e39c8 38%, #f38ab2 70%, #ffc7a1 100%);
   background-attachment: fixed;
 }
 

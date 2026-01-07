@@ -59,10 +59,10 @@ const createDefaultChoices = () =>
   Object.fromEntries(ROWS.map((row) => [row, 'none']))
 
 const createDefaultContact = () => ({
-  resultsEmail: 'knotty.nights@example.com',
-  displayName: 'RopeBunny',
-  contactMethod: 'instagram',
-  contactValue: 'knotty_nights',
+  resultsEmail: '',
+  displayName: '',
+  contactMethod: '',
+  contactValue: '',
 })
 
 const normalizeInstagram = (value) =>
@@ -111,50 +111,6 @@ const formatPhoneForDisplay = (value) => {
   return `${main} ${digits.slice(10)}`
 }
 
-const sanitizeContact = (raw) => {
-  const defaults = createDefaultContact()
-
-  if (!raw || typeof raw !== 'object') {
-    return defaults
-  }
-
-  const resultsEmail =
-    typeof raw.results_email === 'string'
-      ? raw.results_email
-      : raw.resultsEmail
-  const displayName =
-    typeof raw.display_name === 'string'
-      ? raw.display_name
-      : raw.displayName
-  const contactMethod =
-    typeof raw.contact_method === 'string'
-      ? raw.contact_method
-      : raw.contactMethod
-  const contactValue =
-    typeof raw.contact_value === 'string'
-      ? raw.contact_value
-      : raw.contactValue
-
-  const isMethodValid = CONTACT_METHODS.some(
-    (method) => method.value === contactMethod
-  )
-
-  const normalizedValue = isMethodValid
-    ? contactMethod === 'instagram'
-      ? normalizeInstagram(contactValue || '')
-      : contactMethod === 'phone'
-      ? normalizePhone(contactValue || '')
-      : (contactValue || '').trim()
-    : ''
-
-  return {
-    resultsEmail: (resultsEmail || '').trim(),
-    displayName: (displayName || '').trim(),
-    contactMethod: isMethodValid ? contactMethod : '',
-    contactValue: normalizedValue,
-  }
-}
-
 const getInitialNumber = () => {
   if (typeof window === 'undefined') {
     return 1
@@ -190,23 +146,7 @@ const getInitialChoices = () => {
   }
 }
 
-const getInitialContact = () => {
-  if (typeof window === 'undefined') {
-    return createDefaultContact()
-  }
-
-  const stored = window.localStorage.getItem(STORAGE_KEYS.contact)
-  if (!stored) {
-    return createDefaultContact()
-  }
-
-  try {
-    const parsed = JSON.parse(stored)
-    return sanitizeContact(parsed)
-  } catch {
-    return createDefaultContact()
-  }
-}
+const getInitialContact = () => createDefaultContact()
 
 const sanitizeChoices = (raw) => {
   const defaults = createDefaultChoices()
@@ -363,6 +303,7 @@ function App() {
   const handleSave = () => {
     saveChoicesToStorage(choices, yourNumber)
     showToast('Saved')
+    setStep('confirmation')
   }
 
   const handleClear = () => {
@@ -458,11 +399,12 @@ function App() {
               className="logo"
             />
             <div>
-              <p className="eyebrow">PlayBuddy Speed Dating</p>
-              <h1>Get your matches ✨</h1>
+              <p className="eyebrow">PLAYBUDDY PRESENTS</p>
+              <h1>Pagan&apos;s Paradise Speed Dating &amp; Friending</h1>
               <p className="subtitle">
-                We'll email your match results. Matches will only see the contact
-                method you choose.
+                We will email your match results.
+                <br />
+                Matches will only see the contact method you choose.
               </p>
             </div>
           </header>
@@ -658,7 +600,7 @@ function App() {
             </div>
           ) : null}
         </div>
-      ) : (
+      ) : step === 'choices' ? (
         <div className="screen choices-screen">
           <header className="top-bar">
             <img
@@ -748,13 +690,26 @@ function App() {
             </p>
           </section>
 
-          <footer className="footer">
-            <p>
-              Enjoyed this event? Follow Pagan&apos;s Paradise on PlayBuddy for
-              future events + get 20% off future speed dating (and Pagan&apos;s
-              events in general).
-            </p>
-          </footer>
+        </div>
+      ) : (
+        <div className="screen confirmation-screen">
+          <section className="confirmation-card">
+            <h2 className="confirmation-title">
+              Your matches will be emailed shortly after the event!
+            </h2>
+          </section>
+
+          <section className="promo-card">
+            <p className="promo-kicker">PlayBuddy Promo</p>
+            <img
+              src="/playbuddy-logo.png"
+              alt="PlayBuddy logo"
+              className="promo-logo"
+            />
+            <button className="btn primary" type="button">
+              Download
+            </button>
+          </section>
         </div>
       )}
 
