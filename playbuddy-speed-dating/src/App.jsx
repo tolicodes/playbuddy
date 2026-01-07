@@ -700,12 +700,17 @@ function App() {
           </section>
 
           <section className="promo-card">
-            <p className="promo-kicker">PlayBuddy Promo</p>
+            <p className="promo-kicker">Get 20% off</p>
             <img
-              src="/playbuddy-logo.png"
+              src="/playbuddy-logo-favicon.jpeg"
               alt="PlayBuddy logo"
               className="promo-logo"
             />
+            <p className="promo-text">
+              Get 20% off future Pagan&apos;s events.
+              <br />
+              <strong>Discover NYC&apos;s coolest kink events.</strong>
+            </p>
             <button className="btn primary" type="button">
               Download
             </button>
