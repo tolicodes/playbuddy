@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { authenticateAdminRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
+import { flushEvents } from '../helpers/flushCache.js';
 
 const router = Router();
 
@@ -54,6 +55,7 @@ router.patch('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest,
             .select()
             .single();
         if (error) throw error;
+        await flushEvents();
         res.json(data);
     } catch (err: any) {
         console.error('Error updating organizer', err);

@@ -195,6 +195,18 @@ export const event_classifications = [
     },
 
     {
+        "classification": "neighborhood",
+        "name": "Neighborhood",
+        "description": `NYC neighborhood inferred from the location (e.g., Bushwick or Midtown). Use common neighborhood names; if unclear or non-NY, leave empty string.`,
+    },
+
+    {
+        "classification": "short_price",
+        "name": "Short Price",
+        "description": `Best-guess ticket price as "$<number>" or null if unknown. If a range is listed, use the lower bound.`,
+    },
+
+    {
         "classification": "non_ny",
         "name": "Non NY",
         "description": `is this event not in New York?`,
@@ -209,4 +221,3 @@ export const event_classifications = [
         `,
     },
 ]
-

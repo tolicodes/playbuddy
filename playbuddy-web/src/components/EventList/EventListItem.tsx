@@ -21,12 +21,13 @@ export const EventListItem = ({
     const promoCode = getBestPromoCode(item);
     const imageUrl = item.image_url;
     const formattedDate = formatDate(item);
-    const locationLabel = item.location || item.city || item.region || "";
+    const locationLabel = item.neighborhood || item.location || item.city || item.region || "";
     const tagChips = getTagChips(item);
     const eventTypeKey = getEventTypeKey(item);
     const eventRailColor = EVENT_RAIL_COLORS[eventTypeKey] || EVENT_RAIL_COLORS.default;
     const organizerColor = item.organizerColor || "#c4c4c4";
     const placeholderLabel = item.is_munch || item.munch_id ? "Munch" : "Event";
+    const displayPrice = item.short_price || item.price;
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -94,10 +95,10 @@ export const EventListItem = ({
                         <span>{locationLabel}</span>
                     </div>
                 ) : null}
-                {item.price ? (
+                {displayPrice ? (
                     <div className={styles.metaItem}>
                         <TagIcon className={styles.metaIcon} />
-                        <span>{item.price}</span>
+                        <span>{displayPrice}</span>
                     </div>
                 ) : null}
             </div>

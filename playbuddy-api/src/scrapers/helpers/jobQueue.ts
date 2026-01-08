@@ -35,6 +35,9 @@ export type ScrapeTask = {
     prefetched?: NormalizedEventInput[];
     multipleEvents?: boolean;
     extractFromListPage?: boolean;
+    skipExisting?: boolean;
+    skipExistingNoApproval?: boolean;
+    approveExisting?: boolean;
     result?: any;
     error?: string;
     event_id?: string | null;
@@ -199,10 +202,15 @@ const runTask = async (taskId: string) => {
         );
         console.log(`[jobs] scraped task ${taskId} url=${task.url} events=${scrapedEvents.length} durationMs=${Date.now() - scrapeStart}`);
 
+        const upsertOptions = {
+            ...(task.skipExisting ? { skipExisting: true } : {}),
+            ...(task.skipExistingNoApproval ? { skipExistingNoApproval: true } : {}),
+            ...(task.approveExisting ? { approveExisting: true } : {}),
+        };
         const upsertPromises = scrapedEvents.map(ev =>
             upsertQueue.add(async () => {
                 try {
-                    const res = await upsertEvent(ev, authUserId);
+                    const res = await upsertEvent(ev, authUserId, upsertOptions);
                     return {
                         status: res.result as 'inserted' | 'updated' | 'failed',
                         eventId: res.event?.id ? String(res.event.id) : null,
@@ -311,6 +319,9 @@ type JobInput = string | {
     source?: string;
     multipleEvents?: boolean;
     extractFromListPage?: boolean;
+    skipExisting?: boolean;
+    skipExistingNoApproval?: boolean;
+    approveExisting?: boolean;
 };
 
 type JobOptions = {
@@ -351,6 +362,9 @@ export const createJob = async (urls: JobInput[], priority = 5, options: JobOpti
         const inputSource = typeof input === 'string' ? undefined : input.source;
         const multipleEvents = typeof input === 'string' ? undefined : input.multipleEvents;
         const extractFromListPage = typeof input === 'string' ? undefined : input.extractFromListPage;
+        const skipExisting = typeof input === 'string' ? undefined : input.skipExisting;
+        const skipExistingNoApproval = typeof input === 'string' ? undefined : input.skipExistingNoApproval;
+        const approveExisting = typeof input === 'string' ? undefined : input.approveExisting;
         const source = inputSource || resolveSource(url);
         const taskId = randomUUID();
         const task: ScrapeTask = {
@@ -365,6 +379,9 @@ export const createJob = async (urls: JobInput[], priority = 5, options: JobOpti
             prefetched,
             multipleEvents,
             extractFromListPage,
+            skipExisting,
+            skipExistingNoApproval,
+            approveExisting,
             createdAt: now,
         };
         tasks.set(taskId, task);

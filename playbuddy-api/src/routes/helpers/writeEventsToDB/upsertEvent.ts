@@ -13,6 +13,18 @@ export type UpsertEventResult = {
     event: Event | null;
 };
 
+type ExistingEventMeta = {
+    id: string;
+    frozen?: boolean | null;
+};
+
+type ClassificationInput = {
+    tags?: string[] | null;
+    experience_level?: string | null;
+    interactivity_level?: string | null;
+    inclusivity?: string[] | null;
+};
+
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
 
 // stash originals before overriding
@@ -70,8 +82,36 @@ async function tryUpsertOrganizer(organizer: CreateOrganizerInput) {
     };
 }
 
-async function resolveExistingEventId(event: NormalizedEventInput, organizerId: string) {
-    return event.id?.toString() || await checkExistingEvent(event, organizerId);
+async function fetchExistingEventMetaById(eventId: string): Promise<ExistingEventMeta | null> {
+    const { data, error } = await supabaseClient
+        .from("events")
+        .select("id,frozen")
+        .eq("id", eventId)
+        .limit(1);
+
+    if (error) {
+        throw new Error(`FETCH EVENT: Error fetching event ${eventId}: ${error?.message}`);
+    }
+
+    if (!data || data.length === 0) {
+        return null;
+    }
+
+    const id = data[0].id;
+    if (id === undefined || id === null) {
+        return null;
+    }
+
+    return { id: String(id), frozen: (data[0] as any).frozen ?? null };
+}
+
+async function resolveExistingEvent(event: NormalizedEventInput, organizerId: string): Promise<ExistingEventMeta | null> {
+    if (event.id) {
+        const existing = await fetchExistingEventMetaById(event.id.toString());
+        if (existing) return existing;
+    }
+
+    return await checkExistingEvent(event, organizerId);
 }
 
 async function attachCommunities(eventId: string, communities: any[], organizerCommunityId?: string) {
@@ -92,7 +132,11 @@ async function attachCommunities(eventId: string, communities: any[], organizerC
 }
 
 
-export async function upsertEvent(event: NormalizedEventInput, authUserId?: string, opts: { skipExisting?: boolean; approveExisting?: boolean } = {}): Promise<UpsertEventResult> {
+export async function upsertEvent(
+    event: NormalizedEventInput,
+    authUserId?: string,
+    opts: { skipExisting?: boolean; approveExisting?: boolean; ignoreFrozen?: boolean; skipExistingNoApproval?: boolean } = {}
+): Promise<UpsertEventResult> {
     const normalizedEvent: NormalizedEventInput = { ...event };
     if (normalizedEvent.approval_status === undefined || normalizedEvent.approval_status === null) {
         normalizedEvent.approval_status = 'approved';
@@ -116,28 +160,34 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
         const { organizerId, organizerCommunityId } = upsertedOrganizer;
         const isApprovedEvent = normalizedEvent.approval_status === 'approved';
 
-        const existingEventId = await resolveExistingEventId(normalizedEvent, organizerId);
+        const existingEvent = await resolveExistingEvent(normalizedEvent, organizerId);
 
-        if (existingEventId && opts.skipExisting) {
-            const shouldApproveExisting = opts.approveExisting || normalizedEvent.approval_status === 'approved';
-            if (shouldApproveExisting) {
-                const approvedEvent = await setApprovalStatus(existingEventId, normalizedEvent.approval_status!);
-                log(`EVENT: Updated approval_status for existing event ${existingEventId} -> ${normalizedEvent.approval_status}`);
-                await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
-                return { result: 'updated', event: approvedEvent };
-            }
-            log(`EVENT: Skipping existing event ${existingEventId} (skipExisting=true)`);
+        if (existingEvent?.frozen && !opts.ignoreFrozen) {
+            log(`EVENT: Skipping frozen event ${existingEvent.id}`);
             await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
             return { result: 'skipped', event: null };
         }
 
-        if (existingEventId && normalizedEvent.visibility === 'public') {
-            await setVisibility(existingEventId, 'public');
+        if (existingEvent?.id && opts.skipExisting) {
+            const shouldApproveExisting = opts.approveExisting || (!opts.skipExistingNoApproval && normalizedEvent.approval_status === 'approved');
+            if (shouldApproveExisting) {
+                const approvedEvent = await setApprovalStatus(existingEvent.id, normalizedEvent.approval_status!);
+                log(`EVENT: Updated approval_status for existing event ${existingEvent.id} -> ${normalizedEvent.approval_status}`);
+                await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+                return { result: 'updated', event: approvedEvent };
+            }
+            log(`EVENT: Skipping existing event ${existingEvent.id} (skipExisting=true)`);
+            await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+            return { result: 'skipped', event: null };
+        }
+
+        if (existingEvent?.id && normalizedEvent.visibility === 'public') {
+            await setVisibility(existingEvent.id, 'public');
             log(`VISIBILITY: Changed to public`);
         }
 
         const locationAreaId = NYC_LOCATION_ID; // TODO: Replace with real location
-        const upsertedEvent = await upsertEventInDB(normalizedEvent, organizerId, locationAreaId, existingEventId);
+        const upsertedEvent = await upsertEventInDB(normalizedEvent, organizerId, locationAreaId, existingEvent?.id ?? null);
 
         if (!upsertedEvent) {
             logError(`EVENT: Failed to upsert event`);
@@ -147,6 +197,8 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
         const communities = normalizedEvent.communities || [];
         const attached = await attachCommunities(upsertedEvent.id, communities, organizerCommunityId);
         if (!attached) return { result: 'failed', event: null };
+
+        await upsertEventClassification(upsertedEvent.id, normalizedEvent.classification as ClassificationInput | null | undefined);
 
         if (normalizedEvent.media && normalizedEvent.media.length > 0) {
             await syncEntityMedia({
@@ -170,12 +222,12 @@ export async function upsertEvent(event: NormalizedEventInput, authUserId?: stri
             log(`EVENT MEDIA: Synced ${normalizedEvent.media?.length} media`);
         }
 
-        log(`EVENT: ${existingEventId ? 'Updated' : 'Inserted'}`);
+        log(`EVENT: ${existingEvent?.id ? 'Updated' : 'Inserted'}`);
 
         await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
 
         return {
-            result: existingEventId ? 'updated' : 'inserted',
+            result: existingEvent?.id ? 'updated' : 'inserted',
             event: upsertedEvent,
         }
 
@@ -211,6 +263,30 @@ const setApprovalStatus = async (eventId: string, approval_status: 'approved' | 
 
     return data;
 }
+
+const upsertEventClassification = async (eventId: string | number, classification?: ClassificationInput | null) => {
+    if (!classification) return;
+    const eventIdNum = Number(eventId);
+    if (!Number.isFinite(eventIdNum)) {
+        throw new Error(`CLASSIFICATION: Invalid event id ${eventId}`);
+    }
+
+    const payload: Record<string, any> = { event_id: eventIdNum };
+    if (classification.tags !== undefined) payload.tags = classification.tags;
+    if (classification.experience_level !== undefined) payload.experience_level = classification.experience_level;
+    if (classification.interactivity_level !== undefined) payload.interactivity_level = classification.interactivity_level;
+    if (classification.inclusivity !== undefined) payload.inclusivity = classification.inclusivity;
+
+    if (Object.keys(payload).length === 1) return;
+
+    const { error } = await supabaseClient
+        .from('classifications')
+        .upsert([payload], { onConflict: 'event_id' });
+
+    if (error) {
+        throw new Error(`CLASSIFICATION: Error upserting classification for event ${eventId}: ${error?.message}`);
+    }
+};
 
 const ensureImportSourceForHandle = async (fetlife_handle?: string | null, organizerId?: string | number | null, isApproved?: boolean) => {
     const handle = normalizeHandle(fetlife_handle);
@@ -301,7 +377,7 @@ const attachCommunity = async (eventId: string, communityId: string) => {
     }
 }
 
-const checkExistingEvent = async (event: NormalizedEventInput, organizerId: string): Promise<null | string> => {
+const checkExistingEvent = async (event: NormalizedEventInput, organizerId: string): Promise<ExistingEventMeta | null> => {
     const filters: string[] = [];
 
     if (event.original_id) {
@@ -321,7 +397,7 @@ const checkExistingEvent = async (event: NormalizedEventInput, organizerId: stri
     // Check for existing event by original_id or by start_date and organizer_id
     const { data: existingEvents, error: fetchError } = await supabaseClient
         .from("events")
-        .select("id")
+        .select("id,frozen")
         .or(filters.join(','));
 
 
@@ -332,7 +408,15 @@ const checkExistingEvent = async (event: NormalizedEventInput, organizerId: stri
 
     if (existingEvents && existingEvents.length > 0) {
         console.log(`CHECK EXISTING EVENT: Found existing event ${existingEvents[0].id}`);
-        return existingEvents[0].id;
+        const id = existingEvents[0].id;
+        if (id === undefined || id === null) {
+            return null;
+        }
+
+        return {
+            id: String(id),
+            frozen: (existingEvents[0] as any).frozen ?? null,
+        };
     }
 
     console.log(`CHECK EXISTING EVENT: No existing event found`);

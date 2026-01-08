@@ -22,7 +22,9 @@ CREATE TABLE events (
     ticket_url TEXT,
     image_url TEXT,
     location TEXT,
+    neighborhood TEXT,
     price TEXT,
+    short_price TEXT,
     description TEXT,
     tags TEXT[], -- Array of tags
     timestamp_scraped TIMESTAMP,

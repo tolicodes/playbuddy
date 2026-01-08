@@ -20,7 +20,11 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
 });
 
 router.get('/classify', async (req: AuthenticatedRequest, res: Response) => {
-    const events = await classifyEventsInBatches();
+    const rawNeighborhood = req.query.neighborhoodOnly ?? req.query.neighborhood_only;
+    const rawPrice = req.query.priceOnly ?? req.query.price_only;
+    const neighborhoodOnly = rawNeighborhood === 'true' || rawNeighborhood === '1';
+    const priceOnly = rawPrice === 'true' || rawPrice === '1';
+    const events = await classifyEventsInBatches(10, { neighborhoodOnly, priceOnly });
     await flushEvents();
     return res.json({ message: 'Events classified successfully', events });
 });

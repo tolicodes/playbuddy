@@ -1,16 +1,15 @@
 {
   "expo": {
-    "name": "PlayBuddy",
+    "name": "PlayBuddy Events",
     "slug": "kink-buddy-ios",
-    "version": "6.4.0",
+    "version": "7.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.jpeg",
     "userInterfaceStyle": "light",
     "scheme": "playbuddy",
     "platforms": [
       "ios",
-      "android",
-      "web"
+      "android"
     ],
     "splash": {
       "image": "./assets/splash.jpeg",
@@ -66,6 +65,19 @@
           "data": [
             {
               "scheme": "https",
+              "host": "l.playbuddy.me"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "https",
               "host": "d.playbuddy.me"
             }
           ],
@@ -79,7 +91,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "applinks:playbuddy.onelink.me",
+              "host": "playbuddy.onelink.me",
               "pathPrefix": "/RWsB"
             }
           ],
@@ -176,6 +188,6 @@
       "./plugins/with-android-16k-page-size"
     ],
     "owner": "tolicodes1",
-    "runtimeVersion": "4.16.1"
+    "runtimeVersion": "7.1.0"
   }
 }

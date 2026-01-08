@@ -64,7 +64,7 @@ export async function extractEventLinksAIOnly(html: string, baseUrl: string, now
         `- If this is a single-event page (one event, buy button, long description), set type:"single" and items:[]`,
         `- If this is a list of multiple events, set type:"list" and return up to ${maxEvents} items.`,
         `- URLs must be absolute HTTPS; convert relative using BASE_ORIGIN. Drop mailto/tel/# links.`,
-        `- Only include links that look like event detail/ticket pages (eventbrite, partiful, forbiddentickets, joinbloom, tantrany, google form, ticket URLs).`,
+        `- Only include links that look like event detail/ticket pages: external ticketing domains (eventbrite, partiful, forbiddentickets, joinbloom, tantrany, google form, ticket URLs) OR same-origin event detail pages (e.g., /events/slug or /event/slug).`,
         `- Ignore nav/footer/social/login/cart/etc.`,
         `- Only include a url if you see a date/time near a link, store date in ISO in start_date.`,
         `- Exclude obvious past events relative to NOW_ISO.`,

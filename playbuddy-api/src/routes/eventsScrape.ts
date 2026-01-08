@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { Router, Response } from 'express';
 import { authenticateAdminRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { createJob, getJob, listJobs } from '../scrapers/helpers/jobQueue.js';
@@ -8,8 +11,25 @@ import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { NormalizedEventInput } from '../commonTypes.js';
 import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
+import { scrapeGmailSources, type GmailSourceConfig } from '../scrapers/gmail.js';
 
 const router = Router();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const DEFAULT_GMAIL_LIST = path.resolve(__dirname, '../../data/datasets/gmail_sources.json');
+
+const normalizeGmailSources = (raw: any): GmailSourceConfig[] => {
+    return (Array.isArray(raw) ? raw : [raw])
+        .map((entry: any) => {
+            const rawStatus = typeof entry?.event_status === 'string' ? entry.event_status.toLowerCase() : '';
+            const event_status = rawStatus === 'approved' || rawStatus === 'pending' ? rawStatus : undefined;
+            return {
+                source_email: String(entry?.source_email || '').trim(),
+                event_status,
+            };
+        })
+        .filter((entry: GmailSourceConfig) => Boolean(entry.source_email));
+};
 
 // Run all scrapers (Eventbrite organizers, Plura, TantraNY) and enqueue
 router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
@@ -20,6 +40,58 @@ router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedReques
     } catch (err: any) {
         console.error('Error scraping all sources', err);
         res.status(500).json({ error: err?.message || 'Failed to scrape sources' });
+    }
+});
+
+// Scrape urls.json only (AI/auto routes)
+router.post('/scrape-ai-urls', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { jobId, enqueued } = await runAllScrapers(req.authUserId, { scenario: 'urls_json' });
+        res.json({ jobId, enqueued, scenario: 'urls_json' });
+    } catch (err: any) {
+        console.error('Error scraping urls.json sources', err);
+        res.status(500).json({ error: err?.message || 'Failed to scrape urls.json sources' });
+    }
+});
+
+router.post('/scrape-gmail', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const { sources, maxResults } = req.body || {};
+        let gmailSources: GmailSourceConfig[] = [];
+
+        if (Array.isArray(sources) && sources.length) {
+            gmailSources = normalizeGmailSources(sources);
+        } else {
+            const listPath = process.env.GMAIL_SOURCES_LIST
+                ? path.resolve(process.cwd(), process.env.GMAIL_SOURCES_LIST)
+                : DEFAULT_GMAIL_LIST;
+            const raw = fs.existsSync(listPath) ? JSON.parse(fs.readFileSync(listPath, 'utf-8')) : [];
+            gmailSources = normalizeGmailSources(raw);
+        }
+
+        if (!gmailSources.length) {
+            res.status(400).json({ error: 'sources is required (array) or configure data/datasets/gmail_sources.json' });
+            return;
+        }
+
+        const gmailEvents = await scrapeGmailSources(gmailSources, { maxResults });
+        const gmailTasks = gmailEvents.map((ev, idx) => ({
+            url: ev.source_url || ev.ticket_url || ev.event_url || ev.original_id || `gmail:event:${idx}`,
+            source: 'gmail',
+            prefetched: [ev],
+            skipExisting: true,
+            skipExistingNoApproval: true,
+        }));
+
+        const jobId = await createJob(gmailTasks as any, 5, { authUserId: req.authUserId, source: 'gmail' });
+        res.json({
+            jobId,
+            enqueued: gmailTasks.length,
+            sources: gmailSources.length,
+        });
+    } catch (err: any) {
+        console.error('Error scraping Gmail sources', err);
+        res.status(500).json({ error: err?.message || 'Failed to scrape Gmail sources' });
     }
 });
 

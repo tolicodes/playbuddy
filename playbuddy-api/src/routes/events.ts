@@ -14,6 +14,11 @@ import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import scrapeRoutes from './eventsScrape.js';
 import { ADMIN_EMAILS } from '../config.js';
+import {
+    forceGenerateWeeklyPicksImage,
+    getCachedWeeklyPicksImage,
+    getWeeklyPicksImageCacheStatus,
+} from '../helpers/weeklyPicksImageCache.js';
 
 const router = Router();
 const asyncHandler = (fn: RequestHandler) => (req: any, res: any, next: NextFunction) => {
@@ -26,6 +31,120 @@ const EXCLUDE_EVENT_IDS = [
 
 router.use('/', scrapeRoutes);
 
+const parseNumber = (value: unknown) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const extractWeeklyPicksImageOptions = (req: AuthenticatedRequest) => {
+    const source = { ...(req.query || {}), ...(req.body || {}) } as Record<string, unknown>;
+    const weekOffset = parseNumber(source.weekOffset);
+    const width = parseNumber(source.width);
+    const scale = parseNumber(source.scale);
+    const limit = parseNumber(source.limit);
+    return { weekOffset, width, scale, limit };
+};
+
+router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const options = extractWeeklyPicksImageOptions(req);
+    const status = getWeeklyPicksImageCacheStatus(options);
+    res.status(200).json({
+        cacheKey: status.cacheKey,
+        cached: status.cached,
+        inProgress: status.inProgress,
+        version: status.entry?.version ?? null,
+        generatedAt: status.entry?.generatedAt ?? null,
+        durationMs: status.entry?.durationMs ?? null,
+        width: status.entry?.width ?? null,
+        height: status.entry?.height ?? null,
+        weekOffset: status.entry?.weekOffset ?? null,
+        weekLabel: status.entry?.weekLabel ?? null,
+    });
+}));
+
+router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const startedAt = Date.now();
+    const options = extractWeeklyPicksImageOptions(req);
+    const responseFormat = String((req.query.format ?? (req.body as Record<string, unknown>)?.format ?? 'json')).toLowerCase();
+    console.log(
+        `[weekly-picks][generate] start width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} scale=${options.scale ?? 'auto'} limit=${options.limit ?? 'all'}`
+    );
+    try {
+        const { cacheKey, entry } = await forceGenerateWeeklyPicksImage(options);
+        const durationMs = Date.now() - startedAt;
+        const pngBytes = Buffer.isBuffer(entry.png) ? entry.png.length : 0;
+        console.log(
+            `[weekly-picks][generate] done cacheKey=${cacheKey} durationMs=${durationMs} generatedMs=${entry.durationMs} pngBytes=${pngBytes}`
+        );
+        res.set('Cache-Control', 'no-store');
+        res.set('X-Weekly-Picks-Cache-Key', cacheKey);
+        res.set('X-Weekly-Picks-Version', entry.version);
+        res.set('X-Weekly-Picks-Generated-At', entry.generatedAt);
+        res.set('X-Weekly-Picks-Generate-Duration-Ms', String(entry.durationMs));
+        res.set('X-Weekly-Picks-Week-Offset', String(entry.weekOffset));
+        res.set('X-Weekly-Picks-Week-Label', entry.weekLabel);
+        res.set('X-Weekly-Picks-Width', String(entry.width));
+        res.set('X-Weekly-Picks-Height', String(entry.height));
+        if (responseFormat === 'png') {
+            res.set('Content-Type', 'image/png');
+            res.status(200).send(entry.png);
+            return;
+        }
+        res.status(200).json({
+            cacheKey,
+            version: entry.version,
+            generatedAt: entry.generatedAt,
+            durationMs: entry.durationMs,
+            weekOffset: entry.weekOffset,
+            weekLabel: entry.weekLabel,
+            width: entry.width,
+            height: entry.height,
+        });
+    } catch (error) {
+        const durationMs = Date.now() - startedAt;
+        console.error(`[weekly-picks][generate] failed durationMs=${durationMs}`, error);
+        throw error;
+    }
+}));
+
+router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const startedAt = Date.now();
+    const options = extractWeeklyPicksImageOptions(req);
+    const logPrefix = '[weekly-picks][image]';
+    const { cacheKey, entry, inProgress } = getCachedWeeklyPicksImage(options);
+    console.log(
+        `${logPrefix} GET start cacheKey=${cacheKey} inProgress=${inProgress} width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0}`
+    );
+    if (!entry) {
+        const durationMs = Date.now() - startedAt;
+        console.log(`${logPrefix} cache miss cacheKey=${cacheKey} durationMs=${durationMs}`);
+        res.status(404).json({ error: 'No cached weekly picks image. Generate first.' });
+        return;
+    }
+
+    res.set('Content-Type', 'image/png');
+    res.set('Cache-Control', 'no-store');
+    res.set('X-Weekly-Picks-Cache-Key', cacheKey);
+    res.set('X-Weekly-Picks-Version', entry.version);
+    res.set('X-Weekly-Picks-Generated-At', entry.generatedAt);
+    res.set('X-Weekly-Picks-Generate-Duration-Ms', String(entry.durationMs));
+    res.set('X-Weekly-Picks-Week-Offset', String(entry.weekOffset));
+    res.set('X-Weekly-Picks-Week-Label', entry.weekLabel);
+    res.set('X-Weekly-Picks-Width', String(entry.width));
+    res.set('X-Weekly-Picks-Height', String(entry.height));
+    if (inProgress) {
+        res.set('X-Weekly-Picks-Generating', 'true');
+    }
+    const pngSize = Buffer.isBuffer(entry.png) ? entry.png.length : 0;
+    console.log(
+        `${logPrefix} cache hit cacheKey=${cacheKey} pngBytes=${pngSize} generatedMs=${entry.durationMs}`
+    );
+    res.status(200).send(entry.png);
+    const durationMs = Date.now() - startedAt;
+    console.log(`${logPrefix} GET done cacheKey=${cacheKey} durationMs=${durationMs}`);
+}));
+
 router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const cacheKey = "events";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
@@ -36,8 +155,6 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
     const visibilityParam = req.query.visibility;
     const hasCustomFlags = includeHiddenOrganizers || includeHiddenEvents || !!visibilityParam || calendarType !== 'calendar';
     const cacheKeyWithFlags = cacheKey; // always use base cache key
-
-    console.log('cacheKeyWithFlags', cacheKeyWithFlags, 'hasCustomFlags', hasCustomFlags);
 
     if (req.query.visibility === 'private') {
         if (!req.authUserId) {
@@ -211,7 +328,7 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
 router.post('/', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     console.log('post events')
     const event = req.body;
-    const eventResult = await upsertEvent(event, req.authUserId)
+    const eventResult = await upsertEvent(event, req.authUserId, { ignoreFrozen: true })
     await flushEvents();
 
     res.json(eventResult);
@@ -236,7 +353,7 @@ router.post('/bulk', authenticateAdminRequest, asyncHandler(async (req: Authenti
 
 router.put('/:id', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const event = req.body;
-    const eventResult = await upsertEvent(event, req.authUserId)
+    const eventResult = await upsertEvent(event, req.authUserId, { ignoreFrozen: true })
     await flushEvents();
 
     res.json(eventResult);

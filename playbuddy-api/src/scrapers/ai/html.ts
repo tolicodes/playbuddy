@@ -18,7 +18,7 @@ export function cleanHtml(html: string): string {
     if (body) s = body[1];
 
     // 3) drop huge hidden SVG sprites & base64 images (noise)
-    s = s.replace(/<svg[^>]*>(?:[\s\S]*?<symbol[\s\S]*?<\/symbol>)+[\s\S]*?<\/svg>/gi, '');
+    s = s.replace(/<svg[^>]*>(?:(?!<\/svg>)[\s\S])*<symbol[\s\S]*?<\/symbol>(?:(?!<\/svg>)[\s\S])*<\/svg>/gi, '');
     s = s.replace(/<svg[^>]*style=["'][^"']*display\s*:\s*none[^"']*["'][^>]*>[\s\S]*?<\/svg>/gi, '');
     s = s.replace(/<img[^>]+src=["']data:image\/[^"']+["'][^>]*>/gi, '');
 
