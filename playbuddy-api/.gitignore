@@ -12,3 +12,5 @@ src/scripts/qrcodes/output/*
 
 # Sentry Config File
 .sentryclirc
+
+gmail_credentials.json

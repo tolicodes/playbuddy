@@ -1,0 +1,10 @@
+[
+  {
+     "source_email": "hello@hitmeupnyc.com", 
+     "event_status": "pending" 
+    },
+    {
+        "source_email": "thelist@chemistry-nyc.com",
+        "event_status": "pending"
+    }
+]

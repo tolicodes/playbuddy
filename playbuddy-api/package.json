@@ -17,7 +17,7 @@
     "dev": "NODE_ENV=development tsx watch src/app.ts",
     "start": "NODE_ENV=production node ./dist/app.js",
     "prebuild": "npm run clean",
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && npm run sentry:sourcemaps",
     "lint": "eslint . --ext .ts",
     "lint:fix": "npm run lint -- --fix",
     "check": "prettier --check .",
@@ -25,8 +25,9 @@
     "deploy": "flyctl secrets import < .env && flyctl deploy",
     "script:importMunches": "source .env && npx tsx src/scripts/importMunches.ts",
     "script:qrcodes": "source .env && npx tsx src/scripts/qrcodes/index.ts",
+    "script:weeklyPicksImage": "source .env && npx tsx src/scripts/weeklyPicksImage.ts",
     "script:doSchedule": "npx tsx ./src/scripts/doSchedule/index.ts --main 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRae3avNWRn85A4Ox3WCjcQiLsOYDMLfalQ38FychB5fYCH50UVcYqgImm2pxyu0N0sRkP_oYJsmDmF/pub?gid=1774091174&single=true&output=csv' --workshops 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRae3avNWRn85A4Ox3WCjcQiLsOYDMLfalQ38FychB5fYCH50UVcYqgImm2pxyu0N0sRkP_oYJsmDmF/pub?gid=928344789&single=true&output=csv' --ion 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRae3avNWRn85A4Ox3WCjcQiLsOYDMLfalQ38FychB5fYCH50UVcYqgImm2pxyu0N0sRkP_oYJsmDmF/pub?gid=41278806&single=true&output=csv' --year 2025 --month 8 --tz America/New_York --jsonOut ../playbuddy-web/public/misc/do_summer_camp_2025.json --icsOut ../playbuddy-web/public/misc/do_summer_camp_2025.ics --fuzzyThreshold 0.4 --debugFuzzy && cd ../playbuddy-web && npm run deploy",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org toli-zaslavskiy --project playbuddy-api ./dist && sentry-cli sourcemaps upload --org toli-zaslavskiy --project playbuddy-api ./dist"
+    "sentry:sourcemaps": "SENTRY_RELEASE=${SENTRY_RELEASE:-${CI_COMMIT_SHA:-}}; if [ -z \"$SENTRY_RELEASE\" ] && command -v git >/dev/null 2>&1; then SENTRY_RELEASE=$(git rev-parse --short HEAD); fi; if [ -z \"$SENTRY_RELEASE\" ]; then SENTRY_RELEASE=$(date +%Y%m%d%H%M%S); fi; echo \"Using Sentry release $SENTRY_RELEASE\"; sentry-cli sourcemaps inject --org toli-z2 --project node --release \"$SENTRY_RELEASE\" ./dist && sentry-cli sourcemaps upload --org toli-z2 --project node --release \"$SENTRY_RELEASE\" ./dist"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -56,7 +57,7 @@
   },
   "dependencies": {
     "@google-cloud/logging": "11.0.0",
-    "@sentry/cli": "^2.51.1",
+    "@sentry/cli": "^2.58.4",
     "@sentry/node": "^10.5.0",
     "@supabase/supabase-js": "^2.45.3",
     "axios": "^1.9.0",
