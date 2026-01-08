@@ -1,7 +1,6 @@
 import React from "react";
 import { DefaultTheme, NavigationContainer } from "@react-navigation/native";
 import { DrawerNav } from "./DrawerNav";
-import { tagScreenName } from "../hooks/uxCam";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import { gradients } from "../../components/styles";
@@ -24,15 +23,6 @@ export default function AppNavigator() {
     return (
         <NavigationContainer
             theme={navTheme}
-            onStateChange={(state) => {
-                if (!state) return;
-
-                const currentRoute = state.routes[state.index];
-                if (currentRoute?.name) {
-                    // For UXCam
-                    tagScreenName(currentRoute.name);
-                }
-            }}
         >
 
             <View style={styles.root}>

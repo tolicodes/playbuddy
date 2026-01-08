@@ -96,22 +96,26 @@ export const navigateToHome = (navigation: NavigationProp<ParamListBase>) => {
     navigateToHomeStackScreen(navigation, 'Home');
 };
 
-export const navigateToTab = (navigation: NavigationProp<ParamListBase>, tabName: HomeTabName) => {
+export const navigateToTab = (
+    navigation: NavigationProp<ParamListBase>,
+    tabName: HomeTabName,
+    params?: Record<string, unknown>
+) => {
     const state = navigation.getState?.();
     const routeNames = state?.routeNames ?? [];
 
     if (routeNames.includes(tabName)) {
-        navigation.navigate(tabName as never);
+        navigation.navigate(tabName as never, params as never);
         return;
     }
 
     if (routeNames.includes('Home')) {
-        navigation.navigate('Home' as never, { screen: tabName } as never);
+        navigation.navigate('Home' as never, { screen: tabName, params } as never);
         return;
     }
 
     if (routeNames.includes('HomeDrawer')) {
-        navigation.navigate('HomeDrawer' as never, { screen: 'Home', params: { screen: tabName } } as never);
+        navigation.navigate('HomeDrawer' as never, { screen: 'Home', params: { screen: tabName, params } } as never);
         return;
     }
 

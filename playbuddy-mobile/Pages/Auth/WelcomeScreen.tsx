@@ -22,6 +22,7 @@ import { colors, fontFamilies, fontSizes, gradients, lineHeights, radius, shadow
 
 const googleLogo = require('../../assets/auth/google-logo.png');
 const appleLogo = require('../../assets/auth/apple-logo.png');
+const logoMark = require('../../assets/logo-transparent.png');
 
 const WelcomeScreen = () => {
     const navigation = useNavigation<NavStack>();
@@ -103,6 +104,9 @@ const WelcomeScreen = () => {
                             { opacity: heroAnim, transform: [{ translateY: heroTranslate }] },
                         ]}
                     >
+                        <View style={styles.logoHalo}>
+                            <Image source={logoMark} style={styles.logo} resizeMode="contain" />
+                        </View>
                         <Text style={styles.kicker}>Find your people</Text>
                         <Text style={styles.title}>Welcome to PlayBuddy</Text>
                         <Text style={styles.subtitle}>
@@ -243,6 +247,21 @@ const styles = StyleSheet.create({
     hero: {
         alignItems: 'center',
         marginBottom: spacing.xl,
+    },
+    logoHalo: {
+        width: 82,
+        height: 82,
+        borderRadius: 41,
+        backgroundColor: colors.surfaceGlass,
+        borderWidth: 1,
+        borderColor: colors.borderOnDark,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.mdPlus,
+    },
+    logo: {
+        width: 50,
+        height: 50,
     },
     kicker: {
         fontSize: fontSizes.sm,

@@ -1,13 +1,20 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
+    Alert,
     View,
     Text,
     StyleSheet,
     SectionList,
     ActivityIndicator,
     TouchableOpacity,
+    Image,
+    Dimensions,
+    Linking,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -20,7 +27,7 @@ import { EventListItem } from '../Calendar/ListView/EventListItem';
 import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
 import { useFetchWishlistByCode } from '../../Common/db-axios/useWishlist';
 import { useToggleWeeklyPickEvent } from '../../Common/db-axios/useEvents';
-import { ADMIN_EMAILS } from '../../config';
+import { ADMIN_EMAILS, API_BASE_URL } from '../../config';
 import {
     colors,
     eventListThemes,
@@ -34,6 +41,128 @@ import {
 const PB_SHARE_CODE = 'DCK9PD';
 const HEADER_HEIGHT = 34;
 
+type PreviewHeaderProps = {
+    previewLoading: boolean;
+    downloadLoading: boolean;
+    generationInProgress: boolean;
+    generationCountdown: number;
+    countdownLabel: string;
+    previewSource: { uri: string; cache?: 'default' | 'reload' | 'force-cache' | 'only-if-cached' };
+    previewError: boolean;
+    onGenerate: () => void;
+    onDownload: () => void;
+    onLoadStart: () => void;
+    onLoad: () => void;
+    onLoadEnd: () => void;
+    onError: () => void;
+};
+
+const PreviewHeader = React.memo(({
+    previewLoading,
+    downloadLoading,
+    generationInProgress,
+    generationCountdown,
+    countdownLabel,
+    previewSource,
+    previewError,
+    onGenerate,
+    onDownload,
+    onLoadStart,
+    onLoad,
+    onLoadEnd,
+    onError,
+}: PreviewHeaderProps) => (
+    <View style={styles.previewCard}>
+        <View style={styles.previewHeaderRow}>
+            <Text style={styles.previewTitle}>Weekly Picks Preview</Text>
+            <View style={styles.previewActions}>
+                <TouchableOpacity
+                    style={[
+                        styles.previewActionButton,
+                        (downloadLoading || generationInProgress) && styles.previewActionButtonDisabled,
+                    ]}
+                    onPress={onGenerate}
+                    disabled={downloadLoading || generationInProgress}
+                >
+                    {generationInProgress ? (
+                        <ActivityIndicator size="small" color={colors.brandIndigo} />
+                    ) : (
+                        <Ionicons
+                            name="refresh-outline"
+                            size={16}
+                            color={colors.brandIndigo}
+                        />
+                    )}
+                    <Text style={styles.previewActionText}>
+                        {generationInProgress ? 'Generating' : 'Generate'}
+                    </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        styles.previewActionButton,
+                        (!previewLoading && !previewError && !downloadLoading) ? null : styles.previewActionButtonDisabled,
+                    ]}
+                    onPress={onDownload}
+                    disabled={previewLoading || previewError || downloadLoading}
+                >
+                    {downloadLoading ? (
+                        <ActivityIndicator size="small" color={colors.brandIndigo} />
+                    ) : (
+                        <Ionicons
+                            name="download-outline"
+                            size={16}
+                            color={colors.brandIndigo}
+                        />
+                    )}
+                    <Text style={styles.previewActionText}>Download</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+        {generationInProgress && (
+            <View style={styles.previewCountdownRow}>
+                <Ionicons name="time-outline" size={16} color={colors.textOnDarkMuted} />
+                {generationCountdown > 0 ? (
+                    <>
+                        <Text style={styles.previewCountdownText}>{countdownLabel}</Text>
+                        <Text style={styles.previewCountdownLabel}>remaining</Text>
+                    </>
+                ) : (
+                    <Text style={styles.previewCountdownText}>Still working...</Text>
+                )}
+            </View>
+        )}
+        <View style={styles.previewImageFrame}>
+            <Image
+                source={previewSource}
+                style={styles.previewImage}
+                resizeMode="contain"
+                onLoadStart={onLoadStart}
+                onLoad={onLoad}
+                onLoadEnd={onLoadEnd}
+                onError={onError}
+            />
+            {previewLoading && (
+                <View style={styles.previewLoader}>
+                    <ActivityIndicator size="large" color={colors.brandIndigo} />
+                    <Text style={styles.previewLoaderText}>Rendering preview...</Text>
+                </View>
+            )}
+            {previewError && !previewLoading && (
+                <View style={styles.previewError}>
+                    <Text style={styles.previewErrorText}>Unable to load weekly picks preview.</Text>
+                </View>
+            )}
+        </View>
+        {generationInProgress && (
+            <Text style={styles.previewCountdownFootnote}>
+                {generationCountdown > 0
+                    ? (generationCountdown >= 25 ? 'Starting generation...' : 'Still working...')
+                    : 'Waiting for render to finish...'}
+            </Text>
+        )}
+    </View>
+));
+
 export const WeeklyPicksAdminScreen = () => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
@@ -43,6 +172,18 @@ export const WeeklyPicksAdminScreen = () => {
     const { data: attendees = [] } = useFetchAttendees();
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { mutate: toggleWeeklyPickEvent, isPending: togglePending } = useToggleWeeklyPickEvent();
+    const [previewVersion, setPreviewVersion] = useState<string | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(true);
+    const [previewError, setPreviewError] = useState(false);
+    const [downloadLoading, setDownloadLoading] = useState(false);
+    const [generationInProgress, setGenerationInProgress] = useState(false);
+    const [generationCountdown, setGenerationCountdown] = useState(0);
+    const countdownLabel = useMemo(() => {
+        const totalSeconds = Math.max(0, generationCountdown);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${minutes}:${String(seconds).padStart(2, '0')}`;
+    }, [generationCountdown]);
 
     const attendeesByEvent = useMemo(() => {
         const map = new Map<number, EventAttendees['attendees']>();
@@ -53,6 +194,116 @@ export const WeeklyPicksAdminScreen = () => {
     const wishlistSet = useMemo(() => new Set(wishlist), [wishlist]);
     const { sections } = useGroupedEvents(allEvents);
     const eventListConfig = eventListThemes.welcome;
+    const screenWidth = Dimensions.get('window').width;
+    const previewScale = 3;
+    const previewWidth = Math.round((screenWidth - spacing.lg * 2) * previewScale);
+    const previewVersionParam = previewVersion ? `&v=${previewVersion}` : '';
+    const previewUrl = `${API_BASE_URL}/events/weekly-picks/image?width=${previewWidth}${previewVersionParam}`;
+    const previewSource = useMemo(
+        () => ({ uri: previewUrl, cache: 'force-cache' }),
+        [previewUrl]
+    );
+
+    const handlePreviewLoadStart = useCallback(() => {
+        console.log('[weekly-picks] preview load start', previewUrl);
+        setPreviewError(false);
+        setPreviewLoading(true);
+    }, [previewUrl]);
+    const handlePreviewLoad = useCallback(() => {
+        console.log('[weekly-picks] preview load', previewUrl);
+        setPreviewLoading(false);
+        setPreviewError(false);
+    }, [previewUrl]);
+    const handlePreviewLoadEnd = useCallback(() => {
+        console.log('[weekly-picks] preview load end', previewUrl);
+        setPreviewLoading(false);
+    }, [previewUrl]);
+    const handlePreviewError = useCallback(() => {
+        setPreviewLoading(false);
+        setPreviewError(true);
+        console.warn('[weekly-picks] preview load failed', previewUrl);
+    }, [previewUrl]);
+
+    useEffect(() => {
+        if (!generationInProgress) {
+            setGenerationCountdown(0);
+            return undefined;
+        }
+
+        setGenerationCountdown(30);
+        const interval = setInterval(() => {
+            setGenerationCountdown((prev) => (prev > 1 ? prev - 1 : 0));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [generationInProgress]);
+
+    const handleGeneratePreview = async () => {
+        if (downloadLoading || generationInProgress) return;
+        try {
+            setPreviewError(false);
+            setPreviewLoading(false);
+            setGenerationInProgress(true);
+            console.log('[weekly-picks] generate start', previewUrl);
+            const response = await axios.post(`${API_BASE_URL}/events/weekly-picks/image/generate`, null, {
+                params: { width: previewWidth, format: 'json' },
+            });
+            const versionHeader = response.headers?.['x-weekly-picks-version'];
+            const versionBody = response.data?.version;
+            console.log('[weekly-picks] generate response', {
+                status: response.status,
+                version: versionBody ?? versionHeader,
+                durationMs: response.headers?.['x-weekly-picks-generate-duration-ms'],
+            });
+            setPreviewVersion(String(versionBody ?? versionHeader ?? Date.now()));
+        } catch (error) {
+            console.warn('Failed to generate weekly picks preview', error);
+            Alert.alert('Generation failed', 'Unable to start image generation.');
+            setPreviewLoading(false);
+            setGenerationInProgress(false);
+            return;
+        }
+        setGenerationInProgress(false);
+    };
+
+    const handleDownloadPreview = async () => {
+        if (downloadLoading) return;
+        if (previewLoading) {
+            Alert.alert('Preview still rendering', 'Please wait for the preview to finish loading.');
+            return;
+        }
+        if (previewError) {
+            Alert.alert('Preview unavailable', 'Generate the image again before downloading.');
+            return;
+        }
+
+        try {
+            setDownloadLoading(true);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const fileName = `weekly_picks_${timestamp}.png`;
+            const baseDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+            if (!baseDir) {
+                await Linking.openURL(previewUrl);
+                return;
+            }
+            const fileUri = `${baseDir}${fileName}`;
+            const download = await FileSystem.downloadAsync(previewUrl, fileUri);
+            const canShare = await Sharing.isAvailableAsync();
+            if (canShare) {
+                await Sharing.shareAsync(download.uri, {
+                    mimeType: 'image/png',
+                    dialogTitle: 'Weekly Picks',
+                    UTI: 'public.png',
+                });
+            } else {
+                await Linking.openURL(previewUrl);
+            }
+        } catch (error) {
+            console.warn('Failed to download weekly picks image', error);
+            Alert.alert('Download failed', 'Unable to save the image. Please try again.');
+        } finally {
+            setDownloadLoading(false);
+        }
+    };
 
     if (!isAdmin) {
         return (
@@ -100,7 +351,9 @@ export const WeeklyPicksAdminScreen = () => {
                         isWeeklyPick && styles.actionPillActive,
                     ]}
                     onPress={() =>
-                        toggleWeeklyPickEvent({ eventId: item.id, status: !isWeeklyPick })
+                        toggleWeeklyPickEvent(
+                            { eventId: item.id, status: !isWeeklyPick }
+                        )
                     }
                     disabled={togglePending}
                 >
@@ -186,9 +439,26 @@ export const WeeklyPicksAdminScreen = () => {
                     keyExtractor={(item) => String(item.id)}
                     renderItem={renderItem}
                     renderSectionHeader={renderSectionHeader}
-                    stickySectionHeadersEnabled
+                    stickySectionHeadersEnabled={false}
                     style={styles.sectionList}
                     contentContainerStyle={styles.sectionListContent}
+                    ListHeaderComponent={
+                        <PreviewHeader
+                            previewLoading={previewLoading}
+                            downloadLoading={downloadLoading}
+                            generationInProgress={generationInProgress}
+                            generationCountdown={generationCountdown}
+                            countdownLabel={countdownLabel}
+                            previewSource={previewSource}
+                            previewError={previewError}
+                            onGenerate={handleGeneratePreview}
+                            onDownload={handleDownloadPreview}
+                            onLoadStart={handlePreviewLoadStart}
+                            onLoad={handlePreviewLoad}
+                            onLoadEnd={handlePreviewLoadEnd}
+                            onError={handlePreviewError}
+                        />
+                    }
                     ListEmptyComponent={
                         <View style={styles.emptyList}>
                             <Text style={styles.emptyText}>No events found</Text>
@@ -238,6 +508,122 @@ const styles = StyleSheet.create({
     },
     sectionListContent: {
         paddingBottom: spacing.xxxl,
+    },
+    previewCard: {
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.md,
+        marginBottom: spacing.lg,
+    },
+    previewHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        marginBottom: spacing.sm,
+    },
+    previewTitle: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.white,
+        fontFamily: fontFamilies.display,
+        letterSpacing: 1.2,
+        textTransform: 'uppercase',
+    },
+    previewActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    previewCountdownText: {
+        fontSize: fontSizes.lg,
+        color: colors.textOnDarkStrong,
+        fontFamily: fontFamilies.display,
+        fontWeight: '700',
+        letterSpacing: 1,
+    },
+    previewCountdownRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        marginBottom: spacing.sm,
+    },
+    previewCountdownLabel: {
+        fontSize: fontSizes.sm,
+        color: colors.textOnDarkMuted,
+        fontFamily: fontFamilies.body,
+    },
+    previewCountdownFootnote: {
+        marginTop: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.textOnDarkMuted,
+        fontFamily: fontFamilies.body,
+    },
+    previewActionButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkSoft,
+        backgroundColor: colors.surfaceWhiteStrong,
+    },
+    previewActionButtonDisabled: {
+        opacity: 0.6,
+    },
+    previewActionText: {
+        marginLeft: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.brandIndigo,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
+    previewImageFrame: {
+        height: 600,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkSoft,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        overflow: 'hidden',
+        ...shadows.brandCard,
+    },
+    previewImage: {
+        width: '100%',
+        height: '100%',
+    },
+    previewLoader: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(30, 18, 52, 0.35)',
+    },
+    previewLoaderText: {
+        marginTop: spacing.sm,
+        fontSize: fontSizes.sm,
+        color: colors.textOnDarkStrong,
+        fontFamily: fontFamilies.body,
+    },
+    previewError: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(30, 18, 52, 0.35)',
+        paddingHorizontal: spacing.lg,
+    },
+    previewErrorText: {
+        fontSize: fontSizes.base,
+        color: colors.white,
+        fontFamily: fontFamilies.body,
+        textAlign: 'center',
     },
     sectionHeaderOuterWrapper: {
         paddingBottom: spacing.md,

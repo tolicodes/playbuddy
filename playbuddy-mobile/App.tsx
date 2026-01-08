@@ -3,7 +3,6 @@ import React from 'react'
 import { QueryClientProvider } from '@tanstack/react-query';
 import 'expo-dev-client';
 import { useFonts } from 'expo-font';
-import './Common/hooks/uxCam';
 
 import { UserProvider } from './Pages/Auth/hooks/UserContext';
 import { CalendarProvider } from './Pages/Calendar/hooks/CalendarContext';

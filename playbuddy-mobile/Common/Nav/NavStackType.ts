@@ -39,6 +39,7 @@ export type NavStackProps = {
     'PromoScreen': undefined;
     'Weekly Picks': undefined;
     'Weekly Picks Admin': undefined;
+    'Promo Codes Admin': undefined;
     'Popular Events': undefined;
     'Admin': undefined;
     'Import URLs': undefined;

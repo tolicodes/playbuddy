@@ -19,6 +19,7 @@ import ImportEventURLsScreen from "../../Pages/Admin/ImportEventURLsScreen";
 import WeeklyPicksAdminScreen from "../../Pages/Admin/WeeklyPicksAdminScreen";
 import OrganizerAdminScreen from "../../Pages/Admin/OrganizerAdminScreen";
 import EventAdminScreen from "../../Pages/Admin/EventAdminScreen";
+import PromoCodeAdminScreen from "../../Pages/Admin/PromoCodeAdminScreen";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
@@ -213,6 +214,15 @@ export const DrawerNav = () => {
                         component={EventAdminScreen}
                         options={({ navigation }) => ({
                             ...headerOptions({ navigation, title: 'Event Admin' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                    />
+                    <Drawer.Screen
+                        name="Promo Codes Admin"
+                        component={PromoCodeAdminScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Promo Codes Admin' }),
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}

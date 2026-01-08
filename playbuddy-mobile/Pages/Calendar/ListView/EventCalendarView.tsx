@@ -11,18 +11,22 @@ import {
     TouchableOpacity,
     useWindowDimensions,
 } from "react-native";
+import { useIsFocused, useRoute } from "@react-navigation/native";
 import moment from "moment-timezone";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { useCalendarContext } from "../hooks/CalendarContext";
+import { useFetchEvents } from "../../../Common/db-axios/useEvents";
+import { getAvailableOrganizers } from "../hooks/calendarUtils";
+import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from "../hooks/eventHelpers";
 import { useGroupedEvents } from "../hooks/useGroupedEvents";
 import { useUserContext } from "../../Auth/hooks/UserContext";
 import { FiltersView, FilterState } from "./Filters/FiltersView";
 import EventList from "./EventList";
+import { EventListViewIntroModal } from "./EventListViewIntroModal";
 import { logEvent } from "../../../Common/hooks/logger";
-import { MISC_URLS } from "../../../config";
+import { ADMIN_EMAILS, MISC_URLS } from "../../../config";
 import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
 import { PopupManager } from "../../PopupManager";
 import { TopBar, ChipTone, QuickFilterItem, TypeaheadSuggestion, ActiveFilterChip } from "./TopBar";
@@ -53,6 +57,13 @@ import {
     deriveWeekArrays,
 } from "./calendarNavUtils";
 import { FullCalendar } from "./FullCalendar";
+import {
+    EventListViewMode,
+    getEventListIntroSeen,
+    getEventListViewMode,
+    setEventListIntroSeen,
+    setEventListViewMode as setStoredEventListViewMode,
+} from "./eventListViewMode";
 
 interface Props {
     events?: EventWithMetadata[];
@@ -81,9 +92,25 @@ const EventCalendarView: React.FC<Props> = ({
     const pendingCoachRef = useRef(false);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const toastAnim = useRef(new Animated.Value(0)).current;
-    const { isLoadingEvents, allEvents } = useCalendarContext();
-    const { authUserId } = useUserContext();
-    const sourceEvents = events ?? allEvents;
+    const { userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const { data: fetchedEvents = [], isLoading: isLoadingEvents } = useFetchEvents({
+        includeApprovalPending: isAdmin,
+    });
+    const organizers = useMemo(() => getAvailableOrganizers(fetchedEvents), [fetchedEvents]);
+    const organizerColorMap = useMemo(() => mapOrganizerColors(organizers as any), [organizers]);
+    const eventsWithMetadata = useMemo(
+        () => addEventMetadata({ events: fetchedEvents, organizerColorMap }),
+        [fetchedEvents, organizerColorMap]
+    );
+    const sourceEvents = useMemo(
+        () => (events ? addEventMetadata({ events, organizerColorMap }) : eventsWithMetadata),
+        [events, eventsWithMetadata, organizerColorMap]
+    );
+    const isLoadingList = events ? false : isLoadingEvents;
+    const isFocused = useIsFocused();
+    const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
+    const [showListViewIntro, setShowListViewIntro] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [filtersVisible, setFiltersVisible] = useState(false);
@@ -132,6 +159,40 @@ const EventCalendarView: React.FC<Props> = ({
     }, []);
 
     useEffect(() => {
+        let isActive = true;
+        if (!isFocused) {
+            return () => {
+                isActive = false;
+            };
+        }
+        getEventListViewMode().then((mode) => {
+            if (isActive) {
+                setListViewMode(mode);
+            }
+        });
+        return () => {
+            isActive = false;
+        };
+    }, [isFocused]);
+
+    useEffect(() => {
+        let isActive = true;
+        if (!isFocused) {
+            return () => {
+                isActive = false;
+            };
+        }
+        getEventListIntroSeen().then((seen) => {
+            if (isActive && !seen) {
+                setShowListViewIntro(true);
+            }
+        });
+        return () => {
+            isActive = false;
+        };
+    }, [isFocused]);
+
+    useEffect(() => {
         return () => {
             if (toastTimeoutRef.current) {
                 clearTimeout(toastTimeoutRef.current);
@@ -173,6 +234,32 @@ const EventCalendarView: React.FC<Props> = ({
     const monthModalWidth = Math.max(0, windowWidth - spacing.lg * 2);
 
     const sectionListRef = useRef<SectionList>(null);
+    const route = useRoute();
+    const scrollToTopToken = (route.params as { scrollToTop?: number } | undefined)?.scrollToTop;
+
+    useEffect(() => {
+        if (!scrollToTopToken) return;
+        requestAnimationFrame(() => {
+            sectionListRef.current?.scrollToOffset({ offset: 0, animated: true });
+        });
+    }, [scrollToTopToken]);
+
+    const handleListViewModeChange = (mode: EventListViewMode) => {
+        setListViewMode(mode);
+        void setStoredEventListViewMode(mode);
+    };
+
+    const handleIntroSwitchToClassic = () => {
+        handleListViewModeChange('classic');
+        setShowListViewIntro(false);
+        void setEventListIntroSeen(true);
+    };
+
+    const handleIntroKeepNew = () => {
+        handleListViewModeChange('image');
+        setShowListViewIntro(false);
+        void setEventListIntroSeen(true);
+    };
 
     const eventHasTag = (event: EventWithMetadata, tag: string) => {
         const target = tag.toLowerCase();
@@ -785,6 +872,11 @@ const EventCalendarView: React.FC<Props> = ({
             <View pointerEvents="none" style={styles.screenGlowBottom} />
             <View style={styles.container}>
             <PopupManager />
+            <EventListViewIntroModal
+                visible={showListViewIntro}
+                onSwitchToClassic={handleIntroSwitchToClassic}
+                onKeepNew={handleIntroKeepNew}
+            />
 
             <FiltersView
                 onApply={(f) => {
@@ -1000,7 +1092,8 @@ const EventCalendarView: React.FC<Props> = ({
                 <EventList
                     sections={sections}
                     sectionListRef={sectionListRef}
-                    isLoadingEvents={isLoadingEvents}
+                    isLoadingEvents={isLoadingList}
+                    viewMode={listViewMode}
                 />
             </View>
             </View>

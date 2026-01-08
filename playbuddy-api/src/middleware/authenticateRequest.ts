@@ -69,12 +69,13 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
     const token = req.headers.authorization?.split(' ')[1]; // Extract the token from 'Bearer token'
 
     if (!token) {
+        console.warn(`[auth][admin] missing token ${req.method} ${req.originalUrl}`);
         return res.status(401).json({ error: 'No token provided' });
     }
 
     // service key for scraper
     if (process.env.PLAYBUDDY_API_SERVICE_KEY === token) {
-        console.log('authenticated as scraper')
+        console.log(`[auth][admin] authenticated as service key ${req.method} ${req.originalUrl}`);
         req.authUserId = SERVICE_AUTH_USER_ID;
         return next();
     }
@@ -88,6 +89,7 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
         const { ADMIN_EMAILS } = await import('../config.js');
         const email = user.authUser.email;
         if (!email || !ADMIN_EMAILS.includes(email)) {
+            console.warn(`[auth][admin] user not admin ${req.method} ${req.originalUrl}`);
             throw new Error('User is not an admin');
         }
 
@@ -95,8 +97,13 @@ export const authenticateAdminRequest = async (req: AuthenticatedRequest, res: R
         req.authUserId = user.authUserId
         req.authUser = user.authUser;
 
+        console.log(`[auth][admin] authenticated ${req.method} ${req.originalUrl}`);
         return next(); // Proceed to the next middleware or route handler
     } catch (error) {
+        console.error(
+            `[auth][admin] auth failed ${req.method} ${req.originalUrl}`,
+            error instanceof Error ? error.message : error
+        );
         return res.status(500).json({ error: 'Failed to authenticate token' });
     }
 };

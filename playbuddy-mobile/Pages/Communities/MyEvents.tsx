@@ -1,22 +1,13 @@
 import React, { useMemo } from "react";
 
 import { Community } from "../../Common/types/commonTypes";
-import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
 import { useCommonContext } from "../../Common/hooks/CommonContext";
 import EventCalendarView from "../Calendar/ListView/EventCalendarView";
-
-const getMyEvents = (myCommunities: Community[]) => {
-    const { allEvents } = useCalendarContext();
-    const communityIds = myCommunities.map((community) => community.id);
-    const myEvents = useMemo(() => allEvents.filter((event) => {
-        return event.communities?.some((community) => communityIds.includes(community.id))
-    }), [allEvents, communityIds]);
-
-    return myEvents;
-}
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
 export const MyEvents = ({ type }: { type: 'organizer' | 'private' } = { type: 'private' }) => {
     const { myCommunities } = useCommonContext();
+    const { data: events = [] } = useFetchEvents();
     const privateCommunities = [
         ...myCommunities.myPrivateCommunities,
         ...myCommunities.myOrganizerPrivateCommunities,
@@ -27,7 +18,20 @@ export const MyEvents = ({ type }: { type: 'organizer' | 'private' } = { type: '
     ] as Community[];
 
 
-    const myEvents = getMyEvents(type === 'private' ? privateCommunities : organizerCommunities);
+    const targetCommunities = useMemo(
+        () => (type === 'private' ? privateCommunities : organizerCommunities),
+        [type, privateCommunities, organizerCommunities]
+    );
+    const communityIds = useMemo(
+        () => targetCommunities.map((community) => community.id),
+        [targetCommunities]
+    );
+    const myEvents = useMemo(
+        () => events.filter((event) =>
+            event.communities?.some((community) => communityIds.includes(community.id))
+        ),
+        [events, communityIds]
+    );
 
     return <>
         <EventCalendarView events={myEvents} />

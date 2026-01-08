@@ -49,25 +49,40 @@ export default function DeepLinkHandler() {
             if (!normalizedUrl) {
                 return;
             }
+            console.log('DeepLinkHandler: received url', { source, normalizedUrl });
             if (loadingLinks) {
+                console.log('DeepLinkHandler: links still loading, queueing url');
                 queue.current = normalizedUrl;
                 return;
             }
             const dl = matchDeepLink(normalizedUrl);
 
-            if (!dl?.id?.trim() || !dl.slug?.trim()) return;
+            if (!dl?.id?.trim() || !dl.slug?.trim()) {
+                console.log('DeepLinkHandler: no matching deep link for url', { normalizedUrl });
+                return;
+            }
 
             console.log(`DeepLinkHandler: ${normalizedUrl} -> ${dl.slug}`);
+            console.log('DeepLinkHandler: matched deep link', {
+                id: dl.id,
+                slug: dl.slug,
+                type: dl.type,
+            });
 
             queue.current = null;
 
             if (dl.id !== currentDeepLink?.id) {
+                console.log('DeepLinkHandler: setting current deep link', { id: dl.id });
                 setCurrentDeepLink({ ...dl });
             }
 
             const seenUrl = handledUrls.current.has(normalizedUrl);
             const seenDeepLink = handledDeepLinks.current.has(dl.id);
             if (seenUrl || seenDeepLink) {
+                console.log('DeepLinkHandler: deep link already handled', {
+                    seenUrl,
+                    seenDeepLink,
+                });
                 return;
             }
 
@@ -85,12 +100,14 @@ export default function DeepLinkHandler() {
                 url: normalizedUrl,
                 source,
             });
+            console.log('DeepLinkHandler: DeepLinkDetected logged', deepLinkAnalyticsProps);
 
             if (authUserId) {
                 if (!attributedDeepLinks.current.has(dl.id)) {
                     attributedDeepLinks.current.add(dl.id);
                     addDeepLink.mutate(dl.id);
                     logEvent(UE.DeepLinkAttributed, deepLinkAnalyticsProps);
+                    console.log('DeepLinkHandler: DeepLinkAttributed logged', deepLinkAnalyticsProps);
                 }
             }
         },
@@ -100,10 +117,12 @@ export default function DeepLinkHandler() {
     useEffect(() => {
         // Branch subscription & cold-start handling
         const unsub = branch.subscribe(({ uri }) => {
+            console.log('DeepLinkHandler: branch.subscribe uri', uri);
             if (uri) handleUrl(uri, 'branch');
         });
         branch.getLatestReferringParams().then(data => {
             const url = data['+url'] || data['~referring_link'];
+            console.log('DeepLinkHandler: latest referring params', { url });
             if (url) handleUrl(url, 'cold_start');
         });
 
@@ -113,6 +132,7 @@ export default function DeepLinkHandler() {
             if (!alreadyChecked) {
                 const text = await Clipboard.getStringAsync();
                 if (text && /(?:l\.playbuddy\.me|bclc8)/.test(text)) {
+                    console.log('DeepLinkHandler: clipboard deep link candidate', text);
                     await handleUrl(text, 'clipboard');
                 }
                 await AsyncStorage.setItem(CLIPBOARD_CHECK_KEY, 'true');

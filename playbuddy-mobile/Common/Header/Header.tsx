@@ -35,7 +35,7 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
 // Custom Drawer Button
 export const HomeButton = ({ navigation }: { navigation: NavigationProp<ParamListBase> }) => {
     const onPressHomeButton = () => {
-        navigateToTab(navigation, 'Calendar');
+        navigateToTab(navigation, 'Calendar', { scrollToTop: Date.now() });
     };
     return (
         <TouchableOpacity onPress={onPressHomeButton} accessibilityRole="button" accessibilityLabel="Menu">

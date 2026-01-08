@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image } from 'expo-image';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUserContext } from './hooks/UserContext';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { Avatar } from './Buttons/Avatar';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -14,11 +14,37 @@ import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
 import { navigateToHome, navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
+import { EventListViewMode, getEventListViewMode, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
 
 export default function AccountDetails() {
     const { userProfile, signOut, fullNameFromOAuthedUser } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const analyticsProps = useAnalyticsProps();
+    const isFocused = useIsFocused();
+    const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
+
+    useEffect(() => {
+        let isActive = true;
+        if (!isFocused) {
+            return () => {
+                isActive = false;
+            };
+        }
+        getEventListViewMode().then((mode) => {
+            if (isActive) {
+                setListViewMode(mode);
+            }
+        });
+        return () => {
+            isActive = false;
+        };
+    }, [isFocused]);
+
+    const onToggleClassicView = (value: boolean) => {
+        const nextMode: EventListViewMode = value ? 'classic' : 'image';
+        setListViewMode(nextMode);
+        void setEventListViewMode(nextMode);
+    };
 
 
     const onPressSignOut = async () => {
@@ -86,6 +112,25 @@ export default function AccountDetails() {
                             label="Display Name"
                             value={userProfile?.name || fullNameFromOAuthedUser || ''}
                         />
+                    </View>
+
+                    <View style={styles.sectionCard}>
+                        <Text style={styles.sectionTitle}>Preferences</Text>
+                        <View style={styles.preferenceRow}>
+                            <View style={styles.preferenceCopy}>
+                                <Text style={styles.preferenceLabel}>Classic list view</Text>
+                                <Text style={styles.preferenceDescription}>
+                                    Use compact cards instead of the image-first redesign.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={listViewMode === 'classic'}
+                                onValueChange={onToggleClassicView}
+                                trackColor={{ false: colors.borderMutedAlt, true: colors.accentPurple }}
+                                thumbColor={colors.white}
+                                ios_backgroundColor={colors.borderMutedAlt}
+                            />
+                        </View>
                     </View>
 
                     <View style={styles.sectionCard}>
@@ -179,6 +224,28 @@ const styles = StyleSheet.create({
     },
     infoItem: {
         marginBottom: spacing.mdPlus,
+    },
+    preferenceRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: spacing.md,
+    },
+    preferenceCopy: {
+        flex: 1,
+        paddingRight: spacing.md,
+    },
+    preferenceLabel: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+    },
+    preferenceDescription: {
+        fontSize: fontSizes.sm,
+        color: colors.brandTextMuted,
+        marginTop: spacing.xs,
+        fontFamily: fontFamilies.body,
     },
     iconTextContainer: {
         flexDirection: 'row',

@@ -85,6 +85,10 @@ export interface Event extends EventDataSource {
      */
     location: string;
     /**
+     * Neighborhood for the event (e.g. Bushwick, Midtown)
+     */
+    neighborhood?: string;
+    /**
      * The city of the event
      */
     city?: string;
@@ -100,6 +104,10 @@ export interface Event extends EventDataSource {
      * The price of the event (freeform text)
      */
     price?: string;
+    /**
+     * Best-guess ticket price (e.g. "$25")
+     */
+    short_price?: string | null;
     /**
      * The description of the event, markdown formatted
      */
@@ -489,9 +497,11 @@ export interface Classification {
 
     non_ny: boolean;
     location: string;
+    neighborhood?: string;
 
     hosts: string[];
     price: string;
+    short_price?: string | null;
 
     vetted: boolean;
     vetting_url?: string;

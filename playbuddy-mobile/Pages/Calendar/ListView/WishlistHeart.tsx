@@ -14,13 +14,15 @@ export const WishlistHeart = ({
     handleToggleEventWishlist: () => void;
     size?: number;
     containerStyle?: ViewStyle;
-    variant?: 'outline' | 'solid';
+    variant?: 'outline' | 'solid' | 'thick-outline';
 }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
-    const haloSize = size + 14;
+    const haloSize = size + 20;
     const outlineColor = colors.danger;
     const isSolid = variant === 'solid';
+    const isThickOutline = variant === 'thick-outline';
     const solidColor = itemIsOnWishlist ? colors.danger : 'rgba(255, 255, 255, 0.9)';
+    const iconBoxSize = size + 8;
 
     useEffect(() => {
         // Run animation whenever itemIsOnWishlist changes
@@ -59,22 +61,22 @@ export const WishlistHeart = ({
                         style={styles.iconSolid}
                     />
                 ) : (
-                    <View style={styles.iconStack}>
+                    <View style={[styles.iconStack, { width: iconBoxSize, height: iconBoxSize }]}>
                         <FAIcon
                             name="heart"
                             size={size}
-                            color="rgba(255, 255, 255, 0.8)"
+                            color={colors.white}
                             style={styles.iconBase}
                         />
                         <FAIcon
                             name="heart-o"
-                            size={size + 2}
+                            size={isThickOutline ? size + 4 : size + 2}
                             color={outlineColor}
                             style={styles.iconOutlineBase}
                         />
                         <FAIcon
                             name="heart-o"
-                            size={size}
+                            size={isThickOutline ? size + 2 : size}
                             color={outlineColor}
                             style={styles.iconTop}
                         />
@@ -96,12 +98,25 @@ const styles = StyleSheet.create({
     },
     iconBase: {
         position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        textAlign: 'center',
+        textAlignVertical: 'center',
     },
     iconOutlineBase: {
         position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        textAlign: 'center',
+        textAlignVertical: 'center',
     },
     iconTop: {
         position: 'relative',
+        textAlign: 'center',
         textShadowColor: colors.shadowMedium,
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 2,

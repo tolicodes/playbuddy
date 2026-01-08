@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import { View } from "react-native";
 import EventCalendarView from "../Calendar/ListView/EventCalendarView";
-import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
 export const MunchesScreen = () => {
-    const { allEvents } = useCalendarContext();
+    const { data: events = [] } = useFetchEvents();
     const munchEvents = useMemo(
-        () => allEvents.filter((event) => event.is_munch === true),
-        [allEvents]
+        () => events.filter((event) => event.is_munch === true),
+        [events]
     );
 
     return (

@@ -2,7 +2,6 @@ import { supabase } from '../../../supabaseClient';
 import { Session } from '@supabase/auth-js/src/lib/types';
 import axios from 'axios';
 import * as amplitude from '@amplitude/analytics-react-native';
-import { setUxCamUserIdentity } from '../../../Common/hooks/uxCam';
 
 import { Alert } from 'react-native';
 import { Dispatch, SetStateAction, useEffect } from 'react';
@@ -180,8 +179,5 @@ export const useSetupTracking = (session?: Session | null, userProfile?: UserPro
         }
         amplitude.identify(identifyEvent);
 
-        if (userProfile.email) {
-            setUxCamUserIdentity(userProfile.email, userProfile.name || '')
-        }
     }, [session, userProfile]);
 };

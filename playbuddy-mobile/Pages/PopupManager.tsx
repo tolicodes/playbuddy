@@ -1,18 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Linking, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
-import { logEvent } from '../Common/hooks/logger';
-import {
-    APP_STORE_REVIEW_URL,
-    APP_STORE_WEB_URL,
-    GOOGLE_PLAY_REVIEW_URL,
-    GOOGLE_PLAY_WEB_URL,
-} from '../config';
-import { UE } from '../userEventTypes';
 import { EdgePlayGroupModal } from './EdgePlayGroupModal';
 import { NewsletterSignupModal } from './NewsletterSignupModal';
+import { RateAppModal } from './RateAppModal';
 
 const STORAGE_KEY = 'popup_manager_state_v1';
 const LEGACY_TIMER_KEY = 'edgeplay_modal_timer';
@@ -21,8 +12,7 @@ const LEGACY_SNOOZE_KEY = 'edgeplay_modal_snooze';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_SNOOZE_MS = 14 * DAY_MS;
-const RATE_APP_MIN_DELAY_MS = 7 * DAY_MS;
-
+const RATE_APP_MIN_DELAY_MS = __DEV__ ? 5 * 1000 : 5 * DAY_MS;
 const POPUP_SETTINGS = {
     whatsapp_group: { minDelayMs: 3 * DAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
     rate_app: { minDelayMs: RATE_APP_MIN_DELAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
@@ -87,7 +77,6 @@ const getNextPopupId = (state: PopupManagerState, now: number): PopupId | null =
 };
 
 export const PopupManager: React.FC = () => {
-    const analyticsProps = useAnalyticsProps();
     const [state, setState] = useState<PopupManagerState | null>(null);
     const [hasShownThisSession, setHasShownThisSession] = useState(false);
     const [activePopupId, setActivePopupId] = useState<PopupId | null>(null);
@@ -187,25 +176,6 @@ export const PopupManager: React.FC = () => {
         }));
     };
 
-    const requestNativeReview = async () => {
-        logEvent(UE.RateAppModalOpenStore, analyticsProps);
-        const reviewUrl = Platform.OS === 'ios' ? APP_STORE_REVIEW_URL : GOOGLE_PLAY_REVIEW_URL;
-        const fallbackUrl = Platform.OS === 'ios' ? APP_STORE_WEB_URL : GOOGLE_PLAY_WEB_URL;
-
-        try {
-            await Linking.openURL(reviewUrl);
-        } catch {
-            void Linking.openURL(fallbackUrl);
-        }
-
-        const now = Date.now();
-        updatePopupState('rate_app', {
-            lastShownAt: now,
-            snoozeUntil: now + POPUP_SETTINGS.rate_app.snoozeMs,
-        });
-        setHasShownThisSession(true);
-    };
-
     useEffect(() => {
         if (!state || activePopupId || hasShownThisSession) return;
 
@@ -213,11 +183,6 @@ export const PopupManager: React.FC = () => {
         const nextId = getNextPopupId(state, now);
         if (!nextId) return;
 
-        if (nextId === 'rate_app') {
-            void requestNativeReview();
-            updatePopupState(nextId, { lastShownAt: now });
-            return;
-        }
         setActivePopupId(nextId);
         setHasShownThisSession(true);
         updatePopupState(nextId, { lastShownAt: now });
@@ -239,6 +204,11 @@ export const PopupManager: React.FC = () => {
                 visible={activePopupId === 'whatsapp_group'}
                 onDismiss={() => dismissPopup('whatsapp_group')}
                 onSnooze={() => snoozePopup('whatsapp_group')}
+            />
+            <RateAppModal
+                visible={activePopupId === 'rate_app'}
+                onDismiss={() => dismissPopup('rate_app')}
+                onSnooze={() => snoozePopup('rate_app')}
             />
             <NewsletterSignupModal
                 visible={activePopupId === 'newsletter_signup'}

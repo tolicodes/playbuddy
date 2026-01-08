@@ -1,5 +1,4 @@
 import * as amplitude from '@amplitude/analytics-react-native';
-import RNUxcam from 'react-native-ux-cam';
 import axios from 'axios';
 import { API_BASE_URL } from '../../config';
 import { EventPayloadMap, UE } from '../../userEventTypes';
@@ -63,7 +62,7 @@ export function getAnalyticsPropsFeaturedPromoCode(pc: PromoCode) {
 }
 
 /**
- * Logs a user event to Amplitude, UXCam, and your backend.
+ * Logs a user event to Amplitude and your backend.
  * Supports passing in analytics props built by the above helpers.
  *
  * @param name  – one of your UE enum members
@@ -79,12 +78,6 @@ export function logEvent<
 
     try {
         amplitude.logEvent(name, safeProps);
-    } catch {
-        // ignore in dev
-    }
-
-    try {
-        RNUxcam.logEvent(name, safeProps);
     } catch {
         // ignore in dev
     }

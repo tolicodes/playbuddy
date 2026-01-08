@@ -1,13 +1,13 @@
 import React, { useMemo } from "react";
 import EventCalendarView from "../Calendar/ListView/EventCalendarView";
 import { View } from 'react-native';
-import { useCalendarContext } from "../Calendar/hooks/CalendarContext";
+import { useFetchEvents } from "../../Common/db-axios/useEvents";
 
 
 
 export const PlayParties = () => {
-    const { allEvents } = useCalendarContext();
-    const playPartyEvents = useMemo(() => allEvents.filter(event => event.play_party === true), [allEvents]);
+    const { data: events = [] } = useFetchEvents();
+    const playPartyEvents = useMemo(() => events.filter(event => event.play_party === true), [events]);
 
     return (
         <View style={{ flex: 1 }}>

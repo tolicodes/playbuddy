@@ -9,7 +9,7 @@ export const getBestPromoCode = (event: EventWithMetadata, currentDeepLink?: Dee
 
     let featuredPromoCode;
     let featuredPromoCodeFromWeeklyPromo;
-    if (currentDeepLink) {
+    if (currentDeepLink && currentDeepLink.type !== 'generic') {
         featuredPromoCode = currentDeepLink?.featured_event?.id === event?.id ? currentDeepLink?.featured_promo_code : null;
         featuredPromoCodeFromWeeklyPromo = currentDeepLink?.deep_link_events?.find(event => event.event.id === event.event.id)?.featured_promo_code;
     }

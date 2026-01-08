@@ -12,13 +12,12 @@ import sectionListGetItemLayout from 'react-native-section-list-get-item-layout'
 
 import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
 import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
+import { EventListItemClassic, CLASSIC_ITEM_HEIGHT } from "./EventListItemClassic";
+import type { EventListViewMode } from "./eventListViewMode";
 import { NavStack } from "../../../Common/Nav/NavStackType";
 import { Event } from "../../../commonTypes";
-import { logEvent } from "../../../Common/hooks/logger";
 import { useUserContext } from "../../Auth/hooks/UserContext";
 import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
-import { UE } from "../../../Common/types/userEventTypes";
-import { getEventAnalyticsProps, useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
 import { ADMIN_EMAILS } from "../../../config";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 
@@ -33,39 +32,38 @@ interface EventListProps {
     sections: SectionType[];
     sectionListRef?: React.RefObject<SectionList<Event>>;
     isLoadingEvents?: boolean;
+    viewMode?: EventListViewMode;
 }
 
 const EventList: React.FC<EventListProps> = ({
     sections,
     sectionListRef,
     isLoadingEvents,
+    viewMode,
 }) => {
     const navigation = useNavigation<NavStack>();
-    const { currentDeepLink, userProfile } = useUserContext();
+    const { userProfile } = useUserContext();
     const { data: attendees } = useFetchAttendees();
-    const analyticsProps = useAnalyticsProps();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const resolvedViewMode: EventListViewMode = viewMode ?? 'image';
+    const itemHeight = resolvedViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
+    const ItemComponent = resolvedViewMode === 'classic' ? EventListItemClassic : EventListItem;
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
         const attendeesForEvent = attendees?.find((a) => a.event_id === event.id)?.attendees || [];
         return (
             <View style={styles.eventItemWrapper}>
-                <EventListItem
+                <ItemComponent
                     item={event}
                     onPress={(e) => {
-                        const eventAnalyticsProps = getEventAnalyticsProps(e, currentDeepLink);
-
                         navigation.push('Event Details', {
                             selectedEvent: e,
                             title: e.name,
                         });
-                        logEvent(UE.EventListItemClicked, {
-                            ...analyticsProps,
-                            ...eventAnalyticsProps,
-                        });
                     }}
                     attendees={attendeesForEvent}
                     isAdmin={isAdmin}
+                    listViewMode={resolvedViewMode}
                 />
             </View>
         );
@@ -81,6 +79,7 @@ const EventList: React.FC<EventListProps> = ({
 
     return (
         <SectionList
+            key={`event-list-${resolvedViewMode}`}
             ref={sectionListRef}
             style={styles.sectionList}
             sections={sections}
@@ -89,7 +88,7 @@ const EventList: React.FC<EventListProps> = ({
             renderItem={renderItem}
             renderSectionHeader={renderSectionHeader}
             getItemLayout={sectionListGetItemLayout({
-                getItemHeight: () => ITEM_HEIGHT,
+                getItemHeight: () => itemHeight,
                 getSectionHeaderHeight: () => HEADER_HEIGHT + 18,
             })}
             ListEmptyComponent={

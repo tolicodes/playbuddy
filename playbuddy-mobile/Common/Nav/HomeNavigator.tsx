@@ -57,41 +57,56 @@ export function HomeStackNavigator() {
 
         // First we look for deeplinks
         // If we find one, and they haven't seen it yet
-        if (currentDeepLink && !isPromoScreenViewed) {
+        if (currentDeepLink && !isPromoScreenViewed && currentDeepLink.type !== 'generic') {
+            console.log('HomeNavigator: handling deep link', {
+                id: currentDeepLink.id,
+                type: currentDeepLink.type,
+            });
             // Regular promo codes
             if (
                 currentDeepLink.type === 'organizer_promo_code' ||
                 currentDeepLink.type === 'event_promo_code'
             ) {
+                console.log('HomeNavigator: routing to PromoScreen');
                 navigateToHomeStackScreen(navigation, 'PromoScreen');
                 return;
             }
 
             // Weekly Picks
             if (currentDeepLink.type === 'weekly_picks') {
+                console.log('HomeNavigator: routing to Weekly Picks');
                 navigateToHomeStackScreen(navigation, 'Weekly Picks');
                 return;
             }
 
             if (currentDeepLink.type === 'facilitator_profile') {
+                console.log('HomeNavigator: routing to Facilitator Profile', {
+                    facilitatorId: currentDeepLink.facilitator_id,
+                });
                 navigateToHomeStackScreen(navigation, 'Facilitator Profile', { facilitatorId: currentDeepLink.facilitator_id });
                 return;
             }
+            console.log('HomeNavigator: deep link type has no route, falling through', currentDeepLink.type);
+        } else if (currentDeepLink?.type === 'generic') {
+            console.log('HomeNavigator: generic deep link, no routing');
         }
 
         // If the user has a profile but it's incomplete, navigate to ProfileDetails
         if (authUserId && !isProfileComplete) {
+            console.log('HomeNavigator: routing to Profile Details');
             navigateToAuth(navigation, 'Profile Details');
             return;
         }
 
         // If the user doesn't have a profile, navigate to Welcome
         if (!authUserId) {
+            console.log('HomeNavigator: routing to Welcome');
             navigateToAuth(navigation, 'Welcome');
             return;
         }
 
         // Otherwise, we can go home
+        console.log('HomeNavigator: routing to Home');
         navigateToHome(navigation);
         // important: we do NOT include isPromoScreenViewed in the dependency array
         // because we want to navigate to Home only if it starts out that way

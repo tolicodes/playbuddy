@@ -66,6 +66,14 @@ const QUICK_ACTIONS: QuickAction[] = [
         tone: colors.surfaceGoldWarm,
         iconColor: colors.textGold,
     },
+    {
+        title: 'Promo Codes',
+        subtitle: 'Create and attach codes',
+        icon: 'ticket-alt',
+        route: 'Promo Codes Admin',
+        tone: colors.surfaceGoldWarm,
+        iconColor: colors.textGold,
+    },
 ];
 
 export const AdminScreen = () => {
@@ -106,7 +114,7 @@ export const AdminScreen = () => {
                 <Text style={styles.heroKicker}>Admin control</Text>
                 <Text style={styles.heroTitle}>Command Center</Text>
                 <Text style={styles.heroSubtitle}>
-                    Admin tools for events, imports, organizers, and weekly picks.
+                    Admin tools for events, imports, organizers, weekly picks, and promo codes.
                 </Text>
             </LinearGradient>
 

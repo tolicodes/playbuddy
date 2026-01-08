@@ -1,26 +1,30 @@
 import { useMemo } from 'react';
-import moment from 'moment';
-import { Event } from '../../../commonTypes';
-import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
-import { useCalendarContext } from './CalendarContext';
+import { useFetchEvents } from '../../../Common/db-axios/useEvents';
 import { useFetchDeepLinks } from '../../../Common/hooks/useDeepLinks';
+import { getAvailableOrganizers } from './calendarUtils';
+import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from './eventHelpers';
 
 
 export { useGroupedEvents } from './useGroupedEventsMain'
 
 export const useFeaturedEvents = () => {
-    const { allEvents } = useCalendarContext();
-
+    const { data: events = [] } = useFetchEvents();
     const { data: deepLinks = [] } = useFetchDeepLinks();
 
-    const featuredEvents = deepLinks
-        .filter((dl) => dl.featured_event)
-        .map((dl) => dl.featured_event)
-        .filter((event, index, self) =>
-            index === self.findIndex((e) => e.id === event.id)
-        )
-        .map((event) => allEvents.find(e => e.id === event.id))
-        .filter((event): event is Event => !!event);
+    const organizers = useMemo(() => getAvailableOrganizers(events), [events]);
+    const organizerColorMap = useMemo(() => mapOrganizerColors(organizers as any), [organizers]);
+    const eventsWithMetadata = useMemo(
+        () => addEventMetadata({ events, organizerColorMap }),
+        [events, organizerColorMap]
+    );
+    const featuredEventIds = useMemo(
+        () => new Set(deepLinks.map((dl) => dl.featured_event?.id).filter(Boolean) as number[]),
+        [deepLinks]
+    );
+    const featuredEvents = useMemo(
+        () => eventsWithMetadata.filter((event) => featuredEventIds.has(event.id)),
+        [eventsWithMetadata, featuredEventIds]
+    );
 
     return featuredEvents;
 }

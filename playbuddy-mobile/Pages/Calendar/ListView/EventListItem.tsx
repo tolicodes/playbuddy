@@ -13,12 +13,13 @@ import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
-import { calendarExperienceTone, calendarTagTones, calendarTypeChips, colors, fontSizes, radius, shadows, spacing } from '../../../components/styles';
+import { calendarTypeChips, colors, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistHeart } from './WishlistHeart';
+import type { EventListViewMode } from './eventListViewMode';
 
-interface ListItemProps {
+export interface EventListItemProps {
     item: EventWithMetadata;
     onPress: (event: Event) => void;
     noPadding?: boolean;
@@ -28,49 +29,10 @@ interface ListItemProps {
     footerContent?: React.ReactNode;
     cardHeight?: number;
     autoHeight?: boolean;
+    listViewMode?: EventListViewMode;
 }
 
-const TAG_TONES = calendarTagTones;
-
-const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
-    {
-        tone: 'spiritual',
-        keywords: ['tantra', 'spiritual', 'meditat', 'ritual', 'ceremony', 'sacred', 'yoga', 'breath', 'energy', 'shaman', 'hypnosis'],
-    },
-    {
-        tone: 'social',
-        keywords: ['social', 'community', 'munch', 'meet', 'mingle', 'dating', 'poly', 'network', 'party', 'celebration'],
-    },
-    {
-        tone: 'skill',
-        keywords: ['workshop', 'class', 'training', 'lesson', 'beginner', 'intermediate', 'advanced', 'practice', 'hands on', 'education', 'consent', 'safety'],
-    },
-    {
-        tone: 'scene',
-        keywords: ['bdsm', 'kink', 'rope', 'shibari', 'bondage', 'fetish', 'impact', 'domin', 'submiss', 'sadis', 'masoch', 'exhibition', 'voyeur', 'play', 'erotic', 'sensual', 'sexual'],
-    },
-];
-
-const getTagTone = (tag: string) => {
-    const normalized = tag.trim().toLowerCase();
-    const match = TAG_TONE_MATCHERS.find(({ keywords }) =>
-        keywords.some(keyword => normalized.includes(keyword))
-    );
-    return TAG_TONES[match?.tone ?? 'default'];
-};
-
-const TYPE_ICONS: Record<string, string> = {
-    'play party': 'glass',
-    'munch': 'cutlery',
-    'retreat': 'leaf',
-    'festival': 'music',
-    'workshop': 'wrench',
-    'performance': 'microphone',
-    'discussion': 'comments',
-    'event': 'calendar',
-};
-
-export const EventListItem: React.FC<ListItemProps> = ({
+export const EventListItem: React.FC<EventListItemProps> = ({
     item,
     onPress,
     noPadding,
@@ -80,26 +42,23 @@ export const EventListItem: React.FC<ListItemProps> = ({
     footerContent,
     cardHeight,
     autoHeight,
+    listViewMode,
 }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
     const [scrolling, setScrolling] = useState(false);
+    const [titleLineCount, setTitleLineCount] = useState(0);
     const eventAnalyticsProps = useEventAnalyticsProps(item);
 
     const promoCode = getEventPromoCodes(item)?.[0];
     const formattedDate = formatDate(item, fullDate);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
-    const vetted = item.vetted;
-    const locationLabel = item.location || item.city || item.region || '';
+    const locationLabel = (item.neighborhood || '').trim();
     const metaItems = [
         { key: 'date', label: formattedDate, icon: 'clock-o' },
         ...(locationLabel ? [{ key: 'location', label: locationLabel, icon: 'map-marker' }] : []),
-        ...(item.price ? [{ key: 'price', label: item.price, icon: 'tag' }] : []),
     ];
-    type TagChip = { label: string; kind: 'type' | 'level' | 'vetted' | 'tag' };
-    const tagChips: TagChip[] = [];
-    const seenTags = new Set<string>();
     const typeLabelMap: Record<string, string> = {
         play_party: 'Play Party',
         munch: 'Munch',
@@ -109,45 +68,39 @@ export const EventListItem: React.FC<ListItemProps> = ({
         performance: 'Performance',
         discussion: 'Discussion',
     };
-    const levelLabelMap: Record<string, string> = {
-        beginner: 'Beginner',
-        intermediate: 'Intermediate',
-        advanced: 'Advanced',
-    };
-
-    const pushTag = (tag: string, kind: TagChip['kind']) => {
-        const clean = tag.trim();
-        if (!clean) return;
-        const key = clean.toLowerCase();
-        if (seenTags.has(key)) return;
-        if (tagChips.length >= 3) return;
-        seenTags.add(key);
-        tagChips.push({ label: clean, kind });
-    };
-
-    if (item.play_party) pushTag('Play Party', 'type');
-    if (item.is_munch) pushTag('Munch', 'type');
-    if (item.type && item.type !== 'event') {
-        pushTag(typeLabelMap[item.type] || item.type.replace(/_/g, ' '), 'type');
-    }
-    if (item.classification?.experience_level) {
-        const level = item.classification.experience_level.toLowerCase();
-        pushTag(levelLabelMap[level] || level.replace(/_/g, ' '), 'level');
-    }
-    if (vetted) pushTag('Vetted', 'vetted');
+    const primaryTypeLabel = item.play_party
+        ? 'Play Party'
+        : item.is_munch
+            ? 'Munch'
+            : item.type && item.type !== 'event'
+                ? typeLabelMap[item.type] || item.type.replace(/_/g, ' ')
+                : 'Event';
 
     const extraTags = [...(item.classification?.tags || []), ...(item.tags || [])];
-    for (const tag of extraTags) {
-        pushTag(tag, 'tag');
-    }
-
-    const tagChipColors = calendarTypeChips;
-    const levelChipColors = calendarExperienceTone;
+    const normalizedTypeLabel = primaryTypeLabel.trim().toLowerCase();
+    const primaryTagLabel =
+        extraTags
+            .map(tag => tag.trim())
+            .find(tag => tag && tag.toLowerCase() !== normalizedTypeLabel) || '';
+    const displayTypeLabel = primaryTypeLabel === 'Event' ? '' : primaryTypeLabel;
+    const typeTagLabel = displayTypeLabel
+        ? (primaryTagLabel ? `${displayTypeLabel} | ${primaryTagLabel}` : displayTypeLabel)
+        : primaryTagLabel;
+    const typeKey = (displayTypeLabel || primaryTypeLabel).trim().toLowerCase();
+    const typeTagColors = calendarTypeChips[typeKey] || {
+        background: 'rgba(0, 0, 0, 0.8)',
+        text: colors.textOnDarkStrong,
+        border: 'transparent',
+    };
     const handlePressEvent = () => {
-        // for attendee carousel scroll logic
+        // Prevent accidental taps while scrolling horizontal content.
         if (!scrolling) {
             onPress(item);
-            logEvent(UE.EventListItemClicked, eventAnalyticsProps);
+            const listViewAnalytics = listViewMode ? { list_view_mode: listViewMode } : {};
+            logEvent(UE.EventListItemClicked, {
+                ...eventAnalyticsProps,
+                ...listViewAnalytics,
+            });
         }
     };
 
@@ -168,17 +121,18 @@ export const EventListItem: React.FC<ListItemProps> = ({
         });
     };
 
-    const placeHolderImage = item.munch_id ? (
-        <FAIcon name="cutlery" size={42} color={colors.textSlate} />
-    ) : (
-        <FAIcon name="calendar" size={42} color={colors.textSlate} />
-    );
-
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
 
     const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
     const useAutoHeight = autoHeight === true;
+    const imageHeight = Math.round(resolvedCardHeight * 0.5);
+    const detailsHeight = Math.max(0, resolvedCardHeight - imageHeight);
+    const heartSize = 48;
+    const heartOffset = imageHeight < 140 ? 6 : 0;
+    const heartTop = Math.max(0, imageHeight / 2 - heartSize / 2 - heartOffset);
+    const isSingleLineTitle = titleLineCount === 1;
+    const hasFooter = !!footerContent;
 
     return (
         <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
@@ -191,148 +145,119 @@ export const EventListItem: React.FC<ListItemProps> = ({
                 ]}
             >
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
-                    <View style={styles.poster}>
-                        {imageUrl ? (
-                            <Image
-                                source={{ uri: imageUrl }}
-                                style={styles.posterImage}
-                                contentFit="cover"
-                                cachePolicy="disk"
-                                allowDownscaling
-                                decodeFormat="rgb"
-                            />
-                        ) : (
-                            <View style={styles.posterPlaceholder}>
-                                {placeHolderImage}
+                    <View>
+                        <View style={[styles.poster, { height: imageHeight }]}>
+                            {imageUrl && (
+                                <Image
+                                    source={{ uri: imageUrl }}
+                                    style={styles.posterImage}
+                                    contentFit="cover"
+                                    cachePolicy="disk"
+                                    allowDownscaling
+                                    decodeFormat="rgb"
+                                />
+                            )}
+                            {promoCode && (
+                                <View style={styles.discountBadge}>
+                                    <Text style={styles.discountText}>
+                                        {promoCode.discount_type === 'percent'
+                                            ? `${promoCode.discount}% off`
+                                            : `$${promoCode.discount} off`}
+                                    </Text>
+                                </View>
+                            )}
+                            {typeTagLabel && (
+                                <View
+                                    style={[
+                                        styles.typeTagBadge,
+                                        {
+                                            backgroundColor: typeTagColors.background,
+                                            borderColor: typeTagColors.border || 'rgba(255, 255, 255, 0.25)',
+                                        },
+                                    ]}
+                                >
+                                    <Text style={[styles.typeTagText, { color: typeTagColors.text }]}>
+                                        {typeTagLabel}
+                                    </Text>
+                                </View>
+                            )}
+                            <View style={[styles.heartOverlay, { top: heartTop }]}>
+                                <WishlistHeart
+                                    itemIsOnWishlist={itemIsOnWishlist}
+                                    handleToggleEventWishlist={handleToggleEventWishlist}
+                                    size={heartSize}
+                                    variant="thick-outline"
+                                />
                             </View>
-                        )}
-                        <LinearGradient
-                            colors={[colors.overlayNone, colors.overlayDeep]}
-                            style={styles.posterGradient}
-                        />
-                        {promoCode && (
-                            <View style={styles.discountBadge}>
-                                <Text style={styles.discountText}>
-                                    {promoCode.discount_type === 'percent'
-                                        ? `${promoCode.discount}% off`
-                                        : `$${promoCode.discount} off`}
-                                </Text>
-                            </View>
-                        )}
-                        <View style={styles.posterActions}>
-                            <WishlistHeart
-                                itemIsOnWishlist={itemIsOnWishlist}
-                                handleToggleEventWishlist={handleToggleEventWishlist}
-                                size={24}
-                            />
+                            {(attendees?.length ?? 0) > 0 && (
+                                <View
+                                    style={[
+                                        styles.attendeeWrap,
+                                        { bottom: spacing.xs, right: spacing.xs },
+                                    ]}
+                                >
+                                    <AttendeeCarousel attendees={attendees} scrollEnabled={false} />
+                                </View>
+                            )}
                         </View>
-                        <View style={styles.posterFooter}>
-                            <Text style={styles.eventTitle} numberOfLines={1}>
-                                {item.name}
-                            </Text>
+                        <LinearGradient
+                            colors={['rgba(255, 255, 255, 0.9)', 'rgba(241, 235, 255, 0.75)']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 0, y: 1 }}
+                            style={[
+                                styles.detailsPanel,
+                                !useAutoHeight && { height: detailsHeight },
+                                hasFooter && styles.detailsPanelWithFooter,
+                            ]}
+                        >
                             <View style={styles.organizerRow}>
                                 <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || colors.textDisabled }]} />
                                 <Text style={styles.organizerName} numberOfLines={1}>
                                     {item.organizer?.name}
                                 </Text>
                             </View>
-                        </View>
+                            <Text
+                                style={styles.eventTitle}
+                                numberOfLines={2}
+                                onTextLayout={(event) => {
+                                    const nextLineCount = event.nativeEvent.lines?.length ?? 0;
+                                    if (nextLineCount && nextLineCount !== titleLineCount) {
+                                        setTitleLineCount(nextLineCount);
+                                    }
+                                }}
+                            >
+                                {item.name}
+                            </Text>
+                            <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator={false}
+                                style={isSingleLineTitle && !hasFooter ? styles.metaRowSingleLine : undefined}
+                                contentContainerStyle={styles.metaRow}
+                                onScrollBeginDrag={() => setScrolling(true)}
+                                onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
+                            >
+                                {metaItems.map((meta, index) => (
+                                    <View key={meta.key} style={styles.metaItem}>
+                                        {meta.icon && (
+                                            <FAIcon name={meta.icon} size={12} color={colors.textMuted} style={styles.metaIcon} />
+                                        )}
+                                        <Text
+                                            style={[
+                                                styles.metaText,
+                                                meta.key === 'date' && styles.metaTextStrong,
+                                            ]}
+                                            numberOfLines={1}
+                                        >
+                                            {meta.label}
+                                        </Text>
+                                        {index < metaItems.length - 1 && (
+                                            <Text style={styles.metaSeparator}>.</Text>
+                                        )}
+                                    </View>
+                                ))}
+                            </ScrollView>
+                        </LinearGradient>
                     </View>
-
-                    <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        contentContainerStyle={styles.metaRow}
-                        onScrollBeginDrag={() => setScrolling(true)}
-                        onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
-                    >
-                        {metaItems.map((meta, index) => (
-                            <View key={meta.key} style={styles.metaItem}>
-                                {meta.icon && (
-                                    <FAIcon name={meta.icon} size={12} color={colors.textMuted} style={styles.metaIcon} />
-                                )}
-                                <Text style={styles.metaText} numberOfLines={1}>{meta.label}</Text>
-                                {index < metaItems.length - 1 && (
-                                    <Text style={styles.metaSeparator}>.</Text>
-                                )}
-                            </View>
-                        ))}
-                    </ScrollView>
-
-                    {(tagChips.length > 0 || attendees.length > 0) && (
-                        <View style={styles.tagRowContainer}>
-                            {tagChips.length > 0 ? (
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    contentContainerStyle={styles.tagRow}
-                                    style={styles.tagRowScroll}
-                                    onScrollBeginDrag={() => setScrolling(true)}
-                                    onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
-                                >
-                                    {tagChips.map((tag) => {
-                                        const key = tag.label.toLowerCase();
-                                        const colors =
-                                            tag.kind === 'level'
-                                                ? levelChipColors
-                                                : tag.kind === 'tag'
-                                                    ? getTagTone(tag.label)
-                                                    : tagChipColors[key] || TAG_TONES.default;
-                                        return (
-                                            <View
-                                                key={`${item.id}-${tag.label}`}
-                                                style={[
-                                                    styles.tagChip,
-                                                    { backgroundColor: colors.background, borderColor: colors.border },
-                                                ]}
-                                            >
-                                                {tag.kind === 'type' && (
-                                                    <FAIcon
-                                                        name={TYPE_ICONS[key] || 'calendar'}
-                                                        size={11}
-                                                        color={colors.text}
-                                                        style={styles.tagChipIcon}
-                                                    />
-                                                )}
-                                                {tag.kind === 'tag' && (
-                                                    <FAIcon
-                                                        name="tag"
-                                                        size={11}
-                                                        color={colors.text}
-                                                        style={styles.tagChipIcon}
-                                                    />
-                                                )}
-                                                {tag.kind === 'level' && (
-                                                    <FAIcon
-                                                        name="signal"
-                                                        size={11}
-                                                        color={colors.text}
-                                                        style={styles.tagChipIcon}
-                                                    />
-                                                )}
-                                                <Text
-                                                    style={[
-                                                        styles.tagChipText,
-                                                        { color: colors.text },
-                                                    ]}
-                                                    numberOfLines={1}
-                                                >
-                                                    {tag.label}
-                                                </Text>
-                                            </View>
-                                        );
-                                    })}
-                                </ScrollView>
-                            ) : (
-                                <View style={styles.tagRowSpacer} />
-                            )}
-                            {attendees.length > 0 && (
-                                <View style={styles.attendeeWrap}>
-                                    <AttendeeCarousel attendees={attendees} scrollEnabled={false} />
-                                </View>
-                            )}
-                        </View>
-                    )}
                 </TouchableOpacity>
                 {footerContent && (
                     <View style={styles.footer}>{footerContent}</View>
@@ -343,7 +268,8 @@ export const EventListItem: React.FC<ListItemProps> = ({
 };
 
 
-export const ITEM_HEIGHT = 285;
+const CARD_HEIGHT = 220;
+export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
 
 const styles = StyleSheet.create({
     // Container
@@ -374,56 +300,62 @@ const styles = StyleSheet.create({
     footer: {
         borderTopWidth: 1,
         borderTopColor: colors.borderSubtle,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.smPlus,
         backgroundColor: colors.white,
     },
     poster: {
-        height: 192,
         width: '100%',
-        backgroundColor: colors.surfaceSubtle,
+        backgroundColor: colors.textDisabled,
+        position: 'relative',
     },
     posterImage: {
-        width: '100%',
-        height: '100%',
+        ...StyleSheet.absoluteFillObject,
     },
-    posterPlaceholder: {
-        width: '100%',
-        height: '100%',
-        justifyContent: 'center',
+    heartOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
         alignItems: 'center',
-        backgroundColor: colors.borderLight,
     },
-    posterGradient: {
+    detailsPanel: {
+        backgroundColor: colors.surfaceWhiteFrosted,
+        paddingHorizontal: spacing.mdPlus,
+        paddingTop: spacing.smPlus,
+        paddingBottom: spacing.smPlus,
+        borderTopWidth: StyleSheet.hairlineWidth,
+        borderTopColor: 'rgba(255, 255, 255, 0.65)',
+    },
+    detailsPanelWithFooter: {
+        paddingBottom: spacing.mdPlus,
+    },
+    typeTagBadge: {
         position: 'absolute',
-        left: 0,
+        top: 0,
         right: 0,
-        bottom: 0,
-        height: 110,
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.xs,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        borderWidth: 1,
+        borderRadius: radius.pill,
+        borderTopRightRadius: radius.lg,
+        borderBottomRightRadius: 0,
     },
-    posterFooter: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.lg,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    posterActions: {
-        position: 'absolute',
-        right: spacing.md,
-        top: spacing.md,
+    typeTagText: {
+        fontSize: fontSizes.smPlus,
+        fontWeight: '700',
+        color: colors.textOnDarkStrong,
     },
     eventTitle: {
-        fontSize: fontSizes.xxl,
+        fontSize: fontSizes.xl,
         fontWeight: '700',
-        color: colors.white,
+        color: colors.textDeep,
+        marginTop: spacing.xsPlus,
     },
     organizerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: spacing.xs,
+        marginBottom: spacing.xxs,
     },
     organizerDot: {
         width: 8,
@@ -433,15 +365,18 @@ const styles = StyleSheet.create({
     },
     organizerName: {
         fontSize: fontSizes.sm,
-        color: colors.textOnDarkStrong,
+        color: colors.textMuted,
     },
     discountBadge: {
         position: 'absolute',
-        left: spacing.mdPlus,
-        top: spacing.sm,
-        backgroundColor: colors.gold,
-        borderRadius: 8,
-        paddingHorizontal: spacing.smPlus,
+        top: 0,
+        left: 0,
+        backgroundColor: 'rgba(255, 215, 0, 0.8)',
+        borderTopLeftRadius: radius.lg,
+        borderBottomLeftRadius: 0,
+        borderTopRightRadius: radius.lg,
+        borderBottomRightRadius: radius.pill,
+        paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
         shadowColor: colors.black,
         shadowOpacity: 0.2,
@@ -459,9 +394,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'flex-start',
         flexGrow: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.sm,
+        paddingTop: 0,
+    },
+    metaRowSingleLine: {
+        marginTop: -spacing.smPlus,
     },
     metaItem: {
         flexDirection: 'row',
@@ -484,48 +420,22 @@ const styles = StyleSheet.create({
         flexShrink: 1,
         textAlign: 'left',
     },
-    tagRowContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xs,
-        paddingBottom: spacing.xs,
-        marginTop: 0,
-        minHeight: 44,
-    },
-    tagRowScroll: {
-        flexGrow: 1,
-        flexShrink: 1,
-    },
-    tagRow: {
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-    tagRowSpacer: {
-        flexGrow: 1,
-        flexShrink: 1,
-    },
-    tagChip: {
-        borderRadius: radius.pill,
-        paddingHorizontal: spacing.mdPlus,
-        paddingVertical: spacing.xs,
-        marginRight: spacing.sm,
-        borderWidth: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    tagChipIcon: {
-        marginRight: spacing.xs,
-    },
-    tagChipText: {
-        fontSize: fontSizes.sm,
-        fontWeight: '600',
+    metaTextStrong: {
+        fontWeight: '700',
+        color: colors.textDeep,
     },
     attendeeWrap: {
-        marginLeft: spacing.smPlus,
-        maxWidth: '33%',
+        position: 'absolute',
         alignItems: 'flex-end',
-        flexShrink: 0,
-        overflow: 'hidden',
+        maxWidth: '45%',
+        paddingHorizontal: spacing.xs,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.black,
+        shadowColor: colors.black,
+        shadowOpacity: 0.25,
+        shadowRadius: 8,
+        shadowOffset: { width: 0, height: 2 },
+        elevation: 3,
     },
 });

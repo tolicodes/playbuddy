@@ -13,7 +13,7 @@ export const usePromoCode = (): {
 } | null => {
     const { currentDeepLink } = useUserContext();
 
-    if (!currentDeepLink) return null;
+    if (!currentDeepLink || currentDeepLink.type === 'generic') return null;
 
     const featuredEvent = currentDeepLink?.featured_event;
 
@@ -31,7 +31,11 @@ export const getEventPromoCodes = (event: Event): PromoCode[] => {
     // Determine promo code from event or organizer.
     const eventPromoCode = event.promo_codes?.find(code => code.scope === 'event');
     const organizerPromoCode = event.organizer?.promo_codes?.find(code => code.scope === 'organizer');
-    const featuredPromoCode = currentDeepLink?.featured_event?.id === event.id ? currentDeepLink?.featured_promo_code : null;
+    const featuredPromoCode = currentDeepLink?.type === 'generic'
+        ? null
+        : currentDeepLink?.featured_event?.id === event.id
+            ? currentDeepLink?.featured_promo_code
+            : null;
     const promoCode = featuredPromoCode || eventPromoCode || organizerPromoCode;
 
     return promoCode ? [promoCode] : [];
