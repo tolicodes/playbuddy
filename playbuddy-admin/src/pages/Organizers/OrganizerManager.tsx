@@ -1,7 +1,7 @@
 import React, { useDeferredValue, useMemo, useState } from 'react';
 import {
     Box, Stack, Typography, Paper, Table, TableHead, TableRow, TableCell, TableBody,
-    TextField, Button, Chip, Divider, Pagination
+    TextField, Button, Chip, Divider, Pagination, Switch
 } from '@mui/material';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
@@ -14,7 +14,7 @@ export default function OrganizerManager() {
     const [search, setSearch] = useState('');
     const deferredSearch = useDeferredValue(search);
     const [page, setPage] = useState(1);
-    const [hideNoEvents, setHideNoEvents] = useState(false);
+    const [hideNoEvents, setHideNoEvents] = useState(true);
     const [showOnlyHidden, setShowOnlyHidden] = useState(false);
     const pageSize = 50;
 
@@ -66,6 +66,16 @@ export default function OrganizerManager() {
         setDrafts(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: val } }));
     };
 
+    const toggleHidden = async (org: Organizer, nextHidden: boolean) => {
+        const prevHidden = (drafts[org.id]?.hidden ?? org.hidden) ?? false;
+        setDraft(org.id, 'hidden', nextHidden);
+        try {
+            await updateOrganizer.mutateAsync({ id: org.id, hidden: nextHidden });
+        } catch {
+            setDraft(org.id, 'hidden', prevHidden);
+        }
+    };
+
     const save = async (org: Organizer) => {
         const draft = drafts[org.id] || {};
         await updateOrganizer.mutateAsync({
@@ -77,6 +87,7 @@ export default function OrganizerManager() {
                 : draft.aliases ?? org.aliases,
             fetlife_handle: draft.fetlife_handle ?? org.fetlife_handle,
             instagram_handle: draft.instagram_handle ?? org.instagram_handle,
+            hidden: draft.hidden ?? org.hidden,
         });
     };
 
@@ -132,6 +143,7 @@ export default function OrganizerManager() {
                             const aliasString = draft.aliases !== undefined
                                 ? (typeof draft.aliases === 'string' ? draft.aliases : (draft.aliases || []).join(', '))
                                 : (org.aliases || []).join(', ');
+                            const isHidden = (draft.hidden ?? org.hidden) ?? false;
                             return (
                                 <TableRow key={org.id} hover>
                                     <TableCell sx={{ minWidth: 180 }}>
@@ -149,13 +161,11 @@ export default function OrganizerManager() {
                                         />
                                     </TableCell>
                                     <TableCell>
-                                        <Chip
-                                            label={org.hidden ? 'Hidden' : 'Visible'}
-                                            size="small"
-                                            color={org.hidden ? 'warning' : 'success'}
-                                            onClick={() => setDraft(org.id, 'hidden', !org.hidden)}
-                                            clickable
-                                            variant="outlined"
+                                        <Switch
+                                            checked={isHidden}
+                                            onChange={(e) => toggleHidden(org, e.target.checked)}
+                                            color="warning"
+                                            inputProps={{ 'aria-label': 'Toggle hidden organizer' }}
                                         />
                                     </TableCell>
                                     <TableCell sx={{ minWidth: 200 }}>

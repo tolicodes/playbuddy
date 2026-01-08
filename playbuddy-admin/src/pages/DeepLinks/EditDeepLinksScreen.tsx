@@ -98,6 +98,7 @@ export default function AddDeepLinkForm() {
                     <MenuItem value="event_promo_code">Event Promo Code</MenuItem>
                     <MenuItem value="weekly_picks">Weekly Picks</MenuItem>
                     <MenuItem value="organizer_promo_code">Organizer Promo Code</MenuItem>
+                    <MenuItem value="generic">Generic</MenuItem>
                 </TextField>
 
                 {(type === 'event_promo_code') && (
