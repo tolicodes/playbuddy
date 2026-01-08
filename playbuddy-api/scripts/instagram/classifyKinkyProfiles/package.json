@@ -1,0 +1,27 @@
+{
+  "name": "classifykinkyprofiles",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "scripts": {
+    "start": "ts-node index.ts",
+    "dev": "ts-node --transpile-only index.ts",
+    "reclassify": "ts-node reclassifyLLM.ts",
+    "socialgraph": "ts-node socialGraph.ts",
+    "followinggraph": "ts-node followingGraph.ts",
+    "followingscore": "ts-node computeFollowingScores.ts",
+    "outsiders": "ts-node outsiders.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "openai": "^5.23.1",
+    "p-limit": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
