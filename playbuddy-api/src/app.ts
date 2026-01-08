@@ -29,7 +29,7 @@ import marketingRoute from './routes/marketing.js'
 import attendeesRoute from './routes/attendees.js'
 import followsRoute from './routes/follows.js'
 import classificationsRoute from './routes/classifications.js'
-import scriptsRoute from './routes/scripts.js'
+import visualizerRoute from './routes/visualizer.js'
 import importSourcesRoute from './routes/import_sources.js'
 
 console.log('API Started')
@@ -90,6 +90,11 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use((req, res, next) => {
+  console.log(`[request] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Routes setup (wrapped to surface async errors)
 app.use('/events', wrapRouter(eventsRoute));
 app.use('/kinks', wrapRouter(kinksRoute));
@@ -110,8 +115,17 @@ app.use('/marketing', wrapRouter(marketingRoute));
 app.use('/attendees', wrapRouter(attendeesRoute));
 app.use('/follows', wrapRouter(followsRoute));
 app.use('/classifications', wrapRouter(classificationsRoute));
-app.use('/scripts', wrapRouter(scriptsRoute));
+app.use('/visualizer', wrapRouter(visualizerRoute));
 app.use('/import_sources', wrapRouter(importSourcesRoute));
+
+// Log and return 404s for unmatched routes
+app.use((req, res, next) => {
+  if (res.headersSent) {
+    return next();
+  }
+  console.warn(`[404] ${req.method} ${req.originalUrl}`);
+  res.status(404).json({ error: 'Not Found' });
+});
 
 // Sentry error handler should be before any other error middleware
 Sentry.setupExpressErrorHandler(app);
