@@ -1,5 +1,16 @@
-import React, { Suspense, useEffect, useRef } from "react";
-import { View, StyleSheet, ActivityIndicator, TouchableOpacity, Text, Animated, Platform, StatusBar } from "react-native";
+import React, { Suspense, useEffect, useMemo, useRef } from "react";
+import {
+    View,
+    StyleSheet,
+    ActivityIndicator,
+    TouchableOpacity,
+    Text,
+    Animated,
+    Platform,
+    StatusBar,
+    Alert,
+    Image,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import HeaderLoginButton from "../../Pages/Auth/Buttons/HeaderLoginButton";
@@ -7,9 +18,12 @@ import { navigateToAuth, navigateToTab } from "../Nav/navigationHelpers";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
-import { Image } from "react-native";
 import { NavigationProp, ParamListBase, useRoute } from "@react-navigation/native";
-import { colors, fontFamilies, fontSizes, spacing } from "../../components/styles";
+import { colors, fontFamilies, fontSizes, radius, spacing } from "../../components/styles";
+import { useCommonContext } from "../hooks/CommonContext";
+import { useJoinCommunity, useLeaveCommunity } from "../hooks/useCommunities";
+import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import type { NavStackProps } from "../Nav/NavStackType";
 
 // Custom Back Button
 export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: NavigationProp<ParamListBase>, backToWelcome?: boolean }) => {
@@ -73,14 +87,103 @@ const HeaderTitleText = ({ title, isSmall }: { title: string; isSmall?: boolean 
     );
 };
 
+const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+const CommunityHeaderFollowButton = ({
+    communityId,
+    communityIds,
+}: {
+    communityId?: string;
+    communityIds?: string[];
+}) => {
+    const { authUserId } = useUserContext();
+    const { myCommunities } = useCommonContext();
+    const joinCommunity = useJoinCommunity();
+    const leaveCommunity = useLeaveCommunity();
+
+    const joinableIds = useMemo(() => {
+        const ids = communityIds?.length ? communityIds : communityId ? [communityId] : [];
+        return ids.filter((id) => isUuid(id));
+    }, [communityId, communityIds]);
+
+    const myCommunityIds = useMemo(
+        () => new Set(myCommunities.allMyCommunities?.map((community) => community.id) || []),
+        [myCommunities]
+    );
+
+    const isJoined = joinableIds.some((id) => myCommunityIds.has(id));
+    const canFollow = joinableIds.length > 0;
+
+    const handlePress = () => {
+        if (!canFollow) return;
+        if (!authUserId) {
+            Alert.alert('Create an account to join a community!');
+            return;
+        }
+        if (isJoined) {
+            joinableIds.forEach((targetId) => {
+                if (!myCommunityIds.has(targetId)) return;
+                leaveCommunity.mutate({ community_id: targetId });
+                logEvent('community_events_community_left', { communityId: targetId });
+            });
+            return;
+        }
+        joinableIds.forEach((targetId) => {
+            if (myCommunityIds.has(targetId)) return;
+            joinCommunity.mutate({ community_id: targetId, type: 'organizer_public_community' });
+            logEvent('community_events_community_joined', { communityId: targetId });
+        });
+    };
+
+    return (
+        <TouchableOpacity
+            style={[
+                styles.headerFollowButton,
+                isJoined ? styles.headerFollowButtonActive : styles.headerFollowButtonInactive,
+                !canFollow && styles.headerFollowButtonDisabled,
+            ]}
+            onPress={handlePress}
+            activeOpacity={0.85}
+            accessibilityRole="button"
+            accessibilityLabel={isJoined ? "Following community" : "Follow community"}
+            disabled={!canFollow}
+        >
+            <IonIcon
+                name={isJoined ? "heart" : "heart-outline"}
+                size={16}
+                color={isJoined ? colors.white : colors.headerPurple}
+                style={styles.headerFollowIcon}
+            />
+            <Text style={[styles.headerFollowText, isJoined && styles.headerFollowTextActive]}>
+                {isJoined ? "Following" : "Follow"}
+            </Text>
+        </TouchableOpacity>
+    );
+};
+
 // Header Right (Login)
-export const HeaderRight = () => (
-    <View style={styles.rightContainer}>
-        <Suspense fallback={<ActivityIndicator color={colors.white} />}>
-            <HeaderLoginButton headerButton size={28} />
-        </Suspense>
-    </View>
-);
+export const HeaderRight = () => {
+    const route = useRoute();
+    const communityParams =
+        route.name === 'Community Events'
+            ? (route.params as Partial<NavStackProps['Community Events']> | undefined)
+            : undefined;
+
+    return (
+        <View style={styles.rightContainer}>
+            {communityParams && (
+                <CommunityHeaderFollowButton
+                    communityId={communityParams.communityId}
+                    communityIds={communityParams.communityIds}
+                />
+            )}
+            <Suspense fallback={<ActivityIndicator color={colors.white} />}>
+                <HeaderLoginButton headerButton size={28} />
+            </Suspense>
+        </View>
+    );
+};
 
 // Main Header Component
 const Header = ({
@@ -186,9 +289,42 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     rightContainer: {
-        width: 44,
-        justifyContent: 'center',
-        alignItems: 'flex-end',
+        minWidth: 44,
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+    },
+    headerFollowButton: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.smPlus,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        marginRight: spacing.sm,
+    },
+    headerFollowButtonActive: {
+        backgroundColor: colors.surfaceGlass,
+        borderColor: colors.borderOnDarkStrong,
+    },
+    headerFollowButtonInactive: {
+        backgroundColor: colors.white,
+        borderColor: colors.white,
+    },
+    headerFollowButtonDisabled: {
+        opacity: 0.5,
+    },
+    headerFollowIcon: {
+        marginRight: spacing.xs,
+    },
+    headerFollowText: {
+        color: colors.headerPurple,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+    },
+    headerFollowTextActive: {
+        color: colors.white,
     },
     iconButton: {
         padding: spacing.sm,

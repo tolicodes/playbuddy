@@ -1,18 +1,19 @@
 import { AuthenticatedRequest } from "../middleware/authenticateRequest.js";
-import { supabaseClient } from "../connections/supabaseClient.js";
 import { Request, Response, Router } from 'express';
 import { connectRedisClient } from '../connections/redisClient.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 export const fetchLocationAreas = async (req: AuthenticatedRequest, res: Response) => {
     const cacheKey = 'locationAreas';
     const redisClient = await connectRedisClient();
-    const responseData = await fetchAndCacheData(redisClient, cacheKey, () => {
-        return supabaseClient
-            .from('location_areas')
-            .select('id, name, code')
-            .order('name');
-    });
+    const responseData = await fetchAndCacheData(redisClient, cacheKey, () =>
+        fetchAllRows({
+            from: 'location_areas',
+            select: 'id, name, code',
+            queryModifier: (query) => query.order('name', { ascending: true }),
+        })
+    );
 
     res.json(JSON.parse(responseData));
 }

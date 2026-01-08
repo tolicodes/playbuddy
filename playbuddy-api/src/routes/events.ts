@@ -14,6 +14,7 @@ import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import scrapeRoutes from './eventsScrape.js';
 import { ADMIN_EMAILS } from '../config.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 import {
     forceGenerateWeeklyPicksImage,
     getCachedWeeklyPicksImage,
@@ -146,15 +147,13 @@ router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest,
 }));
 
 router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-    const cacheKey = "events";
+    const cacheKeyBase = "events";
     const flushCache = req.query.flushCache === 'true'; // Check for the flushCache query param
     const nycMidnightUTC = moment.tz('America/New_York').startOf('day').format('YYYY-MM-DD HH:mm:ssZ');
     const calendarType = req.query.wishlist ? "wishlist" : "calendar";
     const includeHiddenOrganizers = req.query.includeHiddenOrganizers === 'true';
     const includeHiddenEvents = req.query.includeHidden === 'true';
-    const visibilityParam = req.query.visibility;
-    const hasCustomFlags = includeHiddenOrganizers || includeHiddenEvents || !!visibilityParam || calendarType !== 'calendar';
-    const cacheKeyWithFlags = cacheKey; // always use base cache key
+    const cacheKey = includeHiddenEvents ? `${cacheKeyBase}:includeHidden` : cacheKeyBase;
 
     if (req.query.visibility === 'private') {
         if (!req.authUserId) {
@@ -172,12 +171,10 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
             console.error('[events] redis unavailable, proceeding without cache', err);
         }
 
-        const runQuery = () => {
-            let query =
-                // @ts-ignore
-                supabaseClient
-                    .from("events")
-                    .select(`
+        const runQuery = () =>
+            fetchAllRows({
+                from: "events",
+                select: `
           *,
           organizer:organizers(*, promo_codes(*)),
           communities!inner(id, name, organizer_id),
@@ -195,31 +192,21 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
                 interactivity_level,
                 inclusivity
             )
-        `)
-                    .gte("start_date", nycMidnightUTC);
-
-            if (!includeHiddenEvents) {
-                query = query.eq('hidden', false);
-            }
-
-            return query;
-        };
+        `,
+                queryModifier: (query) => {
+                    let scoped = query.gte("start_date", nycMidnightUTC);
+                    if (!includeHiddenEvents) {
+                        scoped = scoped.eq('hidden', false);
+                    }
+                    return scoped.order('start_date', { ascending: true }).order('id', { ascending: true });
+                },
+            });
 
         let responseData: string;
         if (redisClient) {
-            if (hasCustomFlags) {
-                console.log(`Flushing cache for key: ${cacheKeyWithFlags} due to custom flags`, req.query);
-                await redisClient.del(cacheKeyWithFlags);
-                responseData = JSON.stringify((await runQuery()).data || []);
-            } else {
-                if (flushCache) {
-                    console.log(`Flushing cache for key: ${cacheKeyWithFlags}`);
-                    await redisClient.del(cacheKeyWithFlags);
-                }
-                responseData = await fetchAndCacheData(redisClient, cacheKeyWithFlags, runQuery, flushCache);
-            }
+            responseData = await fetchAndCacheData(redisClient, cacheKey, runQuery, flushCache);
         } else {
-            responseData = JSON.stringify((await runQuery()).data || []);
+            responseData = JSON.stringify(await runQuery());
         }
 
         let response = JSON.parse(responseData);

@@ -6,6 +6,7 @@ import type { Facilitator, Media } from '../common/types/commonTypes.js';
 import { authenticateAdminRequest, authenticateRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import { syncEntityMedia } from './helpers/syncMedia.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 
 const router = Router();
@@ -44,17 +45,17 @@ const facilitatorFields = `
 `;
 
 async function fetchFacilitators(authUserId?: string) {
-    let query = supabaseClient
-        .from('facilitators')
-        .select(facilitatorFields)
-        .order('name', { ascending: true });
-
-    if (authUserId) {
-        query = query.eq('facilitator_followers.auth_user_id', authUserId);
-    }
-
-    const { data, error } = await query;
-    if (error) throw error;
+    const data = await fetchAllRows({
+        from: 'facilitators',
+        select: facilitatorFields,
+        queryModifier: (query) => {
+            let scoped = query.order('name', { ascending: true });
+            if (authUserId) {
+                scoped = scoped.eq('facilitator_followers.auth_user_id', authUserId);
+            }
+            return scoped;
+        },
+    });
 
     return (data || []).map((f: any) => {
         const event_ids = (f.facilitator_events ?? []).map((fe: any) => fe.event_id);

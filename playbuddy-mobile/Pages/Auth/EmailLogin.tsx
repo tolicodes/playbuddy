@@ -261,11 +261,17 @@ const styles = StyleSheet.create({
         backgroundColor: colors.brandBright,
         borderRadius: radius.md,
         paddingVertical: spacing.md,
+        paddingHorizontal: spacing.md,
+        alignItems: 'center',
+        justifyContent: 'center',
         ...shadows.button,
     },
     buttonTitle: {
         fontWeight: '600',
         fontFamily: fontFamilies.body,
+        fontSize: fontSizes.lg,
+        color: colors.white,
+        textAlign: 'center',
     },
     buttonContainer: {
         marginTop: spacing.smPlus,

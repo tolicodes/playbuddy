@@ -19,6 +19,14 @@ const SOURCES = ['fetlife_handle', 'eb_url', 'url'];
 const ID_TYPES = ['handle', 'url'];
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').toLowerCase().trim();
+const getOrganizerFetlifeHandles = (org: any) => {
+    const handles = [
+        ...(org?.fetlife_handles || []),
+        org?.fetlife_handle,
+    ];
+    const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
+    return Array.from(new Set(normalized));
+};
 
 const formatOrganizer = (src: ImportSource): string => {
     const meta = src?.metadata || {};
@@ -75,8 +83,11 @@ export default function ImportSourcesScreen() {
         const looksLikeHandle = !/^https?:\/\//i.test(identifier || '');
         const norm = (isHandleType || looksLikeHandle) ? normalizeHandle(identifier) : '';
         if (!organizerId || !norm) return;
+        const org = organizers.find((item: any) => String(item?.id) === String(organizerId));
+        const existingHandles = org ? getOrganizerFetlifeHandles(org) : [];
+        const nextHandles = Array.from(new Set([...existingHandles, norm]));
         try {
-            await updateOrganizer.mutateAsync({ id: Number(organizerId), fetlife_handle: norm });
+            await updateOrganizer.mutateAsync({ id: Number(organizerId), fetlife_handles: nextHandles });
         } catch (err) {
             console.warn('Failed to update organizer handle', err);
         }
@@ -104,10 +115,11 @@ export default function ImportSourcesScreen() {
         const map: Record<string, string> = {};
         organizers.forEach((org: any) => {
             if (!org?.name) return;
-            [org.fetlife_handle, org.instagram_handle].forEach((h: string | null | undefined) => {
-                const norm = normalizeHandle(h);
-                if (norm && !map[norm]) map[norm] = org.name;
+            getOrganizerFetlifeHandles(org).forEach((handle) => {
+                if (handle && !map[handle]) map[handle] = org.name;
             });
+            const ig = normalizeHandle(org.instagram_handle);
+            if (ig && !map[ig]) map[ig] = org.name;
         });
         return map;
     }, [organizers]);
@@ -116,7 +128,7 @@ export default function ImportSourcesScreen() {
         const map: Record<string, string> = {};
         organizers.forEach((org: any) => {
             if (!org?.id) return;
-            map[String(org.id)] = org.name || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`;
+            map[String(org.id)] = org.name || org.fetlife_handles?.[0] || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`;
         });
         return map;
     }, [organizers]);
@@ -126,10 +138,11 @@ export default function ImportSourcesScreen() {
         organizers.forEach((org: any) => {
             const id = org?.id ? String(org.id) : '';
             if (!id) return;
-            [org.fetlife_handle, org.instagram_handle].forEach((h: string | null | undefined) => {
-                const norm = normalizeHandle(h);
-                if (norm && !map[norm]) map[norm] = id;
+            getOrganizerFetlifeHandles(org).forEach((handle) => {
+                if (handle && !map[handle]) map[handle] = id;
             });
+            const ig = normalizeHandle(org.instagram_handle);
+            if (ig && !map[ig]) map[ig] = id;
         });
         return map;
     }, [organizers]);
@@ -160,8 +173,8 @@ export default function ImportSourcesScreen() {
     const organizerOptions: OrganizerOption[] = useMemo(() => {
         return organizers.map((org: any) => ({
             id: String(org.id),
-            label: org.name || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`,
-            handles: [org.fetlife_handle, org.instagram_handle].filter(Boolean).join(' • '),
+            label: org.name || org.fetlife_handles?.[0] || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`,
+            handles: [...getOrganizerFetlifeHandles(org), normalizeHandle(org.instagram_handle)].filter(Boolean).join(' • '),
         }));
     }, [organizers]);
 
@@ -297,7 +310,11 @@ export default function ImportSourcesScreen() {
     const fetEventsByHandle = useMemo(() => {
         const map: Record<string, Event[]> = {};
         events.forEach((ev: Event) => {
-            const handle = normalizeHandle((ev as any)?.fetlife_handle || (ev as any)?.organizer?.fetlife_handle);
+            const handle = normalizeHandle(
+                (ev as any)?.fetlife_handle
+                || (ev as any)?.organizer?.fetlife_handle
+                || (ev as any)?.organizer?.fetlife_handles?.[0]
+            );
             if (!handle) return;
             if (!map[handle]) map[handle] = [];
             map[handle].push(ev);

@@ -222,12 +222,6 @@ type EventDetailsProps = AnalyticsProps & {
     event_id?: number | null;
 }
 
-type EventListViewMode = 'image' | 'classic';
-
-type EventListItemClickProps = EventDetailsProps & {
-    list_view_mode?: EventListViewMode;
-};
-
 /**
  * 2) Map event names to their payload shapes (or null for no props)
  */
@@ -380,7 +374,7 @@ export interface EventPayloadMap {
     [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
 
     // Event-List
-    [UE.EventListItemClicked]: EventListItemClickProps
+    [UE.EventListItemClicked]: EventDetailsProps
     [UE.EventListItemDiscountModalOpened]: EventDetailsProps
     [UE.EventListItemTicketPressed]: EventDetailsProps
     [UE.EventListItemWishlistToggled]: EventDetailsProps & {

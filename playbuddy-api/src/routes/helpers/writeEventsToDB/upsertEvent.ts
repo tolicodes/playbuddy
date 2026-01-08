@@ -26,6 +26,15 @@ type ClassificationInput = {
 };
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+const getOrganizerFetlifeHandles = (organizer?: CreateOrganizerInput | null) => {
+    if (!organizer) return [];
+    const handles = [
+        ...(organizer.fetlife_handles || []),
+        organizer.fetlife_handle,
+    ];
+    const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
+    return Array.from(new Set(normalized));
+};
 
 // stash originals before overriding
 const originalLog = console.log;
@@ -46,7 +55,8 @@ function prepareOrganizer(event: NormalizedEventInput) {
 
     let organizerId: string | undefined;
 
-    const logName = organizer?.name || organizerId || organizer?.instagram_handle || organizer?.fetlife_handle || 'Unknown';
+    const fallbackFetlife = organizer?.fetlife_handle || organizer?.fetlife_handles?.[0];
+    const logName = organizer?.name || organizerId || organizer?.instagram_handle || fallbackFetlife || 'Unknown';
     log(`ORGANIZER: ${logName}`);
 
     if (!organizer && !organizerId) {
@@ -114,6 +124,16 @@ async function resolveExistingEvent(event: NormalizedEventInput, organizerId: st
     return await checkExistingEvent(event, organizerId);
 }
 
+const ensureImportSourcesForHandles = async (
+    handles: string[],
+    organizerId?: string | number | null,
+    isApproved?: boolean
+) => {
+    for (const handle of handles) {
+        await ensureImportSourceForHandle(handle, organizerId, isApproved);
+    }
+};
+
 async function attachCommunities(eventId: string, communities: any[], organizerCommunityId?: string) {
     for (const community of communities) {
         if (!('id' in community)) {
@@ -161,10 +181,11 @@ export async function upsertEvent(
         const isApprovedEvent = normalizedEvent.approval_status === 'approved';
 
         const existingEvent = await resolveExistingEvent(normalizedEvent, organizerId);
+        const organizerFetlifeHandles = getOrganizerFetlifeHandles(normalizedEvent.organizer);
 
         if (existingEvent?.frozen && !opts.ignoreFrozen) {
             log(`EVENT: Skipping frozen event ${existingEvent.id}`);
-            await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
             return { result: 'skipped', event: null };
         }
 
@@ -173,11 +194,11 @@ export async function upsertEvent(
             if (shouldApproveExisting) {
                 const approvedEvent = await setApprovalStatus(existingEvent.id, normalizedEvent.approval_status!);
                 log(`EVENT: Updated approval_status for existing event ${existingEvent.id} -> ${normalizedEvent.approval_status}`);
-                await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+                await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
                 return { result: 'updated', event: approvedEvent };
             }
             log(`EVENT: Skipping existing event ${existingEvent.id} (skipExisting=true)`);
-            await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
             return { result: 'skipped', event: null };
         }
 
@@ -224,7 +245,7 @@ export async function upsertEvent(
 
         log(`EVENT: ${existingEvent?.id ? 'Updated' : 'Inserted'}`);
 
-        await ensureImportSourceForHandle(normalizedEvent.organizer?.fetlife_handle, organizerId, isApprovedEvent);
+        await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
 
         return {
             result: existingEvent?.id ? 'updated' : 'inserted',

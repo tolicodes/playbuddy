@@ -6,6 +6,7 @@ import {
     TextInput,
     TouchableOpacity,
     FlatList,
+    Modal,
     Switch,
     ActivityIndicator,
     Alert,
@@ -14,6 +15,7 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import { useFetchOrganizers } from '../../Common/db-axios/useOrganizers';
+import { useMergeOrganizer } from '../../Common/db-axios/useMergeOrganizer';
 import { useUpdateOrganizer } from '../../Common/db-axios/useUpdateOrganizer';
 import type { Organizer } from '../../Common/types/commonTypes';
 import { useUserContext } from '../Auth/hooks/UserContext';
@@ -28,8 +30,24 @@ import {
     spacing,
 } from '../../components/styles';
 
-type OrganizerDraft = Partial<Organizer> & { aliases?: string | string[] | null };
+type OrganizerDraft = Partial<Organizer> & {
+    aliases?: string | string[] | null;
+    fetlife_handles?: string | string[] | null;
+};
 type OrganizerWithCounts = Organizer & { _futureCount: number; _totalCount: number };
+type OrganizerOption = { id: number; label: string; handles?: string };
+
+const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+const formatOrganizerLabel = (org: Organizer) =>
+    org.name || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`;
+const collectFetlifeHandles = (org: Organizer) => {
+    const handles = [
+        ...(org.fetlife_handles || []),
+        org.fetlife_handle,
+    ];
+    const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
+    return Array.from(new Set(normalized));
+};
 
 const parseAliases = (value: OrganizerDraft['aliases'], fallback?: string[] | null) => {
     if (value === undefined) return fallback ?? null;
@@ -48,18 +66,141 @@ const deriveAliasValue = (draftValue: OrganizerDraft['aliases'], fallback?: stri
     return (draftValue || []).join(', ');
 };
 
+const parseFetlifeHandles = (
+    value: OrganizerDraft['fetlife_handles'],
+    fallbackHandles?: string[] | null,
+    fallbackSingle?: string | null
+) => {
+    if (value === undefined) {
+        const handles = [
+            ...(fallbackHandles || []),
+            fallbackSingle,
+        ];
+        const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
+        return Array.from(new Set(normalized));
+    }
+    if (typeof value === 'string') {
+        return value
+            .split(/[,\n]/)
+            .map((handle) => normalizeHandle(handle))
+            .filter(Boolean);
+    }
+    const normalized = (value || []).map((handle) => normalizeHandle(handle)).filter(Boolean);
+    return Array.from(new Set(normalized));
+};
+
+const deriveFetlifeHandleValue = (
+    draftValue: OrganizerDraft['fetlife_handles'],
+    fallbackHandles?: string[] | null,
+    fallbackSingle?: string | null
+) => {
+    if (draftValue === undefined) {
+        const handles = [
+            ...(fallbackHandles || []),
+            fallbackSingle,
+        ].filter(Boolean) as string[];
+        return handles.join(', ');
+    }
+    if (typeof draftValue === 'string') return draftValue;
+    return (draftValue || []).join(', ');
+};
+
+type OrganizerAdminHeaderProps = {
+    search: string;
+    onSearchChange: (value: string) => void;
+    hideNoEvents: boolean;
+    onToggleHideNoEvents: () => void;
+    showOnlyHidden: boolean;
+    onToggleShowOnlyHidden: () => void;
+    filteredCount: number;
+    isSaving: boolean;
+};
+
+const OrganizerAdminHeader = React.memo((props: OrganizerAdminHeaderProps) => {
+    const {
+        search,
+        onSearchChange,
+        hideNoEvents,
+        onToggleHideNoEvents,
+        showOnlyHidden,
+        onToggleShowOnlyHidden,
+        filteredCount,
+        isSaving,
+    } = props;
+
+    return (
+        <View>
+            <View style={styles.heroCard}>
+                <View style={styles.heroIcon}>
+                    <FAIcon name="users" size={18} color={colors.brandBlue} />
+                </View>
+                <Text style={styles.heroTitle}>Organizer Admin</Text>
+                <Text style={styles.heroSubtitle}>
+                    Edit organizer names, handles, aliases, and visibility.
+                </Text>
+            </View>
+
+            <View style={styles.filterCard}>
+                <View style={styles.searchRow}>
+                    <Ionicons name="search" size={16} color={colors.textSubtle} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search name, handle, alias"
+                        placeholderTextColor={colors.textSubtle}
+                        value={search}
+                        onChangeText={onSearchChange}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                    />
+                </View>
+                <View style={styles.filterRow}>
+                    <TouchableOpacity
+                        style={[styles.filterPill, hideNoEvents && styles.filterPillActive]}
+                        onPress={onToggleHideNoEvents}
+                    >
+                        <Text style={[styles.filterText, hideNoEvents && styles.filterTextActive]}>
+                            Hide no-events
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterPill, showOnlyHidden && styles.filterPillActive]}
+                        onPress={onToggleShowOnlyHidden}
+                    >
+                        <Text style={[styles.filterText, showOnlyHidden && styles.filterTextActive]}>
+                            Hidden only
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.filterMetaRow}>
+                    <Text style={styles.filterMetaText}>{filteredCount} organizers</Text>
+                    {isSaving && (
+                        <Text style={styles.filterMetaText}>Saving...</Text>
+                    )}
+                </View>
+            </View>
+        </View>
+    );
+});
+
+OrganizerAdminHeader.displayName = 'OrganizerAdminHeader';
+
 export const OrganizerAdminScreen = () => {
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
     const { data: organizers = [], isLoading, error } = useFetchOrganizers({ includeHidden: true });
     const updateOrganizer = useUpdateOrganizer();
+    const mergeOrganizer = useMergeOrganizer();
 
     const [drafts, setDrafts] = useState<Record<number, OrganizerDraft>>({});
     const [search, setSearch] = useState('');
     const [hideNoEvents, setHideNoEvents] = useState(true);
     const [showOnlyHidden, setShowOnlyHidden] = useState(false);
     const [savingId, setSavingId] = useState<number | null>(null);
+    const [mergeModalVisible, setMergeModalVisible] = useState(false);
+    const [mergeSource, setMergeSource] = useState<OrganizerWithCounts | null>(null);
+    const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
+    const [mergeSearch, setMergeSearch] = useState('');
 
     const setDraft = (id: number, key: keyof OrganizerDraft, value: any) => {
         setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: value } }));
@@ -104,13 +245,47 @@ export const OrganizerAdminScreen = () => {
                     futureCount,
                     totalCount,
                     name: (org.name || '').toLowerCase(),
-                    fet: (org.fetlife_handle || '').toLowerCase(),
+                    fet: collectFetlifeHandles(org),
                     ig: (org.instagram_handle || '').toLowerCase(),
                     aliases: (org.aliases || []).map((alias) => (alias || '').toLowerCase()),
                 };
             })
             .sort((a, b) => (a.org.name || '').localeCompare(b.org.name || ''));
     }, [organizers]);
+
+    const organizerOptions = useMemo<OrganizerOption[]>(() => {
+        return [...organizers]
+            .map((org) => {
+                const handles = [
+                    ...collectFetlifeHandles(org),
+                    normalizeHandle(org.instagram_handle),
+                ].filter(Boolean);
+                return {
+                    id: org.id,
+                    label: formatOrganizerLabel(org),
+                    handles: handles.join(' • '),
+                };
+            })
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [organizers]);
+
+    const mergeOptions = useMemo(() => {
+        if (!mergeSource) return organizerOptions;
+        return organizerOptions.filter((option) => option.id !== mergeSource.id);
+    }, [organizerOptions, mergeSource]);
+
+    const filteredMergeOptions = useMemo(() => {
+        const needle = mergeSearch.trim().toLowerCase();
+        if (!needle) return mergeOptions;
+        return mergeOptions.filter((option) => {
+            const handles = option.handles?.toLowerCase() || '';
+            return (
+                option.label.toLowerCase().includes(needle) ||
+                handles.includes(needle) ||
+                String(option.id).includes(needle)
+            );
+        });
+    }, [mergeOptions, mergeSearch]);
 
     const filtered = useMemo(() => {
         const needle = search.trim().toLowerCase();
@@ -121,7 +296,7 @@ export const OrganizerAdminScreen = () => {
                 if (!needle) return true;
                 return (
                     item.name.includes(needle) ||
-                    item.fet.includes(needle) ||
+                    item.fet.some((handle) => handle.includes(needle)) ||
                     item.ig.includes(needle) ||
                     item.aliases.some((alias) => alias.includes(needle))
                 );
@@ -157,7 +332,7 @@ export const OrganizerAdminScreen = () => {
                 name: draft.name ?? org.name,
                 url: draft.url ?? org.url,
                 aliases: parseAliases(draft.aliases, org.aliases),
-                fetlife_handle: draft.fetlife_handle ?? org.fetlife_handle,
+                fetlife_handles: parseFetlifeHandles(draft.fetlife_handles, org.fetlife_handles, org.fetlife_handle),
                 instagram_handle: draft.instagram_handle ?? org.instagram_handle,
                 hidden: draft.hidden ?? org.hidden,
                 membership_app_url: draft.membership_app_url ?? org.membership_app_url,
@@ -169,6 +344,60 @@ export const OrganizerAdminScreen = () => {
         } finally {
             setSavingId(null);
         }
+    };
+
+    const openMergeModal = (org: OrganizerWithCounts) => {
+        setMergeSource(org);
+        setMergeTarget(null);
+        setMergeSearch('');
+        setMergeModalVisible(true);
+    };
+
+    const closeMergeModal = () => {
+        if (mergeOrganizer.isPending) return;
+        setMergeModalVisible(false);
+        setMergeSource(null);
+        setMergeTarget(null);
+        setMergeSearch('');
+    };
+
+    const runMerge = async (sourceId: number, targetId: number) => {
+        try {
+            const result = await mergeOrganizer.mutateAsync({
+                sourceOrganizerId: sourceId,
+                targetOrganizerId: targetId,
+                deleteSource: true,
+            });
+            closeMergeModal();
+            if (result?.warnings?.length) {
+                const warningText = result.warnings.map((warn) => `${warn.table}: ${warn.message}`).join('\n');
+                Alert.alert('Merge completed with warnings', warningText);
+            } else {
+                Alert.alert('Merge complete', `Organizer #${sourceId} merged into #${targetId}.`);
+            }
+        } catch (err: any) {
+            Alert.alert('Merge failed', err?.message || 'Unable to merge organizers.');
+        }
+    };
+
+    const confirmMerge = () => {
+        if (!mergeSource || !mergeTarget) {
+            Alert.alert('Missing info', 'Pick a destination organizer to merge into.');
+            return;
+        }
+        if (mergeSource.id === mergeTarget.id) {
+            Alert.alert('Invalid merge', 'Source and target organizers must be different.');
+            return;
+        }
+        const sourceLabel = formatOrganizerLabel(mergeSource);
+        Alert.alert(
+            'Confirm merge',
+            `Merge "${sourceLabel}" (#${mergeSource.id}) into "${mergeTarget.label}" (#${mergeTarget.id})? This moves events, communities, promo codes, facilitators, deep links, and munches, then deletes the source organizer.`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Merge', style: 'destructive', onPress: () => void runMerge(mergeSource.id, mergeTarget.id) },
+            ]
+        );
     };
 
     if (!isAdmin) {
@@ -204,64 +433,12 @@ export const OrganizerAdminScreen = () => {
         );
     }
 
-    const renderHeader = () => (
-        <View>
-            <View style={styles.heroCard}>
-                <View style={styles.heroIcon}>
-                    <FAIcon name="users" size={18} color={colors.brandBlue} />
-                </View>
-                <Text style={styles.heroTitle}>Organizer Admin</Text>
-                <Text style={styles.heroSubtitle}>
-                    Edit organizer names, handles, aliases, and visibility.
-                </Text>
-            </View>
-
-            <View style={styles.filterCard}>
-                <View style={styles.searchRow}>
-                    <Ionicons name="search" size={16} color={colors.textSubtle} />
-                    <TextInput
-                        style={styles.searchInput}
-                        placeholder="Search name, handle, alias"
-                        placeholderTextColor={colors.textSubtle}
-                        value={search}
-                        onChangeText={setSearch}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                    />
-                </View>
-                <View style={styles.filterRow}>
-                    <TouchableOpacity
-                        style={[styles.filterPill, hideNoEvents && styles.filterPillActive]}
-                        onPress={() => setHideNoEvents((prev) => !prev)}
-                    >
-                        <Text style={[styles.filterText, hideNoEvents && styles.filterTextActive]}>
-                            Hide no-events
-                        </Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.filterPill, showOnlyHidden && styles.filterPillActive]}
-                        onPress={() => setShowOnlyHidden((prev) => !prev)}
-                    >
-                        <Text style={[styles.filterText, showOnlyHidden && styles.filterTextActive]}>
-                            Hidden only
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.filterMetaRow}>
-                    <Text style={styles.filterMetaText}>{filtered.length} organizers</Text>
-                    {updateOrganizer.isPending && (
-                        <Text style={styles.filterMetaText}>Saving...</Text>
-                    )}
-                </View>
-            </View>
-        </View>
-    );
-
     const renderItem = ({ item }: { item: OrganizerWithCounts }) => {
         const draft = drafts[item.id] || {};
         const hiddenValue = (draft.hidden ?? item.hidden) ?? false;
         const membershipOnlyValue = (draft.membership_only ?? item.membership_only) ?? false;
         const aliasValue = deriveAliasValue(draft.aliases, item.aliases);
+        const fetlifeHandlesValue = deriveFetlifeHandleValue(draft.fetlife_handles, item.fetlife_handles, item.fetlife_handle);
         const hasChanges = Object.keys(draft).length > 0;
         const isSaving = updateOrganizer.isPending && savingId === item.id;
 
@@ -320,12 +497,12 @@ export const OrganizerAdminScreen = () => {
 
                 <View style={styles.fieldRow}>
                     <View style={styles.fieldCol}>
-                        <Text style={styles.label}>Fetlife</Text>
+                        <Text style={styles.label}>FetLife handles</Text>
                         <TextInput
                             style={styles.input}
-                            value={draft.fetlife_handle ?? item.fetlife_handle ?? ''}
-                            onChangeText={(value) => setDraft(item.id, 'fetlife_handle', value)}
-                            placeholder="@handle"
+                            value={fetlifeHandlesValue}
+                            onChangeText={(value) => setDraft(item.id, 'fetlife_handles', value)}
+                            placeholder="@handle1, @handle2"
                             placeholderTextColor={colors.textSubtle}
                             autoCapitalize="none"
                             autoCorrect={false}
@@ -401,25 +578,131 @@ export const OrganizerAdminScreen = () => {
                         </Text>
                     )}
                 </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[
+                        styles.mergeInlineButton,
+                        mergeOrganizer.isPending && styles.mergeInlineButtonDisabled,
+                    ]}
+                    onPress={() => openMergeModal(item)}
+                    disabled={mergeOrganizer.isPending}
+                >
+                    {mergeOrganizer.isPending && mergeSource?.id === item.id ? (
+                        <ActivityIndicator size="small" color={colors.white} />
+                    ) : (
+                        <Text style={styles.mergeInlineButtonText}>Merge into…</Text>
+                    )}
+                </TouchableOpacity>
             </View>
         );
     };
 
     return (
-        <FlatList
-            data={filtered}
-            keyExtractor={(item) => String(item.id)}
-            renderItem={renderItem}
-            ListHeaderComponent={renderHeader}
-            ListEmptyComponent={
-                <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>No organizers found.</Text>
+        <>
+            <FlatList
+                data={filtered}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={renderItem}
+                ListHeaderComponent={
+                    <OrganizerAdminHeader
+                        search={search}
+                        onSearchChange={setSearch}
+                        hideNoEvents={hideNoEvents}
+                        onToggleHideNoEvents={() => setHideNoEvents((prev) => !prev)}
+                        showOnlyHidden={showOnlyHidden}
+                        onToggleShowOnlyHidden={() => setShowOnlyHidden((prev) => !prev)}
+                        filteredCount={filtered.length}
+                        isSaving={updateOrganizer.isPending}
+                    />
+                }
+                ListEmptyComponent={
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyText}>No organizers found.</Text>
+                    </View>
+                }
+                contentContainerStyle={styles.listContent}
+                style={styles.list}
+                keyboardShouldPersistTaps="handled"
+            />
+            <Modal
+                transparent
+                visible={mergeModalVisible}
+                animationType="fade"
+                onRequestClose={closeMergeModal}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalCard}>
+                        <Text style={styles.modalTitle}>Merge organizer</Text>
+                        <Text style={styles.modalSubtitle}>
+                            {mergeSource
+                                ? `Merge "${formatOrganizerLabel(mergeSource)}" (#${mergeSource.id}) into:`
+                                : 'Choose a destination organizer.'}
+                        </Text>
+                        <TextInput
+                            style={styles.modalSearchInput}
+                            value={mergeSearch}
+                            onChangeText={setMergeSearch}
+                            placeholder="Type to search destination organizer"
+                            placeholderTextColor={colors.textSubtle}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                        <FlatList
+                            data={filteredMergeOptions}
+                            keyExtractor={(item) => String(item.id)}
+                            style={styles.modalList}
+                            renderItem={({ item }) => {
+                                const isSelected = mergeTarget?.id === item.id;
+                                return (
+                                    <TouchableOpacity
+                                        style={[
+                                            styles.modalOption,
+                                            isSelected && styles.modalOptionSelected,
+                                        ]}
+                                        onPress={() => setMergeTarget(item)}
+                                    >
+                                        <Text style={styles.modalOptionLabel}>{item.label}</Text>
+                                        {!!item.handles && (
+                                            <Text style={styles.modalOptionHandles}>{item.handles}</Text>
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            }}
+                            ListEmptyComponent={
+                                <Text style={styles.modalEmpty}>No organizers match your search.</Text>
+                            }
+                        />
+                        <Text style={styles.modalHint}>
+                            Destination organizer stays; source organizer is deleted after moving events,
+                            communities, promo codes, facilitators, deep links, and munches.
+                        </Text>
+                        <View style={styles.modalActions}>
+                            <TouchableOpacity
+                                style={styles.modalCancelButton}
+                                onPress={closeMergeModal}
+                                disabled={mergeOrganizer.isPending}
+                            >
+                                <Text style={styles.modalCancelText}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[
+                                    styles.modalMergeButton,
+                                    (!mergeTarget || mergeOrganizer.isPending) && styles.modalMergeButtonDisabled,
+                                ]}
+                                onPress={confirmMerge}
+                                disabled={!mergeTarget || mergeOrganizer.isPending}
+                            >
+                                {mergeOrganizer.isPending ? (
+                                    <ActivityIndicator size="small" color={colors.white} />
+                                ) : (
+                                    <Text style={styles.modalMergeText}>Merge into destination</Text>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
                 </View>
-            }
-            contentContainerStyle={styles.listContent}
-            style={styles.list}
-            keyboardShouldPersistTaps="handled"
-        />
+            </Modal>
+        </>
     );
 };
 
@@ -637,6 +920,23 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         fontFamily: fontFamilies.body,
     },
+    mergeInlineButton: {
+        marginTop: spacing.sm,
+        backgroundColor: colors.danger,
+        borderRadius: radius.pill,
+        paddingVertical: spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    mergeInlineButtonDisabled: {
+        backgroundColor: colors.brandMuted,
+    },
+    mergeInlineButtonText: {
+        color: colors.white,
+        fontSize: fontSizes.smPlus,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
+    },
     emptyState: {
         padding: spacing.xl,
         alignItems: 'center',
@@ -664,6 +964,124 @@ const styles = StyleSheet.create({
         color: colors.danger,
         margin: spacing.lg,
         fontFamily: fontFamilies.body,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(15, 23, 42, 0.6)',
+        padding: spacing.lg,
+        justifyContent: 'center',
+    },
+    modalCard: {
+        backgroundColor: colors.white,
+        borderRadius: radius.lg,
+        padding: spacing.lg,
+        ...shadows.card,
+    },
+    modalTitle: {
+        fontSize: fontSizes.lg,
+        fontWeight: '700',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.display,
+    },
+    modalSubtitle: {
+        marginTop: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
+    },
+    modalSearchInput: {
+        marginTop: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
+        backgroundColor: colors.surfaceWhiteStrong,
+        fontFamily: fontFamilies.body,
+    },
+    modalList: {
+        marginTop: spacing.md,
+        maxHeight: 220,
+    },
+    modalOption: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
+        backgroundColor: colors.surfaceSubtle,
+        marginBottom: spacing.sm,
+    },
+    modalOptionSelected: {
+        borderColor: colors.brandIndigo,
+        backgroundColor: colors.surfaceInfo,
+    },
+    modalOptionLabel: {
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
+    modalOptionHandles: {
+        marginTop: spacing.xs,
+        fontSize: fontSizes.xs,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    modalEmpty: {
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.sm,
+    },
+    modalHint: {
+        marginTop: spacing.sm,
+        fontSize: fontSizes.xs,
+        color: colors.textMuted,
+        lineHeight: lineHeights.sm,
+        fontFamily: fontFamilies.body,
+    },
+    modalActions: {
+        marginTop: spacing.md,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        gap: spacing.sm,
+    },
+    modalCancelButton: {
+        flex: 1,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        borderRadius: radius.pill,
+        paddingVertical: spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceWhiteStrong,
+    },
+    modalCancelText: {
+        fontSize: fontSizes.smPlus,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
+    modalMergeButton: {
+        flex: 1,
+        borderRadius: radius.pill,
+        paddingVertical: spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.danger,
+    },
+    modalMergeButtonDisabled: {
+        backgroundColor: colors.brandMuted,
+    },
+    modalMergeText: {
+        fontSize: fontSizes.smPlus,
+        color: colors.white,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
     },
     lockedCard: {
         margin: spacing.lg,

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
     Animated,
+    Image,
     View,
     StyleSheet,
     SectionList,
@@ -9,32 +10,39 @@ import {
     Pressable,
     Text,
     TouchableOpacity,
+    ScrollView,
     useWindowDimensions,
 } from "react-native";
-import { useIsFocused, useRoute } from "@react-navigation/native";
+import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
 import moment from "moment-timezone";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 
 import { useFetchEvents } from "../../../Common/db-axios/useEvents";
+import { useFetchFollows } from "../../../Common/db-axios/useFollows";
+import { useCommonContext } from "../../../Common/hooks/CommonContext";
 import { getAvailableOrganizers } from "../hooks/calendarUtils";
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from "../hooks/eventHelpers";
 import { useGroupedEvents } from "../hooks/useGroupedEvents";
 import { useUserContext } from "../../Auth/hooks/UserContext";
 import { FiltersView, FilterState } from "./Filters/FiltersView";
-import EventList from "./EventList";
+import EventList, { EVENT_SECTION_HEADER_HEIGHT } from "./EventList";
+import { ITEM_HEIGHT } from "./EventListItem";
+import { CLASSIC_ITEM_HEIGHT } from "./EventListItemClassic";
 import { EventListViewIntroModal } from "./EventListViewIntroModal";
 import { logEvent } from "../../../Common/hooks/logger";
 import { ADMIN_EMAILS, MISC_URLS } from "../../../config";
-import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
+import { EventWithMetadata, NavStack } from "../../../Common/Nav/NavStackType";
 import { PopupManager } from "../../PopupManager";
 import { TopBar, ChipTone, QuickFilterItem, TypeaheadSuggestion, ActiveFilterChip } from "./TopBar";
 import { WeekStrip } from "./WeekStrip";
 import { SECTION_DATE_FORMAT } from "../hooks/useGroupedEventsMain";
+import { formatDate } from "../hooks/calendarUtils";
 import { getAllClassificationsFromEvents } from "../../../utils/getAllClassificationsFromEvents";
 import { UE } from "../../../userEventTypes";
 import { useEventAnalyticsProps } from "../../../Common/hooks/useAnalytics";
+import { navigateToTab } from "../../../Common/Nav/navigationHelpers";
 import {
     calendarExperienceTone,
     calendarInteractivityTones,
@@ -44,7 +52,9 @@ import {
     eventListThemes,
     fontFamilies,
     fontSizes,
+    lineHeights,
     radius,
+    shadows,
     spacing,
 } from "../../../components/styles";
 
@@ -77,6 +87,8 @@ const DATE_COACH_COUNT_KEY = "dateCoachShownCount";
 const DATE_COACH_LAST_SHOWN_KEY = "dateCoachLastShownAt";
 const DATE_COACH_MAX_SHOWS = 3;
 const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+const FAVORITE_ORGANIZERS_NOTICE_KEY = "favoriteOrganizersNoticeDismissed";
+const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
 
 const EventCalendarView: React.FC<Props> = ({
     events,
@@ -89,14 +101,24 @@ const EventCalendarView: React.FC<Props> = ({
     const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
     const [showDateToast, setShowDateToast] = useState(false);
     const [dateCoachMeta, setDateCoachMeta] = useState<DateCoachMeta | null>(null);
+    const [showFavoritesNotice, setShowFavoritesNotice] = useState<boolean | null>(null);
+    const [recommendationsHidden, setRecommendationsHidden] = useState<boolean | null>(null);
+    const [listHeaderHeight, setListHeaderHeight] = useState(0);
+    const [recommendationsLaneWidth, setRecommendationsLaneWidth] = useState(0);
+    const pendingScrollDateRef = useRef<Date | null>(null);
+    const lastScrollDateRef = useRef<Date | null>(null);
+    const lastScrollHeaderHeightRef = useRef<number | null>(null);
     const pendingCoachRef = useRef(false);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const toastAnim = useRef(new Animated.Value(0)).current;
-    const { userProfile } = useUserContext();
+    const { authUserId, userProfile, currentDeepLink } = useUserContext();
+    const navigation = useNavigation<NavStack>();
+    const { myCommunities } = useCommonContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const { data: fetchedEvents = [], isLoading: isLoadingEvents } = useFetchEvents({
         includeApprovalPending: isAdmin,
     });
+    const { data: follows } = useFetchFollows(authUserId);
     const organizers = useMemo(() => getAvailableOrganizers(fetchedEvents), [fetchedEvents]);
     const organizerColorMap = useMemo(() => mapOrganizerColors(organizers as any), [organizers]);
     const eventsWithMetadata = useMemo(
@@ -108,6 +130,30 @@ const EventCalendarView: React.FC<Props> = ({
         [events, eventsWithMetadata, organizerColorMap]
     );
     const isLoadingList = events ? false : isLoadingEvents;
+    const isMainEventsView = !events && entity === "events";
+    const organizerIdsFromCommunities = useMemo(() => {
+        const organizerCommunities = [
+            ...myCommunities.myOrganizerPublicCommunities,
+            ...myCommunities.myOrganizerPrivateCommunities,
+        ];
+        return organizerCommunities
+            .map((community) => community.organizer_id)
+            .filter(Boolean)
+            .map((id) => id.toString());
+    }, [myCommunities.myOrganizerPrivateCommunities, myCommunities.myOrganizerPublicCommunities]);
+    const followedOrganizerIds = useMemo(() => {
+        const followIds = (follows?.organizer || []).map((id) => id.toString());
+        return new Set([...followIds, ...organizerIdsFromCommunities]);
+    }, [follows?.organizer, organizerIdsFromCommunities]);
+    const hasFollowedOrganizers = followedOrganizerIds.size > 0;
+    const { width: windowWidth } = useWindowDimensions();
+    const recommendationCardWidth = useMemo(() => {
+        const baseWidth =
+            recommendationsLaneWidth > 0
+                ? recommendationsLaneWidth
+                : Math.max(0, windowWidth - spacing.lg * 2 - spacing.md * 2);
+        return Math.round(baseWidth * 0.4);
+    }, [recommendationsLaneWidth, windowWidth]);
     const isFocused = useIsFocused();
     const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
     const [showListViewIntro, setShowListViewIntro] = useState(false);
@@ -157,6 +203,23 @@ const EventCalendarView: React.FC<Props> = ({
             isActive = false;
         };
     }, []);
+
+    useEffect(() => {
+        if (!isMainEventsView) return;
+        let isActive = true;
+        AsyncStorage.multiGet([
+            FAVORITE_ORGANIZERS_NOTICE_KEY,
+            RECOMMENDATIONS_HIDDEN_KEY,
+        ]).then((entries) => {
+            if (!isActive) return;
+            const entryMap = new Map(entries);
+            setShowFavoritesNotice(entryMap.get(FAVORITE_ORGANIZERS_NOTICE_KEY) !== "true");
+            setRecommendationsHidden(entryMap.get(RECOMMENDATIONS_HIDDEN_KEY) === "true");
+        });
+        return () => {
+            isActive = false;
+        };
+    }, [isMainEventsView]);
 
     useEffect(() => {
         let isActive = true;
@@ -230,17 +293,35 @@ const EventCalendarView: React.FC<Props> = ({
     const eventListTheme = 'welcome' as const;
     const eventListConfig = eventListThemes[eventListTheme];
     const eventListColors = eventListConfig.colors;
-    const { width: windowWidth } = useWindowDimensions();
     const monthModalWidth = Math.max(0, windowWidth - spacing.lg * 2);
 
     const sectionListRef = useRef<SectionList>(null);
     const route = useRoute();
     const scrollToTopToken = (route.params as { scrollToTop?: number } | undefined)?.scrollToTop;
 
+    const scrollListToOffset = (offset: number, animated = true) => {
+        const list = sectionListRef.current;
+        if (!list) return;
+        if (typeof list.scrollToOffset === "function") {
+            list.scrollToOffset({ offset, animated });
+            return;
+        }
+        const responder = (list as { getScrollResponder?: () => { scrollTo?: (options: { y: number; animated: boolean }) => void } })
+            .getScrollResponder?.();
+        if (typeof responder?.scrollTo === "function") {
+            responder.scrollTo({ y: offset, animated });
+            return;
+        }
+        const fallback = list as { scrollTo?: (options: { y: number; animated: boolean }) => void };
+        if (typeof fallback.scrollTo === "function") {
+            fallback.scrollTo({ y: offset, animated });
+        }
+    };
+
     useEffect(() => {
         if (!scrollToTopToken) return;
         requestAnimationFrame(() => {
-            sectionListRef.current?.scrollToOffset({ offset: 0, animated: true });
+            scrollListToOffset(0);
         });
     }, [scrollToTopToken]);
 
@@ -447,6 +528,73 @@ const EventCalendarView: React.FC<Props> = ({
             return matchesTags && matchesExp && matchesInter && matchesType;
         });
     }, [sourceEvents, searchQuery, filters, quickFilter]);
+
+    const recommendations = useMemo(() => {
+        if (!isMainEventsView || !sourceEvents || followedOrganizerIds.size === 0) {
+            return [] as EventWithMetadata[];
+        }
+
+        const now = moment().tz(TZ).startOf("day");
+        const cutoff = moment(now).add(14, "days").endOf("day");
+
+        const organizerEvents = sourceEvents.filter((event) => {
+            const organizerId = event.organizer?.id?.toString();
+            if (!organizerId || !followedOrganizerIds.has(organizerId)) return false;
+            const eventStart = moment.tz(event.start_date, TZ);
+            if (!eventStart.isValid()) return false;
+            return !eventStart.isBefore(now);
+        });
+
+        const eligible = organizerEvents.filter((event) => {
+            const eventStart = moment.tz(event.start_date, TZ);
+            return !eventStart.isAfter(cutoff);
+        });
+
+        const hasPromo = (event: EventWithMetadata) =>
+            (event.promo_codes && event.promo_codes.length > 0) ||
+            (event.organizer?.promo_codes && event.organizer.promo_codes.length > 0);
+
+        const shuffle = <T,>(items: T[]) => {
+            const shuffled = [...items];
+            for (let i = shuffled.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        };
+
+        const promoEvents = organizerEvents.filter(hasPromo);
+        const pickedPromo = shuffle(promoEvents).slice(0, 2);
+        const pickedPromoIds = new Set(pickedPromo.map((event) => event.id));
+        const promoFillNeeded = Math.max(0, 2 - pickedPromo.length);
+        const promoFill =
+            promoFillNeeded > 0
+                ? shuffle(organizerEvents.filter((event) => !pickedPromoIds.has(event.id))).slice(
+                    0,
+                    promoFillNeeded
+                )
+                : [];
+        const selectedPromo = [...pickedPromo, ...promoFill];
+
+        const pickedIds = new Set(selectedPromo.map((event) => event.id));
+        const nonPromoRemaining = eligible.filter(
+            (event) => !pickedIds.has(event.id) && !hasPromo(event)
+        );
+        const fallbackRemaining = eligible.filter((event) => !pickedIds.has(event.id));
+        const initialPicks = shuffle(nonPromoRemaining).slice(0, 3);
+        const randomPickIds = new Set(initialPicks.map((event) => event.id));
+        const remainingSlots = 3 - initialPicks.length;
+        const fillerPicks =
+            remainingSlots > 0
+                ? shuffle(fallbackRemaining.filter((event) => !randomPickIds.has(event.id))).slice(
+                    0,
+                    remainingSlots
+                )
+                : [];
+        const randomPicks = [...initialPicks, ...fillerPicks];
+
+        return [...selectedPromo, ...randomPicks];
+    }, [followedOrganizerIds, isMainEventsView, sourceEvents]);
 
     const selectedQuickFilterId = quickFilter
         ? quickFilter.type === 'category'
@@ -710,14 +858,21 @@ const EventCalendarView: React.FC<Props> = ({
     const hasEventsOnDay = (d: Date | string) => hasEventsOnDayNY(filteredEvents, d);
 
     const scrollToDate = (date: Date) => {
+        lastScrollDateRef.current = date;
+        if (hasListHeader && listHeaderHeight === 0) {
+            pendingScrollDateRef.current = date;
+            return;
+        }
         const formatted = moment(date).tz(TZ).format(SECTION_DATE_FORMAT);
         const idx = sections.findIndex((s) => s.title === formatted);
         if (idx !== -1 && sectionListRef.current) {
-            sectionListRef.current.scrollToLocation({
-                sectionIndex: idx,
-                itemIndex: 0,
-                animated: true,
-            });
+            const rowHeight = listViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
+            const headerOffset = hasListHeader ? listHeaderHeight : 0;
+            const offset = sections.slice(0, idx).reduce((total, section) => {
+                return total + EVENT_SECTION_HEADER_HEIGHT + section.data.length * rowHeight;
+            }, headerOffset);
+            lastScrollHeaderHeightRef.current = headerOffset;
+            scrollListToOffset(Math.max(0, offset));
         }
     };
 
@@ -849,6 +1004,79 @@ const EventCalendarView: React.FC<Props> = ({
     const handleStripLongPress = (day: Date) => {
         openMonthModal(day);
     };
+
+    const handleDismissFavoritesNotice = () => {
+        setShowFavoritesNotice(false);
+        void AsyncStorage.setItem(FAVORITE_ORGANIZERS_NOTICE_KEY, "true");
+    };
+
+    const handleFollowOrganizersPress = () => {
+        navigateToTab(navigation, "Organizers", { screen: "Follow Organizers" });
+    };
+
+    const handleHideRecommendations = () => {
+        setRecommendationsHidden(true);
+        void AsyncStorage.setItem(RECOMMENDATIONS_HIDDEN_KEY, "true");
+    };
+
+    const handleShowRecommendations = () => {
+        setRecommendationsHidden(false);
+        void AsyncStorage.setItem(RECOMMENDATIONS_HIDDEN_KEY, "false");
+    };
+
+    const handleRecommendationPress = (event: EventWithMetadata) => {
+        navigation.push("Event Details", {
+            selectedEvent: event,
+            title: event.name,
+        });
+    };
+
+    const shouldShowRecommendations =
+        isMainEventsView && hasFollowedOrganizers && recommendationsHidden !== true;
+    const shouldShowHiddenRecommendations =
+        isMainEventsView && hasFollowedOrganizers && recommendationsHidden === true;
+    const hasListHeader = shouldShowRecommendations || shouldShowHiddenRecommendations;
+    const shouldShowFavoritesNotice =
+        isMainEventsView && showFavoritesNotice === true && !hasFollowedOrganizers;
+
+    useEffect(() => {
+        if (!__DEV__ || !isMainEventsView) return;
+        console.log("[recommendations] state", {
+            hasFollowedOrganizers,
+            followedOrganizerCount: followedOrganizerIds.size,
+            recommendationsHidden,
+            recommendationsCount: recommendations.length,
+        });
+    }, [
+        hasFollowedOrganizers,
+        followedOrganizerIds.size,
+        isMainEventsView,
+        recommendations.length,
+        recommendationsHidden,
+    ]);
+
+    useEffect(() => {
+        if (shouldShowRecommendations || shouldShowHiddenRecommendations) return;
+        setListHeaderHeight(0);
+    }, [shouldShowRecommendations, shouldShowHiddenRecommendations]);
+
+    useEffect(() => {
+        if (listHeaderHeight === 0 || !pendingScrollDateRef.current) return;
+        const target = pendingScrollDateRef.current;
+        pendingScrollDateRef.current = null;
+        requestAnimationFrame(() => scrollToDate(target));
+    }, [listHeaderHeight]);
+
+    useEffect(() => {
+        if (!lastScrollDateRef.current) return;
+        if (hasListHeader && listHeaderHeight === 0) {
+            pendingScrollDateRef.current = lastScrollDateRef.current;
+            return;
+        }
+        const headerOffset = hasListHeader ? listHeaderHeight : 0;
+        if (lastScrollHeaderHeightRef.current === headerOffset) return;
+        requestAnimationFrame(() => scrollToDate(lastScrollDateRef.current as Date));
+    }, [hasListHeader, listHeaderHeight]);
 
     const toastTranslateY = toastAnim.interpolate({
         inputRange: [0, 1],
@@ -1003,6 +1231,32 @@ const EventCalendarView: React.FC<Props> = ({
                 <View style={styles.headerDivider} />
             </View>
 
+            {shouldShowFavoritesNotice && (
+                <View style={styles.noticeCard}>
+                    <View style={styles.noticeIcon}>
+                        <FAIcon name="star" size={12} color={colors.textGold} />
+                    </View>
+                    <Text style={styles.noticeText}>
+                        <Text
+                            style={styles.noticeLink}
+                            onPress={handleFollowOrganizersPress}
+                            accessibilityRole="link"
+                        >
+                            Follow
+                        </Text>
+                        {' '}favorite organizers to see personalized recommendations.
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.noticeClose}
+                        onPress={handleDismissFavoritesNotice}
+                        accessibilityRole="button"
+                        accessibilityLabel="Dismiss notice"
+                    >
+                        <FAIcon name="times" size={12} color={colors.textGoldMuted} />
+                    </TouchableOpacity>
+                </View>
+            )}
+
             <Modal
                 transparent
                 animationType="fade"
@@ -1094,6 +1348,132 @@ const EventCalendarView: React.FC<Props> = ({
                     sectionListRef={sectionListRef}
                     isLoadingEvents={isLoadingList}
                     viewMode={listViewMode}
+                    listHeaderHeight={listHeaderHeight}
+                    listHeaderComponent={
+                        shouldShowRecommendations ? (
+                            <View
+                                style={styles.recommendationsHeaderWrap}
+                                onLayout={(event) => setListHeaderHeight(event.nativeEvent.layout.height)}
+                            >
+                                <View style={styles.recommendationsCard}>
+                                    <View style={styles.recommendationsHeader}>
+                                        <Text style={styles.recommendationsTitle}>Your Communiittes</Text>
+                                        <View style={styles.recommendationsActions}>
+                                            <TouchableOpacity
+                                                style={styles.recommendationsActionButton}
+                                                onPress={handleHideRecommendations}
+                                                accessibilityRole="button"
+                                                accessibilityLabel="Hide Your Communiittes"
+                                            >
+                                                <Text style={styles.recommendationsActionText}>Hide</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                    {recommendations.length === 0 && (
+                                        <View style={styles.recommendationsEmpty}>
+                                            <Text style={styles.recommendationsEmptyText}>
+                                                No upcoming communiittes yet.
+                                            </Text>
+                                        </View>
+                                    )}
+                                    {recommendations.length > 0 && (
+                                        <ScrollView
+                                            horizontal
+                                            showsHorizontalScrollIndicator={false}
+                                            contentContainerStyle={styles.recommendationsScroll}
+                                            onLayout={(event) => {
+                                                const nextWidth = Math.round(event.nativeEvent.layout.width);
+                                                setRecommendationsLaneWidth((prev) =>
+                                                    prev === nextWidth ? prev : nextWidth
+                                                );
+                                            }}
+                                        >
+                                            {recommendations.map((event, index) => {
+                                                const promoCode =
+                                                    event.promo_codes?.find((code) => code.scope === "event") ||
+                                                    event.organizer?.promo_codes?.find((code) => code.scope === "organizer") ||
+                                                    (currentDeepLink?.type !== "generic" && currentDeepLink?.featured_event?.id === event.id
+                                                        ? currentDeepLink.featured_promo_code
+                                                        : null);
+                                                const promoLabel = promoCode
+                                                    ? promoCode.discount_type === "percent"
+                                                        ? `${promoCode.discount}% off`
+                                                        : `$${promoCode.discount} off`
+                                                    : null;
+
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={event.id}
+                                                        style={[
+                                                            styles.recommendationCard,
+                                                            {
+                                                                width: recommendationCardWidth,
+                                                                marginRight:
+                                                                    index === recommendations.length - 1 ? 0 : spacing.sm,
+                                                            },
+                                                        ]}
+                                                        onPress={() => handleRecommendationPress(event)}
+                                                        activeOpacity={0.9}
+                                                    >
+                                                        <View style={styles.recommendationMedia}>
+                                                            {event.image_url ? (
+                                                                <Image
+                                                                    source={{ uri: event.image_url }}
+                                                                    style={styles.recommendationImage}
+                                                                    resizeMode="cover"
+                                                                />
+                                                            ) : (
+                                                                <View style={styles.recommendationPlaceholder}>
+                                                                    <FAIcon name="calendar-day" size={16} color={colors.textMuted} />
+                                                                </View>
+                                                            )}
+                                                            {promoLabel && (
+                                                                <View style={styles.recommendationPromoBadge}>
+                                                                    <Text style={styles.recommendationPromoText}>
+                                                                        {promoLabel}
+                                                                    </Text>
+                                                                </View>
+                                                            )}
+                                                        </View>
+                                                        <View style={styles.recommendationBody}>
+                                                            <Text style={styles.recommendationTitle} numberOfLines={2}>
+                                                                {event.name}
+                                                            </Text>
+                                                            <Text style={styles.recommendationOrganizer} numberOfLines={1}>
+                                                                {event.organizer?.name || "Organizer"}
+                                                            </Text>
+                                                            <Text style={styles.recommendationDate} numberOfLines={1}>
+                                                                {formatDate(event, true)}
+                                                            </Text>
+                                                        </View>
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </ScrollView>
+                                    )}
+                                </View>
+                            </View>
+                        ) : shouldShowHiddenRecommendations ? (
+                            <View
+                                style={styles.recommendationsHeaderWrap}
+                                onLayout={(event) => setListHeaderHeight(event.nativeEvent.layout.height)}
+                            >
+                                <View style={styles.recommendationsHiddenCard}>
+                                    <Text style={styles.recommendationsHiddenText}>
+                                        Your Communiittes hidden
+                                    </Text>
+                                    <TouchableOpacity
+                                        style={styles.recommendationsHiddenButton}
+                                        onPress={handleShowRecommendations}
+                                        accessibilityRole="button"
+                                        accessibilityLabel="Show Your Communiittes"
+                                    >
+                                        <Text style={styles.recommendationsHiddenButtonText}>Show</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ) : null
+                    }
                 />
             </View>
             </View>
@@ -1153,6 +1533,204 @@ const styles = StyleSheet.create({
         marginTop: spacing.xs,
         marginHorizontal: spacing.lg,
         opacity: 0.8,
+    },
+    noticeCard: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.sm,
+        marginBottom: spacing.sm,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        backgroundColor: colors.surfaceGoldWarm,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderGoldSoft,
+        ...shadows.card,
+    },
+    noticeIcon: {
+        width: spacing.xl,
+        height: spacing.xl,
+        borderRadius: spacing.xl / 2,
+        backgroundColor: colors.surfaceGoldLight,
+        borderWidth: 1,
+        borderColor: colors.borderGoldLight,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    noticeText: {
+        flex: 1,
+        color: colors.textDeep,
+        fontSize: fontSizes.xl,
+        lineHeight: lineHeights.md,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+        marginHorizontal: spacing.sm,
+    },
+    noticeLink: {
+        color: colors.brandInk,
+        textDecorationLine: "underline",
+        fontWeight: "700",
+        fontFamily: fontFamilies.body,
+    },
+    noticeClose: {
+        padding: spacing.xs,
+    },
+    recommendationsHeaderWrap: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.xs,
+    },
+    recommendationsCard: {
+        width: "100%",
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        padding: spacing.md,
+        ...shadows.card,
+    },
+    recommendationsHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: spacing.sm,
+    },
+    recommendationsTitle: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.xxl,
+        fontWeight: "700",
+        fontFamily: fontFamilies.display,
+    },
+    recommendationsActions: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: spacing.sm,
+    },
+    recommendationsActionButton: {
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.smPlus,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceMutedLight,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+    },
+    recommendationsActionText: {
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+    },
+    recommendationsScroll: {
+        paddingBottom: spacing.xs,
+    },
+    recommendationsHiddenCard: {
+        width: "100%",
+        backgroundColor: colors.surfaceMutedLight,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+    recommendationsHiddenText: {
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+    },
+    recommendationsHiddenButton: {
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.smPlus,
+        borderRadius: radius.pill,
+        backgroundColor: colors.white,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+    },
+    recommendationsHiddenButtonText: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "700",
+        fontFamily: fontFamilies.body,
+    },
+    recommendationsEmpty: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.sm,
+        backgroundColor: colors.surfaceMutedLight,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+        marginBottom: spacing.sm,
+    },
+    recommendationsEmptyText: {
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+    },
+    recommendationCard: {
+        flexGrow: 0,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        overflow: "hidden",
+    },
+    recommendationMedia: {
+        width: "100%",
+        height: 92,
+    },
+    recommendationImage: {
+        width: "100%",
+        height: "100%",
+    },
+    recommendationPlaceholder: {
+        width: "100%",
+        height: "100%",
+        backgroundColor: colors.surfaceMuted,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    recommendationPromoBadge: {
+        position: "absolute",
+        top: 0,
+        left: 0,
+        backgroundColor: "rgba(255, 215, 0, 0.9)",
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderTopLeftRadius: radius.md,
+        borderBottomRightRadius: radius.md,
+    },
+    recommendationPromoText: {
+        color: colors.black,
+        fontSize: fontSizes.smPlus,
+        fontWeight: "700",
+        fontFamily: fontFamilies.body,
+    },
+    recommendationBody: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.smPlus,
+    },
+    recommendationTitle: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.basePlus,
+        fontWeight: "700",
+        fontFamily: fontFamilies.body,
+    },
+    recommendationOrganizer: {
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.xs,
+    },
+    recommendationDate: {
+        color: colors.textSlate,
+        fontSize: fontSizes.sm,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.xs,
     },
     eventListContainer: {
         flex: 1,

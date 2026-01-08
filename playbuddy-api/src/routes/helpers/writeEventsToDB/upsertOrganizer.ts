@@ -5,17 +5,27 @@ import { supabaseClient } from "../../../connections/supabaseClient.js";
 
 
 // Function to upsert an organizer and its associated community
-const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim();
+const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+const normalizeHandles = (handles: Array<string | null | undefined>) => {
+    const normalized = handles
+        .map((handle) => normalizeHandle(handle))
+        .filter(Boolean);
+    return Array.from(new Set(normalized));
+};
 
 export async function upsertOrganizer(
     organizer: CreateOrganizerInput
 ): Promise<{ organizerId?: string; communityId?: string }> {
     const { id, name, url, original_id } = organizer;
     const instagram_handle = normalizeHandle(organizer.instagram_handle);
-    const fetlife_handle = normalizeHandle(organizer.fetlife_handle);
+    const fetlife_handles = normalizeHandles([
+        organizer.fetlife_handle,
+        ...(organizer.fetlife_handles || []),
+    ]);
+    const primaryFetlifeHandle = fetlife_handles[0];
 
     // Require at least one identifier
-    if (!id && !name && !instagram_handle && !fetlife_handle) {
+    if (!id && !name && !instagram_handle && !primaryFetlifeHandle) {
         const msg = "ORGANIZER: No id, name, instagram_handle, or fetlife_handle provided";
         console.error(msg);
         throw new Error(msg);
@@ -24,10 +34,17 @@ export async function upsertOrganizer(
     // Normalize + resolve a display name
     const trimmedName = name?.trim();
     const trimmedInsta = instagram_handle || undefined;
-    const trimmedFet = fetlife_handle || undefined;
+    const trimmedFet = primaryFetlifeHandle || undefined;
     const resolvedName = trimmedName || trimmedInsta || trimmedFet || "Unknown Organizer";
 
-    type OrgRow = { id: string; name: string; aliases?: string[] | null; instagram_handle?: string | null; fetlife_handle?: string | null };
+    type OrgRow = {
+        id: string;
+        name: string;
+        aliases?: string[] | null;
+        instagram_handle?: string | null;
+        fetlife_handle?: string | null;
+        fetlife_handles?: string[] | null;
+    };
 
     let existing: OrgRow | null = null;
 
@@ -35,7 +52,7 @@ export async function upsertOrganizer(
     if (id && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
             .eq("id", id)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -45,7 +62,7 @@ export async function upsertOrganizer(
     if (trimmedName && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
             .eq("name", trimmedName)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -55,7 +72,7 @@ export async function upsertOrganizer(
     if (trimmedName && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
             .contains("aliases", [trimmedName])
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -65,19 +82,38 @@ export async function upsertOrganizer(
     if (trimmedInsta && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
             .ilike("instagram_handle", trimmedInsta)
             .maybeSingle();
         if (data) existing = data as OrgRow;
     }
 
-    if (trimmedFet && !existing) {
-        const { data } = await supabaseClient
-            .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle")
-            .ilike("fetlife_handle", trimmedFet)
-            .maybeSingle();
-        if (data) existing = data as OrgRow;
+    if (fetlife_handles.length && !existing) {
+        for (const handle of fetlife_handles) {
+            const { data } = await supabaseClient
+                .from("organizers")
+                .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+                .contains("fetlife_handles", [handle])
+                .maybeSingle();
+            if (data) {
+                existing = data as OrgRow;
+                break;
+            }
+        }
+    }
+
+    if (fetlife_handles.length && !existing) {
+        for (const handle of fetlife_handles) {
+            const { data } = await supabaseClient
+                .from("organizers")
+                .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+                .ilike("fetlife_handle", handle)
+                .maybeSingle();
+            if (data) {
+                existing = data as OrgRow;
+                break;
+            }
+        }
     }
 
     let organizerId = existing?.id;
@@ -95,12 +131,28 @@ export async function upsertOrganizer(
             original_id: original_id ?? undefined,
         };
 
+        const existingFetlifeHandles = normalizeHandles([
+            existing.fetlife_handle,
+            ...(existing.fetlife_handles || []),
+        ]);
+        const mergedFetlifeHandles = normalizeHandles([
+            ...existingFetlifeHandles,
+            ...fetlife_handles,
+        ]);
+        const hasAllMergedHandles = Array.isArray(existing.fetlife_handles)
+            && mergedFetlifeHandles.every((handle) => existing.fetlife_handles!.includes(handle));
+
         // Only set handles if not already present
         if (trimmedInsta && !existing.instagram_handle) {
             updatePatch.instagram_handle = trimmedInsta;
         }
-        if (trimmedFet && !existing.fetlife_handle) {
-            updatePatch.fetlife_handle = trimmedFet;
+        if (mergedFetlifeHandles.length) {
+            if (!hasAllMergedHandles) {
+                updatePatch.fetlife_handles = mergedFetlifeHandles;
+            }
+            if (!existing.fetlife_handle && mergedFetlifeHandles[0]) {
+                updatePatch.fetlife_handle = mergedFetlifeHandles[0];
+            }
         }
 
         if (needsAlias) {
@@ -135,6 +187,7 @@ export async function upsertOrganizer(
             original_id,
             instagram_handle: trimmedInsta ?? null,
             fetlife_handle: trimmedFet ?? null,
+            fetlife_handles: fetlife_handles.length ? fetlife_handles : null,
             aliases: trimmedName ? [trimmedName] : []
         };
 
@@ -171,20 +224,26 @@ export const upsertCommunityFromOrganizer = async ({
     organizerId: string,
     organizerName: string
 }) => {
-    // Check if a community already exists for the organizer
-    const { data: existingCommunity } = await supabaseClient
+    // Check if a public organizer community already exists for the organizer.
+    const { data: existingCommunities, error: existingCommunityError } = await supabaseClient
         .from('communities')
-        .select("id")
+        .select("id,created_at")
         .eq("organizer_id", organizerId)
-        .single();
+        .eq("type", "organizer_public_community")
+        .order("created_at", { ascending: true })
+        .limit(2);
 
-    // Retrieve the existing community ID if found
-    const communityId = existingCommunity?.id;
+    if (existingCommunityError) {
+        console.error("Error fetching existing community:", existingCommunityError);
+        throw existingCommunityError;
+    }
 
-    // Return the existing community ID if it exists
-    if (communityId) {
-        console.log(`ORGANIZER: Found existing community ${communityId}`);
-        return communityId;
+    if (existingCommunities && existingCommunities.length > 0) {
+        if (existingCommunities.length > 1) {
+            console.warn(`ORGANIZER: Multiple organizer_public_community rows for organizer ${organizerId}. Using ${existingCommunities[0].id}`);
+        }
+        console.log(`ORGANIZER: Found existing community ${existingCommunities[0].id}`);
+        return existingCommunities[0].id;
     }
 
     // If no existing community is found, insert a new one

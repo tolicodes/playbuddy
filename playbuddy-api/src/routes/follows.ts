@@ -37,6 +37,10 @@ router.post('/', authenticateRequest, async (req: AuthenticatedRequest, res: Res
         return res.status(400).json({ error: 'Invalid followee_type' });
     }
 
+    if (followee_type === 'organizer') {
+        return res.status(400).json({ error: 'Organizers are followed via communities. Use /communities/join.' });
+    }
+
     if (!followee_id) {
         return res.status(400).json({ error: 'Missing followee_id' });
     }
@@ -67,6 +71,10 @@ router.delete('/', authenticateRequest, async (req: AuthenticatedRequest, res: R
 
     if (!FOLLOWEE_TYPES.includes(followee_type)) {
         return res.status(400).json({ error: 'Invalid followee_type' });
+    }
+
+    if (followee_type === 'organizer') {
+        return res.status(400).json({ error: 'Organizers are followed via communities. Use /communities/leave.' });
     }
 
     if (!followee_id) {

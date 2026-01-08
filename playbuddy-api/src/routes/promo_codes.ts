@@ -2,18 +2,16 @@ import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust the import path to match your project
 import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { flushEvents } from '../helpers/flushCache.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
-    const { data, error } = await supabaseClient
-        .from('promo_codes')
-        .select(`*`)
-
-    if (error) {
-        console.error(`Error fetching promo codes`, error);
-        throw error;
-    }
+    const data = await fetchAllRows({
+        from: 'promo_codes',
+        select: '*',
+        queryModifier: (query) => query.order('id', { ascending: true }),
+    });
 
     res.json(data);
 

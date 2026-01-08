@@ -12,10 +12,12 @@ export const fetchAndCacheData = async (
         if (cacheData) return cacheData;
     }
 
-    const { data, error } = await supabaseQuery();
+    const result = await supabaseQuery();
+    const data = Array.isArray(result) ? result : result?.data;
+    const error = Array.isArray(result) ? null : result?.error;
     if (error) throw new Error(error.message);
 
-    const responseData = JSON.stringify(data);
+    const responseData = JSON.stringify(data || []);
     await redisClient.set(cacheKey, responseData, "EX", 600); // Cache for 10 minutes
 
     return responseData;

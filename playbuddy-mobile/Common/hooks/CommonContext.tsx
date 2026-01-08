@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useFetchMyCommunities, useFetchPublicCommunities } from './useCommunities';
 import axios from 'axios';
@@ -49,6 +49,18 @@ interface CommonContextType {
 
 const CommonContext = createContext<CommonContextType | undefined>(undefined);
 
+const summarizeCommunities = (communities: Community[]) => {
+    const typeCounts: Record<string, number> = {};
+    let missingOrganizerId = 0;
+    for (const community of communities) {
+        const type = community.type || 'unknown';
+        typeCounts[type] = (typeCounts[type] || 0) + 1;
+        if (!community.organizer_id) {
+            missingOrganizerId += 1;
+        }
+    }
+    return { total: communities.length, typeCounts, missingOrganizerId };
+};
 
 const useFetchLocationAreas = () => {
     const { data: locationAreas = [], isLoading: isLoadingLocationAreas } = useQuery({
@@ -91,6 +103,21 @@ export const CommonProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         }),
         [myCommunities]
     );
+
+    useEffect(() => {
+        if (!__DEV__) return;
+        const publicSummary = summarizeCommunities(publicCommunities);
+        const mySummary = summarizeCommunities(myCommunities);
+        const sampleMissingOrganizerId = publicCommunities
+            .filter((community) => !community.organizer_id)
+            .slice(0, 5)
+            .map((community) => community.id);
+        console.log('[communities] public', {
+            ...publicSummary,
+            sampleMissingOrganizerId,
+        });
+        console.log('[communities] my', mySummary);
+    }, [myCommunities, publicCommunities]);
 
 
     const contextValue = useMemo(

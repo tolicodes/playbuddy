@@ -3,20 +3,18 @@
 import { Router, Request, Response } from 'express';
 import { supabaseClient } from '../connections/supabaseClient.js'; // Adjust path if needed
 import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 const router = Router();
 
 // GET /api/munches
 router.get('/', async (req: Request, res: Response) => {
     try {
-        const { data, error } = await supabaseClient
-            .from('munches')
-            .select('*');
-
-        if (error) {
-            console.error(`Error fetching munches:`, error);
-            throw error;
-        }
+        const data = await fetchAllRows({
+            from: 'munches',
+            select: '*',
+            queryModifier: (query) => query.order('id', { ascending: true }),
+        });
 
         res.json(data);
     } catch (error) {

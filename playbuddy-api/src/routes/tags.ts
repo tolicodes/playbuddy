@@ -1,5 +1,5 @@
 import express from 'express';
-import { supabaseClient } from '../connections/supabaseClient.js';
+import { fetchAllRows } from '../helpers/fetchAllRows.js';
 
 const router = express.Router();
 
@@ -9,14 +9,11 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
     try {
-        const { data, error } = await supabaseClient
-            .from('tags')
-            .select('*')
-            .order('name', { ascending: true });
-        if (error) {
-            console.error('Error fetching tags:', error);
-            return res.status(400).json({ error: error.message });
-        }
+        const data = await fetchAllRows({
+            from: 'tags',
+            select: '*',
+            queryModifier: (query) => query.order('name', { ascending: true }),
+        });
         return res.json(data);
     } catch (err) {
         console.error('Unexpected error:', err);

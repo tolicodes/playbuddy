@@ -1,6 +1,6 @@
 // CommunitiesList.tsx
 
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useEffect, useMemo } from "react";
 import {
     View,
     Text,
@@ -82,6 +82,12 @@ const hasEventPromo = (events: Event[]) =>
         event.promo_codes?.some((code) => code.scope === "event")
     );
 
+const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+const getJoinableCommunityIds = (communityIds: string[]) =>
+    communityIds.filter((id) => isUuid(id));
+
 export const CommunitiesList = ({
     title,
     communities,
@@ -122,21 +128,53 @@ export const CommunitiesList = ({
     const shelfCardWidth = Math.max(200, Math.min(240, Math.floor(width * 0.58)));
     const shelfCardHeight = Math.round(shelfCardWidth * 0.85);
 
+    useEffect(() => {
+        if (!__DEV__ || !isOrganizer) return;
+        const organizerIds = new Set(
+            organizers
+                .map((organizer) => organizer.id?.toString())
+                .filter((id): id is string => Boolean(id))
+        );
+        const communityOrganizerIds = new Set(
+            communities
+                .map((community) => community.organizer_id?.toString())
+                .filter((id): id is string => Boolean(id))
+        );
+        const missingOrganizerIds = Array.from(organizerIds).filter(
+            (id) => !communityOrganizerIds.has(id)
+        );
+        const sampleMissingOrganizerIds = missingOrganizerIds.slice(0, 10);
+        const missingOrganizerIdCommunities = communities
+            .filter((community) => !community.organizer_id)
+            .slice(0, 5)
+            .map((community) => community.id);
+        console.log('[communities][match]', {
+            organizers: organizerIds.size,
+            communityRows: communities.length,
+            communityOrganizerIds: communityOrganizerIds.size,
+            missingOrganizerIds: missingOrganizerIds.length,
+            sampleMissingOrganizerIds,
+            missingOrganizerIdCommunities,
+        });
+    }, [communities, isOrganizer, organizers]);
+
     const myCommunityIds = useMemo(
         () => new Set(myCommunities.map((community) => community.id)),
         [myCommunities]
     );
-
     const toggleMembership = useCallback(
         (communityIds: string[], shouldJoin: boolean) => {
-            if (communityIds.length === 0) return;
+            const validCommunityIds = getJoinableCommunityIds(communityIds);
+            if (validCommunityIds.length === 0) {
+                return;
+            }
             if (!authUserId) {
                 alert('Create an account to join a community!');
                 return;
             }
             const targetIds = shouldJoin
-                ? communityIds.filter((id) => !myCommunityIds.has(id))
-                : communityIds.filter((id) => myCommunityIds.has(id));
+                ? validCommunityIds.filter((id) => !myCommunityIds.has(id))
+                : validCommunityIds.filter((id) => myCommunityIds.has(id));
 
             targetIds.forEach((communityId) => {
                 if (shouldJoin) {
@@ -333,7 +371,13 @@ export const CommunitiesList = ({
     }, [communityEntities, searchQuery, showNoEventOrganizers, entityMeta]);
 
     const isEntityJoined = useCallback(
-        (entity: CommunityEntity) => entity.communityIds.some((id) => myCommunityIds.has(id)),
+        (entity: CommunityEntity) => {
+            const validIds = getJoinableCommunityIds(entity.communityIds);
+            if (validIds.length > 0) {
+                return validIds.some((id) => myCommunityIds.has(id));
+            }
+            return false;
+        },
         [myCommunityIds]
     );
 
@@ -412,23 +456,26 @@ export const CommunitiesList = ({
                     imageUrl: undefined,
                     hasOrganizerPromo: false,
                     hasEventPromo: false,
-                }
-            );
+        }
+    );
         },
         [entityMeta]
     );
 
     const handlePressEntity = useCallback(
         (entity: CommunityEntity) => {
+            const joinableCommunityIds = getJoinableCommunityIds(entity.communityIds);
             const communityId =
                 entity.primaryCommunity?.id ||
+                joinableCommunityIds[0] ||
                 entity.communityIds[0] ||
-                `organizer-${entity.organizerIds[0] || entity.id}`;
+                entity.organizerIds[0] ||
+                entity.id;
             const organizerId =
                 entity.organizerIds[0] || entity.primaryCommunity?.organizer_id;
             navigation.navigate("Community Events", {
                 communityId,
-                communityIds: entity.communityIds,
+                communityIds: joinableCommunityIds,
                 displayName: entity.name,
                 organizerId,
             });
@@ -464,7 +511,9 @@ export const CommunitiesList = ({
         }
     ) => {
         const isJoined = isEntityJoined(entity);
-        const canFollow = entity.communityIds.length > 0;
+        const joinableCommunityIds = getJoinableCommunityIds(entity.communityIds);
+        const canFollow = joinableCommunityIds.length > 0;
+        const heartSize = Math.max(44, Math.min(56, Math.round(options.height * 0.34)));
         const imageUrl = getSafeImageUrl(meta.imageUrl ? getSmallAvatarUrl(meta.imageUrl) : undefined);
         const badgeLabel = options.badgeLabel || getEventCountLabel(meta.eventCount);
         return (
@@ -511,16 +560,24 @@ export const CommunitiesList = ({
                 <View style={styles.imageTileBadge}>
                     <Text style={styles.imageTileBadgeText}>{badgeLabel}</Text>
                 </View>
-                {canFollow && (
+                <View style={styles.imageTileHeartWrap} pointerEvents="box-none">
                     <WishlistHeart
                         itemIsOnWishlist={isJoined}
                         handleToggleEventWishlist={() => {
+                            if (!canFollow) {
+                                alert('This community is not followable yet.');
+                                return;
+                            }
                             toggleMembership(entity.communityIds, !isJoined);
                         }}
-                        size={fontSizes.xxxl}
-                        containerStyle={styles.imageTileHeart}
+                        size={heartSize}
+                        variant={isJoined ? "solid" : "outline"}
+                        containerStyle={[
+                            styles.imageTileHeart,
+                            !canFollow && styles.heartDisabled,
+                        ]}
                     />
-                )}
+                </View>
                 <View style={styles.imageTileFooter}>
                     <Text style={[styles.imageTileTitle, options.titleStyle]} numberOfLines={2}>
                         {entity.name}
@@ -659,6 +716,8 @@ export const CommunitiesList = ({
 
         if (!isOrganizer) {
             const isJoined = isEntityJoined(item);
+            const joinableCommunityIds = getJoinableCommunityIds(item.communityIds);
+            const canFollow = joinableCommunityIds.length > 0;
             return (
                 <TouchableOpacity
                     style={[
@@ -691,9 +750,17 @@ export const CommunitiesList = ({
                         <WishlistHeart
                             itemIsOnWishlist={isJoined}
                             handleToggleEventWishlist={() => {
+                                if (!canFollow) {
+                                    alert('This community is not followable yet.');
+                                    return;
+                                }
                                 toggleMembership(item.communityIds, !isJoined);
                             }}
-                            containerStyle={styles.heartButton}
+                            variant={isJoined ? "solid" : "outline"}
+                            containerStyle={[
+                                styles.heartButton,
+                                !canFollow && styles.heartDisabled,
+                            ]}
                         />
                     </View>
                 </TouchableOpacity>
@@ -921,16 +988,15 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         fontFamily: fontFamilies.body,
     },
+    imageTileHeartWrap: {
+        ...StyleSheet.absoluteFillObject,
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2,
+    },
     imageTileHeart: {
-        position: "absolute",
-        right: spacing.smPlus,
-        top: spacing.smPlus,
-        width: spacing.xxxl,
-        height: spacing.xxxl,
-        borderRadius: radius.lg,
-        backgroundColor: colors.surfaceWhiteFrosted,
-        borderWidth: 1,
-        borderColor: colors.borderOnDarkStrong,
+        backgroundColor: "transparent",
+        borderWidth: 0,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -1049,6 +1115,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.surfaceRoseSoft,
         alignItems: "center",
         justifyContent: "center",
+    },
+    heartDisabled: {
+        opacity: 0.45,
     },
     centeredView: {
         flex: 1,

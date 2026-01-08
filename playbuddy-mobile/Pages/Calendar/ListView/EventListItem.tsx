@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
-import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { Attendee, Event } from '../../../commonTypes';
 import { UE } from '../../../Common/types/userEventTypes';
 import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
@@ -13,7 +12,7 @@ import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
-import { calendarTypeChips, colors, fontSizes, radius, shadows, spacing } from '../../../components/styles';
+import { calendarTypeChips, colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistHeart } from './WishlistHeart';
@@ -46,8 +45,6 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
-    const [scrolling, setScrolling] = useState(false);
-    const [titleLineCount, setTitleLineCount] = useState(0);
     const eventAnalyticsProps = useEventAnalyticsProps(item);
 
     const promoCode = getEventPromoCodes(item)?.[0];
@@ -55,10 +52,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const itemIsOnWishlist = isOnWishlist(item.id);
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const locationLabel = (item.neighborhood || '').trim();
-    const metaItems = [
-        { key: 'date', label: formattedDate, icon: 'clock-o' },
-        ...(locationLabel ? [{ key: 'location', label: locationLabel, icon: 'map-marker' }] : []),
-    ];
+    const organizerName = item.organizer?.name?.trim() || 'Organizer';
+    const priceLabel = item.short_price || item.price || '';
+    const metaLine = [formattedDate, locationLabel, priceLabel].filter(Boolean).join(' - ');
     const typeLabelMap: Record<string, string> = {
         play_party: 'Play Party',
         munch: 'Munch',
@@ -93,15 +89,12 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         border: 'transparent',
     };
     const handlePressEvent = () => {
-        // Prevent accidental taps while scrolling horizontal content.
-        if (!scrolling) {
-            onPress(item);
-            const listViewAnalytics = listViewMode ? { list_view_mode: listViewMode } : {};
-            logEvent(UE.EventListItemClicked, {
-                ...eventAnalyticsProps,
-                ...listViewAnalytics,
-            });
-        }
+        onPress(item);
+        const listViewAnalytics = listViewMode ? { list_view_mode: listViewMode } : {};
+        logEvent(UE.EventListItemClicked, {
+            ...eventAnalyticsProps,
+            ...listViewAnalytics,
+        });
     };
 
     const handleToggleEventWishlist = () => {
@@ -131,7 +124,6 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const heartSize = 48;
     const heartOffset = imageHeight < 140 ? 6 : 0;
     const heartTop = Math.max(0, imageHeight / 2 - heartSize / 2 - heartOffset);
-    const isSingleLineTitle = titleLineCount === 1;
     const hasFooter = !!footerContent;
 
     return (
@@ -210,52 +202,20 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                 hasFooter && styles.detailsPanelWithFooter,
                             ]}
                         >
-                            <View style={styles.organizerRow}>
-                                <View style={[styles.organizerDot, { backgroundColor: item.organizerColor || colors.textDisabled }]} />
-                                <Text style={styles.organizerName} numberOfLines={1}>
-                                    {item.organizer?.name}
-                                </Text>
-                            </View>
                             <Text
                                 style={styles.eventTitle}
-                                numberOfLines={2}
-                                onTextLayout={(event) => {
-                                    const nextLineCount = event.nativeEvent.lines?.length ?? 0;
-                                    if (nextLineCount && nextLineCount !== titleLineCount) {
-                                        setTitleLineCount(nextLineCount);
-                                    }
-                                }}
+                                numberOfLines={1}
                             >
                                 {item.name}
                             </Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                style={isSingleLineTitle && !hasFooter ? styles.metaRowSingleLine : undefined}
-                                contentContainerStyle={styles.metaRow}
-                                onScrollBeginDrag={() => setScrolling(true)}
-                                onScrollEndDrag={() => setTimeout(() => setScrolling(false), 200)}
-                            >
-                                {metaItems.map((meta, index) => (
-                                    <View key={meta.key} style={styles.metaItem}>
-                                        {meta.icon && (
-                                            <FAIcon name={meta.icon} size={12} color={colors.textMuted} style={styles.metaIcon} />
-                                        )}
-                                        <Text
-                                            style={[
-                                                styles.metaText,
-                                                meta.key === 'date' && styles.metaTextStrong,
-                                            ]}
-                                            numberOfLines={1}
-                                        >
-                                            {meta.label}
-                                        </Text>
-                                        {index < metaItems.length - 1 && (
-                                            <Text style={styles.metaSeparator}>.</Text>
-                                        )}
-                                    </View>
-                                ))}
-                            </ScrollView>
+                            <Text style={styles.organizerName} numberOfLines={1}>
+                                {organizerName}
+                            </Text>
+                            {metaLine ? (
+                                <Text style={styles.metaText} numberOfLines={1}>
+                                    {metaLine}
+                                </Text>
+                            ) : null}
                         </LinearGradient>
                     </View>
                 </TouchableOpacity>
@@ -268,7 +228,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 };
 
 
-const CARD_HEIGHT = 220;
+const CARD_HEIGHT = 184;
 export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
 
 const styles = StyleSheet.create({
@@ -347,25 +307,17 @@ const styles = StyleSheet.create({
         color: colors.textOnDarkStrong,
     },
     eventTitle: {
-        fontSize: fontSizes.xl,
+        fontSize: fontSizes.basePlus,
         fontWeight: '700',
-        color: colors.textDeep,
+        color: colors.textPrimary,
         marginTop: spacing.xsPlus,
-    },
-    organizerRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: spacing.xxs,
-    },
-    organizerDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        marginRight: spacing.sm,
+        fontFamily: fontFamilies.body,
     },
     organizerName: {
-        fontSize: fontSizes.sm,
+        fontSize: fontSizes.smPlus,
         color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.xs,
     },
     discountBadge: {
         position: 'absolute',
@@ -389,40 +341,11 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: colors.black,
     },
-    metaRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        flexGrow: 1,
-        paddingTop: 0,
-    },
-    metaRowSingleLine: {
-        marginTop: -spacing.smPlus,
-    },
-    metaItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-    },
-    metaIcon: {
-        marginRight: spacing.xs,
-    },
-    metaSeparator: {
-        marginHorizontal: spacing.xs,
-        fontSize: fontSizes.sm,
-        fontWeight: '600',
-        color: colors.textMuted,
-    },
     metaText: {
         fontSize: fontSizes.sm,
-        color: colors.textMuted,
-        fontWeight: '600',
-        flexShrink: 1,
-        textAlign: 'left',
-    },
-    metaTextStrong: {
-        fontWeight: '700',
-        color: colors.textDeep,
+        color: colors.textSlate,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.xs,
     },
     attendeeWrap: {
         position: 'absolute',

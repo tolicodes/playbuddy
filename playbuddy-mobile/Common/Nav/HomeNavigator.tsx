@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
+import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
 import { TabNavigator } from './TabNavigator';
 import { PromosEntryScreen } from '../../Pages/Entries/PromosEntryScreen';
 import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
@@ -21,7 +22,7 @@ const HomeStack = createStackNavigator();
  * profile completion status, and deeplinks.
  * 
  * Flow:
- * 1. Shows loading indicator while profile is loading
+ * 1. Shows loading indicator while profile or events are loading
  * 2. Handles deeplinks (promo codes, weekly picks)
  * 3. Routes to profile completion if needed
  * 4. Routes to welcome screen for new users
@@ -49,9 +50,10 @@ export function HomeStackNavigator() {
         currentDeepLink,
         hasFetchedSession,
     } = useUserContext();
+    const { isLoadingEvents } = useCalendarContext();
 
     useEffect(() => {
-        if (isLoading || isError || isLoadingUserProfile) {
+        if (isLoading || isError || isLoadingUserProfile || (authUserId && isLoadingEvents)) {
             return;
         }
 
@@ -111,13 +113,24 @@ export function HomeStackNavigator() {
         // important: we do NOT include isPromoScreenViewed in the dependency array
         // because we want to navigate to Home only if it starts out that way
         // not if it's transitioning from promo by an "Event Details" click
-    }, [isLoadingUserProfile, authUserId, isProfileComplete, isLoading, isError, currentDeepLink, navigation]);
+    }, [
+        isLoadingUserProfile,
+        authUserId,
+        isProfileComplete,
+        isLoading,
+        isError,
+        currentDeepLink,
+        navigation,
+        isLoadingEvents,
+    ]);
 
     const PromoScreenWrap = () => (
         <PromosEntryScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
     );
 
-    if (!hasFetchedSession || isLoadingUserProfile) {
+    const shouldShowEventsLoading = !!authUserId && isLoadingEvents;
+
+    if (!hasFetchedSession || isLoadingUserProfile || shouldShowEventsLoading) {
         const isLoggedIn = !!authUserId;
         return (
             <EventsLoadingScreen

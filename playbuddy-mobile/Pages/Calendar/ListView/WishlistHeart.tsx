@@ -22,6 +22,7 @@ export const WishlistHeart = ({
     const isSolid = variant === 'solid';
     const isThickOutline = variant === 'thick-outline';
     const solidColor = itemIsOnWishlist ? colors.danger : 'rgba(255, 255, 255, 0.9)';
+    const fillColor = itemIsOnWishlist ? colors.danger : colors.white;
     const iconBoxSize = size + 8;
 
     useEffect(() => {
@@ -65,21 +66,32 @@ export const WishlistHeart = ({
                         <FAIcon
                             name="heart"
                             size={size}
-                            color={colors.white}
+                            color={fillColor}
                             style={styles.iconBase}
                         />
-                        <FAIcon
-                            name="heart-o"
-                            size={isThickOutline ? size + 4 : size + 2}
-                            color={outlineColor}
-                            style={styles.iconOutlineBase}
-                        />
-                        <FAIcon
-                            name="heart-o"
-                            size={isThickOutline ? size + 2 : size}
-                            color={outlineColor}
-                            style={styles.iconTop}
-                        />
+                        {isThickOutline ? (
+                            <>
+                                <FAIcon
+                                    name="heart-o"
+                                    size={size + 4}
+                                    color={outlineColor}
+                                    style={styles.iconOutlineBase}
+                                />
+                                <FAIcon
+                                    name="heart-o"
+                                    size={size + 2}
+                                    color={outlineColor}
+                                    style={styles.iconTop}
+                                />
+                            </>
+                        ) : (
+                            <FAIcon
+                                name="heart-o"
+                                size={size + 2}
+                                color={outlineColor}
+                                style={styles.iconTop}
+                            />
+                        )}
                     </View>
                 )}
             </Animated.View>
@@ -115,8 +127,13 @@ const styles = StyleSheet.create({
         textAlignVertical: 'center',
     },
     iconTop: {
-        position: 'relative',
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
         textAlign: 'center',
+        textAlignVertical: 'center',
         textShadowColor: colors.shadowMedium,
         textShadowOffset: { width: 0, height: 1 },
         textShadowRadius: 2,

@@ -1,4 +1,5 @@
 import 'react-native-gesture-handler';
+import 'react-native-url-polyfill/auto';
 import React from 'react'
 import { QueryClientProvider } from '@tanstack/react-query';
 import 'expo-dev-client';

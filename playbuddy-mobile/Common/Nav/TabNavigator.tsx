@@ -12,25 +12,16 @@ import { UE } from "../../userEventTypes";
 import { logEvent } from "../hooks/logger";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { DiscoverPage } from "../../Pages/DiscoverPage";
-import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { ActionSheet } from "../../components/ActionSheet";
-import { useCalendarContext } from "../../Pages/Calendar/hooks/CalendarContext";
-import EventsLoadingScreen from "../../components/EventsLoadingScreen";
 import { colors, fontSizes, radius, spacing } from "../../components/styles";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
     const analyticsProps = useAnalyticsProps();
-    const { authUserId } = useUserContext();
-    const { isLoadingEvents } = useCalendarContext();
     const { height: windowHeight } = useWindowDimensions();
     const [isMoreOpen, setIsMoreOpen] = useState(false);
 
     const moreSheetHeight = Math.min(windowHeight * 0.85, 680);
-
-    if (authUserId && isLoadingEvents) {
-        return <EventsLoadingScreen />;
-    }
 
     return (
         <>

@@ -390,8 +390,9 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         <FAIcon
                             name="heart"
                             size={22}
-                            color={colors.badgeAlert}
+                            color={isWishlisted ? colors.badgeAlert : colors.textMuted}
                             solid={isWishlisted}
+                            regular={!isWishlisted}
                         />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.shareButton} onPress={handleShare}>

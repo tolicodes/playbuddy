@@ -696,6 +696,7 @@ export interface Organizer {
 
     instagram_handle?: string;
     fetlife_handle?: string;
+    fetlife_handles?: string[] | null;
 
     membership_app_url: string;
     membership_only: boolean
@@ -709,6 +710,7 @@ export type CreateOrganizerInput = {
     aliases?: string[];
     hidden?: boolean;
     fetlife_handle?: string;
+    fetlife_handles?: string[];
     instagram_handle?: string;
 }
 

@@ -40,6 +40,13 @@ export const puppeteerConfig = {
 
 export const APP_STORE_URL = 'https://playbuddy.me/ios';
 export const GOOGLE_PLAY_URL = 'https://playbuddy.me/android';
+
+export const APP_STORE_ID = '6642655157';
+export const GOOGLE_PLAY_PACKAGE = 'com.tolicodes1.kinkbuddyios';
+export const APP_STORE_WEB_URL = `https://apps.apple.com/app/id${APP_STORE_ID}`;
+export const GOOGLE_PLAY_WEB_URL = `https://play.google.com/store/apps/details?id=${GOOGLE_PLAY_PACKAGE}`;
+export const APP_STORE_REVIEW_URL = `itms-apps://apps.apple.com/app/id${APP_STORE_ID}?action=write-review`;
+export const GOOGLE_PLAY_REVIEW_URL = `market://details?id=${GOOGLE_PLAY_PACKAGE}&reviewId=0`;
 export const DEEP_LINK_BASE = 'https://l.playbuddy.me/';
 
 export const ADMIN_EMAILS = ['toli@toli.me', 'admin@playbuddy.me'];

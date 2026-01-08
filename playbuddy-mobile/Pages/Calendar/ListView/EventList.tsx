@@ -22,6 +22,7 @@ import { ADMIN_EMAILS } from "../../../config";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 
 const HEADER_HEIGHT = 34;
+export const EVENT_SECTION_HEADER_HEIGHT = HEADER_HEIGHT + spacing.md + spacing.lg;
 
 type SectionType = {
     title: string;              // e.g., "Apr 13, 2025"
@@ -33,6 +34,8 @@ interface EventListProps {
     sectionListRef?: React.RefObject<SectionList<Event>>;
     isLoadingEvents?: boolean;
     viewMode?: EventListViewMode;
+    listHeaderComponent?: React.ReactNode;
+    listHeaderHeight?: number;
 }
 
 const EventList: React.FC<EventListProps> = ({
@@ -40,6 +43,8 @@ const EventList: React.FC<EventListProps> = ({
     sectionListRef,
     isLoadingEvents,
     viewMode,
+    listHeaderComponent,
+    listHeaderHeight = 0,
 }) => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
@@ -87,9 +92,11 @@ const EventList: React.FC<EventListProps> = ({
             stickySectionHeadersEnabled={true}
             renderItem={renderItem}
             renderSectionHeader={renderSectionHeader}
+            ListHeaderComponent={listHeaderComponent ?? null}
             getItemLayout={sectionListGetItemLayout({
                 getItemHeight: () => itemHeight,
-                getSectionHeaderHeight: () => HEADER_HEIGHT + 18,
+                getSectionHeaderHeight: () => EVENT_SECTION_HEADER_HEIGHT,
+                getListHeaderHeight: () => listHeaderHeight,
             })}
             ListEmptyComponent={
                 <View style={styles.emptyList}>

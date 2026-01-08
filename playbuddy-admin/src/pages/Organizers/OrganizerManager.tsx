@@ -1,22 +1,95 @@
 import React, { useDeferredValue, useMemo, useState } from 'react';
 import {
-    Box, Stack, Typography, Paper, Table, TableHead, TableRow, TableCell, TableBody,
-    TextField, Button, Chip, Divider, Pagination, Switch
+    Box,
+    Stack,
+    Typography,
+    Paper,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
+    TextField,
+    Button,
+    Chip,
+    Divider,
+    Pagination,
+    Switch,
+    Autocomplete,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
+import { useMergeOrganizer } from '../../common/db-axios/useMergeOrganizer';
 import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
 import { Organizer } from '../../common/types/commonTypes';
+
+type OrganizerDraft = Partial<Organizer> & { fetlife_handles?: string | string[] | null };
+type OrganizerOption = { id: number; label: string; handles?: string };
+
+const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+const formatOrganizerLabel = (org: Organizer) =>
+    org.name || org.fetlife_handles?.[0] || org.fetlife_handle || org.instagram_handle || `Organizer ${org.id}`;
+const collectFetlifeHandles = (org: Organizer) => {
+    const handles = [
+        ...(org.fetlife_handles || []),
+        org.fetlife_handle,
+    ];
+    const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
+    return Array.from(new Set(normalized));
+};
+const formatFetlifeHandlesValue = (draftValue: OrganizerDraft['fetlife_handles'], org: Organizer) => {
+    if (draftValue === undefined) {
+        return collectFetlifeHandles(org).join(', ');
+    }
+    if (typeof draftValue === 'string') return draftValue;
+    return (draftValue || []).join(', ');
+};
+const parseFetlifeHandlesValue = (draftValue: OrganizerDraft['fetlife_handles'], org: Organizer) => {
+    if (draftValue === undefined) return collectFetlifeHandles(org);
+    if (typeof draftValue === 'string') {
+        return draftValue
+            .split(/[,\n]/)
+            .map((handle) => normalizeHandle(handle))
+            .filter(Boolean);
+    }
+    return (draftValue || []).map((handle) => normalizeHandle(handle)).filter(Boolean);
+};
 
 export default function OrganizerManager() {
     const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
     const updateOrganizer = useUpdateOrganizer();
-    const [drafts, setDrafts] = useState<Record<number, Partial<Organizer>>>({});
+    const mergeOrganizer = useMergeOrganizer();
+    const [drafts, setDrafts] = useState<Record<number, OrganizerDraft>>({});
     const [search, setSearch] = useState('');
     const deferredSearch = useDeferredValue(search);
     const [page, setPage] = useState(1);
     const [hideNoEvents, setHideNoEvents] = useState(true);
     const [showOnlyHidden, setShowOnlyHidden] = useState(false);
+    const [mergeSource, setMergeSource] = useState<Organizer | null>(null);
+    const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
     const pageSize = 50;
+
+    const organizerOptions = useMemo<OrganizerOption[]>(() => {
+        return organizers.map((org) => {
+            const handles = [
+                ...collectFetlifeHandles(org),
+                normalizeHandle(org.instagram_handle),
+            ].filter(Boolean);
+            return {
+                id: org.id,
+                label: formatOrganizerLabel(org),
+                handles: handles.join(' • ')
+            };
+        });
+    }, [organizers]);
+
+    const mergeTargetOptions = useMemo(() => {
+        if (!mergeSource) return organizerOptions;
+        return organizerOptions.filter((option) => option.id !== mergeSource.id);
+    }, [organizerOptions, mergeSource]);
 
     const normalized = useMemo(() => {
         const now = Date.now();
@@ -33,7 +106,7 @@ export default function OrganizerManager() {
                     org,
                     futureCount,
                     name: (org.name || '').toLowerCase(),
-                    fet: (org.fetlife_handle || '').toLowerCase(),
+                    fet: collectFetlifeHandles(org),
                     ig: (org.instagram_handle || '').toLowerCase(),
                     aliases: (org.aliases || []).map(a => (a || '').toLowerCase()),
                 };
@@ -49,7 +122,7 @@ export default function OrganizerManager() {
                 if (!needle) return true;
                 return (
                     n.name.includes(needle) ||
-                    n.fet.includes(needle) ||
+                    n.fet.some((handle) => handle.includes(needle)) ||
                     n.ig.includes(needle) ||
                     n.aliases.some(a => a.includes(needle))
                 );
@@ -62,7 +135,7 @@ export default function OrganizerManager() {
         return filtered.slice(start, start + pageSize);
     }, [filtered, page]);
 
-    const setDraft = (id: number, key: keyof Organizer, val: any) => {
+    const setDraft = (id: number, key: keyof OrganizerDraft, val: any) => {
         setDrafts(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: val } }));
     };
 
@@ -85,10 +158,45 @@ export default function OrganizerManager() {
             aliases: typeof draft.aliases === 'string'
                 ? (draft.aliases as any).split(',').map((s: string) => s.trim()).filter(Boolean)
                 : draft.aliases ?? org.aliases,
-            fetlife_handle: draft.fetlife_handle ?? org.fetlife_handle,
+            fetlife_handles: parseFetlifeHandlesValue(draft.fetlife_handles, org),
             instagram_handle: draft.instagram_handle ?? org.instagram_handle,
             hidden: draft.hidden ?? org.hidden,
         });
+    };
+
+    const canMerge = !!mergeSource && !!mergeTarget && mergeSource.id !== mergeTarget.id && !mergeOrganizer.isPending;
+    const openMergeDialog = (org: Organizer) => {
+        setMergeSource(org);
+        setMergeTarget(null);
+    };
+    const closeMergeDialog = () => {
+        if (mergeOrganizer.isPending) return;
+        setMergeSource(null);
+        setMergeTarget(null);
+    };
+    const handleMerge = async () => {
+        if (!mergeSource || !mergeTarget) return;
+        if (mergeSource.id === mergeTarget.id) return;
+        const sourceLabel = formatOrganizerLabel(mergeSource);
+        const confirmed = window.confirm(
+            `Merge "${sourceLabel}" (#${mergeSource.id}) into "${mergeTarget.label}" (#${mergeTarget.id})?\n\n` +
+            'This moves events, communities, promo codes, facilitators, deep links, and munches, then deletes the source organizer.'
+        );
+        if (!confirmed) return;
+        try {
+            const result = await mergeOrganizer.mutateAsync({
+                sourceOrganizerId: mergeSource.id,
+                targetOrganizerId: mergeTarget.id,
+                deleteSource: true,
+            });
+            closeMergeDialog();
+            if (result?.warnings?.length) {
+                const warningText = result.warnings.map((warn) => `${warn.table}: ${warn.message}`).join('\n');
+                window.alert(`Merge completed with warnings:\n${warningText}`);
+            }
+        } catch (err: any) {
+            window.alert(err?.message || 'Failed to merge organizers.');
+        }
     };
 
     return (
@@ -131,10 +239,10 @@ export default function OrganizerManager() {
                             <TableCell>Events</TableCell>
                             <TableCell>Hidden</TableCell>
                             <TableCell>URL</TableCell>
-                            <TableCell>FetLife</TableCell>
+                            <TableCell>FetLife handles (comma separated)</TableCell>
                             <TableCell>Instagram</TableCell>
                             <TableCell>Aliases (comma separated)</TableCell>
-                            <TableCell />
+                            <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -178,10 +286,11 @@ export default function OrganizerManager() {
                                     </TableCell>
                                     <TableCell sx={{ minWidth: 140 }}>
                                         <TextField
-                                            value={draft.fetlife_handle ?? org.fetlife_handle ?? ''}
-                                            onChange={e => setDraft(org.id, 'fetlife_handle', e.target.value)}
+                                            value={formatFetlifeHandlesValue(draft.fetlife_handles, org)}
+                                            onChange={e => setDraft(org.id, 'fetlife_handles', e.target.value)}
                                             size="small"
                                             fullWidth
+                                            placeholder="@handle1, @handle2"
                                         />
                                     </TableCell>
                                     <TableCell sx={{ minWidth: 140 }}>
@@ -201,15 +310,26 @@ export default function OrganizerManager() {
                                             placeholder="alias1, alias2"
                                         />
                                     </TableCell>
-                                    <TableCell width={120}>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            onClick={() => save(org)}
-                                            disabled={updateOrganizer.isPending}
-                                        >
-                                            Save
-                                        </Button>
+                                    <TableCell width={180}>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={() => save(org)}
+                                                disabled={updateOrganizer.isPending}
+                                            >
+                                                Save
+                                            </Button>
+                                            <Button
+                                                variant="outlined"
+                                                color="error"
+                                                size="small"
+                                                onClick={() => openMergeDialog(org)}
+                                                disabled={mergeOrganizer.isPending}
+                                            >
+                                                Merge
+                                            </Button>
+                                        </Stack>
                                     </TableCell>
                                 </TableRow>
                             );
@@ -230,6 +350,66 @@ export default function OrganizerManager() {
                     </Stack>
                 )}
             </Paper>
+            <Dialog
+                open={!!mergeSource}
+                onClose={closeMergeDialog}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Merge organizer</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <Typography variant="body2" color="text.secondary">
+                            {mergeSource
+                                ? `Merge "${formatOrganizerLabel(mergeSource)}" (#${mergeSource.id}) into another organizer.`
+                                : 'Select a destination organizer.'}
+                        </Typography>
+                        <Autocomplete<OrganizerOption, false, false, false>
+                            options={mergeTargetOptions}
+                            getOptionLabel={(option) => option?.label || ''}
+                            value={mergeTarget}
+                            onChange={(_, value) => setMergeTarget(value)}
+                            renderInput={(params) => (
+                                <TextField
+                                    {...params}
+                                    label="Destination organizer"
+                                    placeholder="Type to search organizers"
+                                    helperText="Destination organizer stays; source organizer is deleted after merging."
+                                />
+                            )}
+                            renderOption={(props, option) => (
+                                <li {...props} key={option.id}>
+                                    <Stack>
+                                        <Typography variant="body2">{option.label}</Typography>
+                                        {option.handles && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {option.handles}
+                                            </Typography>
+                                        )}
+                                    </Stack>
+                                </li>
+                            )}
+                            fullWidth
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                            This moves events, communities, promo codes, facilitators, deep links, and munches.
+                        </Typography>
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeMergeDialog} disabled={mergeOrganizer.isPending}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        onClick={handleMerge}
+                        disabled={!canMerge}
+                    >
+                        {mergeOrganizer.isPending ? 'Merging...' : 'Merge into destination'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

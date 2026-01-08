@@ -185,10 +185,6 @@ export const UE = {
     WeeklyPicksPrevWeekClicked: 'weekly_picks_prev_week_clicked',
     WeeklyPicksNextWeekClicked: 'weekly_picks_next_week_clicked',
 
-    // Rate App Modal
-    RateAppModalDismissed: 'rate_app_modal_dismissed',
-    RateAppModalOpenStore: 'rate_app_modal_open_store',
-
     // EdgePlay Group Modal
     EdgePlayGroupModalDismissed: 'edgeplay_group_modal_dismissed',
     EdgePlayGroupModalOpenWhatsapp: 'edgeplay_group_modal_open_whatsapp',
@@ -225,12 +221,6 @@ type AnalyticsProps = {
 type EventDetailsProps = AnalyticsProps & {
     event_id?: number | null;
 }
-
-type EventListViewMode = 'image' | 'classic';
-
-type EventListItemClickProps = EventDetailsProps & {
-    list_view_mode?: EventListViewMode;
-};
 
 /**
  * 2) Map event names to their payload shapes (or null for no props)
@@ -384,7 +374,7 @@ export interface EventPayloadMap {
     [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
 
     // Event-List
-    [UE.EventListItemClicked]: EventListItemClickProps
+    [UE.EventListItemClicked]: EventDetailsProps
     [UE.EventListItemDiscountModalOpened]: EventDetailsProps
     [UE.EventListItemTicketPressed]: EventDetailsProps
     [UE.EventListItemWishlistToggled]: EventDetailsProps & {
@@ -568,10 +558,6 @@ export interface EventPayloadMap {
         name?: string;
         url?: string;
     };
-
-    // Rate App Modal
-    [UE.RateAppModalDismissed]: AnalyticsProps;
-    [UE.RateAppModalOpenStore]: AnalyticsProps;
 
 
     // EdgePlay Group Modal

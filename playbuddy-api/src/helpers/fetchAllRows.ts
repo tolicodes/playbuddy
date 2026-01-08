@@ -9,6 +9,7 @@ type FetchAllRowsParams = {
         count?: 'exact' | 'planned' | 'estimated';
         head?: boolean;
     };
+    queryModifier?: (query: any) => any;
 };
 
 export async function fetchAllRows({
@@ -17,6 +18,7 @@ export async function fetchAllRows({
     where,
     pageSize = 1000,
     options = {},
+    queryModifier,
 }: FetchAllRowsParams): Promise<any[]> {
     let allRows: any[] = [];
     let offset = 0;
@@ -25,8 +27,7 @@ export async function fetchAllRows({
         let query = supabaseClient
             // @ts-ignore
             .from(from)
-            .select(select, options)
-            .range(offset, offset + pageSize - 1)
+            .select(select, options);
 
         // Apply where filter if provided
         if (where) {
@@ -36,6 +37,12 @@ export async function fetchAllRows({
             }
             query = query.filter(column, operator, value);
         }
+
+        if (queryModifier) {
+            query = queryModifier(query) || query;
+        }
+
+        query = query.range(offset, offset + pageSize - 1);
 
         const { data, error } = await query;
 

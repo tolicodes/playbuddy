@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import type { Event } from '../../../commonTypes';
 import type { EventWithMetadata } from '../../../Common/Nav/NavStackType';
+import { TZ } from '../ListView/calendarNavUtils';
 
 export const SECTION_DATE_FORMAT = 'MMM D, YYYY (dddd)';
 
@@ -21,7 +22,7 @@ export const useGroupedEvents = (
         // 2) Group by YYYY-MM-DD
         const grouped: Grouped = {};
         for (const ev of sorted) {
-            const key = moment(ev.start_date).format('YYYY-MM-DD');
+            const key = moment.tz(ev.start_date, TZ).format('YYYY-MM-DD');
             (grouped[key] ||= []).push(ev);
         }
 
@@ -31,7 +32,7 @@ export const useGroupedEvents = (
             .map(([date, data]) => ({
                 key: date,
                 date,
-                title: moment(date).format(SECTION_DATE_FORMAT),
+                title: moment.tz(date, 'YYYY-MM-DD', TZ).format(SECTION_DATE_FORMAT),
                 data,
             }));
 
