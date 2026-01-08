@@ -23,6 +23,7 @@
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.5",
     "axios": "^1.9.0",
+    "d3": "^7.9.0",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.15.0",
     "jszip": "^3.10.1",
@@ -69,6 +70,7 @@
     ]
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
     "@types/papaparse": "^5.3.16",
     "@types/turndown": "^5.0.5",
     "os-browserify": "^0.3.0"
