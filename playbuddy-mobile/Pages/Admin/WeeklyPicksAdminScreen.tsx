@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import {
     Alert,
     View,
@@ -178,6 +178,7 @@ export const WeeklyPicksAdminScreen = () => {
     const [downloadLoading, setDownloadLoading] = useState(false);
     const [generationInProgress, setGenerationInProgress] = useState(false);
     const [generationCountdown, setGenerationCountdown] = useState(0);
+    const lastLoadedPreviewUrlRef = useRef<string | null>(null);
     const countdownLabel = useMemo(() => {
         const totalSeconds = Math.max(0, generationCountdown);
         const minutes = Math.floor(totalSeconds / 60);
@@ -204,19 +205,32 @@ export const WeeklyPicksAdminScreen = () => {
         [previewUrl]
     );
 
+    useEffect(() => {
+        if (previewUrl !== lastLoadedPreviewUrlRef.current) {
+            setPreviewError(false);
+            setPreviewLoading(true);
+        }
+    }, [previewUrl]);
+
     const handlePreviewLoadStart = useCallback(() => {
+        if (previewUrl === lastLoadedPreviewUrlRef.current) {
+            return;
+        }
         console.log('[weekly-picks] preview load start', previewUrl);
         setPreviewError(false);
         setPreviewLoading(true);
     }, [previewUrl]);
     const handlePreviewLoad = useCallback(() => {
         console.log('[weekly-picks] preview load', previewUrl);
+        lastLoadedPreviewUrlRef.current = previewUrl;
         setPreviewLoading(false);
         setPreviewError(false);
     }, [previewUrl]);
     const handlePreviewLoadEnd = useCallback(() => {
         console.log('[weekly-picks] preview load end', previewUrl);
+        lastLoadedPreviewUrlRef.current = previewUrl;
         setPreviewLoading(false);
+        setPreviewError(false);
     }, [previewUrl]);
     const handlePreviewError = useCallback(() => {
         setPreviewLoading(false);

@@ -1,6 +1,3 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import axios from 'axios';
 import sharp from 'sharp';
 import moment from 'moment-timezone';
@@ -65,77 +62,47 @@ const THEME = {
     },
 };
 
-const IONICONS = {
-    calendar: 60112,
-    restaurant: 60982,
-    sparkles: 61069,
-    leaf: 60595,
-    'musical-notes': 60778,
-    construct: 60295,
-    mic: 60757,
-    'chatbubble-ellipses': 60179,
-    'chevron-back': 60202,
-    'chevron-forward': 60220,
-    'time-outline': 61151,
-    'location-outline': 60614,
-    'pricetag-outline': 60908,
-} as const;
-
-const ORGANIZER_PALETTE = [
-    '#7986CB', '#33B679', '#8E24AA', '#E67C73', '#F6BF26', '#F4511E', '#039BE5', '#616161',
-    '#3F51B5', '#0B8043', '#D50000', '#F09300', '#F6BF26', '#33B679', '#0B8043', '#E4C441',
-    '#FF7043', '#795548', '#8D6E63', '#9E9E9E',
-] as const;
-
 const IMAGE_THEMES: Record<
     string,
-    { label: string; icon: keyof typeof IONICONS; colors: string[]; textColor: string }
+    { label: string; colors: string[]; textColor: string }
 > = {
     event: {
         label: 'Event',
-        icon: 'calendar',
         colors: [THEME.colors.surfaceLavenderLight, THEME.colors.surfaceLavenderStrong],
         textColor: THEME.colors.brandViolet,
     },
     munch: {
         label: 'Munch',
-        icon: 'restaurant',
         colors: [THEME.colors.surfaceGoldLight, THEME.colors.surfaceGoldWarm],
         textColor: THEME.colors.textGold,
     },
     play_party: {
         label: 'Play Party',
-        icon: 'sparkles',
         colors: [THEME.colors.surfaceLavenderAlt, THEME.colors.surfaceLavenderStrong],
         textColor: THEME.colors.brandPurpleDark,
     },
     retreat: {
         label: 'Retreat',
-        icon: 'leaf',
         colors: [THEME.colors.surfaceMuted, THEME.colors.surfaceLavenderLight],
         textColor: THEME.colors.success,
     },
     festival: {
         label: 'Festival',
-        icon: 'musical-notes',
         colors: [THEME.colors.surfaceInfo, THEME.colors.surfaceInfoStrong],
         textColor: THEME.colors.brandBlue,
     },
     workshop: {
         label: 'Workshop',
-        icon: 'construct',
         colors: [THEME.colors.surfaceRoseSoft, THEME.colors.surfaceRose],
         textColor: THEME.colors.warning,
     },
     performance: {
         label: 'Performance',
-        icon: 'mic',
         colors: [THEME.colors.surfaceLavenderWarm, THEME.colors.surfaceLavenderAlt],
         textColor: THEME.colors.brandPlum,
     },
     discussion: {
         label: 'Discussion',
-        icon: 'chatbubble-ellipses',
         colors: [THEME.colors.surfaceInfo, THEME.colors.surfaceGoldLight],
         textColor: THEME.colors.brandInk,
     },
@@ -168,7 +135,6 @@ type WeeklyPickItem = {
     dateLabel: string;
     title: string;
     organizer: string;
-    organizerColor: string;
     image: string;
     promoCodeDiscount: string | null;
     eventId: number;
@@ -378,59 +344,10 @@ const resolvePromoDiscount = (event: WeeklyPickEventRow) => {
     return `$${discountValue} off`;
 };
 
-const buildOrganizerColorMap = (events: WeeklyPickEventRow[]) => {
-    const map = new Map<number, string>();
-    let index = 0;
-    events.forEach((event) => {
-        const organizerId = event.organizer?.id;
-        if (!organizerId || map.has(organizerId)) return;
-        map.set(organizerId, ORGANIZER_PALETTE[index % ORGANIZER_PALETTE.length]);
-        index += 1;
-    });
-    return map;
-};
-
-const resolveOrganizerColor = (event: WeeklyPickEventRow, map: Map<number, string>) => {
-    const organizerId = event.organizer?.id;
-    if (!organizerId) return '';
-    return map.get(organizerId) ?? '';
-};
-
 const getWeekRangeLabel = (start: moment.Moment) => {
     const end = start.clone().add(6, 'days');
     return `${start.format('MMM D')} - ${end.format('MMM D')}`;
 };
-
-const currentDir = path.dirname(fileURLToPath(import.meta.url));
-let cachedIoniconsFont: string | null | undefined;
-
-const loadIoniconsFont = () => {
-    if (cachedIoniconsFont !== undefined) return cachedIoniconsFont;
-    const candidates = [
-        process.env.IONICONS_TTF_PATH,
-        path.resolve(currentDir, '../assets/Ionicons.ttf'),
-        path.resolve(currentDir, '../../src/assets/Ionicons.ttf'),
-        path.resolve(process.cwd(), 'src/assets/Ionicons.ttf'),
-        path.resolve(process.cwd(), 'playbuddy-api/src/assets/Ionicons.ttf'),
-        path.resolve(process.cwd(), 'node_modules/react-native-vector-icons/Fonts/Ionicons.ttf'),
-        path.resolve(process.cwd(), '../playbuddy-mobile/node_modules/react-native-vector-icons/Fonts/Ionicons.ttf'),
-        path.resolve(process.cwd(), 'playbuddy-mobile/node_modules/react-native-vector-icons/Fonts/Ionicons.ttf'),
-        path.resolve(process.cwd(), '../playbuddy-mobile/node_modules/expo/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf'),
-    ].filter(Boolean) as string[];
-
-    for (const candidate of candidates) {
-        if (fs.existsSync(candidate)) {
-            const base64 = fs.readFileSync(candidate).toString('base64');
-            cachedIoniconsFont = `data:font/ttf;base64,${base64}`;
-            return cachedIoniconsFont;
-        }
-    }
-    cachedIoniconsFont = null;
-    return cachedIoniconsFont;
-};
-
-const renderIconChar = (name: keyof typeof IONICONS) =>
-    String.fromCodePoint(IONICONS[name]);
 
 const estimateMaxChars = (availableWidth: number, fontSize: number, charWidthFactor = 0.62) => {
     const avgCharWidth = fontSize * charWidthFactor;
@@ -540,7 +457,6 @@ const buildSvg = ({
     isLastWeek,
     days,
     imagesById,
-    ioniconsFont,
 }: {
     width: number;
     height: number;
@@ -550,7 +466,6 @@ const buildSvg = ({
     isLastWeek: boolean;
     days: Array<{ dateKey: string; dayLabel: string; dateLabel: string; items: WeeklyPickItem[] }>;
     imagesById: Map<number, string | null>;
-    ioniconsFont: string | null;
 }): { svg: string; height: number } => {
     const s = (value: number) => value * scale;
 
@@ -600,11 +515,6 @@ const buildSvg = ({
     const metaFont = s(12);
     const metaLineHeight = s(16);
     const metaMarginTop = s(2);
-    const metaIconSize = s(12);
-    const metaIconGap = s(4);
-    const metaSeparatorGap = s(4);
-    const organizerDotSize = s(8);
-    const organizerDotGap = s(8);
 
     const typeTagPaddingX = s(14);
     const typeTagPaddingY = s(4);
@@ -698,16 +608,6 @@ const buildSvg = ({
     </linearGradient>`);
     });
 
-    if (ioniconsFont) {
-        defs.push(`
-    <style>
-      @font-face {
-        font-family: 'Ionicons';
-        src: url('${ioniconsFont}') format('truetype');
-      }
-    </style>`);
-    }
-
     const glowTopX = width - s(90) - glowTopSize;
     const glowTopY = -s(80);
     const glowMidX = -s(110);
@@ -789,37 +689,18 @@ const buildSvg = ({
                 const detailsY = cardY + imageHeight;
                 const detailsAvailableWidth = cardWidth - detailsPaddingX * 2;
                 const maxTitleChars = Math.max(8, estimateMaxChars(detailsAvailableWidth, titleFont, 0.64) - 1);
-                const maxOrganizerChars = estimateMaxChars(
-                    detailsAvailableWidth - organizerDotSize - organizerDotGap,
-                    organizerFont,
-                    0.6
-                );
+                const maxOrganizerChars = estimateMaxChars(detailsAvailableWidth, organizerFont, 0.6);
                 const maxMetaChars = estimateMaxChars(detailsAvailableWidth, metaFont, 0.6);
 
                 const titleLines = wrapText(item.title, maxTitleChars, 2);
                 const organizerText = truncateText(item.organizer, maxOrganizerChars);
-                const hasLocation = item.locationLabel.length > 0;
-                const hasPrice = item.priceLabel.length > 0;
-                const timeMaxChars = (hasLocation || hasPrice)
-                    ? Math.max(6, Math.floor(maxMetaChars * 0.45))
-                    : Math.max(6, maxMetaChars);
-                const locationMaxChars = hasLocation
-                    ? Math.max(8, Math.floor(maxMetaChars * (hasPrice ? 0.35 : 0.55)))
-                    : 0;
-                const priceMaxChars = hasPrice
-                    ? Math.max(4, Math.floor(maxMetaChars * 0.2))
-                    : 0;
-                const timeLabel = truncateText(item.timeLabel, timeMaxChars);
-                const locationLabel = hasLocation ? truncateText(item.locationLabel, locationMaxChars) : '';
-                const priceLabel = hasPrice ? truncateText(item.priceLabel, priceMaxChars) : '';
-                const metaItems: Array<{ icon: keyof typeof IONICONS; label: string; strong: boolean }> = [
-                    { icon: 'time-outline', label: timeLabel, strong: true },
-                    ...(locationLabel ? [{ icon: 'location-outline', label: locationLabel, strong: false }] : []),
-                    ...(priceLabel ? [{ icon: 'pricetag-outline', label: priceLabel, strong: false }] : []),
-                ];
+                const metaLine = truncateText(
+                    [item.timeLabel, item.locationLabel, item.priceLabel].filter(Boolean).join(' - '),
+                    maxMetaChars
+                );
 
                 const hasOrganizer = organizerText.length > 0;
-                const hasMeta = metaItems.length > 0;
+                const hasMeta = metaLine.length > 0;
 
                 content.push(`
     <defs>
@@ -844,11 +725,8 @@ const buildSvg = ({
 
                 let textY = detailsY + detailsPaddingTop;
                 if (hasOrganizer) {
-                    const dotX = paddingX + detailsPaddingX + organizerDotSize / 2;
-                    const dotY = textY + organizerLineHeight / 2;
                     content.push(`
-    <circle cx="${dotX}" cy="${dotY}" r="${organizerDotSize / 2}" fill="${item.organizerColor || THEME.colors.textDisabled}" />
-    <text x="${dotX + organizerDotSize / 2 + organizerDotGap}" y="${textY}" font-size="${organizerFont}" font-family="${fontBody}"
+    <text x="${paddingX + detailsPaddingX}" y="${textY}" font-size="${organizerFont}" font-family="${fontBody}"
           fill="${THEME.colors.textMuted}" dominant-baseline="hanging">${escapeXml(organizerText)}</text>`);
                     textY += organizerLineHeight + organizerMarginBottom;
                 }
@@ -863,28 +741,9 @@ const buildSvg = ({
 
                 if (hasMeta) {
                     textY += metaMarginTop;
-                    let metaX = paddingX + detailsPaddingX;
-                    metaItems.forEach((meta, metaIndex) => {
-                        if (ioniconsFont) {
-                            const iconChar = renderIconChar(meta.icon);
-                            content.push(`
-    <text x="${metaX}" y="${textY + s(1)}" font-size="${metaIconSize}" font-family="Ionicons"
-          fill="${THEME.colors.textMuted}" dominant-baseline="hanging">${iconChar}</text>`);
-                            metaX += metaIconSize + metaIconGap;
-                        }
-                        content.push(`
-    <text x="${metaX}" y="${textY}" font-size="${metaFont}" font-family="${fontBody}"
-          font-weight="${meta.strong ? 700 : 600}" fill="${meta.strong ? THEME.colors.textDeep : THEME.colors.textMuted}"
-          dominant-baseline="hanging">${escapeXml(meta.label)}</text>`);
-                        metaX += estimateTextWidth(meta.label, metaFont, 0);
-
-                        if (metaIndex < metaItems.length - 1) {
-                            content.push(`
-    <text x="${metaX + metaSeparatorGap}" y="${textY}" font-size="${metaFont}" font-family="${fontBody}"
-          fill="${THEME.colors.textMuted}" dominant-baseline="hanging">.</text>`);
-                            metaX += metaSeparatorGap * 2;
-                        }
-                    });
+                    content.push(`
+    <text x="${paddingX + detailsPaddingX}" y="${textY}" font-size="${metaFont}" font-family="${fontBody}"
+          fill="${THEME.colors.textSlate}" dominant-baseline="hanging">${escapeXml(metaLine)}</text>`);
                     textY += metaLineHeight;
                 }
 
@@ -1060,7 +919,6 @@ export const generateWeeklyPicksImage = async (
     const fetchEventsStart = Date.now();
     const events = await fetchWeeklyPickEvents(rangeStart, rangeEnd);
     const fetchEventsMs = Date.now() - fetchEventsStart;
-    const organizerColorMap = buildOrganizerColorMap(events);
     console.log(
         `${logPrefix} Loaded ${events.length} events for range ${rangeStart.format('YYYY-MM-DD')}..${rangeEnd.format('YYYY-MM-DD')} in ${fetchEventsMs}ms`
     );
@@ -1110,7 +968,6 @@ export const generateWeeklyPicksImage = async (
             dateLabel: eventDate.format('MMM D'),
             title: event.name ?? '',
             organizer: event.organizer?.name ?? '',
-            organizerColor: resolveOrganizerColor(event, organizerColorMap),
             image: event.image_url ?? '',
             promoCodeDiscount: resolvePromoDiscount(event),
             eventId: event.id,
@@ -1173,8 +1030,6 @@ export const generateWeeklyPicksImage = async (
     const imageFetchMs = Date.now() - imageFetchStart;
     console.log(`${logPrefix} Image fetch total ${imageFetchMs}ms`);
 
-    const ioniconsFont = loadIoniconsFont();
-
     console.log(`${logPrefix} Rendering SVG`);
     const renderSvgStart = Date.now();
     const { svg, height: renderedHeight } = buildSvg({
@@ -1188,7 +1043,6 @@ export const generateWeeklyPicksImage = async (
             selectedOffset === visibleWeekOffsets[visibleWeekOffsets.length - 1],
         days,
         imagesById,
-        ioniconsFont,
     });
     const renderSvgMs = Date.now() - renderSvgStart;
     console.log(`${logPrefix} SVG rendered height=${renderedHeight} in ${renderSvgMs}ms`);
