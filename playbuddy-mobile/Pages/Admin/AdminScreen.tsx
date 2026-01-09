@@ -82,6 +82,14 @@ const QUICK_ACTIONS: QuickAction[] = [
         tone: colors.surfaceLavenderLight,
         iconColor: colors.brandIndigo,
     },
+    {
+        title: 'Push Notifications',
+        subtitle: 'Send remote app alerts',
+        icon: 'paper-plane',
+        route: 'Push Notifications Admin',
+        tone: colors.surfaceInfo,
+        iconColor: colors.brandBlue,
+    },
 ];
 
 export const AdminScreen = () => {
@@ -122,7 +130,7 @@ export const AdminScreen = () => {
                 <Text style={styles.heroKicker}>Admin control</Text>
                 <Text style={styles.heroTitle}>Command Center</Text>
                 <Text style={styles.heroSubtitle}>
-                    Admin tools for events, imports, organizers, weekly picks, and promo codes.
+                    Admin tools for events, imports, organizers, weekly picks, promo codes, and push.
                 </Text>
             </LinearGradient>
 

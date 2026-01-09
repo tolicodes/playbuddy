@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Image } from 'expo-image';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Linking, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import { Avatar } from './Buttons/Avatar';
 import { ScrollView } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as Notifications from 'expo-notifications';
 import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
@@ -15,13 +16,47 @@ import { UE } from '../../userEventTypes';
 import { navigateToHome, navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { EventListViewMode, getEventListViewMode, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
+import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useFetchFollows } from '../../Common/db-axios/useFollows';
+import { useCommonContext } from '../../Common/hooks/CommonContext';
+import {
+    cancelOrganizerNotifications,
+    ensureNotificationPermissions,
+    getPushNotificationsEnabled,
+    registerRemotePushToken,
+    scheduleOrganizerNotifications,
+    setPushNotificationsEnabled,
+    setPushNotificationsPrompted,
+    unregisterRemotePushToken,
+} from '../../Common/notifications/organizerPushNotifications';
 
 export default function AccountDetails() {
-    const { userProfile, signOut, fullNameFromOAuthedUser } = useUserContext();
+    const { authUserId, userProfile, signOut, fullNameFromOAuthedUser } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const analyticsProps = useAnalyticsProps();
     const isFocused = useIsFocused();
     const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
+    const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
+    const [scheduledNotifications, setScheduledNotifications] = useState<Notifications.NotificationRequest[]>([]);
+    const { allEvents } = useCalendarContext();
+    const { myCommunities } = useCommonContext();
+    const { data: follows } = useFetchFollows(authUserId || undefined);
+
+    const organizerIdsFromCommunities = useMemo(() => {
+        const organizerCommunities = [
+            ...myCommunities.myOrganizerPublicCommunities,
+            ...myCommunities.myOrganizerPrivateCommunities,
+        ];
+        return organizerCommunities
+            .map((community) => community.organizer_id)
+            .filter(Boolean)
+            .map((id) => id.toString());
+    }, [myCommunities.myOrganizerPrivateCommunities, myCommunities.myOrganizerPublicCommunities]);
+
+    const followedOrganizerIds = useMemo(() => {
+        const followIds = (follows?.organizer || []).map((id) => id.toString());
+        return new Set([...followIds, ...organizerIdsFromCommunities]);
+    }, [follows?.organizer, organizerIdsFromCommunities]);
 
     useEffect(() => {
         let isActive = true;
@@ -40,12 +75,81 @@ export default function AccountDetails() {
         };
     }, [isFocused]);
 
+    useEffect(() => {
+        let isActive = true;
+        if (!isFocused) {
+            return () => {
+                isActive = false;
+            };
+        }
+        getPushNotificationsEnabled().then((enabled) => {
+            if (isActive) {
+                setNotificationsEnabledState(enabled);
+            }
+        });
+        return () => {
+            isActive = false;
+        };
+    }, [isFocused]);
+
+    const refreshScheduledNotifications = useCallback(async () => {
+        if (!__DEV__) return;
+        try {
+            const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+            setScheduledNotifications(scheduled);
+        } catch {
+            setScheduledNotifications([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isFocused) return;
+        void refreshScheduledNotifications();
+    }, [isFocused, refreshScheduledNotifications]);
+
     const onToggleClassicView = (value: boolean) => {
         const nextMode: EventListViewMode = value ? 'classic' : 'image';
         setListViewMode(nextMode);
         void setEventListViewMode(nextMode);
     };
 
+    const onToggleNotifications = (value: boolean) => {
+        void (async () => {
+            setNotificationsEnabledState(value);
+            if (!value) {
+                await setPushNotificationsEnabled(false);
+                await cancelOrganizerNotifications();
+                await unregisterRemotePushToken();
+                await refreshScheduledNotifications();
+                return;
+            }
+
+            const granted = await ensureNotificationPermissions();
+            if (!granted) {
+                Alert.alert(
+                    'Notifications are off',
+                    'Enable notifications in Settings to get workshop reminders.'
+                );
+                setNotificationsEnabledState(false);
+                await setPushNotificationsEnabled(false);
+                await setPushNotificationsPrompted(true);
+                return;
+            }
+
+            await setPushNotificationsEnabled(true);
+            await setPushNotificationsPrompted(true);
+            try {
+                await registerRemotePushToken();
+            } catch (error) {
+                console.warn('[notifications] failed to register push token', error);
+            }
+            await scheduleOrganizerNotifications({
+                events: allEvents,
+                followedOrganizerIds,
+            });
+            await refreshScheduledNotifications();
+        })();
+    };
 
     const onPressSignOut = async () => {
         logEvent(UE.AuthProfilePressSignOut, analyticsProps);
@@ -131,7 +235,42 @@ export default function AccountDetails() {
                                 ios_backgroundColor={colors.borderMutedAlt}
                             />
                         </View>
+                        <View style={[styles.preferenceRow, styles.preferenceRowSpaced]}>
+                            <View style={styles.preferenceCopy}>
+                                <Text style={styles.preferenceLabel}>Push notifications</Text>
+                                <Text style={styles.preferenceDescription}>
+                                    Workshop reminders every few days from organizers you follow.
+                                </Text>
+                            </View>
+                            <Switch
+                                value={notificationsEnabled}
+                                onValueChange={onToggleNotifications}
+                                trackColor={{ false: colors.borderMutedAlt, true: colors.accentPurple }}
+                                thumbColor={colors.white}
+                                ios_backgroundColor={colors.borderMutedAlt}
+                            />
+                        </View>
                     </View>
+
+                    {__DEV__ && (
+                        <View style={styles.sectionCard}>
+                            <Text style={styles.sectionTitle}>Scheduled notifications</Text>
+                            {scheduledNotifications.length === 0 ? (
+                                <Text style={styles.metaText}>No scheduled notifications.</Text>
+                            ) : (
+                                scheduledNotifications.map((notification, index) => (
+                                    <View key={notification.identifier || `scheduled-${index}`} style={styles.scheduledRow}>
+                                        <Text style={styles.scheduledTitle}>
+                                            {notification.content.title || 'Notification'}
+                                        </Text>
+                                        <Text style={styles.metaText}>
+                                            {formatNotificationTrigger(notification.trigger)}
+                                        </Text>
+                                    </View>
+                                ))
+                            )}
+                        </View>
+                    )}
 
                     <View style={styles.sectionCard}>
                         <Text style={styles.sectionTitle}>Actions</Text>
@@ -167,6 +306,35 @@ const InfoItem = ({ label, value }: { label: string, value?: string }) => (
         <Text style={styles.value}>{value}</Text>
     </View>
 );
+
+const formatNotificationTrigger = (trigger: Notifications.NotificationTrigger) => {
+    if (!trigger || typeof trigger !== 'object') return 'Trigger: unknown';
+    if ('type' in trigger) {
+        const typed = trigger as Notifications.NotificationTrigger & {
+            type?: string;
+            seconds?: number;
+            repeats?: boolean;
+            weekday?: number;
+            hour?: number;
+            minute?: number;
+        };
+        let label = `Trigger: ${typed.type ?? 'unknown'}`;
+        if (typeof typed.seconds === 'number') {
+            label += ` • every ${typed.seconds}s`;
+        }
+        if (typeof typed.hour === 'number' && typeof typed.minute === 'number') {
+            label += ` • ${typed.hour}:${String(typed.minute).padStart(2, '0')}`;
+        }
+        if (typeof typed.weekday === 'number') {
+            label += ` • weekday ${typed.weekday}`;
+        }
+        if (typeof typed.repeats === 'boolean') {
+            label += typed.repeats ? ' • repeats' : ' • once';
+        }
+        return label;
+    }
+    return `Trigger: ${JSON.stringify(trigger)}`;
+};
 
 const styles = StyleSheet.create({
     container: {

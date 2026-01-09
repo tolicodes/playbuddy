@@ -17,6 +17,8 @@ import { queryClient } from './Common/hooks/reactQueryClient';
 import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DeepLinkHandler from './Common/Nav/DeepLinkHandler';
+import { NotificationResponseHandler } from './Common/notifications/NotificationResponseHandler';
+import { OrganizerNotificationsRefresher } from './Common/notifications/OrganizerNotificationsRefresher';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed', undefined, {
   disableCookies: true,
@@ -55,6 +57,8 @@ const App = () => {
               <CalendarProvider>
                 <PaperProvider>
                   <DeepLinkHandler />
+                  <NotificationResponseHandler />
+                  <OrganizerNotificationsRefresher />
                   <Nav />
                 </PaperProvider>
               </CalendarProvider>

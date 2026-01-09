@@ -992,6 +992,54 @@ export interface EventPopupInput {
     expires_at?: string | null;
 }
 
+export type PushNotificationStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed' | 'canceled';
+
+export interface PushNotification {
+    id: string;
+    event_id?: number | null;
+    title: string;
+    body: string;
+    image_url?: string | null;
+    status: PushNotificationStatus;
+    send_at?: string | null;
+    sent_at?: string | null;
+    sent_count?: number | null;
+    failed_count?: number | null;
+    last_error?: string | null;
+    created_by_auth_user_id?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+}
+
+export interface PushNotificationInput {
+    id?: string;
+    event_id?: number | null;
+    title: string;
+    body: string;
+    image_url?: string | null;
+    status?: PushNotificationStatus;
+    send_at?: string | null;
+}
+
+export interface PushToken {
+    id: string;
+    auth_user_id?: string | null;
+    token: string;
+    device_id?: string | null;
+    platform?: string | null;
+    created_at: string;
+    updated_at?: string | null;
+    last_seen_at?: string | null;
+    disabled_at?: string | null;
+    disable_reason?: string | null;
+}
+
+export interface PushTokenInput {
+    token: string;
+    device_id?: string | null;
+    platform?: string | null;
+}
+
 export interface MarketingAssignee {
     id: number;
     name: string | null;

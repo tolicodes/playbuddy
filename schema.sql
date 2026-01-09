@@ -338,7 +338,6 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
 
 ALTER TABLE "public"."events" OWNER TO "postgres";
 
-
 CREATE TABLE IF NOT EXISTS "public"."event_popups" (
     "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
     "event_id" integer,
@@ -354,6 +353,41 @@ CREATE TABLE IF NOT EXISTS "public"."event_popups" (
 );
 
 ALTER TABLE "public"."event_popups" OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "public"."push_notifications" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "event_id" integer,
+    "title" "text" NOT NULL,
+    "body" "text" NOT NULL,
+    "image_url" "text",
+    "status" "text" DEFAULT 'draft'::"text" NOT NULL,
+    "send_at" timestamp with time zone,
+    "sent_at" timestamp with time zone,
+    "sent_count" integer DEFAULT 0,
+    "failed_count" integer DEFAULT 0,
+    "last_error" "text",
+    "created_by_auth_user_id" "uuid",
+    "created_at" timestamp with time zone DEFAULT now(),
+    "updated_at" timestamp with time zone DEFAULT now(),
+    CONSTRAINT "push_notifications_status_check" CHECK (("status" = ANY (ARRAY['draft'::"text", 'scheduled'::"text", 'sending'::"text", 'sent'::"text", 'failed'::"text", 'canceled'::"text"])))
+);
+
+ALTER TABLE "public"."push_notifications" OWNER TO "postgres";
+
+CREATE TABLE IF NOT EXISTS "public"."push_tokens" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "auth_user_id" "uuid",
+    "token" "text" NOT NULL,
+    "device_id" "text",
+    "platform" "text",
+    "created_at" timestamp with time zone DEFAULT now(),
+    "updated_at" timestamp with time zone DEFAULT now(),
+    "last_seen_at" timestamp with time zone,
+    "disabled_at" timestamp with time zone,
+    "disable_reason" "text"
+);
+
+ALTER TABLE "public"."push_tokens" OWNER TO "postgres";
 
 
 COMMENT ON COLUMN "public"."events"."location_area_id" IS 'Foreign key referencing the location of the event';
@@ -634,9 +668,14 @@ ALTER TABLE ONLY "public"."event_wishlist"
 ALTER TABLE ONLY "public"."events"
     ADD CONSTRAINT "events_pkey" PRIMARY KEY ("id");
 
-
 ALTER TABLE ONLY "public"."event_popups"
     ADD CONSTRAINT "event_popups_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."push_notifications"
+    ADD CONSTRAINT "push_notifications_pkey" PRIMARY KEY ("id");
+
+ALTER TABLE ONLY "public"."push_tokens"
+    ADD CONSTRAINT "push_tokens_pkey" PRIMARY KEY ("id");
 
 
 
@@ -717,6 +756,11 @@ CREATE INDEX "idx_events_start_date" ON "public"."events" USING "btree" ("start_
 
 
 CREATE INDEX "idx_location_area_name" ON "public"."location_areas" USING "btree" ("name");
+
+CREATE INDEX "idx_push_notifications_send_at" ON "public"."push_notifications" USING "btree" ("send_at");
+CREATE INDEX "idx_push_notifications_status" ON "public"."push_notifications" USING "btree" ("status");
+CREATE INDEX "idx_push_notifications_event_id" ON "public"."push_notifications" USING "btree" ("event_id");
+CREATE UNIQUE INDEX "push_tokens_token_key" ON "public"."push_tokens" USING "btree" ("token");
 
 
 
@@ -817,9 +861,17 @@ ALTER TABLE ONLY "public"."event_wishlist"
 ALTER TABLE ONLY "public"."event_wishlist"
     ADD CONSTRAINT "event_wishlist_user_id_fkey1" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE CASCADE;
 
-
 ALTER TABLE ONLY "public"."event_popups"
     ADD CONSTRAINT "event_popups_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
+
+ALTER TABLE ONLY "public"."push_notifications"
+    ADD CONSTRAINT "push_notifications_created_by_auth_user_id_fkey" FOREIGN KEY ("created_by_auth_user_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."push_notifications"
+    ADD CONSTRAINT "push_notifications_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE SET NULL;
+
+ALTER TABLE ONLY "public"."push_tokens"
+    ADD CONSTRAINT "push_tokens_auth_user_id_fkey" FOREIGN KEY ("auth_user_id") REFERENCES "auth"."users"("id") ON DELETE SET NULL;
 
 
 
@@ -1227,11 +1279,20 @@ GRANT ALL ON TABLE "public"."events" TO "authenticated";
 GRANT ALL ON TABLE "public"."events" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."events" TO "retool_user";
 
-
 GRANT ALL ON TABLE "public"."event_popups" TO "anon";
 GRANT ALL ON TABLE "public"."event_popups" TO "authenticated";
 GRANT ALL ON TABLE "public"."event_popups" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."event_popups" TO "retool_user";
+
+GRANT ALL ON TABLE "public"."push_notifications" TO "anon";
+GRANT ALL ON TABLE "public"."push_notifications" TO "authenticated";
+GRANT ALL ON TABLE "public"."push_notifications" TO "service_role";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."push_notifications" TO "retool_user";
+
+GRANT ALL ON TABLE "public"."push_tokens" TO "anon";
+GRANT ALL ON TABLE "public"."push_tokens" TO "authenticated";
+GRANT ALL ON TABLE "public"."push_tokens" TO "service_role";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."push_tokens" TO "retool_user";
 
 
 

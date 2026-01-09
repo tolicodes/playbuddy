@@ -34,6 +34,8 @@ export type NavStackProps = {
     // TODO: Move?
     'Profile': undefined;
     'Login': undefined;
+    'Notifications': undefined;
+    'Debug': undefined;
 
     // Promotional & Events
     'PromoScreen': undefined;
@@ -46,6 +48,7 @@ export type NavStackProps = {
     'Organizer Admin': undefined;
     'Event Admin': undefined;
     'Event Popups Admin': undefined;
+    'Push Notifications Admin': undefined;
     'Event Details': {
         selectedEvent: EventWithMetadata;
         title: string;

@@ -404,25 +404,35 @@ const getPromoLabel = (event: Event) => {
     return `$${promoCode.discount} off`;
 };
 
-const buildOrganizerNotificationContent = (event: Event) => {
+export const getOrganizerNotificationPreview = (event: Event) => {
     const start = moment(event.start_date).tz(NOTIFICATION_TZ);
     const dateLabel = start.isValid() ? start.format('ddd M/D') : 'Upcoming';
     const organizerName = event.organizer?.name?.trim() || 'Organizer';
     const promoLabel = getPromoLabel(event);
     const imageUrl = getNotificationImageUrl(event);
-    const content: Notifications.NotificationContentInput = {
-        title: promoLabel
-            ? `${dateLabel} ${organizerName} - ${promoLabel}`
-            : `${dateLabel} ${organizerName}`,
+    const title = promoLabel
+        ? `${dateLabel} ${organizerName} - ${promoLabel}`
+        : `${dateLabel} ${organizerName}`;
+    return {
+        title,
         body: event.name,
+        imageUrl,
+    };
+};
+
+const buildOrganizerNotificationContent = (event: Event) => {
+    const preview = getOrganizerNotificationPreview(event);
+    const content: Notifications.NotificationContentInput = {
+        title: preview.title,
+        body: preview.body,
         data: {
             eventId: event.id,
             source: 'organizer',
-            imageUrl,
+            imageUrl: preview.imageUrl,
         },
     };
-    if (imageUrl && Platform.OS === 'ios') {
-        content.attachments = [{ url: imageUrl }];
+    if (preview.imageUrl && Platform.OS === 'ios') {
+        content.attachments = [{ url: preview.imageUrl }];
     }
     return {
         ...content,

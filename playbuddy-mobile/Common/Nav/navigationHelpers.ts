@@ -47,6 +47,8 @@ type HomeStackScreenName =
     | 'Home'
     | 'AuthNav'
     | 'PromoScreen'
+    | 'Notifications'
+    | 'Debug'
     | 'Weekly Picks'
     | 'Event Details'
     | 'Community Events'

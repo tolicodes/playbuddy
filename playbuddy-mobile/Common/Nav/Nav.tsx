@@ -4,6 +4,7 @@ import { DrawerNav } from "./DrawerNav";
 import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import { gradients } from "../../components/styles";
+import { navigationRef } from "./navigationRef";
 
 const navTheme = {
     ...DefaultTheme,
@@ -23,6 +24,7 @@ export default function AppNavigator() {
     return (
         <NavigationContainer
             theme={navTheme}
+            ref={navigationRef}
         >
 
             <View style={styles.root}>

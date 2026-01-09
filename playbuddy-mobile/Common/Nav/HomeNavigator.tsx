@@ -14,6 +14,8 @@ import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile/Faci
 import EventsLoadingScreen from '../../components/EventsLoadingScreen';
 import { navigateToAuth, navigateToHome, navigateToHomeStackScreen } from './navigationHelpers';
 import { colors, gradients } from '../../components/styles';
+import { NotificationsScreen } from '../../Pages/Notifications/NotificationsScreen';
+import DebugScreen from '../../Pages/Debug/DebugScreen';
 
 const HomeStack = createStackNavigator();
 /**
@@ -155,6 +157,14 @@ export function HomeStackNavigator() {
             <HomeStack.Screen name="PromoScreen"
                 component={PromoScreenWrap}
                 options={({ navigation }) => headerOptions({ navigation, title: 'Welcome!', backToWelcome: true })}
+            />
+            <HomeStack.Screen name="Notifications"
+                component={NotificationsScreen}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Notifications' })}
+            />
+            <HomeStack.Screen name="Debug"
+                component={DebugScreen}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Debug' })}
             />
 
             <HomeStack.Screen name="Event Details"

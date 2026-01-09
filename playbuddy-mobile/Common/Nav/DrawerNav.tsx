@@ -21,6 +21,7 @@ import OrganizerAdminScreen from "../../Pages/Admin/OrganizerAdminScreen";
 import EventAdminScreen from "../../Pages/Admin/EventAdminScreen";
 import PromoCodeAdminScreen from "../../Pages/Admin/PromoCodeAdminScreen";
 import EventPopupAdminScreen from "../../Pages/Admin/EventPopupAdminScreen";
+import PushNotificationsAdminScreen from "../../Pages/Admin/PushNotificationsAdminScreen";
 import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
@@ -233,6 +234,15 @@ export const DrawerNav = () => {
                         component={EventPopupAdminScreen}
                         options={({ navigation }) => ({
                             ...headerOptions({ navigation, title: 'Event Popups Admin' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                    />
+                    <Drawer.Screen
+                        name="Push Notifications Admin"
+                        component={PushNotificationsAdminScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Push Notifications Admin' }),
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}

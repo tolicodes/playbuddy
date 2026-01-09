@@ -68,14 +68,15 @@ export const NotificationResponseHandler = () => {
 
             const rawEventId = data?.eventId;
             const eventId = typeof rawEventId === 'number' ? rawEventId : Number(rawEventId);
-            if (source !== 'broadcast' && (!eventId || Number.isNaN(eventId))) return;
+            const hasEventId = !!eventId && !Number.isNaN(eventId);
+            if (!hasEventId && source !== 'broadcast') return;
 
             await upsertNotificationHistoryItem({
                 title: content.title || 'Notification',
                 body: content.body || '',
                 createdAt,
                 source,
-                eventId: source === 'broadcast' ? undefined : eventId,
+                eventId: hasEventId ? eventId : undefined,
                 imageUrl:
                     typeof data?.imageUrl === 'string'
                         ? data.imageUrl
