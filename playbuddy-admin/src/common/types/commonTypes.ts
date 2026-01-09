@@ -966,6 +966,32 @@ export interface DeepLinkInput {
     print_run_asset_number?: number;
 }
 
+export type EventPopupStatus = 'draft' | 'published' | 'stopped';
+
+export interface EventPopup {
+    id: string;
+    event_id: number;
+    title: string;
+    body_markdown: string;
+    status: EventPopupStatus;
+    created_at: string;
+    updated_at?: string | null;
+    published_at?: string | null;
+    expires_at?: string | null;
+    stopped_at?: string | null;
+    event?: Event;
+}
+
+export interface EventPopupInput {
+    id?: string;
+    event_id: number;
+    title: string;
+    body_markdown: string;
+    status?: EventPopupStatus;
+    published_at?: string | null;
+    expires_at?: string | null;
+}
+
 export interface MarketingAssignee {
     id: number;
     name: string | null;

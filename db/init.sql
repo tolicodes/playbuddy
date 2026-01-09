@@ -36,6 +36,19 @@ CREATE TABLE events (
     dataset TEXT CHECK (dataset IN ('Kink', 'Whatsapp POC'))
 );
 
+CREATE TABLE event_popups (
+    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+    event_id int4 REFERENCES events (id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    body_markdown TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'stopped')),
+    published_at timestamptz,
+    expires_at timestamptz,
+    stopped_at timestamptz,
+    created_at timestamptz DEFAULT NOW(),
+    updated_at timestamptz DEFAULT NOW()
+);
+
 -- Optional: Create indexes to speed up common queries
 CREATE INDEX idx_events_start_date ON events(start_date);
 CREATE INDEX idx_events_end_date ON events(end_date);

@@ -31,6 +31,7 @@ import followsRoute from './routes/follows.js'
 import classificationsRoute from './routes/classifications.js'
 import visualizerRoute from './routes/visualizer.js'
 import importSourcesRoute from './routes/import_sources.js'
+import eventPopupsRoute from './routes/event_popups.js'
 
 console.log('API Started')
 
@@ -117,6 +118,7 @@ app.use('/follows', wrapRouter(followsRoute));
 app.use('/classifications', wrapRouter(classificationsRoute));
 app.use('/visualizer', wrapRouter(visualizerRoute));
 app.use('/import_sources', wrapRouter(importSourcesRoute));
+app.use('/event_popups', wrapRouter(eventPopupsRoute));
 
 // Log and return 404s for unmatched routes
 app.use((req, res, next) => {

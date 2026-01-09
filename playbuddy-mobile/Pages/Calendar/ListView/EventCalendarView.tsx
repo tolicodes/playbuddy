@@ -1099,7 +1099,7 @@ const EventCalendarView: React.FC<Props> = ({
             <View pointerEvents="none" style={styles.screenGlowMid} />
             <View pointerEvents="none" style={styles.screenGlowBottom} />
             <View style={styles.container}>
-            <PopupManager />
+            <PopupManager events={sourceEvents} />
             <EventListViewIntroModal
                 visible={showListViewIntro}
                 onSwitchToClassic={handleIntroSwitchToClassic}

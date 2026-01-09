@@ -74,6 +74,14 @@ const QUICK_ACTIONS: QuickAction[] = [
         tone: colors.surfaceGoldWarm,
         iconColor: colors.textGold,
     },
+    {
+        title: 'Event Popups',
+        subtitle: 'Launch special event messages',
+        icon: 'bullhorn',
+        route: 'Event Popups Admin',
+        tone: colors.surfaceLavenderLight,
+        iconColor: colors.brandIndigo,
+    },
 ];
 
 export const AdminScreen = () => {

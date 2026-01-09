@@ -339,6 +339,23 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
 ALTER TABLE "public"."events" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."event_popups" (
+    "id" "uuid" DEFAULT "extensions"."uuid_generate_v4"() NOT NULL,
+    "event_id" integer,
+    "title" "text" NOT NULL,
+    "body_markdown" "text" NOT NULL,
+    "status" "text" DEFAULT 'draft'::"text" NOT NULL,
+    "published_at" timestamp with time zone,
+    "expires_at" timestamp with time zone,
+    "stopped_at" timestamp with time zone,
+    "created_at" timestamp with time zone DEFAULT now(),
+    "updated_at" timestamp with time zone DEFAULT now(),
+    CONSTRAINT "event_popups_status_check" CHECK (("status" = ANY (ARRAY['draft'::"text", 'published'::"text", 'stopped'::"text"])))
+);
+
+ALTER TABLE "public"."event_popups" OWNER TO "postgres";
+
+
 COMMENT ON COLUMN "public"."events"."location_area_id" IS 'Foreign key referencing the location of the event';
 
 
@@ -618,6 +635,10 @@ ALTER TABLE ONLY "public"."events"
     ADD CONSTRAINT "events_pkey" PRIMARY KEY ("id");
 
 
+ALTER TABLE ONLY "public"."event_popups"
+    ADD CONSTRAINT "event_popups_pkey" PRIMARY KEY ("id");
+
+
 
 ALTER TABLE ONLY "public"."kinks"
     ADD CONSTRAINT "kinks_idea_title_key" UNIQUE ("idea_title");
@@ -795,6 +816,10 @@ ALTER TABLE ONLY "public"."event_wishlist"
 
 ALTER TABLE ONLY "public"."event_wishlist"
     ADD CONSTRAINT "event_wishlist_user_id_fkey1" FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE CASCADE;
+
+
+ALTER TABLE ONLY "public"."event_popups"
+    ADD CONSTRAINT "event_popups_event_id_fkey" FOREIGN KEY ("event_id") REFERENCES "public"."events"("id") ON DELETE CASCADE;
 
 
 
@@ -1201,6 +1226,12 @@ GRANT ALL ON TABLE "public"."events" TO "anon";
 GRANT ALL ON TABLE "public"."events" TO "authenticated";
 GRANT ALL ON TABLE "public"."events" TO "service_role";
 GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."events" TO "retool_user";
+
+
+GRANT ALL ON TABLE "public"."event_popups" TO "anon";
+GRANT ALL ON TABLE "public"."event_popups" TO "authenticated";
+GRANT ALL ON TABLE "public"."event_popups" TO "service_role";
+GRANT SELECT,INSERT,DELETE,UPDATE ON TABLE "public"."event_popups" TO "retool_user";
 
 
 

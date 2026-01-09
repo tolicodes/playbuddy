@@ -45,6 +45,7 @@ export type NavStackProps = {
     'Import URLs': undefined;
     'Organizer Admin': undefined;
     'Event Admin': undefined;
+    'Event Popups Admin': undefined;
     'Event Details': {
         selectedEvent: EventWithMetadata;
         title: string;
