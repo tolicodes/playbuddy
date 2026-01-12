@@ -16,6 +16,7 @@ import type { UserProfile } from './UserTypes';
 import type { Session } from '@supabase/supabase-js';
 import { useFetchUserProfile, useSkippingWelcomeScreen } from './useUserProfile';
 import type { DeepLink } from '../../../commonTypes';
+import { setAuthUserIdForLog } from '../../../Common/hooks/logger';
 
 interface UserContextType {
     authUserId: string | null;
@@ -94,6 +95,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Keep axios header synced if session changes via listener/refresh
     useEffect(() => {
         setupAxiosHeaders(session);
+        setAuthUserIdForLog(session?.user?.id ?? null);
     }, [session]);
 
     // Profile + analytics

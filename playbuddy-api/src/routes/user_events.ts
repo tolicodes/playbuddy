@@ -39,11 +39,14 @@ const clampTopLimit = (value: unknown) => {
 
 const parseBoolean = (value: unknown) => value === 'true';
 
-const normalizeDeviceId = (value: unknown) => {
+const normalizeOptionalText = (value: unknown) => {
     if (typeof value !== 'string') return null;
     const trimmed = value.trim();
     return trimmed ? trimmed : null;
 };
+
+const normalizeDeviceId = (value: unknown) => normalizeOptionalText(value);
+const normalizeAuthUserId = (value: unknown) => normalizeOptionalText(value);
 
 const extractEventId = (props: unknown) => {
     if (!props || typeof props !== 'object') return null;
@@ -347,13 +350,33 @@ router.post('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentic
             ?? (user_event_props as Record<string, unknown>)?.deviceId
     );
     const device_id = normalizeDeviceId(req.body.device_id ?? req.body.deviceId) ?? propsDeviceId;
+    const propsAuthUserId = normalizeAuthUserId(
+        (user_event_props as Record<string, unknown>)?.auth_user_id
+            ?? (user_event_props as Record<string, unknown>)?.authUserId
+    );
+    const bodyAuthUserId = normalizeAuthUserId(req.body.auth_user_id ?? req.body.authUserId);
+    const authUserIdFromRequest = normalizeAuthUserId(req.authUserId);
+    const auth_user_id = authUserIdFromRequest ?? bodyAuthUserId ?? propsAuthUserId ?? null;
+
+    const safeProps: Record<string, unknown> = user_event_props && typeof user_event_props === 'object'
+        ? { ...(user_event_props as Record<string, unknown>) }
+        : {};
+
+    const safeDeviceId = normalizeOptionalText(safeProps.device_id);
+    if (device_id && safeDeviceId !== device_id) {
+        safeProps.device_id = device_id;
+    }
+    const safeAuthUserId = normalizeOptionalText(safeProps.auth_user_id);
+    if (auth_user_id && safeAuthUserId !== auth_user_id) {
+        safeProps.auth_user_id = auth_user_id;
+    }
 
     const { data, error } = await supabaseClient
         .from('user_events')
         .insert([{
             user_event_name,
-            user_event_props,
-            auth_user_id: req.authUserId || null,
+            user_event_props: safeProps,
+            auth_user_id,
             device_id,
         }]);
 

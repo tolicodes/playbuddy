@@ -4,6 +4,18 @@ import { API_BASE_URL } from '../../config';
 import { EventPayloadMap, UE } from '../../userEventTypes';
 import type { DeepLink, PromoCode, Event } from '../../commonTypes';
 
+const normalizeOptionalText = (value: unknown) => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+};
+
+let cachedAuthUserId: string | null = null;
+
+export const setAuthUserIdForLog = (authUserId: string | null) => {
+    cachedAuthUserId = normalizeOptionalText(authUserId);
+};
+
 /**
  * Individual builder for DeepLink analytics props
  */
@@ -79,11 +91,16 @@ export function logEvent<
     const baseProps: Record<string, unknown> = { ...safeProps };
     const amplitudeUserId =
         typeof amplitude.getUserId === 'function' ? amplitude.getUserId() : null;
-    if (baseProps.auth_user_id === undefined) {
-        baseProps.auth_user_id = typeof amplitudeUserId === 'string' ? amplitudeUserId : null;
+    const resolvedAuthUserId = normalizeOptionalText(baseProps.auth_user_id)
+        ?? cachedAuthUserId
+        ?? normalizeOptionalText(amplitudeUserId);
+    const resolvedDeviceId = normalizeOptionalText(baseProps.device_id) ?? deviceId;
+
+    if (!normalizeOptionalText(baseProps.auth_user_id)) {
+        baseProps.auth_user_id = resolvedAuthUserId;
     }
-    if (baseProps.device_id === undefined) {
-        baseProps.device_id = deviceId;
+    if (!normalizeOptionalText(baseProps.device_id)) {
+        baseProps.device_id = resolvedDeviceId;
     }
 
     try {
@@ -92,7 +109,12 @@ export function logEvent<
         // ignore in dev
     }
 
-    logUserEventToDB({ user_event_name: name, user_event_props: baseProps, device_id: deviceId });
+    logUserEventToDB({
+        user_event_name: name,
+        user_event_props: baseProps,
+        device_id: resolvedDeviceId,
+        auth_user_id: resolvedAuthUserId,
+    });
 
     console.log('logged event', name, baseProps);
 }
@@ -102,13 +124,20 @@ type DBPayload = {
     user_event_name: string;
     user_event_props?: Record<string, any>;
     device_id?: string | null;
+    auth_user_id?: string | null;
 };
-const logUserEventToDB = async ({ user_event_name, user_event_props, device_id }: DBPayload) => {
+const logUserEventToDB = async ({
+    user_event_name,
+    user_event_props,
+    device_id,
+    auth_user_id,
+}: DBPayload) => {
     try {
         await axios.post(`${API_BASE_URL}/user_events`, {
             user_event_name,
             user_event_props,
             device_id,
+            auth_user_id,
         });
     } catch (error) {
         console.error(`Error recording user event:`, error);

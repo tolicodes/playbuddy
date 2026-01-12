@@ -170,9 +170,11 @@ export const setupAxiosHeaders = (session: Session | null) => {
 
 export const useSetupTracking = (session?: Session | null, userProfile?: UserProfile | null) => {
     useEffect(() => {
-        if (!session || !userProfile) return;
+        if (!session) return;
 
         amplitude.setUserId(session.user.id);
+        if (!userProfile) return;
+
         const identifyEvent = new amplitude.Identify();
         if (userProfile?.email) {
             identifyEvent.set('email', userProfile.email);
