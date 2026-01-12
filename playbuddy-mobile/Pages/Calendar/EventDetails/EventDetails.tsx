@@ -26,6 +26,7 @@ import { useUserContext } from '../../Auth/hooks/UserContext';
 import { UE } from '../../../userEventTypes';
 import { getBestPromoCode } from '../../../utils/getBestPromoCode';
 import { useFetchEvents } from '../../../Common/db-axios/useEvents';
+import { useFetchAttendees } from '../../../Common/db-axios/useAttendees';
 import { useFetchFollows } from '../../../Common/db-axios/useFollows';
 import { useCommonContext } from '../../../Common/hooks/CommonContext';
 import { useJoinCommunity, useLeaveCommunity } from '../../../Common/hooks/useCommunities';
@@ -33,6 +34,7 @@ import PromoCodeSection from './PromoCodeSection';
 import { useCalendarContext } from '../hooks/CalendarContext';
 import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
+import { AvatarCircle } from '../../Auth/Buttons/AvatarCircle';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
 import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../../components/styles';
@@ -185,6 +187,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         munch: 'Munch',
         retreat: 'Retreat',
         festival: 'Festival',
+        conference: 'Conference',
         workshop: 'Workshop',
         performance: 'Performance',
         discussion: 'Discussion',
@@ -194,6 +197,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         munch: 'utensils',
         retreat: 'leaf',
         festival: 'music',
+        conference: 'users',
         workshop: 'chalkboard-teacher',
         performance: 'microphone',
         discussion: 'comments',
@@ -551,6 +555,53 @@ const MediaTab = ({ event }: { event: EventWithMetadata }) => {
         </View>
     )
 }
+
+const ATTENDEE_AVATAR_SIZE = 64;
+const ATTENDEE_ITEM_WIDTH = 88;
+
+const AttendeesSection = ({ eventId }: { eventId: number }) => {
+    const { data: attendees = [] } = useFetchAttendees();
+
+    const attendeesForEvent = useMemo(() => {
+        const eventAttendees = attendees.find((entry) => entry.event_id === eventId)?.attendees || [];
+        const seen = new Set<string>();
+        return eventAttendees.filter((attendee) => {
+            const attendeeId = attendee?.id;
+            if (!attendeeId || seen.has(attendeeId)) return false;
+            const name = attendee?.name?.trim();
+            if (name === '0') return false;
+            seen.add(attendeeId);
+            return true;
+        });
+    }, [attendees, eventId]);
+
+    if (attendeesForEvent.length === 0) return null;
+
+    return (
+        <View style={styles.attendeesSection}>
+            <SectionCard title={`Attendees (${attendeesForEvent.length})`} icon="people">
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.attendeesScroll}
+                >
+                    {attendeesForEvent.map((attendee) => {
+                        const displayName = attendee?.name?.trim() || 'Anonymous';
+                        return (
+                            <View key={attendee.id} style={styles.attendeeItem}>
+                                <AvatarCircle userProfile={attendee} size={ATTENDEE_AVATAR_SIZE} />
+                                <Text style={styles.attendeeName} numberOfLines={2}>
+                                    {displayName}
+                                </Text>
+                            </View>
+                        );
+                    })}
+                </ScrollView>
+            </SectionCard>
+        </View>
+    );
+};
+
 const TABS = [
     { name: 'Details', value: 'details' },
     { name: 'Organizer', value: 'organizer' },
@@ -983,6 +1034,8 @@ export const EventDetails = ({ route }) => {
 
                 {hasMedia && <MediaTab event={selectedEvent} />}
 
+                <AttendeesSection eventId={selectedEvent.id} />
+
                 <RecommendedEvents event={selectedEvent} />
 
             </ScrollView>
@@ -1280,6 +1333,27 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.sm,
         paddingBottom: spacing.xxl,
+    },
+    attendeesSection: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+    },
+    attendeesScroll: {
+        alignItems: 'flex-start',
+        paddingRight: spacing.sm,
+    },
+    attendeeItem: {
+        width: ATTENDEE_ITEM_WIDTH,
+        alignItems: 'center',
+        marginRight: spacing.md,
+    },
+    attendeeName: {
+        marginTop: spacing.xsPlus,
+        fontSize: fontSizes.smPlus,
+        lineHeight: lineHeights.sm,
+        color: colors.textPrimary,
+        textAlign: 'center',
+        fontFamily: fontFamilies.body,
     },
     vettedInfoText: {
         fontSize: fontSizes.base,
