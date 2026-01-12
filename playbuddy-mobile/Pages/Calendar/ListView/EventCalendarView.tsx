@@ -41,7 +41,7 @@ import { formatDate } from "../hooks/calendarUtils";
 import { getAllClassificationsFromEvents } from "../../../utils/getAllClassificationsFromEvents";
 import { UE } from "../../../userEventTypes";
 import { useEventAnalyticsProps } from "../../../Common/hooks/useAnalytics";
-import { navigateToTab } from "../../../Common/Nav/navigationHelpers";
+import { navigateToHomeStackScreen, navigateToTab } from "../../../Common/Nav/navigationHelpers";
 import {
     calendarExperienceTone,
     calendarInteractivityTones,
@@ -997,7 +997,7 @@ const EventCalendarView: React.FC<Props> = ({
     };
 
     const handleRecommendationPress = (event: EventWithMetadata) => {
-        navigation.push("Event Details", {
+        navigateToHomeStackScreen(navigation, "Event Details", {
             selectedEvent: event,
             title: event.name,
         });

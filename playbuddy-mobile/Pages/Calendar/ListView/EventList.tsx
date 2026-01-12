@@ -15,6 +15,7 @@ import { EventListItem, ITEM_HEIGHT } from "./EventListItem";
 import { EventListItemClassic, CLASSIC_ITEM_HEIGHT } from "./EventListItemClassic";
 import type { EventListViewMode } from "./eventListViewMode";
 import { NavStack } from "../../../Common/Nav/NavStackType";
+import { navigateToHomeStackScreen } from "../../../Common/Nav/navigationHelpers";
 import { Event } from "../../../commonTypes";
 import { useUserContext } from "../../Auth/hooks/UserContext";
 import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
@@ -61,7 +62,7 @@ const EventList: React.FC<EventListProps> = ({
                 <ItemComponent
                     item={event}
                     onPress={(e) => {
-                        navigation.push('Event Details', {
+                        navigateToHomeStackScreen(navigation, 'Event Details', {
                             selectedEvent: e,
                             title: e.name,
                         });
