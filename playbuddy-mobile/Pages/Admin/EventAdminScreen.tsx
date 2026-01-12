@@ -170,6 +170,7 @@ export const EventAdminScreen = () => {
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
     const [draft, setDraft] = useState<EventDraft | null>(null);
     const [savingId, setSavingId] = useState<number | null>(null);
+    const [savingOrganizerId, setSavingOrganizerId] = useState<number | null>(null);
     const [activePicker, setActivePicker] = useState<'start' | 'end' | null>(null);
 
     const sortedEvents = useMemo(() => {
@@ -283,6 +284,33 @@ export const EventAdminScreen = () => {
         }
     };
 
+    const approveOrganizer = async (event: Event) => {
+        const organizerId = event.organizer?.id;
+        if (!organizerId) {
+            Alert.alert('Missing organizer', 'This event is missing organizer data.');
+            return;
+        }
+        if (savingOrganizerId !== null) return;
+        const pendingEvents = events.filter(
+            (item) => item.organizer?.id === organizerId && !isApprovedStatus(item.approval_status)
+        );
+        if (!pendingEvents.length) {
+            Alert.alert('All approved', 'All events for this organizer are already approved.');
+            return;
+        }
+        setSavingOrganizerId(organizerId);
+        try {
+            for (const pendingEvent of pendingEvents) {
+                await updateEvent.mutateAsync(buildPayload(pendingEvent, { approval_status: 'approved' }));
+            }
+            await queryClient.invalidateQueries({ queryKey: ['events'] });
+        } catch {
+            Alert.alert('Update failed', 'Unable to approve organizer events.');
+        } finally {
+            setSavingOrganizerId(null);
+        }
+    };
+
     if (!isAdmin) {
         return (
             <View style={styles.standaloneContainer}>
@@ -336,7 +364,10 @@ export const EventAdminScreen = () => {
                         renderItem={({ item }) => {
                             const attendeesForEvent = attendeesByEvent.get(item.id) || [];
                             const isHidden = !!item.hidden;
-                            const isSaving = savingId === item.id && updateEvent.isPending;
+                            const organizerId = item.organizer?.id;
+                            const isSavingEvent = savingId === item.id && updateEvent.isPending;
+                            const isOrganizerSaving = !!organizerId && savingOrganizerId === organizerId;
+                            const isActionDisabled = isSavingEvent || isOrganizerSaving;
                             const isApproved = isApprovedStatus(item.approval_status);
                             const approvalLabel = item.approval_status === 'rejected' ? 'Rejected' : 'Pending';
                             const approvalIcon = item.approval_status === 'rejected'
@@ -351,9 +382,9 @@ export const EventAdminScreen = () => {
                                             isHidden && styles.actionPillActive,
                                         ]}
                                         onPress={() => toggleHidden(item, !isHidden)}
-                                        disabled={isSaving}
+                                        disabled={isActionDisabled}
                                     >
-                                        {isSaving ? (
+                                        {isSavingEvent ? (
                                             <ActivityIndicator size="small" color={colors.brandIndigo} />
                                         ) : (
                                             <Ionicons
@@ -374,7 +405,7 @@ export const EventAdminScreen = () => {
                                     <TouchableOpacity
                                         style={styles.actionPill}
                                         onPress={() => openEditor(item)}
-                                        disabled={isSaving}
+                                        disabled={isActionDisabled}
                                     >
                                         <Ionicons name="create-outline" size={16} color={colors.textMuted} />
                                         <Text style={styles.actionText}>Edit</Text>
@@ -391,14 +422,30 @@ export const EventAdminScreen = () => {
                                         <TouchableOpacity
                                             style={[styles.actionPill, styles.actionPillApprove]}
                                             onPress={() => approveEvent(item)}
-                                            disabled={isSaving}
+                                            disabled={isActionDisabled}
                                         >
-                                            {isSaving ? (
+                                            {isSavingEvent || isOrganizerSaving ? (
                                                 <ActivityIndicator size="small" color={colors.brandIndigo} />
                                             ) : (
                                                 <Ionicons name="checkmark-circle-outline" size={16} color={colors.brandIndigo} />
                                             )}
                                             <Text style={[styles.actionText, styles.actionTextApprove]}>Approve</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                    {!isApproved && (
+                                        <TouchableOpacity
+                                            style={[styles.actionPill, styles.actionPillApprove]}
+                                            onPress={() => approveOrganizer(item)}
+                                            disabled={isActionDisabled}
+                                        >
+                                            {isOrganizerSaving ? (
+                                                <ActivityIndicator size="small" color={colors.brandIndigo} />
+                                            ) : (
+                                                <Ionicons name="checkmark-done-outline" size={16} color={colors.brandIndigo} />
+                                            )}
+                                            <Text style={[styles.actionText, styles.actionTextApprove]}>
+                                                Approve organizer
+                                            </Text>
                                         </TouchableOpacity>
                                     )}
                                     {isHidden && (
@@ -499,7 +546,7 @@ export const EventAdminScreen = () => {
                                     </View>
                                     <View style={styles.filterMetaRow}>
                                         <Text style={styles.filterMetaText}>{filteredEvents.length} events</Text>
-                                        {updateEvent.isPending && (
+                                        {(updateEvent.isPending || savingOrganizerId !== null) && (
                                             <Text style={styles.filterMetaText}>Saving...</Text>
                                         )}
                                     </View>

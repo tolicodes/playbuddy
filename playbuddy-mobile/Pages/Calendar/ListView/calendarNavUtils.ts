@@ -55,6 +55,9 @@ export function findEventDayFrom(
     direction: 1 | -1,
     options?: { minDayInclusive?: Date; maxDayInclusive?: Date }
 ): Date | null {
+    if (events.length === 0) {
+        return null;
+    }
     const limit = 366; // safety valve
     let probe = ny.startOfDay(startDay).toDate();
 

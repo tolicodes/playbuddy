@@ -23,7 +23,6 @@ import { useAnalyticsProps } from "../../../Common/hooks/useAnalytics";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 import { ActionSheet } from "../../../components/ActionSheet";
 import { getUnreadNotificationCount, subscribeToNotificationHistory } from "../../../Common/notifications/notificationHistory";
-import { ADMIN_EMAILS } from "../../../config";
 
 const HeaderLoginButton = ({
     showLoginText = false,
@@ -60,7 +59,6 @@ const HeaderLoginButton = ({
     const [menuOpen, setMenuOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const useCustomMenu = true;
-    const canSeeDebug = __DEV__ || (!!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email));
     const logDebug = useCallback((message: string, extra?: Record<string, unknown>) => {
         if (!__DEV__) return;
         if (extra) {
@@ -179,7 +177,7 @@ const HeaderLoginButton = ({
     const avatarContainerStyle = headerButton ? styles.headerAvatarContainer : styles.avatarContainer;
     const showBadge = headerButton && unreadCount > 0;
     const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount);
-    const menuHeight = canSeeDebug ? 420 : 360;
+    const menuHeight = 360;
 
     return (
         <>
@@ -288,29 +286,6 @@ const HeaderLoginButton = ({
                                 </View>
                             )}
                         </Pressable>
-                        {canSeeDebug && (
-                            <Pressable
-                                style={({ pressed }) => [
-                                    styles.sheetItem,
-                                    styles.sheetItemShadow,
-                                    pressed && styles.sheetItemPressed,
-                                ]}
-                                onPress={() => {
-                                    logDebug('menu press: debug', { routeName: route.name });
-                                    setMenuOpen(false);
-                                    setTimeout(() => navigateToHomeStackScreen(navigation, 'Debug'), 0);
-                                }}
-                            >
-                                <View style={styles.sheetIconWrap}>
-                                    <FAIcon name="bug" size={16} color={colors.brandIndigo} />
-                                </View>
-                                <View style={styles.sheetTextWrap}>
-                                    <Text style={styles.sheetItemTitle}>Debug</Text>
-                                    <Text style={styles.sheetItemSubtitle}>Diagnostics and test tools</Text>
-                                </View>
-                                <FAIcon name="chevron-right" size={14} color={colors.textMuted} />
-                            </Pressable>
-                        )}
                         <Pressable
                             style={({ pressed }) => [
                                 styles.sheetItem,

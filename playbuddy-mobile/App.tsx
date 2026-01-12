@@ -19,6 +19,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DeepLinkHandler from './Common/Nav/DeepLinkHandler';
 import { NotificationResponseHandler } from './Common/notifications/NotificationResponseHandler';
 import { OrganizerNotificationsRefresher } from './Common/notifications/OrganizerNotificationsRefresher';
+import { setupAxiosOfflineCache } from './offline/axiosOfflineCache';
 
 amplitude.init('a68ac6bb7695dd7d955ddb8a0928eeed', undefined, {
   disableCookies: true,
@@ -31,6 +32,8 @@ Sentry.init({
   // enableSpotlight: __DEV__,
 });
 
+setupAxiosOfflineCache({ queryClient });
+
 
 const App = () => {
   const [fontsLoaded] = useFonts({
@@ -38,8 +41,12 @@ const App = () => {
     'FontAwesome5Free-Regular': require('react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf'),
     'FontAwesome5Free-Solid': require('react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf'),
     'FontAwesome5Brands-Regular': require('react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf'),
+    FontAwesome5_Regular: require('react-native-vector-icons/Fonts/FontAwesome5_Regular.ttf'),
+    FontAwesome5_Solid: require('react-native-vector-icons/Fonts/FontAwesome5_Solid.ttf'),
+    FontAwesome5_Brands: require('react-native-vector-icons/Fonts/FontAwesome5_Brands.ttf'),
     Ionicons: require('react-native-vector-icons/Fonts/Ionicons.ttf'),
     'Material Icons': require('react-native-vector-icons/Fonts/MaterialIcons.ttf'),
+    MaterialIcons: require('react-native-vector-icons/Fonts/MaterialIcons.ttf'),
   });
 
   useFetchExpoUpdateAsync();

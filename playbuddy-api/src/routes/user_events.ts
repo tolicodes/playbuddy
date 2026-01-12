@@ -39,6 +39,12 @@ const clampTopLimit = (value: unknown) => {
 
 const parseBoolean = (value: unknown) => value === 'true';
 
+const normalizeDeviceId = (value: unknown) => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+};
+
 const extractEventId = (props: unknown) => {
     if (!props || typeof props !== 'object') return null;
     const record = props as Record<string, unknown>;
@@ -67,7 +73,7 @@ const fetchUserEvents = async ({
     limit: number;
     eventNames: string[];
 }) => {
-    const selectFields = 'id, created_at, user_event_name, user_event_props, auth_user_id';
+    const selectFields = 'id, created_at, user_event_name, user_event_props, auth_user_id, device_id';
     const events: any[] = [];
     let cursor: number | string | null = null;
     let pages = 0;
@@ -336,10 +342,20 @@ router.get('/', authenticateAdminRequest, asyncHandler(async (req: Authenticated
 
 router.post('/', optionalAuthenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const { user_event_name, user_event_props } = req.body;
+    const propsDeviceId = normalizeDeviceId(
+        (user_event_props as Record<string, unknown>)?.device_id
+            ?? (user_event_props as Record<string, unknown>)?.deviceId
+    );
+    const device_id = normalizeDeviceId(req.body.device_id ?? req.body.deviceId) ?? propsDeviceId;
 
     const { data, error } = await supabaseClient
         .from('user_events')
-        .insert([{ user_event_name, user_event_props, auth_user_id: req.authUserId || null }]);
+        .insert([{
+            user_event_name,
+            user_event_props,
+            auth_user_id: req.authUserId || null,
+            device_id,
+        }]);
 
     if (error) {
         console.error(`Error recording user event: ${error.message}`);

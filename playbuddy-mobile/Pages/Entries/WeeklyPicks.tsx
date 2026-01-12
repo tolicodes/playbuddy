@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import moment from 'moment-timezone';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
-import { logEvent } from '@amplitude/analytics-react-native';
+import { logEvent } from '../../Common/hooks/logger';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { getAvailableOrganizers } from '../Calendar/hooks/calendarUtils';
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from '../Calendar/hooks/eventHelpers';

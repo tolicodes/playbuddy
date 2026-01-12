@@ -1,184 +1,156 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 import { EdgePlayGroupModal } from './EdgePlayGroupModal';
 import { NewsletterSignupModal } from './NewsletterSignupModal';
 import { RateAppModal } from './RateAppModal';
 import { EventPopupModal } from './EventPopupModal';
+import { EventListViewIntroModal } from './Calendar/ListView/EventListViewIntroModal';
+import {
+    EventListViewMode,
+    getEventListIntroSeen,
+    getEventListViewMode,
+    setEventListIntroSeen,
+    setEventListViewMode,
+} from './Calendar/ListView/eventListViewMode';
 import { useFetchActiveEventPopups } from '../Common/db-axios/useEventPopups';
 import type { EventPopup } from '../commonTypes';
 import type { EventWithMetadata, NavStack } from '../Common/Nav/NavStackType';
+import {
+    createEmptyPopupManagerState,
+    getForcedPopupId,
+    getNextScheduledPopup,
+    getNextPopupId,
+    getPopupReadyAt,
+    loadPopupManagerState,
+    normalizePopupManagerState,
+    POPUP_CONFIG,
+    PopupId,
+    PopupManagerState,
+    PopupState,
+    clearForcedPopupId,
+    savePopupManagerState,
+} from './popupSchedule';
 
-const STORAGE_KEY = 'popup_manager_state_v1';
 const EVENT_POPUP_HIDE_KEY_PREFIX = 'event_popup_hide_';
-const LEGACY_TIMER_KEY = 'edgeplay_modal_timer';
-const LEGACY_HIDE_KEY = 'edgeplay_modal_hide';
-const LEGACY_SNOOZE_KEY = 'edgeplay_modal_snooze';
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_SNOOZE_MS = 14 * DAY_MS;
-const RATE_APP_MIN_DELAY_MS = __DEV__ ? 5 * 1000 : 5 * DAY_MS;
+const EVENT_POPUP_FORCE_KEY = 'popup_manager_force_event_popup';
+const EVENT_POPUP_SEEN_KEY_PREFIX = 'event_popup_seen_';
 const EVENT_POPUP_DELAY_MS = __DEV__ ? 5 * 1000 : 60 * 1000;
 const DEBUG_ALWAYS_ENABLE_EVENT_POPUP = __DEV__;
-const POPUP_SETTINGS = {
-    whatsapp_group: { minDelayMs: 3 * DAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
-    rate_app: { minDelayMs: RATE_APP_MIN_DELAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
-    newsletter_signup: { minDelayMs: 10 * DAY_MS, snoozeMs: DEFAULT_SNOOZE_MS },
-} as const;
-
-type PopupId = keyof typeof POPUP_SETTINGS;
-
-type PopupState = {
-    dismissed?: boolean;
-    snoozeUntil?: number;
-    lastShownAt?: number;
-};
-
-type PopupManagerState = {
-    firstSeenAt?: number;
-    popups: Record<PopupId, PopupState>;
-};
+const LIST_VIEW_INTRO_CUTOFF_MS = Date.parse('2026-01-12T00:00:00Z');
 
 const getEventPopupHideKey = (id: string) => `${EVENT_POPUP_HIDE_KEY_PREFIX}${id}`;
+const getEventPopupSeenKey = (id: string) => `${EVENT_POPUP_SEEN_KEY_PREFIX}${id}`;
 
-const POPUP_ORDER: PopupId[] = ['whatsapp_group', 'rate_app', 'newsletter_signup'];
+const parseIsoTimestamp = (value?: string | null) => {
+    if (!value) return undefined;
+    const parsed = Date.parse(value);
+    if (Number.isNaN(parsed)) return undefined;
+    return parsed;
+};
+
+const getEventPopupEndAt = (popup: EventPopup) => {
+    const endAt = parseIsoTimestamp(popup.event?.end_date);
+    if (endAt) return endAt;
+    return parseIsoTimestamp(popup.event?.start_date);
+};
+
+const isEventPopupExpired = (popup: EventPopup, now: number) => {
+    const eventEndAt = getEventPopupEndAt(popup);
+    if (eventEndAt && eventEndAt <= now) return true;
+    const expiresAt = parseIsoTimestamp(popup.expires_at);
+    if (expiresAt && expiresAt <= now) return true;
+    return false;
+};
+
+const isEventPopupEligible = (popup: EventPopup, installAt: number | undefined, now: number) => {
+    if (isEventPopupExpired(popup, now)) return false;
+    const createdAt = parseIsoTimestamp(popup.created_at);
+    if (installAt && createdAt && createdAt > installAt) return false;
+    return true;
+};
 
 type PopupManagerProps = {
     events?: EventWithMetadata[];
+    onListViewModeChange?: (mode: EventListViewMode) => void;
 };
 
-const createEmptyState = (): PopupManagerState => ({
-    firstSeenAt: undefined,
-    popups: {
-        whatsapp_group: {},
-        rate_app: {},
-        newsletter_signup: {},
-    },
-});
-
-const normalizeState = (state: PopupManagerState): PopupManagerState => ({
-    firstSeenAt: state.firstSeenAt,
-    popups: {
-        whatsapp_group: state.popups?.whatsapp_group ?? {},
-        rate_app: state.popups?.rate_app ?? {},
-        newsletter_signup: state.popups?.newsletter_signup ?? {},
-    },
-});
-
-const parseState = (raw: string | null): PopupManagerState => {
-    if (!raw) return createEmptyState();
-
-    try {
-        return normalizeState(JSON.parse(raw) as PopupManagerState);
-    } catch {
-        return createEmptyState();
-    }
-};
-
-const getNextPopupId = (state: PopupManagerState, now: number): PopupId | null => {
-    const firstSeenAt = state.firstSeenAt ?? now;
-
-    for (const id of POPUP_ORDER) {
-        const popupState = state.popups[id] ?? {};
-        if (popupState.dismissed) continue;
-        if (popupState.snoozeUntil && now < popupState.snoozeUntil) continue;
-        if (now - firstSeenAt < POPUP_SETTINGS[id].minDelayMs) continue;
-        return id;
-    }
-
-    return null;
-};
-
-export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
+export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewModeChange }) => {
     const navigation = useNavigation<NavStack>();
+    const isFocused = useIsFocused();
     const [state, setState] = useState<PopupManagerState | null>(null);
     const [hasShownThisSession, setHasShownThisSession] = useState(false);
     const [activePopupId, setActivePopupId] = useState<PopupId | null>(null);
     const [activeEventPopup, setActiveEventPopup] = useState<EventPopup | null>(null);
+    const [forcedPopupId, setForcedPopupIdState] = useState<PopupId | null>(null);
+    const [forcedEventPopup, setForcedEventPopup] = useState<EventPopup | null>(null);
     const [dismissedPopupIds, setDismissedPopupIds] = useState<Record<string, boolean>>({});
     const [dismissedReady, setDismissedReady] = useState(false);
     const eventPopupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const popupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const stateRef = useRef<PopupManagerState | null>(null);
+    const activePopupIdRef = useRef<PopupId | null>(null);
+    const activeEventPopupRef = useRef<EventPopup | null>(null);
+    const hasShownThisSessionRef = useRef(false);
+    const eventPopupReadyRef = useRef(false);
+    const hasPendingEventPopupRef = useRef(false);
     const { data: eventPopups, isLoading: isLoadingEventPopups } = useFetchActiveEventPopups();
 
     useEffect(() => {
+        if (!isFocused) return;
         let mounted = true;
 
         (async () => {
-            const raw = await AsyncStorage.getItem(STORAGE_KEY);
-            let nextState = parseState(raw);
-
-            const legacyEntries = await AsyncStorage.multiGet([
-                LEGACY_TIMER_KEY,
-                LEGACY_HIDE_KEY,
-                LEGACY_SNOOZE_KEY,
-            ]);
-            const legacyMap = Object.fromEntries(legacyEntries);
-
-            let migrated = false;
-
-            const legacyHide = legacyMap[LEGACY_HIDE_KEY];
-            if (legacyHide === 'true' && !nextState.popups.whatsapp_group.dismissed) {
-                nextState = {
-                    ...nextState,
-                    popups: {
-                        ...nextState.popups,
-                        whatsapp_group: { ...nextState.popups.whatsapp_group, dismissed: true },
-                    },
-                };
-                migrated = true;
+            const nextState = await loadPopupManagerState();
+            const forcedId = await getForcedPopupId();
+            const forcedEventRaw = await AsyncStorage.getItem(EVENT_POPUP_FORCE_KEY);
+            let forcedEvent: EventPopup | null = null;
+            if (forcedEventRaw) {
+                try {
+                    forcedEvent = JSON.parse(forcedEventRaw) as EventPopup;
+                } catch {
+                    await AsyncStorage.removeItem(EVENT_POPUP_FORCE_KEY);
+                }
             }
-
-            const legacySnoozeRaw = legacyMap[LEGACY_SNOOZE_KEY];
-            const legacySnooze = legacySnoozeRaw ? Number(legacySnoozeRaw) : null;
-            if (legacySnooze && !Number.isNaN(legacySnooze)) {
-                nextState = {
-                    ...nextState,
-                    popups: {
-                        ...nextState.popups,
-                        whatsapp_group: { ...nextState.popups.whatsapp_group, snoozeUntil: legacySnooze },
-                    },
-                };
-                migrated = true;
-            }
-
-            const legacyTimerRaw = legacyMap[LEGACY_TIMER_KEY];
-            const legacyTimer = legacyTimerRaw ? Number(legacyTimerRaw) : null;
-            if (!nextState.firstSeenAt && legacyTimer && !Number.isNaN(legacyTimer)) {
-                nextState = { ...nextState, firstSeenAt: legacyTimer };
-                migrated = true;
-            }
-
-            if (!nextState.firstSeenAt) {
-                nextState = { ...nextState, firstSeenAt: Date.now() };
-                migrated = true;
-            }
-
-            nextState = normalizeState(nextState);
-
-            if (!raw || migrated) {
-                await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
-            }
-
-            if (migrated) {
-                await AsyncStorage.multiRemove([LEGACY_TIMER_KEY, LEGACY_HIDE_KEY, LEGACY_SNOOZE_KEY]);
-            }
-
             if (mounted) {
                 setState(nextState);
+                setForcedPopupIdState(forcedId);
+                setForcedEventPopup(forcedEvent);
             }
         })();
 
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [isFocused]);
+
+    useEffect(() => {
+        stateRef.current = state;
+    }, [state]);
+
+    useEffect(() => {
+        activePopupIdRef.current = activePopupId;
+    }, [activePopupId]);
+
+    useEffect(() => {
+        activeEventPopupRef.current = activeEventPopup;
+    }, [activeEventPopup]);
+
+    useEffect(() => {
+        if (!activeEventPopup?.id) return;
+        void AsyncStorage.setItem(getEventPopupSeenKey(activeEventPopup.id), String(Date.now()));
+    }, [activeEventPopup?.id]);
+
+    useEffect(() => {
+        hasShownThisSessionRef.current = hasShownThisSession;
+    }, [hasShownThisSession]);
 
     const updateState = (updater: (prev: PopupManagerState) => PopupManagerState) => {
         setState((prev) => {
-            const base = normalizeState(prev ?? createEmptyState());
+            const base = normalizePopupManagerState(prev ?? createEmptyPopupManagerState());
             const next = updater(base);
-            void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+            void savePopupManagerState(next);
             return next;
         });
     };
@@ -195,6 +167,99 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
             },
         }));
     };
+
+    const markPopupShown = (id: PopupId, shownAt: number) => {
+        updateState((prev) => ({
+            ...prev,
+            lastPopupShownAt: shownAt,
+            popups: {
+                ...prev.popups,
+                [id]: {
+                    ...prev.popups[id],
+                    lastShownAt: shownAt,
+                },
+            },
+        }));
+    };
+
+    useEffect(() => {
+        if (!state) return;
+        const listViewPopup = state.popups.list_view_intro;
+        const firstSeenAt = state.firstSeenAt ?? Date.now();
+        const isLegacyInstall = firstSeenAt < LIST_VIEW_INTRO_CUTOFF_MS;
+
+        if (!listViewPopup?.dismissed && !isLegacyInstall) {
+            updatePopupState('list_view_intro', { dismissed: true, snoozeUntil: undefined });
+            return;
+        }
+
+        if (listViewPopup?.dismissed) return;
+        let isActive = true;
+        (async () => {
+            const [introSeen, listViewMode] = await Promise.all([
+                getEventListIntroSeen(),
+                getEventListViewMode(),
+            ]);
+            if (!isActive) return;
+            if ((introSeen || listViewMode === 'classic') && !listViewPopup?.dismissed) {
+                updatePopupState('list_view_intro', { dismissed: true, snoozeUntil: undefined });
+                return;
+            }
+
+            if (!listViewPopup?.lastShownAt && !listViewPopup?.snoozeUntil) {
+                updatePopupState('list_view_intro', {
+                    snoozeUntil: Date.now() + POPUP_CONFIG.list_view_intro.initialDelayMs,
+                });
+            }
+        })();
+
+        return () => {
+            isActive = false;
+        };
+    }, [state]);
+
+    useEffect(() => {
+        if (!forcedPopupId) return;
+        if (activePopupId || activeEventPopup) return;
+        const now = Date.now();
+
+        updateState((prev) => ({
+            ...prev,
+            lastPopupShownAt: now,
+            popups: {
+                ...prev.popups,
+                [forcedPopupId]: {
+                    ...prev.popups[forcedPopupId],
+                    dismissed: false,
+                    snoozeUntil: undefined,
+                    lastShownAt: now,
+                },
+            },
+        }));
+
+        setActivePopupId(forcedPopupId);
+        setHasShownThisSession(true);
+        void clearForcedPopupId();
+        setForcedPopupIdState(null);
+    }, [forcedPopupId, activePopupId, activeEventPopup, updateState]);
+
+    useEffect(() => {
+        if (!forcedEventPopup) return;
+        if (activePopupId || activeEventPopup) return;
+        const shownAt = Date.now();
+
+        setActiveEventPopup(forcedEventPopup);
+        setHasShownThisSession(true);
+        updateState((prev) => ({
+            ...prev,
+            lastPopupShownAt: Math.max(prev.lastPopupShownAt ?? 0, shownAt),
+        }));
+        if (forcedEventPopup.id) {
+            void AsyncStorage.setItem(getEventPopupSeenKey(forcedEventPopup.id), String(shownAt));
+        }
+        void AsyncStorage.removeItem(EVENT_POPUP_FORCE_KEY);
+        setForcedEventPopup(null);
+    }, [forcedEventPopup, activePopupId, activeEventPopup, updateState]);
 
     const eventLookup = useMemo(() => {
         const map = new Map<number, EventWithMetadata>();
@@ -255,13 +320,25 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
     const eventPopupReady = dismissedReady && !isLoadingEventPopups;
 
     const nextEventPopup = useMemo(() => {
-        const latestPopup = sortedEventPopups[0] ?? null;
-        if (!latestPopup) return null;
-        if (dismissedPopupIds[latestPopup.id]) return null;
-        return latestPopup;
-    }, [dismissedPopupIds, sortedEventPopups]);
+        if (!state) return null;
+        const now = Date.now();
+        for (const popup of sortedEventPopups) {
+            if (dismissedPopupIds[popup.id]) continue;
+            if (!isEventPopupEligible(popup, state.firstSeenAt, now)) continue;
+            return popup;
+        }
+        return null;
+    }, [dismissedPopupIds, sortedEventPopups, state]);
 
     const hasPendingEventPopup = eventPopupReady && !!nextEventPopup;
+
+    useEffect(() => {
+        eventPopupReadyRef.current = eventPopupReady;
+    }, [eventPopupReady]);
+
+    useEffect(() => {
+        hasPendingEventPopupRef.current = hasPendingEventPopup;
+    }, [hasPendingEventPopup]);
 
     useEffect(() => {
         if (!eventPopupReady || !nextEventPopup) return;
@@ -276,8 +353,20 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
             eventPopupTimerRef.current = null;
             if (activeEventPopup || activePopupId) return;
             if (hasShownThisSession && !DEBUG_ALWAYS_ENABLE_EVENT_POPUP) return;
+            const now = Date.now();
+            const currentState = stateRef.current;
+            if (!currentState) return;
+            if (!isEventPopupEligible(nextEventPopup, currentState.firstSeenAt, now)) return;
+            const shownAt = now;
             setActiveEventPopup(nextEventPopup);
             setHasShownThisSession(true);
+            updateState((prev) => ({
+                ...prev,
+                lastPopupShownAt: Math.max(prev.lastPopupShownAt ?? 0, shownAt),
+            }));
+            if (nextEventPopup?.id) {
+                void AsyncStorage.setItem(getEventPopupSeenKey(nextEventPopup.id), String(shownAt));
+            }
         }, EVENT_POPUP_DELAY_MS);
 
         return () => {
@@ -292,19 +381,85 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
         activeEventPopup,
         activePopupId,
         hasShownThisSession,
+        updateState,
     ]);
 
+    const canShowPopupNow = () => {
+        const currentState = stateRef.current;
+        if (!currentState) return false;
+        if (activePopupIdRef.current || activeEventPopupRef.current) return false;
+        if (hasShownThisSessionRef.current) return false;
+        if (!eventPopupReadyRef.current || hasPendingEventPopupRef.current) return false;
+        return true;
+    };
+
     useEffect(() => {
+        if (popupTimerRef.current) {
+            clearTimeout(popupTimerRef.current);
+            popupTimerRef.current = null;
+        }
+
         if (!state || activePopupId || hasShownThisSession) return;
         if (!eventPopupReady || hasPendingEventPopup || activeEventPopup) return;
 
         const now = Date.now();
-        const nextId = getNextPopupId(state, now);
-        if (!nextId) return;
+        const listViewIntroState = state.popups.list_view_intro;
+        let showNowId: PopupId | null = null;
+        let scheduledId: PopupId | null = null;
+        let scheduledAt = 0;
 
-        setActivePopupId(nextId);
-        setHasShownThisSession(true);
-        updatePopupState(nextId, { lastShownAt: now });
+        if (listViewIntroState && !listViewIntroState.dismissed) {
+            const readyAt = getPopupReadyAt(state, now, 'list_view_intro');
+            if (now >= readyAt) {
+                showNowId = 'list_view_intro';
+            } else {
+                scheduledId = 'list_view_intro';
+                scheduledAt = readyAt;
+            }
+        } else {
+            const nextId = getNextPopupId(state, now);
+            if (nextId) {
+                showNowId = nextId;
+            } else {
+                const nextScheduled = getNextScheduledPopup(state, now);
+                if (nextScheduled) {
+                    scheduledId = nextScheduled.id;
+                    scheduledAt = nextScheduled.readyAt;
+                }
+            }
+        }
+
+        if (showNowId) {
+            setActivePopupId(showNowId);
+            setHasShownThisSession(true);
+            markPopupShown(showNowId, now);
+            return () => undefined;
+        }
+
+        if (scheduledId) {
+            const delayMs = Math.max(scheduledAt - now, 0);
+            if (delayMs > 0) {
+                const targetId = scheduledId;
+                popupTimerRef.current = setTimeout(() => {
+                    popupTimerRef.current = null;
+                    if (!canShowPopupNow()) return;
+                    const currentState = stateRef.current;
+                    if (!currentState) return;
+                    if (currentState.popups[targetId]?.dismissed) return;
+                    const fireAt = Date.now();
+                    setActivePopupId(targetId);
+                    setHasShownThisSession(true);
+                    markPopupShown(targetId, fireAt);
+                }, delayMs);
+            }
+        }
+
+        return () => {
+            if (popupTimerRef.current) {
+                clearTimeout(popupTimerRef.current);
+                popupTimerRef.current = null;
+            }
+        };
     }, [
         state,
         activePopupId,
@@ -320,8 +475,18 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
     };
 
     const snoozePopup = (id: PopupId) => {
-        updatePopupState(id, { snoozeUntil: Date.now() + POPUP_SETTINGS[id].snoozeMs });
+        updatePopupState(id, { snoozeUntil: Date.now() + POPUP_CONFIG[id].snoozeMs });
         setActivePopupId(null);
+    };
+
+    const handleListViewIntroChoice = (mode: EventListViewMode) => {
+        if (onListViewModeChange) {
+            onListViewModeChange(mode);
+        } else {
+            void setEventListViewMode(mode);
+        }
+        void setEventListIntroSeen(true);
+        dismissPopup('list_view_intro');
     };
 
     const dismissEventPopup = () => {
@@ -353,6 +518,11 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events }) => {
                 popup={activeEventPopup}
                 onDismiss={dismissEventPopup}
                 onPrimaryAction={handleEventPopupPrimaryAction}
+            />
+            <EventListViewIntroModal
+                visible={activePopupId === 'list_view_intro'}
+                onSwitchToClassic={() => handleListViewIntroChoice('classic')}
+                onKeepNew={() => handleListViewIntroChoice('image')}
             />
             <EdgePlayGroupModal
                 visible={activePopupId === 'whatsapp_group'}

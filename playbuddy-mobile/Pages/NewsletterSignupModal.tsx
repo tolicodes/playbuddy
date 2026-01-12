@@ -4,6 +4,8 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { logEvent } from '../Common/hooks/logger';
+import { useUserContext } from './Auth/hooks/UserContext';
+import { useUpdateUserProfile } from './Auth/hooks/useUserProfile';
 import { MISC_URLS } from '../config';
 import { UE } from '../userEventTypes';
 import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../components/styles';
@@ -16,6 +18,8 @@ type NewsletterSignupModalProps = {
 
 export function NewsletterSignupModal({ visible, onDismiss, onSnooze }: NewsletterSignupModalProps) {
     const analyticsProps = useAnalyticsProps();
+    const { authUserId, userProfile } = useUserContext();
+    const { mutateAsync: updateUserProfile } = useUpdateUserProfile(authUserId || '');
 
     if (!visible) return null;
 
@@ -31,6 +35,9 @@ export function NewsletterSignupModal({ visible, onDismiss, onSnooze }: Newslett
 
     const openNewsletter = () => {
         logEvent(UE.NewsletterSignupModalOpenSignup, analyticsProps);
+        if (authUserId && !userProfile?.joined_newsletter) {
+            void updateUserProfile({ joined_newsletter: true });
+        }
         void Linking.openURL(MISC_URLS.newsletterSignup);
         onDismiss();
     };
@@ -46,9 +53,9 @@ export function NewsletterSignupModal({ visible, onDismiss, onSnooze }: Newslett
                     <View style={styles.iconWrap}>
                         <FontAwesome5 name="envelope-open-text" size={26} color={colors.accentSky} />
                     </View>
-                    <Text style={styles.title}>Stay in the loop</Text>
+                    <Text style={styles.title}>Join our newsletter</Text>
                     <Text style={styles.subtitle}>
-                        Get a short weekly email with new events, updates, and community highlights.
+                        Get the latest NYC kink events, news, and community tips in a short weekly email.
                     </Text>
 
                     <View style={styles.buttonContainer}>

@@ -7,7 +7,7 @@ import {
     ScrollView,
     StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { TagPill } from './FilterComponents';
 import { logEvent } from '../../../../Common/hooks/logger';
 import { UE } from '../../../../userEventTypes';
@@ -280,25 +280,30 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                     onPress={() => toggleGroupSelection(eventTypesSelected, setEventTypesSelected, group.values)}
                                 >
                                     <View style={styles.optionHeader}>
-                                        <View
-                                            style={[
-                                                styles.optionIconWrap,
-                                                selected && styles.optionIconWrapSelected,
-                                            ]}
-                                        >
-                                            <Ionicons
-                                                name={getEventTypeIcon(group.label)}
-                                                size={16}
-                                                color={selected ? colors.white : colors.brandPurpleDark}
-                                            />
+                                        <View style={styles.optionLabelRow}>
+                                            <View
+                                                style={[
+                                                    styles.optionIconWrap,
+                                                    selected && styles.optionIconWrapSelected,
+                                                ]}
+                                            >
+                                                <Ionicons
+                                                    name={getEventTypeIcon(group.label)}
+                                                    size={14}
+                                                    color={selected ? colors.white : colors.brandPurpleDark}
+                                                />
+                                            </View>
+                                            <Text
+                                                numberOfLines={1}
+                                                style={[styles.optionText, selected && styles.optionTextSelected]}
+                                            >
+                                                {group.label}
+                                            </Text>
                                         </View>
-                                        <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                                            {group.label}
+                                        <Text style={[styles.optionCount, selected && styles.optionCountSelected]}>
+                                            {group.count}
                                         </Text>
                                     </View>
-                                    <Text style={[styles.optionCount, selected && styles.optionCountSelected]}>
-                                        {group.count}
-                                    </Text>
                                 </TouchableOpacity>
                             );
                         })}
@@ -326,25 +331,30 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                     onPress={() => toggleGroupSelection(experienceSelected, setExperienceSelected, group.values)}
                                 >
                                     <View style={styles.optionHeader}>
-                                        <View
-                                            style={[
-                                                styles.optionIconWrap,
-                                                selected && styles.optionIconWrapSelected,
-                                            ]}
-                                        >
-                                            <Ionicons
-                                                name={getExperienceIcon(group.label)}
-                                                size={16}
-                                                color={selected ? colors.white : colors.brandPurpleDark}
-                                            />
+                                        <View style={styles.optionLabelRow}>
+                                            <View
+                                                style={[
+                                                    styles.optionIconWrap,
+                                                    selected && styles.optionIconWrapSelected,
+                                                ]}
+                                            >
+                                                <Ionicons
+                                                    name={getExperienceIcon(group.label)}
+                                                    size={14}
+                                                    color={selected ? colors.white : colors.brandPurpleDark}
+                                                />
+                                            </View>
+                                            <Text
+                                                numberOfLines={1}
+                                                style={[styles.optionText, selected && styles.optionTextSelected]}
+                                            >
+                                                {group.label}
+                                            </Text>
                                         </View>
-                                        <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                                            {group.label}
+                                        <Text style={[styles.optionCount, selected && styles.optionCountSelected]}>
+                                            {group.count}
                                         </Text>
                                     </View>
-                                    <Text style={[styles.optionCount, selected && styles.optionCountSelected]}>
-                                        {group.count}
-                                    </Text>
                                 </TouchableOpacity>
                             );
                         })}
@@ -372,25 +382,30 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
                                     onPress={() => toggleGroupSelection(interactivitySelected, setInteractivitySelected, group.values)}
                                 >
                                     <View style={styles.optionHeader}>
-                                        <View
-                                            style={[
-                                                styles.optionIconWrap,
-                                                selected && styles.optionIconWrapSelected,
-                                            ]}
-                                        >
-                                            <Ionicons
-                                                name={getInteractivityIcon(group.label)}
-                                                size={16}
-                                                color={selected ? colors.white : colors.brandPurpleDark}
-                                            />
+                                        <View style={styles.optionLabelRow}>
+                                            <View
+                                                style={[
+                                                    styles.optionIconWrap,
+                                                    selected && styles.optionIconWrapSelected,
+                                                ]}
+                                            >
+                                                <Ionicons
+                                                    name={getInteractivityIcon(group.label)}
+                                                    size={14}
+                                                    color={selected ? colors.white : colors.brandPurpleDark}
+                                                />
+                                            </View>
+                                            <Text
+                                                numberOfLines={1}
+                                                style={[styles.optionText, selected && styles.optionTextSelected]}
+                                            >
+                                                {group.label}
+                                            </Text>
                                         </View>
-                                        <Text style={[styles.optionText, selected && styles.optionTextSelected]}>
-                                            {group.label}
+                                        <Text style={[styles.optionCount, selected && styles.optionCountSelected]}>
+                                            {group.count}
                                         </Text>
                                     </View>
-                                    <Text style={[styles.optionCount, selected && styles.optionCountSelected]}>
-                                        {group.count}
-                                    </Text>
                                 </TouchableOpacity>
                             );
                         })}
@@ -532,9 +547,9 @@ const styles = StyleSheet.create({
     },
     optionButton: {
         width: '48%',
-        minHeight: 56,
+        minHeight: 48,
         borderRadius: radius.md,
-        paddingVertical: spacing.smPlus,
+        paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         backgroundColor: colors.lavenderBackground,
         borderWidth: 1,
@@ -551,12 +566,13 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: colors.textDeep,
         fontFamily: fontFamilies.body,
+        flexShrink: 1,
     },
     optionTextSelected: {
         color: colors.white,
     },
     optionCount: {
-        marginTop: spacing.xs,
+        marginLeft: spacing.sm,
         fontSize: fontSizes.sm,
         fontWeight: '600',
         color: colors.textSlate,
@@ -565,11 +581,17 @@ const styles = StyleSheet.create({
     optionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    optionLabelRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
         gap: spacing.sm,
+        flexShrink: 1,
     },
     optionIconWrap: {
-        width: 26,
-        height: 26,
+        width: 24,
+        height: 24,
         borderRadius: radius.sm,
         backgroundColor: colors.surfaceLavender,
         borderWidth: 1,
@@ -586,9 +608,9 @@ const styles = StyleSheet.create({
     },
     optionMoreButton: {
         width: '48%',
-        minHeight: 52,
+        minHeight: 48,
         borderRadius: radius.md,
-        paddingVertical: spacing.smPlus,
+        paddingVertical: spacing.sm,
         paddingHorizontal: spacing.md,
         backgroundColor: colors.surfaceLavender,
         borderWidth: 1,

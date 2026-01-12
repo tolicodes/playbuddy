@@ -74,28 +74,64 @@ export function logEvent<
     name: E,
     props?: EventPayloadMap[E] extends null ? undefined : EventPayloadMap[E]
 ): void {
+    const deviceId = getDeviceIdForLog();
     const safeProps = (props ?? {}) as NonNullable<EventPayloadMap[E]>;
+    const baseProps: Record<string, unknown> = { ...safeProps };
+    const amplitudeUserId =
+        typeof amplitude.getUserId === 'function' ? amplitude.getUserId() : null;
+    if (baseProps.auth_user_id === undefined) {
+        baseProps.auth_user_id = typeof amplitudeUserId === 'string' ? amplitudeUserId : null;
+    }
+    if (baseProps.device_id === undefined) {
+        baseProps.device_id = deviceId;
+    }
 
     try {
-        amplitude.logEvent(name, safeProps);
+        amplitude.logEvent(name, baseProps);
     } catch {
         // ignore in dev
     }
 
-    logUserEventToDB({ user_event_name: name, user_event_props: safeProps });
+    logUserEventToDB({ user_event_name: name, user_event_props: baseProps, device_id: deviceId });
 
-    console.log('logged event', name, safeProps);
+    console.log('logged event', name, baseProps);
 }
 
 // Simple POST to your API
-type DBPayload = { user_event_name: string; user_event_props?: Record<string, any> };
-const logUserEventToDB = async ({ user_event_name, user_event_props }: DBPayload) => {
+type DBPayload = {
+    user_event_name: string;
+    user_event_props?: Record<string, any>;
+    device_id?: string | null;
+};
+const logUserEventToDB = async ({ user_event_name, user_event_props, device_id }: DBPayload) => {
     try {
         await axios.post(`${API_BASE_URL}/user_events`, {
             user_event_name,
             user_event_props,
+            device_id,
         });
     } catch (error) {
         console.error(`Error recording user event:`, error);
     }
+};
+
+let cachedDeviceId: string | null = null;
+
+const getDeviceIdForLog = () => {
+    const amplitudeDeviceId = amplitude.getDeviceId();
+    if (typeof amplitudeDeviceId === 'string' && amplitudeDeviceId.trim()) {
+        cachedDeviceId = amplitudeDeviceId;
+        return amplitudeDeviceId;
+    }
+
+    if (cachedDeviceId) return cachedDeviceId;
+
+    const fallback = `device_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+    cachedDeviceId = fallback;
+    try {
+        amplitude.setDeviceId(fallback);
+    } catch {
+        // ignore if amplitude isn't ready
+    }
+    return fallback;
 };

@@ -139,8 +139,11 @@ export async function upsertOrganizer(
             ...existingFetlifeHandles,
             ...fetlife_handles,
         ]);
-        const hasAllMergedHandles = Array.isArray(existing.fetlife_handles)
-            && mergedFetlifeHandles.every((handle) => existing.fetlife_handles!.includes(handle));
+        const existingHandleList = Array.isArray(existing.fetlife_handles)
+            ? existing.fetlife_handles
+            : null;
+        const hasAllMergedHandles = !!existingHandleList
+            && mergedFetlifeHandles.every((handle) => existingHandleList.includes(handle));
 
         // Only set handles if not already present
         if (trimmedInsta && !existing.instagram_handle) {

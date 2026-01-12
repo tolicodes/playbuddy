@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -8,6 +8,7 @@ import {
     ScrollView,
     Alert,
     Share,
+    useWindowDimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -16,6 +17,7 @@ import Markdown from 'react-native-markdown-display';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
+import moment from 'moment-timezone';
 
 import { formatDate } from '../hooks/calendarUtils';
 import { logEvent } from '../../../Common/hooks/logger';
@@ -24,14 +26,18 @@ import { useUserContext } from '../../Auth/hooks/UserContext';
 import { UE } from '../../../userEventTypes';
 import { getBestPromoCode } from '../../../utils/getBestPromoCode';
 import { useFetchEvents } from '../../../Common/db-axios/useEvents';
+import { useFetchFollows } from '../../../Common/db-axios/useFollows';
+import { useCommonContext } from '../../../Common/hooks/CommonContext';
+import { useJoinCommunity, useLeaveCommunity } from '../../../Common/hooks/useCommunities';
 import PromoCodeSection from './PromoCodeSection';
 import { useCalendarContext } from '../hooks/CalendarContext';
 import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
-import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../../components/styles';
+import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../../components/styles';
 import SectionCard from './SectionCard';
+import { TZ } from '../ListView/calendarNavUtils';
 
 /* 
  * VideoPlayer
@@ -80,6 +86,9 @@ const buildTicketUrl = (rawUrl: string, opts?: { promoCode?: string }) => {
     }
 };
 
+const isUuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 const TAG_TONES = calendarTagTones;
 
 const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
@@ -110,14 +119,44 @@ const getTagTone = (tag: string) => {
 };
 
 const MAX_COLLAPSED_TAGS = 6;
+const RECOMMENDED_EVENTS_TOTAL = 5;
+const ORGANIZER_RECOMMENDATION_COUNT = 2;
+const FOLLOWED_RECOMMENDATION_COUNT = 3;
 
 const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) => {
     const { currentDeepLink, authUserId } = useUserContext();
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { data: allEvents } = useFetchEvents()
     const navigation = useNavigation<NavStack>();
+    const { myCommunities, communities } = useCommonContext();
+    const joinCommunity = useJoinCommunity();
+    const leaveCommunity = useLeaveCommunity();
 
     const fullEvent = allEvents?.find(event => event.id === selectedEvent.id) || selectedEvent;
+    const organizerId = selectedEvent.organizer?.id?.toString();
+    const eventCommunities = fullEvent.communities || selectedEvent.communities || [];
+    const organizerCommunityIds = organizerId
+        ? Array.from(
+            new Set([
+                ...eventCommunities
+                    .filter(
+                        (community) =>
+                            community.type === 'organizer_public_community' &&
+                            community.organizer_id?.toString() === organizerId
+                    )
+                    .map((community) => community.id),
+                ...communities.organizerPublicCommunities
+                    .filter((community) => community.organizer_id?.toString() === organizerId)
+                    .map((community) => community.id),
+            ])
+        ).filter((id) => isUuid(id))
+        : [];
+    const myCommunityIds = useMemo(
+        () => new Set(myCommunities.allMyCommunities.map((community) => community.id)),
+        [myCommunities.allMyCommunities]
+    );
+    const isOrganizerFollowed = organizerCommunityIds.some((id) => myCommunityIds.has(id));
+    const canFollowOrganizer = organizerCommunityIds.length > 0;
 
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
     const eventAnalyticsProps = useEventAnalyticsProps(selectedEvent);
@@ -215,7 +254,6 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         logEvent(UE.EventDetailOrganizerClicked, eventAnalyticsProps);
 
         // from the allEvents array, find the community that the organizer is in
-        const organizerId = selectedEvent.organizer?.id?.toString();
         if (!organizerId) return;
 
         const communityIdSet = new Set<string>();
@@ -252,6 +290,28 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         }
     };
 
+    const handleOrganizerFollow = () => {
+        if (!canFollowOrganizer) return;
+        if (!authUserId) {
+            Alert.alert('Create an account to follow organizers!');
+            return;
+        }
+        if (isOrganizerFollowed) {
+            organizerCommunityIds.forEach((communityId) => {
+                if (!myCommunityIds.has(communityId)) return;
+                leaveCommunity.mutate({ community_id: communityId });
+            });
+            return;
+        }
+        organizerCommunityIds.forEach((communityId) => {
+            if (myCommunityIds.has(communityId)) return;
+            joinCommunity.mutate({
+                community_id: communityId,
+                type: 'organizer_public_community',
+            });
+        });
+    };
+
     // Handle "Get Tickets" button press.
     const handleGetTickets = () => {
 
@@ -283,7 +343,10 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         logEvent(UE.EventListItemSharePressed, eventAnalyticsProps);
 
         const shareUrl = selectedEvent.ticket_url
-            ? buildTicketUrl(selectedEvent.ticket_url)
+            ? buildTicketUrl(
+                selectedEvent.ticket_url,
+                promoCode ? { promoCode: promoCode.promo_code } : undefined
+            )
             : '';
 
         if (!shareUrl) {
@@ -352,17 +415,52 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                             {selectedEvent.name}
                         </Text>
                         {selectedEvent.organizer?.name ? (
-                            <TouchableOpacity onPress={handleOrganizerClick} style={styles.heroOrganizer}>
-                                <View
+                            <View style={styles.heroOrganizerRow}>
+                                <TouchableOpacity onPress={handleOrganizerClick} style={styles.heroOrganizer}>
+                                    <View
+                                        style={[
+                                            styles.organizerDot,
+                                            { backgroundColor: selectedEvent.organizerColor || colors.white },
+                                        ]}
+                                    />
+                                    <Text style={styles.heroOrganizerText} numberOfLines={1}>
+                                        {selectedEvent.organizer?.name}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleOrganizerFollow}
                                     style={[
-                                        styles.organizerDot,
-                                        { backgroundColor: selectedEvent.organizerColor || colors.white },
+                                        styles.heroFollowButton,
+                                        isOrganizerFollowed
+                                            ? styles.heroFollowButtonActive
+                                            : styles.heroFollowButtonInactive,
+                                        !canFollowOrganizer && styles.heroFollowButtonDisabled,
                                     ]}
-                                />
-                                <Text style={styles.heroOrganizerText} numberOfLines={1}>
-                                    {selectedEvent.organizer?.name}
-                                </Text>
-                            </TouchableOpacity>
+                                    activeOpacity={0.85}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={
+                                        isOrganizerFollowed ? 'Following organizer' : 'Follow organizer'
+                                    }
+                                    disabled={!canFollowOrganizer}
+                                >
+                                    <FAIcon
+                                        name="heart"
+                                        size={12}
+                                        color={isOrganizerFollowed ? colors.white : colors.headerPurple}
+                                        solid={isOrganizerFollowed}
+                                        regular={!isOrganizerFollowed}
+                                        style={styles.heroFollowIcon}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.heroFollowText,
+                                            isOrganizerFollowed && styles.heroFollowTextActive,
+                                        ]}
+                                    >
+                                        {isOrganizerFollowed ? 'Following' : 'Follow'}
+                                    </Text>
+                                </TouchableOpacity>
+                            </View>
                         ) : null}
                     </View>
                 </View>
@@ -390,7 +488,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                         <FAIcon
                             name="heart"
                             size={22}
-                            color={isWishlisted ? colors.badgeAlert : colors.textMuted}
+                            color={colors.badgeAlert}
                             solid={isWishlisted}
                             regular={!isWishlisted}
                         />
@@ -587,6 +685,243 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
     )
 }
 
+const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
+    const navigation = useNavigation<NavStack>();
+    const { allEvents } = useCalendarContext();
+    const { authUserId, currentDeepLink } = useUserContext();
+    const { data: follows } = useFetchFollows(authUserId);
+    const { myCommunities } = useCommonContext();
+    const [recommendationsLaneWidth, setRecommendationsLaneWidth] = useState(0);
+    const { width: windowWidth } = useWindowDimensions();
+
+    const organizerIdsFromCommunities = useMemo(() => {
+        const organizerIds = myCommunities.allMyCommunities
+            .map((community) => community.organizer_id)
+            .filter(Boolean)
+            .map((id) => id.toString());
+        return Array.from(new Set(organizerIds));
+    }, [myCommunities.allMyCommunities]);
+
+    const followedOrganizerIds = useMemo(() => {
+        const followIds = (follows?.organizer || []).map((id) => id.toString());
+        return new Set([...followIds, ...organizerIdsFromCommunities]);
+    }, [follows?.organizer, organizerIdsFromCommunities]);
+
+    const recommendationCardWidth = useMemo(() => {
+        const baseWidth =
+            recommendationsLaneWidth > 0
+                ? recommendationsLaneWidth
+                : Math.max(0, windowWidth - spacing.lg * 2 - spacing.md * 2);
+        return Math.round(baseWidth * 0.4);
+    }, [recommendationsLaneWidth, windowWidth]);
+
+    const recommendations = useMemo(() => {
+        if (!allEvents || allEvents.length === 0) return [] as EventWithMetadata[];
+
+        const currentEvent = allEvents.find((item) => item.id === event.id) || event;
+        const currentOrganizerId = currentEvent.organizer?.id?.toString();
+        const now = moment().tz(TZ).startOf('day');
+
+        const isUpcomingEvent = (item: EventWithMetadata) => {
+            const eventStart = moment.tz(item.start_date, TZ);
+            if (!eventStart.isValid()) return false;
+            return !eventStart.isBefore(now);
+        };
+
+        const eligibleEvents = allEvents.filter(
+            (item) => item.id !== currentEvent.id && isUpcomingEvent(item)
+        );
+
+        const shuffle = <T,>(items: T[]) => {
+            const shuffled = [...items];
+            for (let i = shuffled.length - 1; i > 0; i -= 1) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        };
+
+        const hasPromo = (item: EventWithMetadata) =>
+            (item.promo_codes && item.promo_codes.length > 0) ||
+            (item.organizer?.promo_codes && item.organizer.promo_codes.length > 0);
+
+        const fromOrganizer = currentOrganizerId
+            ? eligibleEvents.filter(
+                (item) => item.organizer?.id?.toString() === currentOrganizerId
+            )
+            : [];
+
+        const fromFollowed =
+            followedOrganizerIds.size > 0
+                ? eligibleEvents.filter((item) => {
+                    const organizerId = item.organizer?.id?.toString();
+                    return (
+                        organizerId &&
+                        organizerId !== currentOrganizerId &&
+                        followedOrganizerIds.has(organizerId)
+                    );
+                })
+                : [];
+
+        const fromPromoOrganizers = eligibleEvents.filter(hasPromo);
+
+        const usedIds = new Set<number>();
+        const pickRandom = (items: EventWithMetadata[], count: number) => {
+            const selection: EventWithMetadata[] = [];
+            if (count <= 0) return selection;
+            for (const item of shuffle(items)) {
+                if (usedIds.has(item.id)) continue;
+                usedIds.add(item.id);
+                selection.push(item);
+                if (selection.length === count) break;
+            }
+            return selection;
+        };
+
+        const picks: EventWithMetadata[] = [];
+        picks.push(...pickRandom(fromOrganizer, ORGANIZER_RECOMMENDATION_COUNT));
+        picks.push(...pickRandom(fromFollowed, FOLLOWED_RECOMMENDATION_COUNT));
+        const remaining = RECOMMENDED_EVENTS_TOTAL - picks.length;
+        if (remaining > 0) {
+            picks.push(...pickRandom(fromPromoOrganizers, remaining));
+        }
+
+        const shuffled = shuffle(picks);
+        if (currentOrganizerId) {
+            const organizerIndex = shuffled.findIndex(
+                (item) => item.organizer?.id?.toString() === currentOrganizerId
+            );
+            if (organizerIndex > 0) {
+                const [organizerPick] = shuffled.splice(organizerIndex, 1);
+                shuffled.unshift(organizerPick);
+            }
+        }
+        return shuffled;
+    }, [allEvents, event, followedOrganizerIds]);
+
+    if (!allEvents || allEvents.length === 0) return null;
+
+    return (
+        <View style={styles.recommendationsHeaderWrap}>
+            <View style={styles.recommendationsCard}>
+                <View style={styles.recommendationsHeader}>
+                    <Text style={styles.recommendationsTitle}>Recommended events</Text>
+                </View>
+                {recommendations.length === 0 ? (
+                    <View style={styles.recommendationsEmpty}>
+                        <Text style={styles.recommendationsEmptyText}>No recommended events yet.</Text>
+                    </View>
+                ) : (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.recommendationsScroll}
+                        onLayout={(layoutEvent) => {
+                            const nextWidth = Math.round(layoutEvent.nativeEvent.layout.width);
+                            setRecommendationsLaneWidth((prev) => (prev === nextWidth ? prev : nextWidth));
+                        }}
+                    >
+                        {recommendations.map((item, index) => {
+                            const deepLinkPromo =
+                                currentDeepLink?.type !== 'generic' &&
+                                currentDeepLink?.featured_event?.id === item.id
+                                    ? currentDeepLink.featured_promo_code
+                                    : null;
+                            const promoCandidates = [
+                                ...(deepLinkPromo ? [deepLinkPromo] : []),
+                                ...(item.promo_codes ?? []).filter((code) => code.scope === 'event'),
+                                ...(item.organizer?.promo_codes ?? []).filter(
+                                    (code) => code.scope === 'organizer'
+                                ),
+                            ];
+                            const promoCodes: typeof promoCandidates = [];
+                            const seenPromoCodes = new Set<string>();
+                            for (const code of promoCandidates) {
+                                const key = code.id || code.promo_code;
+                                if (!key || seenPromoCodes.has(key)) continue;
+                                seenPromoCodes.add(key);
+                                promoCodes.push(code);
+                                if (promoCodes.length === 2) break;
+                            }
+                            const promoLabels = promoCodes.map((promoCode) =>
+                                promoCode.discount_type === 'percent'
+                                    ? `${promoCode.discount}% off`
+                                    : `$${promoCode.discount} off`
+                            );
+                            const imageUrl = getSafeImageUrl(item.image_url);
+
+                            return (
+                                <TouchableOpacity
+                                    key={item.id}
+                                    style={[
+                                        styles.recommendationCard,
+                                        {
+                                            width: recommendationCardWidth,
+                                            marginRight:
+                                                index === recommendations.length - 1 ? 0 : spacing.sm,
+                                        },
+                                    ]}
+                                    onPress={() =>
+                                        navigation.push('Event Details', {
+                                            selectedEvent: item,
+                                            title: item.name,
+                                        })
+                                    }
+                                    activeOpacity={0.9}
+                                >
+                                    <View style={styles.recommendationMedia}>
+                                        {imageUrl ? (
+                                            <Image
+                                                source={{ uri: imageUrl }}
+                                                style={styles.recommendationImage}
+                                                contentFit="cover"
+                                                cachePolicy="disk"
+                                            />
+                                        ) : (
+                                            <View style={styles.recommendationPlaceholder}>
+                                                <FAIcon name="calendar-day" size={16} color={colors.textMuted} />
+                                            </View>
+                                        )}
+                                        {promoLabels.length > 0 && (
+                                            <View style={styles.recommendationPromoBadgeStack}>
+                                                {promoLabels.map((label, labelIndex) => (
+                                                    <View
+                                                        key={`${label}-${labelIndex}`}
+                                                        style={[
+                                                            styles.recommendationPromoBadge,
+                                                            labelIndex > 0 &&
+                                                                styles.recommendationPromoBadgeOffset,
+                                                        ]}
+                                                    >
+                                                        <Text style={styles.recommendationPromoText}>
+                                                            {label}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
+                                    </View>
+                                    <View style={styles.recommendationBody}>
+                                        <Text style={styles.recommendationTitle} numberOfLines={2}>
+                                            {item.name}
+                                        </Text>
+                                        <Text style={styles.recommendationOrganizer} numberOfLines={1}>
+                                            {item.organizer?.name || 'Organizer'}
+                                        </Text>
+                                        <Text style={styles.recommendationDate} numberOfLines={1}>
+                                            {formatDate(item, true)}
+                                        </Text>
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                )}
+            </View>
+        </View>
+    );
+};
+
 /*
  * EventDetail
  * Main component that renders an event’s full details including image/video,
@@ -648,6 +983,8 @@ export const EventDetails = ({ route }) => {
 
                 {hasMedia && <MediaTab event={selectedEvent} />}
 
+                <RecommendedEvents event={selectedEvent} />
+
             </ScrollView>
 
         </>
@@ -660,7 +997,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.lavenderBackground,
     },
     scrollContent: {
-        paddingBottom: spacing.xxl,
+        paddingBottom: spacing.xxxl,
     },
     heroWrapper: {
         marginBottom: 0,
@@ -715,20 +1052,24 @@ const styles = StyleSheet.create({
     },
     heroFooter: {
         position: 'absolute',
-        left: spacing.lg,
-        right: spacing.lg,
-        bottom: spacing.xxxl,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: colors.overlayDeep,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.smPlus,
+        paddingBottom: spacing.xxl,
     },
     heroTitle: {
-        fontSize: fontSizes.title,
+        fontSize: fontSizes.xxl,
         fontWeight: '700',
         color: colors.white,
         fontFamily: fontFamilies.display,
+        marginBottom: spacing.sm,
     },
     heroOrganizer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: spacing.xsPlus,
         alignSelf: 'flex-start',
         backgroundColor: colors.overlayHero,
         borderRadius: radius.pill,
@@ -741,6 +1082,14 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         shadowOffset: { width: 0, height: 2 },
         elevation: 3,
+    },
+    heroOrganizerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        marginTop: spacing.xsPlus,
+        marginBottom: spacing.smPlus,
     },
     organizerDot: {
         width: 12,
@@ -755,6 +1104,37 @@ const styles = StyleSheet.create({
         letterSpacing: 0.2,
         color: colors.white,
         fontFamily: fontFamilies.body,
+    },
+    heroFollowButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: radius.pill,
+        paddingVertical: spacing.xsPlus,
+        paddingHorizontal: spacing.md,
+        borderWidth: 1,
+    },
+    heroFollowButtonActive: {
+        backgroundColor: colors.overlayHero,
+        borderColor: colors.borderOnDarkMedium,
+    },
+    heroFollowButtonInactive: {
+        backgroundColor: colors.white,
+        borderColor: colors.white,
+    },
+    heroFollowButtonDisabled: {
+        opacity: 0.6,
+    },
+    heroFollowIcon: {
+        marginRight: spacing.xsPlus,
+    },
+    heroFollowText: {
+        fontSize: fontSizes.smPlus,
+        fontWeight: '700',
+        color: colors.headerPurple,
+        fontFamily: fontFamilies.body,
+    },
+    heroFollowTextActive: {
+        color: colors.white,
     },
     headerSheet: {
         backgroundColor: colors.white,
@@ -958,6 +1338,117 @@ const styles = StyleSheet.create({
     },
     tagMoreText: {
         color: colors.textSlate,
+    },
+    recommendationsHeaderWrap: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.xs,
+    },
+    recommendationsCard: {
+        width: '100%',
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        padding: spacing.md,
+        ...shadows.card,
+    },
+    recommendationsHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: spacing.sm,
+    },
+    recommendationsTitle: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.xxl,
+        fontWeight: '700',
+        fontFamily: fontFamilies.display,
+    },
+    recommendationsScroll: {
+        paddingBottom: spacing.xs,
+    },
+    recommendationsEmpty: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.sm,
+        backgroundColor: colors.surfaceMutedLight,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+        marginBottom: spacing.sm,
+    },
+    recommendationsEmptyText: {
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
+    },
+    recommendationCard: {
+        flexGrow: 0,
+        backgroundColor: colors.white,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        overflow: 'hidden',
+    },
+    recommendationMedia: {
+        width: '100%',
+        height: 92,
+    },
+    recommendationImage: {
+        width: '100%',
+        height: '100%',
+    },
+    recommendationPlaceholder: {
+        width: '100%',
+        height: '100%',
+        backgroundColor: colors.surfaceMuted,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    recommendationPromoBadgeStack: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        alignItems: 'flex-start',
+    },
+    recommendationPromoBadge: {
+        backgroundColor: 'rgba(255, 215, 0, 0.9)',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderTopLeftRadius: radius.md,
+        borderBottomRightRadius: radius.md,
+    },
+    recommendationPromoBadgeOffset: {
+        marginTop: spacing.xs,
+    },
+    recommendationPromoText: {
+        color: colors.black,
+        fontSize: fontSizes.smPlus,
+        fontWeight: '700',
+        fontFamily: fontFamilies.body,
+    },
+    recommendationBody: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.smPlus,
+    },
+    recommendationTitle: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.basePlus,
+        fontWeight: '700',
+        fontFamily: fontFamilies.body,
+    },
+    recommendationOrganizer: {
+        color: colors.textMuted,
+        fontSize: fontSizes.smPlus,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.xs,
+    },
+    recommendationDate: {
+        color: colors.textSlate,
+        fontSize: fontSizes.sm,
+        fontFamily: fontFamilies.body,
+        marginTop: spacing.xs,
     },
 });
 

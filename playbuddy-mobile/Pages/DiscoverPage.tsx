@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
     View,
     Text,
@@ -18,6 +18,7 @@ import { logEvent } from '../Common/hooks/logger';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
 import { useUserContext } from './Auth/hooks/UserContext';
 import { ADMIN_EMAILS } from '../config';
+import { navigationRef } from '../Common/Nav/navigationRef';
 
 type MenuItem = { title: string; icon: string; route: string; badge?: boolean };
 type MenuGroup = { title: string; items: MenuItem[]; variant?: 'default' | 'evenMore' };
@@ -53,27 +54,40 @@ type DiscoverPageProps = {
     onRequestClose?: () => void;
 };
 
-export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPageProps) => {
+type DiscoverPageContentProps = DiscoverPageProps & {
+    onNavigate: (route: string) => void;
+};
+
+const DiscoverPageContent = ({ variant = 'screen', onRequestClose, onNavigate }: DiscoverPageContentProps) => {
     const analyticsProps = useAnalyticsProps();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const canSeeDebug = __DEV__ || isAdmin;
 
-    const navigation = useNavigation<NavStack>();
     const { availableCardsToSwipe } = useCalendarContext();
 
     useBadgeNotifications({ availableCardsToSwipe });
 
     const menuGroups = useMemo(() => {
-        if (!isAdmin) return baseMenuGroups;
+        const groups: MenuGroup[] = [...baseMenuGroups];
+        const adminItems: MenuItem[] = [];
 
-        return [
-            ...baseMenuGroups,
-            {
-                title: 'Admin',
-                items: [{ title: 'Admin', icon: 'user-shield', route: 'Admin' }],
-            },
-        ];
-    }, [isAdmin]);
+        if (isAdmin) {
+            adminItems.push({ title: 'Admin', icon: 'user-shield', route: 'Admin' });
+        }
+        if (canSeeDebug) {
+            adminItems.push({ title: 'Debug', icon: 'bug', route: 'Debug' });
+        }
+
+        if (adminItems.length) {
+            groups.push({
+                title: 'Admin Tools',
+                items: adminItems,
+            });
+        }
+
+        return groups;
+    }, [isAdmin, canSeeDebug]);
 
     const content = (
         <>
@@ -112,7 +126,7 @@ export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPag
                                             ...analyticsProps,
                                             menu_item: item.route,
                                         });
-                                        navigation.navigate(item.route as keyof NavStack);
+                                        onNavigate(item.route);
                                         onRequestClose?.();
                                     }}
                                 >
@@ -158,6 +172,39 @@ export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPag
     }
 
     return <View style={styles.container}>{content}</View>;
+};
+
+export const DiscoverPage = ({ variant = 'screen', onRequestClose }: DiscoverPageProps) => {
+    const navigation = useNavigation<NavStack>();
+    const handleNavigate = useCallback((route: string) => {
+        navigation.navigate(route as keyof NavStack);
+    }, [navigation]);
+
+    return (
+        <DiscoverPageContent
+            variant={variant}
+            onRequestClose={onRequestClose}
+            onNavigate={handleNavigate}
+        />
+    );
+};
+
+export const DiscoverPageModal = ({ onRequestClose }: { onRequestClose?: () => void }) => {
+    const handleNavigate = useCallback((route: string) => {
+        if (!navigationRef.isReady()) {
+            console.warn('DiscoverPageModal: navigation not ready', { route });
+            return;
+        }
+        navigationRef.navigate(route as never);
+    }, []);
+
+    return (
+        <DiscoverPageContent
+            variant="modal"
+            onRequestClose={onRequestClose}
+            onNavigate={handleNavigate}
+        />
+    );
 };
 
 const styles = StyleSheet.create({

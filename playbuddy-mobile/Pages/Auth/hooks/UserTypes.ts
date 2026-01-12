@@ -9,6 +9,7 @@ export interface UserProfile {
     selected_location_area_id?: string | null;
     selected_community_id?: string | null;
     initial_deep_link_id?: string | null;
+    joined_newsletter?: boolean | null;
 }
 
 export type SignUpParams = {

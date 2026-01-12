@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Video from 'react-native-video';
 import type { Media } from '../Common/types/commonTypes.js';
-import { logEvent } from '@amplitude/analytics-react-native';
+import { logEvent } from '../Common/hooks/logger';
 import { UE } from '../Common/types/userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { colors, fontFamilies, fontSizes, radius, spacing } from './styles';

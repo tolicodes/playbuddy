@@ -30,7 +30,6 @@ import { FiltersView, FilterState } from "./Filters/FiltersView";
 import EventList, { EVENT_SECTION_HEADER_HEIGHT } from "./EventList";
 import { ITEM_HEIGHT } from "./EventListItem";
 import { CLASSIC_ITEM_HEIGHT } from "./EventListItemClassic";
-import { EventListViewIntroModal } from "./EventListViewIntroModal";
 import { logEvent } from "../../../Common/hooks/logger";
 import { ADMIN_EMAILS, MISC_URLS } from "../../../config";
 import { EventWithMetadata, NavStack } from "../../../Common/Nav/NavStackType";
@@ -69,9 +68,7 @@ import {
 import { FullCalendar } from "./FullCalendar";
 import {
     EventListViewMode,
-    getEventListIntroSeen,
     getEventListViewMode,
-    setEventListIntroSeen,
     setEventListViewMode as setStoredEventListViewMode,
 } from "./eventListViewMode";
 
@@ -87,8 +84,9 @@ const DATE_COACH_COUNT_KEY = "dateCoachShownCount";
 const DATE_COACH_LAST_SHOWN_KEY = "dateCoachLastShownAt";
 const DATE_COACH_MAX_SHOWS = 3;
 const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
-const FAVORITE_ORGANIZERS_NOTICE_KEY = "favoriteOrganizersNoticeDismissed";
+const COMMUNITY_BANNER_HIDDEN_KEY = "communityBannerHidden";
 const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
+const EMPTY_EVENTS: EventWithMetadata[] = [];
 
 const EventCalendarView: React.FC<Props> = ({
     events,
@@ -101,7 +99,7 @@ const EventCalendarView: React.FC<Props> = ({
     const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
     const [showDateToast, setShowDateToast] = useState(false);
     const [dateCoachMeta, setDateCoachMeta] = useState<DateCoachMeta | null>(null);
-    const [showFavoritesNotice, setShowFavoritesNotice] = useState<boolean | null>(null);
+    const [communityBannerHidden, setCommunityBannerHidden] = useState(false);
     const [recommendationsHidden, setRecommendationsHidden] = useState<boolean | null>(null);
     const [listHeaderHeight, setListHeaderHeight] = useState(0);
     const [recommendationsLaneWidth, setRecommendationsLaneWidth] = useState(0);
@@ -115,9 +113,11 @@ const EventCalendarView: React.FC<Props> = ({
     const navigation = useNavigation<NavStack>();
     const { myCommunities } = useCommonContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
-    const { data: fetchedEvents = [], isLoading: isLoadingEvents } = useFetchEvents({
+    const { data: fetchedEventsData, isLoading: isLoadingEvents } = useFetchEvents({
         includeApprovalPending: isAdmin,
+        includePrivate: !!authUserId,
     });
+    const fetchedEvents = fetchedEventsData ?? EMPTY_EVENTS;
     const { data: follows } = useFetchFollows(authUserId);
     const organizers = useMemo(() => getAvailableOrganizers(fetchedEvents), [fetchedEvents]);
     const organizerColorMap = useMemo(() => mapOrganizerColors(organizers as any), [organizers]);
@@ -132,15 +132,12 @@ const EventCalendarView: React.FC<Props> = ({
     const isLoadingList = events ? false : isLoadingEvents;
     const isMainEventsView = !events && entity === "events";
     const organizerIdsFromCommunities = useMemo(() => {
-        const organizerCommunities = [
-            ...myCommunities.myOrganizerPublicCommunities,
-            ...myCommunities.myOrganizerPrivateCommunities,
-        ];
-        return organizerCommunities
+        const organizerIds = myCommunities.allMyCommunities
             .map((community) => community.organizer_id)
             .filter(Boolean)
             .map((id) => id.toString());
-    }, [myCommunities.myOrganizerPrivateCommunities, myCommunities.myOrganizerPublicCommunities]);
+        return Array.from(new Set(organizerIds));
+    }, [myCommunities.allMyCommunities]);
     const followedOrganizerIds = useMemo(() => {
         const followIds = (follows?.organizer || []).map((id) => id.toString());
         return new Set([...followIds, ...organizerIdsFromCommunities]);
@@ -156,7 +153,6 @@ const EventCalendarView: React.FC<Props> = ({
     }, [recommendationsLaneWidth, windowWidth]);
     const isFocused = useIsFocused();
     const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
-    const [showListViewIntro, setShowListViewIntro] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState("");
     const [filtersVisible, setFiltersVisible] = useState(false);
@@ -207,13 +203,10 @@ const EventCalendarView: React.FC<Props> = ({
     useEffect(() => {
         if (!isMainEventsView) return;
         let isActive = true;
-        AsyncStorage.multiGet([
-            FAVORITE_ORGANIZERS_NOTICE_KEY,
-            RECOMMENDATIONS_HIDDEN_KEY,
-        ]).then((entries) => {
+        AsyncStorage.multiGet([COMMUNITY_BANNER_HIDDEN_KEY, RECOMMENDATIONS_HIDDEN_KEY]).then((entries) => {
             if (!isActive) return;
             const entryMap = new Map(entries);
-            setShowFavoritesNotice(entryMap.get(FAVORITE_ORGANIZERS_NOTICE_KEY) !== "true");
+            setCommunityBannerHidden(entryMap.get(COMMUNITY_BANNER_HIDDEN_KEY) === "true");
             setRecommendationsHidden(entryMap.get(RECOMMENDATIONS_HIDDEN_KEY) === "true");
         });
         return () => {
@@ -238,22 +231,6 @@ const EventCalendarView: React.FC<Props> = ({
         };
     }, [isFocused]);
 
-    useEffect(() => {
-        let isActive = true;
-        if (!isFocused) {
-            return () => {
-                isActive = false;
-            };
-        }
-        getEventListIntroSeen().then((seen) => {
-            if (isActive && !seen) {
-                setShowListViewIntro(true);
-            }
-        });
-        return () => {
-            isActive = false;
-        };
-    }, [isFocused]);
 
     useEffect(() => {
         return () => {
@@ -330,17 +307,6 @@ const EventCalendarView: React.FC<Props> = ({
         void setStoredEventListViewMode(mode);
     };
 
-    const handleIntroSwitchToClassic = () => {
-        handleListViewModeChange('classic');
-        setShowListViewIntro(false);
-        void setEventListIntroSeen(true);
-    };
-
-    const handleIntroKeepNew = () => {
-        handleListViewModeChange('image');
-        setShowListViewIntro(false);
-        void setEventListIntroSeen(true);
-    };
 
     const eventHasTag = (event: EventWithMetadata, tag: string) => {
         const target = tag.toLowerCase();
@@ -845,7 +811,13 @@ const EventCalendarView: React.FC<Props> = ({
             }
             return recomputed;
         });
-        setMonthAnchorDate(moment(recomputed.weekAnchorDate).startOf("month").toDate());
+        setMonthAnchorDate((prev) => {
+            const next = moment(recomputed.weekAnchorDate).startOf("month");
+            if (moment(prev).isSame(next, "month")) {
+                return prev;
+            }
+            return next.toDate();
+        });
     }, [filteredEvents]);
 
     const { prevWeekDays, weekDays, nextWeekDays } = useMemo(
@@ -1005,9 +977,9 @@ const EventCalendarView: React.FC<Props> = ({
         openMonthModal(day);
     };
 
-    const handleDismissFavoritesNotice = () => {
-        setShowFavoritesNotice(false);
-        void AsyncStorage.setItem(FAVORITE_ORGANIZERS_NOTICE_KEY, "true");
+    const handleHideCommunityBanner = () => {
+        setCommunityBannerHidden(true);
+        void AsyncStorage.setItem(COMMUNITY_BANNER_HIDDEN_KEY, "true");
     };
 
     const handleFollowOrganizersPress = () => {
@@ -1031,13 +1003,16 @@ const EventCalendarView: React.FC<Props> = ({
         });
     };
 
+    const shouldShowCommunityBanner =
+        isMainEventsView && !communityBannerHidden && !hasFollowedOrganizers;
     const shouldShowRecommendations =
         isMainEventsView && hasFollowedOrganizers && recommendationsHidden !== true;
     const shouldShowHiddenRecommendations =
-        isMainEventsView && hasFollowedOrganizers && recommendationsHidden === true;
-    const hasListHeader = shouldShowRecommendations || shouldShowHiddenRecommendations;
-    const shouldShowFavoritesNotice =
-        isMainEventsView && showFavoritesNotice === true && !hasFollowedOrganizers;
+        isMainEventsView && hasFollowedOrganizers && recommendationsHidden === true && !shouldShowCommunityBanner;
+    const shouldShowListHeader =
+        shouldShowCommunityBanner || shouldShowRecommendations || shouldShowHiddenRecommendations;
+    const hasListHeader = shouldShowListHeader;
+    const bannerCtaLabel = "Follow";
 
     useEffect(() => {
         if (!__DEV__ || !isMainEventsView) return;
@@ -1056,9 +1031,9 @@ const EventCalendarView: React.FC<Props> = ({
     ]);
 
     useEffect(() => {
-        if (shouldShowRecommendations || shouldShowHiddenRecommendations) return;
+        if (shouldShowListHeader) return;
         setListHeaderHeight(0);
-    }, [shouldShowRecommendations, shouldShowHiddenRecommendations]);
+    }, [shouldShowListHeader]);
 
     useEffect(() => {
         if (listHeaderHeight === 0 || !pendingScrollDateRef.current) return;
@@ -1099,12 +1074,7 @@ const EventCalendarView: React.FC<Props> = ({
             <View pointerEvents="none" style={styles.screenGlowMid} />
             <View pointerEvents="none" style={styles.screenGlowBottom} />
             <View style={styles.container}>
-            <PopupManager events={sourceEvents} />
-            <EventListViewIntroModal
-                visible={showListViewIntro}
-                onSwitchToClassic={handleIntroSwitchToClassic}
-                onKeepNew={handleIntroKeepNew}
-            />
+            <PopupManager events={sourceEvents} onListViewModeChange={handleListViewModeChange} />
 
             <FiltersView
                 onApply={(f) => {
@@ -1231,32 +1201,6 @@ const EventCalendarView: React.FC<Props> = ({
                 <View style={styles.headerDivider} />
             </View>
 
-            {shouldShowFavoritesNotice && (
-                <View style={styles.noticeCard}>
-                    <View style={styles.noticeIcon}>
-                        <FAIcon name="star" size={12} color={colors.textGold} />
-                    </View>
-                    <Text style={styles.noticeText}>
-                        <Text
-                            style={styles.noticeLink}
-                            onPress={handleFollowOrganizersPress}
-                            accessibilityRole="link"
-                        >
-                            Follow
-                        </Text>
-                        {' '}favorite organizers to see personalized recommendations.
-                    </Text>
-                    <TouchableOpacity
-                        style={styles.noticeClose}
-                        onPress={handleDismissFavoritesNotice}
-                        accessibilityRole="button"
-                        accessibilityLabel="Dismiss notice"
-                    >
-                        <FAIcon name="times" size={12} color={colors.textGoldMuted} />
-                    </TouchableOpacity>
-                </View>
-            )}
-
             <Modal
                 transparent
                 animationType="fade"
@@ -1350,127 +1294,196 @@ const EventCalendarView: React.FC<Props> = ({
                     viewMode={listViewMode}
                     listHeaderHeight={listHeaderHeight}
                     listHeaderComponent={
-                        shouldShowRecommendations ? (
+                        shouldShowListHeader ? (
                             <View
-                                style={styles.recommendationsHeaderWrap}
-                                onLayout={(event) => setListHeaderHeight(event.nativeEvent.layout.height)}
+                                style={styles.listHeaderWrap}
+                                onLayout={(event) => {
+                                    const nextHeight = Math.round(event.nativeEvent.layout.height);
+                                    setListHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+                                }}
                             >
-                                <View style={styles.recommendationsCard}>
-                                    <View style={styles.recommendationsHeader}>
-                                        <Text style={styles.recommendationsTitle}>Your Communiittes</Text>
-                                        <View style={styles.recommendationsActions}>
+                                {shouldShowCommunityBanner && (
+                                    <View style={styles.noticeWrap}>
+                                        <LinearGradient
+                                            colors={[colors.surfaceGoldWarm, colors.surfaceGoldLight]}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 1 }}
+                                            style={styles.noticeCard}
+                                        >
                                             <TouchableOpacity
-                                                style={styles.recommendationsActionButton}
-                                                onPress={handleHideRecommendations}
+                                                style={styles.noticeCloseButton}
+                                                onPress={handleHideCommunityBanner}
                                                 accessibilityRole="button"
-                                                accessibilityLabel="Hide Your Communiittes"
+                                                accessibilityLabel="Hide banner"
                                             >
-                                                <Text style={styles.recommendationsActionText}>Hide</Text>
+                                                <FAIcon name="times" size={12} color={colors.textGoldMuted} />
+                                            </TouchableOpacity>
+                                            <View style={styles.noticeHeader}>
+                                                <View style={styles.noticeIcon}>
+                                                    <FAIcon name="star" size={14} color={colors.textGold} />
+                                                </View>
+                                                <View style={styles.noticeCopy}>
+                                                    <Text style={styles.noticeTitle}>Follow your favorite organizers</Text>
+                                                    <Text style={styles.noticeText}>Upcoming events + discounts</Text>
+                                                    <Text style={styles.noticeText}>from your favorite organizers</Text>
+                                                </View>
+                                            </View>
+                                            <View style={styles.noticeFooter}>
+                                                <TouchableOpacity
+                                                    style={styles.noticeCta}
+                                                    onPress={handleFollowOrganizersPress}
+                                                    accessibilityRole="button"
+                                                    accessibilityLabel={`${bannerCtaLabel} organizers`}
+                                                >
+                                                    <Text style={styles.noticeCtaText}>{bannerCtaLabel}</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </LinearGradient>
+                                    </View>
+                                )}
+                                {shouldShowRecommendations ? (
+                                    <View style={styles.recommendationsHeaderWrap}>
+                                        <View style={styles.recommendationsCard}>
+                                            <View style={styles.recommendationsHeader}>
+                                                <Text style={styles.recommendationsTitle}>Recommended</Text>
+                                                <View style={styles.recommendationsActions}>
+                                                    <TouchableOpacity
+                                                        style={styles.recommendationsActionButton}
+                                                        onPress={handleHideRecommendations}
+                                                        accessibilityRole="button"
+                                                        accessibilityLabel="Hide Recommended"
+                                                    >
+                                                        <Text style={styles.recommendationsActionText}>Hide</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                            </View>
+                                            {recommendations.length === 0 && (
+                                                <View style={styles.recommendationsEmpty}>
+                                                    <Text style={styles.recommendationsEmptyText}>
+                                                        No recommended events yet.
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            {recommendations.length > 0 && (
+                                                <ScrollView
+                                                    horizontal
+                                                    showsHorizontalScrollIndicator={false}
+                                                    contentContainerStyle={styles.recommendationsScroll}
+                                                    onLayout={(event) => {
+                                                        const nextWidth = Math.round(event.nativeEvent.layout.width);
+                                                        setRecommendationsLaneWidth((prev) =>
+                                                            prev === nextWidth ? prev : nextWidth
+                                                        );
+                                                    }}
+                                                >
+                                                    {recommendations.map((event, index) => {
+                                                        const deepLinkPromo =
+                                                            currentDeepLink?.type !== "generic" &&
+                                                            currentDeepLink?.featured_event?.id === event.id
+                                                                ? currentDeepLink.featured_promo_code
+                                                                : null;
+                                                        const promoCandidates = [
+                                                            ...(deepLinkPromo ? [deepLinkPromo] : []),
+                                                            ...(event.promo_codes ?? []).filter((code) => code.scope === "event"),
+                                                            ...(event.organizer?.promo_codes ?? []).filter(
+                                                                (code) => code.scope === "organizer"
+                                                            ),
+                                                        ];
+                                                        const promoCodes: typeof promoCandidates = [];
+                                                        const seenPromoCodes = new Set<string>();
+                                                        for (const code of promoCandidates) {
+                                                            const key = code.id || code.promo_code;
+                                                            if (!key || seenPromoCodes.has(key)) continue;
+                                                            seenPromoCodes.add(key);
+                                                            promoCodes.push(code);
+                                                            if (promoCodes.length === 2) break;
+                                                        }
+                                                        const promoLabels = promoCodes.map((promoCode) =>
+                                                            promoCode.discount_type === "percent"
+                                                                ? `${promoCode.discount}% off`
+                                                                : `$${promoCode.discount} off`
+                                                        );
+
+                                                        return (
+                                                            <TouchableOpacity
+                                                                key={event.id}
+                                                                style={[
+                                                                    styles.recommendationCard,
+                                                                    {
+                                                                        width: recommendationCardWidth,
+                                                                        marginRight:
+                                                                            index === recommendations.length - 1 ? 0 : spacing.sm,
+                                                                    },
+                                                                ]}
+                                                                onPress={() => handleRecommendationPress(event)}
+                                                                activeOpacity={0.9}
+                                                            >
+                                                                <View style={styles.recommendationMedia}>
+                                                                    {event.image_url ? (
+                                                                        <Image
+                                                                            source={{ uri: event.image_url }}
+                                                                            style={styles.recommendationImage}
+                                                                            resizeMode="cover"
+                                                                        />
+                                                                    ) : (
+                                                                        <View style={styles.recommendationPlaceholder}>
+                                                                            <FAIcon name="calendar-day" size={16} color={colors.textMuted} />
+                                                                        </View>
+                                                                    )}
+                                                                    {promoLabels.length > 0 && (
+                                                                        <View style={styles.recommendationPromoBadgeStack}>
+                                                                            {promoLabels.map((label, labelIndex) => (
+                                                                                <View
+                                                                                    key={`${label}-${labelIndex}`}
+                                                                                    style={[
+                                                                                        styles.recommendationPromoBadge,
+                                                                                        labelIndex > 0 &&
+                                                                                            styles.recommendationPromoBadgeOffset,
+                                                                                    ]}
+                                                                                >
+                                                                                    <Text style={styles.recommendationPromoText}>
+                                                                                        {label}
+                                                                                    </Text>
+                                                                                </View>
+                                                                            ))}
+                                                                        </View>
+                                                                    )}
+                                                                </View>
+                                                                <View style={styles.recommendationBody}>
+                                                                    <Text style={styles.recommendationTitle} numberOfLines={2}>
+                                                                        {event.name}
+                                                                    </Text>
+                                                                    <Text style={styles.recommendationOrganizer} numberOfLines={1}>
+                                                                        {event.organizer?.name || "Organizer"}
+                                                                    </Text>
+                                                                    <Text style={styles.recommendationDate} numberOfLines={1}>
+                                                                        {formatDate(event, true)}
+                                                                    </Text>
+                                                                </View>
+                                                            </TouchableOpacity>
+                                                        );
+                                                    })}
+                                                </ScrollView>
+                                            )}
+                                        </View>
+                                    </View>
+                                ) : shouldShowHiddenRecommendations ? (
+                                    <View style={styles.recommendationsHeaderWrap}>
+                                        <View style={styles.recommendationsHiddenCard}>
+                                            <Text style={styles.recommendationsHiddenText}>
+                                                Recommended is hidden
+                                            </Text>
+                                            <TouchableOpacity
+                                                style={styles.recommendationsHiddenButton}
+                                                onPress={handleShowRecommendations}
+                                                accessibilityRole="button"
+                                                accessibilityLabel="Show Recommended"
+                                            >
+                                                <Text style={styles.recommendationsHiddenButtonText}>Show</Text>
                                             </TouchableOpacity>
                                         </View>
                                     </View>
-                                    {recommendations.length === 0 && (
-                                        <View style={styles.recommendationsEmpty}>
-                                            <Text style={styles.recommendationsEmptyText}>
-                                                No upcoming communiittes yet.
-                                            </Text>
-                                        </View>
-                                    )}
-                                    {recommendations.length > 0 && (
-                                        <ScrollView
-                                            horizontal
-                                            showsHorizontalScrollIndicator={false}
-                                            contentContainerStyle={styles.recommendationsScroll}
-                                            onLayout={(event) => {
-                                                const nextWidth = Math.round(event.nativeEvent.layout.width);
-                                                setRecommendationsLaneWidth((prev) =>
-                                                    prev === nextWidth ? prev : nextWidth
-                                                );
-                                            }}
-                                        >
-                                            {recommendations.map((event, index) => {
-                                                const promoCode =
-                                                    event.promo_codes?.find((code) => code.scope === "event") ||
-                                                    event.organizer?.promo_codes?.find((code) => code.scope === "organizer") ||
-                                                    (currentDeepLink?.type !== "generic" && currentDeepLink?.featured_event?.id === event.id
-                                                        ? currentDeepLink.featured_promo_code
-                                                        : null);
-                                                const promoLabel = promoCode
-                                                    ? promoCode.discount_type === "percent"
-                                                        ? `${promoCode.discount}% off`
-                                                        : `$${promoCode.discount} off`
-                                                    : null;
-
-                                                return (
-                                                    <TouchableOpacity
-                                                        key={event.id}
-                                                        style={[
-                                                            styles.recommendationCard,
-                                                            {
-                                                                width: recommendationCardWidth,
-                                                                marginRight:
-                                                                    index === recommendations.length - 1 ? 0 : spacing.sm,
-                                                            },
-                                                        ]}
-                                                        onPress={() => handleRecommendationPress(event)}
-                                                        activeOpacity={0.9}
-                                                    >
-                                                        <View style={styles.recommendationMedia}>
-                                                            {event.image_url ? (
-                                                                <Image
-                                                                    source={{ uri: event.image_url }}
-                                                                    style={styles.recommendationImage}
-                                                                    resizeMode="cover"
-                                                                />
-                                                            ) : (
-                                                                <View style={styles.recommendationPlaceholder}>
-                                                                    <FAIcon name="calendar-day" size={16} color={colors.textMuted} />
-                                                                </View>
-                                                            )}
-                                                            {promoLabel && (
-                                                                <View style={styles.recommendationPromoBadge}>
-                                                                    <Text style={styles.recommendationPromoText}>
-                                                                        {promoLabel}
-                                                                    </Text>
-                                                                </View>
-                                                            )}
-                                                        </View>
-                                                        <View style={styles.recommendationBody}>
-                                                            <Text style={styles.recommendationTitle} numberOfLines={2}>
-                                                                {event.name}
-                                                            </Text>
-                                                            <Text style={styles.recommendationOrganizer} numberOfLines={1}>
-                                                                {event.organizer?.name || "Organizer"}
-                                                            </Text>
-                                                            <Text style={styles.recommendationDate} numberOfLines={1}>
-                                                                {formatDate(event, true)}
-                                                            </Text>
-                                                        </View>
-                                                    </TouchableOpacity>
-                                                );
-                                            })}
-                                        </ScrollView>
-                                    )}
-                                </View>
-                            </View>
-                        ) : shouldShowHiddenRecommendations ? (
-                            <View
-                                style={styles.recommendationsHeaderWrap}
-                                onLayout={(event) => setListHeaderHeight(event.nativeEvent.layout.height)}
-                            >
-                                <View style={styles.recommendationsHiddenCard}>
-                                    <Text style={styles.recommendationsHiddenText}>
-                                        Your Communiittes hidden
-                                    </Text>
-                                    <TouchableOpacity
-                                        style={styles.recommendationsHiddenButton}
-                                        onPress={handleShowRecommendations}
-                                        accessibilityRole="button"
-                                        accessibilityLabel="Show Your Communiittes"
-                                    >
-                                        <Text style={styles.recommendationsHiddenButtonText}>Show</Text>
-                                    </TouchableOpacity>
-                                </View>
+                                ) : null}
                             </View>
                         ) : null
                     }
@@ -1482,6 +1495,8 @@ const EventCalendarView: React.FC<Props> = ({
 };
 
 export default EventCalendarView;
+
+const NOTICE_ICON_SIZE = 36;
 
 const styles = StyleSheet.create({
     screenGradient: { flex: 1 },
@@ -1534,47 +1549,88 @@ const styles = StyleSheet.create({
         marginHorizontal: spacing.lg,
         opacity: 0.8,
     },
+    listHeaderWrap: {
+        paddingBottom: spacing.xs,
+    },
+    noticeWrap: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.xs,
+    },
     noticeCard: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginHorizontal: spacing.lg,
-        marginTop: spacing.sm,
-        marginBottom: spacing.sm,
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
-        backgroundColor: colors.surfaceGoldWarm,
+        paddingVertical: spacing.mdPlus,
+        paddingHorizontal: spacing.mdPlus,
+        paddingRight: spacing.xxl,
         borderRadius: radius.lg,
         borderWidth: 1,
         borderColor: colors.borderGoldSoft,
+        overflow: "hidden",
         ...shadows.card,
     },
+    noticeHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    noticeFooter: {
+        marginTop: spacing.sm,
+        flexDirection: "row",
+        paddingLeft: NOTICE_ICON_SIZE + spacing.md,
+    },
+    noticeCloseButton: {
+        position: "absolute",
+        top: spacing.xs,
+        right: spacing.xs,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: colors.borderGoldLight,
+        backgroundColor: "rgba(255, 255, 255, 0.85)",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 2,
+    },
     noticeIcon: {
-        width: spacing.xl,
-        height: spacing.xl,
-        borderRadius: spacing.xl / 2,
+        width: NOTICE_ICON_SIZE,
+        height: NOTICE_ICON_SIZE,
+        borderRadius: NOTICE_ICON_SIZE / 2,
         backgroundColor: colors.surfaceGoldLight,
         borderWidth: 1,
         borderColor: colors.borderGoldLight,
         alignItems: "center",
         justifyContent: "center",
+        marginRight: spacing.md,
+    },
+    noticeCopy: {
+        flex: 1,
+        minWidth: 0,
+    },
+    noticeTitle: {
+        color: colors.textBrown,
+        fontSize: fontSizes.lg,
+        fontWeight: "700",
+        fontFamily: fontFamilies.display,
+        marginBottom: spacing.xxs,
     },
     noticeText: {
-        flex: 1,
-        color: colors.textDeep,
-        fontSize: fontSizes.xl,
+        color: colors.textGoldMuted,
+        fontSize: fontSizes.smPlus,
         lineHeight: lineHeights.md,
-        fontWeight: "600",
         fontFamily: fontFamilies.body,
-        marginHorizontal: spacing.sm,
+        flexShrink: 1,
     },
-    noticeLink: {
-        color: colors.brandInk,
-        textDecorationLine: "underline",
+    noticeCta: {
+        backgroundColor: colors.brandInk,
+        paddingVertical: spacing.xs,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.pill,
+        alignSelf: "flex-start",
+    },
+    noticeCtaText: {
+        color: colors.white,
+        fontSize: fontSizes.smPlus,
         fontWeight: "700",
         fontFamily: fontFamilies.body,
-    },
-    noticeClose: {
-        padding: spacing.xs,
     },
     recommendationsHeaderWrap: {
         paddingHorizontal: spacing.lg,
@@ -1694,15 +1750,21 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    recommendationPromoBadge: {
+    recommendationPromoBadgeStack: {
         position: "absolute",
         top: 0,
         left: 0,
+        alignItems: "flex-start",
+    },
+    recommendationPromoBadge: {
         backgroundColor: "rgba(255, 215, 0, 0.9)",
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
         borderTopLeftRadius: radius.md,
         borderBottomRightRadius: radius.md,
+    },
+    recommendationPromoBadgeOffset: {
+        marginTop: spacing.xs,
     },
     recommendationPromoText: {
         color: colors.black,

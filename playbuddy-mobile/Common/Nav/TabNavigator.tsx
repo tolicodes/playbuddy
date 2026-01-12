@@ -11,7 +11,7 @@ import { headerOptions } from "../Header/Header";
 import { UE } from "../../userEventTypes";
 import { logEvent } from "../hooks/logger";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
-import { DiscoverPage } from "../../Pages/DiscoverPage";
+import { DiscoverPage, DiscoverPageModal } from "../../Pages/DiscoverPage";
 import { ActionSheet } from "../../components/ActionSheet";
 import { colors, fontSizes, radius, spacing } from "../../components/styles";
 const Tab = createBottomTabNavigator();
@@ -96,6 +96,7 @@ export const TabNavigator = () => {
             <ActionSheet
                 visible={isMoreOpen}
                 height={moreSheetHeight}
+                debugId="more-menu"
                 onClose={() => setIsMoreOpen(false)}
                 dismissOnBackdropPress
             >
@@ -110,7 +111,7 @@ export const TabNavigator = () => {
                             <FAIcon name="times" size={18} color={colors.textMuted} />
                         </TouchableOpacity>
                     </View>
-                    <DiscoverPage variant="modal" onRequestClose={() => setIsMoreOpen(false)} />
+                    <DiscoverPageModal onRequestClose={() => setIsMoreOpen(false)} />
                 </View>
             </ActionSheet>
         </>

@@ -13,7 +13,7 @@ router.get('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
     try {
         const { data, error } = await supabaseClient
             .from('users')
-            .select('user_id, share_code, name, avatar_url, selected_community_id, selected_location_area_id')
+            .select('user_id, share_code, name, avatar_url, selected_community_id, selected_location_area_id, joined_newsletter')
             .eq('user_id', authUserId)
             .single();
 
@@ -34,6 +34,7 @@ router.get('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
             avatar_url: data.avatar_url,
             selected_community_id: data.selected_community_id,
             selected_location_area_id: data.selected_location_area_id,
+            joined_newsletter: data.joined_newsletter,
         };
 
         return res.json(userProfile)
@@ -48,6 +49,7 @@ router.put('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
     const { authUserId } = req;
 
     try {
+        const hasNameUpdate = Object.prototype.hasOwnProperty.call(req.body, 'name');
         // Fetch the user's share code and create it if it doesn't exist
         const { data: userData, error: fetchError } = await supabaseClient
             .from('users')
@@ -67,6 +69,7 @@ router.put('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
             'selected_location_area_id',
             'selected_community_id',
             'initial_deep_link_id',
+            'joined_newsletter',
         ];
 
         const updateFields: any = { share_code: shareCode };
@@ -77,12 +80,39 @@ router.put('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
             }
         });
 
+        if (hasNameUpdate && typeof updateFields.name === 'string') {
+            const normalizedName = updateFields.name.trim();
+            if (!normalizedName) {
+                return res.status(400).json({ error: 'Display name cannot be empty.' });
+            }
+
+            const { data: existingUsers, error: existingError } = await supabaseClient
+                .from('users')
+                .select('user_id')
+                .ilike('name', normalizedName)
+                .neq('user_id', authUserId)
+                .limit(1);
+
+            if (existingError) {
+                return res.status(400).json({ error: existingError.message });
+            }
+
+            if (existingUsers && existingUsers.length > 0) {
+                return res.status(409).json({ error: 'That display name is already taken.' });
+            }
+
+            updateFields.name = normalizedName;
+        }
+
         const { data, error } = await supabaseClient
             .from('users')
             .update(updateFields)
             .eq('user_id', authUserId);
 
         if (error) {
+            if (error.code === '23505') {
+                return res.status(409).json({ error: 'That display name is already taken.' });
+            }
             return res.status(400).json({ error: error.message });
         }
 

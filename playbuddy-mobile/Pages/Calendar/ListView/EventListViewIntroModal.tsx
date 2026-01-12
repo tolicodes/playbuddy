@@ -19,18 +19,20 @@ export const EventListViewIntroModal = ({
         <Modal transparent animationType="fade" onRequestClose={onKeepNew}>
             <View style={styles.backdrop}>
                 <View style={styles.card}>
-                    <Text style={styles.title}>Image-first redesign</Text>
+                    <Text style={styles.title}>Image-first view</Text>
                     <Text style={styles.body}>
-                        This redesign is more image-first. Prefer the classic (old) list view?
+                        You just tried our new image-first list. Want to keep it, or switch back to the
+                        classic view?
                     </Text>
-                    <TouchableOpacity style={styles.primaryButton} onPress={onSwitchToClassic} activeOpacity={0.85}>
-                        <Text style={styles.primaryButtonText}>Switch to classic view</Text>
+                    <TouchableOpacity style={styles.primaryButton} onPress={onKeepNew} activeOpacity={0.85}>
+                        <Text style={styles.primaryButtonText}>Keep new view</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.secondaryButton} onPress={onKeepNew}>
-                        <Text style={styles.secondaryButtonText}>Keep new view</Text>
+                    <TouchableOpacity style={styles.secondaryButton} onPress={onSwitchToClassic}>
+                        <Text style={styles.secondaryButtonText}>Switch to classic view</Text>
                     </TouchableOpacity>
                     <Text style={styles.footnote}>
-                        Switch anytime from the profile icon (top right) -> Preferences.
+                        <Text style={styles.footnoteLabel}>Tip: </Text>
+                        Switch anytime from Profile (top right) &gt; Preferences.
                     </Text>
                 </View>
             </View>
@@ -101,8 +103,13 @@ const styles = StyleSheet.create({
     },
     footnote: {
         marginTop: spacing.md,
-        fontSize: fontSizes.sm,
-        color: colors.brandTextMuted,
+        fontSize: fontSizes.base,
+        color: colors.textDeep,
         fontFamily: fontFamilies.body,
+        lineHeight: Math.round(fontSizes.base * 1.4),
+    },
+    footnoteLabel: {
+        fontWeight: '700',
+        color: colors.brandPurpleDark,
     },
 });

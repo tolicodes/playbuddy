@@ -4,7 +4,7 @@ import { FontAwesome } from '@expo/vector-icons';
 import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axios/useFollows';
-import { logEvent } from '@amplitude/analytics-react-native';
+import { logEvent } from '../../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { UE } from '../../../userEventTypes';
 

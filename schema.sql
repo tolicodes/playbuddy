@@ -549,7 +549,8 @@ CREATE TABLE IF NOT EXISTS "public"."user_events" (
     "created_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "user_event_name" "text",
     "user_event_props" "jsonb",
-    "auth_user_id" "uuid"
+    "auth_user_id" "uuid",
+    "device_id" "text"
 );
 
 
@@ -575,11 +576,14 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     "name" "text",
     "avatar_url" "text",
     "selected_location_area_id" "uuid",
-    "selected_community_id" "uuid"
+    "selected_community_id" "uuid",
+    "joined_newsletter" boolean DEFAULT false
 );
 
 
 ALTER TABLE "public"."users" OWNER TO "postgres";
+
+CREATE UNIQUE INDEX "users_name_lower_unique" ON "public"."users" (lower("name"));
 
 
 ALTER TABLE ONLY "public"."buddies" ALTER COLUMN "id" SET DEFAULT "nextval"('"public"."buddies_id_seq"'::"regclass");

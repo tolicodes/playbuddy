@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from 'axios';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserContext } from "./hooks/UserContext";
@@ -15,7 +16,7 @@ import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../..
 
 export const ProfileDetailsForm = () => {
     const { authUserId, userProfile, isLoadingUserProfile, session, currentDeepLink } = useUserContext()
-    const { mutate: updateUserProfile } = useUpdateUserProfile(authUserId || '')
+    const { mutateAsync: updateUserProfile } = useUpdateUserProfile(authUserId || '')
     const [name, setName] = useState<string>(
         userProfile?.name
         // for google
@@ -24,26 +25,45 @@ export const ProfileDetailsForm = () => {
     );
 
     const analyticsProps = useAnalyticsProps();
+    const isEditing = !!userProfile?.name;
 
-    const onPressCreateAccount = () => {
-        if (!name) {
+    const onPressCreateAccount = async () => {
+        const normalizedName = name.trim();
+        if (!normalizedName) {
             Alert.alert('Please enter a name');
             return;
         }
 
         logEvent(UE.AccountProfileDetailsFormPressSave, analyticsProps);
 
-        if (currentDeepLink?.id) {
+        if (!isEditing && currentDeepLink?.id) {
             logEvent(UE.ProfileInitialDeepLinkAssigned, {
                 ...analyticsProps,
                 initial_deep_link_id: currentDeepLink.id,
             });
         }
 
-        updateUserProfile({
-            name, avatar_url: userProfile?.avatar_url,
-            initial_deep_link_id: currentDeepLink?.id || undefined,
-        });
+        try {
+            const updatePayload = {
+                name: normalizedName,
+                avatar_url: userProfile?.avatar_url,
+                initial_deep_link_id: !isEditing ? currentDeepLink?.id || undefined : undefined,
+            };
+            await updateUserProfile(updatePayload);
+            if (isEditing) {
+                navigation.goBack();
+            }
+        } catch (error) {
+            const errorMessage = axios.isAxiosError(error)
+                ? error.response?.data?.error || error.message
+                : error instanceof Error
+                    ? error.message
+                    : 'Something went wrong.';
+            const title = axios.isAxiosError(error) && error.response?.status === 409
+                ? 'Display name unavailable'
+                : 'Unable to save profile';
+            Alert.alert(title, errorMessage);
+        }
     }
     const navigation = useNavigation<NavStack>();
 
@@ -62,7 +82,7 @@ export const ProfileDetailsForm = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 <View style={styles.centeredContent}>
-                    <Text style={styles.headerText}>Create Your Account</Text>
+                    <Text style={styles.headerText}>{isEditing ? 'Update Your Display Name' : 'Create Your Account'}</Text>
                     <Text style={styles.subHeaderText}>This is how your buddies will identify you</Text>
 
                     <View style={styles.inputContainer}>
@@ -81,7 +101,7 @@ export const ProfileDetailsForm = () => {
                     </View>
 
                     <TouchableOpacity style={styles.button} onPress={onPressCreateAccount}>
-                        <Text style={styles.buttonText}>Create Account</Text>
+                        <Text style={styles.buttonText}>{isEditing ? 'Save Changes' : 'Create Account'}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.button, styles.signOutButton]} onPress={onPressSignOut}>

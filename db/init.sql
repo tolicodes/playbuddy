@@ -133,3 +133,5 @@ ADD COLUMN classification_status TEXT CHECK (classification_status IN ('queued',
 
 ALTER TABLE users
 ADD COLUMN name TEXT;
+
+CREATE UNIQUE INDEX users_name_lower_unique ON users (lower(name));

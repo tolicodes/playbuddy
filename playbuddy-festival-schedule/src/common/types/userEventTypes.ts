@@ -189,6 +189,13 @@ export const UE = {
     EdgePlayGroupModalDismissed: 'edgeplay_group_modal_dismissed',
     EdgePlayGroupModalOpenWhatsapp: 'edgeplay_group_modal_open_whatsapp',
 
+    // Rate App Modal
+    RateAppModalOpenStore: 'rate_app_modal_open_store',
+
+    // Newsletter Signup Modal
+    NewsletterSignupModalDismissed: 'newsletter_signup_modal_dismissed',
+    NewsletterSignupModalOpenSignup: 'newsletter_signup_modal_open_signup',
+
     // Munches
     MunchesListNavigateToMunchDetail: 'munches_list_navigate_to_munch_detail',
 
@@ -563,6 +570,13 @@ export interface EventPayloadMap {
     // EdgePlay Group Modal
     [UE.EdgePlayGroupModalDismissed]: AnalyticsProps;
     [UE.EdgePlayGroupModalOpenWhatsapp]: AnalyticsProps;
+
+    // Rate App Modal
+    [UE.RateAppModalOpenStore]: AnalyticsProps;
+
+    // Newsletter Signup Modal
+    [UE.NewsletterSignupModalDismissed]: AnalyticsProps;
+    [UE.NewsletterSignupModalOpenSignup]: AnalyticsProps;
 }
 
 

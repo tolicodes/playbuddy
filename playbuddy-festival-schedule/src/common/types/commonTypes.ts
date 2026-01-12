@@ -855,6 +855,9 @@ export type UserEvent = UserEventInput & {
 
     /** References users.user_id (nullable). */
     auth_user_id: string | null;
+
+    /** Device identifier (nullable). */
+    device_id: string | null;
 }
 
 
@@ -1205,6 +1208,11 @@ export interface FestivalScheduleEvent {
     location: string;
     organizers: string[];
     description?: string;
+}
+
+export type TestType = {
+    id: string;
+    note?: string;
 }
 
 export type { UE };

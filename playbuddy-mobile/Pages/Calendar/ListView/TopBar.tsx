@@ -194,6 +194,7 @@ export const TopBar = ({
                                             name={iconName}
                                             size={11}
                                             color={tone ? tone.text : colors.textMuted}
+                                            solid
                                         />
                                     </View>
                                     <Text style={topBarStyles.typeaheadText}>{suggestion.label}</Text>
@@ -239,6 +240,7 @@ export const TopBar = ({
                                                 size={10}
                                                 color={textColor}
                                                 style={topBarStyles.chipIcon}
+                                                solid
                                             />
                                         )}
                                         <Text style={[topBarStyles.chipText, { color: textColor }]}>
@@ -249,6 +251,7 @@ export const TopBar = ({
                                             size={9}
                                             color={textColor}
                                             style={topBarStyles.chipRemoveIcon}
+                                            solid
                                         />
                                     </TouchableOpacity>
                                 );
@@ -290,6 +293,7 @@ export const TopBar = ({
                                                 size={10}
                                                 color={textColor}
                                                 style={topBarStyles.chipIcon}
+                                                solid
                                             />
                                         )}
                                         <Text style={[topBarStyles.chipText, { color: textColor }]}>
@@ -301,6 +305,7 @@ export const TopBar = ({
                                                 size={9}
                                                 color={textColor}
                                                 style={topBarStyles.chipRemoveIcon}
+                                                solid
                                             />
                                         )}
                                     </TouchableOpacity>
@@ -314,6 +319,7 @@ export const TopBar = ({
                                 onPressOut={() => setIsInteracting(false)}
                                 onPress={onPressQuickFilterMore}
                             >
+                                <Ionicons name="filter" size={12} color={colors.textMuted} style={topBarStyles.chipIcon} />
                                 <Text style={topBarStyles.chipText}>More &gt;</Text>
                             </TouchableOpacity>
                         )}

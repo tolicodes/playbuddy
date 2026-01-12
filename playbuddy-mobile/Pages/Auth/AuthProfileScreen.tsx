@@ -13,7 +13,7 @@ import { NavStack } from '../../Common/Nav/NavStackType';
 import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
-import { navigateToHome, navigateToTab } from '../../Common/Nav/navigationHelpers';
+import { navigateToAuth, navigateToHome, navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { EventListViewMode, getEventListViewMode, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
@@ -189,6 +189,10 @@ export default function AccountDetails() {
         Linking.openURL('mailto:support@playbuddy.me');
     }
 
+    const onPressEditDisplayName = () => {
+        navigateToAuth(navigation, 'Profile Details');
+    };
+
     return (
         <SafeAreaView style={styles.container}>
             <LinearGradient colors={[colors.brandIndigo, colors.accentPurple]} style={styles.gradient}>
@@ -216,6 +220,9 @@ export default function AccountDetails() {
                             label="Display Name"
                             value={userProfile?.name || fullNameFromOAuthedUser || ''}
                         />
+                        <TouchableOpacity style={styles.secondaryButton} onPress={onPressEditDisplayName}>
+                            <Text style={styles.secondaryButtonText}>Edit Display Name</Text>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.sectionCard}>
@@ -399,6 +406,9 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         gap: spacing.md,
     },
+    preferenceRowSpaced: {
+        marginTop: spacing.md,
+    },
     preferenceCopy: {
         flex: 1,
         paddingRight: spacing.md,
@@ -413,6 +423,23 @@ const styles = StyleSheet.create({
         fontSize: fontSizes.sm,
         color: colors.brandTextMuted,
         marginTop: spacing.xs,
+        fontFamily: fontFamilies.body,
+    },
+    metaText: {
+        marginTop: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.brandTextMuted,
+        fontFamily: fontFamilies.body,
+    },
+    scheduledRow: {
+        paddingVertical: spacing.sm,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLavenderSoft,
+    },
+    scheduledTitle: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.textPrimary,
         fontFamily: fontFamilies.body,
     },
     iconTextContainer: {
