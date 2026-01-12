@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
@@ -37,9 +37,11 @@ import {
     getOrganizerNotificationEligibilityInfo,
     getOrganizerNotificationSchedule,
     getPushNotificationsEnabled,
+    getPushNotificationsPrompted,
     scheduleOrganizerNotifications,
     setPushNotificationsEnabled,
     setPushNotificationsPrompted,
+    unregisterRemotePushToken,
 } from '../../Common/notifications/organizerPushNotifications';
 
 type AccordionSectionProps = {
@@ -249,6 +251,13 @@ export const DebugScreen = () => {
                 const message = error instanceof Error ? error.message : String(error);
                 lines.push(`Push flag: error ${message}`);
             }
+            let pushPromptedFlag: boolean | null = null;
+            try {
+                pushPromptedFlag = await getPushNotificationsPrompted();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                lines.push(`Prompted flag: error ${message}`);
+            }
 
             const eligibility = getOrganizerNotificationEligibilityInfo({
                 events: allEvents,
@@ -281,6 +290,9 @@ export const DebugScreen = () => {
             lines.push(`Platform: ${Platform.OS}`);
             if (pushEnabledFlag !== null) {
                 lines.push(`Push enabled flag: ${pushEnabledFlag}`);
+            }
+            if (pushPromptedFlag !== null) {
+                lines.push(`Push prompted flag: ${pushPromptedFlag}`);
             }
             if (permissions) {
                 lines.push(`Permissions: granted=${permissions.granted} status=${permissions.status}`);
@@ -519,6 +531,40 @@ export const DebugScreen = () => {
         })();
     };
 
+    const onPressResetNotificationPermissions = () => {
+        Alert.alert(
+            'Reset notifications?',
+            'This clears local notification state. Turn off notifications in Settings to revoke OS permissions.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Reset & Open Settings',
+                    onPress: () => {
+                        void (async () => {
+                            await cancelOrganizerNotifications();
+                            try {
+                                await Notifications.cancelAllScheduledNotificationsAsync();
+                            } catch (error) {
+                                console.warn('[notifications] failed to cancel scheduled notifications', error);
+                            }
+                            await unregisterRemotePushToken();
+                            await setPushNotificationsEnabled(false);
+                            await setPushNotificationsPrompted(false);
+                            setDebugStatus('Notification state cleared. Disable OS permissions in Settings if needed.');
+                            await refreshNotificationDebugInfo('reset permissions');
+                            try {
+                                await Linking.openSettings();
+                            } catch (error) {
+                                console.warn('[notifications] failed to open settings', error);
+                            }
+                        })();
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
     const onPressResetPopups = useCallback(() => {
         void (async () => {
             await resetPopupManagerState();
@@ -715,6 +761,14 @@ export const DebugScreen = () => {
                             <TouchableOpacity style={styles.secondaryButton} onPress={onPressClearOrganizerReminders}>
                                 <Text style={styles.secondaryButtonText}>Clear organizer reminders</Text>
                             </TouchableOpacity>
+                            {__DEV__ && (
+                                <TouchableOpacity
+                                    style={styles.secondaryButton}
+                                    onPress={onPressResetNotificationPermissions}
+                                >
+                                    <Text style={styles.secondaryButtonText}>Reset notification permissions</Text>
+                                </TouchableOpacity>
+                            )}
                             <TouchableOpacity
                                 style={styles.secondaryButton}
                                 onPress={() => void refreshNotificationDebugInfo('manual refresh')}

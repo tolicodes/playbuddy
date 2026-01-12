@@ -18,6 +18,7 @@ import { PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import DeepLinkHandler from './Common/Nav/DeepLinkHandler';
 import { NotificationResponseHandler } from './Common/notifications/NotificationResponseHandler';
+import { OrganizerNotificationsPrompt } from './Common/notifications/OrganizerNotificationsPrompt';
 import { OrganizerNotificationsRefresher } from './Common/notifications/OrganizerNotificationsRefresher';
 import { setupAxiosOfflineCache } from './offline/axiosOfflineCache';
 
@@ -65,6 +66,7 @@ const App = () => {
                 <PaperProvider>
                   <DeepLinkHandler />
                   <NotificationResponseHandler />
+                  <OrganizerNotificationsPrompt />
                   <OrganizerNotificationsRefresher />
                   <Nav />
                 </PaperProvider>
