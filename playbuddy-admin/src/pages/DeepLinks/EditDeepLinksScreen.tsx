@@ -18,7 +18,7 @@ export default function AddDeepLinkForm() {
     const { data: promoCodes = [] } = useFetchPromoCodes();
     const { data: facilitators = [] } = useFetchFacilitators();
     const { data: organizers = [] } = useFetchOrganizers();
-    const { mutateAsync: addDeepLink } = useAddDeepLink();
+    const addDeepLinkMutation = useAddDeepLink();
 
     const [campaign, setCampaign] = useState('');
     const [type, setType] = useState('');
@@ -70,7 +70,7 @@ export default function AddDeepLinkForm() {
 
         console.log('Submitting deep link:', deepLinkData);
 
-        addDeepLink(deepLinkData);
+        addDeepLinkMutation.mutate(deepLinkData);
     };
 
     const handleDownloadCsv = () => {
@@ -178,7 +178,24 @@ export default function AddDeepLinkForm() {
                     <Button variant="outlined" onClick={handleDownloadCsv} sx={{ mt: 2 }}>Download CSV</Button>
                 </Box>
 
-                <Button variant="contained" onClick={handleSubmit} sx={{ mt: 4 }}>Submit</Button>
+                <Button
+                    variant="contained"
+                    onClick={handleSubmit}
+                    sx={{ mt: 4 }}
+                    disabled={addDeepLinkMutation.isPending}
+                >
+                    {addDeepLinkMutation.isPending ? 'Submitting...' : 'Submit'}
+                </Button>
+                {addDeepLinkMutation.isSuccess && (
+                    <Typography color="success.main" fontSize="0.875rem" sx={{ mt: 1 }}>
+                        Deep link created successfully.
+                    </Typography>
+                )}
+                {addDeepLinkMutation.isError && (
+                    <Typography color="error.main" fontSize="0.875rem" sx={{ mt: 1 }}>
+                        Failed to create deep link: {(addDeepLinkMutation.error as Error)?.message ?? 'Unknown error'}
+                    </Typography>
+                )}
             </Box>
         </Paper>
     );
