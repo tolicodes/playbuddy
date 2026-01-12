@@ -30,13 +30,6 @@ export const POPUP_SCHEDULE = [
         useInterval: true,
     },
     {
-        id: 'newsletter_signup',
-        label: 'Newsletter signup',
-        initialDelayMs: DEFAULT_INITIAL_DELAY_MS,
-        snoozeMs: DEFAULT_SNOOZE_MS,
-        useInterval: true,
-    },
-    {
         id: 'discover_game',
         label: 'Try Discover Game',
         initialDelayMs: DEFAULT_INITIAL_DELAY_MS,

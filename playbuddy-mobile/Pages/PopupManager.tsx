@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 
 import { EdgePlayGroupModal } from './EdgePlayGroupModal';
-import { NewsletterSignupModal } from './NewsletterSignupModal';
 import { RateAppModal } from './RateAppModal';
 import { EventPopupModal } from './EventPopupModal';
 import { DiscoverGameModal } from './DiscoverGameModal';
@@ -534,11 +533,6 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 visible={activePopupId === 'rate_app'}
                 onDismiss={() => dismissPopup('rate_app')}
                 onSnooze={() => snoozePopup('rate_app')}
-            />
-            <NewsletterSignupModal
-                visible={activePopupId === 'newsletter_signup'}
-                onDismiss={() => dismissPopup('newsletter_signup')}
-                onSnooze={() => snoozePopup('newsletter_signup')}
             />
             <DiscoverGameModal
                 visible={activePopupId === 'discover_game'}
