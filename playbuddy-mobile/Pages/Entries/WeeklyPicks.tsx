@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
+import { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -13,6 +13,7 @@ import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { getAvailableOrganizers } from '../Calendar/hooks/calendarUtils';
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from '../Calendar/hooks/eventHelpers';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
+import { navigateToHomeStackScreen } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
 import type { Attendee } from '../../commonTypes';
 
@@ -26,7 +27,7 @@ type WeeklyPickGroup = {
 
 export const WeeklyPicks = () => {
     const { data: events = [] } = useFetchEvents();
-    const navigation = useNavigation<NavStack>();
+    const navigation = useNavigation<NavigationProp<ParamListBase>>();
     const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
     const [weekDates, setWeekDates] = useState<string[]>([]);
 
@@ -109,7 +110,7 @@ export const WeeklyPicks = () => {
 
     const onPressEvent = (event: EventWithMetadata) => {
         logEvent(UE.WeeklyPicksEventDetailsClicked, { ...analyticsProps, event_id: event.id });
-        navigation.push('Event Details', { selectedEvent: event, title: event.name });
+        navigateToHomeStackScreen(navigation, 'Event Details', { selectedEvent: event, title: event.name });
     };
 
     const handlePrevWeek = () => {
