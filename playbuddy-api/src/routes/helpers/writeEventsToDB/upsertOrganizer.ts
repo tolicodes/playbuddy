@@ -15,7 +15,7 @@ const normalizeHandles = (handles: Array<string | null | undefined>) => {
 
 export async function upsertOrganizer(
     organizer: CreateOrganizerInput
-): Promise<{ organizerId?: string; communityId?: string }> {
+): Promise<{ organizerId?: string; communityId?: string; hidden?: boolean | null }> {
     const { id, name, url, original_id } = organizer;
     const instagram_handle = normalizeHandle(organizer.instagram_handle);
     const fetlife_handles = normalizeHandles([
@@ -44,6 +44,7 @@ export async function upsertOrganizer(
         instagram_handle?: string | null;
         fetlife_handle?: string | null;
         fetlife_handles?: string[] | null;
+        hidden?: boolean | null;
     };
 
     let existing: OrgRow | null = null;
@@ -52,7 +53,7 @@ export async function upsertOrganizer(
     if (id && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles,hidden")
             .eq("id", id)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -62,7 +63,7 @@ export async function upsertOrganizer(
     if (trimmedName && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles,hidden")
             .eq("name", trimmedName)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -72,7 +73,7 @@ export async function upsertOrganizer(
     if (trimmedName && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles,hidden")
             .contains("aliases", [trimmedName])
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -82,7 +83,7 @@ export async function upsertOrganizer(
     if (trimmedInsta && !existing) {
         const { data } = await supabaseClient
             .from("organizers")
-            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+            .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles,hidden")
             .ilike("instagram_handle", trimmedInsta)
             .maybeSingle();
         if (data) existing = data as OrgRow;
@@ -92,7 +93,7 @@ export async function upsertOrganizer(
         for (const handle of fetlife_handles) {
             const { data } = await supabaseClient
                 .from("organizers")
-                .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+                .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles,hidden")
                 .contains("fetlife_handles", [handle])
                 .maybeSingle();
             if (data) {
@@ -106,7 +107,7 @@ export async function upsertOrganizer(
         for (const handle of fetlife_handles) {
             const { data } = await supabaseClient
                 .from("organizers")
-                .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles")
+                .select("id,name,aliases,instagram_handle,fetlife_handle,fetlife_handles,hidden")
                 .ilike("fetlife_handle", handle)
                 .maybeSingle();
             if (data) {
@@ -117,6 +118,7 @@ export async function upsertOrganizer(
     }
 
     let organizerId = existing?.id;
+    let organizerHidden: boolean | null | undefined = existing?.hidden;
 
     if (existing) {
         // Merge aliases if we got a new human-readable name
@@ -170,7 +172,7 @@ export async function upsertOrganizer(
                 .from("organizers")
                 .update(updatePatch)
                 .eq("id", existing.id)
-                .select("id,name")
+                .select("id,name,hidden")
                 .single();
 
             if (error) {
@@ -178,6 +180,7 @@ export async function upsertOrganizer(
                 throw error;
             }
             organizerId = data?.id ?? organizerId;
+            organizerHidden = data?.hidden ?? organizerHidden;
             console.log(`ORGANIZER: Updated ${data?.name || existing.name}`);
         } else {
             console.log(`ORGANIZER: No updates needed for ${existing.name}`);
@@ -197,7 +200,7 @@ export async function upsertOrganizer(
         const { data, error } = await supabaseClient
             .from("organizers")
             .upsert(insertPayload, { onConflict: "name" })
-            .select("id,name")
+            .select("id,name,hidden")
             .single();
 
         if (error) {
@@ -206,6 +209,7 @@ export async function upsertOrganizer(
         }
 
         organizerId = data?.id;
+        organizerHidden = data?.hidden ?? organizerHidden;
         console.log(`ORGANIZER: Upserted ${data?.name}`);
     }
 
@@ -215,7 +219,7 @@ export async function upsertOrganizer(
         organizerName: existing?.name ?? resolvedName
     });
 
-    return { organizerId, communityId };
+    return { organizerId, communityId, hidden: organizerHidden ?? null };
 }
 
 

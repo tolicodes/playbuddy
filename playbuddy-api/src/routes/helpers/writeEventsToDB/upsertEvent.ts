@@ -89,6 +89,7 @@ async function tryUpsertOrganizer(organizer: CreateOrganizerInput) {
     return {
         organizerId: result.organizerId,
         organizerCommunityId: result.communityId,
+        organizerHidden: result.hidden ?? null,
     };
 }
 
@@ -177,11 +178,17 @@ export async function upsertEvent(
         const upsertedOrganizer = await tryUpsertOrganizer(normalizedEvent.organizer!);
         if (!upsertedOrganizer) return { result: 'failed', event: null };
 
-        const { organizerId, organizerCommunityId } = upsertedOrganizer;
+        const { organizerId, organizerCommunityId, organizerHidden } = upsertedOrganizer;
         const isApprovedEvent = normalizedEvent.approval_status === 'approved';
+        const organizerFetlifeHandles = getOrganizerFetlifeHandles(normalizedEvent.organizer);
+
+        if (organizerHidden) {
+            log(`EVENT: Skipping hidden organizer ${organizerInfo.logName}`);
+            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+            return { result: 'skipped', event: null };
+        }
 
         const existingEvent = await resolveExistingEvent(normalizedEvent, organizerId);
-        const organizerFetlifeHandles = getOrganizerFetlifeHandles(normalizedEvent.organizer);
 
         if (existingEvent?.frozen && !opts.ignoreFrozen) {
             log(`EVENT: Skipping frozen event ${existingEvent.id}`);
