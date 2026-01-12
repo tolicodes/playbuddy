@@ -153,12 +153,25 @@ type WeeklyPicksImageOptions = {
     limit?: number;
 };
 
+type WeeklyPicksImagePart = {
+    jpg: Buffer;
+    height: number;
+};
+
 type WeeklyPicksImageResult = {
     png: Buffer;
+    parts: WeeklyPicksImagePart[];
+    splitAt: number;
     width: number;
     height: number;
     weekOffset: number;
     weekLabel: string;
+};
+
+type DayLayout = {
+    dateKey: string;
+    startY: number;
+    endY: number;
 };
 
 type WeeklyPickEventRow = {
@@ -212,7 +225,6 @@ const wrapText = (value: string, maxChars: number, maxLines: number) => {
     const words = cleaned.split(' ');
     const lines: string[] = [];
     let line = '';
-    let usedAllWords = true;
 
     for (let i = 0; i < words.length; i += 1) {
         const word = words[i];
@@ -222,32 +234,32 @@ const wrapText = (value: string, maxChars: number, maxLines: number) => {
             continue;
         }
 
+        const isLastLine = lines.length + 1 >= maxLines;
+        if (isLastLine) {
+            const remaining = Math.max(0, maxChars - line.length - (line ? 1 : 0));
+            const suffix = '...';
+            if (remaining > suffix.length) {
+                const take = Math.max(0, remaining - suffix.length);
+                const chunk = word.slice(0, take);
+                line = line ? `${line} ${chunk}` : chunk;
+            } else if (!line) {
+                line = word.slice(0, Math.max(0, maxChars - suffix.length));
+            }
+            line = line.trimEnd();
+            lines.push((line ? line : '').replace(/\s+$/, '') + suffix);
+            return lines;
+        }
+
         if (line) {
             lines.push(line);
             line = word;
-            if (lines.length === maxLines - 1) {
-                usedAllWords = i + 1 === words.length;
-                break;
-            }
         } else {
             lines.push(word.slice(0, Math.max(1, maxChars - 3)) + '...');
-            line = '';
-            usedAllWords = i + 1 === words.length;
-            break;
+            return lines;
         }
     }
 
     if (line && lines.length < maxLines) lines.push(line);
-
-    if (!usedAllWords && lines.length) {
-        const lastIndex = lines.length - 1;
-        const last = lines[lastIndex];
-        const trimmed =
-            last.length > maxChars
-                ? last.slice(0, Math.max(1, maxChars - 3))
-                : last;
-        lines[lastIndex] = trimmed.replace(/\s+$/, '') + '...';
-    }
 
     return lines;
 };
@@ -466,7 +478,7 @@ const buildSvg = ({
     isLastWeek: boolean;
     days: Array<{ dateKey: string; dayLabel: string; dateLabel: string; items: WeeklyPickItem[] }>;
     imagesById: Map<number, string | null>;
-}): { svg: string; height: number } => {
+}): { svg: string; height: number; dayLayouts: DayLayout[] } => {
     const s = (value: number) => value * scale;
 
     const paddingX = s(16);
@@ -623,6 +635,8 @@ const buildSvg = ({
     <circle cx="${glowMidX + glowMidSize / 2}" cy="${glowMidY + glowMidSize / 2}" r="${glowMidSize / 2}" fill="${THEME.colors.brandGlowMid}" />
     <circle cx="${glowBottomX + glowBottomSize / 2}" cy="${glowBottomY + glowBottomSize / 2}" r="${glowBottomSize / 2}" fill="${THEME.colors.brandGlowWarm}" />`);
 
+    const dayLayouts: DayLayout[] = [];
+
     if (showEmpty) {
         const emptyCardX = paddingX;
         const emptyCardY = paddingTop;
@@ -664,6 +678,7 @@ const buildSvg = ({
 
         days.forEach((day) => {
             const dayHeaderY = y;
+            const dayStartY = y;
             const dayLabel = day.dayLabel.toUpperCase();
             const dateLabel = day.dateLabel.toUpperCase();
             const dayLabelWidth = estimateTextWidth(dayLabel, dayOfWeekFont, s(1.8));
@@ -688,7 +703,7 @@ const buildSvg = ({
                 const imageData = imagesById.get(item.eventId) || null;
                 const detailsY = cardY + imageHeight;
                 const detailsAvailableWidth = cardWidth - detailsPaddingX * 2;
-                const maxTitleChars = Math.max(8, estimateMaxChars(detailsAvailableWidth, titleFont, 0.64) - 1);
+                const maxTitleChars = Math.max(8, estimateMaxChars(detailsAvailableWidth, titleFont, 0.53));
                 const maxOrganizerChars = estimateMaxChars(detailsAvailableWidth, organizerFont, 0.6);
                 const maxMetaChars = estimateMaxChars(detailsAvailableWidth, metaFont, 0.6);
 
@@ -806,6 +821,7 @@ const buildSvg = ({
             });
 
             y += daySectionMarginBottom;
+            dayLayouts.push({ dateKey: day.dateKey, startY: dayStartY, endY: y });
         });
     }
 
@@ -816,7 +832,26 @@ const buildSvg = ({
     </defs>
     ${content.join('\n')}
   </svg>`;
-    return { svg, height: finalHeight };
+    return { svg, height: finalHeight, dayLayouts };
+};
+
+const selectSplitAt = (totalHeight: number, dayLayouts: DayLayout[]) => {
+    const target = totalHeight / 2;
+    const candidates = dayLayouts.slice(1).map((layout) => Math.round(layout.startY));
+    if (candidates.length === 0) {
+        return { splitAt: Math.round(totalHeight / 2), usedFallback: true };
+    }
+    let best = candidates[0];
+    let bestDiff = Math.abs(best - target);
+    for (let i = 1; i < candidates.length; i += 1) {
+        const candidate = candidates[i];
+        const diff = Math.abs(candidate - target);
+        if (diff < bestDiff) {
+            best = candidate;
+            bestDiff = diff;
+        }
+    }
+    return { splitAt: best, usedFallback: false };
 };
 
 const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment.Moment) => {
@@ -1032,7 +1067,7 @@ export const generateWeeklyPicksImage = async (
 
     console.log(`${logPrefix} Rendering SVG`);
     const renderSvgStart = Date.now();
-    const { svg, height: renderedHeight } = buildSvg({
+    const { svg, height: renderedHeight, dayLayouts } = buildSvg({
         width,
         height: Math.round(844 * scale),
         scale,
@@ -1055,8 +1090,38 @@ export const generateWeeklyPicksImage = async (
     const rasterMs = Date.now() - rasterStart;
     console.log(`${logPrefix} PNG ready (${png.length} bytes) in ${rasterMs}ms`);
 
+    const { splitAt, usedFallback } = selectSplitAt(renderedHeight, dayLayouts);
+    if (usedFallback) {
+        console.log(`${logPrefix} Split fallback at y=${splitAt}`);
+    }
+    const clampedSplitAt = Math.min(Math.max(1, Math.round(splitAt)), renderedHeight - 1);
+    const topHeight = clampedSplitAt;
+    const bottomHeight = renderedHeight - clampedSplitAt;
+    const [topJpg, bottomJpg] = await Promise.all([
+        sharp(png)
+            .extract({ left: 0, top: 0, width, height: topHeight })
+            .jpeg({ quality: 90 })
+            .toBuffer(),
+        sharp(png)
+            .extract({ left: 0, top: clampedSplitAt, width, height: bottomHeight })
+            .jpeg({ quality: 90 })
+            .toBuffer(),
+    ]);
+    const parts: WeeklyPicksImagePart[] = [
+        {
+            jpg: topJpg,
+            height: topHeight,
+        },
+        {
+            jpg: bottomJpg,
+            height: bottomHeight,
+        },
+    ];
+
     return {
         png,
+        parts,
+        splitAt: clampedSplitAt,
         width,
         height: renderedHeight,
         weekOffset: selectedOffset,

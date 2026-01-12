@@ -26,7 +26,7 @@ import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { colors } from "../../components/styles";
-import { navigateToHome } from "./navigationHelpers";
+import { navigateToHome, navigateToTab } from "./navigationHelpers";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { ADMIN_EMAILS } from "../../config";
 
@@ -160,7 +160,16 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('gamepad'),
                     ...headerOptions({ navigation, title: 'Discover Game' }),
                 })}
-                listeners={onPressItemLogEventListener('Discover Game')}
+                listeners={({ navigation }) => ({
+                    drawerItemPress: (e) => {
+                        e.preventDefault();
+                        logEvent(UE.DrawerItemPressed, {
+                            ...analyticsProps,
+                            screen_name: 'Discover Game',
+                        });
+                        navigateToTab(navigation, 'More', { screen: 'Discover Game' });
+                    },
+                })}
             />
 
             <Drawer.Screen

@@ -6,6 +6,7 @@ import { EdgePlayGroupModal } from './EdgePlayGroupModal';
 import { NewsletterSignupModal } from './NewsletterSignupModal';
 import { RateAppModal } from './RateAppModal';
 import { EventPopupModal } from './EventPopupModal';
+import { DiscoverGameModal } from './DiscoverGameModal';
 import { EventListViewIntroModal } from './Calendar/ListView/EventListViewIntroModal';
 import {
     EventListViewMode,
@@ -538,6 +539,11 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 visible={activePopupId === 'newsletter_signup'}
                 onDismiss={() => dismissPopup('newsletter_signup')}
                 onSnooze={() => snoozePopup('newsletter_signup')}
+            />
+            <DiscoverGameModal
+                visible={activePopupId === 'discover_game'}
+                onDismiss={() => dismissPopup('discover_game')}
+                onSnooze={() => snoozePopup('discover_game')}
             />
         </>
     );

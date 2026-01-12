@@ -50,7 +50,8 @@ const generateAndCacheWeeklyPicksImage = async (
         version: buildVersion(),
     };
     cache.set(cacheKey, entry);
-    console.log(`[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms`);
+    const jpgBytes = entry.parts.reduce((sum, part) => sum + part.jpg.length, 0);
+    console.log(`[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms parts=${entry.parts.length} jpgBytes=${jpgBytes}`);
     return entry;
 };
 

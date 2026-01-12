@@ -10,20 +10,21 @@ import {
     Easing,
     Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { navigateToAuth } from '../../Common/Nav/navigationHelpers';
-import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
+import { colors, fontFamilies, fontSizes, gradients, lineHeights, radius, shadows, spacing } from '../../components/styles';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = 180;
-const CARD_HEIGHT = 180;
+const CARD_WIDTH = Math.min(SCREEN_WIDTH - 72, 240);
+const CARD_HEIGHT = Math.round(CARD_WIDTH * 0.9);
 
 type Stage = 'left' | 'right';
 
@@ -41,7 +42,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 
     // Animated values:
     const arrowX = useRef(new Animated.Value(0)).current;
-    const downScale = useRef(new Animated.Value(1)).current;
+    const pulseScale = useRef(new Animated.Value(1)).current;
     const intervalRef = useRef<NodeJS.Timer | null>(null);
 
     /**
@@ -78,18 +79,17 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
         };
     }, [stage]);
 
-    // On mount: set up vertical‐pulse for the down arrow, then after 1s, begin alternating stage every 5s
+    // On mount: set up a pulse for the active legend chip, then start alternating stages.
     useEffect(() => {
-        // Vertical pulse for the down arrow hint (heartbeat effect)
-        const downPulse = Animated.loop(
+        const pulseLoop = Animated.loop(
             Animated.sequence([
-                Animated.timing(downScale, {
-                    toValue: 1.3,
+                Animated.timing(pulseScale, {
+                    toValue: 1.08,
                     duration: 500,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
                 }),
-                Animated.timing(downScale, {
+                Animated.timing(pulseScale, {
                     toValue: 1.0,
                     duration: 500,
                     easing: Easing.in(Easing.quad),
@@ -97,7 +97,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
                 }),
             ])
         );
-        downPulse.start();
+        pulseLoop.start();
 
         // After 1 second, alternate stage every 5 seconds
         const holdTimeout = setTimeout(() => {
@@ -109,7 +109,7 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 
         return () => {
             clearTimeout(holdTimeout);
-            downPulse.stop();
+            pulseLoop.stop();
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
     }, []);
@@ -132,92 +132,139 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
 
     return (
         <View style={styles.container}>
-            {/* ── Top: Header & Subtitle ───────────────────────────────── */}
-            <View style={styles.topContainer}>
-                <Text style={styles.header}>
-                    ❤️ Swipe Right ❤️ {'\n'}
-                </Text>
-                <Text style={styles.subheader}>
-                    and save your favorite events!
-                </Text>
-            </View>
+            <View pointerEvents="none" style={styles.glowTop} />
+            <View pointerEvents="none" style={styles.glowBottom} />
 
-            {/* ── Middle: Animated Card + Primary Button ───────────────── */}
-            <View style={styles.middleContainer}>
-                <View style={styles.card}>
-                    {stage === 'left' && (
-                        <>
-                            <View style={[styles.half, styles.leftHalf]} />
-                            <Animated.View
-                                style={[
-                                    styles.arrowIcon,
-                                    styles.leftOverlay,
-                                    { transform: [{ translateX: arrowX }] },
-                                ]}
-                            >
-                                <Ionicons name="arrow-back" size={32} color={colors.white} />
-                            </Animated.View>
-                            <View style={[styles.banner, styles.skipBanner]}>
-                                <Text style={styles.bannerText}>SKIP</Text>
-                            </View>
-                        </>
-                    )}
-
-                    {stage === 'right' && (
-                        <>
-                            <View style={[styles.half, styles.rightHalf]} />
-                            <Animated.View
-                                style={[
-                                    styles.arrowIcon,
-                                    styles.rightOverlay,
-                                    { transform: [{ translateX: arrowX }] },
-                                ]}
-                            >
-                                <Ionicons name="arrow-forward" size={32} color={colors.white} />
-                            </Animated.View>
-                            <View style={[styles.banner, styles.saveBanner]}>
-                                <Text style={styles.bannerText}>Save to My Calendar</Text>
-                            </View>
-                        </>
-                    )}
+            <View style={styles.content}>
+                {/* ── Top: Header & Subtitle ───────────────────────────────── */}
+                <View style={styles.topContainer}>
+                    <Text style={styles.kicker}>Swipe guide</Text>
+                    <Text style={styles.header}>Curate your calendar in seconds.</Text>
+                    <Text style={styles.subheader}>
+                        Swipe right to save. Swipe left to skip.
+                    </Text>
                 </View>
 
-                <TouchableOpacity
-                    style={[
-                        styles.primaryButton,
-                        authUserId ? styles.gotItButton : styles.createAccountButton,
-                    ]}
-                    onPress={handlePrimaryPress}
-                    activeOpacity={0.8}
-                >
-                    <Ionicons
-                        name={authUserId ? 'checkmark-circle-outline' : 'person-add-outline'}
-                        size={20}
-                        color={colors.white}
-                    />
-                    <Text style={styles.primaryButtonText}>
-                        {authUserId ? 'Got it!' : 'Create Account\nto save events'}
-                    </Text>
-                </TouchableOpacity>
-            </View>
+                {/* ── Middle: Animated Card + Primary Button ───────────────── */}
+                <View style={styles.middleContainer}>
+                    <LinearGradient
+                        colors={[colors.brandLavender, colors.brandPink]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.cardFrame}
+                    >
+                        <View style={styles.card}>
+                            {stage === 'left' && (
+                                <>
+                                    <View style={[styles.half, styles.leftHalf]} />
+                                    <Animated.View
+                                        style={[
+                                            styles.arrowIcon,
+                                            styles.leftOverlay,
+                                            { transform: [{ translateX: arrowX }] },
+                                        ]}
+                                    >
+                                        <Ionicons name="arrow-back" size={32} color={colors.textMuted} />
+                                    </Animated.View>
+                                    <View style={[styles.banner, styles.skipBanner]}>
+                                        <Text style={styles.bannerText}>Skip</Text>
+                                    </View>
+                                </>
+                            )}
 
-            {/* ── Bottom: Only show when swiping right ─────────────────── */}
-            {stage === 'right' && (
-                <View style={styles.customHintContainer}>
-                    <View style={styles.iconColumn}>
-                        <Ionicons name="heart" size={24} color={colors.danger} />
-                        <Animated.View
-                            style={{ transform: [{ scale: downScale }], marginTop: 4 }}
+                            {stage === 'right' && (
+                                <>
+                                    <View style={[styles.half, styles.rightHalf]} />
+                                    <Animated.View
+                                        style={[
+                                            styles.arrowIcon,
+                                            styles.rightOverlay,
+                                            { transform: [{ translateX: arrowX }] },
+                                        ]}
+                                    >
+                                        <Ionicons name="arrow-forward" size={32} color={colors.brandPink} />
+                                    </Animated.View>
+                                    <View style={[styles.banner, styles.saveBanner]}>
+                                        <Text style={[styles.bannerText, styles.bannerTextOnDark]}>Save</Text>
+                                    </View>
+                                </>
+                            )}
+                        </View>
+                    </LinearGradient>
+
+                    <TouchableOpacity
+                        style={styles.primaryButton}
+                        onPress={handlePrimaryPress}
+                        activeOpacity={0.85}
+                    >
+                        <LinearGradient
+                            colors={authUserId ? gradients.primaryButton : gradients.auth}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.primaryButtonGradient}
                         >
-                            <Ionicons name="arrow-down" size={20} color={colors.brandBright} />
+                            <Ionicons
+                                name={authUserId ? 'checkmark-circle-outline' : 'person-add-outline'}
+                                size={20}
+                                color={colors.white}
+                                style={styles.primaryButtonIcon}
+                            />
+                            <Text style={[styles.primaryButtonText, !authUserId && styles.primaryButtonTextSmall]}>
+                                {authUserId ? 'Got it!' : 'Create Account\nto save events'}
+                            </Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.bottomContainer}>
+                    <View style={styles.legendRow}>
+                        <Animated.View
+                            style={[
+                                styles.legendChip,
+                                stage === 'left' ? styles.legendChipActive : styles.legendChipMuted,
+                                { transform: [{ scale: stage === 'left' ? pulseScale : 1 }] },
+                            ]}
+                        >
+                            <Ionicons
+                                name="close"
+                                size={16}
+                                color={stage === 'left' ? colors.textPrimary : colors.textOnDarkMuted}
+                                style={styles.legendIcon}
+                            />
+                            <Text
+                                style={[
+                                    styles.legendText,
+                                    stage === 'left' ? styles.legendTextActive : styles.legendTextMuted,
+                                ]}
+                            >
+                                Skip
+                            </Text>
+                        </Animated.View>
+                        <Animated.View
+                            style={[
+                                styles.legendChip,
+                                stage === 'right' ? styles.legendChipActiveSave : styles.legendChipMuted,
+                                { transform: [{ scale: stage === 'right' ? pulseScale : 1 }] },
+                            ]}
+                        >
+                            <Ionicons
+                                name="heart"
+                                size={16}
+                                color={stage === 'right' ? colors.white : colors.textOnDarkMuted}
+                                style={styles.legendIcon}
+                            />
+                            <Text
+                                style={[
+                                    styles.legendText,
+                                    stage === 'right' ? styles.legendTextOnDark : styles.legendTextMuted,
+                                ]}
+                            >
+                                Save
+                            </Text>
                         </Animated.View>
                     </View>
-
-                    <View style={styles.hintBox}>
-                        <Text style={styles.hintText}>Save to{'\n'}My Calendar</Text>
-                    </View>
                 </View>
-            )}
+            </View>
         </View>
     );
 };
@@ -227,25 +274,58 @@ export const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: 'transparent',
     },
+    glowTop: {
+        position: 'absolute',
+        top: -90,
+        right: -60,
+        width: 220,
+        height: 220,
+        borderRadius: 110,
+        backgroundColor: colors.brandGlowTop,
+    },
+    glowBottom: {
+        position: 'absolute',
+        bottom: -120,
+        left: -70,
+        width: 260,
+        height: 260,
+        borderRadius: 130,
+        backgroundColor: colors.brandGlowWarm,
+    },
+    content: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.xxl,
+        paddingTop: spacing.xxxl,
+        paddingBottom: spacing.xxxl,
+    },
 
     // ── Top Container ─────────────────────────────────────────────
     topContainer: {
         alignItems: 'center',
-        marginTop: 60,
-        paddingHorizontal: spacing.xxl,
+        maxWidth: 320,
+    },
+    kicker: {
+        fontSize: fontSizes.sm,
+        letterSpacing: 2,
+        textTransform: 'uppercase',
+        color: colors.textOnDarkSubtle,
+        marginBottom: spacing.sm,
+        fontFamily: fontFamilies.body,
     },
     header: {
         textAlign: 'center',
-        marginBottom: spacing.xs,
-        color: colors.textPrimary,
-        fontSize: fontSizes.headline,
-        fontWeight: "600",
+        marginBottom: spacing.sm,
+        color: colors.textOnDarkStrong,
+        fontSize: fontSizes.display,
+        fontWeight: '700',
         fontFamily: fontFamilies.display,
     },
 
     subheader: {
-        fontSize: fontSizes.xxxl,
-        color: colors.textMuted,
+        fontSize: fontSizes.lg,
+        color: colors.textOnDarkMuted,
         textAlign: 'center',
         lineHeight: lineHeights.lg,
         fontWeight: '600',
@@ -255,22 +335,23 @@ export const styles = StyleSheet.create({
     // ── Middle Container ─────────────────────────────────────────
     middleContainer: {
         alignItems: 'center',
-        marginTop: spacing.jumbo,
+        marginTop: spacing.xl,
+        width: '100%',
+    },
+    cardFrame: {
+        borderRadius: radius.lgPlus,
+        padding: 2,
+        overflow: 'hidden',
+        ...shadows.brandCard,
     },
     card: {
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
-        backgroundColor: colors.surfaceSubtle,
-        borderRadius: radius.smPlus,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderRadius: radius.lg,
         overflow: 'hidden',
-        padding: spacing.lg,
         borderWidth: 1,
-        borderColor: colors.borderLight,
-        shadowColor: colors.black,
-        shadowOpacity: 0.08,
-        shadowOffset: { width: 0, height: 3 },
-        shadowRadius: 6,
-        elevation: 4,
+        borderColor: colors.borderOnDarkSoft,
         marginBottom: spacing.xl,
     },
     half: {
@@ -278,31 +359,42 @@ export const styles = StyleSheet.create({
         top: 0,
         width: CARD_WIDTH / 2,
         height: CARD_HEIGHT,
-        backgroundColor: colors.overlayLight,
     },
-    leftHalf: { left: 0 },
-    rightHalf: { right: 0 },
+    leftHalf: {
+        left: 0,
+        backgroundColor: colors.surfaceMutedAlt,
+    },
+    rightHalf: {
+        right: 0,
+        backgroundColor: colors.surfaceLavenderStrong,
+    },
     banner: {
         position: 'absolute',
         top: spacing.smPlus,
-        paddingHorizontal: spacing.smPlus,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.xs,
-        borderRadius: radius.xxs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
     },
     skipBanner: {
         left: spacing.smPlus,
-        backgroundColor: colors.danger,
+        backgroundColor: colors.surfaceWhiteOpaque,
+        borderColor: colors.borderMutedAlt,
     },
     saveBanner: {
         right: spacing.smPlus,
-        backgroundColor: colors.successBright,
+        backgroundColor: colors.brandPink,
+        borderColor: colors.brandPink,
     },
     bannerText: {
-        color: colors.white,
+        color: colors.textPrimary,
         fontSize: fontSizes.sm,
         fontWeight: '700',
         textAlign: 'center',
         fontFamily: fontFamilies.body,
+    },
+    bannerTextOnDark: {
+        color: colors.white,
     },
     arrowIcon: {
         position: 'absolute',
@@ -312,59 +404,81 @@ export const styles = StyleSheet.create({
     rightOverlay: { right: CARD_WIDTH * 0.25 - 16 },
 
     primaryButton: {
+        width: '100%',
+        maxWidth: 280,
+        borderRadius: radius.lg,
+        overflow: 'hidden',
+        ...shadows.button,
+    },
+    primaryButtonGradient: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
         paddingHorizontal: spacing.xxl,
-        paddingVertical: spacing.md,
-        borderRadius: radius.xs,
+        paddingVertical: spacing.mdPlus,
     },
-    gotItButton: {
-        backgroundColor: colors.brandBright,
-    },
-    createAccountButton: {
-        backgroundColor: colors.brandBlue,
+    primaryButtonIcon: {
+        marginRight: spacing.sm,
     },
     primaryButtonText: {
         color: colors.white,
-        fontSize: fontSizes.xxl,
+        fontSize: fontSizes.lg,
         fontWeight: '600',
-        marginLeft: spacing.sm,
         textAlign: 'center',
         fontFamily: fontFamilies.body,
     },
+    primaryButtonTextSmall: {
+        fontSize: fontSizes.base,
+        lineHeight: lineHeights.md,
+    },
 
-    // ── Custom Bottom Hint ───────────────────────────────────────
-    customHintContainer: {
-        position: 'absolute',
-        bottom: spacing.jumbo,
-        left: SCREEN_WIDTH / 4 + 37, // arrow + pill start
+    // ── Bottom Legend ────────────────────────────────────────────
+    bottomContainer: {
+        alignItems: 'center',
+    },
+    legendRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
-    iconColumn: {
+    legendChip: {
+        flexDirection: 'row',
         alignItems: 'center',
-        marginRight: spacing.sm,
-    },
-    hintBox: {
-        width: 150,
-        backgroundColor: colors.surfaceSubtle,
-        borderRadius: radius.sm,
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.md,
         justifyContent: 'center',
-        shadowColor: colors.black,
-        shadowOpacity: 0.05,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        elevation: 3,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        marginHorizontal: spacing.xs,
+        minWidth: 98,
     },
-    hintText: {
-        fontSize: fontSizes.xl,
-        color: colors.textPrimary,
+    legendChipMuted: {
+        backgroundColor: colors.surfaceGlass,
+        borderColor: colors.borderOnDarkSoft,
+    },
+    legendChipActive: {
+        backgroundColor: colors.white,
+        borderColor: colors.borderOnDarkBright,
+    },
+    legendChipActiveSave: {
+        backgroundColor: colors.brandPink,
+        borderColor: colors.brandPink,
+    },
+    legendIcon: {
+        marginRight: spacing.xs,
+    },
+    legendText: {
+        fontSize: fontSizes.sm,
         fontWeight: '600',
-        textAlign: 'center',
-        lineHeight: lineHeights.md,
         fontFamily: fontFamilies.body,
+    },
+    legendTextMuted: {
+        color: colors.textOnDarkMuted,
+    },
+    legendTextActive: {
+        color: colors.textPrimary,
+    },
+    legendTextOnDark: {
+        color: colors.white,
     },
 });
 

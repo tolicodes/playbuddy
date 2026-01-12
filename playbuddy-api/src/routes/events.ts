@@ -38,6 +38,14 @@ const parseNumber = (value: unknown) => {
     return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+const parsePart = (value: unknown) => {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return undefined;
+    const normalized = Math.floor(parsed);
+    return normalized > 0 ? normalized : undefined;
+};
+
 const extractWeeklyPicksImageOptions = (req: AuthenticatedRequest) => {
     const source = { ...(req.query || {}), ...(req.body || {}) } as Record<string, unknown>;
     const weekOffset = parseNumber(source.weekOffset);
@@ -61,6 +69,9 @@ router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedR
         height: status.entry?.height ?? null,
         weekOffset: status.entry?.weekOffset ?? null,
         weekLabel: status.entry?.weekLabel ?? null,
+        partCount: status.entry?.parts?.length ?? null,
+        partHeights: status.entry?.parts?.map((part) => part.height) ?? null,
+        splitAt: status.entry?.splitAt ?? null,
     });
 }));
 
@@ -68,6 +79,7 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
     const startedAt = Date.now();
     const options = extractWeeklyPicksImageOptions(req);
     const responseFormat = String((req.query.format ?? (req.body as Record<string, unknown>)?.format ?? 'json')).toLowerCase();
+    const requestedPart = parsePart(req.query.part ?? (req.body as Record<string, unknown>)?.part);
     console.log(
         `[weekly-picks][generate] start width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} scale=${options.scale ?? 'auto'} limit=${options.limit ?? 'all'}`
     );
@@ -75,8 +87,9 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
         const { cacheKey, entry } = await forceGenerateWeeklyPicksImage(options);
         const durationMs = Date.now() - startedAt;
         const pngBytes = Buffer.isBuffer(entry.png) ? entry.png.length : 0;
+        const jpgBytes = entry.parts.reduce((sum, part) => sum + part.jpg.length, 0);
         console.log(
-            `[weekly-picks][generate] done cacheKey=${cacheKey} durationMs=${durationMs} generatedMs=${entry.durationMs} pngBytes=${pngBytes}`
+            `[weekly-picks][generate] done cacheKey=${cacheKey} durationMs=${durationMs} generatedMs=${entry.durationMs} pngBytes=${pngBytes} jpgBytes=${jpgBytes}`
         );
         res.set('Cache-Control', 'no-store');
         res.set('X-Weekly-Picks-Cache-Key', cacheKey);
@@ -87,9 +100,25 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
         res.set('X-Weekly-Picks-Week-Label', entry.weekLabel);
         res.set('X-Weekly-Picks-Width', String(entry.width));
         res.set('X-Weekly-Picks-Height', String(entry.height));
+        res.set('X-Weekly-Picks-Part-Count', String(entry.parts.length));
+        res.set('X-Weekly-Picks-Part-Heights', entry.parts.map((part) => part.height).join(','));
+        res.set('X-Weekly-Picks-Split-At', String(entry.splitAt));
         if (responseFormat === 'png') {
             res.set('Content-Type', 'image/png');
             res.status(200).send(entry.png);
+            return;
+        }
+        if (responseFormat === 'jpg' || responseFormat === 'jpeg') {
+            const partIndex = (requestedPart ?? 1) - 1;
+            const part = entry.parts[partIndex];
+            if (!part) {
+                res.status(400).json({ error: 'Invalid part requested.' });
+                return;
+            }
+            res.set('Content-Type', 'image/jpeg');
+            res.set('X-Weekly-Picks-Part', String(partIndex + 1));
+            res.set('X-Weekly-Picks-Part-Height', String(part.height));
+            res.status(200).send(part.jpg);
             return;
         }
         res.status(200).json({
@@ -101,6 +130,9 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
             weekLabel: entry.weekLabel,
             width: entry.width,
             height: entry.height,
+            partCount: entry.parts.length,
+            partHeights: entry.parts.map((part) => part.height),
+            splitAt: entry.splitAt,
         });
     } catch (error) {
         const durationMs = Date.now() - startedAt;
@@ -112,10 +144,12 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
 router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
     const startedAt = Date.now();
     const options = extractWeeklyPicksImageOptions(req);
+    const responseFormat = String(req.query.format ?? 'jpg').toLowerCase();
+    const requestedPart = parsePart(req.query.part);
     const logPrefix = '[weekly-picks][image]';
     const { cacheKey, entry, inProgress } = getCachedWeeklyPicksImage(options);
     console.log(
-        `${logPrefix} GET start cacheKey=${cacheKey} inProgress=${inProgress} width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0}`
+        `${logPrefix} GET start cacheKey=${cacheKey} inProgress=${inProgress} width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} format=${responseFormat}`
     );
     if (!entry) {
         const durationMs = Date.now() - startedAt;
@@ -124,7 +158,6 @@ router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest,
         return;
     }
 
-    res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'no-store');
     res.set('X-Weekly-Picks-Cache-Key', cacheKey);
     res.set('X-Weekly-Picks-Version', entry.version);
@@ -134,14 +167,37 @@ router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest,
     res.set('X-Weekly-Picks-Week-Label', entry.weekLabel);
     res.set('X-Weekly-Picks-Width', String(entry.width));
     res.set('X-Weekly-Picks-Height', String(entry.height));
+    res.set('X-Weekly-Picks-Part-Count', String(entry.parts.length));
+    res.set('X-Weekly-Picks-Part-Heights', entry.parts.map((part) => part.height).join(','));
+    res.set('X-Weekly-Picks-Split-At', String(entry.splitAt));
     if (inProgress) {
         res.set('X-Weekly-Picks-Generating', 'true');
     }
-    const pngSize = Buffer.isBuffer(entry.png) ? entry.png.length : 0;
+    if (responseFormat === 'png') {
+        const pngSize = Buffer.isBuffer(entry.png) ? entry.png.length : 0;
+        console.log(
+            `${logPrefix} cache hit cacheKey=${cacheKey} pngBytes=${pngSize} generatedMs=${entry.durationMs}`
+        );
+        res.set('Content-Type', 'image/png');
+        res.status(200).send(entry.png);
+        const durationMs = Date.now() - startedAt;
+        console.log(`${logPrefix} GET done cacheKey=${cacheKey} durationMs=${durationMs}`);
+        return;
+    }
+
+    const partIndex = (requestedPart ?? 1) - 1;
+    const part = entry.parts[partIndex];
+    if (!part) {
+        res.status(400).json({ error: 'Invalid part requested.' });
+        return;
+    }
+    res.set('Content-Type', 'image/jpeg');
+    res.set('X-Weekly-Picks-Part', String(partIndex + 1));
+    res.set('X-Weekly-Picks-Part-Height', String(part.height));
     console.log(
-        `${logPrefix} cache hit cacheKey=${cacheKey} pngBytes=${pngSize} generatedMs=${entry.durationMs}`
+        `${logPrefix} cache hit cacheKey=${cacheKey} part=${partIndex + 1} jpgBytes=${part.jpg.length} generatedMs=${entry.durationMs}`
     );
-    res.status(200).send(entry.png);
+    res.status(200).send(part.jpg);
     const durationMs = Date.now() - startedAt;
     console.log(`${logPrefix} GET done cacheKey=${cacheKey} durationMs=${durationMs}`);
 }));

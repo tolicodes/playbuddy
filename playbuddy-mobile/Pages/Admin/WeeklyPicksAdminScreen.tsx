@@ -42,19 +42,19 @@ const PB_SHARE_CODE = 'DCK9PD';
 const HEADER_HEIGHT = 34;
 
 type PreviewHeaderProps = {
-    previewLoading: boolean;
+    previewLoading: boolean[];
     downloadLoading: boolean;
     generationInProgress: boolean;
     generationCountdown: number;
     countdownLabel: string;
-    previewSource: { uri: string; cache?: 'default' | 'reload' | 'force-cache' | 'only-if-cached' };
-    previewError: boolean;
+    previewSources: { uri: string; cache?: 'default' | 'reload' | 'force-cache' | 'only-if-cached' }[];
+    previewError: boolean[];
     onGenerate: () => void;
-    onDownload: () => void;
-    onLoadStart: () => void;
-    onLoad: () => void;
-    onLoadEnd: () => void;
-    onError: () => void;
+    onDownload: (index: number) => void;
+    onLoadStart: (index: number) => void;
+    onLoad: (index: number) => void;
+    onLoadEnd: (index: number) => void;
+    onError: (index: number) => void;
 };
 
 const PreviewHeader = React.memo(({
@@ -63,7 +63,7 @@ const PreviewHeader = React.memo(({
     generationInProgress,
     generationCountdown,
     countdownLabel,
-    previewSource,
+    previewSources,
     previewError,
     onGenerate,
     onDownload,
@@ -100,10 +100,10 @@ const PreviewHeader = React.memo(({
                 <TouchableOpacity
                     style={[
                         styles.previewActionButton,
-                        (!previewLoading && !previewError && !downloadLoading) ? null : styles.previewActionButtonDisabled,
+                        (!previewLoading[0] && !previewError[0] && !downloadLoading) ? null : styles.previewActionButtonDisabled,
                     ]}
-                    onPress={onDownload}
-                    disabled={previewLoading || previewError || downloadLoading}
+                    onPress={() => onDownload(0)}
+                    disabled={previewLoading[0] || previewError[0] || downloadLoading}
                 >
                     {downloadLoading ? (
                         <ActivityIndicator size="small" color={colors.brandIndigo} />
@@ -114,7 +114,26 @@ const PreviewHeader = React.memo(({
                             color={colors.brandIndigo}
                         />
                     )}
-                    <Text style={styles.previewActionText}>Download</Text>
+                    <Text style={styles.previewActionText}>Download 1</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[
+                        styles.previewActionButton,
+                        (!previewLoading[1] && !previewError[1] && !downloadLoading) ? null : styles.previewActionButtonDisabled,
+                    ]}
+                    onPress={() => onDownload(1)}
+                    disabled={previewLoading[1] || previewError[1] || downloadLoading}
+                >
+                    {downloadLoading ? (
+                        <ActivityIndicator size="small" color={colors.brandIndigo} />
+                    ) : (
+                        <Ionicons
+                            name="download-outline"
+                            size={16}
+                            color={colors.brandIndigo}
+                        />
+                    )}
+                    <Text style={styles.previewActionText}>Download 2</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -131,27 +150,34 @@ const PreviewHeader = React.memo(({
                 )}
             </View>
         )}
-        <View style={styles.previewImageFrame}>
-            <Image
-                source={previewSource}
-                style={styles.previewImage}
-                resizeMode="contain"
-                onLoadStart={onLoadStart}
-                onLoad={onLoad}
-                onLoadEnd={onLoadEnd}
-                onError={onError}
-            />
-            {previewLoading && (
-                <View style={styles.previewLoader}>
-                    <ActivityIndicator size="large" color={colors.brandIndigo} />
-                    <Text style={styles.previewLoaderText}>Rendering preview...</Text>
+        <View style={styles.previewImageGrid}>
+            {previewSources.map((source, index) => (
+                <View key={`preview-part-${index}`} style={styles.previewImageGroup}>
+                    <Text style={styles.previewPartLabel}>Part {index + 1}</Text>
+                    <View style={styles.previewImageFrame}>
+                        <Image
+                            source={source}
+                            style={styles.previewImage}
+                            resizeMode="contain"
+                            onLoadStart={() => onLoadStart(index)}
+                            onLoad={() => onLoad(index)}
+                            onLoadEnd={() => onLoadEnd(index)}
+                            onError={() => onError(index)}
+                        />
+                        {previewLoading[index] && (
+                            <View style={styles.previewLoader}>
+                                <ActivityIndicator size="large" color={colors.brandIndigo} />
+                                <Text style={styles.previewLoaderText}>Rendering preview...</Text>
+                            </View>
+                        )}
+                        {previewError[index] && !previewLoading[index] && (
+                            <View style={styles.previewError}>
+                                <Text style={styles.previewErrorText}>Unable to load part {index + 1}.</Text>
+                            </View>
+                        )}
+                    </View>
                 </View>
-            )}
-            {previewError && !previewLoading && (
-                <View style={styles.previewError}>
-                    <Text style={styles.previewErrorText}>Unable to load weekly picks preview.</Text>
-                </View>
-            )}
+            ))}
         </View>
         {generationInProgress && (
             <Text style={styles.previewCountdownFootnote}>
@@ -173,12 +199,12 @@ export const WeeklyPicksAdminScreen = () => {
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { mutate: toggleWeeklyPickEvent, isPending: togglePending } = useToggleWeeklyPickEvent();
     const [previewVersion, setPreviewVersion] = useState<string | null>(null);
-    const [previewLoading, setPreviewLoading] = useState(true);
-    const [previewError, setPreviewError] = useState(false);
+    const [previewLoading, setPreviewLoading] = useState([true, true]);
+    const [previewError, setPreviewError] = useState([false, false]);
     const [downloadLoading, setDownloadLoading] = useState(false);
     const [generationInProgress, setGenerationInProgress] = useState(false);
     const [generationCountdown, setGenerationCountdown] = useState(0);
-    const lastLoadedPreviewUrlRef = useRef<string | null>(null);
+    const lastLoadedPreviewUrlRef = useRef<string[]>([]);
     const countdownLabel = useMemo(() => {
         const totalSeconds = Math.max(0, generationCountdown);
         const minutes = Math.floor(totalSeconds / 60);
@@ -199,44 +225,79 @@ export const WeeklyPicksAdminScreen = () => {
     const previewScale = 3;
     const previewWidth = Math.round((screenWidth - spacing.lg * 2) * previewScale);
     const previewVersionParam = previewVersion ? `&v=${previewVersion}` : '';
-    const previewUrl = `${API_BASE_URL}/events/weekly-picks/image?width=${previewWidth}${previewVersionParam}`;
-    const previewSource = useMemo(
-        () => ({ uri: previewUrl, cache: 'force-cache' }),
-        [previewUrl]
+    const previewUrls = [1, 2].map(
+        (part) => `${API_BASE_URL}/events/weekly-picks/image?width=${previewWidth}&part=${part}&format=jpg${previewVersionParam}`
+    );
+    const previewSources = useMemo(
+        () => previewUrls.map((uri) => ({ uri, cache: 'force-cache' })),
+        [previewUrls]
     );
 
     useEffect(() => {
-        if (previewUrl !== lastLoadedPreviewUrlRef.current) {
-            setPreviewError(false);
-            setPreviewLoading(true);
+        const hasChanges = previewUrls.some((url, index) => url !== lastLoadedPreviewUrlRef.current[index]);
+        if (hasChanges) {
+            setPreviewError([false, false]);
+            setPreviewLoading([true, true]);
         }
-    }, [previewUrl]);
+    }, [previewUrls]);
 
-    const handlePreviewLoadStart = useCallback(() => {
-        if (previewUrl === lastLoadedPreviewUrlRef.current) {
+    const handlePreviewLoadStart = useCallback((index: number) => {
+        if (previewUrls[index] === lastLoadedPreviewUrlRef.current[index]) {
             return;
         }
-        console.log('[weekly-picks] preview load start', previewUrl);
-        setPreviewError(false);
-        setPreviewLoading(true);
-    }, [previewUrl]);
-    const handlePreviewLoad = useCallback(() => {
-        console.log('[weekly-picks] preview load', previewUrl);
-        lastLoadedPreviewUrlRef.current = previewUrl;
-        setPreviewLoading(false);
-        setPreviewError(false);
-    }, [previewUrl]);
-    const handlePreviewLoadEnd = useCallback(() => {
-        console.log('[weekly-picks] preview load end', previewUrl);
-        lastLoadedPreviewUrlRef.current = previewUrl;
-        setPreviewLoading(false);
-        setPreviewError(false);
-    }, [previewUrl]);
-    const handlePreviewError = useCallback(() => {
-        setPreviewLoading(false);
-        setPreviewError(true);
-        console.warn('[weekly-picks] preview load failed', previewUrl);
-    }, [previewUrl]);
+        console.log('[weekly-picks] preview load start', previewUrls[index]);
+        setPreviewError((prev) => {
+            const next = [...prev];
+            next[index] = false;
+            return next;
+        });
+        setPreviewLoading((prev) => {
+            const next = [...prev];
+            next[index] = true;
+            return next;
+        });
+    }, [previewUrls]);
+    const handlePreviewLoad = useCallback((index: number) => {
+        console.log('[weekly-picks] preview load', previewUrls[index]);
+        lastLoadedPreviewUrlRef.current[index] = previewUrls[index];
+        setPreviewLoading((prev) => {
+            const next = [...prev];
+            next[index] = false;
+            return next;
+        });
+        setPreviewError((prev) => {
+            const next = [...prev];
+            next[index] = false;
+            return next;
+        });
+    }, [previewUrls]);
+    const handlePreviewLoadEnd = useCallback((index: number) => {
+        console.log('[weekly-picks] preview load end', previewUrls[index]);
+        lastLoadedPreviewUrlRef.current[index] = previewUrls[index];
+        setPreviewLoading((prev) => {
+            const next = [...prev];
+            next[index] = false;
+            return next;
+        });
+        setPreviewError((prev) => {
+            const next = [...prev];
+            next[index] = false;
+            return next;
+        });
+    }, [previewUrls]);
+    const handlePreviewError = useCallback((index: number) => {
+        setPreviewLoading((prev) => {
+            const next = [...prev];
+            next[index] = false;
+            return next;
+        });
+        setPreviewError((prev) => {
+            const next = [...prev];
+            next[index] = true;
+            return next;
+        });
+        console.warn('[weekly-picks] preview load failed', previewUrls[index]);
+    }, [previewUrls]);
 
     useEffect(() => {
         if (!generationInProgress) {
@@ -254,10 +315,10 @@ export const WeeklyPicksAdminScreen = () => {
     const handleGeneratePreview = async () => {
         if (downloadLoading || generationInProgress) return;
         try {
-            setPreviewError(false);
-            setPreviewLoading(false);
+            setPreviewError([false, false]);
+            setPreviewLoading([false, false]);
             setGenerationInProgress(true);
-            console.log('[weekly-picks] generate start', previewUrl);
+            console.log('[weekly-picks] generate start', previewUrls);
             const response = await axios.post(`${API_BASE_URL}/events/weekly-picks/image/generate`, null, {
                 params: { width: previewWidth, format: 'json' },
             });
@@ -279,13 +340,13 @@ export const WeeklyPicksAdminScreen = () => {
         setGenerationInProgress(false);
     };
 
-    const handleDownloadPreview = async () => {
+    const handleDownloadPreview = async (index: number) => {
         if (downloadLoading) return;
-        if (previewLoading) {
+        if (previewLoading[index]) {
             Alert.alert('Preview still rendering', 'Please wait for the preview to finish loading.');
             return;
         }
-        if (previewError) {
+        if (previewError[index]) {
             Alert.alert('Preview unavailable', 'Generate the image again before downloading.');
             return;
         }
@@ -293,23 +354,23 @@ export const WeeklyPicksAdminScreen = () => {
         try {
             setDownloadLoading(true);
             const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            const fileName = `weekly_picks_${timestamp}.png`;
+            const fileName = `weekly_picks_part_${index + 1}_${timestamp}.jpg`;
             const baseDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
             if (!baseDir) {
-                await Linking.openURL(previewUrl);
+                await Linking.openURL(previewUrls[index]);
                 return;
             }
             const fileUri = `${baseDir}${fileName}`;
-            const download = await FileSystem.downloadAsync(previewUrl, fileUri);
+            const download = await FileSystem.downloadAsync(previewUrls[index], fileUri);
             const canShare = await Sharing.isAvailableAsync();
             if (canShare) {
                 await Sharing.shareAsync(download.uri, {
-                    mimeType: 'image/png',
+                    mimeType: 'image/jpeg',
                     dialogTitle: 'Weekly Picks',
-                    UTI: 'public.png',
+                    UTI: 'public.jpeg',
                 });
             } else {
-                await Linking.openURL(previewUrl);
+                await Linking.openURL(previewUrls[index]);
             }
         } catch (error) {
             console.warn('Failed to download weekly picks image', error);
@@ -463,7 +524,7 @@ export const WeeklyPicksAdminScreen = () => {
                             generationInProgress={generationInProgress}
                             generationCountdown={generationCountdown}
                             countdownLabel={countdownLabel}
-                            previewSource={previewSource}
+                            previewSources={previewSources}
                             previewError={previewError}
                             onGenerate={handleGeneratePreview}
                             onDownload={handleDownloadPreview}
@@ -548,6 +609,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
+        flexWrap: 'wrap',
     },
     previewCountdownText: {
         fontSize: fontSizes.lg,
@@ -592,6 +654,18 @@ const styles = StyleSheet.create({
         color: colors.brandIndigo,
         fontFamily: fontFamilies.body,
         fontWeight: '600',
+    },
+    previewImageGrid: {},
+    previewImageGroup: {
+        marginBottom: spacing.md,
+    },
+    previewPartLabel: {
+        marginBottom: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.textOnDarkMuted,
+        fontFamily: fontFamilies.body,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
     },
     previewImageFrame: {
         height: 600,

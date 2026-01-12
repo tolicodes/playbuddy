@@ -11,9 +11,10 @@ import { headerOptions } from "../Header/Header";
 import { UE } from "../../userEventTypes";
 import { logEvent } from "../hooks/logger";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
-import { DiscoverPage, DiscoverPageModal } from "../../Pages/DiscoverPage";
+import { DiscoverPageModal } from "../../Pages/DiscoverPage";
 import { ActionSheet } from "../../components/ActionSheet";
 import { colors, fontSizes, radius, spacing } from "../../components/styles";
+import { MoreNavigator } from "./MoreNavigator";
 const Tab = createBottomTabNavigator();
 
 export const TabNavigator = () => {
@@ -81,16 +82,16 @@ export const TabNavigator = () => {
                 />
                 <Tab.Screen
                     name="More"
-                    component={DiscoverPage}
-                    options={({ navigation }) => ({
+                    component={MoreNavigator}
+                    options={{
                         tabBarIcon: ({ color, size }) => (
                             <View>
                                 <FAIcon name="ellipsis-h" size={size} color={color} />
                                 {/* {availableCardsToSwipe.length > 0 && authUserId && <Badge count={availableCardsToSwipe.length} />} */}
                             </View>
                         ),
-                        ...headerOptions({ navigation, title: 'More', isRootScreen: true }),
-                    })}
+                        headerShown: false,
+                    }}
                 />
             </Tab.Navigator>
             <ActionSheet

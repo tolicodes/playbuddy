@@ -95,6 +95,7 @@ const POPUP_ICON_MAP: Record<PopupId, { icon: string; color: string; bg: string 
     whatsapp_group: { icon: 'whatsapp', color: colors.accentOrange, bg: colors.accentOrangeSoft },
     rate_app: { icon: 'star', color: colors.accentPurple, bg: colors.accentPurpleSoft },
     newsletter_signup: { icon: 'envelope-open-text', color: colors.accentSkyDeep, bg: colors.accentSkySoft },
+    discover_game: { icon: 'gamepad', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
 };
 
 const MANUAL_POPUP_ICON = {

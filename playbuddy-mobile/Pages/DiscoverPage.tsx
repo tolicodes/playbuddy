@@ -44,6 +44,7 @@ const baseMenuGroups: MenuGroup[] = [
         title: 'Even Moar',
         variant: 'evenMore',
         items: [
+            { title: 'Discover Game', icon: 'gamepad', route: 'Discover Game' },
             { title: '...Moar', icon: 'ellipsis-h', route: 'Moar' },
         ],
     },
@@ -193,6 +194,16 @@ export const DiscoverPageModal = ({ onRequestClose }: { onRequestClose?: () => v
     const handleNavigate = useCallback((route: string) => {
         if (!navigationRef.isReady()) {
             console.warn('DiscoverPageModal: navigation not ready', { route });
+            return;
+        }
+        if (route === 'Discover Game') {
+            navigationRef.navigate('HomeDrawer', {
+                screen: 'Home',
+                params: {
+                    screen: 'More',
+                    params: { screen: 'Discover Game' },
+                },
+            });
             return;
         }
         navigationRef.navigate(route as never);

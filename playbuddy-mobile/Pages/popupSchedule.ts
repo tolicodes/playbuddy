@@ -36,6 +36,13 @@ export const POPUP_SCHEDULE = [
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: true,
     },
+    {
+        id: 'discover_game',
+        label: 'Try Discover Game',
+        initialDelayMs: DEFAULT_INITIAL_DELAY_MS,
+        snoozeMs: DEFAULT_SNOOZE_MS,
+        useInterval: true,
+    },
 ] as const;
 
 export type PopupId = typeof POPUP_SCHEDULE[number]['id'];

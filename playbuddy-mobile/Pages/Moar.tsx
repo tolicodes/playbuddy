@@ -11,6 +11,7 @@ import { UE } from '../userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { useCalendarContext } from './Calendar/hooks/CalendarContext';
 import type { NavStack } from '../Common/Nav/NavStackType';
+import { navigateToTab } from '../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
 
 type LinkItem = {
@@ -119,6 +120,10 @@ const Moar: React.FC = () => {
     const handlePress = useCallback((item: LinkItem) => {
         logEvent(UE.MoarLinkClicked, { ...analyticsProps, link_name: item.title });
         if (item.route) {
+            if (item.route === 'Discover Game') {
+                navigateToTab(navigation, 'More', { screen: 'Discover Game' });
+                return;
+            }
             navigation.navigate(item.route as keyof NavStack);
             return;
         }
