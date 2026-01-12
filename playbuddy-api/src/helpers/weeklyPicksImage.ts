@@ -36,6 +36,7 @@ const THEME = {
         surfaceGoldLight: '#FFFAF0',
         surfaceGoldWarm: '#FFF8D6',
         surfaceMuted: '#F6F7F9',
+        surfaceMutedAlt: '#ECECF3',
         surfaceSubtle: '#D1D5DB',
         surfaceInfo: '#F3F7FF',
         surfaceInfoStrong: '#DCE5FF',
@@ -46,6 +47,7 @@ const THEME = {
         borderOnDarkSoft: 'rgba(255,255,255,0.2)',
         borderOnDarkStrong: 'rgba(255,255,255,0.8)',
         borderMuted: '#DADAE6',
+        borderMutedLight: '#E2E0EA',
         gold: '#FFD700',
         warning: '#D97706',
         danger: '#FF3B30',
@@ -151,6 +153,7 @@ type WeeklyPicksImageOptions = {
     width?: number;
     scale?: number;
     limit?: number;
+    partCount?: number;
 };
 
 type WeeklyPicksImagePart = {
@@ -264,11 +267,87 @@ const wrapText = (value: string, maxChars: number, maxLines: number) => {
     return lines;
 };
 
+const normalizePartCount = (value?: number) => {
+    if (!Number.isFinite(value)) return 2;
+    return Math.round(value) === 1 ? 1 : 2;
+};
+
 const truncateText = (value: string, maxChars: number) => {
     const cleaned = sanitizeText(value);
     if (cleaned.length <= maxChars) return cleaned;
     if (maxChars <= 3) return cleaned.slice(0, maxChars);
     return cleaned.slice(0, Math.max(1, maxChars - 3)).trimEnd() + '...';
+};
+
+type PlaceholderIconKind = 'event' | 'munch' | 'party';
+
+const buildPlaceholderIconSvg = ({
+    kind,
+    centerX,
+    centerY,
+    size,
+    stroke,
+    strokeWidth,
+}: {
+    kind: PlaceholderIconKind;
+    centerX: number;
+    centerY: number;
+    size: number;
+    stroke: string;
+    strokeWidth: number;
+}) => {
+    const half = size / 2;
+    const x = centerX - half;
+    const y = centerY - half;
+    const iconProps = `stroke="${stroke}" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" fill="none"`;
+
+    if (kind === 'munch') {
+        const topY = centerY - size * 0.38;
+        const bottomY = centerY + size * 0.38;
+        const forkX = centerX - size * 0.12;
+        const knifeX = centerX + size * 0.18;
+        const prongOffset = size * 0.08;
+        const prongHeight = size * 0.18;
+        return `
+    <g ${iconProps}>
+      <line x1="${forkX}" y1="${topY + prongHeight}" x2="${forkX}" y2="${bottomY}" />
+      <line x1="${forkX - prongOffset}" y1="${topY}" x2="${forkX - prongOffset}" y2="${topY + prongHeight}" />
+      <line x1="${forkX}" y1="${topY}" x2="${forkX}" y2="${topY + prongHeight}" />
+      <line x1="${forkX + prongOffset}" y1="${topY}" x2="${forkX + prongOffset}" y2="${topY + prongHeight}" />
+      <line x1="${knifeX}" y1="${topY}" x2="${knifeX}" y2="${bottomY}" />
+    </g>`;
+    }
+
+    if (kind === 'party') {
+        const coneBaseY = centerY + size * 0.28;
+        const coneLeftX = centerX - size * 0.32;
+        const coneRightX = centerX + size * 0.08;
+        const coneTipX = centerX + size * 0.32;
+        const coneTipY = centerY - size * 0.12;
+        const burstLeftX = centerX - size * 0.12;
+        const burstRightX = centerX + size * 0.2;
+        const burstTopY = centerY - size * 0.44;
+        const burstMidY = centerY - size * 0.28;
+        return `
+    <g ${iconProps}>
+      <path d="M ${coneLeftX} ${coneBaseY} L ${coneRightX} ${coneBaseY} L ${coneTipX} ${coneTipY} Z" />
+      <line x1="${coneRightX - size * 0.06}" y1="${coneBaseY - size * 0.06}" x2="${coneTipX - size * 0.08}" y2="${coneTipY + size * 0.06}" />
+      <line x1="${burstLeftX}" y1="${burstMidY}" x2="${burstLeftX - size * 0.08}" y2="${burstTopY}" />
+      <line x1="${burstRightX}" y1="${burstMidY}" x2="${burstRightX + size * 0.06}" y2="${burstTopY + size * 0.06}" />
+      <line x1="${centerX}" y1="${burstMidY - size * 0.04}" x2="${centerX}" y2="${burstTopY + size * 0.04}" />
+    </g>`;
+    }
+
+    const radius = size * 0.18;
+    const headerY = y + size * 0.32;
+    const ringOffset = size * 0.25;
+    return `
+    <g ${iconProps}>
+      <rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${radius}" ry="${radius}" />
+      <line x1="${x}" y1="${headerY}" x2="${x + size}" y2="${headerY}" />
+      <line x1="${x + ringOffset}" y1="${y}" x2="${x + ringOffset}" y2="${headerY - size * 0.06}" />
+      <line x1="${x + size - ringOffset}" y1="${y}" x2="${x + size - ringOffset}" y2="${headerY - size * 0.06}" />
+    </g>`;
 };
 
 const normalizeType = (value?: string | null) =>
@@ -509,11 +588,16 @@ const buildSvg = ({
     const dayRuleMarginLeft = s(12);
     const dayRuleMarginBottom = s(4);
 
-    const cardHeight = s(220);
+    const cardHeight = s(250);
     const cardRadius = s(16);
     const cardMarginBottom = s(16);
     const imageHeight = Math.round(cardHeight * 0.5);
     const detailsHeight = cardHeight - imageHeight;
+    const typeIconBubbleSize = Math.max(s(32), Math.round(Math.min(imageHeight * 0.5, s(48))));
+    const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
+    const typeIconStroke = Math.max(1, s(2));
+    const typeIconBorder = Math.max(1, s(1));
+    const showMissingImageIcon = false;
 
     const detailsPaddingTop = s(10);
     const detailsPaddingBottom = s(10);
@@ -595,8 +679,8 @@ const buildSvg = ({
     </linearGradient>`);
     defs.push(`
     <linearGradient id="glassPanel" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="rgba(255,255,255,0.9)" />
-      <stop offset="100%" stop-color="rgba(241,235,255,0.75)" />
+      <stop offset="0%" stop-color="${THEME.colors.white}" />
+      <stop offset="100%" stop-color="${THEME.colors.surfaceLavenderLight}" />
     </linearGradient>`);
 
     defs.push(`
@@ -648,7 +732,7 @@ const buildSvg = ({
         content.push(`
     <g filter="url(#brandCardShadow)">
       <rect x="${emptyCardX}" y="${emptyCardY}" width="${emptyCardWidth}" height="${emptyCardHeight}" rx="${s(24)}" ry="${s(24)}"
-            fill="url(#glassPanel)" stroke="${THEME.colors.borderOnDarkSoft}" stroke-width="${s(1)}" />
+            fill="url(#glassPanel)" stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${s(1)}" />
     </g>
     <text x="${emptyCardX + emptyCardWidth / 2}" y="${emptyCardY + emptyCardPaddingY + emptyTextLine / 2}"
           font-family="${fontBody}" font-size="${s(15)}" fill="${THEME.colors.textPrimary}"
@@ -661,7 +745,7 @@ const buildSvg = ({
         content.push(`
     <g filter="url(#brandCardShadow)">
       <rect x="${weekSelectorX}" y="${weekSelectorY}" width="${weekSelectorWidth}" height="${weekSelectorHeight}" rx="${weekSelectorRadius}" ry="${weekSelectorRadius}"
-            fill="url(#glassPanel)" stroke="${THEME.colors.borderOnDarkSoft}" stroke-width="${s(1)}" />
+            fill="url(#glassPanel)" stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${s(1)}" />
     </g>`);
 
         const weekTextCenterX = weekSelectorX + weekSelectorWidth / 2;
@@ -725,7 +809,7 @@ const buildSvg = ({
     </defs>
     <g filter="url(#cardShadow)">
       <rect x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="${cardRadius}" ry="${cardRadius}"
-            fill="url(#glassPanel)" stroke="${THEME.colors.borderOnDarkSoft}" stroke-width="${s(1)}" />
+            fill="url(#glassPanel)" stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${s(1)}" />
     </g>`);
 
                 content.push(`
@@ -736,6 +820,27 @@ const buildSvg = ({
                     content.push(`
     <image x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${imageHeight}" href="${imageData}"
            preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" />`);
+                }
+
+                if (!imageData && showMissingImageIcon) {
+                    const placeholderKind: PlaceholderIconKind = item.typeKey === 'munch'
+                        ? 'munch'
+                        : item.typeKey === 'play_party'
+                            ? 'party'
+                            : 'event';
+                    const typeIconCenterX = paddingX + cardWidth / 2;
+                    const typeIconCenterY = cardY + imageHeight / 2;
+                    content.push(`
+    <circle cx="${typeIconCenterX}" cy="${typeIconCenterY}" r="${typeIconBubbleSize / 2}"
+            fill="${THEME.colors.surfaceMutedAlt}" stroke="${THEME.colors.borderMutedLight}" stroke-width="${typeIconBorder}" />`);
+                    content.push(buildPlaceholderIconSvg({
+                        kind: placeholderKind,
+                        centerX: typeIconCenterX,
+                        centerY: typeIconCenterY,
+                        size: typeIconSize,
+                        stroke: THEME.colors.textSlate,
+                        strokeWidth: typeIconStroke,
+                    }));
                 }
 
                 let textY = detailsY + detailsPaddingTop;
@@ -930,6 +1035,7 @@ export const generateWeeklyPicksImage = async (
     const requestedOffset = Number.isFinite(options.weekOffset)
         ? Number(options.weekOffset)
         : 0;
+    const partCount = normalizePartCount(options.partCount);
     const requestedScale = Number.isFinite(options.scale) ? Number(options.scale) : undefined;
     const requestedWidth = Number.isFinite(options.width) ? Number(options.width) : undefined;
     const scale = requestedScale && requestedScale > 0
@@ -942,7 +1048,7 @@ export const generateWeeklyPicksImage = async (
         : Math.round(BASE_WIDTH * scale);
 
     console.log(
-        `${logPrefix} Start generation weekOffset=${requestedOffset} width=${width} scale=${scale.toFixed(2)} limit=${options.limit ?? 'none'}`
+        `${logPrefix} Start generation weekOffset=${requestedOffset} width=${width} scale=${scale.toFixed(2)} limit=${options.limit ?? 'none'} parts=${partCount}`
     );
 
     const now = moment().tz(TZ);
@@ -1032,7 +1138,7 @@ export const generateWeeklyPicksImage = async (
         });
 
     const cardWidth = Math.round((width - 2 * (16 * scale)));
-    const cardHeight = Math.round(220 * scale);
+    const cardHeight = Math.round(250 * scale);
     const imageHeight = Math.round(cardHeight * 0.5);
 
     const imagesById = new Map<number, string | null>();
@@ -1089,6 +1195,26 @@ export const generateWeeklyPicksImage = async (
         .toBuffer();
     const rasterMs = Date.now() - rasterStart;
     console.log(`${logPrefix} PNG ready (${png.length} bytes) in ${rasterMs}ms`);
+
+    if (partCount === 1) {
+        const jpg = await sharp(png)
+            .jpeg({ quality: 90 })
+            .toBuffer();
+        return {
+            png,
+            parts: [
+                {
+                    jpg,
+                    height: renderedHeight,
+                },
+            ],
+            splitAt: renderedHeight,
+            width,
+            height: renderedHeight,
+            weekOffset: selectedOffset,
+            weekLabel,
+        };
+    }
 
     const { splitAt, usedFallback } = selectSplitAt(renderedHeight, dayLayouts);
     if (usedFallback) {

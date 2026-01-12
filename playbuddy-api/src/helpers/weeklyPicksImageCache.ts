@@ -20,16 +20,23 @@ const inFlight = new Map<string, Promise<WeeklyPicksImageCacheEntry>>();
 const normalizeNumber = (value?: number) =>
     Number.isFinite(value) ? Number(value) : undefined;
 
+const normalizePartCount = (value?: number) => {
+    if (!Number.isFinite(value)) return 2;
+    return Math.round(value) === 1 ? 1 : 2;
+};
+
 const buildCacheKey = (options: WeeklyPicksImageOptions) => {
     const weekOffset = normalizeNumber(options.weekOffset) ?? 0;
     const width = normalizeNumber(options.width);
     const scale = normalizeNumber(options.scale);
     const limit = normalizeNumber(options.limit);
+    const partCount = normalizePartCount(options.partCount);
     return [
         `week=${weekOffset}`,
         `width=${width ?? 'auto'}`,
         `scale=${scale ?? 'auto'}`,
         `limit=${limit ?? 'all'}`,
+        `parts=${partCount}`,
     ].join('|');
 };
 

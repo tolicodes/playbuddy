@@ -60,6 +60,7 @@ export default function WeeklyPicksScreen() {
     const [widthInput, setWidthInput] = useState('');
     const [scaleInput, setScaleInput] = useState('');
     const [limitInput, setLimitInput] = useState('');
+    const [partCount, setPartCount] = useState(2);
     const [jpgUrls, setJpgUrls] = useState<string[]>([]);
     const [partsLoading, setPartsLoading] = useState(false);
     const [generationError, setGenerationError] = useState<string | null>(null);
@@ -70,7 +71,8 @@ export default function WeeklyPicksScreen() {
         width: parseOptionalNumber(widthInput),
         scale: parseOptionalNumber(scaleInput),
         limit: parseOptionalNumber(limitInput),
-    }), [weekOffset, widthInput, scaleInput, limitInput]);
+        partCount,
+    }), [weekOffset, widthInput, scaleInput, limitInput, partCount]);
 
     const {
         data: weeklyImageStatus,
@@ -100,8 +102,8 @@ export default function WeeklyPicksScreen() {
         try {
             const result = await generateWeeklyPicksImage.mutateAsync(weeklyImageOptions);
             setLastGeneratedAt(result.meta.generatedAt ?? null);
-            const partCount = result.meta.partCount ?? weeklyImageStatus?.partCount ?? 2;
-            const partRequests = Array.from({ length: partCount }, (_, index) =>
+            const resolvedPartCount = result.meta.partCount ?? weeklyImageOptions.partCount ?? weeklyImageStatus?.partCount ?? 2;
+            const partRequests = Array.from({ length: resolvedPartCount }, (_, index) =>
                 fetchWeeklyPicksImagePart.mutateAsync({ options: weeklyImageOptions, part: index + 1 })
             );
             const parts = await Promise.all(partRequests);
@@ -192,12 +194,23 @@ export default function WeeklyPicksScreen() {
                             onChange={(event) => setLimitInput(event.target.value)}
                             placeholder="All"
                         />
+                        <TextField
+                            select
+                            label="JPG parts"
+                            size="small"
+                            value={partCount}
+                            onChange={(event) => setPartCount(Number(event.target.value))}
+                            sx={{ minWidth: 120 }}
+                        >
+                            <MenuItem value={1}>1 (single)</MenuItem>
+                            <MenuItem value={2}>2 (split)</MenuItem>
+                        </TextField>
                         <Button
                             variant="contained"
                             onClick={handleGenerateImage}
                             disabled={isGenerating}
                         >
-                            {isGenerating ? 'Generating...' : 'Generate JPGs'}
+                            {isGenerating ? 'Generating...' : `Generate JPG${partCount === 1 ? '' : 's'}`}
                         </Button>
                         <Button
                             variant="outlined"

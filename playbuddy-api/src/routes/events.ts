@@ -46,13 +46,20 @@ const parsePart = (value: unknown) => {
     return normalized > 0 ? normalized : undefined;
 };
 
+const parsePartCount = (value: unknown) => {
+    const parsed = parsePart(value);
+    if (!parsed) return undefined;
+    return parsed === 1 ? 1 : 2;
+};
+
 const extractWeeklyPicksImageOptions = (req: AuthenticatedRequest) => {
     const source = { ...(req.query || {}), ...(req.body || {}) } as Record<string, unknown>;
     const weekOffset = parseNumber(source.weekOffset);
     const width = parseNumber(source.width);
     const scale = parseNumber(source.scale);
     const limit = parseNumber(source.limit);
-    return { weekOffset, width, scale, limit };
+    const partCount = parsePartCount(source.partCount);
+    return { weekOffset, width, scale, limit, partCount };
 };
 
 router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -81,7 +88,7 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
     const responseFormat = String((req.query.format ?? (req.body as Record<string, unknown>)?.format ?? 'json')).toLowerCase();
     const requestedPart = parsePart(req.query.part ?? (req.body as Record<string, unknown>)?.part);
     console.log(
-        `[weekly-picks][generate] start width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} scale=${options.scale ?? 'auto'} limit=${options.limit ?? 'all'}`
+        `[weekly-picks][generate] start width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} scale=${options.scale ?? 'auto'} limit=${options.limit ?? 'all'} parts=${options.partCount ?? 2}`
     );
     try {
         const { cacheKey, entry } = await forceGenerateWeeklyPicksImage(options);

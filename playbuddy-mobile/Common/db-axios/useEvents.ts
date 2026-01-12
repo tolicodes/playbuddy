@@ -119,6 +119,7 @@ export type WeeklyPicksImageOptions = {
     width?: number;
     scale?: number;
     limit?: number;
+    partCount?: number;
 };
 
 export type WeeklyPicksImageStatus = {
@@ -175,6 +176,7 @@ const buildWeeklyPicksImageQuery = (
     addParam("width", options.width);
     addParam("scale", options.scale);
     addParam("limit", options.limit);
+    addParam("partCount", options.partCount);
     Object.entries(extra).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
             params.set(key, String(value));
@@ -195,6 +197,7 @@ const buildWeeklyPicksImagePayload = (options: WeeklyPicksImageOptions = {}) => 
     addPayload("width", options.width);
     addPayload("scale", options.scale);
     addPayload("limit", options.limit);
+    addPayload("partCount", options.partCount);
     return payload;
 };
 
