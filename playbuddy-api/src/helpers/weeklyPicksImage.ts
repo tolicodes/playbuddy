@@ -5,6 +5,7 @@ import { supabaseClient } from '../connections/supabaseClient.js';
 
 const TZ = 'America/New_York';
 const BASE_WIDTH = 390;
+const DETAILS_PANEL_HEIGHT = 92;
 
 const THEME = {
     gradients: {
@@ -591,7 +592,12 @@ const buildSvg = ({
     const cardHeight = s(250);
     const cardRadius = s(16);
     const cardMarginBottom = s(16);
-    const imageHeight = Math.round(cardHeight * 0.5);
+    // Keep the text panel height consistent so extra card height goes to the image.
+    const detailsPanelHeight = s(DETAILS_PANEL_HEIGHT);
+    const imageHeight = Math.max(
+        Math.round(cardHeight * 0.5),
+        Math.round(cardHeight - detailsPanelHeight)
+    );
     const detailsHeight = cardHeight - imageHeight;
     const typeIconBubbleSize = Math.max(s(32), Math.round(Math.min(imageHeight * 0.5, s(48))));
     const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
@@ -1139,7 +1145,11 @@ export const generateWeeklyPicksImage = async (
 
     const cardWidth = Math.round((width - 2 * (16 * scale)));
     const cardHeight = Math.round(250 * scale);
-    const imageHeight = Math.round(cardHeight * 0.5);
+    const detailsPanelHeight = Math.round(DETAILS_PANEL_HEIGHT * scale);
+    const imageHeight = Math.max(
+        Math.round(cardHeight * 0.5),
+        cardHeight - detailsPanelHeight
+    );
 
     const imagesById = new Map<number, string | null>();
     const totalImages = items.length;

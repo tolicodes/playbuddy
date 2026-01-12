@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -29,6 +30,7 @@ export interface EventListItemProps {
     cardHeight?: number;
     autoHeight?: boolean;
     listViewMode?: EventListViewMode;
+    cardVariant?: 'heart' | 'type-icon';
 }
 
 export const EventListItem: React.FC<EventListItemProps> = ({
@@ -42,6 +44,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     cardHeight,
     autoHeight,
     listViewMode,
+    cardVariant,
 }) => {
     const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
     const { authUserId } = useUserContext();
@@ -88,6 +91,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         text: colors.textOnDarkStrong,
         border: 'transparent',
     };
+    const isPlayParty = item.play_party || item.type === 'play_party';
+    const isMunch = item.is_munch || item.munch_id || item.type === 'munch';
+    const placeholderIconName = isPlayParty ? 'birthday-cake' : isMunch ? 'cutlery' : 'calendar';
     const handlePressEvent = () => {
         onPress(item);
         const listViewAnalytics = listViewMode ? { list_view_mode: listViewMode } : {};
@@ -115,16 +121,27 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     };
 
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
+    const resolvedCardVariant = cardVariant ?? 'heart';
 
     const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
     const useAutoHeight = autoHeight === true;
-    const imageHeight = Math.round(resolvedCardHeight * 0.5);
+    // Keep the text panel height consistent so extra card height goes to the image.
+    const detailsPanelHeight = 92;
+    const imageHeight = Math.max(
+        Math.round(resolvedCardHeight * 0.5),
+        resolvedCardHeight - detailsPanelHeight
+    );
     const detailsHeight = Math.max(0, resolvedCardHeight - imageHeight);
     const heartSize = 48;
     const heartOffset = imageHeight < 140 ? 6 : 0;
     const heartTop = Math.max(0, imageHeight / 2 - heartSize / 2 - heartOffset);
+    const typeIconBubbleSize = Math.round(heartSize * 0.9);
+    const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
+    const placeholderIconSize = Math.max(28, Math.round(imageHeight * 0.4));
     const hasFooter = !!footerContent;
+    const showTypeIconOverlay = resolvedCardVariant === 'type-icon' && !imageUrl;
+    const showPlaceholderIcon = !imageUrl && !showTypeIconOverlay && resolvedCardVariant !== 'heart';
 
     return (
         <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
@@ -148,6 +165,17 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     allowDownscaling
                                     decodeFormat="rgb"
                                 />
+                            )}
+                            {!imageUrl && (
+                                <View style={styles.posterPlaceholder}>
+                                    {showPlaceholderIcon && (
+                                        <FAIcon
+                                            name={placeholderIconName}
+                                            size={placeholderIconSize}
+                                            color={colors.textSlate}
+                                        />
+                                    )}
+                                </View>
                             )}
                             {promoCode && (
                                 <View style={styles.discountBadge}>
@@ -173,14 +201,35 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     </Text>
                                 </View>
                             )}
-                            <View style={[styles.heartOverlay, { top: heartTop }]}>
-                                <WishlistHeart
-                                    itemIsOnWishlist={itemIsOnWishlist}
-                                    handleToggleEventWishlist={handleToggleEventWishlist}
-                                    size={heartSize}
-                                    variant="thick-outline"
-                                />
-                            </View>
+                            {resolvedCardVariant === 'heart' ? (
+                                <View style={[styles.heartOverlay, { top: heartTop }]}>
+                                    <WishlistHeart
+                                        itemIsOnWishlist={itemIsOnWishlist}
+                                        handleToggleEventWishlist={handleToggleEventWishlist}
+                                        size={heartSize}
+                                        variant="thick-outline"
+                                    />
+                                </View>
+                            ) : showTypeIconOverlay ? (
+                                <View style={[styles.typeIconOverlay, { top: heartTop }]}>
+                                    <View
+                                        style={[
+                                            styles.typeIconBubble,
+                                            {
+                                                width: typeIconBubbleSize,
+                                                height: typeIconBubbleSize,
+                                                borderRadius: typeIconBubbleSize / 2,
+                                            },
+                                        ]}
+                                    >
+                                        <FAIcon
+                                            name={placeholderIconName}
+                                            size={typeIconSize}
+                                            color={colors.textSlate}
+                                        />
+                                    </View>
+                                </View>
+                            ) : null}
                             {(attendees?.length ?? 0) > 0 && (
                                 <View
                                     style={[
@@ -193,7 +242,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                             )}
                         </View>
                         <LinearGradient
-                            colors={['rgba(255, 255, 255, 0.9)', 'rgba(241, 235, 255, 0.75)']}
+                            colors={[colors.white, colors.surfaceLavenderLight]}
                             start={{ x: 0, y: 0 }}
                             end={{ x: 0, y: 1 }}
                             style={[
@@ -228,7 +277,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 };
 
 
-const CARD_HEIGHT = 184;
+const CARD_HEIGHT = 250;
 export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
 
 const styles = StyleSheet.create({
@@ -260,8 +309,8 @@ const styles = StyleSheet.create({
     footer: {
         borderTopWidth: 1,
         borderTopColor: colors.borderSubtle,
-        paddingHorizontal: spacing.mdPlus,
-        paddingVertical: spacing.smPlus,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
         backgroundColor: colors.white,
     },
     poster: {
@@ -272,19 +321,37 @@ const styles = StyleSheet.create({
     posterImage: {
         ...StyleSheet.absoluteFillObject,
     },
+    posterPlaceholder: {
+        ...StyleSheet.absoluteFillObject,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     heartOverlay: {
         position: 'absolute',
         left: 0,
         right: 0,
         alignItems: 'center',
     },
+    typeIconOverlay: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+    },
+    typeIconBubble: {
+        backgroundColor: colors.surfaceMutedAlt,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+    },
     detailsPanel: {
-        backgroundColor: colors.surfaceWhiteFrosted,
-        paddingHorizontal: spacing.mdPlus,
-        paddingTop: spacing.smPlus,
-        paddingBottom: spacing.smPlus,
+        backgroundColor: colors.white,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.md,
         borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: 'rgba(255, 255, 255, 0.65)',
+        borderTopColor: colors.borderLavenderSoft,
     },
     detailsPanelWithFooter: {
         paddingBottom: spacing.mdPlus,
