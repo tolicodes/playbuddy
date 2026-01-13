@@ -24,6 +24,7 @@ import OrganizerManager from "./pages/Organizers/OrganizerManager";
 import EventPopupsScreen from "./pages/EventPopups/EventPopupsScreen";
 import PushNotificationsScreen from "./pages/PushNotifications/PushNotificationsScreen";
 import BranchStatsScreen from "./pages/BranchStats/BranchStatsScreen";
+import AnalyticsScreen from "./pages/Analytics/AnalyticsScreen";
 
 // ---------- Global axios auth (no instances) ----------
 let axiosAuthInitialized = false;
@@ -157,6 +158,7 @@ export default function App() {
     "/promo-codes",
     "/deep-links",
     "/branch-stats",
+    "/analytics",
     "/event-popups",
     "/push-notifications",
     "/facilitators",
@@ -193,6 +195,7 @@ export default function App() {
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
             <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
             <Tab label="Branch Stats" component={RouterLink} to="/branch-stats" />
+            <Tab label="Analytics" component={RouterLink} to="/analytics" />
             <Tab label="Popups" component={RouterLink} to="/event-popups" />
             <Tab label="Push" component={RouterLink} to="/push-notifications" />
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
@@ -222,6 +225,7 @@ export default function App() {
         <Route path="/deep-links" element={<DeepLinksListScreen />} />
         <Route path="/deep-links/new" element={<EditDeepLinkScreen />} />
         <Route path="/branch-stats" element={<BranchStatsScreen />} />
+        <Route path="/analytics" element={<AnalyticsScreen />} />
         <Route path="/event-popups" element={<EventPopupsScreen />} />
         <Route path="/push-notifications" element={<PushNotificationsScreen />} />
         <Route path="/jobs" element={<JobsScreen />} />

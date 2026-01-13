@@ -82,8 +82,8 @@ export const scrapeEventbriteEvent = async (
     // 8) Price (choose the minimum *all-in* ticket total if available; fallback to availability minimum)
     const price = deriveMinimumPrice(listing);
 
-    // 9) Type (retreat vs event) based on title/description
-    const type: EventTypes = /retreat|immersion/i.test(`${ev.name} ${description}`) ? 'retreat' as EventTypes : 'event' as EventTypes;
+    // 9) Type defaults to event; AI classifier assigns play_party/munch/retreat/etc later
+    const type: EventTypes = 'event';
 
     // 10) Non-NY detection (parity with old scraper: flag if region !== 'NY')
     const region = (eventDefaults as any)?.region;

@@ -80,7 +80,7 @@ async function fetchImportSourceHandles(): Promise<Set<string>> {
     return out;
 }
 
-const EVENT_TYPES: EventTypes[] = ['event', 'play_party', 'munch', 'retreat', 'festival', 'workshop', 'performance', 'discussion'];
+const EVENT_TYPES: EventTypes[] = ['event', 'play_party', 'munch', 'retreat', 'festival', 'conference', 'workshop', 'performance', 'discussion'];
 const coerceEventType = (val?: string | null): EventTypes => {
     if (val && EVENT_TYPES.includes(val as EventTypes)) return val as EventTypes;
     return 'event';
@@ -464,7 +464,9 @@ async function getAutoSources(): Promise<ScrapeSource[]> {
     try {
         const res = await chrome.storage.local.get([AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY]);
         const sources: ScrapeSource[] = [];
-        if (res[AUTO_FETLIFE_KEY]) sources.push('fetlife');
+        if (res[AUTO_FETLIFE_KEY]) {
+            sources.push('fetlife', 'fetlifeFestivals');
+        }
         if (res[AUTO_FETLIFE_NEARBY_KEY]) sources.push('fetlifeNearby');
         return sources;
     } catch {
@@ -475,7 +477,7 @@ async function getAutoSources(): Promise<ScrapeSource[]> {
 async function runScheduledScrapes() {
     const sources = await getAutoSources();
     if (!sources.length) {
-        postStatus('⏸️ Auto-run disabled for Fetlife/FetlifeNearby; skipping scheduled scrape.');
+        postStatus('⏸️ Auto-run disabled for Fetlife/FetlifeNearby/Festivals; skipping scheduled scrape.');
         return;
     }
     await runSourcesSequential(sources);

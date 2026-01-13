@@ -54,12 +54,6 @@ export function isFutureEvent(ev: NormalizedEventInput, nowISO: string) {
     return true;
 }
 
-export function isRetreatByDuration(startISO: string | null, endISO: string | null): boolean {
-    if (!startISO || !endISO) return false;
-    const ms = +new Date(endISO) - +new Date(startISO);
-    return ms > 24 * 60 * 60 * 1000;
-}
-
 export function canonicalUrlKey(raw: string): string {
     try {
         const u = new URL(raw);

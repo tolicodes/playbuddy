@@ -3,7 +3,7 @@ import type { NormalizedEventInput } from '../../commonTypes.js';
 import { ScraperParams } from './types.js';
 import { cleanHtml, safeParseJsonObject } from './html.js';
 import { dbg, DEBUG_SAVE_HTML, saveLogFile, stableNameFrom } from './debug.js';
-import { classifyPlatform, deriveOrganizerOriginalId, deriveOriginalId, isFutureEvent, isRetreatByDuration, toISO } from './normalize.js';
+import { classifyPlatform, deriveOrganizerOriginalId, deriveOriginalId, isFutureEvent, toISO } from './normalize.js';
 import { MODEL, openai } from './config.js';
 import { renderAndPick } from './renderPicker.js';
 
@@ -108,7 +108,7 @@ export async function extractEventAIOnly(
         source_ticketing_platform: platform,
         communities: eventDefaults.communities || [],
         non_ny: false,
-        type: isRetreatByDuration(startISO, endISO) ? 'retreat' : 'event',
+        type: 'event',
     };
 
     return base;

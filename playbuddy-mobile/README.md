@@ -333,7 +333,7 @@ Drawer Navigator – Common/Nav/DrawerNav.tsx
 Routes shown in the side-drawer:
 ‑ HomeDrawer → HomeStackNavigator (main app)
 ‑ Profile / Login (decided by isDefaultsComplete)
-‑ Retreats
+‑ Festivals/Conferences/Retreats
 ‑ Moar
 Home Stack – Common/Nav/HomeNavigator.tsx
 ‑ Home → TabNavigator (bottom tabs)

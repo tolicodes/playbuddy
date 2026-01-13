@@ -37,7 +37,7 @@ const baseMenuGroups: MenuGroup[] = [
         items: [
             { title: 'Play Parties', icon: 'mask', route: 'Play Parties' },
             { title: 'Munches', icon: 'utensils', route: 'Munches' },
-            { title: 'Retreats', icon: 'campground', route: 'Retreats' },
+            { title: 'Festivals/Conferences/Retreats', icon: 'campground', route: 'Retreats' },
         ],
     },
     {

@@ -127,9 +127,9 @@ export const DrawerNav = () => {
                 component={Retreats}
                 options={({ navigation }) => ({
                     drawerIcon: getIcon('campground'),
-                    ...headerOptions({ navigation, title: 'Retreats' }),
+                    ...headerOptions({ navigation, title: 'Festivals/Conferences/Retreats' }),
                 })}
-                listeners={onPressItemLogEventListener('Retreats')}
+                listeners={onPressItemLogEventListener('Festivals/Conferences/Retreats')}
             />
 
             <Drawer.Screen
