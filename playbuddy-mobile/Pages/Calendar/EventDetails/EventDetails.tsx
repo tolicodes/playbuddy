@@ -38,6 +38,7 @@ import { AvatarCircle } from '../../Auth/Buttons/AvatarCircle';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
 import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../../components/styles';
+import { ACTIVE_EVENT_TYPES } from '../../../Common/types/commonTypes';
 import SectionCard from './SectionCard';
 import { TZ } from '../ListView/calendarNavUtils';
 
@@ -182,6 +183,9 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
             .map(word => word[0].toUpperCase() + word.slice(1))
             .join(' ');
 
+    const isActiveEventType = (value?: string | null) =>
+        !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
+
     const typeLabelMap: Record<string, string> = {
         play_party: 'Play Party',
         munch: 'Munch',
@@ -189,8 +193,6 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         festival: 'Festival',
         conference: 'Conference',
         workshop: 'Workshop',
-        performance: 'Performance',
-        discussion: 'Discussion',
     };
     const typeIconMap: Record<string, string> = {
         play_party: 'glass-cheers',
@@ -199,8 +201,6 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         festival: 'music',
         conference: 'users',
         workshop: 'chalkboard-teacher',
-        performance: 'microphone',
-        discussion: 'comments',
         event: 'calendar-alt',
     };
     type QuickChip = { label: string; icon: string };
@@ -216,7 +216,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
 
     if (selectedEvent.play_party) pushQuickChip('Play Party', typeIconMap.play_party);
     if (selectedEvent.is_munch) pushQuickChip('Munch', typeIconMap.munch);
-    if (selectedEvent.type && selectedEvent.type !== 'event') {
+    if (selectedEvent.type && isActiveEventType(selectedEvent.type)) {
         const typeLabel = typeLabelMap[selectedEvent.type] || formatLabel(selectedEvent.type);
         pushQuickChip(typeLabel, typeIconMap[selectedEvent.type] || typeIconMap.event);
     }

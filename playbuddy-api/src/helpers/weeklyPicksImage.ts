@@ -2,10 +2,13 @@ import axios from 'axios';
 import sharp from 'sharp';
 import moment from 'moment-timezone';
 import { supabaseClient } from '../connections/supabaseClient.js';
+import { ACTIVE_EVENT_TYPES } from '../commonTypes.js';
 
 const TZ = 'America/New_York';
 const BASE_WIDTH = 390;
 const DETAILS_PANEL_HEIGHT = 92;
+const isActiveEventType = (value?: string | null) =>
+    !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
 
 const THEME = {
     gradients: {
@@ -94,20 +97,15 @@ const IMAGE_THEMES: Record<
         colors: [THEME.colors.surfaceInfo, THEME.colors.surfaceInfoStrong],
         textColor: THEME.colors.brandBlue,
     },
+    conference: {
+        label: 'Conference',
+        colors: [THEME.colors.surfaceInfo, THEME.colors.surfaceInfoStrong],
+        textColor: THEME.colors.brandBlue,
+    },
     workshop: {
         label: 'Workshop',
         colors: [THEME.colors.surfaceRoseSoft, THEME.colors.surfaceRose],
         textColor: THEME.colors.warning,
-    },
-    performance: {
-        label: 'Performance',
-        colors: [THEME.colors.surfaceLavenderWarm, THEME.colors.surfaceLavenderAlt],
-        textColor: THEME.colors.brandPlum,
-    },
-    discussion: {
-        label: 'Discussion',
-        colors: [THEME.colors.surfaceInfo, THEME.colors.surfaceGoldLight],
-        textColor: THEME.colors.brandInk,
     },
 };
 
@@ -116,9 +114,8 @@ const TYPE_LABEL_MAP: Record<string, string> = {
     munch: 'Munch',
     retreat: 'Retreat',
     festival: 'Festival',
+    conference: 'Conference',
     workshop: 'Workshop',
-    performance: 'Performance',
-    discussion: 'Discussion',
 };
 
 const TYPE_TAG_COLORS: Record<string, { background: string; text: string; border: string }> = {
@@ -126,9 +123,8 @@ const TYPE_TAG_COLORS: Record<string, { background: string; text: string; border
     munch: { background: '#FFE2B6', text: '#8A5200', border: '#F1C07A' },
     retreat: { background: '#EAF6EE', text: '#2E6B4D', border: '#D6EBDC' },
     festival: { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
+    conference: { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
     workshop: { background: '#FDEBEC', text: '#9A3D42', border: '#F6D7DA' },
-    performance: { background: '#F1E9FF', text: '#5D3FA3', border: '#E2D6FB' },
-    discussion: { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
     rope: { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
     vetted: { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
 };
@@ -358,14 +354,16 @@ const resolveTypeKey = (event: WeeklyPickEventRow) => {
     if (event?.is_munch) return 'munch';
     if (event?.play_party) return 'play_party';
     const typeValue = normalizeType(event?.type);
-    return typeValue || 'event';
+    if (typeValue && isActiveEventType(typeValue)) return typeValue;
+    return 'event';
 };
 
 const resolvePrimaryTypeLabel = (event: WeeklyPickEventRow) => {
     if (event?.play_party) return 'Play Party';
     if (event?.is_munch) return 'Munch';
-    if (event?.type && event.type !== 'event') {
-        return TYPE_LABEL_MAP[event.type] || event.type.replace(/_/g, ' ');
+    const typeValue = normalizeType(event?.type);
+    if (typeValue && isActiveEventType(typeValue)) {
+        return TYPE_LABEL_MAP[typeValue] || typeValue.replace(/_/g, ' ');
     }
     return 'Event';
 };

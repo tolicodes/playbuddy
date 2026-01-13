@@ -14,6 +14,7 @@ import { UE } from '../../../../userEventTypes';
 import { useEventAnalyticsProps } from '../../../../Common/hooks/useAnalytics';
 import { ActionSheet } from '../../../../components/ActionSheet';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../../components/styles';
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../../Common/types/commonTypes';
 
 export type FilterState = {
     tags: string[];
@@ -55,9 +56,8 @@ const getEventTypeIcon = (value: string) => {
     if (key.includes('munch')) return 'restaurant';
     if (key.includes('retreat')) return 'leaf';
     if (key.includes('festival')) return 'musical-notes';
+    if (key.includes('conference')) return 'people';
     if (key.includes('workshop') || key.includes('class')) return 'construct';
-    if (key.includes('performance')) return 'mic';
-    if (key.includes('discussion')) return 'chatbubbles';
     return 'calendar';
 };
 
@@ -118,7 +118,7 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
     const [selectedTags, setSelectedTags] = useState(initialFilters.tags || []);
     const [query, setQuery] = useState('');
     const [tagSearchFocused, setTagSearchFocused] = useState(false);
-    const [eventTypesSelected, setEventTypesSelected] = useState(initialFilters.event_types || ['Events']);
+    const [eventTypesSelected, setEventTypesSelected] = useState(initialFilters.event_types ?? []);
     const [experienceSelected, setExperienceSelected] = useState<string[]>(initialFilters.experience_levels || []);
     const [interactivitySelected, setInteractivitySelected] = useState<string[]>(initialFilters.interactivity_levels || []);
     const [showAllEventTypes, setShowAllEventTypes] = useState(false);
@@ -138,8 +138,12 @@ export const FiltersView = ({ onApply, visible, filterOptions, initialFilters = 
     const showTagSuggestions = tagSearchFocused || query.length > 0;
     const visibleTags = selectedTags.slice(0, 3);
     const hiddenTagCount = Math.max(selectedTags.length - visibleTags.length, 0);
+    const activeEventTypeLabels = new Set([
+        ...ACTIVE_EVENT_TYPES.map((type) => snakeToTitle(type).toLowerCase()),
+        snakeToTitle(FALLBACK_EVENT_TYPE).toLowerCase(),
+    ]);
     const eventTypeGroups = buildOptionGroups(filterOptions.event_types || [])
-        .filter((group) => !['event', 'events'].includes(group.label.toLowerCase()));
+        .filter((group) => activeEventTypeLabels.has(group.label.toLowerCase()));
     const experienceGroups = buildOptionGroups(filterOptions.experience_levels || []);
     const interactivityGroups = buildOptionGroups(filterOptions.interactivity_levels || []);
     const visibleEventTypeGroups = showAllEventTypes ? eventTypeGroups : eventTypeGroups.slice(0, 3);

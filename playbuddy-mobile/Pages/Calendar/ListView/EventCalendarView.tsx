@@ -42,6 +42,7 @@ import { getAllClassificationsFromEvents } from "../../../utils/getAllClassifica
 import { UE } from "../../../userEventTypes";
 import { useEventAnalyticsProps } from "../../../Common/hooks/useAnalytics";
 import { navigateToHomeStackScreen, navigateToTab } from "../../../Common/Nav/navigationHelpers";
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from "../../../Common/types/commonTypes";
 import {
     calendarExperienceTone,
     calendarInteractivityTones,
@@ -317,6 +318,16 @@ const EventCalendarView: React.FC<Props> = ({
     const normalizeSearchText = (value?: string) =>
         value ? value.toLowerCase().replace(/[_-]+/g, " ").trim() : "";
 
+    const isActiveEventType = (value?: string | null) =>
+        !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
+
+    const resolveEventTypeValue = (event: EventWithMetadata) => {
+        if (event.play_party || event.type === 'play_party') return 'play_party';
+        if (event.is_munch || event.type === 'munch') return 'munch';
+        if (isActiveEventType(event.type)) return event.type;
+        return FALLBACK_EVENT_TYPE;
+    };
+
     const formatLabel = (value: string) =>
         value
             .replace(/[_-]+/g, " ")
@@ -362,13 +373,7 @@ const EventCalendarView: React.FC<Props> = ({
         }
         if (quickFilter.type === 'event_type') {
             const eventType = normalizeValue(quickFilter.eventType);
-            if (eventType === 'play_party') {
-                return event.play_party === true || normalizeValue(event.type || '') === eventType;
-            }
-            if (eventType === 'munch') {
-                return event.is_munch === true || normalizeValue(event.type || '') === eventType;
-            }
-            return normalizeValue(event.type || '') === eventType;
+            return resolveEventTypeValue(event) === eventType;
         }
         if (quickFilter.type === 'experience') {
             const level = normalizeValue(event.classification?.experience_level || '');
@@ -459,7 +464,7 @@ const EventCalendarView: React.FC<Props> = ({
                     event.organizer?.name,
                     event.description,
                     event.short_description,
-                    event.type && event.type !== 'event' ? event.type : undefined,
+                    event.type && isActiveEventType(event.type) ? event.type : undefined,
                     event.classification?.experience_level,
                     event.classification?.interactivity_level,
                 ];
@@ -489,8 +494,10 @@ const EventCalendarView: React.FC<Props> = ({
             const matchesExp = filters.experience_levels.length === 0 || filters.experience_levels.includes(exp || "");
             const inter = normalize(event.classification?.interactivity_level);
             const matchesInter = filters.interactivity_levels.length === 0 || filters.interactivity_levels.includes(inter || "");
+            const resolvedType = resolveEventTypeValue(event);
             const matchesType =
-                filters.event_types.length === 0 || filters.event_types.includes("events") || filters.event_types.includes(event.type);
+                filters.event_types.length === 0
+                || (resolvedType && filters.event_types.includes(resolvedType));
             return matchesTags && matchesExp && matchesInter && matchesType;
         });
     }, [sourceEvents, searchQuery, filters, quickFilter]);
@@ -697,7 +704,7 @@ const EventCalendarView: React.FC<Props> = ({
 
         const eventTypeGroups = buildLabelGroups(filters.event_types, (value) => formatLabel(value));
         eventTypeGroups.forEach(({ label, values }) => {
-            if (['event', 'events'].includes(label.toLowerCase())) return;
+            if (label.toLowerCase() === FALLBACK_EVENT_TYPE) return;
             pushChip({
                 id: `filter:event_type:${normalizeValue(label)}`,
                 label,

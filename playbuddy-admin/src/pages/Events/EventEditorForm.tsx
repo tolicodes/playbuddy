@@ -27,6 +27,7 @@ import { useCreateEvent, useUpdateEvent } from '../../common/db-axios/useEvents'
 import { supabaseClient } from '../../lib/supabaseClient';
 import { MediaManager } from '../MediaManager';
 import type { Event } from '../../common/types/commonTypes';
+import { EVENT_TYPE_OPTIONS, formatEventTypeLabel, isKnownEventType } from './eventTypeOptions';
 
 const schema = Yup.object().shape({
     original_id: Yup.string().optional(),
@@ -767,8 +768,16 @@ export default function EventEditorForm({
                     <FormControl fullWidth margin="normal">
                         <InputLabel>Type</InputLabel>
                         <Select {...field} label="Type">
-                            <MenuItem value="event">Event</MenuItem>
-                            <MenuItem value="retreat">Retreat</MenuItem>
+                            {field.value && !isKnownEventType(field.value) && (
+                                <MenuItem value={field.value}>
+                                    {`${formatEventTypeLabel(field.value)} (legacy)`}
+                                </MenuItem>
+                            )}
+                            {EVENT_TYPE_OPTIONS.map((option) => (
+                                <MenuItem key={option.value} value={option.value}>
+                                    {option.label}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 )}

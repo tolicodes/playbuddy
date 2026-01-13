@@ -1,4 +1,4 @@
-import { Event } from "../Common/types/commonTypes";
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE, Event } from "../Common/types/commonTypes";
 
 type TagCount = {
     name: string;
@@ -10,6 +10,16 @@ type TagCountsByCategory = {
     experience_levels: TagCount[];
     interactivity_levels: TagCount[];
     event_types: TagCount[];
+};
+
+const isActiveEventType = (value?: string | null) =>
+    !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
+
+const resolveEventType = (event: Event) => {
+    if (event.play_party || event.type === 'play_party') return 'play_party';
+    if (event.is_munch || event.type === 'munch') return 'munch';
+    if (isActiveEventType(event.type)) return event.type;
+    return FALLBACK_EVENT_TYPE;
 };
 
 export function getAllClassificationsFromEvents(events: Event[]): TagCountsByCategory {
@@ -35,8 +45,9 @@ export function getAllClassificationsFromEvents(events: Event[]): TagCountsByCat
             counters.interactivity_levels[level] = (counters.interactivity_levels[level] || 0) + 1;
         }
 
-        if (event.type) {
-            counters.event_types[event.type] = (counters.event_types[event.type] || 0) + 1;
+        const resolvedType = resolveEventType(event);
+        if (resolvedType) {
+            counters.event_types[resolvedType] = (counters.event_types[resolvedType] || 0) + 1;
         }
     }
 

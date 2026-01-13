@@ -377,9 +377,8 @@ export const calendarTypeChips = {
     'munch': { background: '#FFE2B6', text: '#8A5200', border: '#F1C07A' },
     'retreat': { background: '#EAF6EE', text: '#2E6B4D', border: '#D6EBDC' },
     'festival': { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
+    'conference': { background: '#E8F1FF', text: '#2F5DA8', border: '#D6E4FB' },
     'workshop': { background: '#FDEBEC', text: '#9A3D42', border: '#F6D7DA' },
-    'performance': { background: '#F1E9FF', text: '#5D3FA3', border: '#E2D6FB' },
-    'discussion': { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
     'rope': { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
     'vetted': { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
 };

@@ -14,9 +14,19 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 type ClassifyOptions = {
     neighborhoodOnly?: boolean;
     priceOnly?: boolean;
+    fields?: string[];
+    eventIds?: Array<string | number>;
 };
 
+const normalizeField = (value: string) =>
+    value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+const normalizeFieldList = (fields?: string[]) =>
+    Array.isArray(fields) ? fields.map(normalizeField).filter(Boolean) : [];
+
 async function fetchQueuedEvents(options: ClassifyOptions = {}): Promise<Event[]> {
+    const nowIso = new Date().toISOString();
+    const fieldList = normalizeFieldList(options.fields);
+    const hasFieldFilter = fieldList.length > 0;
     let query = supabaseClient
         .from('events')
         .select(`*,
@@ -24,9 +34,15 @@ async function fetchQueuedEvents(options: ClassifyOptions = {}): Promise<Event[]
                 name
             )
         `)
-        .gte('start_date', new Date().toISOString());
+        .gte('start_date', nowIso);
 
-    if (options.neighborhoodOnly) {
+    if (Array.isArray(options.eventIds) && options.eventIds.length > 0) {
+        query = query.in('id', options.eventIds);
+    }
+
+    if (hasFieldFilter || (options.eventIds?.length ?? 0) > 0) {
+        // Reclassify mode: target all future events (optionally filtered by id).
+    } else if (options.neighborhoodOnly) {
         query = query.or('neighborhood.is.null,neighborhood.eq.""');
     } else if (options.priceOnly) {
         query = query.or('price.is.null,price.eq."",short_price.is.null,short_price.eq.""');
@@ -47,11 +63,13 @@ async function fetchQueuedEvents(options: ClassifyOptions = {}): Promise<Event[]
 export type UUID = string;
 
 export type EventType =
+    | 'workshop'
     | 'munch'
     | 'play_party'
-    | 'class'
-    | 'social'
-    | 'workshop'
+    | 'festival'
+    | 'conference'
+    | 'retreat'
+    | 'event'
     | string;
 
 export type EventUpdate = Partial<Omit<Event, 'id' | 'created_at'>> & {
@@ -78,11 +96,16 @@ async function updateSupabaseAndWriteToFile(
     classifications: Classification[],
     options: ClassifyOptions = {},
 ) {
-    const mode = options.neighborhoodOnly
-        ? 'neighborhood'
-        : options.priceOnly
-            ? 'price'
-            : 'full';
+    const fieldList = normalizeFieldList(options.fields);
+    const fieldSet = new Set(fieldList);
+    const hasFieldFilter = fieldSet.size > 0;
+    const mode = hasFieldFilter
+        ? 'fields'
+        : options.neighborhoodOnly
+            ? 'neighborhood'
+            : options.priceOnly
+                ? 'price'
+                : 'full';
     for (let i = 0; i < classifications.length; i++) {
         const c = classifications[i];
         const event_id = c.event_id;
@@ -133,6 +156,81 @@ async function updateSupabaseAndWriteToFile(
 
                 if (updateError) {
                     console.error(`Price update error for ${event_id}:`, updateError);
+                }
+            }
+            continue;
+        }
+
+        if (mode === 'fields') {
+            const shouldUpdate = (field: string) => fieldSet.has(field);
+
+            const classificationPayload: Record<string, any> = {};
+            if (shouldUpdate('tags') && c.tags !== undefined) classificationPayload.tags = c.tags;
+            if (shouldUpdate('experience_level') && c.experience_level !== undefined) {
+                classificationPayload.experience_level = c.experience_level;
+            }
+            if (shouldUpdate('interactivity_level') && c.interactivity_level !== undefined) {
+                classificationPayload.interactivity_level = c.interactivity_level;
+            }
+            if (shouldUpdate('inclusivity') && c.inclusivity !== undefined) {
+                classificationPayload.inclusivity = c.inclusivity;
+            }
+
+            if (Object.keys(classificationPayload).length > 0) {
+                const { error: upsertError } = await supabaseClient
+                    .from('classifications')
+                    .upsert(
+                        [{ event_id, ...classificationPayload }],
+                        { onConflict: 'event_id' }
+                    );
+                if (upsertError) {
+                    console.error(`CLASSIFICATION: Error upserting classification for event ${event_id}: ${upsertError?.message}`);
+                }
+            }
+
+            const updateFields: EventUpdatePayload = {};
+            if (shouldUpdate('type') && c.type !== undefined) {
+                updateFields.type = c.type;
+                updateFields.is_munch = c.type === 'munch';
+                updateFields.play_party = c.type === 'play_party';
+            }
+            if (shouldUpdate('short_description') && c.short_description !== undefined) {
+                updateFields.short_description = c.short_description;
+            }
+            if (shouldUpdate('vetted') && c.vetted !== undefined) updateFields.vetted = c.vetted;
+            if (shouldUpdate('vetting_url') && c.vetting_url !== undefined) {
+                updateFields.vetting_url = c.vetting_url;
+            }
+            if (shouldUpdate('location') && c.location !== undefined) updateFields.location = c.location;
+            if (shouldUpdate('neighborhood') && c.neighborhood !== undefined) {
+                updateFields.neighborhood = c.neighborhood;
+            }
+            if (shouldUpdate('hosts') && c.hosts !== undefined) updateFields.hosts = c.hosts;
+            if (shouldUpdate('non_ny') && c.non_ny !== undefined) updateFields.non_ny = c.non_ny;
+            if (shouldUpdate('price') && c.price !== undefined) updateFields.price = c.price;
+            if (shouldUpdate('short_price') && c.short_price !== undefined) {
+                updateFields.short_price = c.short_price;
+            }
+
+            if (Object.keys(updateFields).length > 0) {
+                const { error: updateError } = await supabaseClient
+                    .from('events')
+                    .update(updateFields)
+                    .eq('id', event_id);
+
+                if (updateError) {
+                    console.error(`Update error for ${event_id}:`, updateError);
+                }
+            }
+
+            if (Object.keys(updateFields).length > 0 || Object.keys(classificationPayload).length > 0) {
+                const { error: classificationUpdateError } = await supabaseClient
+                    .from('events')
+                    .update({ classification_status: 'auto_classified' })
+                    .eq('id', event_id);
+
+                if (classificationUpdateError) {
+                    console.error(`Update error for ${event_id}:`, classificationUpdateError);
                 }
             }
             continue;
@@ -239,8 +337,18 @@ function chunkArray(array: any[], chunkSize: number) {
 const MAX_EVENTS = Infinity;
 const OUTPUT_PATH = './classifications.json';
 export async function classifyEventsInBatches(batchSize = 10, options: ClassifyOptions = {}) {
-    const neighborhoodOnly = options.neighborhoodOnly === true;
-    const priceOnly = options.priceOnly === true;
+    const fieldList = normalizeFieldList(options.fields);
+    const fieldSet = new Set(fieldList);
+    const promptNeighborhoodOnly =
+        options.neighborhoodOnly === true ||
+        (!options.priceOnly && !options.neighborhoodOnly && fieldSet.size === 1 && fieldSet.has('neighborhood'));
+    const promptPriceOnly =
+        options.priceOnly === true ||
+        (!options.priceOnly &&
+            !options.neighborhoodOnly &&
+            fieldSet.size > 0 &&
+            fieldSet.has('price') &&
+            (fieldSet.size === 1 || (fieldSet.size === 2 && fieldSet.has('short_price'))));
     const events = await fetchQueuedEvents(options);
 
     const results = [];
@@ -278,9 +386,9 @@ export async function classifyEventsInBatches(batchSize = 10, options: ClassifyO
             messages: [
                 {
                     role: 'system',
-                    content: neighborhoodOnly
+                    content: promptNeighborhoodOnly
                         ? neighborhoodOnlyPrompt
-                        : priceOnly
+                        : promptPriceOnly
                             ? priceOnlyPrompt
                             : systemPrompt,
                 },

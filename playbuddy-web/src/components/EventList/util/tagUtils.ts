@@ -1,4 +1,4 @@
-import type { Event } from "../../../../../common/src/types/commonTypes";
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE, type Event } from "../../../../../common/src/types/commonTypes";
 
 export type TagChipKind = "type" | "level" | "vetted" | "tag";
 
@@ -102,14 +102,17 @@ export const getTagTone = (tag: string) => {
   return TAG_TONES[match?.tone ?? "default"];
 };
 
+const isActiveEventType = (value?: string | null) =>
+  !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
+
 const TYPE_LABEL_MAP: Record<string, string> = {
+  event: "Event",
   play_party: "Play Party",
   munch: "Munch",
   retreat: "Retreat",
   festival: "Festival",
+  conference: "Conference",
   workshop: "Workshop",
-  performance: "Performance",
-  discussion: "Discussion",
 };
 
 const LEVEL_LABEL_MAP: Record<string, string> = {
@@ -123,9 +126,8 @@ const TYPE_CHIP_TONES: Record<string, TagTone> = {
   munch: { background: "#FFE2B6", text: "#8A5200", border: "#F1C07A" },
   retreat: { background: "#EAF6EE", text: "#2E6B4D", border: "#D6EBDC" },
   festival: { background: "#E8F1FF", text: "#2F5DA8", border: "#D6E4FB" },
+  conference: { background: "#E8F1FF", text: "#2F5DA8", border: "#D6E4FB" },
   workshop: { background: "#FDEBEC", text: "#9A3D42", border: "#F6D7DA" },
-  performance: { background: "#F1E9FF", text: "#5D3FA3", border: "#E2D6FB" },
-  discussion: { background: "#E8F5F8", text: "#2D5E6F", border: "#D3E7EE" },
   vetted: { background: "#E9F8EF", text: "#2F6E4A", border: "#D7F0E1" },
 };
 
@@ -136,24 +138,22 @@ export const LEVEL_CHIP_TONE: TagTone = {
 };
 
 export const EVENT_RAIL_COLORS: Record<string, string> = {
-  event: "#9B8FD4",
   "play party": "#5A43B5",
   munch: "#B45309",
   retreat: "#2E6B4D",
   festival: "#2F5DA8",
   workshop: "#9A3D42",
-  performance: "#5D3FA3",
-  discussion: "#2D5E6F",
+  event: "#9B8FD4",
   default: "#9B8FD4",
 };
 
 export const getEventTypeKey = (event: Event) => {
   if (event.play_party) return "play party";
   if (event.is_munch) return "munch";
-  if (event.type && event.type !== "event") {
+  if (event.type && isActiveEventType(event.type)) {
     return event.type.replace(/_/g, " ").toLowerCase();
   }
-  return "event";
+  return FALLBACK_EVENT_TYPE;
 };
 
 export const getTagChips = (event: Event, limit = 6) => {
@@ -172,7 +172,7 @@ export const getTagChips = (event: Event, limit = 6) => {
 
   if (event.play_party) pushTag("Play Party", "type");
   if (event.is_munch) pushTag("Munch", "type");
-  if (event.type && event.type !== "event") {
+  if (event.type && isActiveEventType(event.type)) {
     pushTag(TYPE_LABEL_MAP[event.type] || event.type.replace(/_/g, " "), "type");
   }
   if (event.classification?.experience_level) {

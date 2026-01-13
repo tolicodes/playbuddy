@@ -16,11 +16,6 @@ export const event_classifications = [
                 examples: ["Play Party", "Temple Night", "Kink Party", "Sex Party", "Dungeon"]
             },
             {
-                name: "jam",
-                description: "Free form jam, but not a play party",
-                examples: ["Rope Jam", "Hypnosis Practice"]
-            },
-            {
                 name: "munch",
                 description: "Munch, social, meetup, brunch, happy hour.",
                 examples: ["Munch", "Social", "Meetup", "Brunch", "Happy Hour"]
@@ -32,23 +27,23 @@ export const event_classifications = [
             },
             {
                 name: "festival",
-                description: "Festival, conference, convention, summit.",
-                examples: ["Festival", "Conference", "Convention", "Summit"]
+                description: "Festival, camp, gathering, multi-day celebration.",
+                examples: ["Festival", "Camp", "Gathering", "Celebration"]
+            },
+            {
+                name: "conference",
+                description: "Conference, convention, summit, congress.",
+                examples: ["Conference", "Convention", "Summit", "Congress"]
             },
             {
                 name: "workshop",
-                description: "Workshop, class, skills training, demo.",
-                examples: ["Workshop", "Class", "Skills Training", "Demo"]
+                description: "Workshop, class, skills training, demo, practice lab.",
+                examples: ["Workshop", "Class", "Skills Training", "Demo", "Practice Lab"]
             },
             {
-                name: "performance",
-                description: "Performance, show, burlesque, drag, live act.",
-                examples: ["Performance", "Burlesque", "Drag", "Live Show", "Karaoke", "Film"]
-            },
-            {
-                name: "discussion",
-                description: "Discussion, panel, Q&A, talk, roundtable.",
-                examples: ["Panel", "Discussion", "Roundtable", "Q&A"]
+                name: "event",
+                description: "Generic event when none of the other types are explicitly indicated.",
+                examples: ["Event", "Community Night", "Open House"]
             }
         ]
     },

@@ -117,7 +117,7 @@ export interface Event extends EventDataSource {
      */
     tags?: string[];
     /**
-     * The type of the event (workshop, munch, play_party, festival, conference, retreat; legacy: event, performance, discussion)
+     * The type of the event (workshop, munch, play_party, festival, conference, retreat; fallback: event; legacy: performance, discussion)
      */
     type: EventTypes;
     /**
@@ -505,8 +505,9 @@ export const ACTIVE_EVENT_TYPES = [
     'retreat',
 ] as const;
 
+export const FALLBACK_EVENT_TYPE = 'event' as const;
+
 export const LEGACY_EVENT_TYPES = [
-    'event',
     'performance',
     'discussion',
 ] as const;
@@ -514,7 +515,7 @@ export const LEGACY_EVENT_TYPES = [
 export type ActiveEventType = (typeof ACTIVE_EVENT_TYPES)[number];
 export type LegacyEventType = (typeof LEGACY_EVENT_TYPES)[number];
 
-export type EventTypes = ActiveEventType | LegacyEventType;
+export type EventTypes = ActiveEventType | typeof FALLBACK_EVENT_TYPE | LegacyEventType;
 
 export type ImportMethod = 'chrome_scraper' | 'eb_scraper' | 'ai_scraper';
 export type IdentifierType = 'handle' | 'url';

@@ -36,8 +36,8 @@ ${event_classifications.map((c) => `${c.name}: string;`).join('\n')}
 
 Mapping
 - use classification ID for keys in the output (ex: type vs Type)
-- type must be one of: play_party, jam, munch, retreat, festival, workshop, performance, discussion. Do not output "event".
-- if the title/description indicates a class, training, demo, or workshop, choose "workshop" for type.
+- type must be one of: workshop, munch, play_party, festival, conference, retreat, event.
+- only choose a specific type when the title/description is explicit; otherwise use "event".
 - JSON output should be an array of objects containing a key "events" which is an  array of objects with the above structure
 - input event.id maps to event_id (the integer) NOT the original_id
 - do not put in tags something that already exists in another field (ex: queer, workshop)
