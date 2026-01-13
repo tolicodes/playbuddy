@@ -1,4 +1,5 @@
 import { supabaseClient } from "../connections/supabaseClient.js"
+import { pgQuery } from "../connections/postgres.js";
 import { Router } from "express";
 import { Request, Response } from "express";
 import { authenticateAdminRequest, AuthenticatedRequest } from '../middleware/authenticateRequest.js';
@@ -46,8 +47,53 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
       throw new Error(`Failed to fetch deep links: ${error.message}`);
     }
 
+    const deepLinks = data ?? [];
+    const statsById = new Map<string, any>();
+    if (deepLinks.length) {
+      const ids = deepLinks.map((dl) => dl.id).filter(Boolean);
+      if (ids.length) {
+        try {
+          const { rows: statsRows } = await pgQuery(`
+            SELECT DISTINCT ON (deep_link_id)
+              deep_link_id,
+              range_start_date,
+              range_end_date,
+              range_label,
+              range_days,
+              generated_at,
+              overall_clicks,
+              ios_link_clicks,
+              ios_install,
+              ios_reopen,
+              android_link_clicks,
+              android_install,
+              android_reopen,
+              desktop_link_clicks,
+              desktop_texts_sent,
+              desktop_ios_install,
+              desktop_ios_reopen,
+              desktop_android_install,
+              desktop_android_reopen,
+              source_url,
+              source_name
+            FROM public.deep_link_branch_stats
+            WHERE deep_link_id = ANY($1::uuid[])
+            ORDER BY deep_link_id,
+                     range_end_date DESC NULLS LAST,
+                     generated_at DESC NULLS LAST,
+                     updated_at DESC NULLS LAST;
+          `, [ids]);
+          for (const row of statsRows) {
+            statsById.set(String(row.deep_link_id), row);
+          }
+        } catch (statsError: any) {
+          console.warn("Failed to fetch branch stats for deep links", statsError?.message || statsError);
+        }
+      }
+    }
+
     // 2) Optional post-transform to flatten the attached events at the deep link level
-    const transformed = (data ?? []).map((dl) => {
+    const transformed = deepLinks.map((dl) => {
       // Extract the nested arrays
       const dpc = dl.deep_link_promo_codes ?? [];
 
@@ -73,6 +119,7 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
         promo_codes: promoCodes,
         // Flatten event IDs that came from promo_code_event
         event_ids: eventIds,
+        branch_stats: statsById.get(String(dl.id)) ?? null,
       };
     });
 

@@ -5,6 +5,7 @@ import { Router, Response } from 'express';
 import { authenticateAdminRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { createJob, getJob, listJobs } from '../scrapers/helpers/jobQueue.js';
 import runAllScrapers from '../scrapers/helpers/runAllScrapers.js';
+import { startBranchStatsScrape } from './branch_stats.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import scrapeURLs from '../scrapers/helpers/scrapeURLs.js';
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
@@ -36,7 +37,21 @@ router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedReques
     try {
         const scenario = req.query.scenario?.toString();
         const { jobId, enqueued } = await runAllScrapers(req.authUserId, { scenario });
-        res.json({ jobId, enqueued, scenario: scenario || 'all' });
+        const branchStatsResult = startBranchStatsScrape();
+        if (!branchStatsResult.ok && branchStatsResult.statusCode !== 409) {
+            console.warn('[scrape] branch stats failed to start', {
+                statusCode: branchStatsResult.statusCode,
+                error: branchStatsResult.error,
+            });
+        }
+        res.json({
+            jobId,
+            enqueued,
+            scenario: scenario || 'all',
+            branchStats: branchStatsResult.ok
+                ? { status: branchStatsResult.state.status, startedAt: branchStatsResult.state.startedAt }
+                : { status: branchStatsResult.state.status, error: branchStatsResult.error, statusCode: branchStatsResult.statusCode },
+        });
     } catch (err: any) {
         console.error('Error scraping all sources', err);
         res.status(500).json({ error: err?.message || 'Failed to scrape sources' });

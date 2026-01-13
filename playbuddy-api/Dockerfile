@@ -20,6 +20,9 @@ COPY package*.json ./
 # Install app dependencies including Puppeteer
 RUN npm install
 
+# Install Playwright browsers + OS deps (used by branch stats scrape)
+RUN npx playwright install --with-deps chromium
+
 # Bundle app source code
 COPY . .
 

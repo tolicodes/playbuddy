@@ -961,6 +961,29 @@ export interface DeepLinkEvent {
     featured_promo_code: PromoCode;
 }
 
+export interface DeepLinkBranchStats {
+    range_start_date?: string | null;
+    range_end_date?: string | null;
+    range_label?: string | null;
+    range_days?: number | null;
+    generated_at?: string | null;
+    overall_clicks?: number | null;
+    ios_link_clicks?: number | null;
+    ios_install?: number | null;
+    ios_reopen?: number | null;
+    android_link_clicks?: number | null;
+    android_install?: number | null;
+    android_reopen?: number | null;
+    desktop_link_clicks?: number | null;
+    desktop_texts_sent?: number | null;
+    desktop_ios_install?: number | null;
+    desktop_ios_reopen?: number | null;
+    desktop_android_install?: number | null;
+    desktop_android_reopen?: number | null;
+    source_url?: string | null;
+    source_name?: string | null;
+}
+
 /**
  * Represents a single deep link record.
  */
@@ -1001,6 +1024,8 @@ export interface DeepLink {
     featured_promo_code: PromoCode;
 
     deep_link_events: DeepLinkEvent[]
+
+    branch_stats?: DeepLinkBranchStats | null;
 
     facilitatorId?: string;        // from facilitator_id
 

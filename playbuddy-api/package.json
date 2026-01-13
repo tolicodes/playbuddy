@@ -84,7 +84,9 @@
     "qrcode": "^1.5.4",
     "redis": "^4.7.0",
     "sharp": "^0.34.2",
-    "turndown": "^7.2.0"
+    "turndown": "^7.2.0",
+    "pg": "^8.12.0",
+    "playwright": "^1.57.0"
   },
   "keywords": [],
   "author": ""
