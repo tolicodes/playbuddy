@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import Swiper from 'react-native-deck-swiper';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
+import { useHeaderHeight } from '@react-navigation/elements';
 
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
 import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
@@ -37,6 +40,9 @@ export const DiscoverGame: React.FC = () => {
     const recordSwipe = useRecordSwipeChoice();
     const swiperRef = useRef<Swiper<any> | null>(null);
     const analyticsProps = useAnalyticsProps();
+    const insets = useSafeAreaInsets();
+    const tabBarHeight = useBottomTabBarHeight();
+    const headerHeight = useHeaderHeight();
 
     const { visible: discoverEventsTourVisible, saveVisible: setDiscoverEventsTourVisible } = useShowDiscoverEventsTour();
 
@@ -138,6 +144,11 @@ export const DiscoverGame: React.FC = () => {
         </View>
     }
 
+    const controlsBottom = insets.bottom + spacing.xs;
+    const controlsRowHeight = BUTTON_SIZE + spacing.mdPlus;
+    const swiperMarginBottom = tabBarHeight + insets.bottom + controlsRowHeight + spacing.xl;
+    const swiperMarginTop = insets.top + spacing.sm;
+
     return (
         <View style={styles.container}>
             {discoverEventsTourVisible && <DiscoverEventsTour onClose={() => setDiscoverEventsTourVisible(false)} />}
@@ -148,12 +159,10 @@ export const DiscoverGame: React.FC = () => {
                     ref={(ref) => (swiperRef.current = ref)}
                     cards={cards}
                     renderCard={(event) => (
-                        <View style={{ flex: 1 }}>
-                            <DiscoverEventsCard
-                                key={event.id}
-                                event={event}
-                            />
-                        </View>
+                        <DiscoverEventsCard
+                            key={event.id}
+                            event={event}
+                        />
                     )}
                     backgroundColor='transparent'
                     onSwipedRight={onSwipeRight}
@@ -161,7 +170,12 @@ export const DiscoverGame: React.FC = () => {
                     cardIndex={0}
                     stackSize={3}
                     verticalSwipe={false}
-                    stackSeparation={20}
+                    stackSeparation={-40}
+                    stackScale={3}
+                    marginTop={swiperMarginTop}
+                    marginBottom={swiperMarginBottom}
+                    cardVerticalMargin={spacing.xs}
+                    cardStyle={styles.cardStyle}
                     overlayLabels={{
                         left: {
                             title: 'SKIP',
@@ -172,12 +186,11 @@ export const DiscoverGame: React.FC = () => {
                             style: styles.overlayRight
                         }
                     }}
-                    cardStyle={{ flex: 1 }}
                 />
             </View>
 
             {/* ─── Swipe Control Buttons Row ───────────────────────────────────────────── */}
-            <View style={styles.controlsRow}>
+            <View style={[styles.controlsRow, { bottom: controlsBottom }]}>
                 <TouchableOpacity
                     style={styles.controlButton}
                     onPress={() => {
@@ -222,7 +235,11 @@ const styles = StyleSheet.create({
     swiperContainer: {
         flex: 1,
         width: '100%',
-        paddingBottom: 120,
+    },
+    cardStyle: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'flex-start',
     },
     overlayLeft: {
         label: {
@@ -246,7 +263,6 @@ const styles = StyleSheet.create({
     },
     controlsRow: {
         position: 'absolute',
-        bottom: spacing.jumbo,
         width: SCREEN_WIDTH,
         flexDirection: 'row',
         justifyContent: 'center',

@@ -1,284 +1,190 @@
-// DiscoverEventsCard.tsx
+import React, { useCallback, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
 
-import React, { useCallback } from 'react';
-import {
-    View,
-    Text,
-    Image as RNImage,
-    TouchableOpacity,
-    StyleSheet,
-    Dimensions,
-    Linking,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import moment from 'moment';
-
-import { formatDate } from '../Calendar/hooks/calendarUtils';
-import { getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
+import type { EventWithMetadata } from '../../Common/Nav/NavStackType';
+import type { Attendee } from '../../commonTypes';
 import { logEvent } from '../../Common/hooks/logger';
-import type { Event } from '../../commonTypes';
-import { BadgeRow } from '../../components/EventBadgesRow';
 import { UE } from '../../Common/types/userEventTypes';
+import { EventListItem, ITEM_HEIGHT } from '../Calendar/ListView/EventListItem';
+import { useUserContext } from '../Auth/hooks/UserContext';
+import { ADMIN_EMAILS } from '../../config';
 import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../Common/types/commonTypes';
 
-export const CARD_HEIGHT = 500;
-const IMAGE_HEIGHT = CARD_HEIGHT * 0.4;
-const DATE_PILL_HEIGHT = 28; // adjust if font/padding changes
+const emptyAttendees: Attendee[] = [];
+const DISCOVER_CARD_HEIGHT = ITEM_HEIGHT + spacing.xxxl;
 
-/** ─── CardWrapper ──────────────────────────────────────────────────────────── */
-const CardWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <View style={cardWrapperStyles.container}>{children}</View>
-);
+type DiscoverEventsCardProps = {
+    event: EventWithMetadata;
+};
 
-const cardWrapperStyles = StyleSheet.create({
-    container: {
-        width: '100%',
-        height: CARD_HEIGHT,
-        borderRadius: radius.md,
-        backgroundColor: colors.white,
-        marginBottom: spacing.xl,
-        overflow: 'hidden',
-        borderWidth: 1,
-        borderColor: colors.borderLight,
-        shadowColor: colors.black,
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 12 },
-        shadowRadius: 24,
-        elevation: 24,
-        position: 'relative',
-    },
-});
+export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event }) => {
+    const { userProfile } = useUserContext();
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const description = (event.short_description || '').trim();
+    const ticketUrl = event.event_url || event.ticket_url;
+    const isKnownEventType = (value?: string | null) =>
+        !!value && (value === FALLBACK_EVENT_TYPE || ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]));
+    const adminLines = useMemo(() => {
+        if (!isAdmin) return [];
+        const classification = event.classification;
+        const tags = [
+            ...(event.tags || []),
+            ...(classification?.tags || []),
+        ].map(tag => tag.trim()).filter(Boolean);
+        const inclusivity = classification?.inclusivity?.filter(Boolean) || [];
+        const lines: Array<{ label: string; value: string }> = [];
+        const typeValue = event.play_party ? 'play_party' : event.is_munch ? 'munch' : event.type;
+        if (typeValue) {
+            const label = typeValue.replace(/_/g, ' ');
+            lines.push({
+                label: 'Type',
+                value: isKnownEventType(typeValue) ? label : `${label} (legacy)`,
+            });
+        }
+        if (tags.length) lines.push({ label: 'Tags', value: tags.join(', ') });
+        if (classification?.experience_level) {
+            lines.push({ label: 'Experience', value: classification.experience_level });
+        }
+        if (classification?.interactivity_level) {
+            lines.push({ label: 'Interactivity', value: classification.interactivity_level });
+        }
+        if (inclusivity.length) {
+            lines.push({ label: 'Inclusivity', value: inclusivity.join(', ') });
+        }
+        if (classification?.vetted != null || event.vetted != null) {
+            const vettedValue = (classification?.vetted ?? event.vetted) ? 'yes' : 'no';
+            lines.push({ label: 'Vetted', value: vettedValue });
+        }
+        if (event.approval_status) {
+            lines.push({ label: 'Approval', value: event.approval_status });
+        }
+        if (event.hidden != null) {
+            lines.push({ label: 'Hidden', value: event.hidden ? 'yes' : 'no' });
+        }
+        return lines;
+    }, [event, isAdmin]);
 
-/** ─── CardImage ────────────────────────────────────────────────────────────── */
-const CardImage: React.FC<{ uri?: string }> = ({ uri }) => (
-    <RNImage source={uri ? { uri } : undefined} style={cardImageStyles.image} />
-);
+    const handleMoreInfo = useCallback(() => {
+        if (!ticketUrl) return;
+        Linking.openURL(ticketUrl);
+        logEvent(UE.DiscoverEventsMoreInfoClicked, { event_id: event.id });
+    }, [event.id, ticketUrl]);
 
-const cardImageStyles = StyleSheet.create({
-    image: {
-        width: '100%',
-        height: IMAGE_HEIGHT,
-        resizeMode: 'cover',
-    },
-});
-
-/** ─── DatePill ─────────────────────────────────────────────────────────────── */
-const DatePill: React.FC<{ date: string }> = ({ date }) => (
-    <View style={datePillStyles.container}>
-        <Icon name="event" size={16} color={colors.white} />
-        <Text style={datePillStyles.text}>  {date}</Text>
-    </View>
-);
-
-const datePillStyles = StyleSheet.create({
-    container: {
-        position: 'absolute',
-        top: IMAGE_HEIGHT - DATE_PILL_HEIGHT / 2,
-        alignSelf: 'center',
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: colors.brandBright,
-        borderRadius: radius.md,
-        paddingVertical: spacing.xsPlus,
-        paddingHorizontal: spacing.lg,
-        height: DATE_PILL_HEIGHT,
-    },
-    text: {
-        color: colors.white,
-        fontSize: fontSizes.base,
-        fontWeight: '600',
-        fontFamily: fontFamilies.body,
-    },
-});
-
-/** ─── CardContent ──────────────────────────────────────────────────────────── */
-const CardContent: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <View style={cardContentStyles.container}>{children}</View>
-);
-
-const cardContentStyles = StyleSheet.create({
-    container: {
-        flex: 1,
-        paddingHorizontal: spacing.lg,
-        paddingTop: DATE_PILL_HEIGHT / 2 + spacing.lg, // push content below pill
-        paddingBottom: spacing.lg,
-        justifyContent: 'space-between',
-    },
-});
-
-/** ─── TimeLine ─────────────────────────────────────────────────────────────── */
-const TimeLine: React.FC<{ date: string }> = ({ date }) => (
-    <Text style={timeLineStyles.text}>{date}</Text>
-);
-
-const timeLineStyles = StyleSheet.create({
-    text: {
-        fontSize: fontSizes.base,
-        color: colors.textPrimary,
-        textAlign: 'center',
-        marginTop: spacing.sm,
-        fontFamily: fontFamilies.body,
-    },
-});
-
-/** ─── Title ─────────────────────────────────────────────────────────────────── */
-const Title: React.FC<{ text: string }> = ({ text }) => (
-    <Text style={titleStyles.text} numberOfLines={2}>
-        {text}
-    </Text>
-);
-
-const titleStyles = StyleSheet.create({
-    text: {
-        fontSize: fontSizes.xxxl,
-        fontWeight: '600',
-        color: colors.textDeep,
-        textAlign: 'center',
-        marginTop: spacing.md,
-        fontFamily: fontFamilies.display,
-    },
-});
-
-/** ─── Subtitle ──────────────────────────────────────────────────────────────── */
-const Subtitle: React.FC<{ text?: string }> = ({ text }) =>
-    text ? (
-        <Text style={subtitleStyles.text} numberOfLines={1}>
-            {text}
-        </Text>
+    const footerContent = description || ticketUrl || adminLines.length ? (
+        <View>
+            <View style={styles.footerDivider} />
+            {description ? (
+                <Text style={styles.description} numberOfLines={4}>
+                    {description}
+                </Text>
+            ) : null}
+            {adminLines.length ? (
+                <View style={styles.adminSection}>
+                    <Text style={styles.adminHeading}>Admin details</Text>
+                    <ScrollView
+                        style={styles.adminScroll}
+                        contentContainerStyle={styles.adminScrollContent}
+                        showsVerticalScrollIndicator
+                    >
+                        {adminLines.map(line => (
+                            <Text key={line.label} style={styles.adminLine}>
+                                <Text style={styles.adminLabel}>{line.label}:</Text> {line.value}
+                            </Text>
+                        ))}
+                    </ScrollView>
+                </View>
+            ) : null}
+            {ticketUrl ? (
+                <TouchableOpacity
+                    style={styles.ctaButton}
+                    onPress={handleMoreInfo}
+                    activeOpacity={0.85}
+                >
+                    <Text style={styles.ctaText}>Get Tickets</Text>
+                </TouchableOpacity>
+            ) : null}
+        </View>
     ) : null;
 
-const subtitleStyles = StyleSheet.create({
-    text: {
-        fontSize: fontSizes.xl,
-        color: colors.textMuted,
-        textAlign: 'center',
-        marginTop: spacing.xs,
-        marginBottom: spacing.md,
-        fontFamily: fontFamilies.body,
+    return (
+        <View style={styles.wrapper}>
+            <EventListItem
+                item={event}
+                onPress={handleMoreInfo}
+                attendees={emptyAttendees}
+                autoHeight
+                listViewMode="image"
+                cardVariant="type-icon"
+                isAdmin={isAdmin}
+                cardHeight={DISCOVER_CARD_HEIGHT}
+                footerContent={footerContent ?? undefined}
+            />
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    wrapper: {
+        width: '100%',
     },
-});
-
-/** ─── PromoBadge ────────────────────────────────────────────────────────────── */
-const PromoBadge: React.FC<{ label: string }> = ({ label }) => (
-    <View style={promoBadgeStyles.container}>
-        <Text style={promoBadgeStyles.text}>{label}</Text>
-    </View>
-);
-
-const promoBadgeStyles = StyleSheet.create({
-    container: {
-        backgroundColor: colors.gold,
-        borderRadius: radius.sm,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        alignSelf: 'center',
-        marginVertical: spacing.sm,
-    },
-    text: {
-        fontSize: fontSizes.sm,
-        fontWeight: 'bold',
-        color: colors.textPrimary,
-        fontFamily: fontFamilies.body,
-    },
-});
-
-/** ─── Description ───────────────────────────────────────────────────────────── */
-const Description: React.FC<{ text: string }> = ({ text }) => (
-    <Text style={descriptionStyles.text} numberOfLines={3}>
-        {text}
-    </Text>
-);
-
-const descriptionStyles = StyleSheet.create({
-    text: {
+    description: {
         fontSize: fontSizes.base,
         color: colors.textPrimary,
         lineHeight: lineHeights.md,
-        marginVertical: spacing.sm,
         fontFamily: fontFamilies.body,
+        marginBottom: spacing.md,
+        textAlign: 'left',
     },
-});
-
-/** ─── CTAButton ─────────────────────────────────────────────────────────────── */
-const CTAButton: React.FC<{ label: string; onPress: () => void }> = ({
-    label,
-    onPress,
-}) => (
-    <TouchableOpacity style={ctaButtonStyles.container} onPress={onPress}>
-        <Text style={ctaButtonStyles.text}>{label}</Text>
-    </TouchableOpacity>
-);
-
-const ctaButtonStyles = StyleSheet.create({
-    container: {
+    footerDivider: {
+        height: 2,
+        backgroundColor: colors.borderLavenderStrong,
+        marginBottom: spacing.mdPlus,
+        borderRadius: 1,
+    },
+    adminSection: {
+        marginBottom: spacing.mdPlus,
+    },
+    adminHeading: {
+        fontSize: fontSizes.smPlus,
+        fontWeight: '700',
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+        marginBottom: spacing.xs,
+    },
+    adminScroll: {
+        maxHeight: 96,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        backgroundColor: colors.surfaceLavenderLight,
+    },
+    adminScrollContent: {
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.sm,
+    },
+    adminLine: {
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
+        lineHeight: lineHeights.sm,
+        fontFamily: fontFamilies.body,
+        marginBottom: spacing.xs,
+    },
+    adminLabel: {
+        fontWeight: '700',
+        color: colors.textPrimary,
+    },
+    ctaButton: {
         backgroundColor: colors.brandBright,
         borderRadius: radius.hero,
         paddingVertical: spacing.md,
         alignItems: 'center',
-        marginTop: spacing.lg,
+        alignSelf: 'stretch',
     },
-    text: {
+    ctaText: {
         color: colors.white,
         fontSize: fontSizes.xl,
         fontWeight: '600',
         fontFamily: fontFamilies.body,
     },
 });
-
-/** ─── DiscoverEventsCard ───────────────────────────────────────────────────── */
-interface DiscoverEventsCardProps {
-    event: Event;
-}
-
-export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({
-    event,
-}) => {
-    const day = moment(event.start_date).format('dddd').toUpperCase();
-    const time = `${moment(event.start_date).format('MMM D')} · ${formatDate(
-        event
-    )}`;
-
-    const promo =
-        event.promo_codes?.find((c) => c.scope === 'event') ||
-        event.organizer?.promo_codes?.find((c) => c.scope === 'organizer');
-    const description = event.short_description || '';
-
-    const handleMoreInfo = useCallback(() => {
-        if (!event.event_url) return;
-        Linking.openURL(event.event_url);
-        logEvent(UE.DiscoverEventsMoreInfoClicked, { event_id: event.id });
-    }, [event]);
-
-    const promoLabel = promo
-        ? promo.discount_type === 'percent'
-            ? `${promo.discount}% off`
-            : `$${promo.discount} off`
-        : undefined;
-
-    return (
-        <CardWrapper>
-            {event.image_url && <CardImage uri={getSmallAvatarUrl(event.image_url)} />}
-
-            {/* Date pill overlapping image & content */}
-            <DatePill date={day} />
-
-            <CardContent>
-                {/* Top section: time + title/subtitle + promo + description */}
-                <View>
-                    <TimeLine date={time} />
-                    <Title text={event.name} />
-                    <Subtitle text={event.organizer?.name} />
-
-                    {promoLabel && <PromoBadge label={promoLabel} />}
-
-                    <BadgeRow center={true} vetted={event.vetted} playParty={event.play_party} />
-
-                    {description && <Description text={description} />}
-                </View>
-
-                {/* Bottom (CTA) */}
-                <CTAButton label="Get Tickets" onPress={handleMoreInfo} />
-            </CardContent>
-        </CardWrapper>
-    );
-};

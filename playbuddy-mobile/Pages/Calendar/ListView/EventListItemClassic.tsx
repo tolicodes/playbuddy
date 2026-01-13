@@ -62,7 +62,11 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
         });
     };
 
-    const placeHolderImage = item.munch_id ? (
+    const isPlayParty = item.play_party || item.type === 'play_party';
+    const isMunch = item.is_munch || item.munch_id || item.type === 'munch';
+    const placeHolderImage = isPlayParty ? (
+        <FAIcon name="birthday-cake" size={22} color={colors.textSlate} />
+    ) : isMunch ? (
         <FAIcon name="cutlery" size={22} color={colors.textSlate} />
     ) : (
         <FAIcon name="calendar" size={22} color={colors.textSlate} />

@@ -17,7 +17,7 @@ import { useUserContext } from '../Auth/hooks/UserContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { navigateToAuth } from '../../Common/Nav/navigationHelpers';
-import { colors, fontFamilies, fontSizes, gradients, lineHeights, radius, shadows, spacing } from '../../components/styles';
+import { colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../components/styles';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
@@ -192,27 +192,28 @@ export const DiscoverEventsTour: React.FC<DiscoverEventsTourProps> = ({ onClose 
                         </View>
                     </LinearGradient>
 
+                    {!authUserId && (
+                        <Text style={styles.authNotice}>
+                            You must create an account to save events
+                        </Text>
+                    )}
+
                     <TouchableOpacity
-                        style={styles.primaryButton}
+                        style={[
+                            styles.primaryButton,
+                            authUserId ? styles.primaryButtonConfirm : styles.primaryButtonCreate,
+                        ]}
                         onPress={handlePrimaryPress}
                         activeOpacity={0.85}
                     >
-                        <LinearGradient
-                            colors={authUserId ? gradients.primaryButton : gradients.auth}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.primaryButtonGradient}
+                        <Text
+                            style={[
+                                styles.primaryButtonText,
+                                authUserId && styles.primaryButtonTextConfirm,
+                            ]}
                         >
-                            <Ionicons
-                                name={authUserId ? 'checkmark-circle-outline' : 'person-add-outline'}
-                                size={20}
-                                color={colors.white}
-                                style={styles.primaryButtonIcon}
-                            />
-                            <Text style={[styles.primaryButtonText, !authUserId && styles.primaryButtonTextSmall]}>
-                                {authUserId ? 'Got it!' : 'Create Account\nto save events'}
-                            </Text>
-                        </LinearGradient>
+                            {authUserId ? 'Got it!' : 'Create Account'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
@@ -338,6 +339,17 @@ export const styles = StyleSheet.create({
         marginTop: spacing.xl,
         width: '100%',
     },
+    authNotice: {
+        marginTop: spacing.lg,
+        marginBottom: spacing.md,
+        maxWidth: 280,
+        textAlign: 'center',
+        color: colors.textOnDarkMuted,
+        fontSize: fontSizes.base,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
     cardFrame: {
         borderRadius: radius.lgPlus,
         padding: 2,
@@ -408,17 +420,18 @@ export const styles = StyleSheet.create({
         maxWidth: 280,
         borderRadius: radius.lg,
         overflow: 'hidden',
-        ...shadows.button,
-    },
-    primaryButtonGradient: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
         paddingHorizontal: spacing.xxl,
         paddingVertical: spacing.mdPlus,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
-    primaryButtonIcon: {
-        marginRight: spacing.sm,
+    primaryButtonCreate: {
+        backgroundColor: colors.brandBright,
+    },
+    primaryButtonConfirm: {
+        backgroundColor: colors.white,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
     },
     primaryButtonText: {
         color: colors.white,
@@ -427,9 +440,8 @@ export const styles = StyleSheet.create({
         textAlign: 'center',
         fontFamily: fontFamilies.body,
     },
-    primaryButtonTextSmall: {
-        fontSize: fontSizes.base,
-        lineHeight: lineHeights.md,
+    primaryButtonTextConfirm: {
+        color: colors.brandDeep,
     },
 
     // ── Bottom Legend ────────────────────────────────────────────

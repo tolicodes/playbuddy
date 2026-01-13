@@ -14,6 +14,7 @@ import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageU
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
 import { calendarTypeChips, colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistHeart } from './WishlistHeart';
@@ -58,22 +59,25 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const organizerName = item.organizer?.name?.trim() || 'Organizer';
     const priceLabel = item.short_price || item.price || '';
     const metaLine = [formattedDate, locationLabel, priceLabel].filter(Boolean).join(' - ');
+    const isActiveEventType = (value?: string | null) =>
+        !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
     const typeLabelMap: Record<string, string> = {
+        event: 'Event',
         play_party: 'Play Party',
         munch: 'Munch',
         retreat: 'Retreat',
         festival: 'Festival',
+        conference: 'Conference',
         workshop: 'Workshop',
-        performance: 'Performance',
-        discussion: 'Discussion',
     };
-    const primaryTypeLabel = item.play_party
-        ? 'Play Party'
-        : item.is_munch
-            ? 'Munch'
-            : item.type && item.type !== 'event'
-                ? typeLabelMap[item.type] || item.type.replace(/_/g, ' ')
-                : 'Event';
+    const resolvedType = item.play_party || item.type === 'play_party'
+        ? 'play_party'
+        : item.is_munch || item.type === 'munch'
+            ? 'munch'
+            : item.type && isActiveEventType(item.type)
+                ? item.type
+                : FALLBACK_EVENT_TYPE;
+    const primaryTypeLabel = typeLabelMap[resolvedType] || resolvedType.replace(/_/g, ' ');
 
     const extraTags = [...(item.classification?.tags || []), ...(item.tags || [])];
     const normalizedTypeLabel = primaryTypeLabel.trim().toLowerCase();
@@ -81,7 +85,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         extraTags
             .map(tag => tag.trim())
             .find(tag => tag && tag.toLowerCase() !== normalizedTypeLabel) || '';
-    const displayTypeLabel = primaryTypeLabel === 'Event' ? '' : primaryTypeLabel;
+    const displayTypeLabel = resolvedType === FALLBACK_EVENT_TYPE ? '' : primaryTypeLabel;
     const typeTagLabel = displayTypeLabel
         ? (primaryTagLabel ? `${displayTypeLabel} | ${primaryTagLabel}` : displayTypeLabel)
         : primaryTagLabel;
