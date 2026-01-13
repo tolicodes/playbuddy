@@ -165,7 +165,7 @@ export async function upsertEvent(
     if (!normalizedEvent.end_date && normalizedEvent.start_date) {
         const start = new Date(normalizedEvent.start_date);
         if (!Number.isNaN(start.getTime())) {
-            normalizedEvent.end_date = new Date(start.getTime() + 3 * 60 * 60 * 1000).toISOString();
+            normalizedEvent.end_date = new Date(start.getTime() + 4 * 60 * 60 * 1000).toISOString();
         }
     }
 

@@ -26,7 +26,7 @@ export default function EventsListScreen() {
     const { data: events = [], isLoading: loadingEvents, error: errorEvents } = useFetchEvents({
         includeFacilitatorOnly: true,
     });
-    const { data: organizers = [], isLoading: loadingOrganizers } = useFetchOrganizers();
+    const { data: organizers = [], isLoading: loadingOrganizers, error: errorOrganizers } = useFetchOrganizers();
 
     const [search, setSearch] = useState('');
     const [selectedOrganizerId, setSelectedOrganizerId] = useState<string | null>(null);
@@ -42,7 +42,7 @@ export default function EventsListScreen() {
             ? events.filter((e) => e.organizer?.id + '' === selectedOrganizerId)
             : [];
 
-    if (loadingEvents || loadingOrganizers) return <CircularProgress />;
+    if (loadingEvents) return <CircularProgress />;
     if (errorEvents) return <Typography color="error">Failed to load events</Typography>;
 
     return (
@@ -71,6 +71,13 @@ export default function EventsListScreen() {
                     Import from URLs
                 </Button>
 
+                <Button
+                    variant="outlined"
+                    onClick={() => navigate('/events/duplicates')}
+                >
+                    Find Duplicates
+                </Button>
+
                 <TextField
                     fullWidth
                     label="Search Organizer"
@@ -80,7 +87,15 @@ export default function EventsListScreen() {
                         setSelectedOrganizerId(null);
                     }}
                     sx={{ mt: 2 }}
-                    disabled={showAllEvents}
+                    disabled={showAllEvents || loadingOrganizers || Boolean(errorOrganizers)}
+                    error={Boolean(errorOrganizers)}
+                    helperText={
+                        errorOrganizers
+                            ? 'Failed to load organizers'
+                            : loadingOrganizers
+                                ? 'Loading organizers...'
+                                : undefined
+                    }
                 />
 
                 <FormControlLabel
@@ -97,7 +112,7 @@ export default function EventsListScreen() {
                     label="Show all events"
                 />
 
-                {!showAllEvents && search && !selectedOrganizerId && (
+                {!showAllEvents && !loadingOrganizers && !errorOrganizers && search && !selectedOrganizerId && (
                     <Box sx={{ mt: 1, border: '1px solid #ccc', borderRadius: 2, maxHeight: 200, overflowY: 'auto' }}>
                         {filteredOrganizers.map((org) => (
                             <Box
@@ -133,6 +148,8 @@ export default function EventsListScreen() {
                     <EventsTable
                         events={filteredEvents}
                         actionsHeader="Edit"
+                        enableTypeEditor
+                        enableHorizontalScroll
                         renderActions={(event) => (
                             <IconButton onClick={() => setEditingEvent(event)}>
                                 <Edit />

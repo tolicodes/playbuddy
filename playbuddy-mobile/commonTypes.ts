@@ -117,7 +117,7 @@ export interface Event extends EventDataSource {
      */
     tags?: string[];
     /**
-     * The type of the event (event or retreat)
+     * The type of the event (workshop, munch, play_party, festival, conference, retreat; legacy: event, performance, discussion)
      */
     type: EventTypes;
     /**
@@ -221,6 +221,56 @@ export interface Event extends EventDataSource {
 
     hosts?: string[];
 }
+
+export type EventDuplicateMode = 'heuristic' | 'ai' | 'hybrid';
+
+export type EventDuplicateAiResult = {
+    decision: 'duplicate' | 'not_duplicate' | 'unsure';
+    confidence: number | null;
+    rationale?: string | null;
+};
+
+export type EventDuplicateCandidate = {
+    eventA: Event;
+    eventB: Event;
+    score: number;
+    reasons: string[];
+    ai?: EventDuplicateAiResult | null;
+};
+
+export type EventDuplicateRequest = {
+    startDate?: string;
+    endDate?: string;
+    maxHoursApart?: number;
+    minScore?: number;
+    limit?: number;
+    mode?: EventDuplicateMode;
+    includeHidden?: boolean;
+    includePrivate?: boolean;
+    includeUnapproved?: boolean;
+};
+
+export type EventDuplicateResponse = {
+    generatedAt: string;
+    totalCandidates: number;
+    mode: EventDuplicateMode;
+    candidates: EventDuplicateCandidate[];
+    warnings?: string[];
+};
+
+export type MergeEventRequest = {
+    sourceEventId: number;
+    targetEventId: number;
+    deleteSource?: boolean;
+    preferSource?: boolean;
+};
+
+export type MergeEventResponse = {
+    merged_from: number;
+    merged_into: number;
+    event: Event;
+    warnings?: { table: string; message: string }[];
+};
 
 // Scrape job/task tracking
 export type ScrapeJobRecord = {
@@ -446,15 +496,25 @@ export type Community = {
     join_code?: string | null;
 }
 
-export type EventTypes =
-    'event' |
-    'play_party' |
-    'munch' |
-    'retreat' |
-    'festival' |
-    'workshop' |
-    'performance' |
-    'discussion'
+export const ACTIVE_EVENT_TYPES = [
+    'workshop',
+    'munch',
+    'play_party',
+    'festival',
+    'conference',
+    'retreat',
+] as const;
+
+export const LEGACY_EVENT_TYPES = [
+    'event',
+    'performance',
+    'discussion',
+] as const;
+
+export type ActiveEventType = (typeof ACTIVE_EVENT_TYPES)[number];
+export type LegacyEventType = (typeof LEGACY_EVENT_TYPES)[number];
+
+export type EventTypes = ActiveEventType | LegacyEventType;
 
 export type ImportMethod = 'chrome_scraper' | 'eb_scraper' | 'ai_scraper';
 export type IdentifierType = 'handle' | 'url';

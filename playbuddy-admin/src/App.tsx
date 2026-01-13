@@ -15,6 +15,7 @@ import ImportCSVScreen from "./pages/Events/ImportCSVScreen";
 import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
 import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 import ImportEventURLsScreen from "./pages/Events/ImportEventURLsScreen";
+import EventDuplicatesScreen from "./pages/Events/EventDuplicatesScreen";
 import { supabaseClient } from "./lib/supabaseClient";
 import JobsScreen from "./pages/Jobs/JobsScreen";
 import VisualizerScreen from "./pages/Visualizer/VisualizerScreen";
@@ -22,6 +23,7 @@ import ImportSourcesScreen from "./pages/ImportSources/ImportSourcesScreen";
 import OrganizerManager from "./pages/Organizers/OrganizerManager";
 import EventPopupsScreen from "./pages/EventPopups/EventPopupsScreen";
 import PushNotificationsScreen from "./pages/PushNotifications/PushNotificationsScreen";
+import BranchStatsScreen from "./pages/BranchStats/BranchStatsScreen";
 
 // ---------- Global axios auth (no instances) ----------
 let axiosAuthInitialized = false;
@@ -150,16 +152,19 @@ export default function App() {
   // Tabs: map + prefix-match so /events/:id stays selected
   const tabRoutes = [
     "/weekly-picks",
+    "/events/import-urls",
     "/events",
     "/promo-codes",
     "/deep-links",
+    "/branch-stats",
     "/event-popups",
     "/push-notifications",
     "/facilitators",
     "/print-runs",
-    "/events/import-urls",
     "/jobs",
     "/visualizer",
+    "/import-sources",
+    "/organizers/manage",
   ];
 
   const currentTabIndex = tabRoutes.findIndex(
@@ -187,6 +192,7 @@ export default function App() {
             <Tab label="Events" component={RouterLink} to="/events" />
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
             <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
+            <Tab label="Branch Stats" component={RouterLink} to="/branch-stats" />
             <Tab label="Popups" component={RouterLink} to="/event-popups" />
             <Tab label="Push" component={RouterLink} to="/push-notifications" />
             <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
@@ -203,6 +209,7 @@ export default function App() {
         <Route path="/login" element={<LoginScreen />} />
         <Route path="/weekly-picks" element={<WeeklyPicks />} />
         <Route path="/events" element={<EventsListScreen />} />
+        <Route path="/events/duplicates" element={<EventDuplicatesScreen />} />
         <Route path="/events/add" element={<AddEventScreen />} />
         <Route path="/events/:id" element={<AddEventScreen />} />
         <Route path="/events/import-csv" element={<ImportCSVScreen />} />
@@ -214,6 +221,7 @@ export default function App() {
         <Route path="/promo-codes" element={<PromoCodeEventManager />} />
         <Route path="/deep-links" element={<DeepLinksListScreen />} />
         <Route path="/deep-links/new" element={<EditDeepLinkScreen />} />
+        <Route path="/branch-stats" element={<BranchStatsScreen />} />
         <Route path="/event-popups" element={<EventPopupsScreen />} />
         <Route path="/push-notifications" element={<PushNotificationsScreen />} />
         <Route path="/jobs" element={<JobsScreen />} />

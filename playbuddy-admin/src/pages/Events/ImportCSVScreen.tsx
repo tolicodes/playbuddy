@@ -27,7 +27,7 @@ import { useUpdateMunch } from '../../common/db-axios/useMunches';
 import { useFetchMunches } from '../../common/db-axios/useMunches';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useImportSources } from '../../common/db-axios/useImportSources';
-import { Munch, Event } from '../../common/types/commonTypes';
+import { Munch, Event, EventTypes, NormalizedEventInput } from '../../common/types/commonTypes';
 
 const FETLIFE_URL = 'https://fetlife.com';
 
@@ -237,16 +237,18 @@ export default function ImportCSVScreen() {
 
   const handleCreateAll = async () => {
     for (const [, handleEvents] of Object.entries(groupedEvents)) {
-      const createEventsInput = []
+      const createEventsInput: NormalizedEventInput[] = []
       for (const event of handleEvents) {
         const key = `${event.name}_${event.start_date}`;
         if (excluded[key]) continue;
 
         const isMunch = !!isMunchOverride[key];
+        const isPlayPartyEvent = !!isPlayParty[key];
         const munch = isMunch ? event.munch : undefined;
         const organizerId = munch?.organizer_id;
 
         const sourceType = event.fetlife_handle ? 'fetlife' : 'instagram';
+        const eventType: EventTypes = isMunch ? 'munch' : isPlayPartyEvent ? 'play_party' : 'event';
 
         const commonProps = {
           name: event.name,
@@ -256,10 +258,10 @@ export default function ImportCSVScreen() {
           ticket_url: event.ticket_url,
           event_url: event.ticket_url,
           location: event.location,
-          type: isMunch ? 'munch' : 'event' as 'munch' | 'event',
+          type: eventType,
           ...(isMunch && { munch_id: munch?.id }),
           is_munch: isMunch,
-          is_play_party: !!isPlayParty[key],
+          play_party: isPlayPartyEvent,
           image_url: event.image_url,
 
           // @ts-ignore
