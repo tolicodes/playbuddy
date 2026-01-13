@@ -86,7 +86,7 @@ async function appendProgress(msg: string) {
         } else {
             runs.unshift({ runId: activeRunId, startedAt: Date.now(), entries: [entry] });
         }
-        const capped = runs.slice(0, 8);
+        const capped = runs.slice(0, 50);
         await chrome.storage.local.set({ [PROGRESS_KEY]: capped });
     } catch (err) {
         console.warn('Failed to persist progress', err);

@@ -1,140 +1,634 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Playbuddy FetLife Scraper</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Playbuddy Scraper Console</title>
     <style>
-      body {
-        font-family: "Inter", system-ui, -apple-system, sans-serif;
-        padding: 20px;
-        width: 800px; /* 800 is near Chrome’s popup max */
-        max-width: 800px; /* wider */
-        background: radial-gradient(circle at 20% 20%, rgba(96,165,250,0.07), transparent 35%),
-                    radial-gradient(circle at 80% 10%, rgba(16,185,129,0.07), transparent 30%),
-                    #0b1220;
-        color: #e5e7eb;
+      :root {
+        color-scheme: light;
+        --bg: #f5efe6;
+        --bg-soft: #fbf7f1;
+        --card: #fffdf8;
+        --border: #dbcbb4;
+        --ink: #1f2937;
+        --muted: #5f6b6a;
+        --accent: #0f766e;
+        --accent-2: #f97316;
+        --accent-3: #2563eb;
+        --shadow: 0 14px 26px rgba(15, 23, 42, 0.08);
       }
 
-      h1 {
-        font-size: 1.75em;
-        margin-bottom: 12px;
-        letter-spacing: -0.02em;
-      }
-
-      #log {
-        margin-top: 20px;
-        padding: 10px;
-        border: 1px solid var(--border);
-        background: #0c1626;
-        color: #e5e7eb;
-        height: 200px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        font-family: "SFMono-Regular", Consolas, monospace;
-        font-size: 13px;
-      }
-
-      input,
-      button {
-        margin-top: 10px;
-        padding: 10px 12px;
-        font-size: 1em;
-        border-radius: 10px;
-        border: 1px solid #1f2a3d;
-        background: linear-gradient(120deg, #3b82f6, #22c55e);
-        color: white;
-        font-weight: 600;
-        cursor: pointer;
-        transition: filter 0.2s ease;
-      }
-      button:hover { filter: brightness(1.05); }
-
-      input[type="text"] {
-        width: 100%;
+      * {
         box-sizing: border-box;
       }
 
-      #apiStatus {
-        margin-left: 10px;
-        font-size: 0.9em;
-        color: #666;
+      body {
+        margin: 0;
+        font-family: "Avenir Next", "Avenir", "Trebuchet MS", sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 15% 15%, rgba(15, 118, 110, 0.12), transparent 40%),
+          radial-gradient(circle at 90% 10%, rgba(249, 115, 22, 0.15), transparent 35%),
+          linear-gradient(180deg, #f7f2ea 0%, #f2e8da 100%);
+        min-height: 100vh;
       }
 
-      #tableOutput a {
+      .page {
+        max-width: 1200px;
+        margin: 24px auto 40px;
+        padding: 0 18px 32px;
+      }
+
+      .hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+
+      .eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      h1 {
+        margin: 6px 0 4px;
+        font-size: 2.1rem;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.98rem;
+        max-width: 520px;
+      }
+
+      .grid {
+        margin-top: 22px;
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 16px 18px;
+        box-shadow: var(--shadow);
+        animation: fadeUp 0.55s ease both;
+        animation-delay: var(--delay, 0s);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .card h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        letter-spacing: -0.01em;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        background: #f4efe5;
+        border: 1px solid var(--border);
+      }
+
+      .badge[data-state="saved"] {
+        background: #e6f6ee;
+        border-color: #86efac;
+        color: #166534;
+      }
+
+      .badge[data-state="empty"] {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #991b1b;
+      }
+
+      label {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      input,
+      select {
+        width: 100%;
+        font-family: inherit;
+        font-size: 0.95rem;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--ink);
+      }
+
+      input[type="file"] {
+        padding: 8px 10px;
+        background: var(--bg-soft);
+      }
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+      }
+
+      button {
+        border: none;
+        background: linear-gradient(120deg, var(--accent), var(--accent-2));
         color: #fff;
-        text-decoration: underline;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(15, 23, 42, 0.2);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .input-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .input-row input {
+        flex: 1;
+      }
+
+      .settings-grid {
+        display: grid;
+        gap: 14px;
+      }
+
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 0;
+        font-size: 0.9rem;
+      }
+
+      .hint {
+        margin-top: 6px;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .action-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+      }
+
+      .action-group {
+        background: var(--bg-soft);
+        border: 1px dashed var(--border);
+        border-radius: 14px;
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .action-group h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .button-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+      }
+
+      .inline-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .inline-row input[type="text"],
+      .inline-row input[type="file"] {
+        flex: 1;
+        min-width: 220px;
+      }
+
+      .log-pane {
+        background: #101828;
+        color: #e2e8f0;
+        border-radius: 12px;
+        padding: 12px;
+        height: 240px;
+        overflow-y: auto;
+        font-family: "SF Mono", "Menlo", "Consolas", monospace;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .log-line {
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      }
+
+      .log-line:last-child {
+        border-bottom: none;
+      }
+
+      .log-time {
+        color: #94a3b8;
+        margin-right: 6px;
+      }
+
+      .run-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 360px;
+        overflow-y: auto;
+      }
+
+      .run-row {
+        text-align: left;
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 12px;
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+
+      .run-row:hover {
+        transform: translateY(-1px);
+      }
+
+      .run-row.active {
+        border-color: var(--accent);
+        box-shadow: 0 10px 18px rgba(15, 118, 110, 0.2);
+      }
+
+      .run-row-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .run-source {
+        font-weight: 600;
+      }
+
+      .status {
+        font-size: 0.74rem;
+        padding: 3px 8px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #f3f4f6;
+        color: #374151;
+      }
+
+      .status.success {
+        background: #e6f6ee;
+        border-color: #86efac;
+        color: #166534;
+      }
+
+      .status.error {
+        background: #fff1f2;
+        border-color: #fecdd3;
+        color: #991b1b;
+      }
+
+      .status.neutral {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        color: #4b5563;
+      }
+
+      .run-row-meta {
+        margin-top: 4px;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .meta-item {
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #f5efe6;
+        font-size: 0.85rem;
+      }
+
+      .meta-item span {
+        display: block;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 2px;
+      }
+
+      .skip-section {
+        margin: 10px 0 14px;
+      }
+
+      .skip-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+
+      .skip-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .skip-pill {
+        padding: 4px 8px;
+        border-radius: 999px;
+        border: 1px solid #fdba74;
+        background: #fff7ed;
+        color: #9a3412;
+        font-size: 0.78rem;
+      }
+
+      .table-wrapper {
+        border: 1px solid var(--border);
+        background: #fff;
+        border-radius: 12px;
+        overflow: auto;
+      }
+
+      .status-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+
+      .status-table th,
+      .status-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+      }
+
+      .status-table th {
+        background: #f5efe6;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      .status-table tr:nth-child(even) td {
+        background: #fbf7f1;
+      }
+
+      .status-table-link {
+        color: var(--accent-3);
+      }
+
+      .span-5 { grid-column: span 5; }
+      .span-7 { grid-column: span 7; }
+      .span-12 { grid-column: span 12; }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      @media (max-width: 1000px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .span-5,
+        .span-7,
+        .span-12 {
+          grid-column: 1 / -1;
+        }
+        .hero {
+          align-items: flex-start;
+        }
       }
     </style>
   </head>
   <body>
-    <h1>Scraper</h1>
+    <div class="page">
+      <header class="hero">
+        <div>
+          <div class="eyebrow">Playbuddy Scraper Console</div>
+          <h1>Scraper Control Center</h1>
+          <p class="subtitle">Organized runs, saved logs, and previews in one place.</p>
+        </div>
+      </header>
 
-    <!-- API Key -->
-    <label for="apiKey">API Key</label>
-    <input id="apiKey" type="text" placeholder="Enter your API key" />
-    <button id="saveApiKey">Save</button>
-    <span id="apiStatus"></span>
-    <div style="margin-top:10px; max-width:320px;">
-      <label for="apiEnv">API Environment</label>
-      <select id="apiEnv" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid #1f2a3d; background:#0c1626; color:#e5e7eb;">
-        <option value="local">Local (http://localhost:8080)</option>
-        <option value="prod">Production (https://api.playbuddy.me)</option>
-      </select>
+      <main class="grid">
+        <section class="card span-5" style="--delay: 0.05s;">
+          <div class="card-header">
+            <div>
+              <h2>Settings</h2>
+              <p class="muted">Credentials, environment, and run behavior.</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <div>
+              <label for="apiKey">API key</label>
+              <div class="input-row">
+                <input id="apiKey" type="text" placeholder="Enter your API key" />
+                <button id="saveApiKey">Save key</button>
+              </div>
+              <div class="hint">Status: <span id="apiStatus" class="badge" data-state="empty">Not saved</span></div>
+            </div>
+
+            <div>
+              <label for="apiEnv">API environment</label>
+              <select id="apiEnv">
+                <option value="local">Local (http://localhost:8080)</option>
+                <option value="prod">Production (https://api.playbuddy.me)</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Run rules</label>
+              <div class="toggle">
+                <input id="testMode" type="checkbox" />
+                <span>Test mode (limits runs and shortens delays)</span>
+              </div>
+              <div class="toggle">
+                <input id="skipOverwrite" type="checkbox" />
+                <span>Do not overwrite existing events</span>
+              </div>
+              <div class="toggle">
+                <input id="autoFetlife" type="checkbox" />
+                <span>Auto-run FetLife and Festivals every 12 hours</span>
+              </div>
+              <div class="toggle">
+                <input id="autoFetlifeNearby" type="checkbox" />
+                <span>Auto-run FetLife Nearby (API) every 12 hours</span>
+              </div>
+            </div>
+
+            <div>
+              <label for="maxEvents">Max events to scrape</label>
+              <input id="maxEvents" type="number" min="1" step="1" placeholder="1000" />
+              <div class="hint">Leave blank to use the default.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card span-7" style="--delay: 0.1s;">
+          <div class="card-header">
+            <div>
+              <h2>Run Controls</h2>
+              <p class="muted">Grouped by source for quick reporting.</p>
+            </div>
+          </div>
+
+          <div class="action-grid">
+            <div class="action-group">
+              <h3>FetLife core</h3>
+              <p class="muted">Events and festivals.</p>
+              <div class="button-grid">
+                <button id="startFetlife">Run FetLife events</button>
+                <button id="startFetlifeFestivals">Run FetLife festivals</button>
+              </div>
+            </div>
+
+            <div class="action-group">
+              <h3>FetLife nearby</h3>
+              <p class="muted">Nearby events with pending approvals.</p>
+              <div class="button-grid">
+                <button id="startFetlifeNearby">Run nearby (HTML)</button>
+                <button id="startFetlifeNearbyApi">Run nearby (API)</button>
+              </div>
+            </div>
+
+            <div class="action-group">
+              <h3>FetLife friends pipeline</h3>
+              <p class="muted">Stage 1 counts, stage 2 handle scrape.</p>
+              <div class="button-grid">
+                <button id="startFetlifeFriendsStage1">Stage 1: friends counts</button>
+                <button id="startFetlifeFriendsApiStage1">Stage 1: friends API</button>
+              </div>
+              <div class="inline-row">
+                <input id="stage2File" type="file" accept="application/json" />
+                <button id="startFetlifeFriendsStage2">Stage 2: uploaded handles (HTML)</button>
+                <button id="startFetlifeFriendsApiStage2">Stage 2: uploaded handles (API)</button>
+              </div>
+              <div class="inline-row">
+                <input id="singleFetlifeHandle" type="text" placeholder="Enter one FetLife handle (e.g. Queens_Kinksters)" />
+                <button id="startSingleFetlifeHandle">Run single handle</button>
+              </div>
+            </div>
+
+            <div class="action-group">
+              <h3>Other sources</h3>
+              <div class="button-grid">
+                <button id="startInstagram">Run Instagram</button>
+                <button id="startTicketTailor">Run TicketTailor</button>
+                <button id="startPluraPromoStats">Run Plura promo stats</button>
+              </div>
+            </div>
+
+            <div class="action-group">
+              <h3>Ops tools</h3>
+              <div class="button-grid">
+                <button id="startBranchStats">Run branch stats</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card span-7" style="--delay: 0.15s;">
+          <div class="card-header">
+            <div>
+              <h2>Live log</h2>
+              <p class="muted">Streaming output, auto-saved to each run.</p>
+            </div>
+          </div>
+          <div id="log" class="log-pane"></div>
+        </section>
+
+        <section class="card span-5" style="--delay: 0.2s;">
+          <div class="card-header">
+            <div>
+              <h2>Run history</h2>
+              <p class="muted">Select a run to view saved logs.</p>
+            </div>
+          </div>
+          <div id="runLogs" class="run-list"></div>
+        </section>
+
+        <section class="card span-7" style="--delay: 0.25s;">
+          <div class="card-header">
+            <div>
+              <h2>Run details</h2>
+              <p class="muted">Full log and summary for the selected run.</p>
+            </div>
+            <span id="runDetailTitle" class="badge">No run selected</span>
+          </div>
+          <div id="runDetailMeta" class="meta-grid"></div>
+          <div class="skip-section">
+            <div class="skip-title">Skipped by reason</div>
+            <div id="runDetailSkipReasons" class="skip-list"></div>
+          </div>
+          <div id="runDetailLog" class="log-pane"></div>
+        </section>
+
+        <section class="card span-12" style="--delay: 0.3s;">
+          <div class="card-header">
+            <div>
+              <h2>Run table preview</h2>
+              <p class="muted">Table captured for the selected run.</p>
+            </div>
+            <span id="runTableLabel" class="badge">No run selected</span>
+          </div>
+          <div id="tableOutput" class="table-wrapper"></div>
+        </section>
+      </main>
     </div>
-
-    <div style="margin-top:12px;">
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
-        <input id="testMode" type="checkbox" style="width:16px; height:16px; accent-color:#22c55e;" />
-        <span>Test mode (limits runs and shortens delays)</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
-        <input id="skipOverwrite" type="checkbox" style="width:16px; height:16px; accent-color:#22c55e;" />
-        <span>Do not overwrite existing events</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
-        <input id="autoFetlife" type="checkbox" style="width:16px; height:16px; accent-color:#22c55e;" />
-        <span>Auto-run Fetlife + Festivals every 12h</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
-        <input id="autoFetlifeNearby" type="checkbox" style="width:16px; height:16px; accent-color:#22c55e;" />
-        <span>Auto-run Fetlife Nearby (API) every 12h</span>
-      </label>
-      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-top:6px;">
-        <span style="white-space:nowrap;">Max events to scrape</span>
-        <input id="maxEvents" type="number" min="1" step="1" placeholder="1000" style="width:120px; color:#0b1220; background:#e5e7eb; border-radius:6px; padding:6px 8px; border:1px solid #1f2a3d;" />
-      </label>
-    </div>
-
-    <!-- Actions -->
-    <div style="margin-top: 18px;">
-      <button id="startFetlife">Start Fetlife</button>
-      <button id="startFetlifeNearby">Start Fetlife Nearby</button>
-      <button id="startFetlifeNearbyApi">Start Fetlife Nearby (API)</button>
-      <button id="startFetlifeFestivals">Start Fetlife Festivals</button>
-      <button id="startFetlifeFriendsStage1">Stage 1: Fetlife Friends (Counts)</button>
-      <button id="startFetlifeFriendsApiStage1">Stage 1: Fetlife Friends (API)</button>
-      <button id="startInstagram">Start Instagram</button>
-      <button id="startTicketTailor">Start TicketTailor</button>
-      <button id="startPluraPromoStats">Start Plura Promo Stats</button>
-
-      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <input id="stage2File" type="file" accept="application/json" style="background:#0c1626; color:#e5e7eb; border-radius:6px; padding:6px; border:1px solid #1f2937;" />
-        <button id="startFetlifeFriendsStage2">Stage 2: Scrape Uploaded Handles (HTML)</button>
-        <button id="startFetlifeFriendsApiStage2">Stage 2: Scrape Uploaded Handles (API)</button>
-      </div>
-
-      <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <input id="singleFetlifeHandle" type="text" placeholder="Enter one Fetlife handle (e.g. Queens_Kinksters)" style="background:#0c1626; color:#e5e7eb; border-radius:6px; padding:10px 12px; border:1px solid #1f2937; flex:1; min-width:260px;" />
-        <button id="startSingleFetlifeHandle">Scrape Single Handle</button>
-      </div>
-    </div>
-
-    <div id="log"></div>
-
-    <h2 style="margin-top:24px;">Latest Upload Preview</h2>
-    <div id="tableOutput" style="margin-top:8px; border:1px solid #ccc; padding:10px; background:#0f172a20; overflow:auto; color:#e5e7eb;"></div>
-
-    <h2 style="margin-top:24px;">Run History</h2>
-    <div id="runLogs" style="margin-top:8px; border:1px solid #ccc; padding:10px; background:#0f172a20;"></div>
 
     <script type="module" src="./options.js"></script>
   </body>

@@ -1,4 +1,4 @@
-import type { ImportSource } from './common/types/commonTypes.js';
+import type { ImportSource } from './common/types/types/commonTypes.js';
 import { getApiBase } from './config.js';
 
 const LS_KEY = 'PLAYBUDDY_API_KEY';

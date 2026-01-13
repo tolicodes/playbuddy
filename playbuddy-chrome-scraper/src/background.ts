@@ -1,12 +1,12 @@
-import type { EventTypes, NormalizedEventInput } from './common/types/commonTypes';
+import type { EventTypes, NormalizedEventInput } from './common/types/types/commonTypes';
 import * as fetlife from './providers/fetlife';
 import { scrapeBySource, type ScrapeSource } from './scrapeRouter';
 import type { EventResult } from './types';
-import { postStatus, setActiveRunId, resetLiveLog } from './utils';
+import { postStatus, setActiveRunId, resetLiveLog, sleep } from './utils';
 import { getApiBase, AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY } from './config.js';
 import { fetchImportSources } from './data.js';
 
-type ScrapeAction = 'scrapeSingleSource' | 'setStage2Handles';
+type ScrapeAction = 'scrapeSingleSource' | 'setStage2Handles' | 'branchStatsScrape';
 type DoScrapeOpts = {
     scrapeFn?: () => Promise<EventResult[]>;
     approvalStatus?: 'pending' | 'approved' | 'rejected';
@@ -17,7 +17,7 @@ type DoScrapeOpts = {
 
 interface ScrapeMessage {
     action: ScrapeAction;
-    source: string;
+    source?: string;
     handles?: string[];
 }
 
@@ -31,6 +31,7 @@ const RUN_LOG_KEY = 'PB_SCRAPE_LOGS';
 const FETLIFE_HISTORY_KEY = 'PB_FETLIFE_HISTORY';
 const SKIP_OVERWRITE_KEY = 'PB_SKIP_OVERWRITE';
 const TABLE_LOG_KEY = 'PB_TABLE_HTML';
+const TABLE_LOGS_KEY = 'PB_TABLE_LOGS';
 
 type RunLogEntry = {
     id: string;
@@ -39,11 +40,46 @@ type RunLogEntry = {
     endedAt: number;
     durationMs: number;
     eventCount: number;
+    skippedCount?: number;
+    skippedByReason?: Record<string, number>;
     status: 'success' | 'error';
     error?: string;
     uploaded?: boolean;
     filename?: string;
 };
+
+type RunTableEntry = {
+    runId: string;
+    source: ScrapeSource;
+    html: string;
+    updatedAt: number;
+};
+
+type BranchStatsScrapeDebug = {
+    apiRoot?: string;
+    dataDir?: string;
+    scriptPath?: string;
+    scriptRunner?: string;
+    scriptExists?: boolean;
+    cwd?: string;
+    nodeVersion?: string;
+    hasBranchEmail?: boolean;
+    hasBranchPassword?: boolean;
+};
+
+type BranchStatsScrapeStatus = {
+    status: 'idle' | 'running' | 'completed' | 'failed';
+    startedAt?: string | null;
+    finishedAt?: string | null;
+    progress?: { processed: number; total?: number | null } | null;
+    lastLog?: string | null;
+    error?: string | null;
+    debug?: BranchStatsScrapeDebug | null;
+};
+
+const BRANCH_STATS_POLL_MS = 2000;
+const BRANCH_STATS_MAX_POLLS = 1800;
+let branchStatsRunning = false;
 
 type FetlifeRun = RunLogEntry & {
     events: Array<Pick<EventResult,
@@ -184,6 +220,141 @@ async function setTableLog(html: string) {
     }
 }
 
+async function saveRunTable(runId: string, source: ScrapeSource, html: string) {
+    try {
+        const { [TABLE_LOGS_KEY]: existing = [] } = await chrome.storage.local.get(TABLE_LOGS_KEY);
+        const next = [
+            { runId, source, html, updatedAt: Date.now() },
+            ...(existing as RunTableEntry[]).filter(entry => entry?.runId !== runId),
+        ].slice(0, 25);
+        await chrome.storage.local.set({ [TABLE_LOGS_KEY]: next });
+    } catch (err) {
+        console.warn('Failed to persist run table', err);
+    }
+}
+
+async function readJsonSafe(res: Response): Promise<{ json: any | null; text: string }> {
+    const text = await res.text();
+    try {
+        return { json: JSON.parse(text), text };
+    } catch {
+        return { json: null, text };
+    }
+}
+
+async function fetchBranchStatsStatus(apiBase: string, apiKey: string): Promise<BranchStatsScrapeStatus | null> {
+    try {
+        const res = await fetch(`${apiBase}/branch_stats/scrape/status`, {
+            headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        const { json, text } = await readJsonSafe(res);
+        if (!res.ok) {
+            postStatus(`❌ Branch status error (${res.status}): ${text.slice(0, 200)}`);
+            return null;
+        }
+        return json as BranchStatsScrapeStatus;
+    } catch (err: any) {
+        postStatus(`❌ Branch status fetch failed: ${err?.message || err}`);
+        return null;
+    }
+}
+
+async function runBranchStatsScrape() {
+    if (branchStatsRunning) {
+        postStatus('⚠️ Branch stats scrape already running.');
+        return;
+    }
+    branchStatsRunning = true;
+    const runId = `branch-stats-${Date.now()}`;
+    setActiveRunId(runId);
+    await resetLiveLog();
+    postStatus(`🚀 Starting branch stats scrape (${runId})`);
+
+    try {
+        const apiBase = await getApiBase();
+        postStatus(`DEBUG Branch API base: ${apiBase}`);
+        const apiKey = await getApiKey();
+        if (!apiKey) {
+            postStatus('❌ Missing API key. Save it in the extension options.');
+            return;
+        }
+
+        const startRes = await fetch(`${apiBase}/branch_stats/scrape`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${apiKey}` },
+        });
+        const { json: startJson, text: startText } = await readJsonSafe(startRes);
+
+        if (!startRes.ok && startRes.status !== 409) {
+            postStatus(`❌ Branch scrape start failed (${startRes.status}): ${startText.slice(0, 200)}`);
+            return;
+        }
+
+        if (startRes.status === 409) {
+            postStatus('⚠️ Branch stats scrape already running. Watching progress...');
+        } else {
+            postStatus('✅ Branch stats scrape started.');
+        }
+
+        let lastProcessed = -1;
+        let lastLog = '';
+        let lastDebug = '';
+        const reportStatus = (status: BranchStatsScrapeStatus | null) => {
+            if (!status) return;
+            const progress = status.progress;
+            if (progress && progress.processed !== lastProcessed) {
+                const total = progress.total ? `/${progress.total}` : '';
+                postStatus(`📊 Branch progress: ${progress.processed}${total}`);
+                lastProcessed = progress.processed;
+            }
+            if (status.lastLog && status.lastLog !== lastLog) {
+                postStatus(`🧾 ${status.lastLog}`);
+                lastLog = status.lastLog;
+            }
+            if (status.debug) {
+                const d = status.debug;
+                const nextDebug = [
+                    `DEBUG apiRoot=${d.apiRoot ?? ''}`,
+                    `dataDir=${d.dataDir ?? ''}`,
+                    `scriptPath=${d.scriptPath ?? ''}`,
+                    `scriptRunner=${d.scriptRunner ?? ''}`,
+                    `scriptExists=${d.scriptExists ?? ''}`,
+                    `node=${d.nodeVersion ?? ''}`,
+                    `hasBranchEmail=${d.hasBranchEmail ?? false}`,
+                    `hasBranchPassword=${d.hasBranchPassword ?? false}`,
+                ].join(' ');
+                if (nextDebug.trim() && nextDebug !== lastDebug) {
+                    postStatus(nextDebug);
+                    lastDebug = nextDebug;
+                }
+            }
+        };
+
+        if (startJson) reportStatus(startJson as BranchStatsScrapeStatus);
+
+        for (let i = 0; i < BRANCH_STATS_MAX_POLLS; i++) {
+            const status = await fetchBranchStatsStatus(apiBase, apiKey);
+            if (!status) return;
+            reportStatus(status);
+            if (status.status !== 'running') {
+                if (status.status === 'completed') {
+                    postStatus('✅ Branch stats scrape completed.');
+                } else if (status.status === 'failed') {
+                    postStatus(`❌ Branch stats scrape failed: ${status.error || 'Unknown error'}`);
+                }
+                return;
+            }
+            await sleep(BRANCH_STATS_POLL_MS);
+        }
+        postStatus('⚠️ Branch stats scrape polling timed out.');
+    } catch (err: any) {
+        postStatus(`❌ Branch stats scrape error: ${err?.message || err}`);
+    } finally {
+        branchStatsRunning = false;
+        setActiveRunId(null);
+    }
+}
+
 type TableRowStatus = 'pending' | 'scraped' | 'skipped';
 type TableRow = {
     organizer?: string | null;
@@ -242,12 +413,23 @@ function buildStatusTable(
         const reason = safe(r.reason || '');
         const type = safe(r.type || '');
         const date = safe(r.date || '');
-        const link = r.url ? `<a href="${r.url}" target="_blank" rel="noreferrer" style="color:#fff;">${name}</a>` : name;
+        const link = r.url ? `<a href="${r.url}" target="_blank" rel="noreferrer" class="status-table-link">${name}</a>` : name;
         const location = safe((r as any).location || '');
         const uploadStatus = safe((r as any).uploadStatus || '');
         return `<tr><td>${date}</td><td>${organizer}</td><td>${link}</td><td>${type}</td><td>${location}</td><td>${uploadStatus}</td><td>${statusLabel(r.status)}</td><td>${reason}</td></tr>`;
     }).join('');
-    return `<table border="1" cellspacing="0" cellpadding="6" style="color:#fff;"><thead><tr><th>Date</th><th>Organizer</th><th>Event</th><th>Type</th><th>Location</th><th>Upload</th><th>Status</th><th>Reason</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    return `<table class="status-table"><thead><tr><th>Date</th><th>Organizer</th><th>Event</th><th>Type</th><th>Location</th><th>Upload</th><th>Status</th><th>Reason</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+}
+
+function computeSkipStats(skipped?: Array<{ reason?: string | null }>) {
+    const byReason: Record<string, number> = {};
+    const items = Array.isArray(skipped) ? skipped : [];
+    items.forEach(entry => {
+        const raw = (entry?.reason || '').trim();
+        const reason = raw || 'unspecified';
+        byReason[reason] = (byReason[reason] || 0) + 1;
+    });
+    return { skippedCount: items.length, skippedByReason: byReason };
 }
 
 const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
@@ -265,6 +447,7 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                 const json = JSON.stringify(events, null, 2);
                 const blobUrl = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
                 const isFriendSource = source.startsWith('fetlifeFriends');
+                let skipStats = { skippedCount: 0, skippedByReason: {} as Record<string, number> };
                 const filenameBase = opts.filenamePrefix || source;
                 const filename = isFriendSource ? `${filenameBase}-friends.json` : `${filenameBase}-events.json`;
                 chrome.downloads.download({ url: blobUrl, filename });
@@ -276,6 +459,7 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                     const approveExisting = opts.approveExisting ?? (source === 'fetlife' && !isNearby);
 
                     const skipped = (events as any)?.skippedLog || [];
+                    skipStats = computeSkipStats(skipped);
                     const tableRows = (events as any)?.tableRows as TableRow[] | undefined;
 
                     const shouldSplit = isNearby;
@@ -305,8 +489,9 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                         });
 
                         const tableHtml = buildStatusTable(events, skipped, tableRowsWithUpload);
+                        await saveRunTable(runId, source, tableHtml);
                         await setTableLog(tableHtml);
-                        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
+                        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml, runId }); } catch {}
 
                         if (pendingEvents.length) {
                             await uploadEvents(pendingEvents, 'pending', { forceSkipExisting: true, approveExisting: false });
@@ -320,8 +505,9 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                         postStatus(`✅ Done! Uploaded ${pendingEvents.length} pending and ${approvedEvents.length} approved nearby events.`);
                     } else {
                         const tableHtml = buildStatusTable(events, skipped, tableRows);
+                        await saveRunTable(runId, source, tableHtml);
                         await setTableLog(tableHtml);
-                        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml }); } catch {}
+                        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml, runId }); } catch {}
                         // Skipped summary intentionally omitted to reduce noise
 
                         await uploadEvents(events, approval_status, { forceSkipExisting, approveExisting });
@@ -339,6 +525,8 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                     endedAt,
                     durationMs: endedAt - startedAt,
                     eventCount: events.length,
+                    skippedCount: skipStats.skippedCount,
+                    skippedByReason: skipStats.skippedByReason,
                     status: 'success',
                     uploaded: !isFriendSource,
                     filename,
@@ -371,6 +559,8 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
                 endedAt,
                 durationMs: endedAt - startedAt,
                 eventCount: 0,
+                skippedCount: 0,
+                skippedByReason: {},
                 status: 'error',
                 error: err?.message || String(err),
                 uploaded: source !== 'fetlifeNearby',
@@ -394,6 +584,10 @@ chrome.runtime.onMessage.addListener((
     (async () => {
         if (msg.action === 'scrapeSingleSource') {
             const { source } = msg;
+            if (!source) {
+                sendResponse({ ok: false });
+                return;
+            }
             if (source === 'fetlifeSingle') {
                 const handles = Array.isArray(msg.handles) ? msg.handles.map(h => (h || '').trim()).filter(Boolean) : [];
                 if (!handles.length) {
@@ -413,6 +607,12 @@ chrome.runtime.onMessage.addListener((
 
             doScrape(source as ScrapeSource);
 
+            sendResponse({ ok: true });
+            return;
+        }
+
+        if (msg.action === 'branchStatsScrape') {
+            runBranchStatsScrape();
             sendResponse({ ok: true });
             return;
         }
