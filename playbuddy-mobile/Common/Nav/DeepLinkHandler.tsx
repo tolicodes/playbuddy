@@ -16,7 +16,7 @@ import branch from 'react-native-branch';
 import URLParse from 'url-parse';
 import * as Clipboard from 'expo-clipboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFetchDeepLinks, useAddDeepLinkToUser } from '../hooks/useDeepLinks';
+import { useFetchDeepLinks, useAddDeepLinkToUser } from '../db-axios/useDeepLinks';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
@@ -31,6 +31,7 @@ export default function DeepLinkHandler() {
     const handledUrls = useRef<Set<string>>(new Set());
     const handledDeepLinks = useRef<Set<string>>(new Set());
     const attributedDeepLinks = useRef<Set<string>>(new Set());
+    const attributedAnonymousSession = useRef(false);
 
     const matchDeepLink = useCallback(
         (url: string): DeepLink | undefined => {
@@ -102,13 +103,19 @@ export default function DeepLinkHandler() {
             });
             console.log('DeepLinkHandler: DeepLinkDetected logged', deepLinkAnalyticsProps);
 
-            if (authUserId) {
-                if (!attributedDeepLinks.current.has(dl.id)) {
+            const shouldAttribute = authUserId
+                ? !attributedDeepLinks.current.has(dl.id)
+                : !attributedAnonymousSession.current;
+
+            if (shouldAttribute) {
+                if (authUserId) {
                     attributedDeepLinks.current.add(dl.id);
                     addDeepLink.mutate(dl.id);
-                    logEvent(UE.DeepLinkAttributed, deepLinkAnalyticsProps);
-                    console.log('DeepLinkHandler: DeepLinkAttributed logged', deepLinkAnalyticsProps);
+                } else {
+                    attributedAnonymousSession.current = true;
                 }
+                logEvent(UE.DeepLinkAttributed, deepLinkAnalyticsProps);
+                console.log('DeepLinkHandler: DeepLinkAttributed logged', deepLinkAnalyticsProps);
             }
         },
         [loadingLinks, authUserId, matchDeepLink, setCurrentDeepLink, addDeepLink],

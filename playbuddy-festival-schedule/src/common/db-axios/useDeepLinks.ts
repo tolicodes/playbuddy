@@ -13,6 +13,18 @@ export const useFetchDeepLinks = () => {
     });
 };
 
+// USER
+export const useAddDeepLinkToUser = () => {
+    return useMutation({
+        mutationFn: async (deepLinkId: string) => {
+            const response = await axios.post(`${API_BASE_URL}/me/deep-link`, {
+                deep_link_id: deepLinkId,
+            });
+            return response.data;
+        }
+    });
+}
+
 // ADMIN
 export const useAddDeepLink = () => {
     return useMutation({

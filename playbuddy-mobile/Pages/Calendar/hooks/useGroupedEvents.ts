@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useFetchEvents } from '../../../Common/db-axios/useEvents';
-import { useFetchDeepLinks } from '../../../Common/hooks/useDeepLinks';
+import { useFetchDeepLinks } from '../../../Common/db-axios/useDeepLinks';
 import { getAvailableOrganizers } from './calendarUtils';
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from './eventHelpers';
 
