@@ -196,6 +196,9 @@ export const UE = {
     NewsletterSignupModalDismissed: 'newsletter_signup_modal_dismissed',
     NewsletterSignupModalOpenSignup: 'newsletter_signup_modal_open_signup',
 
+    // Notifications
+    NotificationsApprovalGranted: 'notifications_approval_granted',
+
     // Munches
     MunchesListNavigateToMunchDetail: 'munches_list_navigate_to_munch_detail',
 
@@ -577,6 +580,9 @@ export interface EventPayloadMap {
     // Newsletter Signup Modal
     [UE.NewsletterSignupModalDismissed]: AnalyticsProps;
     [UE.NewsletterSignupModalOpenSignup]: AnalyticsProps;
+
+    // Notifications
+    [UE.NotificationsApprovalGranted]: AnalyticsProps;
 }
 
 

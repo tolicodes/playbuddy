@@ -7,7 +7,9 @@ import moment from 'moment-timezone';
 import { Platform } from 'react-native';
 
 import { API_BASE_URL } from '../config';
+import { logEvent } from '../hooks/logger';
 import type { Event } from '../types/commonTypes';
+import { UE } from '../types/userEventTypes';
 import {
     buildNotificationHistoryId,
     getNotificationHistory,
@@ -104,7 +106,11 @@ export const ensureNotificationPermissions = async () => {
     const current = await Notifications.getPermissionsAsync();
     if (isPermissionGranted(current)) return true;
     const requested = await Notifications.requestPermissionsAsync();
-    return isPermissionGranted(requested);
+    const granted = isPermissionGranted(requested);
+    if (granted) {
+        logEvent(UE.NotificationsApprovalGranted);
+    }
+    return granted;
 };
 
 export const ensureNotificationChannel = async () => {
