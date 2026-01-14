@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { Image } from 'expo-image';
@@ -19,6 +19,13 @@ import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistPlusButton } from './WishlistPlusButton';
 import type { EventListViewMode } from './eventListViewMode';
+
+const DETAILS_PANEL_HEIGHT = 92;
+const CARD_IMAGE_ASPECT_RATIO = 2;
+const DEFAULT_CARD_WIDTH = Math.max(0, Dimensions.get('window').width - spacing.lg * 2);
+const DEFAULT_IMAGE_HEIGHT = Math.round(DEFAULT_CARD_WIDTH / CARD_IMAGE_ASPECT_RATIO);
+const CARD_HEIGHT = DEFAULT_IMAGE_HEIGHT + DETAILS_PANEL_HEIGHT;
+export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
 
 export interface EventListItemProps {
     item: EventWithMetadata;
@@ -138,12 +145,10 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
     const useAutoHeight = autoHeight === true;
-    // Keep the text panel height consistent so extra card height goes to the image.
-    const detailsPanelHeight = 92;
-    const imageHeight = Math.max(
-        Math.round(resolvedCardHeight * 0.5),
-        resolvedCardHeight - detailsPanelHeight
-    );
+    const detailsPanelHeight = DETAILS_PANEL_HEIGHT;
+    const targetImageHeight = DEFAULT_IMAGE_HEIGHT;
+    const maxImageHeight = Math.max(0, resolvedCardHeight - detailsPanelHeight);
+    const imageHeight = Math.max(0, Math.min(targetImageHeight, maxImageHeight));
     const detailsHeight = Math.max(0, resolvedCardHeight - imageHeight);
     const actionButtonSize = Math.max(36, Math.min(52, Math.round(resolvedCardHeight * 0.18)));
     const badgeInset = spacing.xs;
@@ -297,9 +302,6 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     );
 };
 
-
-const CARD_HEIGHT = 250;
-export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
 
 const styles = StyleSheet.create({
     // Container

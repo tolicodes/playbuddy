@@ -34,8 +34,6 @@ const THEME = {
         brandInk: '#3B2F74',
         surfaceWhiteStrong: 'rgba(255,255,255,0.8)',
         surfaceWhiteFrosted: 'rgba(255,255,255,0.92)',
-        glassFill: '#6A1B9A',
-        glassBorder: '#5A43B5',
         surfaceLavenderLight: '#F7F5FF',
         surfaceLavenderStrong: '#E7DEFF',
         surfaceLavenderAlt: '#F3EEFF',
@@ -590,15 +588,12 @@ const buildSvg = ({
     const dayRuleMarginLeft = s(12);
     const dayRuleMarginBottom = s(4);
 
-    const cardHeight = s(250);
+    const cardWidth = width - paddingX * 2;
     const cardRadius = s(16);
     const cardMarginBottom = s(16);
-    // Keep the text panel height consistent so extra card height goes to the image.
     const detailsPanelHeight = s(DETAILS_PANEL_HEIGHT);
-    const imageHeight = Math.max(
-        Math.round(cardHeight * 0.5),
-        Math.round(cardHeight - detailsPanelHeight)
-    );
+    const imageHeight = Math.round(cardWidth / 2);
+    const cardHeight = imageHeight + detailsPanelHeight;
     const detailsHeight = cardHeight - imageHeight;
     const typeIconBubbleSize = Math.max(s(32), Math.round(Math.min(imageHeight * 0.5, s(48))));
     const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
@@ -706,6 +701,10 @@ const buildSvg = ({
     <filter id="discountShadow" x="-20%" y="-20%" width="140%" height="160%">
       <feDropShadow dx="0" dy="${discountShadowDy}" stdDeviation="${discountShadowBlur}" flood-color="${THEME.colors.black}" flood-opacity="0.2" />
     </filter>`);
+    defs.push(`
+    <filter id="iconShadow" x="-40%" y="-40%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="${Math.max(1, s(2))}" stdDeviation="${Math.max(1, s(2.5))}" flood-color="${THEME.colors.black}" flood-opacity="0.25" />
+    </filter>`);
 
     Object.entries(IMAGE_THEMES).forEach(([key, value]) => {
         defs.push(`
@@ -769,7 +768,6 @@ const buildSvg = ({
           font-family="${fontDisplay}" font-weight="700" letter-spacing="${s(0.4)}" dominant-baseline="hanging" text-anchor="middle">${escapeXml(weekLabel)}</text>`);
 
         let y = weekSelectorY + weekSelectorHeight + weekSelectorMarginBottom;
-        const cardWidth = width - paddingX * 2;
 
         days.forEach((day) => {
             const dayHeaderY = y;
@@ -887,12 +885,12 @@ const buildSvg = ({
                 const actionButtonCenterX = actionButtonX + actionButtonSize / 2;
                 const actionButtonCenterY = actionButtonY + actionButtonSize / 2;
                 const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.04));
-                const plusSize = Math.round(actionButtonSize * 0.52);
+                const plusSize = Math.round(actionButtonSize * 0.34);
                 const plusHalf = plusSize / 2;
                 const plusStroke = Math.max(2, Math.round(actionButtonSize * 0.1));
-                const plusOffset = Math.round(actionButtonSize * 0.08);
+                const plusOffset = Math.round(actionButtonSize * 0.1);
                 const plusCenterY = actionButtonCenterY + plusOffset;
-                const calendarSize = Math.round(actionButtonSize * 0.62);
+                const calendarSize = Math.round(actionButtonSize * 0.4);
                 const calendarX = actionButtonCenterX - calendarSize / 2;
                 const calendarY = actionButtonCenterY - calendarSize / 2;
                 const calendarRadius = Math.round(calendarSize * 0.2);
@@ -904,22 +902,22 @@ const buildSvg = ({
                 const calendarRingRight = calendarX + calendarSize * 0.72;
 
                 content.push(`
-    <circle cx="${actionButtonCenterX}" cy="${actionButtonCenterY}" r="${actionButtonSize / 2}"
-          fill="${THEME.colors.glassFill}" stroke="${THEME.colors.glassBorder}" stroke-width="${actionButtonStroke}" />
+    <g filter="url(#iconShadow)">
     <rect x="${calendarX}" y="${calendarY}" width="${calendarSize}" height="${calendarSize}" rx="${calendarRadius}" ry="${calendarRadius}"
-          fill="none" stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" />
+          fill="none" stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" />
     <line x1="${calendarX}" y1="${calendarHeaderY}" x2="${calendarX + calendarSize}" y2="${calendarHeaderY}"
-          stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" stroke-linecap="round" />
+          stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" stroke-linecap="round" />
     <line x1="${calendarRingLeft}" y1="${calendarRingTop}" x2="${calendarRingLeft}" y2="${calendarRingBottom}"
-          stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" stroke-linecap="round" />
+          stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" stroke-linecap="round" />
     <line x1="${calendarRingRight}" y1="${calendarRingTop}" x2="${calendarRingRight}" y2="${calendarRingBottom}"
-          stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" stroke-linecap="round" />
+          stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" stroke-linecap="round" />
     <line x1="${actionButtonCenterX - plusHalf}" y1="${plusCenterY}"
           x2="${actionButtonCenterX + plusHalf}" y2="${plusCenterY}"
-          stroke="${THEME.colors.white}" stroke-width="${plusStroke}" stroke-linecap="round" />
+          stroke="${THEME.colors.black}" stroke-width="${plusStroke}" stroke-linecap="round" />
     <line x1="${actionButtonCenterX}" y1="${plusCenterY - plusHalf}"
           x2="${actionButtonCenterX}" y2="${plusCenterY + plusHalf}"
-          stroke="${THEME.colors.white}" stroke-width="${plusStroke}" stroke-linecap="round" />`);
+          stroke="${THEME.colors.black}" stroke-width="${plusStroke}" stroke-linecap="round" />
+    </g>`);
 
                 if (item.typeTagLabel) {
                     const maxTagChars = estimateMaxChars(cardWidth - typeTagPaddingX * 2, typeTagFont, 0.6);
@@ -1191,13 +1189,10 @@ export const generateWeeklyPicksImage = async (
             };
         });
 
-    const cardWidth = Math.round((width - 2 * (16 * scale)));
-    const cardHeight = Math.round(250 * scale);
+    const cardWidth = Math.round(width - 2 * (16 * scale));
     const detailsPanelHeight = Math.round(DETAILS_PANEL_HEIGHT * scale);
-    const imageHeight = Math.max(
-        Math.round(cardHeight * 0.5),
-        cardHeight - detailsPanelHeight
-    );
+    const imageHeight = Math.round(cardWidth / 2);
+    const cardHeight = imageHeight + detailsPanelHeight;
 
     const imagesById = new Map<number, string | null>();
     const totalImages = items.length;
