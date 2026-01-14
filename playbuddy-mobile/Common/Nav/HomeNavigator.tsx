@@ -16,6 +16,7 @@ import { navigateToAuth, navigateToHome, navigateToHomeStackScreen } from './nav
 import { colors, gradients } from '../../components/styles';
 import { NotificationsScreen } from '../../Pages/Notifications/NotificationsScreen';
 import DebugScreen from '../../Pages/Debug/DebugScreen';
+import { navigationRef } from './navigationRef';
 
 const HomeStack = createStackNavigator();
 /**
@@ -54,10 +55,34 @@ export function HomeStackNavigator() {
     } = useUserContext();
     const { isLoadingEvents } = useCalendarContext();
 
+    const getActiveRouteChain = (state?: { index?: number; routes?: Array<{ name: string; state?: any }> }) => {
+        const chain: string[] = [];
+        let currentState = state;
+
+        while (currentState?.routes?.length) {
+            const routeIndex = typeof currentState.index === 'number' ? currentState.index : 0;
+            const route = currentState.routes[routeIndex];
+            if (!route) break;
+            chain.push(route.name);
+            currentState = route.state;
+        }
+
+        return chain;
+    };
+
     useEffect(() => {
         if (isLoading || isError || isLoadingUserProfile || (authUserId && isLoadingEvents)) {
             return;
         }
+
+        const rootState = (navigation as any).getRootState?.() ?? navigation.getState?.();
+        const activeRouteChain = getActiveRouteChain(rootState);
+        const lastAuthIndex = activeRouteChain.lastIndexOf('AuthNav');
+        const authRouteNames = new Set(['AuthNav', 'Welcome', 'Login Form', 'Profile Details', 'Profile']);
+        const currentRouteName = navigationRef.getCurrentRoute?.()?.name ?? null;
+        const isAuthRouteActive = currentRouteName ? authRouteNames.has(currentRouteName) : false;
+        const isAuthRouteInChain = activeRouteChain.some((name) => authRouteNames.has(name));
+        const isAuthFlowActive = lastAuthIndex >= 0 || isAuthRouteActive || isAuthRouteInChain;
 
         // First we look for deeplinks
         // If we find one, and they haven't seen it yet
@@ -102,10 +127,13 @@ export function HomeStackNavigator() {
             return;
         }
 
-        // If the user doesn't have a profile, navigate to Welcome
+        // If the user doesn't have a profile, navigate to Login Form
         if (!authUserId) {
-            console.log('HomeNavigator: routing to Welcome');
-            navigateToAuth(navigation, 'Welcome');
+            if (isAuthFlowActive) {
+                return;
+            }
+            console.log('HomeNavigator: routing to Login Form');
+            navigateToAuth(navigation, 'Login Form');
             return;
         }
 
