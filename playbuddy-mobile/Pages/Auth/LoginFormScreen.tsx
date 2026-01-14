@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
     Animated,
     Easing,
+    Keyboard,
     View,
+    KeyboardAvoidingView,
     StyleSheet,
     Text,
     Pressable,
@@ -14,6 +16,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useUserContext } from './hooks/UserContext';
 import { EmailLogin } from './EmailLogin';
 import { PhoneLogin } from './PhoneLogin';
@@ -21,6 +25,8 @@ import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
+import { navigateToAuth } from '../../Common/Nav/navigationHelpers';
+import { NavStack } from '../../Common/Nav/NavStackType';
 
 const googleLogo = require('../../assets/auth/google-logo.png');
 const appleLogo = require('../../assets/auth/apple-logo.png');
@@ -92,7 +98,9 @@ const AppleLogin: React.FC = () => {
 };
 
 const LoginFormScreen: React.FC = () => {
+    const navigation = useNavigation<NavStack>();
     const [showEmailLogin, setShowEmailLogin] = useState<boolean>(true);
+    const [keyboardPadding, setKeyboardPadding] = useState(0);
     const heroAnim = useRef(new Animated.Value(0)).current;
     const ssoAnim = useRef(new Animated.Value(0)).current;
     const formAnim = useRef(new Animated.Value(0)).current;
@@ -105,8 +113,24 @@ const LoginFormScreen: React.FC = () => {
             useNativeDriver: true,
         });
 
-        Animated.stagger(120, [buildTiming(heroAnim), buildTiming(ssoAnim), buildTiming(formAnim)]).start();
+        Animated.stagger(120, [buildTiming(heroAnim), buildTiming(formAnim), buildTiming(ssoAnim)]).start();
     }, [formAnim, heroAnim, ssoAnim]);
+
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+        const showSub = Keyboard.addListener(showEvent, (event) => {
+            setKeyboardPadding(event.endCoordinates.height);
+        });
+        const hideSub = Keyboard.addListener(hideEvent, () => {
+            setKeyboardPadding(0);
+        });
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     const buildEnterStyle = (anim: Animated.Value, offset = 16) => ({
         opacity: anim,
@@ -120,6 +144,10 @@ const LoginFormScreen: React.FC = () => {
         ],
     });
 
+    const handleBack = () => {
+        navigateToAuth(navigation, 'Welcome');
+    };
+
     return (
         <LinearGradient
             colors={gradients.auth}
@@ -129,37 +157,59 @@ const LoginFormScreen: React.FC = () => {
         >
             <View pointerEvents="none" style={styles.glowTop} />
             <View pointerEvents="none" style={styles.glowBottom} />
-            <SafeAreaView style={styles.safe}>
-                <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-                    <Animated.View style={[styles.hero, buildEnterStyle(heroAnim, 18)]}>
-                        <View style={styles.logoHalo}>
-                            <Image source={logoMark} style={styles.logo} resizeMode="contain" />
-                        </View>
-                    </Animated.View>
-                    <Animated.View style={[styles.ssoGroup, buildEnterStyle(ssoAnim, 16)]}>
-                        <View style={styles.ssoCard}>
-                            <View style={styles.ssoHeader}>
-                                <Text style={styles.ssoTitle}>Continue with</Text>
-                                <View style={styles.ssoBadge}>
-                                    <Text style={styles.ssoBadgeText}>Secure</Text>
-                                </View>
+            <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
+                <Pressable
+                    onPress={handleBack}
+                    style={({ pressed }) => [
+                        styles.backButton,
+                        pressed && styles.backButtonPressed,
+                    ]}
+                    accessibilityRole="button"
+                    accessibilityLabel="Back to welcome"
+                >
+                    <IonIcon name="chevron-back" size={24} color={colors.white} />
+                </Pressable>
+                <KeyboardAvoidingView
+                    style={styles.keyboardAvoid}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <ScrollView
+                        contentContainerStyle={[styles.content, { paddingBottom: spacing.xxxl + keyboardPadding }]}
+                        showsVerticalScrollIndicator={false}
+                        keyboardShouldPersistTaps="handled"
+                        keyboardDismissMode="on-drag"
+                        contentInsetAdjustmentBehavior="never"
+                    >
+                        <Animated.View style={[styles.hero, buildEnterStyle(heroAnim, 18)]}>
+                            <View style={styles.logoHalo}>
+                                <Image source={logoMark} style={styles.logo} resizeMode="contain" />
                             </View>
-                            <GoogleLogin />
-                            {Platform.OS === 'ios' && <AppleLogin />}
-                        </View>
-                        <View style={styles.orContainer}>
-                            <View style={styles.orLine} />
-                            <Text style={styles.orText}>or</Text>
-                            <View style={styles.orLine} />
-                        </View>
-                    </Animated.View>
-                    <Animated.View style={[styles.authContainer, buildEnterStyle(formAnim, 14)]}>
-                        {showEmailLogin
-                            ? <EmailLogin onSwitchToPhone={() => setShowEmailLogin(false)} />
-                            : <PhoneLogin onSwitchToEmail={() => setShowEmailLogin(true)} />
-                        }
-                    </Animated.View>
-                </ScrollView>
+                        </Animated.View>
+                        <Animated.View style={[styles.authContainer, buildEnterStyle(formAnim, 14)]}>
+                            {showEmailLogin
+                                ? <EmailLogin onSwitchToPhone={() => setShowEmailLogin(false)} />
+                                : <PhoneLogin onSwitchToEmail={() => setShowEmailLogin(true)} />
+                            }
+                        </Animated.View>
+                        <Animated.View style={[styles.ssoGroup, buildEnterStyle(ssoAnim, 16)]}>
+                            <View style={styles.orContainer}>
+                                <View style={styles.orLine} />
+                                <Text style={styles.orText}>or</Text>
+                                <View style={styles.orLine} />
+                            </View>
+                            <View style={styles.ssoCard}>
+                                <View style={styles.ssoHeader}>
+                                    <Text style={styles.ssoTitle}>Continue with</Text>
+                                    <View style={styles.ssoBadge}>
+                                        <Text style={styles.ssoBadgeText}>Secure</Text>
+                                    </View>
+                                </View>
+                                <GoogleLogin />
+                                {Platform.OS === 'ios' && <AppleLogin />}
+                            </View>
+                        </Animated.View>
+                    </ScrollView>
+                </KeyboardAvoidingView>
             </SafeAreaView>
         </LinearGradient>
     );
@@ -190,9 +240,30 @@ const styles = StyleSheet.create({
     safe: {
         flex: 1,
     },
+    backButton: {
+        position: 'absolute',
+        top: spacing.sm,
+        left: spacing.sm,
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceGlass,
+        borderWidth: 1,
+        borderColor: colors.borderOnDark,
+        zIndex: 2,
+    },
+    backButtonPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.98 }],
+    },
+    keyboardAvoid: {
+        flex: 1,
+    },
     content: {
         paddingHorizontal: spacing.lgPlus,
-        paddingTop: spacing.xl,
+        paddingTop: 0,
         paddingBottom: spacing.xxxl,
         alignItems: 'center',
     },
@@ -260,7 +331,7 @@ const styles = StyleSheet.create({
     orContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginTop: spacing.lgPlus,
+        marginTop: spacing.sm,
         marginBottom: spacing.lgPlus,
         width: '100%',
     },
@@ -279,7 +350,7 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     authContainer: {
-        marginBottom: 12,
+        marginBottom: 0,
         width: '100%',
         maxWidth: 360,
     },

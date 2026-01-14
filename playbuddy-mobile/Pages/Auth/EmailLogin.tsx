@@ -207,7 +207,6 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     formContainer: {
-        minHeight: 300,
     },
     headerRow: {
         flexDirection: 'row',
@@ -257,6 +256,7 @@ const styles = StyleSheet.create({
     },
     switchText: {
         marginTop: spacing.sm,
+        marginBottom: spacing.smPlus,
         color: colors.brandBright,
         textAlign: 'center',
         fontWeight: '600',

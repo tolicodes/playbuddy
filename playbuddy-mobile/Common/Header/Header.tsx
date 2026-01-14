@@ -30,7 +30,7 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
     const analyticsProps = useAnalyticsProps();
     const onPress = () => {
         if (backToWelcome) {
-            navigateToAuth(navigation, 'Welcome');
+            navigateToAuth(navigation, 'Login Form');
         } else if (navigation.canGoBack?.()) {
             navigation.goBack();
         } else {
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         justifyContent: 'space-between',
-        paddingHorizontal: spacing.md,
+        paddingHorizontal: spacing.lg,
         paddingTop: 0,
         paddingBottom: spacing.md,
     },
