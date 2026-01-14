@@ -127,13 +127,13 @@ export function HomeStackNavigator() {
             return;
         }
 
-        // If the user doesn't have a profile, navigate to Login Form
+        // If the user doesn't have a profile, navigate to Welcome
         if (!authUserId) {
             if (isAuthFlowActive) {
                 return;
             }
-            console.log('HomeNavigator: routing to Login Form');
-            navigateToAuth(navigation, 'Login Form');
+            console.log('HomeNavigator: routing to Welcome');
+            navigateToAuth(navigation, 'Welcome');
             return;
         }
 

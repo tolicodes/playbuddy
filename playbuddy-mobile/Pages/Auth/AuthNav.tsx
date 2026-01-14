@@ -10,15 +10,17 @@ const AuthStack = createStackNavigator();
 
 const AuthNav = () => {
     return (
-        <AuthStack.Navigator>
+        <AuthStack.Navigator initialRouteName="Welcome">
             <AuthStack.Screen name="Welcome" component={WelcomeScreen} options={
                 {
                     headerShown: false,
                 }
             } />
-            <AuthStack.Screen name="Login Form" component={LoginFormScreen} options={
-                ({ navigation }) => headerOptions({ navigation, title: 'Login' })
-            } />
+            <AuthStack.Screen
+                name="Login Form"
+                component={LoginFormScreen}
+                options={{ headerShown: false }}
+            />
             <AuthStack.Screen name="Profile Details" component={ProfileDetailsForm} />
             <AuthStack.Screen name="Profile" component={AuthProfileScreen} options={
                 ({ navigation }) => headerOptions({ navigation, title: 'Profile' })
