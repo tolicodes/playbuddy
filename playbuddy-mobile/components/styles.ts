@@ -364,6 +364,16 @@ export const eventListThemes = {
     },
 };
 
+export const eventImageFallbackGradients = {
+    event: [colors.surfaceLavenderLight, colors.surfaceLavenderStrong],
+    play_party: [colors.surfaceLavenderAlt, colors.surfaceLavenderStrong],
+    munch: [colors.surfaceGoldLight, colors.surfaceGoldWarm],
+    retreat: [colors.surfaceMuted, colors.surfaceLavenderLight],
+    festival: [colors.surfaceInfo, colors.surfaceInfoStrong],
+    conference: [colors.surfaceInfo, colors.surfaceInfoStrong],
+    workshop: [colors.surfaceRoseSoft, colors.surfaceRose],
+} as const;
+
 export const calendarTagTones = {
     spiritual: { background: '#FFF4E6', text: '#B45309', border: '#FFD7A8' },
     social: { background: '#E9FBF3', text: '#1F8A5B', border: '#BDEDD8' },

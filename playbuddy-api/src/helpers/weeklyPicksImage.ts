@@ -26,6 +26,7 @@ const THEME = {
         textOnDarkMuted: 'rgba(255,255,255,0.8)',
         textOnDarkSubtle: 'rgba(255,255,255,0.5)',
         brandViolet: '#6A1B9A',
+        brandPink: '#FF2675',
         brandDeep: '#2C0B63',
         brandBlue: '#1976D2',
         brandPurpleDark: '#5A43B5',
@@ -33,6 +34,8 @@ const THEME = {
         brandInk: '#3B2F74',
         surfaceWhiteStrong: 'rgba(255,255,255,0.8)',
         surfaceWhiteFrosted: 'rgba(255,255,255,0.92)',
+        glassFill: '#6A1B9A',
+        glassBorder: '#5A43B5',
         surfaceLavenderLight: '#F7F5FF',
         surfaceLavenderStrong: '#E7DEFF',
         surfaceLavenderAlt: '#F3EEFF',
@@ -615,6 +618,10 @@ const buildSvg = ({
     const metaFont = s(12);
     const metaLineHeight = s(16);
     const metaMarginTop = s(2);
+    const actionButtonSize = Math.max(s(30), Math.round(Math.min(detailsHeight * 0.45, s(40))));
+    const actionButtonSpacing = s(12);
+    const actionButtonInset = s(4);
+    const actionButtonRight = s(4);
 
     const typeTagPaddingX = s(14);
     const typeTagPaddingY = s(4);
@@ -789,8 +796,12 @@ const buildSvg = ({
                 const cardY = y;
                 const clipId = `cardClip_${day.dateKey}_${index}`;
                 const imageData = imagesById.get(item.eventId) || null;
+                const fallbackGradientId = item.typeKey in IMAGE_THEMES ? `fallback_${item.typeKey}` : 'fallback_event';
                 const detailsY = cardY + imageHeight;
-                const detailsAvailableWidth = cardWidth - detailsPaddingX * 2;
+                const detailsAvailableWidth = Math.max(
+                    0,
+                    cardWidth - detailsPaddingX * 2 - actionButtonSize - actionButtonSpacing
+                );
                 const maxTitleChars = Math.max(8, estimateMaxChars(detailsAvailableWidth, titleFont, 0.53));
                 const maxOrganizerChars = estimateMaxChars(detailsAvailableWidth, organizerFont, 0.6);
                 const maxMetaChars = estimateMaxChars(detailsAvailableWidth, metaFont, 0.6);
@@ -817,7 +828,7 @@ const buildSvg = ({
     </g>`);
 
                 content.push(`
-    <rect x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${imageHeight}" fill="${THEME.colors.surfaceSubtle}"
+    <rect x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${imageHeight}" fill="url(#${fallbackGradientId})"
           clip-path="url(#${clipId})" />`);
 
                 if (imageData) {
@@ -870,6 +881,45 @@ const buildSvg = ({
           fill="${THEME.colors.textSlate}" dominant-baseline="hanging">${escapeXml(metaLine)}</text>`);
                     textY += metaLineHeight;
                 }
+
+                const actionButtonX = paddingX + cardWidth - actionButtonRight - actionButtonSize;
+                const actionButtonY = detailsY + detailsHeight - detailsPaddingBottom - actionButtonInset - actionButtonSize;
+                const actionButtonCenterX = actionButtonX + actionButtonSize / 2;
+                const actionButtonCenterY = actionButtonY + actionButtonSize / 2;
+                const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.04));
+                const plusSize = Math.round(actionButtonSize * 0.52);
+                const plusHalf = plusSize / 2;
+                const plusStroke = Math.max(2, Math.round(actionButtonSize * 0.1));
+                const plusOffset = Math.round(actionButtonSize * 0.08);
+                const plusCenterY = actionButtonCenterY + plusOffset;
+                const calendarSize = Math.round(actionButtonSize * 0.62);
+                const calendarX = actionButtonCenterX - calendarSize / 2;
+                const calendarY = actionButtonCenterY - calendarSize / 2;
+                const calendarRadius = Math.round(calendarSize * 0.2);
+                const calendarStroke = Math.max(1, Math.round(actionButtonSize * 0.06));
+                const calendarHeaderY = calendarY + calendarSize * 0.28;
+                const calendarRingTop = calendarY + calendarSize * 0.08;
+                const calendarRingBottom = calendarY + calendarSize * 0.2;
+                const calendarRingLeft = calendarX + calendarSize * 0.28;
+                const calendarRingRight = calendarX + calendarSize * 0.72;
+
+                content.push(`
+    <circle cx="${actionButtonCenterX}" cy="${actionButtonCenterY}" r="${actionButtonSize / 2}"
+          fill="${THEME.colors.glassFill}" stroke="${THEME.colors.glassBorder}" stroke-width="${actionButtonStroke}" />
+    <rect x="${calendarX}" y="${calendarY}" width="${calendarSize}" height="${calendarSize}" rx="${calendarRadius}" ry="${calendarRadius}"
+          fill="none" stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" />
+    <line x1="${calendarX}" y1="${calendarHeaderY}" x2="${calendarX + calendarSize}" y2="${calendarHeaderY}"
+          stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" stroke-linecap="round" />
+    <line x1="${calendarRingLeft}" y1="${calendarRingTop}" x2="${calendarRingLeft}" y2="${calendarRingBottom}"
+          stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" stroke-linecap="round" />
+    <line x1="${calendarRingRight}" y1="${calendarRingTop}" x2="${calendarRingRight}" y2="${calendarRingBottom}"
+          stroke="${THEME.colors.white}" stroke-width="${calendarStroke}" stroke-linecap="round" />
+    <line x1="${actionButtonCenterX - plusHalf}" y1="${plusCenterY}"
+          x2="${actionButtonCenterX + plusHalf}" y2="${plusCenterY}"
+          stroke="${THEME.colors.white}" stroke-width="${plusStroke}" stroke-linecap="round" />
+    <line x1="${actionButtonCenterX}" y1="${plusCenterY - plusHalf}"
+          x2="${actionButtonCenterX}" y2="${plusCenterY + plusHalf}"
+          stroke="${THEME.colors.white}" stroke-width="${plusStroke}" stroke-linecap="round" />`);
 
                 if (item.typeTagLabel) {
                     const maxTagChars = estimateMaxChars(cardWidth - typeTagPaddingX * 2, typeTagFont, 0.6);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 
 import { UE } from '../../../Common/types/userEventTypes';
@@ -9,8 +10,9 @@ import { useUserContext } from '../../Auth/hooks/UserContext';
 import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
-import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
+import { colors, eventImageFallbackGradients, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
 import type { EventListItemProps } from './EventListItem';
 
 export const CLASSIC_ITEM_HEIGHT = 128;
@@ -27,7 +29,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     autoHeight,
     listViewMode,
 }) => {
-    const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
+    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
@@ -35,6 +37,16 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const organizerName = item.organizer?.name?.trim();
     const organizerColor = item.organizerColor || colors.textDisabled;
+    const isActiveEventType = (value?: string | null) =>
+        !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
+    const resolvedType = item.play_party || item.type === 'play_party'
+        ? 'play_party'
+        : item.is_munch || item.munch_id || item.type === 'munch'
+            ? 'munch'
+            : item.type && isActiveEventType(item.type)
+                ? item.type
+                : FALLBACK_EVENT_TYPE;
+    const fallbackGradient = eventImageFallbackGradients[resolvedType] ?? eventImageFallbackGradients.event;
 
     const handlePressEvent = () => {
         onPress(item);
@@ -51,6 +63,9 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
             return;
         }
 
+        if (!itemIsOnWishlist && wishlistEvents.length === 0) {
+            logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
+        }
         logEvent(UE.EventListItemWishlistToggled, {
             ...eventAnalyticsProps,
             is_on_wishlist: !itemIsOnWishlist,
@@ -100,7 +115,14 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                                 decodeFormat="rgb"
                             />
                         ) : (
-                            <View style={styles.thumbPlaceholder}>{placeHolderImage}</View>
+                            <LinearGradient
+                                colors={fallbackGradient}
+                                start={{ x: 0, y: 0 }}
+                                end={{ x: 1, y: 1 }}
+                                style={styles.thumbPlaceholder}
+                            >
+                                {placeHolderImage}
+                            </LinearGradient>
                         )}
                     </View>
                     <View style={styles.content}>
@@ -180,7 +202,7 @@ const styles = StyleSheet.create({
         width: THUMB_SIZE,
         height: THUMB_SIZE,
         borderRadius: THUMB_SIZE / 2,
-        backgroundColor: colors.surfaceSubtle,
+        backgroundColor: colors.surfaceLavenderLight,
         overflow: 'hidden',
         alignItems: 'center',
         justifyContent: 'center',
@@ -190,6 +212,7 @@ const styles = StyleSheet.create({
         height: '100%',
     },
     thumbPlaceholder: {
+        ...StyleSheet.absoluteFillObject,
         alignItems: 'center',
         justifyContent: 'center',
     },

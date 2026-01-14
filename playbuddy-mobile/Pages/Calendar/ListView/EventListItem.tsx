@@ -13,11 +13,11 @@ import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
-import { calendarTypeChips, colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
+import { calendarTypeChips, colors, eventImageFallbackGradients, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
-import { WishlistHeart } from './WishlistHeart';
+import { WishlistPlusButton } from './WishlistPlusButton';
 import type { EventListViewMode } from './eventListViewMode';
 
 export interface EventListItemProps {
@@ -32,6 +32,7 @@ export interface EventListItemProps {
     autoHeight?: boolean;
     listViewMode?: EventListViewMode;
     cardVariant?: 'heart' | 'type-icon';
+    disableClickAnalytics?: boolean;
 }
 
 export const EventListItem: React.FC<EventListItemProps> = ({
@@ -46,8 +47,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     autoHeight,
     listViewMode,
     cardVariant,
+    disableClickAnalytics,
 }) => {
-    const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
+    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
 
@@ -77,6 +79,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
             : item.type && isActiveEventType(item.type)
                 ? item.type
                 : FALLBACK_EVENT_TYPE;
+    const fallbackGradient = eventImageFallbackGradients[resolvedType] ?? eventImageFallbackGradients.event;
     const primaryTypeLabel = typeLabelMap[resolvedType] || resolvedType.replace(/_/g, ' ');
 
     const extraTags = [...(item.classification?.tags || []), ...(item.tags || [])];
@@ -100,11 +103,13 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const placeholderIconName = isPlayParty ? 'birthday-cake' : isMunch ? 'cutlery' : 'calendar';
     const handlePressEvent = () => {
         onPress(item);
-        const listViewAnalytics = listViewMode ? { list_view_mode: listViewMode } : {};
-        logEvent(UE.EventListItemClicked, {
-            ...eventAnalyticsProps,
-            ...listViewAnalytics,
-        });
+        if (!disableClickAnalytics) {
+            const listViewAnalytics = listViewMode ? { list_view_mode: listViewMode } : {};
+            logEvent(UE.EventListItemClicked, {
+                ...eventAnalyticsProps,
+                ...listViewAnalytics,
+            });
+        }
     };
 
     const handleToggleEventWishlist = () => {
@@ -113,6 +118,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
             return;
         }
 
+        if (!itemIsOnWishlist && wishlistEvents.length === 0) {
+            logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
+        }
         logEvent(UE.EventListItemWishlistToggled, {
             ...eventAnalyticsProps,
             is_on_wishlist: !itemIsOnWishlist,
@@ -137,15 +145,18 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         resolvedCardHeight - detailsPanelHeight
     );
     const detailsHeight = Math.max(0, resolvedCardHeight - imageHeight);
-    const heartSize = 48;
-    const heartOffset = imageHeight < 140 ? 6 : 0;
-    const heartTop = Math.max(0, imageHeight / 2 - heartSize / 2 - heartOffset);
-    const typeIconBubbleSize = Math.round(heartSize * 0.9);
+    const actionButtonSize = Math.max(36, Math.min(52, Math.round(resolvedCardHeight * 0.18)));
+    const badgeInset = spacing.xs;
+    const actionButtonInset = badgeInset;
+    const actionButtonRight = badgeInset;
+    const typeIconBubbleSize = Math.round(Math.max(32, Math.min(48, actionButtonSize * 1.1)));
     const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
+    const typeIconTop = Math.max(0, imageHeight / 2 - typeIconBubbleSize / 2);
     const placeholderIconSize = Math.max(28, Math.round(imageHeight * 0.4));
     const hasFooter = !!footerContent;
     const showTypeIconOverlay = resolvedCardVariant === 'type-icon' && !imageUrl;
-    const showPlaceholderIcon = !imageUrl && !showTypeIconOverlay && resolvedCardVariant !== 'heart';
+    const showPlaceholderIcon = !imageUrl && !showTypeIconOverlay;
+    const detailsPanelPaddingRight = actionButtonRight + actionButtonSize + spacing.sm;
 
     return (
         <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
@@ -171,7 +182,12 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                 />
                             )}
                             {!imageUrl && (
-                                <View style={styles.posterPlaceholder}>
+                                <LinearGradient
+                                    colors={fallbackGradient}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.posterPlaceholder}
+                                >
                                     {showPlaceholderIcon && (
                                         <FAIcon
                                             name={placeholderIconName}
@@ -179,7 +195,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                             color={colors.textSlate}
                                         />
                                     )}
-                                </View>
+                                </LinearGradient>
                             )}
                             {promoCode && (
                                 <View style={styles.discountBadge}>
@@ -205,17 +221,8 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     </Text>
                                 </View>
                             )}
-                            {resolvedCardVariant === 'heart' ? (
-                                <View style={[styles.heartOverlay, { top: heartTop }]}>
-                                    <WishlistHeart
-                                        itemIsOnWishlist={itemIsOnWishlist}
-                                        handleToggleEventWishlist={handleToggleEventWishlist}
-                                        size={heartSize}
-                                        variant="thick-outline"
-                                    />
-                                </View>
-                            ) : showTypeIconOverlay ? (
-                                <View style={[styles.typeIconOverlay, { top: heartTop }]}>
+                            {showTypeIconOverlay ? (
+                                <View style={[styles.typeIconOverlay, { top: typeIconTop }]}>
                                     <View
                                         style={[
                                             styles.typeIconBubble,
@@ -238,9 +245,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                 <View
                                     style={[
                                         styles.attendeeWrap,
-                                        { bottom: spacing.xs, right: spacing.xs },
-                                    ]}
-                                >
+                                    { bottom: badgeInset, right: badgeInset },
+                                ]}
+                            >
                                     <AttendeeCarousel attendees={attendees} scrollEnabled={false} />
                                 </View>
                             )}
@@ -251,6 +258,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                             end={{ x: 0, y: 1 }}
                             style={[
                                 styles.detailsPanel,
+                                { paddingRight: detailsPanelPaddingRight },
                                 !useAutoHeight && { height: detailsHeight },
                                 hasFooter && styles.detailsPanelWithFooter,
                             ]}
@@ -269,6 +277,15 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     {metaLine}
                                 </Text>
                             ) : null}
+                            <WishlistPlusButton
+                                itemIsOnWishlist={itemIsOnWishlist}
+                                handleToggleEventWishlist={handleToggleEventWishlist}
+                                size={actionButtonSize}
+                                containerStyle={[
+                                    styles.actionButton,
+                                    { right: actionButtonRight, bottom: actionButtonInset },
+                                ]}
+                            />
                         </LinearGradient>
                     </View>
                 </TouchableOpacity>
@@ -319,7 +336,7 @@ const styles = StyleSheet.create({
     },
     poster: {
         width: '100%',
-        backgroundColor: colors.textDisabled,
+        backgroundColor: colors.surfaceLavenderLight,
         position: 'relative',
     },
     posterImage: {
@@ -330,17 +347,14 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    heartOverlay: {
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        alignItems: 'center',
-    },
     typeIconOverlay: {
         position: 'absolute',
         left: 0,
         right: 0,
         alignItems: 'center',
+    },
+    actionButton: {
+        position: 'absolute',
     },
     typeIconBubble: {
         backgroundColor: colors.surfaceMutedAlt,
@@ -422,8 +436,7 @@ const styles = StyleSheet.create({
         position: 'absolute',
         alignItems: 'flex-end',
         maxWidth: '45%',
-        paddingHorizontal: spacing.xs,
-        paddingVertical: spacing.xs,
+        padding: spacing.xs,
         borderRadius: radius.pill,
         backgroundColor: colors.black,
         shadowColor: colors.black,
