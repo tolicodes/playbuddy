@@ -39,7 +39,13 @@ export const FullCalendar = ({
                 const isDisabled = state === 'disabled';
                 const hasEvent = hasEventsOnDay(iso);
                 const bg = selected ? colors.white : hasEvent ? colors.accentPurpleSoft : 'transparent';
-                const textColor = selected ? colors.brandIndigo : isDisabled ? colors.textOnDarkSubtle : colors.white;
+                const textColor = selected
+                    ? colors.brandIndigo
+                    : isDisabled
+                        ? colors.textOnDarkSubtle
+                        : hasEvent
+                            ? colors.white
+                            : colors.textOnDarkSubtle;
                 return (
                     <TouchableOpacity
                         disabled={false}

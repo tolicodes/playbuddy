@@ -63,6 +63,7 @@ import {
     NavState,
     ny,
     hasEventsOnDayNY,
+    findEventDayFrom,
     computeInitialState,
     deriveWeekArrays,
 } from "./calendarNavUtils";
@@ -110,6 +111,7 @@ const EventCalendarView: React.FC<Props> = ({
     const pendingCoachRef = useRef(false);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const toastAnim = useRef(new Animated.Value(0)).current;
+    const monthModalAnim = useRef(new Animated.Value(0)).current;
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const { myCommunities } = useCommonContext();
@@ -259,6 +261,17 @@ const EventCalendarView: React.FC<Props> = ({
         }
     }, [showDateToast, toastAnim]);
 
+    useEffect(() => {
+        if (!isMonthModalOpen) return;
+        monthModalAnim.setValue(0);
+        Animated.spring(monthModalAnim, {
+            toValue: 1,
+            friction: 8,
+            tension: 120,
+            useNativeDriver: true,
+        }).start();
+    }, [isMonthModalOpen, monthModalAnim]);
+
     const allClassifications = useMemo(() => {
         if (!sourceEvents)
             return { tags: [], experience_levels: [], interactivity_levels: [], event_types: [] };
@@ -272,6 +285,14 @@ const EventCalendarView: React.FC<Props> = ({
     const eventListConfig = eventListThemes[eventListTheme];
     const eventListColors = eventListConfig.colors;
     const monthModalWidth = Math.max(0, windowWidth - spacing.lg * 2);
+    const monthModalTranslateY = monthModalAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [18, 0],
+    });
+    const monthModalScale = monthModalAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.96, 1],
+    });
 
     const sectionListRef = useRef<SectionList>(null);
     const route = useRoute();
@@ -317,6 +338,7 @@ const EventCalendarView: React.FC<Props> = ({
 
     const normalizeSearchText = (value?: string) =>
         value ? value.toLowerCase().replace(/[_-]+/g, " ").trim() : "";
+    const formatDayKey = (day: Date) => moment(day).tz(TZ).format("YYYY-MM-DD");
 
     const isActiveEventType = (value?: string | null) =>
         !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
@@ -803,12 +825,39 @@ const EventCalendarView: React.FC<Props> = ({
         moment(initialNav.weekAnchorDate).startOf("month").toDate()
     );
 
+    // Treat all days before today as disabled/grey.
+    const isDaySelectable = (d: Date | string) => !ny.isBeforeToday(d);
+    const hasEventsOnDay = (d: Date | string) => hasEventsOnDayNY(filteredEvents, d);
+    const resolveEventDay = (day: Date) => {
+        if (hasEventsOnDay(day)) {
+            return day;
+        }
+        return findEventDayFrom(filteredEvents, day, 1) ?? day;
+    };
+    const resolveNextWeekSelection = (weekStart: Date, sameDow: Date) => {
+        const weekAnchor = ny.startOfWeek(weekStart).toDate();
+        const weekEnd = ny.addDays(weekAnchor, 6).toDate();
+        const inWeek =
+            findEventDayFrom(filteredEvents, sameDow, 1, { maxDayInclusive: weekEnd }) ??
+            findEventDayFrom(filteredEvents, weekAnchor, 1, { maxDayInclusive: weekEnd });
+        if (inWeek) {
+            return inWeek;
+        }
+        const afterWeek = ny.addDays(weekEnd, 1).toDate();
+        return findEventDayFrom(filteredEvents, afterWeek, 1) ?? sameDow;
+    };
+
     // Re-sanitize selection when filters change
     useEffect(() => {
         const recomputed = computeInitialState(filteredEvents);
         setNav((prev) => {
             const selectedStillOk = !ny.isBeforeToday(prev.selectedDate);
             if (selectedStillOk) {
+                const chosen = resolveEventDay(prev.selectedDate);
+                if (!ny.isSameDay(prev.selectedDate, chosen)) {
+                    const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
+                    return next;
+                }
                 const correctAnchor = ny.startOfWeek(prev.selectedDate).toDate();
                 if (!ny.startOfWeek(prev.weekAnchorDate).isSame(correctAnchor, "day")) {
                     const next = { weekAnchorDate: correctAnchor, selectedDate: prev.selectedDate };
@@ -831,10 +880,6 @@ const EventCalendarView: React.FC<Props> = ({
         () => deriveWeekArrays(nav.weekAnchorDate),
         [nav.weekAnchorDate]
     );
-
-    // Treat all days before today as disabled/grey.
-    const isDaySelectable = (d: Date | string) => !ny.isBeforeToday(d);
-    const hasEventsOnDay = (d: Date | string) => hasEventsOnDayNY(filteredEvents, d);
 
     const scrollToDate = (date: Date) => {
         lastScrollDateRef.current = date;
@@ -893,40 +938,47 @@ const EventCalendarView: React.FC<Props> = ({
         if (!isDaySelectable(day)) {
             return;
         }
-        const next = { weekAnchorDate: ny.startOfWeek(day).toDate(), selectedDate: day };
+        const chosen = resolveEventDay(day);
+        const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
 
         setNav(next);
-        setMonthAnchorDate(moment(day).startOf("month").toDate());
-        scrollToDate(day);
-        setIsMonthModalOpen(false);
+        setMonthAnchorDate(moment(chosen).startOf("month").toDate());
+        scrollToDate(chosen);
+        closeMonthModal();
     };
 
     const goToPrevDay = () => {
         const prevDay = ny.addDays(nav.selectedDate, -1).toDate();
         if (!isDaySelectable(prevDay)) return;
-        const next = { weekAnchorDate: ny.startOfWeek(prevDay).toDate(), selectedDate: prevDay };
+        const chosen = resolveEventDay(prevDay);
+        const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
         setNav(next);
-        setMonthAnchorDate(moment(prevDay).startOf("month").toDate());
-        scrollToDate(prevDay);
+        setMonthAnchorDate(moment(chosen).startOf("month").toDate());
+        scrollToDate(chosen);
     };
 
     const goToNextDay = () => {
         const nextDay = ny.addDays(nav.selectedDate, 1).toDate();
         if (!isDaySelectable(nextDay)) return;
-        const next = { weekAnchorDate: ny.startOfWeek(nextDay).toDate(), selectedDate: nextDay };
+        const chosen = resolveEventDay(nextDay);
+        const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
         setNav(next);
-        setMonthAnchorDate(moment(nextDay).startOf("month").toDate());
-        scrollToDate(nextDay);
+        setMonthAnchorDate(moment(chosen).startOf("month").toDate());
+        scrollToDate(chosen);
     };
 
     const shiftWeek = (direction: 1 | -1) => {
         const nextWeekAnchor = ny.addWeeks(nav.weekAnchorDate, direction).toDate();
         const selectedDow = moment(nav.selectedDate).tz(TZ).day();
         const nextSelected = ny.addDays(nextWeekAnchor, selectedDow).toDate();
-        const next = { weekAnchorDate: nextWeekAnchor, selectedDate: nextSelected };
+        const chosen =
+            direction === 1
+                ? resolveNextWeekSelection(nextWeekAnchor, nextSelected)
+                : nextSelected;
+        const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
         setNav(next);
-        setMonthAnchorDate(moment(nextWeekAnchor).startOf("month").toDate());
-        scrollToDate(nextSelected);
+        setMonthAnchorDate(moment(chosen).startOf("month").toDate());
+        scrollToDate(chosen);
     };
 
     const goToPrevWeek = () => {
@@ -940,18 +992,32 @@ const EventCalendarView: React.FC<Props> = ({
     const goToToday = () => {
         const today = moment().tz(TZ).toDate();
         if (!isDaySelectable(today)) return;
-        const next = { weekAnchorDate: ny.startOfWeek(today).toDate(), selectedDate: today };
+        const chosen = resolveEventDay(today);
+        const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
         setNav(next);
-        setMonthAnchorDate(moment(today).startOf("month").toDate());
-        scrollToDate(today);
+        setMonthAnchorDate(moment(chosen).startOf("month").toDate());
+        scrollToDate(chosen);
     };
 
     const openMonthModal = (day?: Date) => {
         const anchor = day ?? nav.selectedDate;
         setMonthAnchorDate(moment(anchor).startOf("month").toDate());
+        if (!isMonthModalOpen) {
+            logEvent(UE.DateBarCalendarPressed, { ...analyticsPropsPlusEntity, expanded: true });
+        }
         setIsMonthModalOpen(true);
     };
-    const closeMonthModal = () => setIsMonthModalOpen(false);
+    const closeMonthModal = () => {
+        Animated.timing(monthModalAnim, {
+            toValue: 0,
+            duration: 160,
+            useNativeDriver: true,
+        }).start(({ finished }) => {
+            if (finished) {
+                setIsMonthModalOpen(false);
+            }
+        });
+    };
 
     const goToPrevMonth = () =>
         setMonthAnchorDate((prev) => moment(prev).subtract(1, "month").startOf("month").toDate());
@@ -971,17 +1037,25 @@ const EventCalendarView: React.FC<Props> = ({
     };
 
     const handleStripSwipePrevDay = () => {
+        logEvent(UE.DateBarSwipePrev, analyticsPropsPlusEntity);
         goToPrevWeek();
         triggerDateToast();
     };
 
     const handleStripSwipeNextDay = () => {
+        logEvent(UE.DateBarSwipeNext, analyticsPropsPlusEntity);
         goToNextWeek();
         triggerDateToast();
     };
 
     const handleStripLongPress = (day: Date) => {
+        logEvent(UE.DateBarLongPress, { ...analyticsPropsPlusEntity, day: formatDayKey(day) });
         openMonthModal(day);
+    };
+
+    const handleMonthModalTodayPress = () => {
+        logEvent(UE.DateBarTodayPressed, analyticsPropsPlusEntity);
+        onSelectDay(moment().tz(TZ).toDate());
     };
 
     const handleHideCommunityBanner = () => {
@@ -1007,6 +1081,7 @@ const EventCalendarView: React.FC<Props> = ({
         navigateToHomeStackScreen(navigation, "Event Details", {
             selectedEvent: event,
             title: event.name,
+            source: "calendar_recommendation",
         });
     };
 
@@ -1085,6 +1160,15 @@ const EventCalendarView: React.FC<Props> = ({
 
             <FiltersView
                 onApply={(f) => {
+                    const previousTags = new Set(filters.tags.map((tag) => normalizeSearchText(tag)));
+                    const nextTags = f.tags.filter((tag) => !previousTags.has(normalizeSearchText(tag)));
+                    nextTags.forEach((tag) => {
+                        logEvent(UE.FilterTagAdded, {
+                            ...analyticsPropsPlusEntity,
+                            tag_name: tag,
+                            tag_count: f.tags.length,
+                        });
+                    });
                     logEvent(UE.EventCalendarViewFiltersSet, { ...analyticsPropsPlusEntity, filters: f });
                     setFilters(f);
                     setFiltersVisible(false);
@@ -1099,7 +1183,7 @@ const EventCalendarView: React.FC<Props> = ({
                 <TopBar
                     searchQuery={searchQuery}
                     setSearchQuery={(q) => {
-                        logEvent(UE.EventCalendarViewSearchChanged, { ...analyticsPropsPlusEntity, search_text: q });
+                        logEvent(UE.FilterSearchTyped, { ...analyticsPropsPlusEntity, search_text: q });
                         setSearchQuery(q);
                         if (typeaheadSelection && q.trim().length > 0) {
                             setTypeaheadSelection(null);
@@ -1113,6 +1197,9 @@ const EventCalendarView: React.FC<Props> = ({
                                 setQuickFilter(null);
                             }
                         }
+                    }}
+                    onSearchFocus={() => {
+                        logEvent(UE.FilterSearchFocused, analyticsPropsPlusEntity);
                     }}
                     onPressFilters={() => {
                         if (Object.values(filters).some((a) => a.length > 0)) {
@@ -1147,6 +1234,11 @@ const EventCalendarView: React.FC<Props> = ({
                         if (filterId.startsWith('tag:')) {
                             setTypeaheadSelection(null);
                             const tag = filterId.replace('tag:', '');
+                            logEvent(UE.FilterTagAdded, {
+                                ...analyticsPropsPlusEntity,
+                                tag_name: tag,
+                                tag_count: filters.tags.length + 1,
+                            });
                             setQuickFilter({ type: 'tag', tag });
                             return;
                         }
@@ -1174,7 +1266,10 @@ const EventCalendarView: React.FC<Props> = ({
                             setQuickFilter({ type: 'interactivity', level });
                         }
                     }}
-                    onPressQuickFilterMore={() => setFiltersVisible(true)}
+                    onPressQuickFilterMore={() => {
+                        logEvent(UE.FilterMorePressed, analyticsPropsPlusEntity);
+                        setFiltersVisible(true);
+                    }}
                     typeaheadSuggestions={typeaheadSuggestions}
                     onSelectTypeaheadSuggestion={(suggestion) => {
                         setTypeaheadSelection(suggestion);
@@ -1187,6 +1282,11 @@ const EventCalendarView: React.FC<Props> = ({
                         } else if (suggestion.type === 'interactivity') {
                             setQuickFilter({ type: 'interactivity', level: suggestion.value || suggestion.label });
                         } else {
+                            logEvent(UE.FilterTagAdded, {
+                                ...analyticsPropsPlusEntity,
+                                tag_name: suggestion.label,
+                                tag_count: filters.tags.length + 1,
+                            });
                             setQuickFilter({ type: 'tag', tag: suggestion.label });
                         }
                         setSearchQuery('');
@@ -1200,6 +1300,7 @@ const EventCalendarView: React.FC<Props> = ({
                     selectedDay={nav.selectedDate}
                     onChangeSelectedDay={handleStripSelectDay}
                     isDaySelectable={isDaySelectable}
+                    hasEventsOnDay={hasEventsOnDay}
                     onSwipePrevDay={handleStripSwipePrevDay}
                     onSwipeNextDay={handleStripSwipeNextDay}
                     onLongPress={handleStripLongPress}
@@ -1210,13 +1311,22 @@ const EventCalendarView: React.FC<Props> = ({
 
             <Modal
                 transparent
-                animationType="fade"
+                animationType="none"
                 visible={isMonthModalOpen}
                 onRequestClose={closeMonthModal}
             >
-                <View style={styles.monthModalBackdrop}>
+                <Animated.View style={[styles.monthModalBackdrop, { opacity: monthModalAnim }]}>
                     <Pressable style={StyleSheet.absoluteFillObject} onPress={closeMonthModal} />
-                    <View style={[styles.monthModalCard, { width: monthModalWidth }]}>
+                    <Animated.View
+                        style={[
+                            styles.monthModalCard,
+                            {
+                                width: monthModalWidth,
+                                opacity: monthModalAnim,
+                                transform: [{ translateY: monthModalTranslateY }, { scale: monthModalScale }],
+                            },
+                        ]}
+                    >
                         <TouchableOpacity
                             style={styles.monthModalClose}
                             onPress={closeMonthModal}
@@ -1247,7 +1357,7 @@ const EventCalendarView: React.FC<Props> = ({
 
                         <TouchableOpacity
                             style={styles.monthModalToday}
-                            onPress={() => onSelectDay(moment().tz(TZ).toDate())}
+                            onPress={handleMonthModalTodayPress}
                             accessibilityLabel="Select today"
                         >
                             <FAIcon name="calendar-day" size={12} color={colors.white} />
@@ -1261,8 +1371,8 @@ const EventCalendarView: React.FC<Props> = ({
                             selectedDate={nav.selectedDate}
                             onMonthChange={onMonthChange}
                         />
-                    </View>
-                </View>
+                    </Animated.View>
+                </Animated.View>
             </Modal>
             <View
                 pointerEvents="none"

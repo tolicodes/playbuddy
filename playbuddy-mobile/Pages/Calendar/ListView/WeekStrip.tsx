@@ -26,6 +26,7 @@ type Props = {
 
     // Should be false for any day you want disabled (e.g., before today)
     isDaySelectable: (d: Date | string) => boolean;
+    hasEventsOnDay?: (d: Date | string) => boolean;
 
     onSwipePrevDay?: () => void;
     onSwipeNextDay?: () => void;
@@ -41,6 +42,7 @@ export const WeekStrip: React.FC<Props> = ({
     selectedDay,
     onChangeSelectedDay,
     isDaySelectable,
+    hasEventsOnDay,
     onSwipePrevDay,
     onSwipeNextDay,
     onLongPress,
@@ -77,6 +79,7 @@ export const WeekStrip: React.FC<Props> = ({
                 const dayMoment = moment(day).tz(TZ);
                 const key = String(day instanceof Date ? day.getTime() : +new Date(day));
                 const selectable = isDaySelectable(day);
+                const hasEvent = hasEventsOnDay ? hasEventsOnDay(day) : true;
                 const selected = isSameDayNY(day, selectedDay);
                 const today = isTodayNY(day);
                 const showTodayRing = today && !selected;
@@ -102,7 +105,7 @@ export const WeekStrip: React.FC<Props> = ({
                         activeOpacity={0.85}
                         style={[
                             s.dayCell,
-                            selectable ? s.dayHasEvent : s.dayNoEvent,
+                            hasEvent ? s.dayHasEvent : s.dayNoEvent,
                             selected && s.daySelected,
                             showTodayRing && s.todayRing,
                         ]}
@@ -112,7 +115,7 @@ export const WeekStrip: React.FC<Props> = ({
                         <Text
                             style={[
                                 s.dowText,
-                                selectable ? s.textOn : s.textOff,
+                                !selectable ? s.textOff : hasEvent ? s.textOn : s.textNoEvent,
                                 selected && s.textSelected,
                             ]}
                         >
@@ -121,7 +124,7 @@ export const WeekStrip: React.FC<Props> = ({
                         <Text
                             style={[
                                 s.dayNum,
-                                selectable ? s.textOn : s.textOff,
+                                !selectable ? s.textOff : hasEvent ? s.textOn : s.textNoEvent,
                                 selected && s.textSelected,
                             ]}
                         >
@@ -208,6 +211,7 @@ const s = StyleSheet.create({
     dayNum: { fontSize: fontSizes.lg, fontWeight: "600", fontFamily: fontFamilies.body },
     textOn: { color: colors.textPrimary },
     textOff: { color: colors.textSubtle },
+    textNoEvent: { color: colors.textSlate },
     textSelected: { color: colors.brandPurpleDark },
 });
 
