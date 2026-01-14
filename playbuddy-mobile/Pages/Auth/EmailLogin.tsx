@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useUserContext } from './hooks/UserContext';
@@ -8,7 +7,6 @@ import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
-const Tab = createMaterialTopTabNavigator();
 interface LoginProps {
     email: string;
     setEmail: (email: string) => void;
@@ -18,6 +16,8 @@ interface LoginProps {
     confirmPassword?: string;
     setConfirmPassword?: (confirmPassword: string) => void;
 }
+
+type AuthTab = 'signup' | 'login';
 
 const Login: React.FC<LoginProps> = ({
     email,
@@ -102,6 +102,12 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [confirmPassword, setConfirmPassword] = useState<string>('');
+    const [activeTab, setActiveTab] = useState<AuthTab>('signup');
+
+    const tabs = [
+        { label: 'Sign Up', value: 'signup' as const },
+        { label: 'Sign In', value: 'login' as const },
+    ];
 
     return (
         <View style={styles.emailContainer}>
@@ -111,43 +117,38 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
                 </View>
                 <Text style={styles.header}>Email</Text>
             </View>
-            <Tab.Navigator
-                style={styles.tabNavigator}
-                screenOptions={{
-                    tabBarStyle: styles.tabBar,
-                    tabBarIndicatorStyle: styles.tabIndicator,
-                    tabBarLabelStyle: styles.tabLabel,
-                    tabBarItemStyle: styles.tabItem,
-                    tabBarActiveTintColor: colors.brandText,
-                    tabBarInactiveTintColor: colors.brandTextMuted,
-                    tabBarPressColor: 'transparent',
-                }}
-            >
-                <Tab.Screen name="Sign Up">
-                    {() => <Login
-                        email={email}
-                        setEmail={setEmail}
-                        password={password}
-                        setPassword={setPassword}
-                        isSignUp={true}
-                        confirmPassword={confirmPassword}
-                        setConfirmPassword={setConfirmPassword}
-                    />}
-                </Tab.Screen>
-
-                <Tab.Screen name="Login">
-                    {() => <Login
-                        email={email}
-                        setEmail={setEmail}
-                        password={password}
-                        setPassword={setPassword}
-                        isSignUp={false}
-                        confirmPassword={confirmPassword}
-                        setConfirmPassword={setConfirmPassword}
-                    />}
-                </Tab.Screen>
-
-            </Tab.Navigator>
+            <View style={styles.segmentedWrap}>
+                {tabs.map((tab) => {
+                    const isActive = activeTab === tab.value;
+                    return (
+                        <TouchableOpacity
+                            key={tab.value}
+                            onPress={() => setActiveTab(tab.value)}
+                            style={[
+                                styles.segmentedButton,
+                                isActive && styles.segmentedButtonActive,
+                            ]}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: isActive }}
+                        >
+                            <Text style={isActive ? styles.segmentedTextActive : styles.segmentedText}>
+                                {tab.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </View>
+            <View style={styles.formContainer}>
+                <Login
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    isSignUp={activeTab === 'signup'}
+                    confirmPassword={confirmPassword}
+                    setConfirmPassword={setConfirmPassword}
+                />
+            </View>
             <TouchableOpacity onPress={onSwitchToPhone}>
                 <Text style={styles.switchText}>Use phone instead</Text>
             </TouchableOpacity>
@@ -157,7 +158,9 @@ export const EmailLogin: React.FC<{ onSwitchToPhone: () => void; }> = ({ onSwitc
 
 const styles = StyleSheet.create({
     emailContainer: {
-        padding: spacing.xl,
+        paddingTop: spacing.xl,
+        paddingHorizontal: spacing.xl,
+        paddingBottom: 0,
         backgroundColor: colors.white,
         borderRadius: radius.xxl,
         borderWidth: 1,
@@ -168,40 +171,43 @@ const styles = StyleSheet.create({
     loginContainer: {
         paddingTop: spacing.mdPlus,
     },
-    tabNavigator: {
-        minHeight: 300,
-    },
-    tabBar: {
-        backgroundColor: colors.surfaceSoft,
+    segmentedWrap: {
+        flexDirection: 'row',
+        alignSelf: 'center',
+        padding: spacing.xs,
         borderRadius: radius.pill,
-        padding: spacing.xxs,
-        height: 40,
-        marginBottom: spacing.mdPlus,
+        backgroundColor: colors.surfaceSoft,
         borderWidth: 1,
         borderColor: colors.badgeBackground,
+        marginBottom: spacing.smPlus,
     },
-    tabIndicator: {
-        top: spacing.xxs,
-        bottom: spacing.xxs,
+    segmentedButton: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
         borderRadius: radius.pill,
-        backgroundColor: colors.white,
     },
-    tabLabel: {
-        fontSize: fontSizes.smPlus,
-        fontWeight: '700',
-        textTransform: 'none',
-        textAlign: 'center',
-        textAlignVertical: 'center',
-        includeFontPadding: false,
-        paddingVertical: 0,
+    segmentedButtonActive: {
+        backgroundColor: colors.accentPurple,
+        shadowColor: colors.black,
+        shadowOpacity: 0.18,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    segmentedText: {
+        fontSize: fontSizes.base,
+        fontWeight: '600',
+        color: colors.brandTextMuted,
         fontFamily: fontFamilies.body,
     },
-    tabItem: {
-        height: 36,
-        paddingVertical: 0,
-        paddingHorizontal: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
+    segmentedTextActive: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.white,
+        fontFamily: fontFamilies.body,
+    },
+    formContainer: {
+        minHeight: 300,
     },
     headerRow: {
         flexDirection: 'row',
