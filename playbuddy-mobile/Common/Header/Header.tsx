@@ -30,7 +30,7 @@ export const CustomBackButton = ({ navigation, backToWelcome }: { navigation: Na
     const analyticsProps = useAnalyticsProps();
     const onPress = () => {
         if (backToWelcome) {
-            navigateToAuth(navigation, 'Login Form');
+            navigateToAuth(navigation, 'Welcome');
         } else if (navigation.canGoBack?.()) {
             navigation.goBack();
         } else {

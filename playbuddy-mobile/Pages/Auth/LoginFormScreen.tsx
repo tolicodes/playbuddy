@@ -16,8 +16,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
-import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useUserContext } from './hooks/UserContext';
 import { EmailLogin } from './EmailLogin';
 import { PhoneLogin } from './PhoneLogin';
@@ -25,8 +23,6 @@ import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import { UE } from '../../userEventTypes';
 import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
-import { navigateToAuth } from '../../Common/Nav/navigationHelpers';
-import { NavStack } from '../../Common/Nav/NavStackType';
 
 const googleLogo = require('../../assets/auth/google-logo.png');
 const appleLogo = require('../../assets/auth/apple-logo.png');
@@ -98,7 +94,6 @@ const AppleLogin: React.FC = () => {
 };
 
 const LoginFormScreen: React.FC = () => {
-    const navigation = useNavigation<NavStack>();
     const [showEmailLogin, setShowEmailLogin] = useState<boolean>(true);
     const [keyboardPadding, setKeyboardPadding] = useState(0);
     const heroAnim = useRef(new Animated.Value(0)).current;
@@ -144,10 +139,6 @@ const LoginFormScreen: React.FC = () => {
         ],
     });
 
-    const handleBack = () => {
-        navigateToAuth(navigation, 'Welcome');
-    };
-
     return (
         <LinearGradient
             colors={gradients.auth}
@@ -157,18 +148,7 @@ const LoginFormScreen: React.FC = () => {
         >
             <View pointerEvents="none" style={styles.glowTop} />
             <View pointerEvents="none" style={styles.glowBottom} />
-            <SafeAreaView style={styles.safe} edges={['top', 'left', 'right', 'bottom']}>
-                <Pressable
-                    onPress={handleBack}
-                    style={({ pressed }) => [
-                        styles.backButton,
-                        pressed && styles.backButtonPressed,
-                    ]}
-                    accessibilityRole="button"
-                    accessibilityLabel="Back to welcome"
-                >
-                    <IonIcon name="chevron-back" size={24} color={colors.white} />
-                </Pressable>
+            <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
                 <KeyboardAvoidingView
                     style={styles.keyboardAvoid}
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -240,30 +220,12 @@ const styles = StyleSheet.create({
     safe: {
         flex: 1,
     },
-    backButton: {
-        position: 'absolute',
-        top: spacing.sm,
-        left: spacing.sm,
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.surfaceGlass,
-        borderWidth: 1,
-        borderColor: colors.borderOnDark,
-        zIndex: 2,
-    },
-    backButtonPressed: {
-        opacity: 0.85,
-        transform: [{ scale: 0.98 }],
-    },
     keyboardAvoid: {
         flex: 1,
     },
     content: {
         paddingHorizontal: spacing.lgPlus,
-        paddingTop: 0,
+        paddingTop: spacing.smPlus,
         paddingBottom: spacing.xxxl,
         alignItems: 'center',
     },

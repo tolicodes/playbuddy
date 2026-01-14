@@ -19,7 +19,7 @@ const AuthNav = () => {
             <AuthStack.Screen
                 name="Login Form"
                 component={LoginFormScreen}
-                options={{ headerShown: false }}
+                options={({ navigation }) => headerOptions({ navigation, title: 'Login' })}
             />
             <AuthStack.Screen name="Profile Details" component={ProfileDetailsForm} />
             <AuthStack.Screen name="Profile" component={AuthProfileScreen} options={
