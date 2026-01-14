@@ -250,14 +250,8 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         toggleWishlistEvent.mutate({ eventId: selectedEvent.id, isOnWishlist: !isWishlisted });
     };
 
-    // Navigates to the organizer’s community events page.
-    const handleOrganizerClick = () => {
-        if (!eventAnalyticsProps.event_id) {
-            return;
-        }
-        logEvent(UE.EventDetailOrganizerClicked, eventAnalyticsProps);
-
-        // from the allEvents array, find the community that the organizer is in
+    const navigateToOrganizerCommunity = () => {
+        // From the allEvents array, find the community that the organizer is in.
         if (!organizerId) return;
 
         const communityIdSet = new Set<string>();
@@ -294,6 +288,15 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         }
     };
 
+    // Navigates to the organizer’s community events page.
+    const handleOrganizerClick = () => {
+        if (!eventAnalyticsProps.event_id) {
+            return;
+        }
+        logEvent(UE.EventDetailOrganizerClicked, eventAnalyticsProps);
+        navigateToOrganizerCommunity();
+    };
+
     const handleOrganizerFollow = () => {
         if (!canFollowOrganizer) return;
         if (!authUserId) {
@@ -314,6 +317,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                 type: 'organizer_public_community',
             });
         });
+        navigateToOrganizerCommunity();
     };
 
     // Handle "Get Tickets" button press.
