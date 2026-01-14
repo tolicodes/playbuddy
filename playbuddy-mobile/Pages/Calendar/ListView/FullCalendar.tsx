@@ -17,9 +17,11 @@ export const FullCalendar = ({
     onMonthChange,
     enableSwipeMonths = true,
 }: any) => {
+    const calendarDate = moment.tz(currentDate, 'America/New_York').format('YYYY-MM-DD');
     return (
         <Calendar
-            current={currentDate.toISOString()}
+            current={calendarDate}
+            initialDate={calendarDate}
             markedDates={markedDates}
             onDayPress={(day: any) =>
                 onSelectDay(moment.tz(day.dateString, 'America/New_York').toDate())
