@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, type UseQueryOptions } from "@tanstack/react-query";
 import type { Event, NormalizedEventInput } from "../types/commonTypes";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
@@ -138,6 +138,16 @@ export type WeeklyPicksImageStatus = {
     splitAt: number | null;
 };
 
+export type WeeklyPicksImageLogStatus = {
+    cacheKey: string;
+    status: "idle" | "running" | "completed" | "failed";
+    inProgress: boolean;
+    startedAt: string | null;
+    finishedAt: string | null;
+    error: string | null;
+    logs: string[];
+};
+
 export type WeeklyPicksImageMeta = {
     cacheKey: string | null;
     version: string | null;
@@ -226,6 +236,22 @@ export const useFetchWeeklyPicksImageStatus = (options: WeeklyPicksImageOptions 
         },
     });
 };
+
+export const useFetchWeeklyPicksImageLogs = (
+    options: WeeklyPicksImageOptions = {},
+    queryOptions?: Omit<UseQueryOptions<WeeklyPicksImageLogStatus>, 'queryKey' | 'queryFn'>
+) =>
+    useQuery<WeeklyPicksImageLogStatus>({
+        queryKey: ["weekly-picks-image-logs", options],
+        queryFn: async () => {
+            const queryString = buildWeeklyPicksImageQuery(options);
+            const response = await axios.get<WeeklyPicksImageLogStatus>(
+                `${API_BASE_URL}/events/weekly-picks/image/logs${queryString}`
+            );
+            return response.data;
+        },
+        ...queryOptions,
+    });
 
 export const useGenerateWeeklyPicksImage = () => {
     return useMutation<WeeklyPicksImageGenerateResult, unknown, WeeklyPicksImageOptions>({

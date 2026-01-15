@@ -3,13 +3,19 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-nati
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../../components/styles';
 
-export const TagPill = ({ label, onRemove, variant = 'selected' }: {
+export const TagPill = ({ label, onRemove, variant = 'selected', count }: {
     label: string;
     onRemove?: () => void;
     variant?: 'selected' | 'suggestion';
+    count?: number;
 }) => (
     <View style={[styles.tagPill, variant === 'suggestion' && styles.suggestionPill]}>
         <Text style={styles.tagText}>{label}</Text>
+        {typeof count === 'number' && (
+            <View style={styles.tagCount}>
+                <Text style={styles.tagCountText}>{count}</Text>
+            </View>
+        )}
         {onRemove && (
             <TouchableOpacity onPress={onRemove} style={styles.removeIcon}>
                 <Ionicons name="close-circle" size={16} color={colors.textDisabled} />
@@ -49,6 +55,21 @@ const styles = StyleSheet.create({
         fontSize: fontSizes.sm,
         fontWeight: '500',
         color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+    },
+    tagCount: {
+        marginLeft: spacing.xsPlus,
+        paddingHorizontal: spacing.xs,
+        paddingVertical: spacing.xxs,
+        borderRadius: radius.smPlus,
+        backgroundColor: colors.surfaceLavenderAlt,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+    },
+    tagCountText: {
+        fontSize: fontSizes.xs,
+        fontWeight: '600',
+        color: colors.brandPurpleDark,
         fontFamily: fontFamilies.body,
     },
     removeIcon: {

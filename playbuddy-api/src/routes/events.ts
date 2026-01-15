@@ -21,6 +21,7 @@ import {
     forceGenerateWeeklyPicksImage,
     getCachedWeeklyPicksImage,
     getWeeklyPicksImageCacheStatus,
+    getWeeklyPicksImageLogStatus,
 } from '../helpers/weeklyPicksImageCache.js';
 
 const router = Router();
@@ -388,6 +389,12 @@ router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedR
         partHeights: status.entry?.parts?.map((part) => part.height) ?? null,
         splitAt: status.entry?.splitAt ?? null,
     });
+}));
+
+router.get('/weekly-picks/image/logs', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    const options = extractWeeklyPicksImageOptions(req);
+    const status = getWeeklyPicksImageLogStatus(options);
+    res.status(200).json(status);
 }));
 
 router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {

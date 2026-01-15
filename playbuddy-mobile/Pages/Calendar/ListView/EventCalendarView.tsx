@@ -301,22 +301,6 @@ const EventCalendarView: React.FC<Props> = ({
             return { tags: [], experience_levels: [], interactivity_levels: [], event_types: [] };
         return getAllClassificationsFromEvents(sourceEvents);
     }, [sourceEvents]);
-    const organizerOptions = useMemo(() => {
-        const options = new Map<string, { id: string; name: string; count: number }>();
-        for (const event of sourceEvents || []) {
-            const organizer = event.organizer;
-            const name = organizer?.name?.trim();
-            if (!name) continue;
-            const idValue = organizer?.id?.toString() || name.toLowerCase();
-            const existing = options.get(idValue);
-            if (existing) {
-                existing.count += 1;
-            } else {
-                options.set(idValue, { id: idValue, name, count: 1 });
-            }
-        }
-        return Array.from(options.values()).sort((a, b) => b.count - a.count);
-    }, [sourceEvents]);
 
     const analyticsProps = useEventAnalyticsProps();
     const analyticsPropsPlusEntity = { ...analyticsProps, entity, entityId };
@@ -526,11 +510,19 @@ const EventCalendarView: React.FC<Props> = ({
     const filteredEvents = useMemo(() => {
         if (!sourceEvents) return [];
         const normalize = (str?: string) => str?.toLowerCase().replace(/ /g, "_");
+        const normalizeExperienceLevel = (value?: string | null) => {
+            const normalized = normalize(value || '') || '';
+            if (normalized === 'all_levels' || normalized === 'all_level' || normalized === 'all') {
+                return 'all';
+            }
+            return normalized;
+        };
+        const normalizedExperienceFilters = filters.experience_levels.map(normalizeExperienceLevel);
         const baseEvents = quickFilter ? sourceEvents.filter(matchesQuickFilter) : sourceEvents;
 
         const normalizedQuery = normalizeSearchText(searchQuery);
-        if (normalizedQuery.length > 0) {
-            return baseEvents.filter((event) => {
+        return baseEvents.filter((event) => {
+            if (normalizedQuery.length > 0) {
                 const fields: Array<string | undefined> = [
                     event.name,
                     event.organizer?.name,
@@ -551,19 +543,20 @@ const EventCalendarView: React.FC<Props> = ({
                     fields.push(tag);
                 }
 
-                return fields.some((field) =>
+                const matchesQuery = fields.some((field) =>
                     normalizeSearchText(field).includes(normalizedQuery)
                 );
-            });
-        }
+                if (!matchesQuery) return false;
+            }
 
-        return baseEvents.filter((event) => {
             const tags = [...(event.classification?.tags || []), ...(event.tags || [])];
             const matchesTags =
                 filters.tags.length === 0 ||
                 filters.tags.some((t) => tags.some((tag) => tag.toLowerCase() === t.toLowerCase()));
-            const exp = normalize(event.classification?.experience_level);
-            const matchesExp = filters.experience_levels.length === 0 || filters.experience_levels.includes(exp || "");
+            const exp = normalizeExperienceLevel(event.classification?.experience_level);
+            const matchesExp =
+                filters.experience_levels.length === 0 ||
+                normalizedExperienceFilters.includes(exp || "");
             const inter = normalize(event.classification?.interactivity_level);
             const matchesInter = filters.interactivity_levels.length === 0 || filters.interactivity_levels.includes(inter || "");
             const resolvedType = resolveEventTypeValue(event);
@@ -875,6 +868,8 @@ const EventCalendarView: React.FC<Props> = ({
         setQuickFilter,
         setTypeaheadSelection,
     ]);
+    const hasSheetFilters = Object.values(filters).some((values) => values.length > 0);
+    const hasActiveFilters = activeFilterChips.length > 0;
 
     const { sections } = useGroupedEvents(filteredEvents, featuredEvents);
 
@@ -1253,9 +1248,9 @@ const EventCalendarView: React.FC<Props> = ({
                         visible={filtersVisible}
                         onClose={() => setFiltersVisible(false)}
                         filterOptions={allClassifications}
+                        events={sourceEvents}
                         searchQuery={searchQuery}
                         onSearchQueryChange={handleSearchQueryChange}
-                        organizerOptions={organizerOptions}
                     />
 
                     <View style={styles.headerSurface}>
@@ -1266,20 +1261,24 @@ const EventCalendarView: React.FC<Props> = ({
                         logEvent(UE.FilterSearchFocused, analyticsPropsPlusEntity);
                     }}
                     onPressFilters={() => {
-                        if (Object.values(filters).some((a) => a.length > 0)) {
-                            logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
+                        if (hasActiveFilters) {
+                            if (hasSheetFilters) {
+                                logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
+                            }
                             setFilters({ tags: [], event_types: [], experience_levels: [], interactivity_levels: [] });
-                        } else {
-                            logEvent(UE.EventCalendarViewFiltersEnabled, analyticsPropsPlusEntity);
-                            setFiltersVisible(true);
+                            setQuickFilter(null);
+                            setTypeaheadSelection(null);
+                            return;
                         }
+                        logEvent(UE.EventCalendarViewFiltersEnabled, analyticsPropsPlusEntity);
+                        setFiltersVisible(true);
                     }}
                     onPressGoogleCalendar={() => {
                         logEvent(UE.EventCalendarViewGoogleCalendar, analyticsPropsPlusEntity);
                         Linking.openURL(MISC_URLS.addGoogleCalendar());
                     }}
                     showGoogleCalendar={showGoogleCalendar}
-                    filtersEnabled={Object.values(filters).some((a) => a.length > 0)}
+                    filtersEnabled={hasActiveFilters}
                     quickFilters={quickFilters}
                     activeFilters={activeFilterChips}
                     selectedQuickFilterId={selectedQuickFilterId}

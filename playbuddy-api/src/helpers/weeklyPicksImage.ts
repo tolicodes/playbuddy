@@ -6,7 +6,7 @@ import { ACTIVE_EVENT_TYPES } from '../commonTypes.js';
 
 const TZ = 'America/New_York';
 const BASE_WIDTH = 390;
-const DETAILS_PANEL_HEIGHT = 108;
+const DETAILS_PANEL_HEIGHT = 100;
 const isActiveEventType = (value?: string | null) =>
     !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
 
@@ -291,7 +291,8 @@ const wrapText = (value: string, maxChars: number, maxLines: number) => {
 
 const normalizePartCount = (value?: number) => {
     if (!Number.isFinite(value)) return 2;
-    return Math.round(value) === 1 ? 1 : 2;
+    const normalized = Number(value);
+    return Math.round(normalized) === 1 ? 1 : 2;
 };
 
 const truncateText = (value: string, maxChars: number) => {
@@ -568,8 +569,6 @@ const buildSvg = ({
     height,
     scale,
     weekLabel,
-    isFirstWeek,
-    isLastWeek,
     days,
     imagesById,
 }: {
@@ -577,8 +576,6 @@ const buildSvg = ({
     height: number;
     scale: number;
     weekLabel: string;
-    isFirstWeek: boolean;
-    isLastWeek: boolean;
     days: Array<{ dateKey: string; dayLabel: string; dateLabel: string; items: WeeklyPickItem[] }>;
     imagesById: Map<number, string | null>;
 }): { svg: string; height: number; dayLayouts: DayLayout[] } => {
@@ -589,11 +586,7 @@ const buildSvg = ({
     const paddingBottom = s(20);
     const eventsPaddingBottom = s(24);
 
-    const weekSelectorPaddingX = s(16);
     const weekSelectorPaddingY = s(18);
-    const weekNavSize = s(44);
-    const weekNavIconSize = s(24);
-    const weekNavStroke = Math.max(1, Math.round(weekNavIconSize * 0.12));
     const weekSelectorRadius = s(24);
     const weekSelectorMarginBottom = s(16);
 
@@ -601,8 +594,9 @@ const buildSvg = ({
     const weekTextFont = s(28);
     const weekKickerLine = s(14);
     const weekTextLine = s(34);
-    const weekTextBlockHeight = weekKickerLine + weekTextLine;
-    const weekSelectorHeight = Math.max(weekNavSize, weekTextBlockHeight) + weekSelectorPaddingY * 2;
+    const weekKickerGap = s(4);
+    const weekTextBlockHeight = weekKickerLine + weekKickerGap + weekTextLine;
+    const weekSelectorHeight = weekTextBlockHeight + weekSelectorPaddingY * 2;
 
     const dayOfWeekFont = s(24);
     const dayOfWeekLine = s(28);
@@ -777,39 +771,8 @@ const buildSvg = ({
         content.push(`
     <text x="${weekTextCenterX}" y="${weekTextTop}" font-size="${weekKickerFont}" fill="${THEME.colors.textMuted}"
           font-family="${fontBody}" letter-spacing="${s(1.6)}" dominant-baseline="hanging" text-anchor="middle">WEEK OF</text>
-    <text x="${weekTextCenterX}" y="${weekTextTop + weekKickerLine}" font-size="${weekTextFont}" fill="${THEME.colors.brandDeep}"
+    <text x="${weekTextCenterX}" y="${weekTextTop + weekKickerLine + weekKickerGap}" font-size="${weekTextFont}" fill="${THEME.colors.brandDeep}"
           font-family="${fontDisplay}" font-weight="700" letter-spacing="${s(0.4)}" dominant-baseline="hanging" text-anchor="middle">${escapeXml(weekLabel)}</text>`);
-
-        const weekNavY = weekSelectorY + (weekSelectorHeight - weekNavSize) / 2;
-        const weekNavLeftX = weekSelectorX + weekSelectorPaddingX;
-        const weekNavRightX = weekSelectorX + weekSelectorWidth - weekSelectorPaddingX - weekNavSize;
-        const arrowX = weekNavIconSize * 0.35;
-        const arrowY = weekNavIconSize * 0.45;
-        const buildWeekNav = (x: number, disabled: boolean, direction: 'left' | 'right') => {
-            const fill = disabled ? THEME.colors.surfaceMuted : THEME.colors.surfaceWhiteStrong;
-            const border = disabled ? THEME.colors.borderMuted : THEME.colors.borderOnDarkSoft;
-            const icon = disabled ? THEME.colors.textDisabled : THEME.colors.brandViolet;
-            const opacity = disabled ? 0.7 : 1;
-            const cx = x + weekNavSize / 2;
-            const cy = weekNavY + weekNavSize / 2;
-            const sign = direction === 'left' ? 1 : -1;
-            const xStart = cx + arrowX * sign;
-            const xMid = cx - arrowX * sign;
-            const xEnd = xStart;
-            const yTop = cy - arrowY;
-            const yMid = cy;
-            const yBottom = cy + arrowY;
-            return `
-    <g opacity="${opacity}">
-      <rect x="${x}" y="${weekNavY}" width="${weekNavSize}" height="${weekNavSize}" rx="${weekNavSize / 2}" ry="${weekNavSize / 2}"
-            fill="${fill}" stroke="${border}" stroke-width="${s(1)}" />
-      <path d="M ${xStart} ${yTop} L ${xMid} ${yMid} L ${xEnd} ${yBottom}" fill="none"
-            stroke="${icon}" stroke-width="${weekNavStroke}" stroke-linecap="round" stroke-linejoin="round" />
-    </g>`;
-        };
-
-        content.push(buildWeekNav(weekNavLeftX, isFirstWeek, 'left'));
-        content.push(buildWeekNav(weekNavRightX, isLastWeek, 'right'));
 
         let y = weekSelectorY + weekSelectorHeight + weekSelectorMarginBottom;
 
@@ -1246,10 +1209,6 @@ export const generateWeeklyPicksImage = async (
         height: Math.round(844 * scale),
         scale,
         weekLabel,
-        isFirstWeek: visibleWeekOffsets.length > 0 && selectedOffset === visibleWeekOffsets[0],
-        isLastWeek:
-            visibleWeekOffsets.length > 0 &&
-            selectedOffset === visibleWeekOffsets[visibleWeekOffsets.length - 1],
         days,
         imagesById,
     });

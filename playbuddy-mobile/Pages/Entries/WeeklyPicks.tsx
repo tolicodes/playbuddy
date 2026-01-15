@@ -195,6 +195,8 @@ export const WeeklyPicks = () => {
                                             onPress={onPressEvent}
                                             attendees={emptyAttendees}
                                             noPadding
+                                            disableClickAnalytics
+                                            hideSaveButton
                                         />
                                     ))}
                                 </View>
@@ -283,6 +285,7 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
         color: colors.textMuted,
         fontFamily: fontFamilies.body,
+        marginBottom: spacing.xs,
     },
     weekText: {
         fontSize: fontSizes.display,

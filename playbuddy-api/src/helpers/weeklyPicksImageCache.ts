@@ -18,15 +18,37 @@ type WeeklyPicksImageCacheStatus = {
     entry?: WeeklyPicksImageCacheEntry;
 };
 
+type WeeklyPicksImageLogState = {
+    cacheKey: string;
+    status: 'running' | 'completed' | 'failed';
+    startedAt: string | null;
+    finishedAt: string | null;
+    error: string | null;
+    logs: string[];
+};
+
+type WeeklyPicksImageLogStatus = {
+    cacheKey: string;
+    status: 'idle' | 'running' | 'completed' | 'failed';
+    inProgress: boolean;
+    startedAt: string | null;
+    finishedAt: string | null;
+    error: string | null;
+    logs: string[];
+};
+
 const cache = new Map<string, WeeklyPicksImageCacheEntry>();
 const inFlight = new Map<string, Promise<WeeklyPicksImageCacheEntry>>();
+const logStore = new Map<string, WeeklyPicksImageLogState>();
+const MAX_WEEKLY_PICKS_LOGS = 500;
 
 const normalizeNumber = (value?: number) =>
     Number.isFinite(value) ? Number(value) : undefined;
 
 const normalizePartCount = (value?: number) => {
     if (!Number.isFinite(value)) return 2;
-    return Math.round(value) === 1 ? 1 : 2;
+    const normalized = Number(value);
+    return Math.round(normalized) === 1 ? 1 : 2;
 };
 
 const buildCacheKey = (options: WeeklyPicksImageOptions) => {
@@ -47,28 +69,81 @@ const buildCacheKey = (options: WeeklyPicksImageOptions) => {
 const buildVersion = () =>
     `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
 
+const nowIso = () => new Date().toISOString();
+
+const startLogState = (cacheKey: string) => {
+    const state: WeeklyPicksImageLogState = {
+        cacheKey,
+        status: 'running',
+        startedAt: nowIso(),
+        finishedAt: null,
+        error: null,
+        logs: [],
+    };
+    logStore.set(cacheKey, state);
+    return state;
+};
+
+const ensureLogState = (cacheKey: string) =>
+    logStore.get(cacheKey) ?? startLogState(cacheKey);
+
+const pushLogLine = (cacheKey: string, line: string) => {
+    if (!line) return;
+    const state = ensureLogState(cacheKey);
+    state.logs.push(line);
+    if (state.logs.length > MAX_WEEKLY_PICKS_LOGS) {
+        state.logs.splice(0, state.logs.length - MAX_WEEKLY_PICKS_LOGS);
+    }
+};
+
+const finalizeLogState = (cacheKey: string, status: 'completed' | 'failed', error?: string | null) => {
+    const state = ensureLogState(cacheKey);
+    state.status = status;
+    state.finishedAt = nowIso();
+    state.error = error ?? null;
+};
+
+const buildLogSink = (cacheKey: string, logger?: WeeklyPicksImageLogger): WeeklyPicksImageLogger =>
+    (level, message) => {
+        pushLogLine(cacheKey, message);
+        if (logger) {
+            logger(level, message);
+            return;
+        }
+        logWeeklyPicksMessage(undefined, level, message);
+    };
+
 const generateAndCacheWeeklyPicksImage = async (
     options: WeeklyPicksImageOptions,
     cacheKey: string,
     logger?: WeeklyPicksImageLogger
 ) => {
     const startedAt = Date.now();
-    const result = await generateWeeklyPicksImage(options, logger);
-    const durationMs = Date.now() - startedAt;
-    const entry: WeeklyPicksImageCacheEntry = {
-        ...result,
-        generatedAt: new Date().toISOString(),
-        durationMs,
-        version: buildVersion(),
-    };
-    cache.set(cacheKey, entry);
-    const jpgBytes = entry.parts.reduce((sum, part) => sum + part.jpg.length, 0);
-    logWeeklyPicksMessage(
-        logger,
-        'info',
-        `[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms parts=${entry.parts.length} jpgBytes=${jpgBytes}`
-    );
-    return entry;
+    startLogState(cacheKey);
+    const logSink = buildLogSink(cacheKey, logger);
+    try {
+        const result = await generateWeeklyPicksImage(options, logSink);
+        const durationMs = Date.now() - startedAt;
+        const entry: WeeklyPicksImageCacheEntry = {
+            ...result,
+            generatedAt: new Date().toISOString(),
+            durationMs,
+            version: buildVersion(),
+        };
+        cache.set(cacheKey, entry);
+        const jpgBytes = entry.parts.reduce((sum, part) => sum + part.jpg.length, 0);
+        logSink(
+            'info',
+            `[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms parts=${entry.parts.length} jpgBytes=${jpgBytes}`
+        );
+        finalizeLogState(cacheKey, 'completed');
+        return entry;
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logSink('error', `[weekly-picks] Generation failed ${cacheKey} error=${errorMessage}`);
+        finalizeLogState(cacheKey, 'failed', errorMessage);
+        throw error;
+    }
 };
 
 export const getWeeklyPicksImageCacheStatus = (
@@ -81,6 +156,35 @@ export const getWeeklyPicksImageCacheStatus = (
         cached: !!entry,
         inProgress: inFlight.has(cacheKey),
         entry,
+    };
+};
+
+export const getWeeklyPicksImageLogStatus = (
+    options: WeeklyPicksImageOptions
+): WeeklyPicksImageLogStatus => {
+    const cacheKey = buildCacheKey(options);
+    const inProgress = inFlight.has(cacheKey);
+    const state = logStore.get(cacheKey);
+    if (!state) {
+        return {
+            cacheKey,
+            status: inProgress ? 'running' : 'idle',
+            inProgress,
+            startedAt: null,
+            finishedAt: null,
+            error: null,
+            logs: [],
+        };
+    }
+    const status = inProgress ? 'running' : state.status;
+    return {
+        cacheKey,
+        status,
+        inProgress,
+        startedAt: state.startedAt,
+        finishedAt: state.finishedAt,
+        error: state.error,
+        logs: state.logs,
     };
 };
 
@@ -167,4 +271,4 @@ export const triggerWeeklyPicksImageGeneration = (
     };
 };
 
-export type { WeeklyPicksImageCacheEntry };
+export type { WeeklyPicksImageCacheEntry, WeeklyPicksImageLogStatus };

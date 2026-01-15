@@ -28,6 +28,7 @@ export type TypeaheadSuggestion = {
 export interface TopBarProps {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
+    onSearchFocus?: () => void;
     filtersEnabled: boolean;
     onPressFilters: () => void;
     onPressGoogleCalendar: () => void;
@@ -45,6 +46,9 @@ export interface TopBarProps {
 export const TopBar = ({
     searchQuery,
     setSearchQuery,
+    onSearchFocus,
+    filtersEnabled,
+    onPressFilters,
     quickFilters,
     activeFilters = [],
     selectedQuickFilterId,
@@ -79,6 +83,8 @@ export const TopBar = ({
         activeFilterChipKeys.add(key);
         return true;
     });
+    const filterIconColor = filtersEnabled ? colors.accentPurple : colors.textMuted;
+    const filterIconName = filtersEnabled ? 'close' : 'filter';
     const showQuickFilters = isSearchExpanded;
     const visibleQuickFilters = (isSearchExpanded
         ? quickFilters.filter(
@@ -114,6 +120,7 @@ export const TopBar = ({
         }
         setIsSearchFocused(true);
         setIsSearchPinned(true);
+        onSearchFocus?.();
     };
 
     const handleBlur = () => {
@@ -158,6 +165,21 @@ export const TopBar = ({
                             autoCapitalize="none"
                             clearButtonMode="while-editing"
                         />
+                        <TouchableOpacity
+                            style={[
+                                topBarStyles.filterButton,
+                                filtersEnabled && topBarStyles.filterButtonActive,
+                            ]}
+                            onPress={() => {
+                                setIsInteracting(false);
+                                onPressFilters();
+                            }}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                            accessibilityRole="button"
+                            accessibilityLabel={filtersEnabled ? "Clear filters" : "Open filters"}
+                        >
+                            <Ionicons name={filterIconName} size={18} color={filterIconColor} />
+                        </TouchableOpacity>
                     </View>
                 </View>
                 {tagMatches.length > 0 && (
@@ -415,6 +437,21 @@ const topBarStyles = StyleSheet.create({
     },
     searchIcon: { marginRight: spacing.sm },
     searchInput: { flex: 1, fontSize: fontSizes.xl, color: colors.textPrimary, fontFamily: fontFamilies.body },
+    filterButton: {
+        marginLeft: spacing.sm,
+        width: 28,
+        height: 28,
+        borderRadius: radius.pill,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceLavenderLight,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+    },
+    filterButtonActive: {
+        backgroundColor: colors.surfaceLavenderStrong,
+        borderColor: colors.borderLavenderActive,
+    },
     quickFiltersRow: {
         flexDirection: 'row',
         alignItems: 'center',

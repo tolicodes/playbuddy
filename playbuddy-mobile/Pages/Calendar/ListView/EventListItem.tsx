@@ -24,7 +24,7 @@ import { ActionSheet } from '../../../components/ActionSheet';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 import { useCalendarCoach } from '../../PopupManager';
 
-const DETAILS_PANEL_HEIGHT = 108;
+const DETAILS_PANEL_HEIGHT = 100;
 const CARD_IMAGE_ASPECT_RATIO = 2;
 const DEFAULT_CARD_WIDTH = Math.max(0, Dimensions.get('window').width - spacing.lg * 2);
 const DEFAULT_IMAGE_HEIGHT = Math.round(DEFAULT_CARD_WIDTH / CARD_IMAGE_ASPECT_RATIO);
