@@ -29,15 +29,17 @@ export type NavStackProps = {
 
     // Authentication & Profile
     'AuthNav': {
-        screen: 'Welcome' | 'Login Form' | 'Profile Details' | 'Profile';
+        screen: 'Welcome' | 'Login Form';
     };
     // TODO: Move?
+    'Profile Details': undefined;
     'Profile': undefined;
     'Login': undefined;
     'Notifications': undefined;
     'Debug': undefined;
 
     // Promotional & Events
+    'Promos': undefined;
     'PromoScreen': undefined;
     'Weekly Picks': undefined;
     'Weekly Picks Admin': undefined;
@@ -58,6 +60,7 @@ export type NavStackProps = {
     };
 
     'Munches': undefined;
+    'Play Parties': undefined;
 
     'Munch Details': {
         munchId: string;
@@ -72,6 +75,7 @@ export type NavStackProps = {
     // Other Sections
     'Retreats': undefined;
     'Moar': undefined;
+    'Discover Game': undefined;
 
 }
 

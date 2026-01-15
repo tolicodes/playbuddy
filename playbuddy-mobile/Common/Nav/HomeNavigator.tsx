@@ -1,21 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
 import { TabNavigator } from './TabNavigator';
 import { PromosEntryScreen } from '../../Pages/Entries/PromosEntryScreen';
-import { CommunityEvents } from '../../Pages/Communities/CommunityEvents';
-import { MunchDetails } from '../../Pages/Munches/MunchDetails';
-import EventDetails from '../../Pages/Calendar/EventDetails/EventDetails';
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
 import AuthNav from '../../Pages/Auth/AuthNav';
 import { headerOptions } from '../Header/Header';
-import FacilitatorProfile from '../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile';
 import EventsLoadingScreen from '../../components/EventsLoadingScreen';
 import { navigateToAuth, navigateToHome, navigateToHomeStackScreen } from './navigationHelpers';
-import { colors, gradients } from '../../components/styles';
-import { NotificationsScreen } from '../../Pages/Notifications/NotificationsScreen';
-import DebugScreen from '../../Pages/Debug/DebugScreen';
 import { navigationRef } from './navigationRef';
 
 const HomeStack = createStackNavigator();
@@ -32,13 +25,8 @@ const HomeStack = createStackNavigator();
  * 5. Routes to home for authenticated users
  * 
  * Screens:
- * - Home: Main tab navigator
- * - AuthNav: Authentication flow
- * - PromoScreen: Promotional content
- * - Weekly Picks: Featured events
- * - Event Details: Single event view
- * - Community Events: Events for a specific community
- * - Buddy Events: Events for a buddy's wishlist
+ * - Home: Main tab navigator (nested stacks host detail screens)
+ * - AuthNav: Authentication flow (Welcome/Login)
  */
 export function HomeStackNavigator() {
     const navigation = useNavigation<NavigationProp<ParamListBase>>();
@@ -78,7 +66,7 @@ export function HomeStackNavigator() {
         const rootState = (navigation as any).getRootState?.() ?? navigation.getState?.();
         const activeRouteChain = getActiveRouteChain(rootState);
         const lastAuthIndex = activeRouteChain.lastIndexOf('AuthNav');
-        const authRouteNames = new Set(['AuthNav', 'Welcome', 'Login Form', 'Profile Details', 'Profile']);
+        const authRouteNames = new Set(['AuthNav', 'Welcome', 'Login Form']);
         const currentRouteName = navigationRef.getCurrentRoute?.()?.name ?? null;
         const isAuthRouteActive = currentRouteName ? authRouteNames.has(currentRouteName) : false;
         const isAuthRouteInChain = activeRouteChain.some((name) => authRouteNames.has(name));
@@ -123,7 +111,7 @@ export function HomeStackNavigator() {
         // If the user has a profile but it's incomplete, navigate to ProfileDetails
         if (authUserId && !isProfileComplete) {
             console.log('HomeNavigator: routing to Profile Details');
-            navigateToAuth(navigation, 'Profile Details');
+            navigateToHomeStackScreen(navigation, 'Profile Details');
             return;
         }
 
@@ -154,8 +142,11 @@ export function HomeStackNavigator() {
         isLoadingEvents,
     ]);
 
-    const PromoScreenWrap = () => (
-        <PromosEntryScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
+    const PromoScreenWrap = useCallback(
+        () => (
+            <PromosEntryScreen onPromoScreenViewed={() => setIsPromoScreenViewed(true)} />
+        ),
+        [setIsPromoScreenViewed]
     );
 
     const shouldShowEventsLoading = !!authUserId && isLoadingEvents;
@@ -178,47 +169,13 @@ export function HomeStackNavigator() {
                 animation: 'none',
             }}
         >
-            <HomeStack.Screen name="Home"
-                component={TabNavigator} />
+            <HomeStack.Screen name="Home" component={TabNavigator} />
             <HomeStack.Screen name="AuthNav"
                 component={AuthNav} />
             <HomeStack.Screen name="PromoScreen"
                 component={PromoScreenWrap}
                 options={({ navigation }) => headerOptions({ navigation, title: 'Welcome!', backToWelcome: true })}
             />
-            <HomeStack.Screen name="Notifications"
-                component={NotificationsScreen}
-                options={({ navigation }) => headerOptions({ navigation, title: 'Notifications' })}
-            />
-            <HomeStack.Screen name="Debug"
-                component={DebugScreen}
-                options={({ navigation }) => headerOptions({ navigation, title: 'Debug' })}
-            />
-
-            <HomeStack.Screen name="Event Details"
-                options={({ navigation }) => ({
-                    ...headerOptions({
-                        navigation,
-                        title: 'Event Details',
-                        backgroundColor: gradients.nav[0],
-                    }),
-                    cardStyle: { backgroundColor: colors.lavenderBackground },
-                })}
-                component={EventDetails} />
-
-            {/* Detail Screens */}
-            <HomeStack.Screen name="Community Events"
-                options={({ navigation }) => headerOptions({ navigation, title: 'Events' })}
-                component={CommunityEvents} />
-
-            <HomeStack.Screen name="Munch Details"
-                options={({ navigation }) => headerOptions({ navigation, title: 'Munch Details' })}
-                component={MunchDetails} />
-
-
-            <HomeStack.Screen name="Facilitator Profile"
-                options={({ navigation }) => headerOptions({ navigation, title: 'Facilitator Profile' })}
-                component={FacilitatorProfile} />
         </HomeStack.Navigator >
     );
 }

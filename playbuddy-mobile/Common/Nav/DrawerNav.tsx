@@ -26,7 +26,7 @@ import { logEvent } from "../hooks/logger";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { colors } from "../../components/styles";
-import { navigateToHome, navigateToTab } from "./navigationHelpers";
+import { navigateToHome, navigateToHomeStackScreen, navigateToTab } from "./navigationHelpers";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { ADMIN_EMAILS } from "../../config";
 
@@ -46,13 +46,19 @@ export const DrawerNav = () => {
         return getter;
     }
 
-    const onPressItemLogEventListener = (screenName: string) => {
-        return () => ({
-            drawerItemPress: () => {
+    const onPressItemLogEventListener = (screenName: string, targetScreen?: Parameters<typeof navigateToHomeStackScreen>[1]) => {
+        return ({ navigation }: { navigation: any }) => ({
+            drawerItemPress: (e: any) => {
+                if (targetScreen) {
+                    e.preventDefault();
+                }
                 logEvent(UE.DrawerItemPressed, {
                     ...analyticsProps,
                     screen_name: screenName,
                 });
+                if (targetScreen) {
+                    navigateToHomeStackScreen(navigation, targetScreen);
+                }
             },
         })
     }
@@ -84,7 +90,7 @@ export const DrawerNav = () => {
                     ...headerOptions({ navigation, title: 'Facilitators' }),
                     drawerIcon: getIcon('user-tie'),
                 })}
-                listeners={onPressItemLogEventListener('Facilitators')}
+                listeners={onPressItemLogEventListener('Facilitators', 'Facilitators')}
             />
 
             <Drawer.Screen
@@ -98,7 +104,7 @@ export const DrawerNav = () => {
                         </View>
                     ),
                 })}
-                listeners={onPressItemLogEventListener('Promos')}
+                listeners={onPressItemLogEventListener('Promos', 'Promos')}
             />
 
 
@@ -109,7 +115,7 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('calendar-week'),
                     ...headerOptions({ navigation, title: 'PB\'s Weekly Picks' }),
                 })}
-                listeners={onPressItemLogEventListener('Weekly Picks')}
+                listeners={onPressItemLogEventListener('Weekly Picks', 'Weekly Picks')}
             />
 
             <Drawer.Screen
@@ -119,7 +125,7 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('fire'),
                     ...headerOptions({ navigation, title: 'Popular Events' }),
                 })}
-                listeners={onPressItemLogEventListener('Popular Events')}
+                listeners={onPressItemLogEventListener('Popular Events', 'Popular Events')}
             />
 
             <Drawer.Screen
@@ -129,7 +135,7 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('campground'),
                     ...headerOptions({ navigation, title: 'Festivals/Conferences/Retreats' }),
                 })}
-                listeners={onPressItemLogEventListener('Festivals/Conferences/Retreats')}
+                listeners={onPressItemLogEventListener('Festivals/Conferences/Retreats', 'Retreats')}
             />
 
             <Drawer.Screen
@@ -139,7 +145,7 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('utensils'),
                     ...headerOptions({ navigation, title: 'Munches' }),
                 })}
-                listeners={onPressItemLogEventListener('Munches')}
+                listeners={onPressItemLogEventListener('Munches', 'Munches')}
             />
 
 
@@ -150,7 +156,7 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('mask'),
                     ...headerOptions({ navigation, title: 'Play Parties' }),
                 })}
-                listeners={onPressItemLogEventListener('Play Parties')}
+                listeners={onPressItemLogEventListener('Play Parties', 'Play Parties')}
             />
 
             <Drawer.Screen
@@ -179,7 +185,7 @@ export const DrawerNav = () => {
                     drawerIcon: getIcon('ellipsis-h'),
                     ...headerOptions({ navigation, title: 'Moar' }),
                 })}
-                listeners={onPressItemLogEventListener('Moar')}
+                listeners={onPressItemLogEventListener('Moar', 'Moar')}
             />
 
             {isAdmin && (
@@ -191,7 +197,7 @@ export const DrawerNav = () => {
                             drawerIcon: getIcon('user-shield'),
                             ...headerOptions({ navigation, title: 'Admin' }),
                         })}
-                        listeners={onPressItemLogEventListener('Admin')}
+                        listeners={onPressItemLogEventListener('Admin', 'Admin')}
                     />
                     <Drawer.Screen
                         name="Import URLs"
@@ -201,6 +207,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Import URLs', 'Import URLs')}
                     />
                     <Drawer.Screen
                         name="Weekly Picks Admin"
@@ -210,6 +217,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Weekly Picks Admin', 'Weekly Picks Admin')}
                     />
                     <Drawer.Screen
                         name="Organizer Admin"
@@ -219,6 +227,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Organizer Admin', 'Organizer Admin')}
                     />
                     <Drawer.Screen
                         name="Event Admin"
@@ -228,6 +237,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Event Admin', 'Event Admin')}
                     />
                     <Drawer.Screen
                         name="Promo Codes Admin"
@@ -237,6 +247,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Promo Codes Admin', 'Promo Codes Admin')}
                     />
                     <Drawer.Screen
                         name="Event Popups Admin"
@@ -246,6 +257,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Event Popups Admin', 'Event Popups Admin')}
                     />
                     <Drawer.Screen
                         name="Push Notifications Admin"
@@ -255,6 +267,7 @@ export const DrawerNav = () => {
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
+                        listeners={onPressItemLogEventListener('Push Notifications Admin', 'Push Notifications Admin')}
                     />
                 </>
             )}

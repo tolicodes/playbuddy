@@ -19,6 +19,7 @@ import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../co
 import { useUserContext } from './Auth/hooks/UserContext';
 import { ADMIN_EMAILS } from '../config';
 import { navigationRef } from '../Common/Nav/navigationRef';
+import { navigateToHomeStackScreen, navigateToTab } from '../Common/Nav/navigationHelpers';
 
 type MenuItem = { title: string; icon: string; route: string; badge?: boolean };
 type MenuGroup = { title: string; items: MenuItem[]; variant?: 'default' | 'evenMore' };
@@ -197,16 +198,10 @@ export const DiscoverPageModal = ({ onRequestClose }: { onRequestClose?: () => v
             return;
         }
         if (route === 'Discover Game') {
-            navigationRef.navigate('HomeDrawer', {
-                screen: 'Home',
-                params: {
-                    screen: 'More',
-                    params: { screen: 'Discover Game' },
-                },
-            });
+            navigateToTab(navigationRef as any, 'More', { screen: 'Discover Game' });
             return;
         }
-        navigationRef.navigate(route as never);
+        navigateToHomeStackScreen(navigationRef as any, route as any);
     }, []);
 
     return (
