@@ -154,6 +154,7 @@ export type WeeklyPicksImageMeta = {
 
 export type WeeklyPicksImageGenerateResult = {
     meta: WeeklyPicksImageMeta;
+    logs?: string[];
 };
 
 export type WeeklyPicksImagePartResult = {
@@ -242,9 +243,13 @@ export const useGenerateWeeklyPicksImage = () => {
                 partCount?: number;
                 partHeights?: number[];
                 splitAt?: number;
+                logs?: string[];
             }>(`${API_BASE_URL}/events/weekly-picks/image/generate?format=json`, payload);
             const header = (key: string) => response.headers?.[key.toLowerCase()];
             const data = response.data || {};
+            const logs = Array.isArray(data.logs)
+                ? data.logs.filter((line: unknown): line is string => typeof line === 'string')
+                : undefined;
             const meta: WeeklyPicksImageMeta = {
                 cacheKey: data.cacheKey ?? header("x-weekly-picks-cache-key") ?? null,
                 version: data.version ?? header("x-weekly-picks-version") ?? null,
@@ -258,7 +263,7 @@ export const useGenerateWeeklyPicksImage = () => {
                 partHeights: data.partHeights ?? parseHeaderNumberList(header("x-weekly-picks-part-heights")),
                 splitAt: data.splitAt ?? parseHeaderNumber(header("x-weekly-picks-split-at")),
             };
-            return { meta };
+            return { meta, logs };
         },
     });
 };

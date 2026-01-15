@@ -1,5 +1,9 @@
-import { generateWeeklyPicksImage } from './weeklyPicksImage.js';
-import type { WeeklyPicksImageOptions, WeeklyPicksImageResult } from './weeklyPicksImage.js';
+import { generateWeeklyPicksImage, logWeeklyPicksMessage } from './weeklyPicksImage.js';
+import type {
+    WeeklyPicksImageLogger,
+    WeeklyPicksImageOptions,
+    WeeklyPicksImageResult,
+} from './weeklyPicksImage.js';
 
 type WeeklyPicksImageCacheEntry = WeeklyPicksImageResult & {
     generatedAt: string;
@@ -45,10 +49,11 @@ const buildVersion = () =>
 
 const generateAndCacheWeeklyPicksImage = async (
     options: WeeklyPicksImageOptions,
-    cacheKey: string
+    cacheKey: string,
+    logger?: WeeklyPicksImageLogger
 ) => {
     const startedAt = Date.now();
-    const result = await generateWeeklyPicksImage(options);
+    const result = await generateWeeklyPicksImage(options, logger);
     const durationMs = Date.now() - startedAt;
     const entry: WeeklyPicksImageCacheEntry = {
         ...result,
@@ -58,7 +63,11 @@ const generateAndCacheWeeklyPicksImage = async (
     };
     cache.set(cacheKey, entry);
     const jpgBytes = entry.parts.reduce((sum, part) => sum + part.jpg.length, 0);
-    console.log(`[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms parts=${entry.parts.length} jpgBytes=${jpgBytes}`);
+    logWeeklyPicksMessage(
+        logger,
+        'info',
+        `[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms parts=${entry.parts.length} jpgBytes=${jpgBytes}`
+    );
     return entry;
 };
 
@@ -84,7 +93,8 @@ export const getCachedWeeklyPicksImage = (
 };
 
 export const getOrGenerateWeeklyPicksImage = async (
-    options: WeeklyPicksImageOptions
+    options: WeeklyPicksImageOptions,
+    logger?: WeeklyPicksImageLogger
 ) => {
     const cacheKey = buildCacheKey(options);
     const cached = cache.get(cacheKey);
@@ -97,7 +107,7 @@ export const getOrGenerateWeeklyPicksImage = async (
         return { cacheKey, entry: await existing };
     }
 
-    const task = generateAndCacheWeeklyPicksImage(options, cacheKey);
+    const task = generateAndCacheWeeklyPicksImage(options, cacheKey, logger);
     inFlight.set(cacheKey, task);
     try {
         const entry = await task;
@@ -108,7 +118,8 @@ export const getOrGenerateWeeklyPicksImage = async (
 };
 
 export const forceGenerateWeeklyPicksImage = async (
-    options: WeeklyPicksImageOptions
+    options: WeeklyPicksImageOptions,
+    logger?: WeeklyPicksImageLogger
 ) => {
     const cacheKey = buildCacheKey(options);
     const existing = inFlight.get(cacheKey);
@@ -116,7 +127,7 @@ export const forceGenerateWeeklyPicksImage = async (
         await existing;
     }
 
-    const task = generateAndCacheWeeklyPicksImage(options, cacheKey);
+    const task = generateAndCacheWeeklyPicksImage(options, cacheKey, logger);
     inFlight.set(cacheKey, task);
     try {
         const entry = await task;
@@ -127,7 +138,8 @@ export const forceGenerateWeeklyPicksImage = async (
 };
 
 export const triggerWeeklyPicksImageGeneration = (
-    options: WeeklyPicksImageOptions
+    options: WeeklyPicksImageOptions,
+    logger?: WeeklyPicksImageLogger
 ) => {
     const cacheKey = buildCacheKey(options);
     if (inFlight.has(cacheKey)) {
@@ -138,7 +150,7 @@ export const triggerWeeklyPicksImageGeneration = (
         };
     }
 
-    const task = generateAndCacheWeeklyPicksImage(options, cacheKey)
+    const task = generateAndCacheWeeklyPicksImage(options, cacheKey, logger)
         .catch((error) => {
             console.error(`[weekly-picks] Generation failed for ${cacheKey}`, error);
             throw error;

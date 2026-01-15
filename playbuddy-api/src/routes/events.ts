@@ -16,6 +16,7 @@ import scrapeRoutes from './eventsScrape.js';
 import { ADMIN_EMAILS } from '../config.js';
 import { fetchAllRows } from '../helpers/fetchAllRows.js';
 import { openai, MODEL } from '../scrapers/ai/config.js';
+import type { WeeklyPicksImageLogger } from '../helpers/weeklyPicksImage.js';
 import {
     forceGenerateWeeklyPicksImage,
     getCachedWeeklyPicksImage,
@@ -394,15 +395,28 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
     const options = extractWeeklyPicksImageOptions(req);
     const responseFormat = String((req.query.format ?? (req.body as Record<string, unknown>)?.format ?? 'json')).toLowerCase();
     const requestedPart = parsePart(req.query.part ?? (req.body as Record<string, unknown>)?.part);
-    console.log(
+    const logs: string[] = [];
+    const logMessage: WeeklyPicksImageLogger = (level, message) => {
+        logs.push(message);
+        if (level === 'warn') {
+            console.warn(message);
+            return;
+        }
+        if (level === 'error') {
+            console.error(message);
+            return;
+        }
+        console.log(message);
+    };
+    logMessage('info',
         `[weekly-picks][generate] start width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} scale=${options.scale ?? 'auto'} limit=${options.limit ?? 'all'} parts=${options.partCount ?? 2}`
     );
     try {
-        const { cacheKey, entry } = await forceGenerateWeeklyPicksImage(options);
+        const { cacheKey, entry } = await forceGenerateWeeklyPicksImage(options, logMessage);
         const durationMs = Date.now() - startedAt;
         const pngBytes = Buffer.isBuffer(entry.png) ? entry.png.length : 0;
         const jpgBytes = entry.parts.reduce((sum, part) => sum + part.jpg.length, 0);
-        console.log(
+        logMessage('info',
             `[weekly-picks][generate] done cacheKey=${cacheKey} durationMs=${durationMs} generatedMs=${entry.durationMs} pngBytes=${pngBytes} jpgBytes=${jpgBytes}`
         );
         res.set('Cache-Control', 'no-store');
@@ -447,10 +461,12 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
             partCount: entry.parts.length,
             partHeights: entry.parts.map((part) => part.height),
             splitAt: entry.splitAt,
+            logs,
         });
     } catch (error) {
         const durationMs = Date.now() - startedAt;
-        console.error(`[weekly-picks][generate] failed durationMs=${durationMs}`, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logMessage('error', `[weekly-picks][generate] failed durationMs=${durationMs} error=${errorMessage}`);
         throw error;
     }
 }));

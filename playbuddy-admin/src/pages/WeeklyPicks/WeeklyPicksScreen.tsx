@@ -8,7 +8,6 @@ import {
     CircularProgress,
     Divider,
     FormControlLabel,
-    LinearProgress,
     MenuItem,
     Paper,
     Stack,
@@ -73,6 +72,12 @@ const extractBranchSlug = (link?: string | null) => {
 
 type BranchFlowStep = 'idle' | 'creating_link' | 'creating_deep_link' | 'done' | 'error_link' | 'error_deep_link';
 
+const normalizeLogs = (value: unknown) => (
+    Array.isArray(value)
+        ? value.filter((line): line is string => typeof line === 'string')
+        : []
+);
+
 export default function WeeklyPicksScreen() {
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { data: events = [], isLoading: eventsLoading, error: eventsError } = useFetchEvents();
@@ -94,10 +99,13 @@ export default function WeeklyPicksScreen() {
     const [jpgUrls, setJpgUrls] = useState<string[]>([]);
     const [partsLoading, setPartsLoading] = useState(false);
     const [generationError, setGenerationError] = useState<string | null>(null);
+    const [generationLogs, setGenerationLogs] = useState<string[]>([]);
     const [lastGeneratedAt, setLastGeneratedAt] = useState<string | null>(null);
     const [branchLink, setBranchLink] = useState<string | null>(null);
     const [branchFlowStep, setBranchFlowStep] = useState<BranchFlowStep>('idle');
     const [branchFlowError, setBranchFlowError] = useState<string | null>(null);
+    const [branchFlowLogs, setBranchFlowLogs] = useState<string[]>([]);
+    const [headless, setHeadless] = useState(true);
 
     const weeklyImageOptions = useMemo(() => ({
         weekOffset,
@@ -146,10 +154,12 @@ export default function WeeklyPicksScreen() {
 
     const handleGenerateImage = async () => {
         setGenerationError(null);
+        setGenerationLogs([]);
         setPartsLoading(true);
         try {
             const result = await generateWeeklyPicksImage.mutateAsync(weeklyImageOptions);
             setLastGeneratedAt(result.meta.generatedAt ?? null);
+            setGenerationLogs(result.logs ?? []);
             const resolvedPartCount = result.meta.partCount ?? weeklyImageOptions.partCount ?? weeklyImageStatus?.partCount ?? 2;
             const partRequests = Array.from({ length: resolvedPartCount }, (_, index) =>
                 fetchWeeklyPicksImagePart.mutateAsync({ options: weeklyImageOptions, part: index + 1 })
@@ -164,35 +174,47 @@ export default function WeeklyPicksScreen() {
             });
             await refetchWeeklyImageStatus();
         } catch (error) {
+            const responseLogs = (error as any)?.response?.data?.logs;
+            if (Array.isArray(responseLogs)) {
+                setGenerationLogs(responseLogs.filter((line: unknown): line is string => typeof line === 'string'));
+            }
             setGenerationError(error instanceof Error ? error.message : 'Unable to generate weekly picks image.');
         } finally {
             setPartsLoading(false);
         }
     };
 
-    const createBranchQuickLink = async (campaignValue: string, descriptionValue: string) => {
+    const createBranchQuickLink = async (
+        campaignValue: string,
+        descriptionValue: string,
+        headlessValue: boolean
+    ) => {
         console.log('[WeeklyPicks] Creating Branch quick link.');
         const response = await createWeeklyPicksBranchLink.mutateAsync({
             weekOffset: 1,
             title: campaignValue,
             socialTitle: campaignValue,
             socialDescription: descriptionValue,
-            headless: true,
+            headless: headlessValue,
         });
         const link = response.link ?? null;
         console.log('[WeeklyPicks] Branch quick link created:', link);
         setBranchLink(link);
-        return link;
+        return response;
     };
 
     const handleCreateBranchLink = async () => {
         setBranchFlowError(null);
+        setBranchFlowLogs([]);
         setBranchFlowStep('creating_link');
         let failedAt: 'link' | 'deep' = 'link';
         const campaignValue = campaignNameRef.current?.value?.trim() || defaultWeeklyPicksCampaign;
         const descriptionValue = ogDescriptionRef.current?.value?.trim() || defaultWeeklyPicksOgDescription;
         try {
-            const link = await createBranchQuickLink(campaignValue, descriptionValue);
+            const response = await createBranchQuickLink(campaignValue, descriptionValue, headless);
+            const responseLogs = normalizeLogs(response.logs);
+            if (responseLogs.length > 0) setBranchFlowLogs(responseLogs);
+            const link = response.link;
             if (!link) {
                 setBranchFlowStep('error_link');
                 setBranchFlowError('Branch quick link was not returned.');
@@ -212,10 +234,18 @@ export default function WeeklyPicksScreen() {
                 type: 'weekly_picks',
             });
             setBranchFlowStep('done');
-        } catch (error) {
-            const message = error instanceof Error ? error.message : 'Unable to create Branch deep link.';
-            setBranchFlowError(message);
+        } catch (error: any) {
+            const responseLogs = normalizeLogs(error?.response?.data?.logs);
+            if (responseLogs.length > 0) setBranchFlowLogs(responseLogs);
+            const status = error?.response?.status;
+            const message = error?.response?.data?.error
+                || error?.message
+                || 'Unable to create Branch deep link.';
+            const formatted = status ? `HTTP ${status}: ${message}` : message;
+            const failedMessage = failedAt === 'link' ? 'Unable to create Branch link.' : 'Unable to create deep link.';
+            setBranchFlowError(formatted);
             setBranchFlowStep(failedAt === 'link' ? 'error_link' : 'error_deep_link');
+            console.error(`[WeeklyPicks] ${failedMessage}`, error);
         }
     };
 
@@ -395,6 +425,24 @@ export default function WeeklyPicksScreen() {
                         )}
                     </Stack>
 
+                    {generationLogs.length > 0 && (
+                        <Box
+                            sx={{
+                                backgroundColor: '#0f172a',
+                                color: '#e2e8f0',
+                                borderRadius: 2,
+                                p: 2,
+                                fontFamily: 'monospace',
+                                whiteSpace: 'pre-wrap',
+                                fontSize: 12,
+                                maxHeight: 240,
+                                overflow: 'auto',
+                            }}
+                        >
+                            {generationLogs.join('\n')}
+                        </Box>
+                    )}
+
                     <Box
                         sx={{
                             border: '1px solid #e5e7eb',
@@ -447,6 +495,15 @@ export default function WeeklyPicksScreen() {
                         inputRef={ogDescriptionRef}
                         fullWidth
                     />
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={headless}
+                                onChange={(event) => setHeadless(event.target.checked)}
+                            />
+                        }
+                        label={headless ? 'Run headless (no browser UI)' : 'Run headed (show browser UI)'}
+                    />
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
                         <Button
                             variant="contained"
@@ -474,9 +531,6 @@ export default function WeeklyPicksScreen() {
                     />
                     {branchFlowStep !== 'idle' && (
                         <Stack spacing={1}>
-                            {(branchFlowStep === 'creating_link' || branchFlowStep === 'creating_deep_link') && (
-                                <LinearProgress />
-                            )}
                             <Stack direction="row" spacing={1} alignItems="center">
                                 <Chip
                                     size="small"
@@ -503,16 +557,28 @@ export default function WeeklyPicksScreen() {
                                     Deep link created.
                                 </Typography>
                             )}
+                            {branchFlowStep !== 'idle' && branchFlowStep !== 'done' && (
+                                <Box
+                                    sx={{
+                                        backgroundColor: '#0f172a',
+                                        color: '#e2e8f0',
+                                        borderRadius: 2,
+                                        p: 2,
+                                        fontFamily: 'monospace',
+                                        whiteSpace: 'pre-wrap',
+                                        fontSize: 12,
+                                        maxHeight: 240,
+                                        overflow: 'auto',
+                                    }}
+                                >
+                                    {branchFlowLogs.length > 0 ? branchFlowLogs.join('\n') : 'Waiting for logs...'}
+                                </Box>
+                            )}
                         </Stack>
                     )}
-                    {!branchLink && (
+                    {!branchLink && branchFlowStep === 'idle' && (
                         <Typography variant="body2" color="text.secondary">
                             No Branch link yet. This will create one first.
-                        </Typography>
-                    )}
-                    {createWeeklyPicksBranchLink.isError && (
-                        <Typography color="error">
-                            Unable to create Branch link. Try again.
                         </Typography>
                     )}
                     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>

@@ -6,7 +6,7 @@ import { ACTIVE_EVENT_TYPES } from '../commonTypes.js';
 
 const TZ = 'America/New_York';
 const BASE_WIDTH = 390;
-const DETAILS_PANEL_HEIGHT = 92;
+const DETAILS_PANEL_HEIGHT = 108;
 const isActiveEventType = (value?: string | null) =>
     !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
 
@@ -129,6 +129,29 @@ const TYPE_TAG_COLORS: Record<string, { background: string; text: string; border
     rope: { background: '#E8F5F8', text: '#2D5E6F', border: '#D3E7EE' },
     vetted: { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
 };
+
+type WeeklyPicksImageLogLevel = 'info' | 'warn' | 'error';
+type WeeklyPicksImageLogger = (level: WeeklyPicksImageLogLevel, message: string) => void;
+
+export const logWeeklyPicksMessage = (
+    logger: WeeklyPicksImageLogger | undefined,
+    level: WeeklyPicksImageLogLevel,
+    message: string
+) => {
+    if (logger) {
+        logger(level, message);
+        return;
+    }
+    if (level === 'warn') {
+        console.warn(message);
+        return;
+    }
+    if (level === 'error') {
+        console.error(message);
+        return;
+    }
+    console.log(message);
+};
 type WeeklyPickItem = {
     dateKey: string;
     dayOfWeek: string;
@@ -183,6 +206,7 @@ type WeeklyPickEventRow = {
     image_url: string | null;
     short_description: string | null;
     short_price?: string | null;
+    price?: string | null;
     weekly_pick: boolean | null;
     type?: string | null;
     is_munch?: boolean | null;
@@ -277,7 +301,7 @@ const truncateText = (value: string, maxChars: number) => {
     return cleaned.slice(0, Math.max(1, maxChars - 3)).trimEnd() + '...';
 };
 
-type PlaceholderIconKind = 'event' | 'munch' | 'party';
+type PlaceholderIconKind = 'event' | 'munch' | 'disc';
 
 const buildPlaceholderIconSvg = ({
     kind,
@@ -316,28 +340,18 @@ const buildPlaceholderIconSvg = ({
     </g>`;
     }
 
-    if (kind === 'party') {
-        const ballRadius = size * 0.22;
-        const ballCenterY = centerY + size * 0.08;
-        const ballTop = ballCenterY - ballRadius;
-        const ballBottom = ballCenterY + ballRadius;
-        const capHeight = size * 0.07;
-        const capWidth = size * 0.18;
-        const capX = centerX - capWidth / 2;
-        const capY = ballTop - capHeight;
-        const chainTopY = capY - size * 0.08;
-        const bandWidth = ballRadius * 0.6;
-        const bandTopY = ballCenterY - ballRadius * 0.45;
-        const bandBottomY = ballCenterY + ballRadius * 0.45;
+    if (kind === 'disc') {
+        const outerRadius = size * 0.42;
+        const innerRadius = size * 0.14;
+        const lineStartX = centerX + outerRadius * 0.35;
+        const lineStartY = centerY - outerRadius * 0.35;
+        const lineEndX = centerX + outerRadius * 0.7;
+        const lineEndY = centerY - outerRadius * 0.7;
         return `
     <g ${iconProps}>
-      <line x1="${centerX}" y1="${chainTopY}" x2="${centerX}" y2="${capY}" />
-      <rect x="${capX}" y="${capY}" width="${capWidth}" height="${capHeight}" rx="${capHeight * 0.4}" ry="${capHeight * 0.4}" />
-      <circle cx="${centerX}" cy="${ballCenterY}" r="${ballRadius}" />
-      <line x1="${centerX - bandWidth}" y1="${bandTopY}" x2="${centerX + bandWidth}" y2="${bandTopY}" />
-      <line x1="${centerX - bandWidth}" y1="${ballCenterY}" x2="${centerX + bandWidth}" y2="${ballCenterY}" />
-      <line x1="${centerX - bandWidth}" y1="${bandBottomY}" x2="${centerX + bandWidth}" y2="${bandBottomY}" />
-      <line x1="${centerX}" y1="${ballTop}" x2="${centerX}" y2="${ballBottom}" />
+      <circle cx="${centerX}" cy="${centerY}" r="${outerRadius}" />
+      <circle cx="${centerX}" cy="${centerY}" r="${innerRadius}" />
+      <line x1="${lineStartX}" y1="${lineStartY}" x2="${lineEndX}" y2="${lineEndY}" />
     </g>`;
     }
 
@@ -422,8 +436,10 @@ const formatPrimaryMetaLabel = (event: WeeklyPickEventRow) => {
 const formatLocationLabel = (event: WeeklyPickEventRow) =>
     event?.neighborhood ? event.neighborhood.trim() : '';
 
-const formatPriceLabel = (event: WeeklyPickEventRow) =>
-    event?.short_price ? event.short_price.trim() : '';
+const formatPriceLabel = (event: WeeklyPickEventRow) => {
+    const value = event?.short_price || event?.price || '';
+    return value.trim();
+};
 
 const resolvePromoDiscount = (event: WeeklyPickEventRow) => {
     const organizerPromo = event?.organizer?.promo_codes?.find((code) => code?.scope === 'organizer');
@@ -484,9 +500,12 @@ const fetchImageDataUri = async (
     url: string | null,
     width: number,
     height: number,
-    context: { eventId?: number; index?: number; total?: number } = {}
+    context: { eventId?: number; index?: number; total?: number } = {},
+    logger?: WeeklyPicksImageLogger
 ) => {
     if (!url) return null;
+    const log = (level: WeeklyPicksImageLogLevel, message: string) =>
+        logWeeklyPicksMessage(logger, level, message);
     const label = [
         context.eventId ? `id=${context.eventId}` : null,
         context.index && context.total ? `(${context.index}/${context.total})` : null,
@@ -494,7 +513,7 @@ const fetchImageDataUri = async (
         .filter(Boolean)
         .join(' ');
     const startTime = Date.now();
-    console.log(`[weekly-picks] Image fetch start ${label}`.trim());
+    log('info', `[weekly-picks] Image fetch start ${label}`.trim());
     try {
         const transformedUrl = buildSupabaseImageUrl(url, width, height);
         if (transformedUrl) {
@@ -504,25 +523,25 @@ const fetchImageDataUri = async (
                 const contentType = response.headers?.['content-type'] || 'image/jpeg';
                 const durationMs = Date.now() - transformedStart;
                 const sizeBytes = Buffer.byteLength(response.data || []);
-                console.log(
+                log('info', 
                     `[weekly-picks] Image fetch transformed ok ${label} ms=${durationMs} bytes=${sizeBytes} type=${contentType}`.trim()
                 );
                 return `data:${contentType};base64,${Buffer.from(response.data).toString('base64')}`;
             } catch (error) {
                 const durationMs = Date.now() - transformedStart;
-                console.warn(
+                log('warn',
                     `[weekly-picks] Image fetch transformed failed ${label} ms=${durationMs} url=${url}`.trim()
                 );
             }
         } else {
-            console.log(`[weekly-picks] Image not transformable ${label} url=${url}`.trim());
+            log('info', `[weekly-picks] Image not transformable ${label} url=${url}`.trim());
         }
 
         const fetchStart = Date.now();
         const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 15000 });
         const fetchMs = Date.now() - fetchStart;
         const rawBytes = Buffer.byteLength(response.data || []);
-        console.log(
+        log('info',
             `[weekly-picks] Image fetch raw ok ${label} ms=${fetchMs} bytes=${rawBytes}`.trim()
         );
         const resizeStart = Date.now();
@@ -531,15 +550,15 @@ const fetchImageDataUri = async (
             .jpeg({ quality: 60 })
             .toBuffer();
         const resizeMs = Date.now() - resizeStart;
-        console.log(
+        log('info',
             `[weekly-picks] Image resize ok ${label} ms=${resizeMs} outBytes=${resized.length}`.trim()
         );
         const totalMs = Date.now() - startTime;
-        console.log(`[weekly-picks] Image fetch done ${label} totalMs=${totalMs}`.trim());
+        log('info', `[weekly-picks] Image fetch done ${label} totalMs=${totalMs}`.trim());
         return `data:image/jpeg;base64,${resized.toString('base64')}`;
     } catch (error) {
         const totalMs = Date.now() - startTime;
-        console.warn(`[weekly-picks] Image fetch failed ${label} totalMs=${totalMs} url=${url}`.trim());
+        log('warn', `[weekly-picks] Image fetch failed ${label} totalMs=${totalMs} url=${url}`.trim());
         return null;
     }
 };
@@ -573,6 +592,8 @@ const buildSvg = ({
     const weekSelectorPaddingX = s(16);
     const weekSelectorPaddingY = s(18);
     const weekNavSize = s(44);
+    const weekNavIconSize = s(24);
+    const weekNavStroke = Math.max(1, Math.round(weekNavIconSize * 0.12));
     const weekSelectorRadius = s(24);
     const weekSelectorMarginBottom = s(16);
 
@@ -595,57 +616,32 @@ const buildSvg = ({
 
     const cardWidth = width - paddingX * 2;
     const cardRadius = s(16);
-    const cardMarginBottom = s(16);
+    const cardMarginBottom = s(8);
     const detailsPanelHeight = s(DETAILS_PANEL_HEIGHT);
     const imageHeight = Math.round(cardWidth / 2);
     const cardHeight = imageHeight + detailsPanelHeight;
-    const detailsHeight = cardHeight - imageHeight;
-    const typeIconBubbleSize = Math.max(s(32), Math.round(Math.min(imageHeight * 0.5, s(48))));
-    const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
-    const typeIconStroke = Math.max(1, s(2));
-    const typeIconBorder = Math.max(1, s(1));
-    const showMissingImageIcon = false;
+    const placeholderIconSize = Math.max(s(28), Math.round(imageHeight * 0.4));
+    const placeholderIconStroke = Math.max(1, Math.round(placeholderIconSize * 0.08));
 
-    const detailsPaddingTop = s(10);
-    const detailsPaddingBottom = s(10);
-    const detailsPaddingX = s(14);
-    const titleFont = s(16);
-    const titleLine = s(20);
-    const organizerFont = s(12);
-    const organizerLineHeight = s(16);
-    const organizerMarginBottom = s(2);
+    const detailsPaddingTop = s(12);
+    const detailsPaddingX = s(16);
+    const titleFont = s(15);
+    const titleLine = Math.round(titleFont * 1.3);
+    const organizerFont = s(14);
+    const organizerLineHeight = Math.round(organizerFont * 1.25);
+    const organizerMarginTop = s(4);
     const titleMarginTop = s(6);
-    const metaFont = s(12);
-    const metaLineHeight = s(16);
-    const metaMarginTop = s(2);
-    const actionButtonSize = Math.max(s(26), Math.round(Math.min(detailsHeight * 0.36, s(34))));
-    const actionButtonSpacing = s(10);
-    const actionButtonInset = s(4);
-    const actionButtonRight = s(4);
-    const actionButtonLabel = 'Save';
-    const actionButtonLabelMax = 'Saved';
-    const actionButtonFont = Math.round(actionButtonSize * 0.3);
-    const actionButtonIconSize = Math.round(actionButtonSize * 0.38);
-    const actionButtonPaddingX = Math.round(actionButtonSize * 0.3);
-    const actionButtonGap = Math.max(s(3), Math.round(actionButtonSize * 0.14));
-    const actionButtonTextWidth = estimateTextWidth(actionButtonLabelMax, actionButtonFont, 0);
-    const actionButtonWidth = Math.round(
-        actionButtonPaddingX * 2 + actionButtonIconSize + actionButtonGap + actionButtonTextWidth
-    );
-    const actionButtonRadius = Math.round(actionButtonSize / 2);
-    const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.04));
-    const actionButtonIconStroke = Math.max(1, Math.round(actionButtonSize * 0.08));
-    const actionButtonLabelWidth = estimateTextWidth(actionButtonLabel, actionButtonFont, 0);
-    const actionButtonContentWidth = actionButtonIconSize + actionButtonGap + actionButtonLabelWidth;
-    const actionButtonContentOffsetX = (actionButtonWidth - actionButtonContentWidth) / 2;
+    const metaFont = s(13);
+    const metaLineHeight = Math.round(metaFont * 1.25);
+    const metaMarginTop = s(4);
 
     const typeTagPaddingX = s(14);
     const typeTagPaddingY = s(4);
     const typeTagFont = s(13);
     const typeTagRadius = s(16);
 
-    const discountPaddingX = s(10);
-    const discountPaddingY = s(6);
+    const discountPaddingX = s(8);
+    const discountPaddingY = s(4);
     const discountRadius = s(16);
     const discountOffset = s(0);
     const discountFont = s(13);
@@ -679,8 +675,8 @@ const buildSvg = ({
 
     const brandShadowDy = s(10);
     const brandShadowBlur = s(18);
-    const cardShadowDy = s(3);
-    const cardShadowBlur = s(8);
+    const cardShadowDy = s(4);
+    const cardShadowBlur = s(10);
     const discountShadowDy = s(1);
     const discountShadowBlur = s(3);
 
@@ -716,15 +712,11 @@ const buildSvg = ({
     </filter>`);
     defs.push(`
     <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feDropShadow dx="0" dy="${cardShadowDy}" stdDeviation="${cardShadowBlur}" flood-color="${THEME.colors.black}" flood-opacity="0.08" />
+      <feDropShadow dx="0" dy="${cardShadowDy}" stdDeviation="${cardShadowBlur}" flood-color="${THEME.colors.black}" flood-opacity="0.12" />
     </filter>`);
     defs.push(`
     <filter id="discountShadow" x="-20%" y="-20%" width="140%" height="160%">
       <feDropShadow dx="0" dy="${discountShadowDy}" stdDeviation="${discountShadowBlur}" flood-color="${THEME.colors.black}" flood-opacity="0.2" />
-    </filter>`);
-    defs.push(`
-    <filter id="iconShadow" x="-40%" y="-40%" width="180%" height="200%">
-      <feDropShadow dx="0" dy="${Math.max(1, s(1.5))}" stdDeviation="${Math.max(1, s(2))}" flood-color="${THEME.colors.black}" flood-opacity="0.15" />
     </filter>`);
 
     Object.entries(IMAGE_THEMES).forEach(([key, value]) => {
@@ -763,7 +755,7 @@ const buildSvg = ({
         content.push(`
     <g filter="url(#brandCardShadow)">
       <rect x="${emptyCardX}" y="${emptyCardY}" width="${emptyCardWidth}" height="${emptyCardHeight}" rx="${s(24)}" ry="${s(24)}"
-            fill="url(#glassPanel)" stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${s(1)}" />
+            fill="${THEME.colors.surfaceWhiteFrosted}" stroke="${THEME.colors.borderOnDarkStrong}" stroke-width="${s(1)}" />
     </g>
     <text x="${emptyCardX + emptyCardWidth / 2}" y="${emptyCardY + emptyCardPaddingY + emptyTextLine / 2}"
           font-family="${fontBody}" font-size="${s(15)}" fill="${THEME.colors.textPrimary}"
@@ -776,7 +768,7 @@ const buildSvg = ({
         content.push(`
     <g filter="url(#brandCardShadow)">
       <rect x="${weekSelectorX}" y="${weekSelectorY}" width="${weekSelectorWidth}" height="${weekSelectorHeight}" rx="${weekSelectorRadius}" ry="${weekSelectorRadius}"
-            fill="url(#glassPanel)" stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${s(1)}" />
+            fill="${THEME.colors.surfaceWhiteFrosted}" stroke="${THEME.colors.borderOnDarkStrong}" stroke-width="${s(1)}" />
     </g>`);
 
         const weekTextCenterX = weekSelectorX + weekSelectorWidth / 2;
@@ -787,6 +779,37 @@ const buildSvg = ({
           font-family="${fontBody}" letter-spacing="${s(1.6)}" dominant-baseline="hanging" text-anchor="middle">WEEK OF</text>
     <text x="${weekTextCenterX}" y="${weekTextTop + weekKickerLine}" font-size="${weekTextFont}" fill="${THEME.colors.brandDeep}"
           font-family="${fontDisplay}" font-weight="700" letter-spacing="${s(0.4)}" dominant-baseline="hanging" text-anchor="middle">${escapeXml(weekLabel)}</text>`);
+
+        const weekNavY = weekSelectorY + (weekSelectorHeight - weekNavSize) / 2;
+        const weekNavLeftX = weekSelectorX + weekSelectorPaddingX;
+        const weekNavRightX = weekSelectorX + weekSelectorWidth - weekSelectorPaddingX - weekNavSize;
+        const arrowX = weekNavIconSize * 0.35;
+        const arrowY = weekNavIconSize * 0.45;
+        const buildWeekNav = (x: number, disabled: boolean, direction: 'left' | 'right') => {
+            const fill = disabled ? THEME.colors.surfaceMuted : THEME.colors.surfaceWhiteStrong;
+            const border = disabled ? THEME.colors.borderMuted : THEME.colors.borderOnDarkSoft;
+            const icon = disabled ? THEME.colors.textDisabled : THEME.colors.brandViolet;
+            const opacity = disabled ? 0.7 : 1;
+            const cx = x + weekNavSize / 2;
+            const cy = weekNavY + weekNavSize / 2;
+            const sign = direction === 'left' ? 1 : -1;
+            const xStart = cx + arrowX * sign;
+            const xMid = cx - arrowX * sign;
+            const xEnd = xStart;
+            const yTop = cy - arrowY;
+            const yMid = cy;
+            const yBottom = cy + arrowY;
+            return `
+    <g opacity="${opacity}">
+      <rect x="${x}" y="${weekNavY}" width="${weekNavSize}" height="${weekNavSize}" rx="${weekNavSize / 2}" ry="${weekNavSize / 2}"
+            fill="${fill}" stroke="${border}" stroke-width="${s(1)}" />
+      <path d="M ${xStart} ${yTop} L ${xMid} ${yMid} L ${xEnd} ${yBottom}" fill="none"
+            stroke="${icon}" stroke-width="${weekNavStroke}" stroke-linecap="round" stroke-linejoin="round" />
+    </g>`;
+        };
+
+        content.push(buildWeekNav(weekNavLeftX, isFirstWeek, 'left'));
+        content.push(buildWeekNav(weekNavRightX, isLastWeek, 'right'));
 
         let y = weekSelectorY + weekSelectorHeight + weekSelectorMarginBottom;
 
@@ -818,15 +841,11 @@ const buildSvg = ({
                 const fallbackGradientId = item.typeKey in IMAGE_THEMES ? `fallback_${item.typeKey}` : 'fallback_event';
                 const detailsY = cardY + imageHeight;
                 const detailsFullWidth = Math.max(0, cardWidth - detailsPaddingX * 2);
-                const detailsTrimmedWidth = Math.max(
-                    0,
-                    detailsFullWidth - actionButtonWidth - actionButtonSpacing
-                );
-                const maxTitleChars = Math.max(8, estimateMaxChars(detailsFullWidth, titleFont, 0.53));
+                const maxTitleChars = Math.max(8, estimateMaxChars(detailsFullWidth, titleFont, 0.6));
                 const maxOrganizerChars = estimateMaxChars(detailsFullWidth, organizerFont, 0.6);
-                const maxMetaChars = estimateMaxChars(detailsTrimmedWidth, metaFont, 0.6);
+                const maxMetaChars = estimateMaxChars(detailsFullWidth, metaFont, 0.6);
 
-                const titleLines = wrapText(item.title, maxTitleChars, 2);
+                const titleText = truncateText(item.title, maxTitleChars);
                 const organizerText = truncateText(item.organizer, maxOrganizerChars);
                 const metaLine = truncateText(
                     [item.timeLabel, item.locationLabel, item.priceLabel].filter(Boolean).join(' - '),
@@ -857,42 +876,39 @@ const buildSvg = ({
            preserveAspectRatio="xMidYMid slice" clip-path="url(#${clipId})" />`);
                 }
 
-                if (!imageData && showMissingImageIcon) {
+                if (!imageData) {
                     const placeholderKind: PlaceholderIconKind = item.typeKey === 'munch'
                         ? 'munch'
                         : item.typeKey === 'play_party'
-                            ? 'party'
+                            ? 'disc'
                             : 'event';
                     const typeIconCenterX = paddingX + cardWidth / 2;
                     const typeIconCenterY = cardY + imageHeight / 2;
-                    content.push(`
-    <circle cx="${typeIconCenterX}" cy="${typeIconCenterY}" r="${typeIconBubbleSize / 2}"
-            fill="${THEME.colors.surfaceMutedAlt}" stroke="${THEME.colors.borderMutedLight}" stroke-width="${typeIconBorder}" />`);
                     content.push(buildPlaceholderIconSvg({
                         kind: placeholderKind,
                         centerX: typeIconCenterX,
                         centerY: typeIconCenterY,
-                        size: typeIconSize,
+                        size: placeholderIconSize,
                         stroke: THEME.colors.textSlate,
-                        strokeWidth: typeIconStroke,
+                        strokeWidth: placeholderIconStroke,
                     }));
                 }
 
-                let textY = detailsY + detailsPaddingTop;
+                let textY = detailsY + detailsPaddingTop + titleMarginTop;
+                if (titleText) {
+                    content.push(`
+    <text x="${paddingX + detailsPaddingX}" y="${textY}" font-size="${titleFont}" font-family="${fontBody}"
+          font-weight="700" fill="${THEME.colors.textPrimary}" dominant-baseline="hanging">${escapeXml(titleText)}</text>`);
+                    textY += titleLine;
+                }
+
                 if (hasOrganizer) {
+                    textY += organizerMarginTop;
                     content.push(`
     <text x="${paddingX + detailsPaddingX}" y="${textY}" font-size="${organizerFont}" font-family="${fontBody}"
           fill="${THEME.colors.textMuted}" dominant-baseline="hanging">${escapeXml(organizerText)}</text>`);
-                    textY += organizerLineHeight + organizerMarginBottom;
+                    textY += organizerLineHeight;
                 }
-
-                textY += titleMarginTop;
-                titleLines.forEach((line) => {
-                    content.push(`
-    <text x="${paddingX + detailsPaddingX}" y="${textY}" font-size="${titleFont}" font-family="${fontDisplay}"
-          font-weight="700" fill="${THEME.colors.textDeep}" dominant-baseline="hanging">${escapeXml(line)}</text>`);
-                    textY += titleLine;
-                });
 
                 if (hasMeta) {
                     textY += metaMarginTop;
@@ -902,30 +918,6 @@ const buildSvg = ({
                     textY += metaLineHeight;
                 }
 
-                const actionButtonX = paddingX + cardWidth - actionButtonRight - actionButtonWidth;
-                const actionButtonY = detailsY + detailsHeight - detailsPaddingBottom - actionButtonInset - actionButtonSize;
-                const actionButtonCenterY = actionButtonY + actionButtonSize / 2;
-                const actionButtonContentX = actionButtonX + actionButtonContentOffsetX;
-                const actionButtonIconCenterX = actionButtonContentX + actionButtonIconSize / 2;
-                const actionButtonIconHalf = actionButtonIconSize / 2;
-                const actionButtonTextX = actionButtonContentX + actionButtonIconSize + actionButtonGap;
-                const actionButtonTextY = actionButtonCenterY;
-
-                content.push(`
-    <g filter="url(#iconShadow)">
-      <rect x="${actionButtonX}" y="${actionButtonY}" width="${actionButtonWidth}" height="${actionButtonSize}"
-            rx="${actionButtonRadius}" ry="${actionButtonRadius}" fill="${THEME.colors.surfaceWhiteFrosted}"
-            stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${actionButtonStroke}" />
-    </g>
-    <line x1="${actionButtonIconCenterX - actionButtonIconHalf}" y1="${actionButtonCenterY}"
-          x2="${actionButtonIconCenterX + actionButtonIconHalf}" y2="${actionButtonCenterY}"
-          stroke="${THEME.colors.brandInk}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
-    <line x1="${actionButtonIconCenterX}" y1="${actionButtonCenterY - actionButtonIconHalf}"
-          x2="${actionButtonIconCenterX}" y2="${actionButtonCenterY + actionButtonIconHalf}"
-          stroke="${THEME.colors.brandInk}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
-    <text x="${actionButtonTextX}" y="${actionButtonTextY}" font-size="${actionButtonFont}" font-family="${fontBody}"
-          font-weight="700" fill="${THEME.colors.brandInk}" dominant-baseline="middle">${actionButtonLabel}</text>`);
-
                 if (item.typeTagLabel) {
                     const maxTagChars = estimateMaxChars(cardWidth - typeTagPaddingX * 2, typeTagFont, 0.6);
                     const tagText = truncateText(item.typeTagLabel, maxTagChars);
@@ -934,19 +926,24 @@ const buildSvg = ({
                     const tagHeight = typeTagFont + typeTagPaddingY * 2;
                     const tagX = paddingX + cardWidth - tagWidth;
                     const tagY = cardY;
-                    const tagRadius = Math.min(typeTagRadius, tagHeight, tagWidth);
+                    const tagLeftRadius = Math.min(tagHeight / 2, tagWidth / 2);
+                    const tagRightRadius = Math.min(typeTagRadius, tagHeight, tagWidth / 2);
                     const tagRight = tagX + tagWidth;
                     const tagBottom = tagY + tagHeight;
                     const tagPath = [
-                        `M ${tagX} ${tagY}`,
-                        `H ${tagRight - tagRadius}`,
-                        `A ${tagRadius} ${tagRadius} 0 0 1 ${tagRight} ${tagY + tagRadius}`,
+                        `M ${tagX + tagLeftRadius} ${tagY}`,
+                        `H ${tagRight - tagRightRadius}`,
+                        `A ${tagRightRadius} ${tagRightRadius} 0 0 1 ${tagRight} ${tagY + tagRightRadius}`,
                         `V ${tagBottom}`,
-                        `H ${tagX}`,
+                        `H ${tagX + tagLeftRadius}`,
+                        `A ${tagLeftRadius} ${tagLeftRadius} 0 0 1 ${tagX} ${tagBottom - tagLeftRadius}`,
+                        `V ${tagY + tagLeftRadius}`,
+                        `A ${tagLeftRadius} ${tagLeftRadius} 0 0 1 ${tagX + tagLeftRadius} ${tagY}`,
                         'Z',
                     ].join(' ');
+                    const tagBorder = item.typeTagColors.border || 'rgba(255,255,255,0.25)';
                     content.push(`
-    <path d="${tagPath}" fill="${item.typeTagColors.background}" stroke="${item.typeTagColors.border}" stroke-width="${s(1)}" />
+    <path d="${tagPath}" fill="${item.typeTagColors.background}" stroke="${tagBorder}" stroke-width="${s(1)}" />
     <text x="${tagX + tagWidth / 2}" y="${tagY + tagHeight / 2}" font-size="${typeTagFont}" font-family="${fontBody}"
           font-weight="700" fill="${item.typeTagColors.text}" dominant-baseline="middle" text-anchor="middle">${escapeXml(tagText)}</text>`);
                 }
@@ -964,7 +961,8 @@ const buildSvg = ({
                     const bottomRadius = Math.min(bubbleHeight / 2, bubbleWidth / 2);
                     const bubblePath = [
                         `M ${bubbleX + topRadius} ${bubbleY}`,
-                        `H ${bubbleRight}`,
+                        `H ${bubbleRight - topRadius}`,
+                        `A ${topRadius} ${topRadius} 0 0 1 ${bubbleRight} ${bubbleY + topRadius}`,
                         `V ${bubbleBottom - bottomRadius}`,
                         `A ${bottomRadius} ${bottomRadius} 0 0 1 ${bubbleRight - bottomRadius} ${bubbleBottom}`,
                         `H ${bubbleX}`,
@@ -1029,6 +1027,7 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
             image_url,
             short_description,
             short_price,
+            price,
             weekly_pick,
             type,
             is_munch,
@@ -1088,9 +1087,12 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
 };
 
 export const generateWeeklyPicksImage = async (
-    options: WeeklyPicksImageOptions = {}
+    options: WeeklyPicksImageOptions = {},
+    logger?: WeeklyPicksImageLogger
 ): Promise<WeeklyPicksImageResult> => {
     const logPrefix = '[weekly-picks]';
+    const log = (level: WeeklyPicksImageLogLevel, message: string) =>
+        logWeeklyPicksMessage(logger, level, message);
     const requestedOffset = Number.isFinite(options.weekOffset)
         ? Number(options.weekOffset)
         : 0;
@@ -1106,7 +1108,7 @@ export const generateWeeklyPicksImage = async (
         ? Math.round(requestedWidth)
         : Math.round(BASE_WIDTH * scale);
 
-    console.log(
+    log('info',
         `${logPrefix} Start generation weekOffset=${requestedOffset} width=${width} scale=${scale.toFixed(2)} limit=${options.limit ?? 'none'} parts=${partCount}`
     );
 
@@ -1119,7 +1121,7 @@ export const generateWeeklyPicksImage = async (
     const fetchEventsStart = Date.now();
     const events = await fetchWeeklyPickEvents(rangeStart, rangeEnd);
     const fetchEventsMs = Date.now() - fetchEventsStart;
-    console.log(
+    log('info',
         `${logPrefix} Loaded ${events.length} events for range ${rangeStart.format('YYYY-MM-DD')}..${rangeEnd.format('YYYY-MM-DD')} in ${fetchEventsMs}ms`
     );
 
@@ -1158,7 +1160,7 @@ export const generateWeeklyPicksImage = async (
             return aTime - bTime;
         })
         .slice(0, options.limit && options.limit > 0 ? options.limit : undefined);
-    console.log(`${logPrefix} Selected ${selectedEvents.length} events for week ${weekLabel}`);
+    log('info', `${logPrefix} Selected ${selectedEvents.length} events for week ${weekLabel}`);
 
     const items: WeeklyPickItem[] = selectedEvents.map((event) => {
         const eventDate = moment.tz(event.start_date ?? '', TZ);
@@ -1167,7 +1169,7 @@ export const generateWeeklyPicksImage = async (
             dayOfWeek: eventDate.format('ddd'),
             dateLabel: eventDate.format('MMM D'),
             title: event.name ?? '',
-            organizer: event.organizer?.name ?? '',
+            organizer: event.organizer?.name?.trim() || 'Organizer',
             image: event.image_url ?? '',
             promoCodeDiscount: resolvePromoDiscount(event),
             eventId: event.id,
@@ -1204,34 +1206,40 @@ export const generateWeeklyPicksImage = async (
     const imagesById = new Map<number, string | null>();
     const totalImages = items.length;
     if (totalImages === 0) {
-        console.log(`${logPrefix} No images to fetch`);
+        log('info', `${logPrefix} No images to fetch`);
     } else {
-        console.log(`${logPrefix} Fetching ${totalImages} event images`);
+        log('info', `${logPrefix} Fetching ${totalImages} event images`);
     }
     let completedImages = 0;
     const progressStep = totalImages <= 5 ? 1 : Math.max(1, Math.floor(totalImages / 4));
     const imageFetchStart = Date.now();
     await Promise.all(
         items.map(async (item, index) => {
-            const dataUri = await fetchImageDataUri(item.image, cardWidth, imageHeight, {
-                eventId: item.eventId,
-                index: index + 1,
-                total: totalImages,
-            });
+            const dataUri = await fetchImageDataUri(
+                item.image,
+                cardWidth,
+                imageHeight,
+                {
+                    eventId: item.eventId,
+                    index: index + 1,
+                    total: totalImages,
+                },
+                logger
+            );
             imagesById.set(item.eventId, dataUri);
             completedImages += 1;
             if (
                 completedImages === totalImages ||
                 (progressStep > 0 && completedImages % progressStep === 0)
             ) {
-                console.log(`${logPrefix} Image fetch ${completedImages}/${totalImages}`);
+                log('info', `${logPrefix} Image fetch ${completedImages}/${totalImages}`);
             }
         })
     );
     const imageFetchMs = Date.now() - imageFetchStart;
-    console.log(`${logPrefix} Image fetch total ${imageFetchMs}ms`);
+    log('info', `${logPrefix} Image fetch total ${imageFetchMs}ms`);
 
-    console.log(`${logPrefix} Rendering SVG`);
+    log('info', `${logPrefix} Rendering SVG`);
     const renderSvgStart = Date.now();
     const { svg, height: renderedHeight, dayLayouts } = buildSvg({
         width,
@@ -1246,15 +1254,15 @@ export const generateWeeklyPicksImage = async (
         imagesById,
     });
     const renderSvgMs = Date.now() - renderSvgStart;
-    console.log(`${logPrefix} SVG rendered height=${renderedHeight} in ${renderSvgMs}ms`);
+    log('info', `${logPrefix} SVG rendered height=${renderedHeight} in ${renderSvgMs}ms`);
 
-    console.log(`${logPrefix} Rasterizing PNG`);
+    log('info', `${logPrefix} Rasterizing PNG`);
     const rasterStart = Date.now();
     const png = await sharp(Buffer.from(svg))
         .png({ compressionLevel: 1, adaptiveFiltering: false })
         .toBuffer();
     const rasterMs = Date.now() - rasterStart;
-    console.log(`${logPrefix} PNG ready (${png.length} bytes) in ${rasterMs}ms`);
+    log('info', `${logPrefix} PNG ready (${png.length} bytes) in ${rasterMs}ms`);
 
     if (partCount === 1) {
         const jpg = await sharp(png)
@@ -1278,7 +1286,7 @@ export const generateWeeklyPicksImage = async (
 
     const { splitAt, usedFallback } = selectSplitAt(renderedHeight, dayLayouts);
     if (usedFallback) {
-        console.log(`${logPrefix} Split fallback at y=${splitAt}`);
+        log('info', `${logPrefix} Split fallback at y=${splitAt}`);
     }
     const clampedSplitAt = Math.min(Math.max(1, Math.round(splitAt)), renderedHeight - 1);
     const topHeight = clampedSplitAt;
@@ -1315,4 +1323,9 @@ export const generateWeeklyPicksImage = async (
     };
 };
 
-export type { WeeklyPicksImageOptions, WeeklyPicksImageResult };
+export type {
+    WeeklyPicksImageLogLevel,
+    WeeklyPicksImageLogger,
+    WeeklyPicksImageOptions,
+    WeeklyPicksImageResult,
+};
