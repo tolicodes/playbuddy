@@ -18,6 +18,7 @@ type Props = {
     height?: number;
     visible: boolean;
     onClose?: () => void;
+    onBackdropPress?: () => void;
     dismissOnBackdropPress?: boolean;
     debugId?: string;
     sheetStyle?: StyleProp<ViewStyle>;
@@ -29,6 +30,7 @@ export const ActionSheet = ({
     visible,
     height = 500,
     onClose,
+    onBackdropPress,
     dismissOnBackdropPress = false,
     debugId,
     sheetStyle,
@@ -91,6 +93,10 @@ export const ActionSheet = ({
     const handleBackdropPress = () => {
         if (!dismissOnBackdropPress) return;
         logDebug('backdrop press');
+        if (onBackdropPress) {
+            onBackdropPress();
+            return;
+        }
         onClose?.();
     };
 

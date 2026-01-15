@@ -352,7 +352,7 @@ export const FiltersView = ({
     const showTagDropdown = showTagSuggestions && tagSuggestions.length > 0;
     const showOrganizerDropdown = showOrganizerSuggestions && organizerSuggestions.length > 0;
     const showDropdownBackdrop = showTagDropdown || showOrganizerDropdown;
-    const sheetHeight = Math.round(windowHeight * 0.92);
+    const sheetHeight = Math.max(0, Math.round(windowHeight - 100));
 
     const dismissDropdowns = () => {
         setTagSearchFocused(false);
@@ -458,7 +458,12 @@ export const FiltersView = ({
     }
 
     return (
-        <ActionSheet visible={visible} height={sheetHeight}>
+        <ActionSheet
+            visible={visible}
+            height={sheetHeight}
+            dismissOnBackdropPress
+            onBackdropPress={applyFilters}
+        >
             <View style={styles.sheetContainer}>
                 <View style={styles.headerRow}>
                     <Text style={styles.headerText}>Filter Events</Text>
