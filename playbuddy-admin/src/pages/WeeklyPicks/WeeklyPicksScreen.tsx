@@ -17,10 +17,12 @@ import {
 import { useFetchWishlistByCode } from '../../common/db-axios/useWishlist';
 import {
     useFetchEvents,
+    useFetchWeeklyPicksImageLogs,
     useFetchWeeklyPicksImageStatus,
     useFetchWeeklyPicksImagePart,
     useGenerateWeeklyPicksImage,
     useToggleWeeklyPickEvent,
+    type WeeklyPicksImageOptions,
 } from '../../common/db-axios/useEvents';
 import EventsTable from '../Events/EventsTable';
 import { useCreateWeeklyPicksBranchLink, useFetchWeeklyPicksBranchLinkStatus } from '../../common/db-axios/useBranchLinks';
@@ -101,16 +103,15 @@ export default function WeeklyPicksScreen() {
     const [generationError, setGenerationError] = useState<string | null>(null);
     const [generationLogs, setGenerationLogs] = useState<string[]>([]);
     const [lastGeneratedAt, setLastGeneratedAt] = useState<string | null>(null);
+    const [generationLogOptions, setGenerationLogOptions] = useState<WeeklyPicksImageOptions | null>(null);
+    const [shouldPollGenerationLogs, setShouldPollGenerationLogs] = useState(false);
     const [branchLink, setBranchLink] = useState<string | null>(null);
     const [branchFlowStep, setBranchFlowStep] = useState<BranchFlowStep>('idle');
     const [branchFlowError, setBranchFlowError] = useState<string | null>(null);
     const [branchFlowLogs, setBranchFlowLogs] = useState<string[]>([]);
     const [headless, setHeadless] = useState(true);
     const shouldPollBranchStatus = branchFlowStep === 'creating_link' || branchFlowStep === 'creating_deep_link';
-    const { data: branchLinkStatus } = useFetchWeeklyPicksBranchLinkStatus({
-        enabled: shouldPollBranchStatus,
-        refetchInterval: shouldPollBranchStatus ? 3000 : false,
-    });
+    const { data: branchLinkStatus, refetch: refetchBranchLinkStatus } = useFetchWeeklyPicksBranchLinkStatus();
 
     const weeklyImageOptions = useMemo(() => ({
         weekOffset,
@@ -141,6 +142,13 @@ export default function WeeklyPicksScreen() {
         error: weeklyImageStatusError,
         refetch: refetchWeeklyImageStatus,
     } = useFetchWeeklyPicksImageStatus(weeklyImageOptions);
+    const { data: weeklyImageLogs } = useFetchWeeklyPicksImageLogs(
+        generationLogOptions ?? weeklyImageOptions,
+        {
+            enabled: shouldPollGenerationLogs && !!generationLogOptions,
+            refetchInterval: shouldPollGenerationLogs ? 3000 : false,
+        }
+    );
 
     const wishlistSet = useMemo(() => new Set<number>(wishlist), [wishlist]);
     const isLoading = eventsLoading || wishlistLoading;
@@ -150,12 +158,22 @@ export default function WeeklyPicksScreen() {
             ? `Error fetching wishlist: ${wishlistError.message}`
             : null;
     const isGenerating = generateWeeklyPicksImage.isPending || partsLoading;
+    const isStreamingLogs = shouldPollGenerationLogs || weeklyImageLogs?.status === 'running';
 
     useEffect(() => {
         return () => {
             jpgUrls.forEach((url) => URL.revokeObjectURL(url));
         };
     }, [jpgUrls]);
+
+    useEffect(() => {
+        if (!shouldPollBranchStatus) return;
+        void refetchBranchLinkStatus();
+        const interval = setInterval(() => {
+            void refetchBranchLinkStatus();
+        }, 3000);
+        return () => clearInterval(interval);
+    }, [refetchBranchLinkStatus, shouldPollBranchStatus]);
 
     useEffect(() => {
         if (!branchLinkStatus) return;
@@ -171,17 +189,51 @@ export default function WeeklyPicksScreen() {
         });
     }, [branchLinkStatus]);
 
+    useEffect(() => {
+        if (!weeklyImageLogs) return;
+        const statusLogs = normalizeLogs(weeklyImageLogs.logs);
+        if (statusLogs.length > 0) {
+            setGenerationLogs((prev) => {
+                const prevLast = prev[prev.length - 1];
+                const nextLast = statusLogs[statusLogs.length - 1];
+                if (prev.length === statusLogs.length && prevLast === nextLast) {
+                    return prev;
+                }
+                return statusLogs;
+            });
+        }
+        if (weeklyImageLogs.error) {
+            setGenerationError((prev) => prev ?? weeklyImageLogs.error);
+        }
+        if (weeklyImageLogs.status !== 'running' && !generateWeeklyPicksImage.isPending) {
+            setShouldPollGenerationLogs(false);
+        }
+    }, [weeklyImageLogs, generateWeeklyPicksImage.isPending]);
+
     const handleGenerateImage = async () => {
         setGenerationError(null);
         setGenerationLogs([]);
+        const options = weeklyImageOptions;
+        setGenerationLogOptions(options);
+        setShouldPollGenerationLogs(true);
         setPartsLoading(true);
         try {
-            const result = await generateWeeklyPicksImage.mutateAsync(weeklyImageOptions);
+            const result = await generateWeeklyPicksImage.mutateAsync(options);
             setLastGeneratedAt(result.meta.generatedAt ?? null);
-            setGenerationLogs(result.logs ?? []);
-            const resolvedPartCount = result.meta.partCount ?? weeklyImageOptions.partCount ?? weeklyImageStatus?.partCount ?? 2;
+            const responseLogs = normalizeLogs(result.logs);
+            if (responseLogs.length > 0) {
+                setGenerationLogs((prev) => {
+                    const prevLast = prev[prev.length - 1];
+                    const nextLast = responseLogs[responseLogs.length - 1];
+                    if (prev.length === responseLogs.length && prevLast === nextLast) {
+                        return prev;
+                    }
+                    return responseLogs;
+                });
+            }
+            const resolvedPartCount = result.meta.partCount ?? options.partCount ?? weeklyImageStatus?.partCount ?? 2;
             const partRequests = Array.from({ length: resolvedPartCount }, (_, index) =>
-                fetchWeeklyPicksImagePart.mutateAsync({ options: weeklyImageOptions, part: index + 1 })
+                fetchWeeklyPicksImagePart.mutateAsync({ options, part: index + 1 })
             );
             const parts = await Promise.all(partRequests);
             const nextUrls = parts.map((part) =>
@@ -194,8 +246,16 @@ export default function WeeklyPicksScreen() {
             await refetchWeeklyImageStatus();
         } catch (error) {
             const responseLogs = (error as any)?.response?.data?.logs;
-            if (Array.isArray(responseLogs)) {
-                setGenerationLogs(responseLogs.filter((line: unknown): line is string => typeof line === 'string'));
+            const normalizedLogs = normalizeLogs(responseLogs);
+            if (normalizedLogs.length > 0) {
+                setGenerationLogs((prev) => {
+                    const prevLast = prev[prev.length - 1];
+                    const nextLast = normalizedLogs[normalizedLogs.length - 1];
+                    if (prev.length === normalizedLogs.length && prevLast === nextLast) {
+                        return prev;
+                    }
+                    return normalizedLogs;
+                });
             }
             setGenerationError(error instanceof Error ? error.message : 'Unable to generate weekly picks image.');
         } finally {
@@ -324,10 +384,10 @@ export default function WeeklyPicksScreen() {
     const renderBranchFlowLine = (step: 'link' | 'deep', label: string) => {
         const status = getBranchFlowStatus(step);
         return (
-            <Typography variant="body2" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Typography variant="body2" sx={{ display: 'flex', gap: 0.5, alignItems: 'center', flexWrap: 'wrap' }}>
                 <Box component="span">{label}</Box>
                 <Box component="span" sx={{ color: branchFlowStatusTone[status], fontWeight: 600 }}>
-                    {branchFlowStatusLabel[status]}
+                    {`— ${branchFlowStatusLabel[status]}`}
                 </Box>
             </Typography>
         );
@@ -456,7 +516,7 @@ export default function WeeklyPicksScreen() {
                         )}
                     </Stack>
 
-                    {generationLogs.length > 0 && (
+                    {(generationLogs.length > 0 || isStreamingLogs) && (
                         <Box
                             sx={{
                                 backgroundColor: '#0f172a',
@@ -470,7 +530,7 @@ export default function WeeklyPicksScreen() {
                                 overflow: 'auto',
                             }}
                         >
-                            {generationLogs.join('\n')}
+                            {generationLogs.length > 0 ? generationLogs.join('\n') : 'Waiting for logs...'}
                         </Box>
                     )}
 
