@@ -3,7 +3,6 @@ import { createDrawerNavigator } from "@react-navigation/drawer";
 
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { HomeStackNavigator } from "./HomeNavigator";
-import { Retreats } from "../../Pages/EventLists/Retreats";
 import { headerOptions } from "../Header/Header";
 import { View } from "react-native";
 import Moar from "../../Pages/Moar";
@@ -126,16 +125,6 @@ export const DrawerNav = () => {
                     ...headerOptions({ navigation, title: 'Popular Events' }),
                 })}
                 listeners={onPressItemLogEventListener('Popular Events', 'Popular Events')}
-            />
-
-            <Drawer.Screen
-                name="Retreats"
-                component={Retreats}
-                options={({ navigation }) => ({
-                    drawerIcon: getIcon('campground'),
-                    ...headerOptions({ navigation, title: 'Festivals/Conferences/Retreats' }),
-                })}
-                listeners={onPressItemLogEventListener('Festivals/Conferences/Retreats', 'Retreats')}
             />
 
             <Drawer.Screen
