@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { Community, Event } from '../../commonTypes';
+import { Event } from '../../commonTypes';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -47,23 +47,19 @@ async function schedulePushNotification(availableCardsToSwipe: Event[]) {
     const organizersString = sortedOrganizers.slice(0, 3).join('\n');
 
     const channelId = await ensureBadgeNotificationChannel();
-    const content = channelId
-      ? { title: `Check out these new events!`, body: organizersString, channelId }
-      : { title: `Check out these new events!`, body: organizersString };
+    const content = { title: `Check out these new events!`, body: organizersString };
+    const trigger: Notifications.NotificationTriggerInput = {
+      type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+      // // Sunday
+      weekday: 1,
+      hour: 12 + 6,
+      minute: 0,
+      ...(channelId ? { channelId } : {}),
+    };
     await Notifications.cancelAllScheduledNotificationsAsync();
     await Notifications.scheduleNotificationAsync({
       content,
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
-        // // Sunday
-        weekday: 1,
-
-        hour: 12 + 6,
-        minute: 0,
-
-        // hour: new Date().getHours(),
-        // minute: new Date().getMinutes() + 1,
-      },
+      trigger,
     });
   } catch (error) {
     console.warn('schedulePushNotification: failed to schedule', error);

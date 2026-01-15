@@ -13,14 +13,42 @@ type CacheEntry = {
 type SetupOptions = {
   queryClient: QueryClient;
   maxAgeMs?: number;
+  maxEntries?: number;
+  maxBytes?: number;
+  maxEntryBytes?: number;
   reconnectPollMs?: number;
+};
+
+type CacheIndexEntry = {
+  key: string;
+  timestamp: number;
+  size: number;
+};
+
+type CacheSettings = {
+  maxAgeMs: number;
+  maxEntries: number;
+  maxBytes: number;
+  maxEntryBytes: number;
 };
 
 const CACHE_PREFIX = 'playbuddy:http-cache:';
 const DEFAULT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
 const DEFAULT_RECONNECT_POLL_MS = 15000;
+const CACHE_INDEX_KEY = `${CACHE_PREFIX}index`;
+const DEFAULT_MAX_ENTRIES = 120;
+const DEFAULT_MAX_BYTES = 3 * 1024 * 1024;
+const DEFAULT_MAX_ENTRY_BYTES = 256 * 1024;
 
 let hasSetup = false;
+let cacheIndex: CacheIndexEntry[] | null = null;
+let cacheIndexPromise: Promise<CacheIndexEntry[]> | null = null;
+let cacheSettings: CacheSettings = {
+  maxAgeMs: DEFAULT_MAX_AGE_MS,
+  maxEntries: DEFAULT_MAX_ENTRIES,
+  maxBytes: DEFAULT_MAX_BYTES,
+  maxEntryBytes: DEFAULT_MAX_ENTRY_BYTES,
+};
 
 const stableStringify = (value: unknown): string => {
   if (value === null || typeof value !== 'object') {
@@ -106,6 +134,154 @@ const isNetworkError = (error: unknown): boolean => {
   return !error.response;
 };
 
+const getByteLength = (value: string): number => value.length;
+
+const normalizeCacheIndex = (entries: CacheIndexEntry[]): CacheIndexEntry[] => {
+  const map = new Map<string, CacheIndexEntry>();
+  for (const entry of entries) {
+    if (!entry || typeof entry.key !== 'string') continue;
+    if (!Number.isFinite(entry.timestamp) || !Number.isFinite(entry.size)) continue;
+    const existing = map.get(entry.key);
+    if (!existing || entry.timestamp > existing.timestamp) {
+      map.set(entry.key, entry);
+    }
+  }
+  return Array.from(map.values());
+};
+
+const persistCacheIndex = async (entries: CacheIndexEntry[]): Promise<void> => {
+  try {
+    await AsyncStorage.setItem(CACHE_INDEX_KEY, JSON.stringify(entries));
+  } catch {
+    // Ignore storage errors so requests still succeed.
+  }
+};
+
+const rebuildCacheIndex = async (): Promise<CacheIndexEntry[]> => {
+  try {
+    const keys = await AsyncStorage.getAllKeys();
+    const cacheKeys = keys.filter(key => key.startsWith(CACHE_PREFIX) && key !== CACHE_INDEX_KEY);
+    if (!cacheKeys.length) return [];
+    const pairs = await AsyncStorage.multiGet(cacheKeys);
+    const entries: CacheIndexEntry[] = [];
+    for (const [key, raw] of pairs) {
+      if (!raw) continue;
+      try {
+        const parsed = JSON.parse(raw) as CacheEntry;
+        if (!Number.isFinite(parsed.timestamp)) continue;
+        entries.push({
+          key,
+          timestamp: parsed.timestamp,
+          size: getByteLength(raw),
+        });
+      } catch {
+        // Ignore invalid cache entries.
+      }
+    }
+    return normalizeCacheIndex(entries);
+  } catch {
+    return [];
+  }
+};
+
+const loadCacheIndex = async (): Promise<CacheIndexEntry[]> => {
+  if (cacheIndex) return cacheIndex;
+  if (cacheIndexPromise) return cacheIndexPromise;
+  cacheIndexPromise = (async () => {
+    let entries: CacheIndexEntry[] | null = null;
+    try {
+      const raw = await AsyncStorage.getItem(CACHE_INDEX_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as CacheIndexEntry[];
+        entries = normalizeCacheIndex(Array.isArray(parsed) ? parsed : []);
+      }
+    } catch {
+      // Ignore invalid cache index values.
+    }
+    if (!entries) {
+      entries = await rebuildCacheIndex();
+    }
+    cacheIndex = entries;
+    await persistCacheIndex(entries);
+    cacheIndexPromise = null;
+    return entries;
+  })();
+  return cacheIndexPromise;
+};
+
+const trimCacheEntries = (
+  entries: CacheIndexEntry[],
+  now: number,
+  maxAgeMs: number,
+  maxEntries: number,
+  maxBytes: number,
+) => {
+  const expiredKeys: string[] = [];
+  const freshEntries: CacheIndexEntry[] = [];
+
+  for (const entry of entries) {
+    if (now - entry.timestamp > maxAgeMs) {
+      expiredKeys.push(entry.key);
+    } else {
+      freshEntries.push(entry);
+    }
+  }
+
+  const sorted = [...freshEntries].sort((a, b) => a.timestamp - b.timestamp);
+  let totalSize = sorted.reduce((sum, entry) => sum + entry.size, 0);
+  const evictedKeys: string[] = [];
+  const maxEntriesLimit = maxEntries > 0 ? maxEntries : Number.POSITIVE_INFINITY;
+  const maxBytesLimit = maxBytes > 0 ? maxBytes : Number.POSITIVE_INFINITY;
+
+  while (sorted.length > maxEntriesLimit || totalSize > maxBytesLimit) {
+    const removed = sorted.shift();
+    if (!removed) break;
+    totalSize -= removed.size;
+    evictedKeys.push(removed.key);
+  }
+
+  return {
+    kept: sorted.sort((a, b) => b.timestamp - a.timestamp),
+    expiredKeys,
+    evictedKeys,
+  };
+};
+
+const pruneCacheIndex = async (
+  maxAgeMs: number,
+  maxEntries: number,
+  maxBytes: number,
+) => {
+  const entries = await loadCacheIndex();
+  if (!entries.length) return;
+  const now = Date.now();
+  const { kept, expiredKeys, evictedKeys } = trimCacheEntries(
+    entries,
+    now,
+    maxAgeMs,
+    maxEntries,
+    maxBytes,
+  );
+  const keysToRemove = [...expiredKeys, ...evictedKeys];
+  if (keysToRemove.length) {
+    try {
+      await AsyncStorage.multiRemove(keysToRemove);
+    } catch {
+      // Ignore storage errors so requests still succeed.
+    }
+  }
+  cacheIndex = kept;
+  await persistCacheIndex(kept);
+};
+
+const removeCacheKeyFromIndex = (key: string) => {
+  if (!cacheIndex) return;
+  const next = cacheIndex.filter(entry => entry.key !== key);
+  if (next.length === cacheIndex.length) return;
+  cacheIndex = next;
+  void persistCacheIndex(next);
+};
+
 const readCacheEntry = async (key: string, maxAgeMs: number): Promise<CacheEntry | null> => {
   try {
     const raw = await AsyncStorage.getItem(key);
@@ -113,17 +289,83 @@ const readCacheEntry = async (key: string, maxAgeMs: number): Promise<CacheEntry
     const parsed = JSON.parse(raw) as CacheEntry;
     if (Date.now() - parsed.timestamp > maxAgeMs) {
       await AsyncStorage.removeItem(key);
+      removeCacheKeyFromIndex(key);
       return null;
     }
     return parsed;
   } catch {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch {
+      // Ignore storage errors so requests still succeed.
+    }
+    removeCacheKeyFromIndex(key);
     return null;
   }
 };
 
 const writeCacheEntry = async (key: string, entry: CacheEntry): Promise<void> => {
   try {
-    await AsyncStorage.setItem(key, JSON.stringify(entry));
+    const raw = JSON.stringify(entry);
+    const entrySize = getByteLength(raw);
+    if (entrySize > cacheSettings.maxEntryBytes) {
+      await pruneCacheIndex(
+        cacheSettings.maxAgeMs,
+        cacheSettings.maxEntries,
+        cacheSettings.maxBytes,
+      );
+      return;
+    }
+
+    const entries = await loadCacheIndex();
+    const now = Date.now();
+    const nextEntries: CacheIndexEntry[] = [
+      { key, timestamp: entry.timestamp, size: entrySize },
+      ...entries.filter(existing => existing.key !== key),
+    ];
+    const { kept, expiredKeys, evictedKeys } = trimCacheEntries(
+      nextEntries,
+      now,
+      cacheSettings.maxAgeMs,
+      cacheSettings.maxEntries,
+      cacheSettings.maxBytes,
+    );
+    const shouldWrite = kept.some(entryItem => entryItem.key === key);
+
+    if (!shouldWrite) {
+      const { kept: pruned, expiredKeys: prunedExpired, evictedKeys: prunedEvicted } =
+        trimCacheEntries(
+          entries,
+          now,
+          cacheSettings.maxAgeMs,
+          cacheSettings.maxEntries,
+          cacheSettings.maxBytes,
+        );
+      const keysToRemove = [...prunedExpired, ...prunedEvicted];
+      if (keysToRemove.length) {
+        try {
+          await AsyncStorage.multiRemove(keysToRemove);
+        } catch {
+          // Ignore storage errors so requests still succeed.
+        }
+      }
+      cacheIndex = pruned;
+      await persistCacheIndex(pruned);
+      return;
+    }
+
+    const keysToRemove = [...expiredKeys, ...evictedKeys];
+    if (keysToRemove.length) {
+      try {
+        await AsyncStorage.multiRemove(keysToRemove);
+      } catch {
+        // Ignore storage errors so requests still succeed.
+      }
+    }
+
+    await AsyncStorage.setItem(key, raw);
+    cacheIndex = kept;
+    await persistCacheIndex(kept);
   } catch {
     // Ignore storage errors so requests still succeed.
   }
@@ -132,10 +374,15 @@ const writeCacheEntry = async (key: string, entry: CacheEntry): Promise<void> =>
 export const setupAxiosOfflineCache = ({
   queryClient,
   maxAgeMs = DEFAULT_MAX_AGE_MS,
+  maxEntries = DEFAULT_MAX_ENTRIES,
+  maxBytes = DEFAULT_MAX_BYTES,
+  maxEntryBytes = DEFAULT_MAX_ENTRY_BYTES,
   reconnectPollMs = DEFAULT_RECONNECT_POLL_MS,
 }: SetupOptions) => {
   if (hasSetup) return;
   hasSetup = true;
+  cacheSettings = { maxAgeMs, maxEntries, maxBytes, maxEntryBytes };
+  void pruneCacheIndex(maxAgeMs, maxEntries, maxBytes);
 
   let isOffline = false;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;

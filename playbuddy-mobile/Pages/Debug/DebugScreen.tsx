@@ -455,13 +455,10 @@ export const DebugScreen = () => {
             try {
                 const channelId = await ensureNotificationChannel();
                 const sendAt = Date.now() + 5000;
-                const baseContent = channelId
-                    ? { ...candidate.content, channelId }
-                    : candidate.content;
                 const content = {
-                    ...baseContent,
+                    ...candidate.content,
                     data: {
-                        ...(baseContent.data || {}),
+                        ...(candidate.content.data || {}),
                         source: 'test',
                         sendAt,
                     },
@@ -472,6 +469,7 @@ export const DebugScreen = () => {
                         type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
                         seconds: 5,
                         repeats: false,
+                        ...(channelId ? { channelId } : {}),
                     },
                 });
                 setDebugStatus(

@@ -552,11 +552,10 @@ export const scheduleOrganizerNotifications = async ({
 
         usedEventIds.add(event.id);
         const content = buildOrganizerNotificationContent(event);
-        const contentWithChannel = channelId ? { ...content, channelId } : content;
         const contentWithMetadata = {
-            ...contentWithChannel,
+            ...content,
             data: {
-                ...contentWithChannel.data,
+                ...content.data,
                 sendAt,
             },
         };
@@ -573,6 +572,7 @@ export const scheduleOrganizerNotifications = async ({
                 trigger: {
                     type: Notifications.SchedulableTriggerInputTypes.DATE,
                     date: sendAt,
+                    ...(channelId ? { channelId } : {}),
                 },
             });
             scheduledIds.push(id);
