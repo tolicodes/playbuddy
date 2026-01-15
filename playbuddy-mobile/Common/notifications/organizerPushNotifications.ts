@@ -28,7 +28,7 @@ const NOTIFICATION_TZ = 'America/New_York';
 const NOTIFICATION_INTERVAL_SECONDS = 4 * 24 * 60 * 60;
 const NOTIFICATION_INTERVAL_MS = NOTIFICATION_INTERVAL_SECONDS * 1000;
 const NOTIFICATION_BATCH_COUNT = 5;
-const NOTIFICATION_EVENT_WINDOW_START_DAYS = 5;
+const NOTIFICATION_EVENT_WINDOW_START_DAYS = 2;
 const NOTIFICATION_EVENT_WINDOW_END_DAYS = 10;
 const NOTIFICATION_WINDOW_START_DAYS = 0;
 const NOTIFICATION_WINDOW_END_DAYS = 28;
@@ -295,24 +295,37 @@ const pickEventForNotification = ({
     followedOrganizerIds: Set<string>;
     usedEventIds: Set<number>;
 }) => {
-    const remaining = eligible.filter((entry) => !usedEventIds.has(entry.event.id));
-    if (!remaining.length) return null;
-
     const isFollowed = (event: Event) => {
         const organizerId = event.organizer?.id?.toString();
         return !!organizerId && followedOrganizerIds.has(organizerId);
     };
 
-    const promoRemaining = remaining.filter((entry) => hasPromoCodes(entry.event));
-    if (promoRemaining.length) {
-        const promoFollowed = promoRemaining.filter((entry) => isFollowed(entry.event));
-        if (promoFollowed.length) return promoFollowed[0].event;
-        return promoRemaining[0].event;
+    const pickRandom = (candidates: { event: Event; start: moment.Moment }[]) => {
+        if (!candidates.length) return null;
+        const index = Math.floor(Math.random() * candidates.length);
+        return candidates[index].event;
+    };
+
+    const pickPreferredRandom = (candidates: { event: Event; start: moment.Moment }[]) => {
+        if (!candidates.length) return null;
+        const followed = candidates.filter((entry) => isFollowed(entry.event));
+        return pickRandom(followed.length ? followed : candidates);
+    };
+
+    const pickRandomFromEligible = (candidates: { event: Event; start: moment.Moment }[]) => {
+        if (!candidates.length) return null;
+        const remaining = candidates.filter((entry) => !usedEventIds.has(entry.event.id));
+        return pickRandom(remaining.length ? remaining : candidates);
+    };
+
+    const promoEligible = eligible.filter((entry) => hasPromoCodes(entry.event));
+    if (promoEligible.length) {
+        // Keep promos if any exist in the window, even if it repeats an event.
+        return pickRandomFromEligible(promoEligible);
     }
 
-    const followed = remaining.filter((entry) => isFollowed(entry.event));
-    if (followed.length) return followed[0].event;
-    return remaining[0]?.event ?? null;
+    const remaining = eligible.filter((entry) => !usedEventIds.has(entry.event.id));
+    return pickPreferredRandom(remaining);
 };
 
 const computeNextOrganizerNotificationSendAt = async () => {

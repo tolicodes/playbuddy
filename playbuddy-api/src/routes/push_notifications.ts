@@ -88,6 +88,12 @@ const parseEventId = (value: unknown): { provided: boolean; value: number | null
     return { provided: true, value: parsed };
 };
 
+const normalizeImageUrl = (value?: string | null) => {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : null;
+};
+
 const chunk = <T>(items: T[], size: number) => {
     const chunks: T[][] = [];
     for (let i = 0; i < items.length; i += size) {
@@ -156,6 +162,21 @@ const disablePushTokens = async (tokens: string[], reason: string) => {
     }
 };
 
+const fetchEventImageUrl = async (eventId: number) => {
+    const { data, error } = await supabaseClient
+        .from('events')
+        .select('image_url')
+        .eq('id', eventId)
+        .maybeSingle();
+
+    if (error) {
+        console.warn(`Failed to fetch event image for push notification (${eventId}): ${error.message}`);
+        return null;
+    }
+
+    return normalizeImageUrl(data?.image_url);
+};
+
 const sendNotificationToAllTokens = async (notification: PushNotificationRecord) => {
     const { data: tokens, error } = await supabaseClient
         .from('push_tokens')
@@ -197,6 +218,10 @@ const sendNotificationToAllTokens = async (notification: PushNotificationRecord)
         typeof notification.event_id === 'number' && Number.isFinite(notification.event_id)
             ? notification.event_id
             : undefined;
+    let imageUrl = normalizeImageUrl(notification.image_url);
+    if (!imageUrl && eventId !== undefined) {
+        imageUrl = await fetchEventImageUrl(eventId);
+    }
 
     const messages: ExpoPushMessage[] = validTokens.map((token) => ({
         to: token,
@@ -206,7 +231,7 @@ const sendNotificationToAllTokens = async (notification: PushNotificationRecord)
         channelId: 'default',
         data: {
             notificationId: notification.id,
-            imageUrl: notification.image_url ?? null,
+            imageUrl,
             source: 'broadcast',
             eventId,
         },
