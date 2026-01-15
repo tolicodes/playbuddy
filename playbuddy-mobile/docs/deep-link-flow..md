@@ -35,16 +35,12 @@ Appears in main cal view
 
 The event details page contains the promo code logic
 
-- `EventDetailPromoCodeSeen`: if there is a promo code (with possible deep link details)
 - `EventDetailHeaderTitleClicked`: the header title is clicked (going to ticket)
 - `EventDetailOrganizerClicked`: organizer is clicked
 - `EventDetailGoogleCalendarClicked`: google cal is clicked
 - `EventDetailGetTicketsClicked`: get tickets button or header is clicked
 - `EventDetailTicketPressed`: specifically tickets button is clicked
-- `EventDetailDiscountModalOpened`: modal is opened for promo code
 - `EventDetailPromoCodeCopied`: promo code is copied in main view
-- `EventDetailModalTicketPressed`: user goes to ticket page from modal
-- `EventDetailTicketPromoModalPromoCopied`: promo code is
 
 Only Logged In
 

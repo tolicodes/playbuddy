@@ -57,6 +57,9 @@ export const UE = {
 
     // Onboarding & Misc
     ProfileInitialDeepLinkAssigned: 'profile_initial_deep_link_assigned',
+    OrganizerFollowPressed: 'organizer_follow_pressed',
+    OrganizerFirstFollowed: 'organizer_first_followed',
+    WishlistFirstAdded: 'wishlist_first_added',
 
     // Avatar
     AvatarPressPickImage: 'avatar_press_pick_image',
@@ -67,6 +70,13 @@ export const UE = {
     EventCalendarViewFiltersEnabled: 'event_calendar_view_filters_enabled',
     EventCalendarViewFiltersDisabled: 'event_calendar_view_filters_disabled',
     EventCalendarViewFiltersSet: 'event_calendar_view_filters_set',
+
+    // Date Bar
+    DateBarSwipePrev: 'date_bar_swipe_prev',
+    DateBarSwipeNext: 'date_bar_swipe_next',
+    DateBarLongPress: 'date_bar_long_press',
+    DateBarCalendarPressed: 'date_bar_calendar_pressed',
+    DateBarTodayPressed: 'date_bar_today_pressed',
 
     EventCalendarViewExpand: 'event_calendar_view_expand',
     EventCalendarViewToday: 'event_calendar_view_today',
@@ -79,20 +89,19 @@ export const UE = {
     // Filters
     FilterTagSelected: 'filter_tag_selected',
     FilterSearchChanged: 'filter_search_changed',
+    FilterSearchFocused: 'filter_search_focused',
+    FilterSearchTyped: 'filter_search_typed',
+    FilterMorePressed: 'filter_more_pressed',
+    FilterTagAdded: 'filter_tag_added',
 
     // Event-Detail & Tickets Flow
-    EventDetailDeepLinkPromoCodeSeen: 'event_detail_deep_link_promo_code_seen',
-    EventDetailDiscountModalOpened: 'event_detail_discount_modal_opened',
     EventDetailGetTicketsClicked: 'event_detail_get_tickets_clicked',
     EventDetailGoogleCalendarClicked: 'event_detail_google_calendar_clicked',
     EventDetailLinkClicked: 'event_detail_link_clicked',
-    EventDetailModalTicketPressed: 'event_detail_modal_ticket_pressed',
     EventDetailOrganizerClicked: 'event_detail_organizer_clicked',
     EventDetailPromoCodeCopied: 'event_detail_promo_code_copied',
-    EventDetailPromoCodeSeen: 'event_detail_promo_code_seen',
     EventDetailTicketPressed: 'event_detail_ticket_pressed',
     EventDetailWishlistToggled: 'event_detail_wishlist_toggled',
-    EventDetailTicketPromoModalPromoCopied: 'event_detail_ticket_promo_modal_promo_code_copied',
     EventDetailHeaderTitleClicked: 'event_detail_header_title_clicked',
     EventCalendarViewSearchChanged: 'event_calendar_view_search_changed',
 
@@ -220,6 +229,7 @@ export const UE = {
     TagPress: 'tag_press',
 } as const;
 
+// eslint-disable-next-line @typescript-eslint/no-redeclare
 export type UE = (typeof UE)[keyof typeof UE];
 
 type AnalyticsProps = {
@@ -301,6 +311,17 @@ export interface EventPayloadMap {
         organizer_id?: string;
         community_id?: string;
     };
+    [UE.OrganizerFollowPressed]: AnalyticsProps & {
+        organizer_id?: string;
+        community_id?: string;
+        source?: string;
+    };
+    [UE.OrganizerFirstFollowed]: AnalyticsProps & {
+        organizer_id?: string;
+        community_id?: string;
+        source?: string;
+    };
+    [UE.WishlistFirstAdded]: EventDetailsProps;
 
 
     [UE.TabNavigatorTabClicked]: AnalyticsProps & {
@@ -329,6 +350,28 @@ export interface EventPayloadMap {
     };
 
     [UE.EventCalendarViewFiltersSet]: AnalyticsProps & { filters: FilterState } & {
+        entity: string;
+        entityId?: string;
+    };
+
+    // Date Bar
+    [UE.DateBarSwipePrev]: AnalyticsProps & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.DateBarSwipeNext]: AnalyticsProps & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.DateBarLongPress]: AnalyticsProps & { day: string } & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.DateBarCalendarPressed]: AnalyticsProps & { expanded: boolean } & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.DateBarTodayPressed]: AnalyticsProps & {
         entity: string;
         entityId?: string;
     };
@@ -364,24 +407,34 @@ export interface EventPayloadMap {
     [UE.FilterSearchChanged]: AnalyticsProps & {
         search_text: string;
     };
+    [UE.FilterSearchFocused]: AnalyticsProps & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.FilterSearchTyped]: AnalyticsProps & { search_text: string } & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.FilterMorePressed]: AnalyticsProps & {
+        entity: string;
+        entityId?: string;
+    };
+    [UE.FilterTagAdded]: AnalyticsProps & { tag_name: string; tag_count: number } & {
+        entity: string;
+        entityId?: string;
+    };
 
     // Event-Detail & Tickets Flow
-    [UE.EventDetailDeepLinkPromoCodeSeen]: EventDetailsProps;
-    [UE.EventDetailDiscountModalOpened]: EventDetailsProps;
     [UE.EventDetailHeaderTitleClicked]: EventDetailsProps;
     [UE.EventDetailGetTicketsClicked]: EventDetailsProps;
     [UE.EventDetailGoogleCalendarClicked]: EventDetailsProps;
     [UE.EventDetailLinkClicked]: EventDetailsProps;
-    [UE.EventDetailModalTicketPressed]: EventDetailsProps;
     [UE.EventDetailOrganizerClicked]: EventDetailsProps;
     [UE.EventDetailPromoCodeCopied]: EventDetailsProps;
-    [UE.EventDetailPromoCodeSeen]: EventDetailsProps;
     [UE.EventDetailTicketPressed]: EventDetailsProps;
     [UE.EventDetailWishlistToggled]: EventDetailsProps & {
         is_on_wishlist: boolean;
     };
-
-    [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
 
     // Event-List
     [UE.EventListItemClicked]: EventDetailsProps
@@ -446,9 +499,6 @@ export interface EventPayloadMap {
     [UE.SwipeModeUndo]: AnalyticsProps & {
         event_id: number;
     };
-
-    // Ticket-Promo Modal
-    [UE.EventDetailTicketPromoModalPromoCopied]: EventDetailsProps
 
     [UE.AttendeeAvatarCarouselPress]: AnalyticsProps & {
         attendee_user_id: string;
