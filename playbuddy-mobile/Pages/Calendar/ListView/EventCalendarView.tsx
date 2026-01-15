@@ -88,6 +88,8 @@ const DATE_COACH_MAX_SHOWS = 3;
 const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const COMMUNITY_BANNER_HIDDEN_KEY = "communityBannerHidden";
 const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
+const RECOMMENDATION_WINDOW_START_DAYS = 2;
+const RECOMMENDATION_WINDOW_END_DAYS = 10;
 const EMPTY_EVENTS: EventWithMetadata[] = [];
 
 const EventCalendarView: React.FC<Props> = ({
@@ -154,6 +156,28 @@ const EventCalendarView: React.FC<Props> = ({
                 : Math.max(0, windowWidth - spacing.lg * 2 - spacing.md * 2);
         return Math.round(baseWidth * 0.4);
     }, [recommendationsLaneWidth, windowWidth]);
+    const getPromoCodesForEvent = (event: EventWithMetadata) => {
+        const deepLinkPromo =
+            currentDeepLink?.type !== "generic" && currentDeepLink?.featured_event?.id === event.id
+                ? currentDeepLink.featured_promo_code
+                : null;
+        const promoCandidates = [
+            ...(deepLinkPromo ? [deepLinkPromo] : []),
+            ...(event.promo_codes ?? []).filter((code) => code.scope === "event"),
+            ...(event.organizer?.promo_codes ?? []).filter((code) => code.scope === "organizer"),
+        ];
+        const promoCodes: typeof promoCandidates = [];
+        const seenPromoCodes = new Set<string>();
+        for (const code of promoCandidates) {
+            if (!code) continue;
+            const key = code.id || code.promo_code;
+            if (!key || seenPromoCodes.has(key)) continue;
+            seenPromoCodes.add(key);
+            promoCodes.push(code);
+            if (promoCodes.length === 2) break;
+        }
+        return promoCodes;
+    };
     const isFocused = useIsFocused();
     const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
 
@@ -297,6 +321,7 @@ const EventCalendarView: React.FC<Props> = ({
     const sectionListRef = useRef<SectionList>(null);
     const route = useRoute();
     const scrollToTopToken = (route.params as { scrollToTop?: number } | undefined)?.scrollToTop;
+    const didFilterScrollRef = useRef(false);
 
     const scrollListToOffset = (offset: number, animated = true) => {
         const list = sectionListRef.current;
@@ -323,6 +348,15 @@ const EventCalendarView: React.FC<Props> = ({
             scrollListToOffset(0);
         });
     }, [scrollToTopToken]);
+
+    useEffect(() => {
+        if (!sectionListRef.current) return;
+        if (!didFilterScrollRef.current) {
+            didFilterScrollRef.current = true;
+            return;
+        }
+        scrollListToOffset(0);
+    }, [filters, quickFilter, searchQuery]);
 
     const handleListViewModeChange = (mode: EventListViewMode) => {
         setListViewMode(mode);
@@ -530,24 +564,24 @@ const EventCalendarView: React.FC<Props> = ({
         }
 
         const now = moment().tz(TZ).startOf("day");
-        const cutoff = moment(now).add(14, "days").endOf("day");
+        const windowStart = moment(now).add(RECOMMENDATION_WINDOW_START_DAYS, "days").startOf("day");
+        const windowEnd = moment(now).add(RECOMMENDATION_WINDOW_END_DAYS, "days").endOf("day");
+
+        const isWithinRecommendationWindow = (event: EventWithMetadata) => {
+            const eventStart = moment.tz(event.start_date, TZ);
+            if (!eventStart.isValid()) return false;
+            return eventStart.isBetween(windowStart, windowEnd, undefined, "[]");
+        };
 
         const organizerEvents = sourceEvents.filter((event) => {
             const organizerId = event.organizer?.id?.toString();
             if (!organizerId || !followedOrganizerIds.has(organizerId)) return false;
-            const eventStart = moment.tz(event.start_date, TZ);
-            if (!eventStart.isValid()) return false;
-            return !eventStart.isBefore(now);
+            return isWithinRecommendationWindow(event);
         });
 
-        const eligible = organizerEvents.filter((event) => {
-            const eventStart = moment.tz(event.start_date, TZ);
-            return !eventStart.isAfter(cutoff);
-        });
+        const eligible = organizerEvents;
 
-        const hasPromo = (event: EventWithMetadata) =>
-            (event.promo_codes && event.promo_codes.length > 0) ||
-            (event.organizer?.promo_codes && event.organizer.promo_codes.length > 0);
+        const hasPromo = (event: EventWithMetadata) => getPromoCodesForEvent(event).length > 0;
 
         const shuffle = <T,>(items: T[]) => {
             const shuffled = [...items];
@@ -562,9 +596,12 @@ const EventCalendarView: React.FC<Props> = ({
         const pickedPromo = shuffle(promoEvents).slice(0, 2);
         const pickedPromoIds = new Set(pickedPromo.map((event) => event.id));
         const promoFillNeeded = Math.max(0, 2 - pickedPromo.length);
+        const promoFillPool = sourceEvents.filter(
+            (event) => isWithinRecommendationWindow(event) && hasPromo(event)
+        );
         const promoFill =
             promoFillNeeded > 0
-                ? shuffle(organizerEvents.filter((event) => !pickedPromoIds.has(event.id))).slice(
+                ? shuffle(promoFillPool.filter((event) => !pickedPromoIds.has(event.id))).slice(
                     0,
                     promoFillNeeded
                 )
@@ -588,8 +625,15 @@ const EventCalendarView: React.FC<Props> = ({
                 : [];
         const randomPicks = [...initialPicks, ...fillerPicks];
 
-        return [...selectedPromo, ...randomPicks];
-    }, [followedOrganizerIds, isMainEventsView, sourceEvents]);
+        const selections = [...selectedPromo, ...randomPicks];
+        if (selections.length <= 1) return selections;
+
+        const promoPicks = selections.filter(hasPromo);
+        if (promoPicks.length === 0) return selections;
+
+        const nonPromoPicks = selections.filter((event) => !hasPromo(event));
+        return [...promoPicks, ...nonPromoPicks];
+    }, [currentDeepLink, followedOrganizerIds, isMainEventsView, sourceEvents]);
 
     const selectedQuickFilterId = quickFilter
         ? quickFilter.type === 'category'
@@ -1144,6 +1188,23 @@ const EventCalendarView: React.FC<Props> = ({
         outputRange: [0.96, 1],
     });
 
+    const handleSearchQueryChange = (q: string) => {
+        logEvent(UE.FilterSearchTyped, { ...analyticsPropsPlusEntity, search_text: q });
+        setSearchQuery(q);
+        if (typeaheadSelection && q.trim().length > 0) {
+            setTypeaheadSelection(null);
+            if (
+                quickFilter?.type === 'tag' ||
+                quickFilter?.type === 'organizer' ||
+                quickFilter?.type === 'event_type' ||
+                quickFilter?.type === 'experience' ||
+                quickFilter?.type === 'interactivity'
+            ) {
+                setQuickFilter(null);
+            }
+        }
+    };
+
     return (
         <LinearGradient
             colors={eventListColors}
@@ -1152,52 +1213,38 @@ const EventCalendarView: React.FC<Props> = ({
             end={{ x: 0.9, y: 1 }}
             style={styles.screenGradient}
         >
-            <View pointerEvents="none" style={styles.screenGlowTop} />
-            <View pointerEvents="none" style={styles.screenGlowMid} />
-            <View pointerEvents="none" style={styles.screenGlowBottom} />
-            <View style={styles.container}>
-            <PopupManager events={sourceEvents} onListViewModeChange={handleListViewModeChange} />
+            <PopupManager events={sourceEvents} onListViewModeChange={handleListViewModeChange}>
+                <View pointerEvents="none" style={styles.screenGlowTop} />
+                <View pointerEvents="none" style={styles.screenGlowMid} />
+                <View pointerEvents="none" style={styles.screenGlowBottom} />
+                <View style={styles.container}>
+                    <FiltersView
+                        onApply={(f) => {
+                            const previousTags = new Set(filters.tags.map((tag) => normalizeSearchText(tag)));
+                            const nextTags = f.tags.filter((tag) => !previousTags.has(normalizeSearchText(tag)));
+                            nextTags.forEach((tag) => {
+                                logEvent(UE.FilterTagAdded, {
+                                    ...analyticsPropsPlusEntity,
+                                    tag_name: tag,
+                                    tag_count: f.tags.length,
+                                });
+                            });
+                            logEvent(UE.EventCalendarViewFiltersSet, { ...analyticsPropsPlusEntity, filters: f });
+                            setFilters(f);
+                            setFiltersVisible(false);
+                        }}
+                        initialFilters={filters}
+                        visible={filtersVisible}
+                        onClose={() => setFiltersVisible(false)}
+                        filterOptions={allClassifications}
+                        searchQuery={searchQuery}
+                        onSearchQueryChange={handleSearchQueryChange}
+                    />
 
-            <FiltersView
-                onApply={(f) => {
-                    const previousTags = new Set(filters.tags.map((tag) => normalizeSearchText(tag)));
-                    const nextTags = f.tags.filter((tag) => !previousTags.has(normalizeSearchText(tag)));
-                    nextTags.forEach((tag) => {
-                        logEvent(UE.FilterTagAdded, {
-                            ...analyticsPropsPlusEntity,
-                            tag_name: tag,
-                            tag_count: f.tags.length,
-                        });
-                    });
-                    logEvent(UE.EventCalendarViewFiltersSet, { ...analyticsPropsPlusEntity, filters: f });
-                    setFilters(f);
-                    setFiltersVisible(false);
-                }}
-                initialFilters={filters}
-                visible={filtersVisible}
-                onClose={() => setFiltersVisible(false)}
-                filterOptions={allClassifications}
-            />
-
-            <View style={styles.headerSurface}>
+                    <View style={styles.headerSurface}>
                 <TopBar
                     searchQuery={searchQuery}
-                    setSearchQuery={(q) => {
-                        logEvent(UE.FilterSearchTyped, { ...analyticsPropsPlusEntity, search_text: q });
-                        setSearchQuery(q);
-                        if (typeaheadSelection && q.trim().length > 0) {
-                            setTypeaheadSelection(null);
-                            if (
-                                quickFilter?.type === 'tag' ||
-                                quickFilter?.type === 'organizer' ||
-                                quickFilter?.type === 'event_type' ||
-                                quickFilter?.type === 'experience' ||
-                                quickFilter?.type === 'interactivity'
-                            ) {
-                                setQuickFilter(null);
-                            }
-                        }
-                    }}
+                    setSearchQuery={handleSearchQueryChange}
                     onSearchFocus={() => {
                         logEvent(UE.FilterSearchFocused, analyticsPropsPlusEntity);
                     }}
@@ -1494,27 +1541,7 @@ const EventCalendarView: React.FC<Props> = ({
                                                     }}
                                                 >
                                                     {recommendations.map((event, index) => {
-                                                        const deepLinkPromo =
-                                                            currentDeepLink?.type !== "generic" &&
-                                                            currentDeepLink?.featured_event?.id === event.id
-                                                                ? currentDeepLink.featured_promo_code
-                                                                : null;
-                                                        const promoCandidates = [
-                                                            ...(deepLinkPromo ? [deepLinkPromo] : []),
-                                                            ...(event.promo_codes ?? []).filter((code) => code.scope === "event"),
-                                                            ...(event.organizer?.promo_codes ?? []).filter(
-                                                                (code) => code.scope === "organizer"
-                                                            ),
-                                                        ];
-                                                        const promoCodes: typeof promoCandidates = [];
-                                                        const seenPromoCodes = new Set<string>();
-                                                        for (const code of promoCandidates) {
-                                                            const key = code.id || code.promo_code;
-                                                            if (!key || seenPromoCodes.has(key)) continue;
-                                                            seenPromoCodes.add(key);
-                                                            promoCodes.push(code);
-                                                            if (promoCodes.length === 2) break;
-                                                        }
+                                                        const promoCodes = getPromoCodesForEvent(event);
                                                         const promoLabels = promoCodes.map((promoCode) =>
                                                             promoCode.discount_type === "percent"
                                                                 ? `${promoCode.discount}% off`
@@ -1607,6 +1634,7 @@ const EventCalendarView: React.FC<Props> = ({
                 />
             </View>
             </View>
+            </PopupManager>
         </LinearGradient>
     );
 };

@@ -93,6 +93,8 @@ const MAX_COLLAPSED_TAGS = 6;
 const RECOMMENDED_EVENTS_TOTAL = 5;
 const ORGANIZER_RECOMMENDATION_COUNT = 2;
 const FOLLOWED_RECOMMENDATION_COUNT = 3;
+const RECOMMENDATION_WINDOW_START_DAYS = 2;
+const RECOMMENDATION_WINDOW_END_DAYS = 10;
 
 const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string }) => {
     const { currentDeepLink, authUserId } = useUserContext();
@@ -760,6 +762,28 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
                 : Math.max(0, windowWidth - spacing.lg * 2 - spacing.md * 2);
         return Math.round(baseWidth * 0.4);
     }, [recommendationsLaneWidth, windowWidth]);
+    const getPromoCodesForEvent = (item: EventWithMetadata) => {
+        const deepLinkPromo =
+            currentDeepLink?.type !== 'generic' && currentDeepLink?.featured_event?.id === item.id
+                ? currentDeepLink.featured_promo_code
+                : null;
+        const promoCandidates = [
+            ...(deepLinkPromo ? [deepLinkPromo] : []),
+            ...(item.promo_codes ?? []).filter((code) => code.scope === 'event'),
+            ...(item.organizer?.promo_codes ?? []).filter((code) => code.scope === 'organizer'),
+        ];
+        const promoCodes: typeof promoCandidates = [];
+        const seenPromoCodes = new Set<string>();
+        for (const code of promoCandidates) {
+            if (!code) continue;
+            const key = code.id || code.promo_code;
+            if (!key || seenPromoCodes.has(key)) continue;
+            seenPromoCodes.add(key);
+            promoCodes.push(code);
+            if (promoCodes.length === 2) break;
+        }
+        return promoCodes;
+    };
 
     const recommendations = useMemo(() => {
         if (!allEvents || allEvents.length === 0) return [] as EventWithMetadata[];
@@ -767,15 +791,17 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
         const currentEvent = allEvents.find((item) => item.id === event.id) || event;
         const currentOrganizerId = currentEvent.organizer?.id?.toString();
         const now = moment().tz(TZ).startOf('day');
+        const windowStart = moment(now).add(RECOMMENDATION_WINDOW_START_DAYS, 'days').startOf('day');
+        const windowEnd = moment(now).add(RECOMMENDATION_WINDOW_END_DAYS, 'days').endOf('day');
 
-        const isUpcomingEvent = (item: EventWithMetadata) => {
+        const isWithinRecommendationWindow = (item: EventWithMetadata) => {
             const eventStart = moment.tz(item.start_date, TZ);
             if (!eventStart.isValid()) return false;
-            return !eventStart.isBefore(now);
+            return eventStart.isBetween(windowStart, windowEnd, undefined, '[]');
         };
 
         const eligibleEvents = allEvents.filter(
-            (item) => item.id !== currentEvent.id && isUpcomingEvent(item)
+            (item) => item.id !== currentEvent.id && isWithinRecommendationWindow(item)
         );
 
         const shuffle = <T,>(items: T[]) => {
@@ -787,9 +813,7 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
             return shuffled;
         };
 
-        const hasPromo = (item: EventWithMetadata) =>
-            (item.promo_codes && item.promo_codes.length > 0) ||
-            (item.organizer?.promo_codes && item.organizer.promo_codes.length > 0);
+        const hasPromo = (item: EventWithMetadata) => getPromoCodesForEvent(item).length > 0;
 
         const fromOrganizer = currentOrganizerId
             ? eligibleEvents.filter(
@@ -832,18 +856,59 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
             picks.push(...pickRandom(fromPromoOrganizers, remaining));
         }
 
-        const shuffled = shuffle(picks);
+        const ensurePromoSlots = (items: EventWithMetadata[]) => {
+            const desiredPromoCount = Math.min(2, fromPromoOrganizers.length);
+            if (desiredPromoCount === 0) return items;
+
+            const currentPromoCount = items.filter(hasPromo).length;
+            if (currentPromoCount >= desiredPromoCount) return items;
+
+            const needed = desiredPromoCount - currentPromoCount;
+            const pickedIds = new Set(items.map((item) => item.id));
+            const promoAdds = shuffle(fromPromoOrganizers.filter((item) => !pickedIds.has(item.id))).slice(0, needed);
+            if (promoAdds.length === 0) return items;
+
+            const nextItems = [...items];
+            const availableSlots = RECOMMENDED_EVENTS_TOTAL - nextItems.length;
+            let promoAddsToUse = promoAdds;
+
+            if (availableSlots < promoAdds.length) {
+                let toRemove = promoAdds.length - availableSlots;
+                for (let i = nextItems.length - 1; i >= 0 && toRemove > 0; i -= 1) {
+                    if (!hasPromo(nextItems[i])) {
+                        nextItems.splice(i, 1);
+                        toRemove -= 1;
+                    }
+                }
+                const maxAdds = Math.max(0, promoAdds.length - toRemove);
+                promoAddsToUse = promoAdds.slice(0, maxAdds);
+            }
+
+            return [...nextItems, ...promoAddsToUse];
+        };
+
+        const shuffled = shuffle(ensurePromoSlots(picks));
+        const promoPicks = shuffled.filter(hasPromo);
+        const nonPromoPicks = shuffled.filter((item) => !hasPromo(item));
+        const ordered = [...promoPicks, ...nonPromoPicks];
+
         if (currentOrganizerId) {
-            const organizerIndex = shuffled.findIndex(
+            const organizerIndex = ordered.findIndex(
                 (item) => item.organizer?.id?.toString() === currentOrganizerId
             );
-            if (organizerIndex > 0) {
-                const [organizerPick] = shuffled.splice(organizerIndex, 1);
-                shuffled.unshift(organizerPick);
+            if (organizerIndex > -1) {
+                const organizerPick = ordered[organizerIndex];
+                const organizerIsPromo = hasPromo(organizerPick);
+                const targetIndex = organizerIsPromo ? 0 : promoPicks.length;
+                if (organizerIndex !== targetIndex) {
+                    ordered.splice(organizerIndex, 1);
+                    ordered.splice(targetIndex, 0, organizerPick);
+                }
             }
         }
-        return shuffled;
-    }, [allEvents, event, followedOrganizerIds]);
+
+        return ordered;
+    }, [allEvents, currentDeepLink, event, followedOrganizerIds]);
 
     if (!allEvents || allEvents.length === 0) return null;
 
@@ -868,27 +933,7 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
                         }}
                     >
                         {recommendations.map((item, index) => {
-                            const deepLinkPromo =
-                                currentDeepLink?.type !== 'generic' &&
-                                currentDeepLink?.featured_event?.id === item.id
-                                    ? currentDeepLink.featured_promo_code
-                                    : null;
-                            const promoCandidates = [
-                                ...(deepLinkPromo ? [deepLinkPromo] : []),
-                                ...(item.promo_codes ?? []).filter((code) => code.scope === 'event'),
-                                ...(item.organizer?.promo_codes ?? []).filter(
-                                    (code) => code.scope === 'organizer'
-                                ),
-                            ];
-                            const promoCodes: typeof promoCandidates = [];
-                            const seenPromoCodes = new Set<string>();
-                            for (const code of promoCandidates) {
-                                const key = code.id || code.promo_code;
-                                if (!key || seenPromoCodes.has(key)) continue;
-                                seenPromoCodes.add(key);
-                                promoCodes.push(code);
-                                if (promoCodes.length === 2) break;
-                            }
+                            const promoCodes = getPromoCodesForEvent(item);
                             const promoLabels = promoCodes.map((promoCode) =>
                                 promoCode.discount_type === 'percent'
                                     ? `${promoCode.discount}% off`
