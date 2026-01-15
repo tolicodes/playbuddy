@@ -16,9 +16,9 @@ const MAX_LABEL = 'Saved';
 
 const buildButtonMetrics = (height: number) => {
     const iconSize = Math.round(height * 0.34);
-    const fontSize = Math.round(height * 0.27);
-    const paddingX = Math.round(height * 0.22);
-    const gap = Math.max(3, Math.round(height * 0.12));
+    const fontSize = Math.round(height * 0.29);
+    const paddingX = Math.round(height * 0.18);
+    const gap = Math.max(3, Math.round(height * 0.1));
     const textWidth = Math.round(MAX_LABEL.length * fontSize * 0.6);
     const minWidth = Math.round(paddingX * 2 + iconSize + gap + textWidth);
     return {
@@ -46,6 +46,7 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
     const wobbleLoopRef = useRef<Animated.CompositeAnimation | null>(null);
     const longPressTriggeredRef = useRef(false);
     const { iconSize, fontSize, paddingX, gap, minWidth } = buildButtonMetrics(size);
+    const heightValue = Math.max(28, Math.round(size * 0.86));
     const label = itemIsOnWishlist ? 'Saved' : 'Save';
     const iconName = itemIsOnWishlist ? 'check' : 'plus';
     const contentColor = itemIsOnWishlist ? colors.white : colors.brandInk;
@@ -140,9 +141,9 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
                 styles.button,
                 itemIsOnWishlist ? styles.buttonActive : styles.buttonInactive,
                 {
-                    height: size,
+                    height: heightValue,
                     minWidth,
-                    borderRadius: size / 2,
+                    borderRadius: heightValue / 2,
                     paddingHorizontal: paddingX,
                 },
                 containerStyle,

@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         gap: spacing.mdPlus,
         flexGrow: 1,
-        paddingHorizontal: spacing.mdPlus,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.smPlus,
     },
     thumbWrap: {
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     footer: {
         borderTopWidth: 1,
         borderTopColor: colors.borderSubtle,
-        paddingHorizontal: spacing.lg,
+        paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         backgroundColor: colors.white,
     },

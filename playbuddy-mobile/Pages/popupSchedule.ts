@@ -6,12 +6,20 @@ export const POPUP_INTERVAL_MS = POPUP_INTERVAL_DAYS * DAY_MS;
 const DEFAULT_SNOOZE_MS = 14 * DAY_MS;
 const DEFAULT_INITIAL_DELAY_MS = 0;
 const LIST_VIEW_INTRO_DELAY_MS = 5 * 60 * 1000;
+const CALENDAR_ADD_COACH_DELAY_MS = 10 * 60 * 1000;
 
 export const POPUP_SCHEDULE = [
     {
         id: 'list_view_intro',
         label: 'Switch to classic view',
         initialDelayMs: LIST_VIEW_INTRO_DELAY_MS,
+        snoozeMs: DEFAULT_SNOOZE_MS,
+        useInterval: false,
+    },
+    {
+        id: 'calendar_add_coach',
+        label: 'Add to calendar coach',
+        initialDelayMs: CALENDAR_ADD_COACH_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: false,
     },

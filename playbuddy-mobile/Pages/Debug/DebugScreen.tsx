@@ -94,6 +94,7 @@ type PopupStatusCounts = Record<PopupStatusTone, number>;
 
 const POPUP_ICON_MAP: Record<PopupId, { icon: string; color: string; bg: string }> = {
     list_view_intro: { icon: 'list', color: colors.accentBlue, bg: colors.accentBlueSoft },
+    calendar_add_coach: { icon: 'calendar-plus', color: colors.accentTeal, bg: 'rgba(20, 184, 166, 0.12)' },
     whatsapp_group: { icon: 'whatsapp', color: colors.accentOrange, bg: colors.accentOrangeSoft },
     rate_app: { icon: 'star', color: colors.accentPurple, bg: colors.accentPurpleSoft },
     discover_game: { icon: 'gamepad', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
@@ -108,6 +109,7 @@ const MANUAL_POPUP_ICON = {
 const EVENT_POPUP_HIDE_KEY_PREFIX = 'event_popup_hide_';
 const EVENT_POPUP_SEEN_KEY_PREFIX = 'event_popup_seen_';
 const EVENT_POPUP_FORCE_KEY = 'popup_manager_force_event_popup';
+const CALENDAR_ADD_COACH_COMPLETED_KEY = 'calendar_add_coach_completed_v1';
 
 const getEventPopupHideKey = (id: string) => `${EVENT_POPUP_HIDE_KEY_PREFIX}${id}`;
 const getEventPopupSeenKey = (id: string) => `${EVENT_POPUP_SEEN_KEY_PREFIX}${id}`;
@@ -589,6 +591,18 @@ export const DebugScreen = () => {
         })();
     }, [navigation]);
 
+    const onPressClearCalendarAddToast = useCallback(() => {
+        void (async () => {
+            try {
+                await AsyncStorage.removeItem(CALENDAR_ADD_COACH_COMPLETED_KEY);
+                setPopupDebugStatus('Calendar add toast cleared.');
+            } catch (error) {
+                console.warn('[debug] failed to clear calendar add toast', error);
+                setPopupDebugStatus('Unable to clear calendar add toast.');
+            }
+        })();
+    }, []);
+
     const now = Date.now();
     const manualPopupSource = isAdmin ? publishedEventPopups : activeEventPopups;
     const manualPopupsLoading = isAdmin ? isLoadingPublishedEventPopups : isLoadingActiveEventPopups;
@@ -811,6 +825,9 @@ export const DebugScreen = () => {
                             <View style={styles.popupActionRow}>
                                 <TouchableOpacity style={styles.secondaryButton} onPress={onPressResetPopups}>
                                     <Text style={styles.secondaryButtonText}>Reset popup history</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={styles.secondaryButton} onPress={onPressClearCalendarAddToast}>
+                                    <Text style={styles.secondaryButtonText}>Clear calendar add toast</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.secondaryButton}

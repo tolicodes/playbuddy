@@ -24,7 +24,7 @@ import { ActionSheet } from '../../../components/ActionSheet';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 import { useCalendarCoach } from '../../PopupManager';
 
-const DETAILS_PANEL_HEIGHT = 92;
+const DETAILS_PANEL_HEIGHT = 108;
 const CARD_IMAGE_ASPECT_RATIO = 2;
 const DEFAULT_CARD_WIDTH = Math.max(0, Dimensions.get('window').width - spacing.lg * 2);
 const DEFAULT_IMAGE_HEIGHT = Math.round(DEFAULT_CARD_WIDTH / CARD_IMAGE_ASPECT_RATIO);
@@ -44,6 +44,7 @@ export interface EventListItemProps {
     listViewMode?: EventListViewMode;
     cardVariant?: 'heart' | 'type-icon';
     disableClickAnalytics?: boolean;
+    hideSaveButton?: boolean;
 }
 
 export const EventListItem: React.FC<EventListItemProps> = ({
@@ -59,6 +60,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     listViewMode,
     cardVariant,
     disableClickAnalytics,
+    hideSaveButton,
 }) => {
     const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
@@ -177,6 +179,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
     const resolvedCardVariant = cardVariant ?? 'heart';
+    const showActionButton = !hideSaveButton;
 
     const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
@@ -188,9 +191,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const detailsHeight = Math.max(0, resolvedCardHeight - imageHeight);
     const actionButtonSize = Math.max(30, Math.min(42, Math.round(resolvedCardHeight * 0.14)));
     const actionButtonWidth = getWishlistButtonWidth(actionButtonSize);
-    const badgeInset = spacing.xs;
-    const actionButtonInset = badgeInset;
-    const actionButtonRight = badgeInset;
+    const badgeInset = spacing.sm;
+    const actionButtonInset = spacing.lg;
+    const actionButtonRight = spacing.lg;
     const typeIconBubbleSize = Math.round(Math.max(32, Math.min(48, actionButtonSize * 1.1)));
     const typeIconSize = Math.round(typeIconBubbleSize * 0.5);
     const typeIconTop = Math.max(0, imageHeight / 2 - typeIconBubbleSize / 2);
@@ -199,7 +202,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const showTypeIconOverlay = resolvedCardVariant === 'type-icon' && !imageUrl;
     const showPlaceholderIcon = !imageUrl && !showTypeIconOverlay;
     const actionIconRightInset = actionButtonRight;
-    const metaTextPaddingRight = actionButtonRight + actionButtonWidth + spacing.sm;
+    const metaTextPaddingRight = showActionButton
+        ? actionButtonRight + actionButtonWidth + spacing.sm
+        : 0;
 
     return (
         <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
@@ -311,17 +316,19 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     {metaLine}
                                 </Text>
                             ) : null}
-                            <WishlistPlusButton
-                                itemIsOnWishlist={itemIsOnWishlist}
-                                handleToggleEventWishlist={handleToggleEventWishlist}
-                                onLongPress={() => setShareMenuOpen(true)}
-                                size={actionButtonSize}
-                                wobble={wobblePlus && !itemIsOnWishlist}
-                                containerStyle={[
-                                    styles.actionButton,
-                                    { right: actionButtonRight, bottom: actionButtonInset },
-                                ]}
-                            />
+                            {showActionButton && (
+                                <WishlistPlusButton
+                                    itemIsOnWishlist={itemIsOnWishlist}
+                                    handleToggleEventWishlist={handleToggleEventWishlist}
+                                    onLongPress={() => setShareMenuOpen(true)}
+                                    size={actionButtonSize}
+                                    wobble={wobblePlus && !itemIsOnWishlist}
+                                    containerStyle={[
+                                        styles.actionButton,
+                                        { right: actionButtonRight, bottom: actionButtonInset },
+                                    ]}
+                                />
+                            )}
                         </LinearGradient>
                     </View>
                 </TouchableOpacity>
@@ -331,7 +338,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
             </View>
             <ActionSheet
                 visible={shareMenuOpen}
-                height={180}
+                height={120}
                 onClose={() => setShareMenuOpen(false)}
                 dismissOnBackdropPress
                 sheetStyle={styles.shareSheet}
@@ -348,7 +355,15 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                         void handleSharePress();
                     }}
                 >
-                    <Text style={styles.shareSheetItemText}>Share</Text>
+                    <View style={styles.shareSheetItemContent}>
+                        <FAIcon
+                            name="share-alt"
+                            size={18}
+                            color={colors.textPrimary}
+                            style={styles.shareSheetItemIcon}
+                        />
+                        <Text style={styles.shareSheetItemText}>Share</Text>
+                    </View>
                 </Pressable>
             </ActionSheet>
         </View>
@@ -366,7 +381,7 @@ const styles = StyleSheet.create({
         borderRadius: radius.lg,
         overflow: 'hidden',
         marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.sm,
         position: 'relative',
         ...shadows.card,
         shadowOpacity: 0.08,
@@ -386,7 +401,7 @@ const styles = StyleSheet.create({
         borderTopWidth: 1,
         borderTopColor: colors.borderSubtle,
         paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
+        paddingVertical: spacing.mdPlus,
         backgroundColor: colors.white,
     },
     poster: {
@@ -422,7 +437,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.md,
-        paddingBottom: spacing.md,
+        paddingBottom: spacing.mdPlus,
         borderTopWidth: StyleSheet.hairlineWidth,
         borderTopColor: colors.borderLavenderSoft,
     },
@@ -447,14 +462,14 @@ const styles = StyleSheet.create({
         color: colors.textOnDarkStrong,
     },
     eventTitle: {
-        fontSize: fontSizes.basePlus,
+        fontSize: fontSizes.lg,
         fontWeight: '700',
         color: colors.textPrimary,
         marginTop: spacing.xsPlus,
         fontFamily: fontFamilies.body,
     },
     organizerName: {
-        fontSize: fontSizes.smPlus,
+        fontSize: fontSizes.base,
         color: colors.textMuted,
         fontFamily: fontFamilies.body,
         marginTop: spacing.xs,
@@ -482,7 +497,7 @@ const styles = StyleSheet.create({
         color: colors.black,
     },
     metaText: {
-        fontSize: fontSizes.sm,
+        fontSize: fontSizes.smPlus,
         color: colors.textSlate,
         fontFamily: fontFamilies.body,
         marginTop: spacing.xs,
@@ -520,6 +535,13 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.mdPlus,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    shareSheetItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    shareSheetItemIcon: {
+        marginRight: spacing.sm,
     },
     shareSheetItemPressed: {
         opacity: 0.72,

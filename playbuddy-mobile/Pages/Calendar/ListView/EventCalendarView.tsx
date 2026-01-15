@@ -301,6 +301,22 @@ const EventCalendarView: React.FC<Props> = ({
             return { tags: [], experience_levels: [], interactivity_levels: [], event_types: [] };
         return getAllClassificationsFromEvents(sourceEvents);
     }, [sourceEvents]);
+    const organizerOptions = useMemo(() => {
+        const options = new Map<string, { id: string; name: string; count: number }>();
+        for (const event of sourceEvents || []) {
+            const organizer = event.organizer;
+            const name = organizer?.name?.trim();
+            if (!name) continue;
+            const idValue = organizer?.id?.toString() || name.toLowerCase();
+            const existing = options.get(idValue);
+            if (existing) {
+                existing.count += 1;
+            } else {
+                options.set(idValue, { id: idValue, name, count: 1 });
+            }
+        }
+        return Array.from(options.values()).sort((a, b) => b.count - a.count);
+    }, [sourceEvents]);
 
     const analyticsProps = useEventAnalyticsProps();
     const analyticsPropsPlusEntity = { ...analyticsProps, entity, entityId };
@@ -697,7 +713,7 @@ const EventCalendarView: React.FC<Props> = ({
             pushSuggestion('tag', name, getToneForLabel(name));
         }
 
-        for (const event of events || []) {
+        for (const event of sourceEvents || []) {
             for (const tag of event.tags || []) {
                 const name = tag.trim();
                 if (!name) continue;
@@ -710,7 +726,7 @@ const EventCalendarView: React.FC<Props> = ({
         }
 
         return suggestions;
-    }, [allClassifications, events]);
+    }, [allClassifications, sourceEvents]);
 
     const quickFilters = useMemo<QuickFilterItem[]>(() => {
         if (!typeaheadSelection) return baseQuickFilters;
@@ -1239,6 +1255,7 @@ const EventCalendarView: React.FC<Props> = ({
                         filterOptions={allClassifications}
                         searchQuery={searchQuery}
                         onSearchQueryChange={handleSearchQueryChange}
+                        organizerOptions={organizerOptions}
                     />
 
                     <View style={styles.headerSurface}>
