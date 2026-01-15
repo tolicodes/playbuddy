@@ -23,7 +23,7 @@ import {
     useToggleWeeklyPickEvent,
 } from '../../common/db-axios/useEvents';
 import EventsTable from '../Events/EventsTable';
-import { useCreateWeeklyPicksBranchLink } from '../../common/db-axios/useBranchLinks';
+import { useCreateWeeklyPicksBranchLink, useFetchWeeklyPicksBranchLinkStatus } from '../../common/db-axios/useBranchLinks';
 import { useAddDeepLink } from '../../common/db-axios/useDeepLinks';
 
 const PB_SHARE_CODE = 'DCK9PD';
@@ -106,6 +106,11 @@ export default function WeeklyPicksScreen() {
     const [branchFlowError, setBranchFlowError] = useState<string | null>(null);
     const [branchFlowLogs, setBranchFlowLogs] = useState<string[]>([]);
     const [headless, setHeadless] = useState(true);
+    const shouldPollBranchStatus = branchFlowStep === 'creating_link' || branchFlowStep === 'creating_deep_link';
+    const { data: branchLinkStatus } = useFetchWeeklyPicksBranchLinkStatus({
+        enabled: shouldPollBranchStatus,
+        refetchInterval: shouldPollBranchStatus ? 3000 : false,
+    });
 
     const weeklyImageOptions = useMemo(() => ({
         weekOffset,
@@ -151,6 +156,20 @@ export default function WeeklyPicksScreen() {
             jpgUrls.forEach((url) => URL.revokeObjectURL(url));
         };
     }, [jpgUrls]);
+
+    useEffect(() => {
+        if (!branchLinkStatus) return;
+        const statusLogs = normalizeLogs(branchLinkStatus.logs);
+        if (statusLogs.length === 0) return;
+        setBranchFlowLogs((prev) => {
+            const prevLast = prev[prev.length - 1];
+            const nextLast = statusLogs[statusLogs.length - 1];
+            if (prev.length === statusLogs.length && prevLast === nextLast) {
+                return prev;
+            }
+            return statusLogs;
+        });
+    }, [branchLinkStatus]);
 
     const handleGenerateImage = async () => {
         setGenerationError(null);
@@ -295,12 +314,24 @@ export default function WeeklyPicksScreen() {
         error: 'Failed',
     } as const;
 
-    const branchFlowStatusColor = {
-        pending: 'default',
-        active: 'info',
-        done: 'success',
-        error: 'error',
+    const branchFlowStatusTone = {
+        pending: 'text.secondary',
+        active: 'info.main',
+        done: 'success.main',
+        error: 'error.main',
     } as const;
+
+    const renderBranchFlowLine = (step: 'link' | 'deep', label: string) => {
+        const status = getBranchFlowStatus(step);
+        return (
+            <Typography variant="body2" sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+                <Box component="span">{label}</Box>
+                <Box component="span" sx={{ color: branchFlowStatusTone[status], fontWeight: 600 }}>
+                    {branchFlowStatusLabel[status]}
+                </Box>
+            </Typography>
+        );
+    };
 
     return (
         <Paper sx={{ p: 4, maxWidth: 1000, mx: 'auto' }}>
@@ -531,22 +562,8 @@ export default function WeeklyPicksScreen() {
                     />
                     {branchFlowStep !== 'idle' && (
                         <Stack spacing={1}>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Chip
-                                    size="small"
-                                    label={branchFlowStatusLabel[getBranchFlowStatus('link')]}
-                                    color={branchFlowStatusColor[getBranchFlowStatus('link')]}
-                                />
-                                <Typography variant="body2">Create Branch quick link</Typography>
-                            </Stack>
-                            <Stack direction="row" spacing={1} alignItems="center">
-                                <Chip
-                                    size="small"
-                                    label={branchFlowStatusLabel[getBranchFlowStatus('deep')]}
-                                    color={branchFlowStatusColor[getBranchFlowStatus('deep')]}
-                                />
-                                <Typography variant="body2">Create deep link record</Typography>
-                            </Stack>
+                            {renderBranchFlowLine('link', 'Create Branch quick link')}
+                            {renderBranchFlowLine('deep', 'Create deep link record')}
                             {branchFlowError && (
                                 <Typography color="error" variant="body2">
                                     {branchFlowError}
@@ -557,23 +574,25 @@ export default function WeeklyPicksScreen() {
                                     Deep link created.
                                 </Typography>
                             )}
-                            {branchFlowStep !== 'idle' && branchFlowStep !== 'done' && (
-                                <Box
-                                    sx={{
-                                        backgroundColor: '#0f172a',
-                                        color: '#e2e8f0',
-                                        borderRadius: 2,
-                                        p: 2,
-                                        fontFamily: 'monospace',
-                                        whiteSpace: 'pre-wrap',
-                                        fontSize: 12,
-                                        maxHeight: 240,
-                                        overflow: 'auto',
-                                    }}
-                                >
-                                    {branchFlowLogs.length > 0 ? branchFlowLogs.join('\n') : 'Waiting for logs...'}
-                                </Box>
-                            )}
+                            <Box
+                                sx={{
+                                    backgroundColor: '#0f172a',
+                                    color: '#e2e8f0',
+                                    borderRadius: 2,
+                                    p: 2,
+                                    fontFamily: 'monospace',
+                                    whiteSpace: 'pre-wrap',
+                                    fontSize: 12,
+                                    maxHeight: 240,
+                                    overflow: 'auto',
+                                }}
+                            >
+                                {branchFlowLogs.length > 0
+                                    ? branchFlowLogs.join('\n')
+                                    : branchFlowStep === 'done'
+                                        ? 'No logs captured.'
+                                        : 'Waiting for logs...'}
+                            </Box>
                         </Stack>
                     )}
                     {!branchLink && branchFlowStep === 'idle' && (
