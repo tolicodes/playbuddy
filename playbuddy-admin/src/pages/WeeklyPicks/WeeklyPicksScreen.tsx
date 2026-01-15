@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import moment from 'moment-timezone';
 import {
     Box,
     Button,
@@ -7,6 +8,7 @@ import {
     CircularProgress,
     Divider,
     FormControlLabel,
+    LinearProgress,
     MenuItem,
     Paper,
     Stack,
@@ -22,8 +24,12 @@ import {
     useToggleWeeklyPickEvent,
 } from '../../common/db-axios/useEvents';
 import EventsTable from '../Events/EventsTable';
+import { useCreateWeeklyPicksBranchLink } from '../../common/db-axios/useBranchLinks';
+import { useAddDeepLink } from '../../common/db-axios/useDeepLinks';
 
 const PB_SHARE_CODE = 'DCK9PD';
+const BRANCH_MANAGER_URL = 'https://dashboard.branch.io/quick-links/manager?v=latest';
+const BRANCH_TZ = 'America/New_York';
 
 const parseOptionalNumber = (value: string) => {
     const trimmed = value.trim();
@@ -45,6 +51,28 @@ const buildDownloadName = (generatedAt: string | null | undefined, part: number)
     return `weekly_picks_${base.replace(/-/g, '_')}_part_${part}.jpg`;
 };
 
+const getWeekRangeLabel = (start: moment.Moment) => {
+    const end = start.clone().add(6, 'days');
+    return `${start.format('MMM D')} - ${end.format('MMM D')}`;
+};
+
+const buildWeeklyPicksCampaignName = (weekLabel: string) => `Weekly Picks (${weekLabel})`;
+const buildWeeklyPicksOgDescription = (weekLabel: string) => `Weekly Picks for ${weekLabel} on Playbuddy.`;
+
+const extractBranchSlug = (link?: string | null) => {
+    if (!link) return '';
+    const trimmed = link.trim();
+    if (!trimmed) return '';
+    try {
+        const url = new URL(trimmed);
+        return url.pathname.replace(/^\/+/, '').split('/')[0] ?? '';
+    } catch {
+        return trimmed.replace(/^https?:\/\/l\.playbuddy\.me\//i, '').split(/[?#]/)[0];
+    }
+};
+
+type BranchFlowStep = 'idle' | 'creating_link' | 'creating_deep_link' | 'done' | 'error_link' | 'error_deep_link';
+
 export default function WeeklyPicksScreen() {
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { data: events = [], isLoading: eventsLoading, error: eventsError } = useFetchEvents();
@@ -53,6 +81,8 @@ export default function WeeklyPicksScreen() {
         isPending: toggleWeeklyPickEventLoading,
         error: toggleWeeklyPickEventError,
     } = useToggleWeeklyPickEvent();
+    const createWeeklyPicksBranchLink = useCreateWeeklyPicksBranchLink();
+    const createWeeklyPicksDeepLink = useAddDeepLink();
     const generateWeeklyPicksImage = useGenerateWeeklyPicksImage();
     const fetchWeeklyPicksImagePart = useFetchWeeklyPicksImagePart();
 
@@ -65,6 +95,9 @@ export default function WeeklyPicksScreen() {
     const [partsLoading, setPartsLoading] = useState(false);
     const [generationError, setGenerationError] = useState<string | null>(null);
     const [lastGeneratedAt, setLastGeneratedAt] = useState<string | null>(null);
+    const [branchLink, setBranchLink] = useState<string | null>(null);
+    const [branchFlowStep, setBranchFlowStep] = useState<BranchFlowStep>('idle');
+    const [branchFlowError, setBranchFlowError] = useState<string | null>(null);
 
     const weeklyImageOptions = useMemo(() => ({
         weekOffset,
@@ -73,6 +106,21 @@ export default function WeeklyPicksScreen() {
         limit: parseOptionalNumber(limitInput),
         partCount,
     }), [weekOffset, widthInput, scaleInput, limitInput, partCount]);
+
+    const nextWeekLabel = useMemo(() => {
+        const start = moment().tz(BRANCH_TZ).startOf('isoWeek').add(1, 'week');
+        return getWeekRangeLabel(start);
+    }, []);
+    const defaultWeeklyPicksCampaign = useMemo(
+        () => buildWeeklyPicksCampaignName(nextWeekLabel),
+        [nextWeekLabel]
+    );
+    const defaultWeeklyPicksOgDescription = useMemo(
+        () => buildWeeklyPicksOgDescription(nextWeekLabel),
+        [nextWeekLabel]
+    );
+    const campaignNameRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
+    const ogDescriptionRef = useRef<HTMLInputElement | HTMLTextAreaElement>(null);
 
     const {
         data: weeklyImageStatus,
@@ -122,6 +170,64 @@ export default function WeeklyPicksScreen() {
         }
     };
 
+    const createBranchQuickLink = async (campaignValue: string, descriptionValue: string) => {
+        console.log('[WeeklyPicks] Creating Branch quick link.');
+        const response = await createWeeklyPicksBranchLink.mutateAsync({
+            weekOffset: 1,
+            title: campaignValue,
+            socialTitle: campaignValue,
+            socialDescription: descriptionValue,
+            headless: true,
+        });
+        const link = response.link ?? null;
+        console.log('[WeeklyPicks] Branch quick link created:', link);
+        setBranchLink(link);
+        return link;
+    };
+
+    const handleCreateBranchLink = async () => {
+        setBranchFlowError(null);
+        setBranchFlowStep('creating_link');
+        let failedAt: 'link' | 'deep' = 'link';
+        const campaignValue = campaignNameRef.current?.value?.trim() || defaultWeeklyPicksCampaign;
+        const descriptionValue = ogDescriptionRef.current?.value?.trim() || defaultWeeklyPicksOgDescription;
+        try {
+            const link = await createBranchQuickLink(campaignValue, descriptionValue);
+            if (!link) {
+                setBranchFlowStep('error_link');
+                setBranchFlowError('Branch quick link was not returned.');
+                return;
+            }
+            const slug = extractBranchSlug(link);
+            if (!slug) {
+                setBranchFlowStep('error_deep_link');
+                setBranchFlowError('Unable to extract Branch slug.');
+                return;
+            }
+            failedAt = 'deep';
+            setBranchFlowStep('creating_deep_link');
+            await createWeeklyPicksDeepLink.mutateAsync({
+                campaign: campaignValue,
+                slug,
+                type: 'weekly_picks',
+            });
+            setBranchFlowStep('done');
+        } catch (error) {
+            const message = error instanceof Error ? error.message : 'Unable to create Branch deep link.';
+            setBranchFlowError(message);
+            setBranchFlowStep(failedAt === 'link' ? 'error_link' : 'error_deep_link');
+        }
+    };
+
+    const handleOpenBranch = () => {
+        window.open(BRANCH_MANAGER_URL, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleOpenBranchLink = () => {
+        if (!branchLink) return;
+        window.open(branchLink, '_blank', 'noopener,noreferrer');
+    };
+
     const handleDownload = (partIndex: number) => {
         const url = jpgUrls[partIndex];
         if (!url) return;
@@ -142,6 +248,29 @@ export default function WeeklyPicksScreen() {
     if (errorMessage) {
         return <Typography color="error">{errorMessage}</Typography>;
     }
+
+    const getBranchFlowStatus = (step: 'link' | 'deep') => {
+        if (branchFlowStep === 'idle') return 'pending';
+        if (branchFlowStep === 'creating_link') return step === 'link' ? 'active' : 'pending';
+        if (branchFlowStep === 'creating_deep_link') return step === 'link' ? 'done' : 'active';
+        if (branchFlowStep === 'done') return 'done';
+        if (branchFlowStep === 'error_link') return step === 'link' ? 'error' : 'pending';
+        return step === 'link' ? 'done' : 'error';
+    };
+
+    const branchFlowStatusLabel = {
+        pending: 'Pending',
+        active: 'In progress',
+        done: 'Done',
+        error: 'Failed',
+    } as const;
+
+    const branchFlowStatusColor = {
+        pending: 'default',
+        active: 'info',
+        done: 'success',
+        error: 'error',
+    } as const;
 
     return (
         <Paper sx={{ p: 4, maxWidth: 1000, mx: 'auto' }}>
@@ -293,6 +422,108 @@ export default function WeeklyPicksScreen() {
                             <Typography color="text.secondary">Generate JPGs to preview them here.</Typography>
                         )}
                     </Box>
+                </Stack>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            <Box sx={{ mb: 4 }}>
+                <Typography variant="h5" sx={{ mb: 0.5 }}>Branch Weekly Picks Link</Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Create the Branch quick link for next week&apos;s Weekly Picks.
+                </Typography>
+                <Stack spacing={2} sx={{ mt: 2 }}>
+                    <TextField
+                        label="Campaign name"
+                        size="small"
+                        defaultValue={defaultWeeklyPicksCampaign}
+                        inputRef={campaignNameRef}
+                        fullWidth
+                    />
+                    <TextField
+                        label="OG description"
+                        size="small"
+                        defaultValue={defaultWeeklyPicksOgDescription}
+                        inputRef={ogDescriptionRef}
+                        fullWidth
+                    />
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
+                        <Button
+                            variant="contained"
+                            onClick={handleCreateBranchLink}
+                            disabled={branchFlowStep === 'creating_link' || branchFlowStep === 'creating_deep_link'}
+                        >
+                            {(branchFlowStep === 'creating_link' || branchFlowStep === 'creating_deep_link')
+                                ? 'Creating...'
+                                : 'Create Branch Link'}
+                        </Button>
+                        <Button
+                            variant="text"
+                            onClick={handleOpenBranch}
+                        >
+                            Open Branch Quick Links
+                        </Button>
+                    </Stack>
+                    <TextField
+                        label="Branch short link"
+                        size="small"
+                        value={branchLink ?? ''}
+                        InputProps={{ readOnly: true }}
+                        placeholder="Create a link to populate this field."
+                        fullWidth
+                    />
+                    {branchFlowStep !== 'idle' && (
+                        <Stack spacing={1}>
+                            {(branchFlowStep === 'creating_link' || branchFlowStep === 'creating_deep_link') && (
+                                <LinearProgress />
+                            )}
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Chip
+                                    size="small"
+                                    label={branchFlowStatusLabel[getBranchFlowStatus('link')]}
+                                    color={branchFlowStatusColor[getBranchFlowStatus('link')]}
+                                />
+                                <Typography variant="body2">Create Branch quick link</Typography>
+                            </Stack>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                                <Chip
+                                    size="small"
+                                    label={branchFlowStatusLabel[getBranchFlowStatus('deep')]}
+                                    color={branchFlowStatusColor[getBranchFlowStatus('deep')]}
+                                />
+                                <Typography variant="body2">Create deep link record</Typography>
+                            </Stack>
+                            {branchFlowError && (
+                                <Typography color="error" variant="body2">
+                                    {branchFlowError}
+                                </Typography>
+                            )}
+                            {branchFlowStep === 'done' && (
+                                <Typography color="success.main" variant="body2">
+                                    Deep link created.
+                                </Typography>
+                            )}
+                        </Stack>
+                    )}
+                    {!branchLink && (
+                        <Typography variant="body2" color="text.secondary">
+                            No Branch link yet. This will create one first.
+                        </Typography>
+                    )}
+                    {createWeeklyPicksBranchLink.isError && (
+                        <Typography color="error">
+                            Unable to create Branch link. Try again.
+                        </Typography>
+                    )}
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems={{ xs: 'stretch', md: 'center' }}>
+                        <Button
+                            variant="outlined"
+                            onClick={handleOpenBranchLink}
+                            disabled={!branchLink}
+                        >
+                            Open Branch Link
+                        </Button>
+                    </Stack>
                 </Stack>
             </Box>
 

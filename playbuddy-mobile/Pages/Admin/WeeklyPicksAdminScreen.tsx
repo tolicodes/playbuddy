@@ -3,6 +3,7 @@ import {
     Alert,
     View,
     Text,
+    TextInput,
     StyleSheet,
     SectionList,
     ActivityIndicator,
@@ -14,6 +15,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as Clipboard from 'expo-clipboard';
 import axios from 'axios';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
@@ -205,12 +207,34 @@ export const WeeklyPicksAdminScreen = () => {
     const [generationInProgress, setGenerationInProgress] = useState(false);
     const [generationCountdown, setGenerationCountdown] = useState(0);
     const lastLoadedPreviewUrlRef = useRef<string[]>([]);
+    const [shareLink, setShareLink] = useState('');
+    const [copyStatus, setCopyStatus] = useState<string | null>(null);
+    const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const countdownLabel = useMemo(() => {
         const totalSeconds = Math.max(0, generationCountdown);
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
         return `${minutes}:${String(seconds).padStart(2, '0')}`;
     }, [generationCountdown]);
+    const shareMessage = useMemo(() => {
+        const linkValue = shareLink.trim() || '<link>';
+        return [
+            '*PB’s Weekly Picks*',
+            'Weekly picks are out!!',
+            '',
+            'As always, discounts on Pagan’s, Tantra Institute, Everyday Tantra, and Night Owls!',
+            '',
+            linkValue,
+        ].join('\n');
+    }, [shareLink]);
+
+    useEffect(() => {
+        return () => {
+            if (copyTimeoutRef.current) {
+                clearTimeout(copyTimeoutRef.current);
+            }
+        };
+    }, []);
 
     const attendeesByEvent = useMemo(() => {
         const map = new Map<number, EventAttendees['attendees']>();
@@ -298,6 +322,14 @@ export const WeeklyPicksAdminScreen = () => {
         });
         console.warn('[weekly-picks] preview load failed', previewUrls[index]);
     }, [previewUrls]);
+    const handleCopyShareMessage = useCallback(async () => {
+        await Clipboard.setStringAsync(shareMessage);
+        setCopyStatus('Copied to clipboard');
+        if (copyTimeoutRef.current) {
+            clearTimeout(copyTimeoutRef.current);
+        }
+        copyTimeoutRef.current = setTimeout(() => setCopyStatus(null), 2000);
+    }, [shareMessage]);
 
     useEffect(() => {
         if (!generationInProgress) {
@@ -518,21 +550,52 @@ export const WeeklyPicksAdminScreen = () => {
                     style={styles.sectionList}
                     contentContainerStyle={styles.sectionListContent}
                     ListHeaderComponent={
-                        <PreviewHeader
-                            previewLoading={previewLoading}
-                            downloadLoading={downloadLoading}
-                            generationInProgress={generationInProgress}
-                            generationCountdown={generationCountdown}
-                            countdownLabel={countdownLabel}
-                            previewSources={previewSources}
-                            previewError={previewError}
-                            onGenerate={handleGeneratePreview}
-                            onDownload={handleDownloadPreview}
-                            onLoadStart={handlePreviewLoadStart}
-                            onLoad={handlePreviewLoad}
-                            onLoadEnd={handlePreviewLoadEnd}
-                            onError={handlePreviewError}
-                        />
+                        <View>
+                            <PreviewHeader
+                                previewLoading={previewLoading}
+                                downloadLoading={downloadLoading}
+                                generationInProgress={generationInProgress}
+                                generationCountdown={generationCountdown}
+                                countdownLabel={countdownLabel}
+                                previewSources={previewSources}
+                                previewError={previewError}
+                                onGenerate={handleGeneratePreview}
+                                onDownload={handleDownloadPreview}
+                                onLoadStart={handlePreviewLoadStart}
+                                onLoad={handlePreviewLoad}
+                                onLoadEnd={handlePreviewLoadEnd}
+                                onError={handlePreviewError}
+                            />
+                            <View style={styles.copyCard}>
+                                <View style={styles.copyHeaderRow}>
+                                    <Text style={styles.copyTitle}>Weekly Picks Message</Text>
+                                    <TouchableOpacity style={styles.copyButton} onPress={handleCopyShareMessage}>
+                                        <Ionicons name="copy-outline" size={16} color={colors.brandIndigo} />
+                                        <Text style={styles.copyButtonText}>Copy</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <Text style={styles.copySubtitle}>
+                                    Paste the Branch link, then copy the full message.
+                                </Text>
+                                <TextInput
+                                    value={shareLink}
+                                    onChangeText={setShareLink}
+                                    placeholder="https://l.playbuddy.me/..."
+                                    placeholderTextColor={colors.textMuted}
+                                    style={styles.copyLinkInput}
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                                <View style={styles.copyMessageBox}>
+                                    <Text selectable style={styles.copyMessageText}>
+                                        {shareMessage}
+                                    </Text>
+                                </View>
+                                {copyStatus && (
+                                    <Text style={styles.copyStatus}>{copyStatus}</Text>
+                                )}
+                            </View>
+                        </View>
                     }
                     ListEmptyComponent={
                         <View style={styles.emptyList}>
@@ -654,6 +717,86 @@ const styles = StyleSheet.create({
         color: colors.brandIndigo,
         fontFamily: fontFamilies.body,
         fontWeight: '600',
+    },
+    copyCard: {
+        marginHorizontal: spacing.lg,
+        marginBottom: spacing.lg,
+        padding: spacing.md,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkSoft,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        ...shadows.brandCard,
+    },
+    copyHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: spacing.sm,
+        marginBottom: spacing.xs,
+    },
+    copyTitle: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.white,
+        fontFamily: fontFamilies.display,
+        letterSpacing: 1.1,
+        textTransform: 'uppercase',
+    },
+    copyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkSoft,
+        backgroundColor: colors.surfaceWhiteStrong,
+    },
+    copyButtonText: {
+        marginLeft: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.brandIndigo,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
+    copySubtitle: {
+        marginBottom: spacing.sm,
+        fontSize: fontSizes.sm,
+        color: colors.textOnDarkMuted,
+        fontFamily: fontFamilies.body,
+    },
+    copyLinkInput: {
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkSoft,
+        backgroundColor: colors.surfaceWhiteStrong,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+        marginBottom: spacing.sm,
+    },
+    copyMessageBox: {
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderOnDarkSoft,
+        backgroundColor: colors.surfaceWhiteStrong,
+        padding: spacing.sm,
+    },
+    copyMessageText: {
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+        lineHeight: 20,
+    },
+    copyStatus: {
+        marginTop: spacing.xs,
+        fontSize: fontSizes.sm,
+        color: colors.textOnDarkMuted,
+        fontFamily: fontFamilies.body,
     },
     previewImageGrid: {},
     previewImageGroup: {
