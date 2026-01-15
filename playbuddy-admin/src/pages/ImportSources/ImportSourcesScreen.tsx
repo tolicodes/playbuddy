@@ -1,14 +1,17 @@
 import React, { useMemo, useState } from 'react';
 import {
     Autocomplete,
-    Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Divider, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link,
+    Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Divider, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link, Collapse, IconButton,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useImportSources } from '../../common/db-axios/useImportSources';
 import { useCreateImportSource } from '../../common/db-axios/useCreateImportSource';
 import { useUpdateImportSource } from '../../common/db-axios/useUpdateImportSource';
 import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
 import { useApproveImportSource } from '../../common/db-axios/useApproveImportSource';
+import { useDeleteImportSource } from '../../common/db-axios/useDeleteImportSource';
 import { useMarkImportSourceMessageSent } from '../../common/db-axios/useMarkImportSourceMessageSent';
 import { Event, ImportSource } from '../../common/types/commonTypes';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
@@ -19,6 +22,30 @@ const SOURCES = ['fetlife_handle', 'eb_url', 'url'];
 const ID_TYPES = ['handle', 'url'];
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').toLowerCase().trim();
+const normalizeUrl = (val?: string | null) => {
+    if (!val) return '';
+    const raw = val.trim();
+    if (!raw) return '';
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+        const url = new URL(withScheme);
+        url.hash = '';
+        url.search = '';
+        const normalized = `${url.host}${url.pathname}`.replace(/\/$/, '');
+        return normalized.toLowerCase();
+    } catch {
+        return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+    }
+};
+const getNormalizedEventUrls = (ev: Event) => {
+    const urls = [
+        ev.ticket_url,
+        ev.event_url,
+        (ev as any)?.source_url,
+    ].filter(Boolean) as string[];
+    const normalized = urls.map(normalizeUrl).filter(Boolean);
+    return Array.from(new Set(normalized));
+};
 const getOrganizerFetlifeHandles = (org: any) => {
     const handles = [
         ...(org?.fetlife_handles || []),
@@ -66,7 +93,9 @@ export default function ImportSourcesScreen() {
     const updateSource = useUpdateImportSource();
     const updateOrganizer = useUpdateOrganizer();
     const approveSource = useApproveImportSource();
+    const deleteSource = useDeleteImportSource();
     const markMessageSent = useMarkImportSourceMessageSent();
+    const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
     const [tab, setTab] = useState<'sources' | 'fet'>('sources');
     const [form, setForm] = useState({
         source: '',
@@ -206,6 +235,22 @@ export default function ImportSourcesScreen() {
         await markMessageSent.mutateAsync({ id: String(src.id), message_sent: checked });
     };
 
+    const toggleExpandedSource = (id: string) => {
+        setExpandedSources(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+
+    const handleDeleteSource = async (src: ImportSource) => {
+        if (!src?.id) return;
+        const name = src.identifier || src.source || 'this source';
+        const confirmed = window.confirm(`Delete import source "${name}"?`);
+        if (!confirmed) return;
+        try {
+            await deleteSource.mutateAsync(String(src.id));
+        } catch (err) {
+            console.warn('Failed to delete import source', err);
+        }
+    };
+
     const renderFetSourceAccordion = (entry: FetSourceEntry, showMessaged: boolean) => {
         const isApproved = (entry.approval_status || 'pending') === 'approved';
         const approvalColor: 'success' | 'warning' | 'default' = isApproved ? 'success' : 'warning';
@@ -238,6 +283,18 @@ export default function ImportSourcesScreen() {
                                     Approve
                                 </Button>
                             )}
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    void handleDeleteSource(entry.source);
+                                }}
+                                disabled={deleteSource.isPending}
+                            >
+                                Delete
+                            </Button>
                             {showMessaged && (
                                 <FormControlLabel
                                     label="Messaged"
@@ -307,6 +364,29 @@ export default function ImportSourcesScreen() {
         return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
     };
 
+    const eventsByOrganizerId = useMemo(() => {
+        const map: Record<string, Event[]> = {};
+        events.forEach((ev: Event) => {
+            const organizerId = (ev as any)?.organizer_id ?? ev?.organizer?.id;
+            if (!organizerId) return;
+            const key = String(organizerId);
+            if (!map[key]) map[key] = [];
+            map[key].push(ev);
+        });
+        return map;
+    }, [events]);
+
+    const eventsByUrl = useMemo(() => {
+        const map: Record<string, Event[]> = {};
+        events.forEach((ev: Event) => {
+            getNormalizedEventUrls(ev).forEach((url) => {
+                if (!map[url]) map[url] = [];
+                map[url].push(ev);
+            });
+        });
+        return map;
+    }, [events]);
+
     const fetEventsByHandle = useMemo(() => {
         const map: Record<string, Event[]> = {};
         events.forEach((ev: Event) => {
@@ -324,6 +404,53 @@ export default function ImportSourcesScreen() {
         });
         return map;
     }, [events]);
+
+    const associatedEventsBySourceId = useMemo(() => {
+        const map = new Map<string, Event[]>();
+        sorted.forEach((src: ImportSource) => {
+            if (!src?.id) return;
+            const eventMap = new Map<number, Event>();
+            const addEvents = (list?: Event[]) => {
+                (list || []).forEach((ev) => eventMap.set(ev.id, ev));
+            };
+
+            const organizerIds = new Set<string>();
+            const addOrganizerId = (val: any) => {
+                if (val === undefined || val === null) return;
+                const trimmed = String(val).trim();
+                if (trimmed) organizerIds.add(trimmed);
+            };
+            const defaults = src.event_defaults || {};
+            const metadata = src.metadata || {};
+            addOrganizerId((defaults as any).organizer_id);
+            addOrganizerId((defaults as any).organizerId);
+            addOrganizerId((metadata as any).organizer_id);
+            addOrganizerId((metadata as any).organizerId);
+            organizerIds.forEach((id) => addEvents(eventsByOrganizerId[id]));
+
+            const isHandleSource =
+                (src.identifier_type || '').toLowerCase() === 'handle' ||
+                src.source === 'fetlife_handle';
+            const handle = isHandleSource ? normalizeHandle(src.identifier) : '';
+            if (handle) addEvents(fetEventsByHandle[handle]);
+
+            const isUrlSource =
+                (src.identifier_type || '').toLowerCase() === 'url' ||
+                src.source === 'eb_url' ||
+                src.source === 'url' ||
+                /^https?:\/\//i.test(src.identifier || '');
+            if (isUrlSource && src.identifier) {
+                const normalized = normalizeUrl(src.identifier);
+                if (normalized) addEvents(eventsByUrl[normalized]);
+            }
+
+            const ordered = Array.from(eventMap.values()).sort((a, b) =>
+                (a.start_date || '').localeCompare(b.start_date || '')
+            );
+            map.set(String(src.id), ordered);
+        });
+        return map;
+    }, [eventsByOrganizerId, eventsByUrl, fetEventsByHandle, sorted]);
 
     const fetSourceEntries = useMemo<FetSourceEntry[]>(() => {
         const map = new Map<string, ImportSource>();
@@ -460,60 +587,150 @@ export default function ImportSourcesScreen() {
                                     <TableCell>Type</TableCell>
                                     <TableCell>Organizer</TableCell>
                                     <TableCell>Created</TableCell>
+                                    <TableCell>Events</TableCell>
+                                    <TableCell>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {sorted.map((src: ImportSource) => (
-                                    <TableRow key={`${src.source}-${src.method}-${src.identifier}`}>
-                                        <TableCell>{src.source}</TableCell>
-                                        <TableCell>{src.method}</TableCell>
-                                        <TableCell>{src.identifier}</TableCell>
-                                        <TableCell>{src.identifier_type || '—'}</TableCell>
-                                        <TableCell sx={{ minWidth: 240 }}>
-                                            <Autocomplete<OrganizerOption, false, false, false>
-                                                options={organizerOptions}
-                                                getOptionLabel={(option) => option?.label || ''}
-                                                value={(() => {
-                                                    const explicitId = (src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId;
-                                                    const explicit = explicitId ? organizerOptions.find(o => o.id === String(explicitId)) : null;
-                                                    if (explicit) return explicit;
-                                                    const isHandle = (src.identifier_type || '').toLowerCase() === 'handle' || src.source === 'fetlife_handle';
-                                                    if (isHandle) {
-                                                        const norm = normalizeHandle(src.identifier);
-                                                        const matchId = norm ? organizerIdByHandle[norm] : undefined;
-                                                        if (matchId) return organizerOptions.find(o => o.id === matchId) || null;
-                                                    }
-                                                    return null;
-                                                })()}
-                                                onChange={(_, val) => handleOrganizerUpdate(src, val?.id || '')}
-                                                renderInput={(params) => (
-                                                    <TextField
-                                                        {...params}
-                                                        size="small"
-                                                        label="Organizer"
-                                                        placeholder={formatOrganizerFromSources(src) || 'Select organizer'}
+                                {sorted.map((src: ImportSource) => {
+                                    const associatedEvents = associatedEventsBySourceId.get(String(src.id)) || [];
+                                    const isExpanded = !!expandedSources[String(src.id)];
+                                    const hasEvents = associatedEvents.length > 0;
+                                    const isHandleSource =
+                                        (src.identifier_type || '').toLowerCase() === 'handle' ||
+                                        src.source === 'fetlife_handle';
+                                    const normalizedHandle = isHandleSource ? normalizeHandle(src.identifier) : '';
+                                    const fetlifeProfileUrl = normalizedHandle ? `https://fetlife.com/${normalizedHandle}` : '';
+                                    return (
+                                        <React.Fragment key={`${src.source}-${src.method}-${src.identifier}`}>
+                                            <TableRow>
+                                                <TableCell>{src.source}</TableCell>
+                                                <TableCell>{src.method}</TableCell>
+                                                <TableCell>
+                                                    {fetlifeProfileUrl ? (
+                                                        <Link href={fetlifeProfileUrl} target="_blank" rel="noopener noreferrer" underline="hover">
+                                                            {src.identifier || `@${normalizedHandle}`}
+                                                        </Link>
+                                                    ) : (
+                                                        src.identifier
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>{src.identifier_type || '—'}</TableCell>
+                                                <TableCell sx={{ minWidth: 240 }}>
+                                                    <Autocomplete<OrganizerOption, false, false, false>
+                                                        options={organizerOptions}
+                                                        getOptionLabel={(option) => option?.label || ''}
+                                                        value={(() => {
+                                                            const explicitId = (src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId;
+                                                            const explicit = explicitId ? organizerOptions.find(o => o.id === String(explicitId)) : null;
+                                                            if (explicit) return explicit;
+                                                            const isHandle = (src.identifier_type || '').toLowerCase() === 'handle' || src.source === 'fetlife_handle';
+                                                            if (isHandle) {
+                                                                const norm = normalizeHandle(src.identifier);
+                                                                const matchId = norm ? organizerIdByHandle[norm] : undefined;
+                                                                if (matchId) return organizerOptions.find(o => o.id === matchId) || null;
+                                                            }
+                                                            return null;
+                                                        })()}
+                                                        onChange={(_, val) => handleOrganizerUpdate(src, val?.id || '')}
+                                                        renderInput={(params) => (
+                                                            <TextField
+                                                                {...params}
+                                                                size="small"
+                                                                label="Organizer"
+                                                                placeholder={formatOrganizerFromSources(src) || 'Select organizer'}
+                                                            />
+                                                        )}
+                                                        renderOption={(props, option) => (
+                                                            <li {...props} key={option.id}>
+                                                                <Stack>
+                                                                    <Typography variant="body2">{option.label}</Typography>
+                                                                    {option.handles && <Typography variant="caption" color="text.secondary">{option.handles}</Typography>}
+                                                                </Stack>
+                                                            </li>
+                                                        )}
+                                                        fullWidth
+                                                        disableClearable={false}
+                                                        clearOnBlur
+                                                        loading={updateSource.isPending}
                                                     />
-                                                )}
-                                                renderOption={(props, option) => (
-                                                    <li {...props} key={option.id}>
-                                                        <Stack>
-                                                            <Typography variant="body2">{option.label}</Typography>
-                                                            {option.handles && <Typography variant="caption" color="text.secondary">{option.handles}</Typography>}
-                                                        </Stack>
-                                                    </li>
-                                                )}
-                                                fullWidth
-                                                disableClearable={false}
-                                                clearOnBlur
-                                                loading={updateSource.isPending}
-                                            />
-                                        </TableCell>
-                                        <TableCell>{src.created_at ? new Date(src.created_at).toLocaleString() : '—'}</TableCell>
-                                    </TableRow>
-                                ))}
+                                                </TableCell>
+                                                <TableCell>{src.created_at ? new Date(src.created_at).toLocaleString() : '—'}</TableCell>
+                                                <TableCell>
+                                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => toggleExpandedSource(String(src.id))}
+                                                            disabled={!hasEvents}
+                                                        >
+                                                            {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                        </IconButton>
+                                                        <Typography variant="body2">{associatedEvents.length}</Typography>
+                                                    </Stack>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        size="small"
+                                                        variant="outlined"
+                                                        color="error"
+                                                        onClick={() => handleDeleteSource(src)}
+                                                        disabled={deleteSource.isPending}
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </TableCell>
+                                            </TableRow>
+                                            <TableRow>
+                                                <TableCell colSpan={8} sx={{ py: 0 }}>
+                                                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                                        <Box sx={{ py: 1.5, px: 2 }}>
+                                                            {hasEvents ? (
+                                                                <Stack spacing={1}>
+                                                                    {associatedEvents.map((ev) => {
+                                                                        const statusLabel = (!ev.approval_status || ev.approval_status === 'approved') ? 'Approved' : (ev.approval_status || 'Pending');
+                                                                        const statusColor: 'default' | 'success' | 'warning' =
+                                                                            (!ev.approval_status || ev.approval_status === 'approved') ? 'success' : 'warning';
+                                                                        const ticketHref = ev.ticket_url || ev.event_url || (ev as any)?.source_url || '';
+                                                                        return (
+                                                                            <Stack
+                                                                                key={`${src.id}-event-${ev.id}`}
+                                                                                direction="row"
+                                                                                alignItems="center"
+                                                                                justifyContent="space-between"
+                                                                                spacing={1}
+                                                                            >
+                                                                                <Stack spacing={0.25}>
+                                                                                    {ticketHref ? (
+                                                                                        <Link href={ticketHref} target="_blank" rel="noopener noreferrer" underline="hover">
+                                                                                            <Typography variant="body2" color="primary">
+                                                                                                {ev.name || `Event ${ev.id}`}
+                                                                                            </Typography>
+                                                                                        </Link>
+                                                                                    ) : (
+                                                                                        <Typography variant="body2">{ev.name || `Event ${ev.id}`}</Typography>
+                                                                                    )}
+                                                                                    <Typography variant="caption" color="text.secondary">
+                                                                                        {formatEventDate(ev)}{ev.location ? ` • ${ev.location}` : ''}
+                                                                                    </Typography>
+                                                                                </Stack>
+                                                                                <Chip label={statusLabel} size="small" color={statusColor} />
+                                                                            </Stack>
+                                                                        );
+                                                                    })}
+                                                                </Stack>
+                                                            ) : (
+                                                                <Typography color="text.secondary">No associated events found.</Typography>
+                                                            )}
+                                                        </Box>
+                                                    </Collapse>
+                                                </TableCell>
+                                            </TableRow>
+                                        </React.Fragment>
+                                    );
+                                })}
                                 {!sorted.length && (
                                     <TableRow>
-                                        <TableCell colSpan={6} align="center">No sources yet</TableCell>
+                                        <TableCell colSpan={8} align="center">No sources yet</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
