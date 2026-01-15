@@ -35,12 +35,13 @@ import { useCalendarContext } from '../hooks/CalendarContext';
 import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { AvatarCircle } from '../../Auth/Buttons/AvatarCircle';
-import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
+import { useAnalyticsProps, useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
 import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../../components/styles';
 import { ACTIVE_EVENT_TYPES } from '../../../Common/types/commonTypes';
 import SectionCard from './SectionCard';
 import { TZ } from '../ListView/calendarNavUtils';
+import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 
 /* 
  * VideoPlayer
@@ -55,39 +56,6 @@ const VideoPlayer = ({ uri }: { uri: string }) => (
         source={{ uri }}
     />
 );
-
-const allowedAffiliates = ['1pb'];
-
-const buildTicketUrl = (rawUrl: string, opts?: { promoCode?: string }) => {
-    const { promoCode } = opts || {};
-
-    // Only attach affiliate for Eventbrite. UTM is safe everywhere.
-    const addParams = (u: URL) => {
-        const isEventbrite = u.hostname.includes('eventbrite.');
-        if (isEventbrite && !allowedAffiliates.includes(u.searchParams.get('aff') || '')) {
-            u.searchParams.set('aff', 'playbuddy');        // Eventbrite affiliate
-            if (promoCode) u.searchParams.set('discount', promoCode); // EB promo
-        } else {
-            // Safe defaults for non-EB vendors; won’t break pages
-            u.searchParams.set('utm_source', 'playbuddy');
-            if (promoCode) u.searchParams.set('discount', promoCode);
-        }
-    };
-
-    try {
-        const u = new URL(rawUrl);
-        addParams(u);
-        return u.toString();
-    } catch {
-        // Fallback for relative/invalid URLs
-        const sep = rawUrl.includes('?') ? '&' : '?';
-        const params = new URLSearchParams();
-        // We can’t detect vendor here, so use safe defaults
-        params.set('utm_source', 'playbuddy');
-        if (promoCode) params.set('discount', promoCode);
-        return `${rawUrl}${sep}${params.toString()}`;
-    }
-};
 
 const isUuid = (value: string) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -126,14 +94,15 @@ const RECOMMENDED_EVENTS_TOTAL = 5;
 const ORGANIZER_RECOMMENDATION_COUNT = 2;
 const FOLLOWED_RECOMMENDATION_COUNT = 3;
 
-const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) => {
+const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string }) => {
     const { currentDeepLink, authUserId } = useUserContext();
-    const { toggleWishlistEvent, isOnWishlist } = useCalendarContext();
+    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
     const { data: allEvents } = useFetchEvents()
     const navigation = useNavigation<NavStack>();
     const { myCommunities, communities } = useCommonContext();
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
+    const analyticsProps = useAnalyticsProps();
 
     const fullEvent = allEvents?.find(event => event.id === selectedEvent.id) || selectedEvent;
     const organizerId = selectedEvent.organizer?.id?.toString();
@@ -158,6 +127,9 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         () => new Set(myCommunities.allMyCommunities.map((community) => community.id)),
         [myCommunities.allMyCommunities]
     );
+    const organizerFollowCount =
+        myCommunities.myOrganizerPublicCommunities.length +
+        myCommunities.myOrganizerPrivateCommunities.length;
     const isOrganizerFollowed = organizerCommunityIds.some((id) => myCommunityIds.has(id));
     const canFollowOrganizer = organizerCommunityIds.length > 0;
 
@@ -195,7 +167,7 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
         workshop: 'Workshop',
     };
     const typeIconMap: Record<string, string> = {
-        play_party: 'glass-cheers',
+        play_party: 'compact-disc',
         munch: 'utensils',
         retreat: 'leaf',
         festival: 'music',
@@ -243,6 +215,9 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
             return;
         }
 
+        if (!isWishlisted && wishlistEvents.length === 0) {
+            logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
+        }
         logEvent(UE.EventDetailWishlistToggled, {
             ...eventAnalyticsProps,
             is_on_wishlist: !isWishlisted,
@@ -309,6 +284,22 @@ const EventHeader = ({ selectedEvent }: { selectedEvent: EventWithMetadata }) =>
                 leaveCommunity.mutate({ community_id: communityId });
             });
             return;
+        }
+        const followSource = source ?? 'event_detail';
+        const organizerCommunityId = organizerCommunityIds[0];
+        logEvent(UE.OrganizerFollowPressed, {
+            ...analyticsProps,
+            organizer_id: organizerId,
+            community_id: organizerCommunityId,
+            source: followSource,
+        });
+        if (organizerFollowCount === 0) {
+            logEvent(UE.OrganizerFirstFollowed, {
+                ...analyticsProps,
+                organizer_id: organizerId,
+                community_id: organizerCommunityId,
+                source: followSource,
+            });
         }
         organizerCommunityIds.forEach((communityId) => {
             if (myCommunityIds.has(communityId)) return;
@@ -920,6 +911,7 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
                                         navigation.push('Event Details', {
                                             selectedEvent: item,
                                             title: item.name,
+                                            source: "event_recommendation",
                                         })
                                     }
                                     activeOpacity={0.9}
@@ -984,7 +976,7 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
  */
 export const EventDetails = ({ route }) => {
 
-    const { selectedEvent }: { selectedEvent: EventWithMetadata } = route.params || {};
+    const { selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string } = route.params || {};
     const { currentDeepLink, authUserId } = useUserContext();
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
     const [activeTab, setActiveTab] = useState<string>('details');
@@ -993,13 +985,6 @@ export const EventDetails = ({ route }) => {
 
     // If no event is provided, render nothing.
     if (!selectedEvent || !eventAnalyticsProps.event_id) return null;
-
-    useEffect(() => {
-        // This is just for all promo codes
-        if (promoCode) {
-            logEvent(UE.EventDetailPromoCodeSeen, eventAnalyticsProps);
-        }
-    }, [promoCode, currentDeepLink]);
 
     const handleCopyPromoCode = () => {
         if (!promoCode) return;
@@ -1017,7 +1002,7 @@ export const EventDetails = ({ route }) => {
         <>
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
 
-                <EventHeader selectedEvent={selectedEvent} />
+                <EventHeader selectedEvent={selectedEvent} source={source} />
 
                 {enabledTabs.length > 1 && (
                     <View style={styles.tabBarWrap}>

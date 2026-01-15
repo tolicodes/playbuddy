@@ -1,6 +1,7 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Pressable, Share, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
+import FA5Icon from 'react-native-vector-icons/FontAwesome5';
 
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,8 +18,11 @@ import { calendarTypeChips, colors, eventImageFallbackGradients, fontFamilies, f
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
-import { WishlistPlusButton } from './WishlistPlusButton';
+import { WishlistPlusButton, getWishlistButtonWidth } from './WishlistPlusButton';
 import type { EventListViewMode } from './eventListViewMode';
+import { ActionSheet } from '../../../components/ActionSheet';
+import { buildTicketUrl } from '../hooks/ticketUrlUtils';
+import { useCalendarCoach } from '../../PopupManager';
 
 const DETAILS_PANEL_HEIGHT = 92;
 const CARD_IMAGE_ASPECT_RATIO = 2;
@@ -59,10 +63,13 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
     const { authUserId } = useUserContext();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
+    const calendarCoach = useCalendarCoach();
+    const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
     const promoCode = getEventPromoCodes(item)?.[0];
     const formattedDate = formatDate(item, fullDate);
     const itemIsOnWishlist = isOnWishlist(item.id);
+    const wobblePlus = calendarCoach?.wobblePlus ?? false;
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const locationLabel = (item.neighborhood || '').trim();
     const organizerName = item.organizer?.name?.trim() || 'Organizer';
@@ -107,7 +114,12 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     };
     const isPlayParty = item.play_party || item.type === 'play_party';
     const isMunch = item.is_munch || item.munch_id || item.type === 'munch';
-    const placeholderIconName = isPlayParty ? 'birthday-cake' : isMunch ? 'cutlery' : 'calendar';
+    const renderPlaceholderIcon = (size: number) =>
+        isPlayParty ? (
+            <FA5Icon name="compact-disc" size={size} color={colors.textSlate} solid />
+        ) : (
+            <FAIcon name={isMunch ? 'cutlery' : 'calendar'} size={size} color={colors.textSlate} />
+        );
     const handlePressEvent = () => {
         onPress(item);
         if (!disableClickAnalytics) {
@@ -125,7 +137,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
             return;
         }
 
-        if (!itemIsOnWishlist && wishlistEvents.length === 0) {
+        const willAdd = !itemIsOnWishlist;
+
+        if (willAdd && wishlistEvents.length === 0) {
             logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
         }
         logEvent(UE.EventListItemWishlistToggled, {
@@ -137,6 +151,28 @@ export const EventListItem: React.FC<EventListItemProps> = ({
             eventId: item.id,
             isOnWishlist: !itemIsOnWishlist,
         });
+
+        if (willAdd) {
+            calendarCoach?.notifyWishlistAdded();
+        }
+    };
+
+    const handleSharePress = async () => {
+        const rawShareUrl = item.ticket_url || item.event_url || '';
+        if (!rawShareUrl) {
+            Alert.alert('No ticket link yet', 'Tickets are not available for this event yet.');
+            return;
+        }
+        logEvent(UE.EventListItemSharePressed, eventAnalyticsProps);
+        const shareUrl = buildTicketUrl(
+            rawShareUrl,
+            promoCode ? { promoCode: promoCode.promo_code } : undefined,
+        );
+        try {
+            await Share.share({ message: shareUrl });
+        } catch {
+            Alert.alert('Error', 'Unable to share right now.');
+        }
     };
 
     const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
@@ -151,6 +187,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const imageHeight = Math.max(0, Math.min(targetImageHeight, maxImageHeight));
     const detailsHeight = Math.max(0, resolvedCardHeight - imageHeight);
     const actionButtonSize = Math.max(36, Math.min(52, Math.round(resolvedCardHeight * 0.18)));
+    const actionButtonWidth = getWishlistButtonWidth(actionButtonSize);
     const badgeInset = spacing.xs;
     const actionButtonInset = badgeInset;
     const actionButtonRight = badgeInset;
@@ -161,7 +198,8 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const hasFooter = !!footerContent;
     const showTypeIconOverlay = resolvedCardVariant === 'type-icon' && !imageUrl;
     const showPlaceholderIcon = !imageUrl && !showTypeIconOverlay;
-    const detailsPanelPaddingRight = actionButtonRight + actionButtonSize + spacing.sm;
+    const actionIconRightInset = actionButtonRight;
+    const metaTextPaddingRight = actionButtonRight + actionButtonWidth + spacing.sm;
 
     return (
         <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
@@ -194,11 +232,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     style={styles.posterPlaceholder}
                                 >
                                     {showPlaceholderIcon && (
-                                        <FAIcon
-                                            name={placeholderIconName}
-                                            size={placeholderIconSize}
-                                            color={colors.textSlate}
-                                        />
+                                        renderPlaceholderIcon(placeholderIconSize)
                                     )}
                                 </LinearGradient>
                             )}
@@ -238,11 +272,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                             },
                                         ]}
                                     >
-                                        <FAIcon
-                                            name={placeholderIconName}
-                                            size={typeIconSize}
-                                            color={colors.textSlate}
-                                        />
+                                        {renderPlaceholderIcon(typeIconSize)}
                                     </View>
                                 </View>
                             ) : null}
@@ -250,9 +280,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                 <View
                                     style={[
                                         styles.attendeeWrap,
-                                    { bottom: badgeInset, right: badgeInset },
-                                ]}
-                            >
+                                        { bottom: badgeInset, right: actionIconRightInset },
+                                    ]}
+                                >
                                     <AttendeeCarousel attendees={attendees} scrollEnabled={false} />
                                 </View>
                             )}
@@ -263,7 +293,6 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                             end={{ x: 0, y: 1 }}
                             style={[
                                 styles.detailsPanel,
-                                { paddingRight: detailsPanelPaddingRight },
                                 !useAutoHeight && { height: detailsHeight },
                                 hasFooter && styles.detailsPanelWithFooter,
                             ]}
@@ -278,14 +307,16 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                 {organizerName}
                             </Text>
                             {metaLine ? (
-                                <Text style={styles.metaText} numberOfLines={1}>
+                                <Text style={[styles.metaText, { paddingRight: metaTextPaddingRight }]} numberOfLines={1}>
                                     {metaLine}
                                 </Text>
                             ) : null}
                             <WishlistPlusButton
                                 itemIsOnWishlist={itemIsOnWishlist}
                                 handleToggleEventWishlist={handleToggleEventWishlist}
+                                onLongPress={() => setShareMenuOpen(true)}
                                 size={actionButtonSize}
+                                wobble={wobblePlus && !itemIsOnWishlist}
                                 containerStyle={[
                                     styles.actionButton,
                                     { right: actionButtonRight, bottom: actionButtonInset },
@@ -298,6 +329,28 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                     <View style={styles.footer}>{footerContent}</View>
                 )}
             </View>
+            <ActionSheet
+                visible={shareMenuOpen}
+                height={180}
+                onClose={() => setShareMenuOpen(false)}
+                dismissOnBackdropPress
+                sheetStyle={styles.shareSheet}
+                backdropOpacity={0.35}
+            >
+                <View style={styles.shareSheetHandle} />
+                <Pressable
+                    style={({ pressed }) => [
+                        styles.shareSheetItem,
+                        pressed && styles.shareSheetItemPressed,
+                    ]}
+                    onPress={() => {
+                        setShareMenuOpen(false);
+                        void handleSharePress();
+                    }}
+                >
+                    <Text style={styles.shareSheetItemText}>Share</Text>
+                </Pressable>
+            </ActionSheet>
         </View>
     );
 };
@@ -446,5 +499,35 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
         elevation: 3,
+    },
+    shareSheet: {
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.sm,
+    },
+    shareSheetHandle: {
+        alignSelf: 'center',
+        width: 44,
+        height: 4,
+        borderRadius: 2,
+        backgroundColor: colors.borderMutedLight,
+        marginBottom: spacing.lg,
+    },
+    shareSheetItem: {
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        paddingVertical: spacing.mdPlus,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    shareSheetItemPressed: {
+        opacity: 0.72,
+    },
+    shareSheetItemText: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.basePlus,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
     },
 });

@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
+import FA5Icon from 'react-native-vector-icons/FontAwesome5';
 
 import { UE } from '../../../Common/types/userEventTypes';
 import { useCalendarContext } from '../hooks/CalendarContext';
@@ -80,7 +81,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     const isPlayParty = item.play_party || item.type === 'play_party';
     const isMunch = item.is_munch || item.munch_id || item.type === 'munch';
     const placeHolderImage = isPlayParty ? (
-        <FAIcon name="birthday-cake" size={22} color={colors.textSlate} />
+        <FA5Icon name="compact-disc" size={22} color={colors.textSlate} solid />
     ) : isMunch ? (
         <FAIcon name="cutlery" size={22} color={colors.textSlate} />
     ) : (

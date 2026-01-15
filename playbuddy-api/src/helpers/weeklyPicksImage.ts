@@ -317,22 +317,27 @@ const buildPlaceholderIconSvg = ({
     }
 
     if (kind === 'party') {
-        const coneBaseY = centerY + size * 0.28;
-        const coneLeftX = centerX - size * 0.32;
-        const coneRightX = centerX + size * 0.08;
-        const coneTipX = centerX + size * 0.32;
-        const coneTipY = centerY - size * 0.12;
-        const burstLeftX = centerX - size * 0.12;
-        const burstRightX = centerX + size * 0.2;
-        const burstTopY = centerY - size * 0.44;
-        const burstMidY = centerY - size * 0.28;
+        const ballRadius = size * 0.22;
+        const ballCenterY = centerY + size * 0.08;
+        const ballTop = ballCenterY - ballRadius;
+        const ballBottom = ballCenterY + ballRadius;
+        const capHeight = size * 0.07;
+        const capWidth = size * 0.18;
+        const capX = centerX - capWidth / 2;
+        const capY = ballTop - capHeight;
+        const chainTopY = capY - size * 0.08;
+        const bandWidth = ballRadius * 0.6;
+        const bandTopY = ballCenterY - ballRadius * 0.45;
+        const bandBottomY = ballCenterY + ballRadius * 0.45;
         return `
     <g ${iconProps}>
-      <path d="M ${coneLeftX} ${coneBaseY} L ${coneRightX} ${coneBaseY} L ${coneTipX} ${coneTipY} Z" />
-      <line x1="${coneRightX - size * 0.06}" y1="${coneBaseY - size * 0.06}" x2="${coneTipX - size * 0.08}" y2="${coneTipY + size * 0.06}" />
-      <line x1="${burstLeftX}" y1="${burstMidY}" x2="${burstLeftX - size * 0.08}" y2="${burstTopY}" />
-      <line x1="${burstRightX}" y1="${burstMidY}" x2="${burstRightX + size * 0.06}" y2="${burstTopY + size * 0.06}" />
-      <line x1="${centerX}" y1="${burstMidY - size * 0.04}" x2="${centerX}" y2="${burstTopY + size * 0.04}" />
+      <line x1="${centerX}" y1="${chainTopY}" x2="${centerX}" y2="${capY}" />
+      <rect x="${capX}" y="${capY}" width="${capWidth}" height="${capHeight}" rx="${capHeight * 0.4}" ry="${capHeight * 0.4}" />
+      <circle cx="${centerX}" cy="${ballCenterY}" r="${ballRadius}" />
+      <line x1="${centerX - bandWidth}" y1="${bandTopY}" x2="${centerX + bandWidth}" y2="${bandTopY}" />
+      <line x1="${centerX - bandWidth}" y1="${ballCenterY}" x2="${centerX + bandWidth}" y2="${ballCenterY}" />
+      <line x1="${centerX - bandWidth}" y1="${bandBottomY}" x2="${centerX + bandWidth}" y2="${bandBottomY}" />
+      <line x1="${centerX}" y1="${ballTop}" x2="${centerX}" y2="${ballBottom}" />
     </g>`;
     }
 
@@ -617,6 +622,22 @@ const buildSvg = ({
     const actionButtonSpacing = s(12);
     const actionButtonInset = s(4);
     const actionButtonRight = s(4);
+    const actionButtonLabel = 'Save';
+    const actionButtonLabelMax = 'Saved';
+    const actionButtonFont = Math.round(actionButtonSize * 0.36);
+    const actionButtonIconSize = Math.round(actionButtonSize * 0.42);
+    const actionButtonPaddingX = Math.round(actionButtonSize * 0.4);
+    const actionButtonGap = Math.max(s(4), Math.round(actionButtonSize * 0.18));
+    const actionButtonTextWidth = estimateTextWidth(actionButtonLabelMax, actionButtonFont, 0);
+    const actionButtonWidth = Math.round(
+        actionButtonPaddingX * 2 + actionButtonIconSize + actionButtonGap + actionButtonTextWidth
+    );
+    const actionButtonRadius = Math.round(actionButtonSize / 2);
+    const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.05));
+    const actionButtonIconStroke = Math.max(2, Math.round(actionButtonSize * 0.1));
+    const actionButtonLabelWidth = estimateTextWidth(actionButtonLabel, actionButtonFont, 0);
+    const actionButtonContentWidth = actionButtonIconSize + actionButtonGap + actionButtonLabelWidth;
+    const actionButtonContentOffsetX = (actionButtonWidth - actionButtonContentWidth) / 2;
 
     const typeTagPaddingX = s(14);
     const typeTagPaddingY = s(4);
@@ -796,13 +817,14 @@ const buildSvg = ({
                 const imageData = imagesById.get(item.eventId) || null;
                 const fallbackGradientId = item.typeKey in IMAGE_THEMES ? `fallback_${item.typeKey}` : 'fallback_event';
                 const detailsY = cardY + imageHeight;
-                const detailsAvailableWidth = Math.max(
+                const detailsFullWidth = Math.max(0, cardWidth - detailsPaddingX * 2);
+                const detailsTrimmedWidth = Math.max(
                     0,
-                    cardWidth - detailsPaddingX * 2 - actionButtonSize - actionButtonSpacing
+                    detailsFullWidth - actionButtonWidth - actionButtonSpacing
                 );
-                const maxTitleChars = Math.max(8, estimateMaxChars(detailsAvailableWidth, titleFont, 0.53));
-                const maxOrganizerChars = estimateMaxChars(detailsAvailableWidth, organizerFont, 0.6);
-                const maxMetaChars = estimateMaxChars(detailsAvailableWidth, metaFont, 0.6);
+                const maxTitleChars = Math.max(8, estimateMaxChars(detailsFullWidth, titleFont, 0.53));
+                const maxOrganizerChars = estimateMaxChars(detailsFullWidth, organizerFont, 0.6);
+                const maxMetaChars = estimateMaxChars(detailsTrimmedWidth, metaFont, 0.6);
 
                 const titleLines = wrapText(item.title, maxTitleChars, 2);
                 const organizerText = truncateText(item.organizer, maxOrganizerChars);
@@ -880,44 +902,29 @@ const buildSvg = ({
                     textY += metaLineHeight;
                 }
 
-                const actionButtonX = paddingX + cardWidth - actionButtonRight - actionButtonSize;
+                const actionButtonX = paddingX + cardWidth - actionButtonRight - actionButtonWidth;
                 const actionButtonY = detailsY + detailsHeight - detailsPaddingBottom - actionButtonInset - actionButtonSize;
-                const actionButtonCenterX = actionButtonX + actionButtonSize / 2;
                 const actionButtonCenterY = actionButtonY + actionButtonSize / 2;
-                const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.04));
-                const plusSize = Math.round(actionButtonSize * 0.34);
-                const plusHalf = plusSize / 2;
-                const plusStroke = Math.max(2, Math.round(actionButtonSize * 0.1));
-                const plusOffset = Math.round(actionButtonSize * 0.1);
-                const plusCenterY = actionButtonCenterY + plusOffset;
-                const calendarSize = Math.round(actionButtonSize * 0.4);
-                const calendarX = actionButtonCenterX - calendarSize / 2;
-                const calendarY = actionButtonCenterY - calendarSize / 2;
-                const calendarRadius = Math.round(calendarSize * 0.2);
-                const calendarStroke = Math.max(1, Math.round(actionButtonSize * 0.06));
-                const calendarHeaderY = calendarY + calendarSize * 0.28;
-                const calendarRingTop = calendarY + calendarSize * 0.08;
-                const calendarRingBottom = calendarY + calendarSize * 0.2;
-                const calendarRingLeft = calendarX + calendarSize * 0.28;
-                const calendarRingRight = calendarX + calendarSize * 0.72;
+                const actionButtonContentX = actionButtonX + actionButtonContentOffsetX;
+                const actionButtonIconCenterX = actionButtonContentX + actionButtonIconSize / 2;
+                const actionButtonIconHalf = actionButtonIconSize / 2;
+                const actionButtonTextX = actionButtonContentX + actionButtonIconSize + actionButtonGap;
+                const actionButtonTextY = actionButtonCenterY;
 
                 content.push(`
     <g filter="url(#iconShadow)">
-    <rect x="${calendarX}" y="${calendarY}" width="${calendarSize}" height="${calendarSize}" rx="${calendarRadius}" ry="${calendarRadius}"
-          fill="none" stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" />
-    <line x1="${calendarX}" y1="${calendarHeaderY}" x2="${calendarX + calendarSize}" y2="${calendarHeaderY}"
-          stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" stroke-linecap="round" />
-    <line x1="${calendarRingLeft}" y1="${calendarRingTop}" x2="${calendarRingLeft}" y2="${calendarRingBottom}"
-          stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" stroke-linecap="round" />
-    <line x1="${calendarRingRight}" y1="${calendarRingTop}" x2="${calendarRingRight}" y2="${calendarRingBottom}"
-          stroke="${THEME.colors.black}" stroke-width="${calendarStroke}" stroke-linecap="round" />
-    <line x1="${actionButtonCenterX - plusHalf}" y1="${plusCenterY}"
-          x2="${actionButtonCenterX + plusHalf}" y2="${plusCenterY}"
-          stroke="${THEME.colors.black}" stroke-width="${plusStroke}" stroke-linecap="round" />
-    <line x1="${actionButtonCenterX}" y1="${plusCenterY - plusHalf}"
-          x2="${actionButtonCenterX}" y2="${plusCenterY + plusHalf}"
-          stroke="${THEME.colors.black}" stroke-width="${plusStroke}" stroke-linecap="round" />
-    </g>`);
+      <rect x="${actionButtonX}" y="${actionButtonY}" width="${actionButtonWidth}" height="${actionButtonSize}"
+            rx="${actionButtonRadius}" ry="${actionButtonRadius}" fill="${THEME.colors.surfaceWhiteFrosted}"
+            stroke="${THEME.colors.brandPink}" stroke-width="${actionButtonStroke}" />
+    </g>
+    <line x1="${actionButtonIconCenterX - actionButtonIconHalf}" y1="${actionButtonCenterY}"
+          x2="${actionButtonIconCenterX + actionButtonIconHalf}" y2="${actionButtonCenterY}"
+          stroke="${THEME.colors.brandPink}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
+    <line x1="${actionButtonIconCenterX}" y1="${actionButtonCenterY - actionButtonIconHalf}"
+          x2="${actionButtonIconCenterX}" y2="${actionButtonCenterY + actionButtonIconHalf}"
+          stroke="${THEME.colors.brandPink}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
+    <text x="${actionButtonTextX}" y="${actionButtonTextY}" font-size="${actionButtonFont}" font-family="${fontBody}"
+          font-weight="700" fill="${THEME.colors.brandPink}" dominant-baseline="middle">${actionButtonLabel}</text>`);
 
                 if (item.typeTagLabel) {
                     const maxTagChars = estimateMaxChars(cardWidth - typeTagPaddingX * 2, typeTagFont, 0.6);
