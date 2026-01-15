@@ -618,23 +618,23 @@ const buildSvg = ({
     const metaFont = s(12);
     const metaLineHeight = s(16);
     const metaMarginTop = s(2);
-    const actionButtonSize = Math.max(s(30), Math.round(Math.min(detailsHeight * 0.45, s(40))));
-    const actionButtonSpacing = s(12);
+    const actionButtonSize = Math.max(s(26), Math.round(Math.min(detailsHeight * 0.36, s(34))));
+    const actionButtonSpacing = s(10);
     const actionButtonInset = s(4);
     const actionButtonRight = s(4);
     const actionButtonLabel = 'Save';
     const actionButtonLabelMax = 'Saved';
-    const actionButtonFont = Math.round(actionButtonSize * 0.36);
-    const actionButtonIconSize = Math.round(actionButtonSize * 0.42);
-    const actionButtonPaddingX = Math.round(actionButtonSize * 0.4);
-    const actionButtonGap = Math.max(s(4), Math.round(actionButtonSize * 0.18));
+    const actionButtonFont = Math.round(actionButtonSize * 0.3);
+    const actionButtonIconSize = Math.round(actionButtonSize * 0.38);
+    const actionButtonPaddingX = Math.round(actionButtonSize * 0.3);
+    const actionButtonGap = Math.max(s(3), Math.round(actionButtonSize * 0.14));
     const actionButtonTextWidth = estimateTextWidth(actionButtonLabelMax, actionButtonFont, 0);
     const actionButtonWidth = Math.round(
         actionButtonPaddingX * 2 + actionButtonIconSize + actionButtonGap + actionButtonTextWidth
     );
     const actionButtonRadius = Math.round(actionButtonSize / 2);
-    const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.05));
-    const actionButtonIconStroke = Math.max(2, Math.round(actionButtonSize * 0.1));
+    const actionButtonStroke = Math.max(1, Math.round(actionButtonSize * 0.04));
+    const actionButtonIconStroke = Math.max(1, Math.round(actionButtonSize * 0.08));
     const actionButtonLabelWidth = estimateTextWidth(actionButtonLabel, actionButtonFont, 0);
     const actionButtonContentWidth = actionButtonIconSize + actionButtonGap + actionButtonLabelWidth;
     const actionButtonContentOffsetX = (actionButtonWidth - actionButtonContentWidth) / 2;
@@ -724,7 +724,7 @@ const buildSvg = ({
     </filter>`);
     defs.push(`
     <filter id="iconShadow" x="-40%" y="-40%" width="180%" height="200%">
-      <feDropShadow dx="0" dy="${Math.max(1, s(2))}" stdDeviation="${Math.max(1, s(2.5))}" flood-color="${THEME.colors.black}" flood-opacity="0.25" />
+      <feDropShadow dx="0" dy="${Math.max(1, s(1.5))}" stdDeviation="${Math.max(1, s(2))}" flood-color="${THEME.colors.black}" flood-opacity="0.15" />
     </filter>`);
 
     Object.entries(IMAGE_THEMES).forEach(([key, value]) => {
@@ -915,16 +915,16 @@ const buildSvg = ({
     <g filter="url(#iconShadow)">
       <rect x="${actionButtonX}" y="${actionButtonY}" width="${actionButtonWidth}" height="${actionButtonSize}"
             rx="${actionButtonRadius}" ry="${actionButtonRadius}" fill="${THEME.colors.surfaceWhiteFrosted}"
-            stroke="${THEME.colors.brandPink}" stroke-width="${actionButtonStroke}" />
+            stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${actionButtonStroke}" />
     </g>
     <line x1="${actionButtonIconCenterX - actionButtonIconHalf}" y1="${actionButtonCenterY}"
           x2="${actionButtonIconCenterX + actionButtonIconHalf}" y2="${actionButtonCenterY}"
-          stroke="${THEME.colors.brandPink}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
+          stroke="${THEME.colors.brandInk}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
     <line x1="${actionButtonIconCenterX}" y1="${actionButtonCenterY - actionButtonIconHalf}"
           x2="${actionButtonIconCenterX}" y2="${actionButtonCenterY + actionButtonIconHalf}"
-          stroke="${THEME.colors.brandPink}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
+          stroke="${THEME.colors.brandInk}" stroke-width="${actionButtonIconStroke}" stroke-linecap="round" />
     <text x="${actionButtonTextX}" y="${actionButtonTextY}" font-size="${actionButtonFont}" font-family="${fontBody}"
-          font-weight="700" fill="${THEME.colors.brandPink}" dominant-baseline="middle">${actionButtonLabel}</text>`);
+          font-weight="700" fill="${THEME.colors.brandInk}" dominant-baseline="middle">${actionButtonLabel}</text>`);
 
                 if (item.typeTagLabel) {
                     const maxTagChars = estimateMaxChars(cardWidth - typeTagPaddingX * 2, typeTagFont, 0.6);
