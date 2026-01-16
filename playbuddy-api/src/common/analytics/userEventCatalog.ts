@@ -1,4 +1,4 @@
-import { UE } from "../types/userEventTypes";
+import { UE } from "../types/userEventTypes.js";
 
 export type UserEventStateConfig = {
   key: string;

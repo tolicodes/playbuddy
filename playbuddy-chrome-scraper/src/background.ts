@@ -454,7 +454,8 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
 
                 if (!isFriendSource) {
                     const isNearby = source.startsWith('fetlifeNearby');
-                    const approval_status = opts.approvalStatus ?? (isNearby ? 'pending' : undefined);
+                    const isFestivalSource = source === 'fetlifeFestivals';
+                    const approval_status = opts.approvalStatus ?? ((isNearby || isFestivalSource) ? 'pending' : undefined);
                     const forceSkipExisting = opts.forceSkipExisting ?? (isNearby ? true : (source === 'fetlife' || source === 'fetlifeFestivals'));
                     const approveExisting = opts.approveExisting ?? (source === 'fetlife' && !isNearby);
 

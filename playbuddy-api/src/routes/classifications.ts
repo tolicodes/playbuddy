@@ -48,13 +48,14 @@ router.get('/classify', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 router.post('/reclassify', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const rawFields = Array.isArray(req.body?.fields) ? req.body.fields : [];
-    const fields = Array.from(new Set(rawFields.map(String).map(normalizeField)))
-        .filter((field) => ALLOWED_RECLASSIFY_FIELDS.has(field));
-    const rawEventIds = Array.isArray(req.body?.eventIds) ? req.body.eventIds : [];
+    const rawFields: unknown[] = Array.isArray(req.body?.fields) ? req.body.fields : [];
+    const fields = Array.from(
+        new Set(rawFields.map((field) => normalizeField(String(field))))
+    ).filter((field) => ALLOWED_RECLASSIFY_FIELDS.has(field));
+    const rawEventIds: unknown[] = Array.isArray(req.body?.eventIds) ? req.body.eventIds : [];
     const eventIds = rawEventIds
         .map((id) => Number(id))
-        .filter((id) => Number.isFinite(id));
+        .filter((id): id is number => Number.isFinite(id));
     const hasEventIds = eventIds.length > 0;
     if (!fields.length && !hasEventIds) {
         return res.status(400).json({ error: 'fields or eventIds is required' });
