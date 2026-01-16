@@ -713,7 +713,14 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
             {event.ticket_url?.includes('fetlife') && (
                 <SectionCard title="FetLife" icon="link" tone="info">
                     <Text style={styles.infoCardText}>
-                        🔗 Imported from FetLife with the organizer's permission. Requires FetLife account.
+                        🔗 Imported from FetLife with the organizer's permission. Requires FetLife account. Contact{' '}
+                        <Text
+                            style={{ color: colors.linkAccent, fontWeight: 'bold' }}
+                            onPress={() => Linking.openURL('mailto:support@playbuddy.me')}
+                        >
+                            support@playbuddy.me
+                        </Text>{' '}
+                        for questions and concerns.
                     </Text>
                     <TouchableOpacity
                         onPress={() => Linking.openURL(buildTicketUrl(event.ticket_url || ''))}
