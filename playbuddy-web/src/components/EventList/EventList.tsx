@@ -5,6 +5,8 @@ import styles from './EventList.module.css';
 import type { EventWithMetadata, SectionType } from "./util/types";
 import { getTagChipTone, getTagChips } from "./util/tagUtils";
 
+const normalizeSearchText = (value: string) => value.toLowerCase().replace(/\s+/g, ' ').trim();
+
 export const EventList = ({
     events,
     isLoadingEvents,
@@ -13,8 +15,36 @@ export const EventList = ({
     isLoadingEvents: boolean;
 }) => {
     const [selectedEvent, setSelectedEvent] = useState<EventWithMetadata | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const normalizedSearch = useMemo(() => normalizeSearchText(searchQuery), [searchQuery]);
+    const searchTokens = useMemo(
+        () => (normalizedSearch ? normalizedSearch.split(' ') : []),
+        [normalizedSearch]
+    );
 
-    const { sections } = useGroupedEvents(events);
+    const filteredEvents = useMemo(() => {
+        if (!searchTokens.length) return events;
+        return events.filter((event) => {
+            const organizerAliases = Array.isArray(event.organizer?.aliases)
+                ? event.organizer.aliases
+                : [];
+            const tags = [
+                ...(event.tags || []),
+                ...(event.classification?.tags || []),
+            ].filter(Boolean);
+            const searchTarget = normalizeSearchText([
+                event.name,
+                event.organizer?.name,
+                ...organizerAliases,
+                ...tags,
+            ]
+                .filter(Boolean)
+                .join(' '));
+            return searchTokens.every((token) => searchTarget.includes(token));
+        });
+    }, [events, searchTokens]);
+
+    const { sections } = useGroupedEvents(filteredEvents);
 
     const toTimestamp = (value: string) => {
         const time = new Date(value).getTime();
@@ -22,10 +52,10 @@ export const EventList = ({
     };
 
     const weeklyPicks = useMemo(() => {
-        if (!events.length) return [];
+        if (!filteredEvents.length) return [];
         const now = Date.now();
         const weekFromNow = now + 7 * 24 * 60 * 60 * 1000;
-        const upcomingWeek = events
+        const upcomingWeek = filteredEvents
             .filter((event) => {
                 const time = toTimestamp(event.start_date);
                 return time >= now && time <= weekFromNow;
@@ -34,7 +64,7 @@ export const EventList = ({
         const picks = upcomingWeek.filter((event) => event.weekly_pick);
         const source = picks.length ? picks : upcomingWeek;
         return source.slice(0, 6);
-    }, [events]);
+    }, [filteredEvents]);
 
     const formatWeeklyMeta = (event: EventWithMetadata) => {
         const start = new Date(event.start_date);
@@ -49,6 +79,7 @@ export const EventList = ({
         window.location.href = `/event/${selectedEvent.id}`;
     }, [selectedEvent]);
 
+    const emptyLabel = searchTokens.length > 0 ? 'No matching events found' : 'No events found';
 
     return (
         <div className={styles.eventList}>
@@ -58,6 +89,25 @@ export const EventList = ({
                 </div>
             )}
             <div className={styles.eventListInner}>
+                <div className={styles.searchBar}>
+                    <input
+                        type="search"
+                        className={styles.searchInput}
+                        placeholder="Search events, tags, organizers"
+                        value={searchQuery}
+                        onChange={(event) => setSearchQuery(event.target.value)}
+                        aria-label="Search events, tags, organizers"
+                    />
+                    {searchQuery.length > 0 && (
+                        <button
+                            type="button"
+                            className={styles.searchClear}
+                            onClick={() => setSearchQuery('')}
+                        >
+                            Clear
+                        </button>
+                    )}
+                </div>
                 {weeklyPicks.length > 0 && (
                     <section className={styles.weeklySection}>
                         <div className={styles.weeklyHeader}>
@@ -133,7 +183,7 @@ export const EventList = ({
                 )}
                 {!isLoadingEvents && sections.length === 0 ? (
                     <div className={styles.emptyList}>
-                        <p className={styles.emptyText}>No events found</p>
+                        <p className={styles.emptyText}>{emptyLabel}</p>
                     </div>
                 ) : (
                     sections.map((section: SectionType) => (

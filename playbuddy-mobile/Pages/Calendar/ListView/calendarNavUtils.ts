@@ -1,5 +1,5 @@
 import moment from "moment-timezone";
-import { EventWithMetadata } from "../../../Common/Nav/NavStackType";
+import type { EventWithMetadata } from "../../../Common/Nav/NavStackType";
 
 export const TZ = "America/New_York";
 
