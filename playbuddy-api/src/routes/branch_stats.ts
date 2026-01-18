@@ -79,6 +79,11 @@ const resolveScript = (): ScriptInfo => {
 const shouldUseChrome = () => /^(1|true|yes)$/i.test(process.env.BRANCH_STATS_USE_CHROME || "");
 const shouldOpenDevtools = () => /^(1|true|yes)$/i.test(process.env.BRANCH_STATS_DEVTOOLS || "");
 const shouldRunHeadless = () => !/^(0|false|no)$/i.test(process.env.BRANCH_STATS_HEADLESS || "");
+const BRANCH_STATS_PAGE_SIZE = (() => {
+  const raw = process.env.BRANCH_STATS_PAGE_SIZE;
+  const n = raw ? Number(raw) : 100;
+  return Number.isFinite(n) && n > 0 ? n : 100;
+})();
 
 type BranchStatsScrapeProgress = {
   processed: number;
@@ -119,6 +124,10 @@ type BranchStatsScrapeStatus = {
   error?: string | null;
   command?: string | null;
   debug?: BranchStatsScrapeDebug | null;
+};
+
+type BranchStatsScrapeOptions = {
+  headless?: boolean;
 };
 
 export type BranchStatsScrapeStartResult = {
@@ -305,7 +314,9 @@ const wireProcessOutput = (proc: ChildProcessWithoutNullStreams) => {
   proc.stderr.on("data", (chunk: Buffer) => handleChunk(chunk, stderrBuffer, true));
 };
 
-export const startBranchStatsScrape = (): BranchStatsScrapeStartResult => {
+export const startBranchStatsScrape = (
+  options?: BranchStatsScrapeOptions
+): BranchStatsScrapeStartResult => {
   const scriptInfo = resolveScript();
   if (scrapeState.status === "running" && runningProcess) {
     debugLog("scrape already running", { pid: scrapeState.pid });
@@ -336,10 +347,13 @@ export const startBranchStatsScrape = (): BranchStatsScrapeStartResult => {
     };
   }
 
+  const headless = typeof options?.headless === "boolean" ? options.headless : shouldRunHeadless();
   const scriptArgs = [
     scriptInfo.path,
     "--days=14",
-    shouldRunHeadless() ? "--headless" : null,
+    "--paginate",
+    `--page-size=${BRANCH_STATS_PAGE_SIZE}`,
+    headless ? "--headless" : "--headed",
     shouldUseChrome() ? "--use-chrome" : null,
     shouldOpenDevtools() ? "--devtools" : null,
     "--quiet",
@@ -414,8 +428,11 @@ export const startBranchStatsScrape = (): BranchStatsScrapeStartResult => {
   return { ok: true, state: scrapeState };
 };
 
-router.post("/scrape", authenticateAdminRequest, async (_req: AuthenticatedRequest, res: Response) => {
-  const result = startBranchStatsScrape();
+router.post("/scrape", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+  const requestedHeadless = req.body?.headless;
+  const result = startBranchStatsScrape(
+    typeof requestedHeadless === "boolean" ? { headless: requestedHeadless } : undefined
+  );
   if (!result.ok) {
     if (result.statusCode === 409) {
       res.status(409).json(result.state);

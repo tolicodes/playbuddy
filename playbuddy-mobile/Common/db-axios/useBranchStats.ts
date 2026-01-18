@@ -65,6 +65,10 @@ export type BranchStatsScrapeStatus = {
   debug?: BranchStatsScrapeDebug | null;
 };
 
+export type BranchStatsScrapeOptions = {
+  headless?: boolean;
+};
+
 export const useFetchBranchStats = () =>
   useQuery<BranchStatsResponse>({
     queryKey: ["branch-stats"],
@@ -86,9 +90,12 @@ export const useFetchBranchStatsScrapeStatus = () =>
   });
 
 export const useCreateBranchStatsScrape = () =>
-  useMutation({
-    mutationFn: async () => {
-      const res = await axios.post<BranchStatsScrapeStatus>(`${API_BASE_URL}/branch_stats/scrape`);
+  useMutation<BranchStatsScrapeStatus, unknown, BranchStatsScrapeOptions | undefined>({
+    mutationFn: async (payload) => {
+      const res = await axios.post<BranchStatsScrapeStatus>(
+        `${API_BASE_URL}/branch_stats/scrape`,
+        payload ?? {}
+      );
       return res.data;
     },
   });

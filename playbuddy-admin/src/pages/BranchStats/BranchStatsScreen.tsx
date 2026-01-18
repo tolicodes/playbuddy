@@ -4,6 +4,8 @@ import {
   Box,
   Button,
   Chip,
+  Checkbox,
+  FormControlLabel,
   LinearProgress,
   Link,
   Paper,
@@ -38,17 +40,22 @@ export default function BranchStatsScreen() {
   const createScrape = useCreateBranchStatsScrape();
   const [triggerError, setTriggerError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [headless, setHeadless] = useState(true);
   const prevScrapeStatus = useRef<string | null>(null);
 
   const rows = useMemo(() => data?.rows ?? [], [data?.rows]);
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((row) => {
-      const name = row.name?.toLowerCase() || "";
-      const url = row.url?.toLowerCase() || "";
-      return name.includes(q) || url.includes(q);
-    });
+    const list = !q
+      ? rows
+      : rows.filter((row) => {
+        const name = row.name?.toLowerCase() || "";
+        const url = row.url?.toLowerCase() || "";
+        return name.includes(q) || url.includes(q);
+      });
+    return list
+      .slice()
+      .sort((a, b) => (b.stats?.overallClicks ?? 0) - (a.stats?.overallClicks ?? 0));
   }, [rows, query]);
 
   const totals = useMemo(() => {
@@ -125,7 +132,7 @@ export default function BranchStatsScreen() {
   const handleRunScrape = async () => {
     setTriggerError(null);
     try {
-      await createScrape.mutateAsync();
+      await createScrape.mutateAsync({ headless });
       refetchScrapeStatus();
     } catch (err: any) {
       if (err?.response?.status === 409) {
@@ -178,13 +185,24 @@ export default function BranchStatsScreen() {
           <Stack spacing={1.5}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
               <Typography variant="subtitle2">Branch scrape</Typography>
-              <Button
-                variant="contained"
-                onClick={handleRunScrape}
-                disabled={isScraping || createScrape.isPending}
-              >
-                {isScraping ? "Scraping..." : "Run scrape"}
-              </Button>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={headless}
+                      onChange={(e) => setHeadless(e.target.checked)}
+                    />
+                  }
+                  label="Headless"
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleRunScrape}
+                  disabled={isScraping || createScrape.isPending}
+                >
+                  {isScraping ? "Scraping..." : "Run scrape"}
+                </Button>
+              </Stack>
             </Stack>
 
             {triggerError && <Alert severity="error">{triggerError}</Alert>}
@@ -216,9 +234,23 @@ export default function BranchStatsScreen() {
               />
             )}
 
-            {scrapeStatus?.lastLog && (
-              <Typography variant="body2" color="text.secondary">
-                Last log: {scrapeStatus.lastLog}
+            {scrapeStatus && (
+              <Typography
+                component="pre"
+                variant="body2"
+                sx={{
+                  backgroundColor: "#f8fafc",
+                  borderRadius: 1,
+                  p: 1,
+                  fontFamily: "monospace",
+                  whiteSpace: "pre-wrap",
+                  maxHeight: 240,
+                  overflow: "auto",
+                }}
+              >
+                {(scrapeStatus.logs && scrapeStatus.logs.length > 0)
+                  ? scrapeStatus.logs.join("\n")
+                  : "No logs yet."}
               </Typography>
             )}
 
