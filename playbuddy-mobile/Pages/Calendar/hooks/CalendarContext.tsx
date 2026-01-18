@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { UseMutationResult } from '@tanstack/react-query';
-import { useWishlist } from './useWishlist';
+import { useWishlist, type WishlistEntry } from './useWishlist';
 import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
 import { OrganizerFilterOption, getAvailableOrganizers } from './calendarUtils';
 import { useUserContext } from '../../Auth/hooks/UserContext';
@@ -28,6 +28,8 @@ type CalendarContextType = {
 
     // Wishlist
     wishlistEvents: EventWithMetadata[];
+    wishlistEntries: WishlistEntry[];
+    wishlistEntryMap: Map<number, WishlistEntry>;
     isOnWishlist: (eventId: number) => boolean;
     toggleWishlistEvent: UseMutationResult<void, Error, { eventId: number; isOnWishlist: boolean }, unknown>;
 
@@ -84,6 +86,8 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
     const {
         wishlistEvents,
+        wishlistEntries,
+        wishlistEntryMap,
         isOnWishlist,
         toggleWishlistEvent,
         swipeChoices,
@@ -109,13 +113,15 @@ export const CalendarProvider: React.FC<{ children: ReactNode }> = ({ children }
 
         // Wishlist
         wishlistEvents,
+        wishlistEntries,
+        wishlistEntryMap,
         isOnWishlist,
         toggleWishlistEvent,
         // Swipe Mode
         availableCardsToSwipe,
     }), [
         organizers, eventsWithMetadata, reloadEvents, isLoadingEvents,
-        wishlistEvents, isOnWishlist, toggleWishlistEvent, availableCardsToSwipe
+        wishlistEvents, wishlistEntries, wishlistEntryMap, isOnWishlist, toggleWishlistEvent, availableCardsToSwipe
     ]);
 
     return (

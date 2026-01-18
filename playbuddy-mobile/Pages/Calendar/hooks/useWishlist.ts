@@ -14,16 +14,35 @@ const useGetAuthUserId = () => {
 };
 
 
+export type WishlistEntry = {
+    event_id: number;
+    created_at: string | null;
+};
+
+const normalizeWishlistEntries = (payload: unknown): WishlistEntry[] => {
+    if (!Array.isArray(payload)) return [];
+    return payload
+        .map((entry: any) => {
+            if (entry && typeof entry === 'object' && 'event_id' in entry) {
+                const eventId = Number(entry.event_id);
+                if (!Number.isFinite(eventId)) return null;
+                return { event_id: eventId, created_at: entry.created_at ?? null };
+            }
+            const eventId = Number(entry);
+            if (!Number.isFinite(eventId)) return null;
+            return { event_id: eventId, created_at: null };
+        })
+        .filter(Boolean) as WishlistEntry[];
+};
+
 const useFetchWishlistEvents = () => {
     const authUserId = useGetAuthUserId();
     return useAuthorizedQuery({
         queryKey: ['wishlistEvents', authUserId],
         queryFn: async () => {
             try {
-                const response = await axios.get<Array<string | number>>(`${API_BASE_URL}/wishlist`);
-                return (response.data ?? [])
-                    .map((id) => Number(id))
-                    .filter((id) => Number.isFinite(id));
+                const response = await axios.get(`${API_BASE_URL}/wishlist?includeMeta=true`);
+                return normalizeWishlistEntries(response.data ?? []);
             } catch (error) {
                 throw new Error(`Error fetching wishlist events: ${error.message}`);
             }
@@ -61,13 +80,16 @@ const useToggleWishlistEvent = () => {
             await queryClient.cancelQueries({ queryKey: ['wishlistEvents', authUserId] });
 
             // Snapshot the previous value
-            const previousWishlist = queryClient.getQueryData<number[]>(['wishlistEvents', authUserId]);
+            const previousWishlist = queryClient.getQueryData<WishlistEntry[] | number[]>(['wishlistEvents', authUserId]);
 
             // Optimistically update the cache
-            queryClient.setQueryData<number[]>(['wishlistEvents', authUserId], (oldWishlist = []) => {
-                return isOnWishlist
-                    ? [...oldWishlist, eventId]
-                    : oldWishlist.filter(id => id !== eventId);
+            queryClient.setQueryData<WishlistEntry[] | number[]>(['wishlistEvents', authUserId], (oldWishlist = []) => {
+                const entries = normalizeWishlistEntries(oldWishlist);
+                if (isOnWishlist) {
+                    if (entries.some((entry) => entry.event_id === eventId)) return entries;
+                    return [...entries, { event_id: eventId, created_at: new Date().toISOString() }];
+                }
+                return entries.filter((entry) => entry.event_id !== eventId);
             });
 
             return { previousWishlist };
@@ -91,16 +113,25 @@ const useToggleWishlistEvent = () => {
 };
 // Combined Hook to manage both user and friend's wishlist
 export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
-    const { data: wishlistEventIds, isLoading: isLoadingWishlistEvents, } = useFetchWishlistEvents();
+    const { data: wishlistEntries = [], isLoading: isLoadingWishlistEvents } = useFetchWishlistEvents();
+    const wishlistEventIds = useMemo(
+        () => new Set(wishlistEntries.map((entry) => entry.event_id)),
+        [wishlistEntries]
+    );
+    const wishlistEntryMap = useMemo(
+        () => new Map(wishlistEntries.map((entry) => [entry.event_id, entry])),
+        [wishlistEntries]
+    );
 
     // Memoized function to calculate wishlist events
     const wishlistEvents = useMemo(() => {
-        return eventsWithMetadata.filter(event => wishlistEventIds?.includes(event.id));
+        if (!wishlistEventIds.size) return [];
+        return eventsWithMetadata.filter((event) => wishlistEventIds.has(event.id));
     }, [wishlistEventIds, eventsWithMetadata]);
 
     // Memoized function to check if an event is on wishlist
     const isOnWishlist = useCallback((eventId: number) => {
-        return wishlistEventIds?.includes(eventId) || false;
+        return wishlistEventIds.has(eventId);
     }, [wishlistEventIds]);
 
     const toggleWishlistEvent = useToggleWishlistEvent();
@@ -109,6 +140,8 @@ export const useWishlist = (eventsWithMetadata: EventWithMetadata[]) => {
 
     return {
         wishlistEvents,
+        wishlistEntries,
+        wishlistEntryMap,
         isLoadingWishlistEvents,
         isOnWishlist,
         toggleWishlistEvent,

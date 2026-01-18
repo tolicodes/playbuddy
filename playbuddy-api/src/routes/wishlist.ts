@@ -71,10 +71,32 @@ router.get('/buddies', authenticateRequest, async (req: AuthenticatedRequest, re
 
 // GET /wishlist - Get user's wishlist
 router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const includeMeta =
+        req.query.includeMeta === 'true' ||
+        req.query.include_meta === 'true';
+    if (includeMeta) {
+        const { data, error } = await supabaseClient
+            .from('event_wishlist')
+            .select('event_id, created_at')
+            .eq('user_id', req.authUserId);
+
+        if (error) {
+            throw new Error(`Error fetching wishlist: ${error.message}`);
+        }
+
+        const entries = data
+            .map((wishlist_event: { event_id: string; created_at?: string | null }) => ({
+                event_id: Number(wishlist_event.event_id),
+                created_at: wishlist_event.created_at ?? null,
+            }))
+            .filter((entry) => Number.isFinite(entry.event_id));
+        return res.status(200).json(entries);
+    }
+
     const { data, error } = await supabaseClient
         .from('event_wishlist')
         .select('event_id')
-        .eq('user_id', req.authUserId)
+        .eq('user_id', req.authUserId);
 
     if (error) {
         throw new Error(`Error fetching wishlist: ${error.message}`);
@@ -82,7 +104,7 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
 
     const eventIds = data.map((wishlist_event: { event_id: string }) => wishlist_event.event_id);
 
-    res.status(200).json(eventIds);
+    return res.status(200).json(eventIds);
 });
 
 router.get('/swipe_mode_choices', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {

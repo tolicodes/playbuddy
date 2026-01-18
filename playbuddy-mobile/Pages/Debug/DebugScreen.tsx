@@ -10,13 +10,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { buildRecommendations, type RecommendationPick } from '../Calendar/hooks/recommendations';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { useFetchActiveEventPopups, useFetchEventPopups } from '../../Common/db-axios/useEventPopups';
 import { navigateToTab } from '../../Common/Nav/navigationHelpers';
 import type { NavStack } from '../../Common/Nav/NavStackType';
-import type { EventPopup } from '../../Common/types/commonTypes';
+import type { Event, EventPopup } from '../../Common/types/commonTypes';
 import { ADMIN_EMAILS } from '../../config';
+import { TZ } from '../Calendar/ListView/calendarNavUtils';
 import {
     getForcedPopupId,
     getLatestPopupShown,
@@ -187,8 +189,8 @@ const AccordionSection = ({ title, subtitle, expanded, onToggle, children }: Acc
 export const DebugScreen = () => {
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
-    const { authUserId, userProfile } = useUserContext();
-    const { allEvents } = useCalendarContext();
+    const { authUserId, userProfile, currentDeepLink } = useUserContext();
+    const { allEvents, wishlistEvents, wishlistEntryMap } = useCalendarContext();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const { data: publishedEventPopups = [], isLoading: isLoadingPublishedEventPopups, error: publishedEventPopupsError } =
@@ -196,6 +198,7 @@ export const DebugScreen = () => {
     const { data: activeEventPopups = [], isLoading: isLoadingActiveEventPopups } = useFetchActiveEventPopups();
     const [notificationExpanded, setNotificationExpanded] = useState(true);
     const [popupExpanded, setPopupExpanded] = useState(true);
+    const [recommendationsExpanded, setRecommendationsExpanded] = useState(false);
     const [debugStatus, setDebugStatus] = useState<string | null>(null);
     const [notificationDebugLines, setNotificationDebugLines] = useState<string[]>([]);
     const [popupDebugLines, setPopupDebugLines] = useState<string[]>([]);
@@ -229,6 +232,57 @@ export const DebugScreen = () => {
         const followIds = (follows?.organizer || []).map((id) => id.toString());
         return new Set([...followIds, ...organizerIdsFromCommunities]);
     }, [follows?.organizer, organizerIdsFromCommunities]);
+
+    const getPromoCodesForEvent = useCallback((event: Event) => {
+        const deepLinkPromo =
+            currentDeepLink?.type !== "generic" && currentDeepLink?.featured_event?.id === event.id
+                ? currentDeepLink.featured_promo_code
+                : null;
+        const promoCandidates = [
+            ...(deepLinkPromo ? [deepLinkPromo] : []),
+            ...(event.promo_codes ?? []).filter((code) => code.scope === "event"),
+            ...(event.organizer?.promo_codes ?? []).filter((code) => code.scope === "organizer"),
+        ];
+        const promoCodes: typeof promoCandidates = [];
+        const seenPromoCodes = new Set<string>();
+        for (const code of promoCandidates) {
+            if (!code) continue;
+            const key = code.id || code.promo_code;
+            if (!key || seenPromoCodes.has(key)) continue;
+            seenPromoCodes.add(key);
+            promoCodes.push(code);
+            if (promoCodes.length === 2) break;
+        }
+        return promoCodes;
+    }, [currentDeepLink]);
+
+    const recommendationResult = useMemo(() => {
+        const hasPromo = (event: Event) => getPromoCodesForEvent(event).length > 0;
+        return buildRecommendations({
+            sourceEvents: allEvents,
+            wishlistEvents,
+            wishlistEntryMap,
+            followedOrganizerIds,
+            tz: TZ,
+            hasPromo,
+        });
+    }, [
+        allEvents,
+        followedOrganizerIds,
+        getPromoCodesForEvent,
+        wishlistEntryMap,
+        wishlistEvents,
+    ]);
+
+    const formatRecommendationPick = (pick: RecommendationPick) => {
+        const promoLabel = pick.promo ? "promo" : "no promo";
+        const reasonLabel = pick.reason.replace("-", " ");
+        const addedAt = pick.wishlistCreatedAt ? ` • added ${pick.wishlistCreatedAt}` : "";
+        const startsAt = pick.event.start_date ? ` • starts ${pick.event.start_date}` : "";
+        const name = pick.event.name || `Event ${pick.event.id}`;
+        const organizer = pick.event.organizer?.name ? ` • ${pick.event.organizer.name}` : "";
+        return `${promoLabel} • ${reasonLabel} • ${name}${organizer}${addedAt}${startsAt}`;
+    };
 
     const refreshNotificationDebugInfo = useCallback(
         async (context?: string) => {
@@ -808,6 +862,76 @@ export const DebugScreen = () => {
                                             </Text>
                                         </View>
                                     ))
+                                )}
+                            </View>
+                        </AccordionSection>
+                    )}
+
+                    {canAccess && (
+                        <AccordionSection
+                            title="Recommendations"
+                            subtitle="My Calendar picks vs followed organizers"
+                            expanded={recommendationsExpanded}
+                            onToggle={() => setRecommendationsExpanded((prev) => !prev)}
+                        >
+                            <Text style={styles.debugMeta}>
+                                My Calendar (wishlist) pool: {recommendationResult.debug.calendar.poolCount} • promo{' '}
+                                {recommendationResult.debug.calendar.promoPoolCount}
+                            </Text>
+                            <Text style={styles.debugMeta}>
+                                My Calendar promo required:{' '}
+                                {recommendationResult.debug.calendar.promoRequired ? 'yes' : 'no'} • satisfied:{' '}
+                                {recommendationResult.debug.calendar.promoSatisfied ? 'yes' : 'no'}
+                            </Text>
+                            <Text style={styles.debugMeta}>
+                                Organizer pool: {recommendationResult.debug.organizers.poolCount} • promo{' '}
+                                {recommendationResult.debug.organizers.promoPoolCount}
+                            </Text>
+                            <Text style={styles.debugMeta}>
+                                Organizer promo required:{' '}
+                                {recommendationResult.debug.organizers.promoRequired ? 'yes' : 'no'} • satisfied:{' '}
+                                {recommendationResult.debug.organizers.promoSatisfied ? 'yes' : 'no'}
+                            </Text>
+                            <Text style={styles.debugMeta}>
+                                Dedupe excluded ids:{' '}
+                                {recommendationResult.debug.dedupe.excludedIds.length
+                                    ? recommendationResult.debug.dedupe.excludedIds.join(', ')
+                                    : 'none'}
+                            </Text>
+                            <View style={{ marginTop: spacing.sm, gap: spacing.xxs }}>
+                                <Text style={styles.debugMeta}>My Calendar (wishlist) picks:</Text>
+                                {recommendationResult.debug.calendar.picks.length ? (
+                                    recommendationResult.debug.calendar.picks.map((pick) => (
+                                        <Text key={`rec-calendar-${pick.event.id}`} style={styles.debugMeta}>
+                                            {formatRecommendationPick(pick)}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.debugMeta}>No calendar picks.</Text>
+                                )}
+                            </View>
+                            <View style={{ marginTop: spacing.sm, gap: spacing.xxs }}>
+                                <Text style={styles.debugMeta}>Organizer picks:</Text>
+                                {recommendationResult.debug.organizers.picks.length ? (
+                                    recommendationResult.debug.organizers.picks.map((pick) => (
+                                        <Text key={`rec-org-${pick.event.id}`} style={styles.debugMeta}>
+                                            {formatRecommendationPick(pick)}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.debugMeta}>No organizer picks.</Text>
+                                )}
+                            </View>
+                            <View style={{ marginTop: spacing.sm, gap: spacing.xxs }}>
+                                <Text style={styles.debugMeta}>Final order (promo first):</Text>
+                                {recommendationResult.debug.final.picks.length ? (
+                                    recommendationResult.debug.final.picks.map((pick, index) => (
+                                        <Text key={`rec-final-${pick.event.id}-${index}`} style={styles.debugMeta}>
+                                            {index + 1}. {formatRecommendationPick(pick)}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.debugMeta}>No recommendations selected.</Text>
                                 )}
                             </View>
                         </AccordionSection>

@@ -24,6 +24,12 @@ import { useFetchFollows } from "../../../Common/db-axios/useFollows";
 import { useCommonContext } from "../../../Common/hooks/CommonContext";
 import { getAvailableOrganizers } from "../hooks/calendarUtils";
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from "../hooks/eventHelpers";
+import { useCalendarContext } from "../hooks/CalendarContext";
+import {
+    buildRecommendations,
+    RECOMMENDATION_WINDOW_END_DAYS,
+    RECOMMENDATION_WINDOW_START_DAYS,
+} from "../hooks/recommendations";
 import { useGroupedEvents } from "../hooks/useGroupedEvents";
 import { useUserContext } from "../../Auth/hooks/UserContext";
 import { FiltersView, FilterState } from "./Filters/FiltersView";
@@ -88,8 +94,6 @@ const DATE_COACH_MAX_SHOWS = 3;
 const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const COMMUNITY_BANNER_HIDDEN_KEY = "communityBannerHidden";
 const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
-const RECOMMENDATION_WINDOW_START_DAYS = 2;
-const RECOMMENDATION_WINDOW_END_DAYS = 10;
 const EMPTY_EVENTS: EventWithMetadata[] = [];
 
 const EventCalendarView: React.FC<Props> = ({
@@ -117,6 +121,7 @@ const EventCalendarView: React.FC<Props> = ({
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const { myCommunities } = useCommonContext();
+    const { wishlistEvents, wishlistEntryMap } = useCalendarContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const { data: fetchedEventsData, isLoading: isLoadingEvents } = useFetchEvents({
         includeApprovalPending: isAdmin,
@@ -567,82 +572,27 @@ const EventCalendarView: React.FC<Props> = ({
         });
     }, [sourceEvents, searchQuery, filters, quickFilter]);
 
-    const recommendations = useMemo(() => {
-        if (!isMainEventsView || !sourceEvents || followedOrganizerIds.size === 0) {
-            return [] as EventWithMetadata[];
-        }
-
-        const now = moment().tz(TZ).startOf("day");
-        const windowStart = moment(now).add(RECOMMENDATION_WINDOW_START_DAYS, "days").startOf("day");
-        const windowEnd = moment(now).add(RECOMMENDATION_WINDOW_END_DAYS, "days").endOf("day");
-
-        const isWithinRecommendationWindow = (event: EventWithMetadata) => {
-            const eventStart = moment.tz(event.start_date, TZ);
-            if (!eventStart.isValid()) return false;
-            return eventStart.isBetween(windowStart, windowEnd, undefined, "[]");
-        };
-
-        const organizerEvents = sourceEvents.filter((event) => {
-            const organizerId = event.organizer?.id?.toString();
-            if (!organizerId || !followedOrganizerIds.has(organizerId)) return false;
-            return isWithinRecommendationWindow(event);
-        });
-
-        const eligible = organizerEvents;
-
+    const recommendationResult = useMemo(() => {
         const hasPromo = (event: EventWithMetadata) => getPromoCodesForEvent(event).length > 0;
+        return buildRecommendations({
+            sourceEvents: sourceEvents ?? [],
+            wishlistEvents,
+            wishlistEntryMap,
+            followedOrganizerIds,
+            tz: TZ,
+            hasPromo,
+            windowStartDays: RECOMMENDATION_WINDOW_START_DAYS,
+            windowEndDays: RECOMMENDATION_WINDOW_END_DAYS,
+        });
+    }, [
+        currentDeepLink,
+        followedOrganizerIds,
+        sourceEvents,
+        wishlistEvents,
+        wishlistEntryMap,
+    ]);
 
-        const shuffle = <T,>(items: T[]) => {
-            const shuffled = [...items];
-            for (let i = shuffled.length - 1; i > 0; i -= 1) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-            }
-            return shuffled;
-        };
-
-        const promoEvents = organizerEvents.filter(hasPromo);
-        const pickedPromo = shuffle(promoEvents).slice(0, 2);
-        const pickedPromoIds = new Set(pickedPromo.map((event) => event.id));
-        const promoFillNeeded = Math.max(0, 2 - pickedPromo.length);
-        const promoFillPool = sourceEvents.filter(
-            (event) => isWithinRecommendationWindow(event) && hasPromo(event)
-        );
-        const promoFill =
-            promoFillNeeded > 0
-                ? shuffle(promoFillPool.filter((event) => !pickedPromoIds.has(event.id))).slice(
-                    0,
-                    promoFillNeeded
-                )
-                : [];
-        const selectedPromo = [...pickedPromo, ...promoFill];
-
-        const pickedIds = new Set(selectedPromo.map((event) => event.id));
-        const nonPromoRemaining = eligible.filter(
-            (event) => !pickedIds.has(event.id) && !hasPromo(event)
-        );
-        const fallbackRemaining = eligible.filter((event) => !pickedIds.has(event.id));
-        const initialPicks = shuffle(nonPromoRemaining).slice(0, 3);
-        const randomPickIds = new Set(initialPicks.map((event) => event.id));
-        const remainingSlots = 3 - initialPicks.length;
-        const fillerPicks =
-            remainingSlots > 0
-                ? shuffle(fallbackRemaining.filter((event) => !randomPickIds.has(event.id))).slice(
-                    0,
-                    remainingSlots
-                )
-                : [];
-        const randomPicks = [...initialPicks, ...fillerPicks];
-
-        const selections = [...selectedPromo, ...randomPicks];
-        if (selections.length <= 1) return selections;
-
-        const promoPicks = selections.filter(hasPromo);
-        if (promoPicks.length === 0) return selections;
-
-        const nonPromoPicks = selections.filter((event) => !hasPromo(event));
-        return [...promoPicks, ...nonPromoPicks];
-    }, [currentDeepLink, followedOrganizerIds, isMainEventsView, sourceEvents]);
+    const recommendations = isMainEventsView ? recommendationResult.selections : [];
 
     const selectedQuickFilterId = quickFilter
         ? quickFilter.type === 'category'
@@ -1142,10 +1092,11 @@ const EventCalendarView: React.FC<Props> = ({
 
     const shouldShowCommunityBanner =
         isMainEventsView && !communityBannerHidden && !hasFollowedOrganizers;
+    const hasRecommendationSources = hasFollowedOrganizers || wishlistEvents.length > 0;
     const shouldShowRecommendations =
-        isMainEventsView && hasFollowedOrganizers && recommendationsHidden !== true;
+        isMainEventsView && hasRecommendationSources && recommendationsHidden !== true;
     const shouldShowHiddenRecommendations =
-        isMainEventsView && hasFollowedOrganizers && recommendationsHidden === true && !shouldShowCommunityBanner;
+        isMainEventsView && hasRecommendationSources && recommendationsHidden === true && !shouldShowCommunityBanner;
     const shouldShowListHeader =
         shouldShowCommunityBanner || shouldShowRecommendations || shouldShowHiddenRecommendations;
     const hasListHeader = shouldShowListHeader;
@@ -1156,6 +1107,7 @@ const EventCalendarView: React.FC<Props> = ({
         console.log("[recommendations] state", {
             hasFollowedOrganizers,
             followedOrganizerCount: followedOrganizerIds.size,
+            calendarEventCount: wishlistEvents.length,
             recommendationsHidden,
             recommendationsCount: recommendations.length,
         });
@@ -1163,6 +1115,7 @@ const EventCalendarView: React.FC<Props> = ({
         hasFollowedOrganizers,
         followedOrganizerIds.size,
         isMainEventsView,
+        wishlistEvents,
         recommendations.length,
         recommendationsHidden,
     ]);
