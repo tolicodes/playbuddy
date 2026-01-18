@@ -39,6 +39,7 @@ export function EventPopupModal({ visible, popup, onDismiss, onPrimaryAction }: 
     const { height: windowHeight } = useWindowDimensions();
     const maxContentHeight = Math.min(windowHeight * 0.5, 420);
     const event = popup.event;
+    const hasEvent = !!(popup.event || popup.event_id);
     const eventDate = event ? formatDate(event, true) : '';
     const eventLocation = event ? (event.neighborhood || event.city || event.location || '').trim() : '';
     const organizerName = event?.organizer?.name || 'Organizer';
@@ -75,50 +76,54 @@ export function EventPopupModal({ visible, popup, onDismiss, onPrimaryAction }: 
                             </View>
                         ) : null}
 
-                        <TouchableOpacity style={styles.eventCard} onPress={onPrimaryAction} activeOpacity={0.9}>
-                            <View style={styles.eventImageWrap}>
-                                {imageUrl ? (
-                                    <Image
-                                        source={{ uri: imageUrl }}
-                                        style={styles.eventImage}
-                                        contentFit="cover"
-                                        cachePolicy="disk"
-                                        allowDownscaling
-                                        decodeFormat="rgb"
+                        {hasEvent && (
+                            <TouchableOpacity style={styles.eventCard} onPress={onPrimaryAction} activeOpacity={0.9}>
+                                <View style={styles.eventImageWrap}>
+                                    {imageUrl ? (
+                                        <Image
+                                            source={{ uri: imageUrl }}
+                                            style={styles.eventImage}
+                                            contentFit="cover"
+                                            cachePolicy="disk"
+                                            allowDownscaling
+                                            decodeFormat="rgb"
+                                        />
+                                    ) : (
+                                        <View style={styles.imageFallback}>
+                                            <FontAwesome5 name="calendar-alt" size={28} color={colors.textOnDarkMuted} />
+                                        </View>
+                                    )}
+                                    <LinearGradient
+                                        colors={[colors.overlayNone, colors.overlayHero]}
+                                        style={styles.imageGradient}
                                     />
-                                ) : (
-                                    <View style={styles.imageFallback}>
-                                        <FontAwesome5 name="calendar-alt" size={28} color={colors.textOnDarkMuted} />
-                                    </View>
-                                )}
-                                <LinearGradient
-                                    colors={[colors.overlayNone, colors.overlayHero]}
-                                    style={styles.imageGradient}
-                                />
-                            </View>
-                            <View style={styles.eventBody}>
-                                <Text style={styles.eventTitle} numberOfLines={2}>
-                                    {eventTitle}
-                                </Text>
-                                <Text style={styles.eventOrganizer} numberOfLines={1}>
-                                    {organizerName}
-                                </Text>
-                                {!!eventMeta && (
-                                    <Text style={styles.eventMeta} numberOfLines={2}>
-                                        {eventMeta}
+                                </View>
+                                <View style={styles.eventBody}>
+                                    <Text style={styles.eventTitle} numberOfLines={2}>
+                                        {eventTitle}
                                     </Text>
-                                )}
-                            </View>
-                        </TouchableOpacity>
+                                    <Text style={styles.eventOrganizer} numberOfLines={1}>
+                                        {organizerName}
+                                    </Text>
+                                    {!!eventMeta && (
+                                        <Text style={styles.eventMeta} numberOfLines={2}>
+                                            {eventMeta}
+                                        </Text>
+                                    )}
+                                </View>
+                            </TouchableOpacity>
+                        )}
                     </ScrollView>
 
                     <View style={styles.footer}>
                         <TouchableOpacity style={styles.primaryButton} onPress={onPrimaryAction}>
-                            <Text style={styles.primaryButtonText}>Check it out</Text>
+                            <Text style={styles.primaryButtonText}>{hasEvent ? 'Check it out' : 'Got it'}</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.secondaryButton} onPress={onDismiss}>
-                            <Text style={styles.secondaryButtonText}>Not now</Text>
-                        </TouchableOpacity>
+                        {hasEvent && (
+                            <TouchableOpacity style={styles.secondaryButton} onPress={onDismiss}>
+                                <Text style={styles.secondaryButtonText}>Not now</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 </View>
             </View>

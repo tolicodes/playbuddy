@@ -75,8 +75,8 @@ const QUICK_ACTIONS: QuickAction[] = [
         iconColor: colors.textGold,
     },
     {
-        title: 'Event Popups',
-        subtitle: 'Launch special event messages',
+        title: 'Message Popups',
+        subtitle: 'Launch special messages',
         icon: 'bullhorn',
         route: 'Event Popups Admin',
         tone: colors.surfaceLavenderLight,

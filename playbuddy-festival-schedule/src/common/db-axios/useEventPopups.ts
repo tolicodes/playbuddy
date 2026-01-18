@@ -8,6 +8,7 @@ type FetchEventPopupsOptions = {
 };
 
 type UpdateEventPopupInput = Partial<Omit<EventPopupInput, 'id'>> & { id: string };
+type ResendEventPopupInput = { id: string };
 
 export const useFetchEventPopups = (options: FetchEventPopupsOptions = {}) => {
     const { status } = options;
@@ -55,6 +56,21 @@ export const useUpdateEventPopup = () => {
     return useMutation<EventPopup, unknown, UpdateEventPopupInput>({
         mutationFn: async ({ id, ...payload }: UpdateEventPopupInput) => {
             const response = await axios.patch<EventPopup>(`${API_BASE_URL}/event_popups/${id}`, payload);
+            return response.data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['event_popups'] });
+            qc.invalidateQueries({ queryKey: ['event_popups', 'active'] });
+        },
+    });
+};
+
+export const useResendEventPopup = () => {
+    const qc = useQueryClient();
+
+    return useMutation<EventPopup, unknown, ResendEventPopupInput>({
+        mutationFn: async ({ id }: ResendEventPopupInput) => {
+            const response = await axios.post<EventPopup>(`${API_BASE_URL}/event_popups/${id}/resend`);
             return response.data;
         },
         onSuccess: () => {

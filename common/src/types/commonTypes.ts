@@ -1059,7 +1059,7 @@ export type EventPopupStatus = 'draft' | 'published' | 'stopped';
 
 export interface EventPopup {
     id: string;
-    event_id: number;
+    event_id?: number | null;
     title: string;
     body_markdown: string;
     status: EventPopupStatus;
@@ -1073,7 +1073,7 @@ export interface EventPopup {
 
 export interface EventPopupInput {
     id?: string;
-    event_id: number;
+    event_id?: number | null;
     title: string;
     body_markdown: string;
     status?: EventPopupStatus;

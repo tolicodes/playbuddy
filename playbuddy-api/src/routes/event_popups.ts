@@ -22,10 +22,12 @@ const normalizeStatus = (value: unknown): EventPopupStatus | undefined => {
     return VALID_STATUSES.has(value as EventPopupStatus) ? (value as EventPopupStatus) : undefined;
 };
 
-const parseEventId = (value: unknown): number | null => {
-    if (value === undefined || value === null || value === '') return null;
+const parseEventId = (value: unknown) => {
+    if (value === undefined) return { value: undefined as number | null | undefined, error: false };
+    if (value === null || value === '') return { value: null as number | null, error: false };
     const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
+    if (!Number.isFinite(parsed)) return { value: null as number | null, error: true };
+    return { value: parsed, error: false };
 };
 
 const parseOptionalDate = (value: unknown) => {
@@ -40,8 +42,9 @@ const attachEvents = async (popups: any[]) => {
     const eventIds = Array.from(new Set(
         popups
             .map((popup) => popup.event_id)
-            .filter((id) => Number.isFinite(Number(id)))
+            .filter((id) => id !== null && id !== undefined && id !== '')
             .map((id) => Number(id))
+            .filter((id) => Number.isFinite(id))
     ));
 
     if (eventIds.length === 0) return popups;
@@ -62,7 +65,7 @@ const attachEvents = async (popups: any[]) => {
 
     return popups.map((popup) => ({
         ...popup,
-        event: eventMap.get(Number(popup.event_id)) ?? null,
+        event: popup.event_id ? eventMap.get(Number(popup.event_id)) ?? null : null,
     }));
 };
 
@@ -111,7 +114,7 @@ router.get('/', authenticateAdminRequest, asyncHandler(async (req: Authenticated
 
 router.post('/', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const body = req.body || {};
-    const eventId = parseEventId(body.event_id ?? body.eventId);
+    const eventIdInput = parseEventId(body.event_id ?? body.eventId);
     const title = typeof body.title === 'string' ? body.title.trim() : '';
     const bodyMarkdown = typeof body.body_markdown === 'string'
         ? body.body_markdown.trim()
@@ -121,8 +124,8 @@ router.post('/', authenticateAdminRequest, asyncHandler(async (req: Authenticate
     const publishedAtInput = parseOptionalDate(body.published_at ?? body.publishedAt);
     const expiresAtInput = parseOptionalDate(body.expires_at ?? body.expiresAt);
 
-    if (!eventId) {
-        res.status(400).json({ error: 'event_id is required' });
+    if (eventIdInput.error) {
+        res.status(400).json({ error: 'event_id must be a number' });
         return;
     }
 
@@ -150,12 +153,15 @@ router.post('/', authenticateAdminRequest, asyncHandler(async (req: Authenticate
     const now = new Date().toISOString();
 
     const payload: Record<string, any> = {
-        event_id: eventId,
         title,
         body_markdown: bodyMarkdown,
         status,
         updated_at: now,
     };
+
+    if (eventIdInput.value !== undefined) {
+        payload.event_id = eventIdInput.value;
+    }
 
     if (status === 'published') {
         payload.published_at = publishedAtInput.value ?? now;
@@ -212,12 +218,12 @@ router.patch('/:id', authenticateAdminRequest, asyncHandler(async (req: Authenti
     }
 
     if (body.event_id !== undefined || body.eventId !== undefined) {
-        const eventId = parseEventId(body.event_id ?? body.eventId);
-        if (!eventId) {
+        const eventIdInput = parseEventId(body.event_id ?? body.eventId);
+        if (eventIdInput.error) {
             res.status(400).json({ error: 'event_id must be a number' });
             return;
         }
-        updates.event_id = eventId;
+        updates.event_id = eventIdInput.value ?? null;
     }
 
     if (body.published_at !== undefined || body.publishedAt !== undefined) {
@@ -279,6 +285,53 @@ router.patch('/:id', authenticateAdminRequest, asyncHandler(async (req: Authenti
 
     const hydrated = await attachEvents([data]);
     res.json(hydrated[0] ?? data);
+}));
+
+router.post('/:id/resend', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { id } = req.params;
+    const { data: popup, error } = await supabaseClient
+        .from('event_popups')
+        .select(POPUP_SELECT)
+        .eq('id', id)
+        .single();
+
+    if (error || !popup) {
+        throw new Error(`Failed to fetch event popup: ${error?.message ?? 'not found'}`);
+    }
+
+    const now = new Date().toISOString();
+    const expiresAtInput = parseOptionalDate(popup.expires_at);
+    let expiresAt = expiresAtInput.error ? null : expiresAtInput.value ?? null;
+    if (expiresAt) {
+        const expiresAtMs = Date.parse(expiresAt);
+        if (!Number.isNaN(expiresAtMs) && expiresAtMs <= Date.now()) {
+            expiresAt = null;
+        }
+    }
+
+    const payload: Record<string, any> = {
+        event_id: popup.event_id ?? null,
+        title: popup.title,
+        body_markdown: popup.body_markdown,
+        status: 'published',
+        published_at: now,
+        expires_at: expiresAt,
+        stopped_at: null,
+        updated_at: now,
+    };
+
+    const { data: created, error: insertError } = await supabaseClient
+        .from('event_popups')
+        .insert(payload)
+        .select(POPUP_SELECT)
+        .single();
+
+    if (insertError) {
+        throw new Error(`Failed to resend event popup: ${insertError.message}`);
+    }
+
+    const hydrated = await attachEvents([created]);
+    res.json(hydrated[0] ?? created);
 }));
 
 export default router;

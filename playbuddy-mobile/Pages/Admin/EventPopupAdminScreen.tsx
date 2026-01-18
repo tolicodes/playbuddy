@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     View,
     Text,
@@ -12,11 +12,14 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
 
+import { EventPopupModal } from '../EventPopupModal';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import {
     useCreateEventPopup,
     useFetchEventPopups,
+    useResendEventPopup,
     useUpdateEventPopup,
 } from '../../Common/db-axios/useEventPopups';
 import type { Event, EventPopup } from '../../Common/types/commonTypes';
@@ -53,6 +56,7 @@ const formatDateTime = (value?: string | null) => {
 };
 
 export const EventPopupAdminScreen = () => {
+    const navigation = useNavigation<NavigationProp<ParamListBase>>();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
@@ -63,6 +67,7 @@ export const EventPopupAdminScreen = () => {
     });
     const { data: popups = [], isLoading: loadingPopups } = useFetchEventPopups();
     const createPopup = useCreateEventPopup();
+    const resendPopup = useResendEventPopup();
     const updatePopup = useUpdateEventPopup();
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -72,6 +77,10 @@ export const EventPopupAdminScreen = () => {
     const [publishNow, setPublishNow] = useState(true);
     const [publishAtInput, setPublishAtInput] = useState('');
     const [expiresAtInput, setExpiresAtInput] = useState('');
+    const [isEventSearchFocused, setIsEventSearchFocused] = useState(false);
+    const [previewPopup, setPreviewPopup] = useState<EventPopup | null>(null);
+    const eventSearchBlurTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const canPreview = title.trim().length > 0 && bodyMarkdown.trim().length > 0;
 
     const filteredEvents = useMemo(() => {
         const needle = searchQuery.trim().toLowerCase();
@@ -112,10 +121,6 @@ export const EventPopupAdminScreen = () => {
     };
 
     const handleCreate = async () => {
-        if (!selectedEvent) {
-            Alert.alert('Select an event', 'Pick the event this popup should link to.');
-            return;
-        }
         if (!title.trim()) {
             Alert.alert('Add a title', 'Give the popup a title.');
             return;
@@ -138,7 +143,7 @@ export const EventPopupAdminScreen = () => {
 
         try {
             await createPopup.mutateAsync({
-                event_id: selectedEvent.id,
+                event_id: selectedEvent?.id,
                 title: title.trim(),
                 body_markdown: bodyMarkdown.trim(),
                 status: publishNow ? 'published' : 'draft',
@@ -158,6 +163,84 @@ export const EventPopupAdminScreen = () => {
             Alert.alert('Update failed', 'Could not update popup status.');
         }
     };
+
+    const handleResendPopup = useCallback((popup: EventPopup) => {
+        Alert.alert(
+            'Re-send message?',
+            'This will re-send the popup to all devices.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Re-send',
+                    style: 'destructive',
+                    onPress: () => {
+                        void (async () => {
+                            try {
+                                await resendPopup.mutateAsync({ id: popup.id });
+                                Alert.alert('Re-sent', 'The popup will reappear on all devices.');
+                            } catch {
+                                Alert.alert('Re-send failed', 'Unable to resend this popup.');
+                            }
+                        })();
+                    },
+                },
+            ],
+            { cancelable: true }
+        );
+    }, [resendPopup]);
+
+    useEffect(() => () => {
+        if (eventSearchBlurTimeoutRef.current) {
+            clearTimeout(eventSearchBlurTimeoutRef.current);
+        }
+    }, []);
+
+    const handleEventSearchFocus = useCallback(() => {
+        if (eventSearchBlurTimeoutRef.current) {
+            clearTimeout(eventSearchBlurTimeoutRef.current);
+            eventSearchBlurTimeoutRef.current = null;
+        }
+        setIsEventSearchFocused(true);
+    }, []);
+
+    const handleEventSearchBlur = useCallback(() => {
+        eventSearchBlurTimeoutRef.current = setTimeout(() => {
+            setIsEventSearchFocused(false);
+        }, 120);
+    }, []);
+
+    const showPopupPreview = useCallback((popup: EventPopup) => {
+        setPreviewPopup(popup);
+    }, []);
+
+    const handlePreviewDraft = useCallback(() => {
+        const nowIso = new Date().toISOString();
+        const previewPopup: EventPopup = {
+            id: `preview-${Date.now()}`,
+            event_id: selectedEvent?.id ?? null,
+            title: title.trim(),
+            body_markdown: bodyMarkdown.trim(),
+            status: publishNow ? 'published' : 'draft',
+            created_at: nowIso,
+            updated_at: nowIso,
+            published_at: publishNow ? nowIso : null,
+            expires_at: null,
+            stopped_at: null,
+            event: selectedEvent ?? undefined,
+        };
+
+        showPopupPreview(previewPopup);
+    }, [bodyMarkdown, publishNow, selectedEvent, showPopupPreview, title]);
+
+    const handlePreviewPrimaryAction = useCallback(() => {
+        if (previewPopup?.event) {
+            navigation.navigate('Event Details' as never, {
+                selectedEvent: previewPopup.event,
+                title: previewPopup.event.name,
+            } as never);
+        }
+        setPreviewPopup(null);
+    }, [navigation, previewPopup]);
 
     if (!isAdmin) {
         return (
@@ -183,17 +266,17 @@ export const EventPopupAdminScreen = () => {
                 end={{ x: 1, y: 1 }}
                 style={styles.heroCard}
             >
-                <Text style={styles.heroKicker}>Event Popups</Text>
-                <Text style={styles.heroTitle}>Special event callouts</Text>
+                <Text style={styles.heroKicker}>Message Popups</Text>
+                <Text style={styles.heroTitle}>Special messages</Text>
                 <Text style={styles.heroSubtitle}>
-                    Craft a beautiful popup tied to an event, then publish it when you want it to land.
+                    Craft a beautiful popup with an optional event link, then publish it when you want it to land.
                 </Text>
             </LinearGradient>
 
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Create popup</Text>
                 <View style={styles.card}>
-                    <Text style={styles.fieldLabel}>Event</Text>
+                    <Text style={styles.fieldLabel}>Event (optional)</Text>
                     <TextInput
                         style={styles.input}
                         value={searchQuery}
@@ -203,29 +286,34 @@ export const EventPopupAdminScreen = () => {
                                 setSelectedEvent(null);
                             }
                         }}
+                        onFocus={handleEventSearchFocus}
+                        onBlur={handleEventSearchBlur}
                         placeholder="Search events"
                         placeholderTextColor={colors.textSubtle}
                     />
-                    {loadingEvents ? (
-                        <ActivityIndicator color={colors.brandIndigo} style={styles.loader} />
-                    ) : (
-                        <View style={styles.resultsList}>
-                            {filteredEvents.map((event) => (
-                                <TouchableOpacity
-                                    key={event.id}
-                                    style={styles.resultRow}
-                                    onPress={() => {
-                                        setSelectedEvent(event);
-                                        setSearchQuery(event.name || '');
-                                    }}
-                                >
-                                    <Text style={styles.resultTitle} numberOfLines={2}>
-                                        {formatEventLabel(event)}
-                                    </Text>
-                                    <Ionicons name="chevron-forward" size={16} color={colors.textSubtle} />
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                    {isEventSearchFocused && (
+                        loadingEvents ? (
+                            <ActivityIndicator color={colors.brandIndigo} style={styles.loader} />
+                        ) : (
+                            <View style={styles.resultsList}>
+                                {filteredEvents.map((event) => (
+                                    <TouchableOpacity
+                                        key={event.id}
+                                        style={styles.resultRow}
+                                        onPress={() => {
+                                            setSelectedEvent(event);
+                                            setSearchQuery(event.name || '');
+                                            setIsEventSearchFocused(false);
+                                        }}
+                                    >
+                                        <Text style={styles.resultTitle} numberOfLines={2}>
+                                            {formatEventLabel(event)}
+                                        </Text>
+                                        <Ionicons name="chevron-forward" size={16} color={colors.textSubtle} />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )
                     )}
 
                     {selectedEvent && (
@@ -240,7 +328,7 @@ export const EventPopupAdminScreen = () => {
                                     setSearchQuery('');
                                 }}
                             >
-                                <Text style={styles.clearButtonText}>Change event</Text>
+                                <Text style={styles.clearButtonText}>Remove event</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -297,13 +385,20 @@ export const EventPopupAdminScreen = () => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.primaryButton, (!selectedEvent || createPopup.isPending) && styles.primaryButtonDisabled]}
+                        style={[styles.primaryButton, createPopup.isPending && styles.primaryButtonDisabled]}
                         onPress={handleCreate}
-                        disabled={!selectedEvent || createPopup.isPending}
+                        disabled={createPopup.isPending}
                     >
                         <Text style={styles.primaryButtonText}>
                             {createPopup.isPending ? 'Saving…' : 'Create popup'}
                         </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.secondaryButton, !canPreview && styles.secondaryButtonDisabled]}
+                        onPress={handlePreviewDraft}
+                        disabled={!canPreview}
+                    >
+                        <Text style={styles.secondaryButtonText}>Preview popup</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -323,7 +418,7 @@ export const EventPopupAdminScreen = () => {
                                             <Text style={[styles.statusText, { color: tone.text }]}>{popup.status}</Text>
                                         </View>
                                         <Text style={styles.popupEvent} numberOfLines={2}>
-                                            {popup.event?.name || popup.event_id}
+                                            {popup.event?.name || (popup.event_id ? `Event #${popup.event_id}` : 'Message only')}
                                         </Text>
                                     </View>
                                     <Text style={styles.popupTitle}>{popup.title}</Text>
@@ -331,6 +426,21 @@ export const EventPopupAdminScreen = () => {
                                     <Text style={styles.popupMeta}>Expires: {formatDateTime(popup.expires_at)}</Text>
                                     <Text style={styles.popupMeta}>Stopped: {formatDateTime(popup.stopped_at)}</Text>
                                     <View style={styles.popupActions}>
+                                        <TouchableOpacity
+                                            style={styles.actionButton}
+                                            onPress={() => showPopupPreview(popup)}
+                                        >
+                                            <Text style={styles.actionButtonText}>Preview</Text>
+                                        </TouchableOpacity>
+                                        {(popup.status === 'published' || popup.status === 'stopped') && (
+                                            <TouchableOpacity
+                                                style={styles.actionButton}
+                                                onPress={() => handleResendPopup(popup)}
+                                                disabled={resendPopup.isPending}
+                                            >
+                                                <Text style={styles.actionButtonText}>Re-send</Text>
+                                            </TouchableOpacity>
+                                        )}
                                         {popup.status === 'draft' && (
                                             <TouchableOpacity
                                                 style={styles.actionButton}
@@ -365,6 +475,12 @@ export const EventPopupAdminScreen = () => {
                     </View>
                 )}
             </View>
+            <EventPopupModal
+                visible={!!previewPopup}
+                popup={previewPopup}
+                onDismiss={() => setPreviewPopup(null)}
+                onPrimaryAction={handlePreviewPrimaryAction}
+            />
         </ScrollView>
     );
 };
@@ -554,6 +670,23 @@ const styles = StyleSheet.create({
     primaryButtonText: {
         color: colors.white,
         fontSize: fontSizes.lg,
+        fontWeight: '700',
+        fontFamily: fontFamilies.body,
+    },
+    secondaryButton: {
+        borderRadius: radius.mdPlus,
+        paddingVertical: spacing.md,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+        backgroundColor: colors.surfaceWhiteOpaque,
+    },
+    secondaryButtonDisabled: {
+        opacity: 0.6,
+    },
+    secondaryButtonText: {
+        color: colors.textSecondary,
+        fontSize: fontSizes.base,
         fontWeight: '700',
         fontFamily: fontFamilies.body,
     },

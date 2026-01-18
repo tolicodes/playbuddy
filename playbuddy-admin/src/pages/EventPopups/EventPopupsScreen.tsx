@@ -20,6 +20,7 @@ import { useFetchEvents } from '../../common/db-axios/useEvents';
 import {
     useCreateEventPopup,
     useFetchEventPopups,
+    useResendEventPopup,
     useUpdateEventPopup,
 } from '../../common/db-axios/useEventPopups';
 import type { Event, EventPopup } from '../../common/types/commonTypes';
@@ -53,6 +54,7 @@ export default function EventPopupsScreen() {
     const { data: popups = [], isLoading: loadingPopups, error: popupsError } = useFetchEventPopups();
 
     const createPopup = useCreateEventPopup();
+    const resendPopup = useResendEventPopup();
     const updatePopup = useUpdateEventPopup();
 
     const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -81,7 +83,6 @@ export default function EventPopupsScreen() {
     };
 
     const handleCreate = async () => {
-        if (!selectedEvent) return;
         const publishedAtInput = parseDateInput(publishAt);
         const expiresAtInput = parseDateInput(expiresAt);
         if (publishedAtInput.error) {
@@ -93,7 +94,7 @@ export default function EventPopupsScreen() {
             return;
         }
         await createPopup.mutateAsync({
-            event_id: selectedEvent.id,
+            event_id: selectedEvent?.id,
             title: title.trim(),
             body_markdown: bodyMarkdown.trim(),
             status: publishNow ? 'published' : 'draft',
@@ -112,12 +113,22 @@ export default function EventPopupsScreen() {
         await updatePopup.mutateAsync({ id: popup.id, status });
     };
 
-    const canSubmit = !!selectedEvent && title.trim().length > 0 && bodyMarkdown.trim().length > 0;
+    const handleResendPopup = async (popup: EventPopup) => {
+        const confirmed = window.confirm('Re-send this popup to all devices?');
+        if (!confirmed) return;
+        try {
+            await resendPopup.mutateAsync({ id: popup.id });
+        } catch {
+            alert('Unable to resend this popup.');
+        }
+    };
+
+    const canSubmit = title.trim().length > 0 && bodyMarkdown.trim().length > 0;
 
     return (
         <Paper sx={{ p: 4, maxWidth: 1100, mx: 'auto' }}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
-                <Typography variant="h4">Event Popups</Typography>
+                <Typography variant="h4">Message Popups</Typography>
             </Box>
 
             <Box sx={{ mb: 4, display: 'grid', gap: 2 }}>
@@ -131,7 +142,7 @@ export default function EventPopupsScreen() {
                     renderInput={(params) => (
                         <TextField
                             {...params}
-                            label="Event"
+                            label="Event (optional)"
                             placeholder="Search events"
                         />
                     )}
@@ -216,7 +227,7 @@ export default function EventPopupsScreen() {
                                         size="small"
                                     />
                                 </TableCell>
-                                <TableCell>{popup.event?.name ?? popup.event_id}</TableCell>
+                                <TableCell>{popup.event?.name ?? (popup.event_id ? `Event #${popup.event_id}` : 'Message only')}</TableCell>
                                 <TableCell>{popup.title}</TableCell>
                                 <TableCell>{formatDateTime(popup.published_at)}</TableCell>
                                 <TableCell>{formatDateTime(popup.expires_at)}</TableCell>
@@ -230,6 +241,16 @@ export default function EventPopupsScreen() {
                                             disabled={updatePopup.isPending}
                                         >
                                             Publish
+                                        </Button>
+                                    )}
+                                    {(popup.status === 'published' || popup.status === 'stopped') && (
+                                        <Button
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={() => handleResendPopup(popup)}
+                                            disabled={resendPopup.isPending}
+                                        >
+                                            Re-send
                                         </Button>
                                     )}
                                     {popup.status === 'published' && (

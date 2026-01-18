@@ -242,11 +242,11 @@ export const DrawerNav = () => {
                         name="Event Popups Admin"
                         component={EventPopupAdminScreen}
                         options={({ navigation }) => ({
-                            ...headerOptions({ navigation, title: 'Event Popups Admin' }),
+                            ...headerOptions({ navigation, title: 'Message Popups' }),
                             drawerLabel: () => null,
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
-                        listeners={onPressItemLogEventListener('Event Popups Admin', 'Event Popups Admin')}
+                        listeners={onPressItemLogEventListener('Message Popups Admin', 'Message Popups Admin')}
                     />
                     <Drawer.Screen
                         name="Push Notifications Admin"

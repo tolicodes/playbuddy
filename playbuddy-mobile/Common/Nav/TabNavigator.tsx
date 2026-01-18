@@ -165,7 +165,7 @@ const renderSharedStackScreens = () => (
         <Stack.Screen
             name="Event Popups Admin"
             component={EventPopupAdminScreen}
-            options={({ navigation }) => headerOptions({ navigation, title: 'Event Popups Admin' })}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Message Popups' })}
         />
         <Stack.Screen
             name="Push Notifications Admin"

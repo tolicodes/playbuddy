@@ -81,10 +81,8 @@ const isEventPopupExpired = (popup: EventPopup, now: number) => {
     return false;
 };
 
-const isEventPopupEligible = (popup: EventPopup, installAt: number | undefined, now: number) => {
+const isEventPopupEligible = (popup: EventPopup, _installAt: number | undefined, now: number) => {
     if (isEventPopupExpired(popup, now)) return false;
-    const createdAt = parseIsoTimestamp(popup.created_at);
-    if (installAt && createdAt && createdAt > installAt) return false;
     return true;
 };
 
@@ -347,6 +345,7 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
 
     useEffect(() => {
         if (!activeEventPopup || activeEventPopup.event || eventLookup.size === 0) return;
+        if (!activeEventPopup.event_id) return;
         const resolvedEvent = eventLookup.get(Number(activeEventPopup.event_id));
         if (!resolvedEvent) return;
         setActiveEventPopup((prev) => (prev ? { ...prev, event: resolvedEvent } : prev));
@@ -354,7 +353,7 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
 
     const sortedEventPopups = useMemo(() => {
         const items = [...(eventPopups ?? [])].map((popup) => {
-            if (popup.event || eventLookup.size === 0) return popup;
+            if (popup.event || eventLookup.size === 0 || !popup.event_id) return popup;
             const resolvedEvent = eventLookup.get(Number(popup.event_id));
             return resolvedEvent ? { ...popup, event: resolvedEvent } : popup;
         });
