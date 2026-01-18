@@ -16,6 +16,7 @@ import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { UE } from '../userEventTypes';
 import { logEvent } from '../Common/hooks/logger';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
+import { useFlushEventsCache } from '../Common/db-axios/useEvents';
 import { useUserContext } from './Auth/hooks/UserContext';
 import { ADMIN_EMAILS } from '../config';
 import { navigationRef } from '../Common/Nav/navigationRef';
@@ -61,6 +62,7 @@ type DiscoverPageContentProps = DiscoverPageProps & {
 
 const DiscoverPageContent = ({ variant = 'screen', onRequestClose, onNavigate }: DiscoverPageContentProps) => {
     const analyticsProps = useAnalyticsProps();
+    const flushEventsCache = useFlushEventsCache();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const canSeeDebug = __DEV__ || isAdmin;
@@ -74,6 +76,7 @@ const DiscoverPageContent = ({ variant = 'screen', onRequestClose, onNavigate }:
         const adminItems: MenuItem[] = [];
 
         if (isAdmin) {
+            adminItems.push({ title: 'Refresh Events', icon: 'sync', route: 'Refresh Events' });
             adminItems.push({ title: 'Admin', icon: 'user-shield', route: 'Admin' });
         }
         if (canSeeDebug) {
@@ -127,6 +130,11 @@ const DiscoverPageContent = ({ variant = 'screen', onRequestClose, onNavigate }:
                                             ...analyticsProps,
                                             menu_item: item.route,
                                         });
+                                        if (item.route === 'Refresh Events') {
+                                            flushEventsCache.mutate();
+                                            onRequestClose?.();
+                                            return;
+                                        }
                                         onNavigate(item.route);
                                         onRequestClose?.();
                                     }}

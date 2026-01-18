@@ -91,6 +91,22 @@ export const useUpdateEvent = () => {
     });
 };
 
+export const useFlushEventsCache = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation<Event[], unknown, void>({
+        mutationFn: async () => {
+            const response = await axios.get<Event[]>(`${API_BASE_URL}/events`, {
+                params: { flushCache: true },
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["events"] });
+        },
+    });
+};
+
 
 export const useToggleWeeklyPickEvent = () => {
     const queryClient = useQueryClient();
