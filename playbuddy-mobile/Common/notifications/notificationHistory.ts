@@ -2,10 +2,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type NotificationHistoryItem = {
     id: string;
+    externalId?: string;
     title: string;
     body: string;
     createdAt: number;
-    source?: 'organizer' | 'test' | 'badge' | 'broadcast';
+    source?: 'organizer' | 'test' | 'badge' | 'broadcast' | 'admin_review';
     eventId?: number;
     imageUrl?: string;
 };
@@ -63,12 +64,15 @@ export const upsertNotificationHistoryItem = async (
     item: Omit<NotificationHistoryItem, 'id'>
 ) => {
     const history = await getNotificationHistory();
-    const matchIndex =
-        item.eventId !== undefined
-            ? history.findIndex(
-                  (entry) => entry.eventId === item.eventId && entry.source === item.source
-              )
-            : -1;
+    let matchIndex = -1;
+    if (item.externalId) {
+        matchIndex = history.findIndex((entry) => entry.externalId === item.externalId);
+    }
+    if (matchIndex < 0 && item.eventId !== undefined) {
+        matchIndex = history.findIndex(
+            (entry) => entry.eventId === item.eventId && entry.source === item.source
+        );
+    }
     if (matchIndex >= 0) {
         const next = [...history];
         next[matchIndex] = { ...next[matchIndex], ...item };

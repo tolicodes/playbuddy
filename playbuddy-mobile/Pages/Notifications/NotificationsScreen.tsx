@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import moment from 'moment-timezone';
+import axios from 'axios';
 
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
@@ -13,6 +14,7 @@ import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { navigateToHomeStackScreen, navigateToTab } from '../../Common/Nav/navigationHelpers';
 import type { NavStack } from '../../Common/Nav/NavStackType';
+import type { PushNotification } from '../../Common/types/commonTypes';
 import {
     ensureNotificationPermissions,
     getPushNotificationsEnabled,
@@ -26,17 +28,23 @@ import {
     NotificationHistoryItem,
     subscribeToNotificationHistory,
     setNotificationHistorySeenAt,
+    setNotificationHistory,
 } from '../../Common/notifications/notificationHistory';
+import { ADMIN_EMAILS, API_BASE_URL } from '../../config';
+
+const ADMIN_REVIEW_PREFIX = 'Admin review:';
 
 export const NotificationsScreen = () => {
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
-    const { authUserId } = useUserContext();
+    const { authUserId, userProfile, session } = useUserContext();
     const { allEvents } = useCalendarContext();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const adminAccessToken = session?.access_token;
 
     const organizerIdsFromCommunities = useMemo(() => {
         const organizerCommunities = [
@@ -65,6 +73,64 @@ export const NotificationsScreen = () => {
         setHistory(list.filter((item) => item.createdAt <= now));
     }, []);
 
+    const syncAdminReviewHistory = useCallback(async (currentHistory?: NotificationHistoryItem[]) => {
+        if (!isAdmin || !adminAccessToken) {
+            return currentHistory ?? getNotificationHistory();
+        }
+
+        try {
+            const response = await axios.get<PushNotification[]>(
+                `${API_BASE_URL}/push_notifications?status=sent`,
+                { headers: { Authorization: `Bearer ${adminAccessToken}` } }
+            );
+            const adminRows = (response.data || []).filter((row) =>
+                (row.title || '').startsWith(ADMIN_REVIEW_PREFIX)
+            );
+
+            if (!adminRows.length) {
+                return currentHistory ?? getNotificationHistory();
+            }
+
+            const historyList = currentHistory ?? await getNotificationHistory();
+            const existingExternalIds = new Set(
+                historyList
+                    .filter((item) => item.source === 'admin_review' && item.externalId)
+                    .map((item) => item.externalId as string)
+            );
+
+            const nextHistory = [...historyList];
+            let updated = false;
+
+            adminRows.forEach((row) => {
+                if (existingExternalIds.has(row.id)) return;
+                const createdAtIso = row.sent_at || row.created_at || row.send_at || '';
+                const createdAt = new Date(createdAtIso).getTime();
+                if (!Number.isFinite(createdAt)) return;
+
+                nextHistory.push({
+                    id: `admin_review-${row.id}`,
+                    externalId: row.id,
+                    title: row.title,
+                    body: row.body,
+                    createdAt,
+                    source: 'admin_review',
+                    eventId: row.event_id ?? undefined,
+                    imageUrl: row.image_url ?? undefined,
+                });
+                updated = true;
+            });
+
+            if (!updated) {
+                return historyList;
+            }
+
+            return setNotificationHistory(nextHistory);
+        } catch (error) {
+            console.warn('[notifications] failed to sync admin review notifications', error);
+            return currentHistory ?? getNotificationHistory();
+        }
+    }, [adminAccessToken, isAdmin]);
+
     useEffect(() => {
         let isActive = true;
         if (!isFocused) {
@@ -76,12 +142,12 @@ export const NotificationsScreen = () => {
         const load = async () => {
             const now = Date.now();
             await setNotificationHistorySeenAt(now);
-            const [list, enabled] = await Promise.all([
-                getNotificationHistory(),
+            const [enabled, syncedHistory] = await Promise.all([
                 getPushNotificationsEnabled(),
+                syncAdminReviewHistory(),
             ]);
             if (!isActive) return;
-            setHistory(list.filter((item) => item.createdAt <= now));
+            setHistory(syncedHistory.filter((item) => item.createdAt <= now));
             setNotificationsEnabled(enabled);
         };
 
@@ -89,7 +155,7 @@ export const NotificationsScreen = () => {
         return () => {
             isActive = false;
         };
-    }, [isFocused]);
+    }, [isFocused, syncAdminReviewHistory]);
 
     useEffect(() => {
         const unsubscribe = navigation.addListener('focus', () => {
