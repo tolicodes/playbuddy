@@ -25,6 +25,8 @@ type ClassificationInput = {
     inclusivity?: string[] | null;
 };
 
+type ImportSourceStatus = 'approved' | 'pending' | 'rejected';
+
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
 const getOrganizerFetlifeHandles = (organizer?: CreateOrganizerInput | null) => {
     if (!organizer) return [];
@@ -34,6 +36,191 @@ const getOrganizerFetlifeHandles = (organizer?: CreateOrganizerInput | null) => 
     ];
     const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
     return Array.from(new Set(normalized));
+};
+const normalizeImportSourceUrl = (val?: string | null) => {
+    if (!val) return '';
+    const raw = val.trim();
+    if (!raw) return '';
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+        const url = new URL(withScheme);
+        url.hash = '';
+        url.search = '';
+        const normalized = `${url.host}${url.pathname}`.replace(/\/$/, '');
+        return normalized.toLowerCase();
+    } catch {
+        return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+    }
+};
+
+const buildUrlVariants = (raw?: string | null) => {
+    if (!raw) return [];
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    const withoutHash = trimmed.split('#')[0];
+    const withoutQuery = withoutHash.split('?')[0];
+    const withScheme = /^https?:\/\//i.test(withoutQuery) ? withoutQuery : `https://${withoutQuery}`;
+    const withoutScheme = withoutQuery.replace(/^https?:\/\//i, '');
+    const stripSlash = (value: string) => value.replace(/\/$/, '');
+    const out = new Set<string>();
+    [trimmed, withoutHash, withoutQuery, withScheme, withoutScheme].forEach((value) => {
+        if (!value) return;
+        out.add(value);
+        out.add(stripSlash(value));
+    });
+    return Array.from(out);
+};
+
+const getEventUrlCandidates = (event: NormalizedEventInput) => {
+    const urls = [
+        event?.source_url,
+        event?.ticket_url,
+        event?.event_url,
+    ]
+        .filter(Boolean)
+        .map((val) => String(val).trim())
+        .filter(Boolean);
+    return Array.from(new Set(urls));
+};
+
+const getImportSourceApprovalSummary = async ({
+    handles,
+    urls,
+    importSourceId,
+}: {
+    handles: string[];
+    urls?: Array<string | null | undefined>;
+    importSourceId?: string | number | null;
+}): Promise<{
+    hasApproved: boolean;
+    hasRejected: boolean;
+    hasExcluded: boolean;
+    hasPending: boolean;
+    resolvedStatus: ImportSourceStatus | null;
+}> => {
+    const normalizedHandles = Array.from(new Set(handles.map((handle) => normalizeHandle(handle)).filter(Boolean)));
+    const urlCandidates = (urls || [])
+        .filter(Boolean)
+        .map((val) => String(val).trim())
+        .filter(Boolean);
+    const hasImportSourceId = importSourceId !== undefined && importSourceId !== null && String(importSourceId).trim() !== '';
+    if (!normalizedHandles.length && !urlCandidates.length && !hasImportSourceId) {
+        return { hasApproved: false, hasRejected: false, hasExcluded: false, hasPending: false, resolvedStatus: null as null };
+    }
+
+    const rows: any[] = [];
+    if (hasImportSourceId) {
+        const { data, error } = await supabaseClient
+            .from('import_sources')
+            .select('approval_status, is_excluded')
+            .eq('id', importSourceId);
+
+        if (error) {
+            throw new Error(`IMPORT_SOURCE: Error fetching approval_status for source id ${importSourceId}: ${error?.message}`);
+        }
+        rows.push(...(data || []));
+    }
+    if (normalizedHandles.length) {
+        const { data, error } = await supabaseClient
+            .from('import_sources')
+            .select('approval_status, is_excluded')
+            .eq('source', 'fetlife_handle')
+            .in('identifier', normalizedHandles);
+
+        if (error) {
+            throw new Error(`IMPORT_SOURCE: Error fetching approval_status for handles: ${error?.message}`);
+        }
+        rows.push(...(data || []));
+    }
+
+    if (urlCandidates.length) {
+        const normalizedCandidates = new Set<string>();
+        urlCandidates.forEach((url) => {
+            const normalized = normalizeImportSourceUrl(url);
+            if (normalized) normalizedCandidates.add(normalized);
+        });
+
+        const variants = new Set<string>();
+        urlCandidates.forEach((url) => {
+            buildUrlVariants(url).forEach((value) => variants.add(value));
+        });
+        normalizedCandidates.forEach((value) => variants.add(value));
+
+        const orFilters = Array.from(variants)
+            .map((value) => `identifier.ilike.${value}`)
+            .join(',');
+        if (orFilters) {
+            const { data, error } = await supabaseClient
+                .from('import_sources')
+                .select('approval_status, is_excluded')
+                .in('source', ['eb_url', 'url'])
+                .or(orFilters);
+
+            if (error) {
+                throw new Error(`IMPORT_SOURCE: Error fetching approval_status for urls: ${error?.message}`);
+            }
+            rows.push(...(data || []));
+        }
+    }
+
+    let hasApproved = false;
+    let hasRejected = false;
+    let hasExcluded = false;
+    let hasPending = false;
+    (rows || []).forEach((row: any) => {
+        const status = row?.approval_status ?? null;
+        if (status === 'rejected') {
+            hasRejected = true;
+        } else if (status === 'pending') {
+            hasPending = true;
+        } else if (status === 'approved' || status === null) {
+            hasApproved = true;
+        }
+        if (row?.is_excluded && status !== 'approved' && status !== 'rejected') {
+            hasExcluded = true;
+        }
+    });
+
+    const resolvedStatus =
+        hasRejected
+            ? 'rejected'
+            : (hasExcluded || hasPending)
+                ? 'pending'
+                : hasApproved
+                    ? 'approved'
+                    : null;
+
+    return { hasApproved, hasRejected, hasExcluded, hasPending, resolvedStatus };
+};
+
+const isHandleImportSource = (source: any) => {
+    const identifierType = (source?.identifier_type || '').toLowerCase();
+    const sourceType = (source?.source || '').toLowerCase();
+    return identifierType === 'handle' || sourceType === 'fetlife_handle';
+};
+
+const updateImportSourceOrganizer = async (source: any, organizer_id: number) => {
+    if (!source?.id) return;
+    const defaults = source?.event_defaults || {};
+    const existingOrganizerId = defaults.organizer_id ?? defaults.organizerId;
+    if (existingOrganizerId && String(existingOrganizerId) !== String(organizer_id)) {
+        console.warn(`IMPORT_SOURCE: Organizer mismatch for ${source.identifier} (existing ${existingOrganizerId}, new ${organizer_id})`);
+        return;
+    }
+    if (String(existingOrganizerId) === String(organizer_id)) return;
+
+    const { error } = await supabaseClient
+        .from('import_sources')
+        .update({
+            event_defaults: {
+                ...(defaults || {}),
+                organizer_id,
+            },
+        })
+        .eq('id', source.id);
+    if (error) {
+        console.error(`IMPORT_SOURCE: Failed to update organizer for ${source.identifier}`, error);
+    }
 };
 
 // stash originals before overriding
@@ -135,6 +322,66 @@ const ensureImportSourcesForHandles = async (
     }
 };
 
+const ensureImportSourcesForUrls = async (
+    event: NormalizedEventInput,
+    organizerId?: string | number | null
+) => {
+    const organizer_id = organizerId ? Number(organizerId) : null;
+    if (!organizer_id || Number.isNaN(organizer_id)) return;
+
+    const metadata = (event?.metadata || {}) as Record<string, any>;
+    const importSourceId = metadata.import_source_id ?? metadata.importSourceId;
+
+    let sources: any[] = [];
+    if (importSourceId) {
+        const { data, error } = await supabaseClient
+            .from('import_sources')
+            .select('id, source, identifier_type, identifier, event_defaults')
+            .eq('id', importSourceId)
+            .limit(1);
+        if (error) {
+            console.error(`IMPORT_SOURCE: Failed to fetch source ${importSourceId}`, error);
+            return;
+        }
+        sources = data || [];
+    } else {
+        const candidates = getEventUrlCandidates(event);
+        if (!candidates.length) return;
+
+        const normalizedCandidates = new Set<string>();
+        candidates.forEach((url) => {
+            const normalized = normalizeImportSourceUrl(url);
+            if (normalized) normalizedCandidates.add(normalized);
+        });
+
+        const variants = new Set<string>();
+        candidates.forEach((url) => {
+            buildUrlVariants(url).forEach((value) => variants.add(value));
+        });
+        normalizedCandidates.forEach((value) => variants.add(value));
+
+        const orFilters = Array.from(variants)
+            .map((value) => `identifier.ilike.${value}`)
+            .join(',');
+        if (!orFilters) return;
+
+        const { data, error } = await supabaseClient
+            .from('import_sources')
+            .select('id, source, identifier_type, identifier, event_defaults')
+            .or(orFilters);
+        if (error) {
+            console.error('IMPORT_SOURCE: Failed to lookup URL sources', error);
+            return;
+        }
+        sources = data || [];
+    }
+
+    for (const source of sources) {
+        if (isHandleImportSource(source)) continue;
+        await updateImportSourceOrganizer(source, organizer_id);
+    }
+};
+
 async function attachCommunities(eventId: string, communities: any[], organizerCommunityId?: string) {
     for (const community of communities) {
         if (!('id' in community)) {
@@ -159,9 +406,6 @@ export async function upsertEvent(
     opts: { skipExisting?: boolean; approveExisting?: boolean; ignoreFrozen?: boolean; skipExistingNoApproval?: boolean } = {}
 ): Promise<UpsertEventResult> {
     const normalizedEvent: NormalizedEventInput = { ...event };
-    if (normalizedEvent.approval_status === undefined || normalizedEvent.approval_status === null) {
-        normalizedEvent.approval_status = 'approved';
-    }
     if (!normalizedEvent.end_date && normalizedEvent.start_date) {
         const start = new Date(normalizedEvent.start_date);
         if (!Number.isNaN(start.getTime())) {
@@ -172,19 +416,52 @@ export async function upsertEvent(
     const organizerInfo = prepareOrganizer(normalizedEvent);
     if (!organizerInfo) return { result: 'failed', event: null };
 
+    const organizerFetlifeHandles = getOrganizerFetlifeHandles(normalizedEvent.organizer);
+    const importSourceMetadata = (normalizedEvent.metadata || {}) as Record<string, any>;
+    const importSourceId = importSourceMetadata.import_source_id ?? importSourceMetadata.importSourceId ?? null;
+    const importSourceIdentifier = importSourceMetadata.import_source_identifier ?? importSourceMetadata.importSourceIdentifier ?? null;
+    const eventUrlCandidates = [
+        normalizedEvent.source_url,
+        normalizedEvent.ticket_url,
+        normalizedEvent.event_url,
+        importSourceIdentifier,
+    ];
+
     logEventHeader(organizerInfo.logName, normalizedEvent);
 
     try {
+        if (organizerFetlifeHandles.length || eventUrlCandidates.some(Boolean)) {
+            try {
+                const summary = await getImportSourceApprovalSummary({
+                    handles: organizerFetlifeHandles,
+                    urls: eventUrlCandidates,
+                    importSourceId,
+                });
+                if (summary.resolvedStatus) {
+                    normalizedEvent.approval_status = summary.resolvedStatus;
+                }
+            } catch (error) {
+                logError('IMPORT_SOURCE: Failed to check approval status for sources', error as Error);
+            }
+        }
+
+        if (normalizedEvent.approval_status === undefined || normalizedEvent.approval_status === null) {
+            normalizedEvent.approval_status = 'approved';
+        }
+
         const upsertedOrganizer = await tryUpsertOrganizer(normalizedEvent.organizer!);
         if (!upsertedOrganizer) return { result: 'failed', event: null };
 
         const { organizerId, organizerCommunityId, organizerHidden } = upsertedOrganizer;
         const isApprovedEvent = normalizedEvent.approval_status === 'approved';
-        const organizerFetlifeHandles = getOrganizerFetlifeHandles(normalizedEvent.organizer);
+        const syncImportSources = async () => {
+            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+            await ensureImportSourcesForUrls(normalizedEvent, organizerId);
+        };
 
         if (organizerHidden) {
             log(`EVENT: Skipping hidden organizer ${organizerInfo.logName}`);
-            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+            await syncImportSources();
             return { result: 'skipped', event: null };
         }
 
@@ -192,7 +469,7 @@ export async function upsertEvent(
 
         if (existingEvent?.frozen && !opts.ignoreFrozen) {
             log(`EVENT: Skipping frozen event ${existingEvent.id}`);
-            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+            await syncImportSources();
             return { result: 'skipped', event: null };
         }
 
@@ -201,11 +478,11 @@ export async function upsertEvent(
             if (shouldApproveExisting) {
                 const approvedEvent = await setApprovalStatus(existingEvent.id, normalizedEvent.approval_status!);
                 log(`EVENT: Updated approval_status for existing event ${existingEvent.id} -> ${normalizedEvent.approval_status}`);
-                await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+                await syncImportSources();
                 return { result: 'updated', event: approvedEvent };
             }
             log(`EVENT: Skipping existing event ${existingEvent.id} (skipExisting=true)`);
-            await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+            await syncImportSources();
             return { result: 'skipped', event: null };
         }
 
@@ -252,7 +529,7 @@ export async function upsertEvent(
 
         log(`EVENT: ${existingEvent?.id ? 'Updated' : 'Inserted'}`);
 
-        await ensureImportSourcesForHandles(organizerFetlifeHandles, organizerId, isApprovedEvent);
+        await syncImportSources();
 
         return {
             result: existingEvent?.id ? 'updated' : 'inserted',
@@ -325,7 +602,7 @@ const ensureImportSourceForHandle = async (fetlife_handle?: string | null, organ
     try {
         const { data: existing, error: fetchError } = await supabaseClient
             .from('import_sources')
-            .select('id, approval_status, event_defaults')
+            .select('id, approval_status, event_defaults, is_excluded')
             .eq('source', 'fetlife_handle')
             .eq('identifier', handle)
             .limit(1);
@@ -337,10 +614,14 @@ const ensureImportSourceForHandle = async (fetlife_handle?: string | null, organ
         if (existing && existing.length) {
             const row = existing[0] as any;
             const updates: any = {};
-            if (isApproved && row.approval_status !== 'approved') {
-                updates.approval_status = 'approved';
-            } else if (!isApproved && (!row.approval_status || row.approval_status === 'pending')) {
-                updates.approval_status = 'pending';
+            const approvalStatus = row.approval_status;
+            const skipApprovalUpdate = approvalStatus === 'rejected' || row.is_excluded;
+            if (!skipApprovalUpdate) {
+                if (isApproved && approvalStatus !== 'approved') {
+                    updates.approval_status = 'approved';
+                } else if (!isApproved && (!approvalStatus || approvalStatus === 'pending')) {
+                    updates.approval_status = 'pending';
+                }
             }
             if (organizer_id) {
                 updates.event_defaults = { ...(row.event_defaults || {}), organizer_id };
