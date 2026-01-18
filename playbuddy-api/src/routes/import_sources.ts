@@ -6,6 +6,121 @@ import { flushEvents } from '../helpers/flushCache.js';
 const router = Router();
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+const normalizeUrl = (val?: string | null) => {
+    if (!val) return '';
+    const lowered = val.trim().toLowerCase();
+    if (!lowered) return '';
+    const withoutHash = lowered.split('#')[0];
+    const withoutQuery = withoutHash.split('?')[0];
+    return withoutQuery.replace(/\/+$/, '');
+};
+const stripUrlScheme = (val: string) => val.replace(/^https?:\/\//i, '');
+const buildUrlVariants = (value?: string | null) => {
+    if (!value) return [];
+    const raw = value.trim();
+    if (!raw) return [];
+    const lowered = raw.toLowerCase();
+    const normalized = normalizeUrl(lowered);
+    const withoutScheme = stripUrlScheme(normalized);
+    const variants = new Set<string>();
+    [lowered, normalized].forEach((entry) => {
+        if (entry) variants.add(entry);
+    });
+    if (withoutScheme) {
+        variants.add(withoutScheme);
+        if (!withoutScheme.startsWith('http')) {
+            variants.add(`https://${withoutScheme}`);
+            variants.add(`http://${withoutScheme}`);
+        }
+    }
+    return Array.from(variants);
+};
+const isUrlSource = (source: any) =>
+    (source?.identifier_type || '').toLowerCase() === 'url' ||
+    source?.source === 'eb_url' ||
+    source?.source === 'url' ||
+    /^https?:\/\//i.test(source?.identifier || '');
+
+const collectOrganizerIdsForSource = async (source: any) => {
+    const organizerIds = new Set<string>();
+    const addOrganizerId = (val: any) => {
+        if (val === undefined || val === null) return;
+        const trimmed = String(val).trim();
+        if (trimmed) organizerIds.add(trimmed);
+    };
+
+    const defaults = source?.event_defaults || {};
+    const meta = source?.metadata || {};
+    addOrganizerId(defaults.organizer_id);
+    addOrganizerId(defaults.organizerId);
+    addOrganizerId(meta.organizer_id);
+    addOrganizerId(meta.organizerId);
+
+    const isHandleSource =
+        (source?.identifier_type || '').toLowerCase() === 'handle' ||
+        source?.source === 'fetlife_handle';
+    const normalizedHandle = isHandleSource ? normalizeHandle(source?.identifier) : '';
+    if (normalizedHandle) {
+        const { data: handleMatches, error: handleError } = await supabaseClient
+            .from('organizers')
+            .select('id')
+            .ilike('fetlife_handle', normalizedHandle);
+        if (handleError) throw handleError;
+        (handleMatches || []).forEach((row: any) => addOrganizerId(row?.id));
+
+        const { data: handleArrayMatches, error: handleArrayError } = await supabaseClient
+            .from('organizers')
+            .select('id')
+            .contains('fetlife_handles', [normalizedHandle]);
+        if (handleArrayError) throw handleArrayError;
+        (handleArrayMatches || []).forEach((row: any) => addOrganizerId(row?.id));
+    }
+
+    return Array.from(organizerIds);
+};
+
+const resolveSourceEventApprovalStatus = (source: any): 'approved' | 'pending' | 'rejected' => {
+    const status = source?.approval_status ?? null;
+    if (status === 'rejected') return 'rejected';
+    if (status === 'approved') return 'approved';
+    if (status === null) return source?.is_excluded ? 'pending' : 'approved';
+    return 'pending';
+};
+
+const updateEventsForSourceApproval = async (source: any, approval_status: 'approved' | 'pending' | 'rejected') => {
+    const organizerIdList = await collectOrganizerIdsForSource(source);
+    const urlVariants = isUrlSource(source) ? buildUrlVariants(source?.identifier) : [];
+    const urlEventIds = new Set<string>();
+    if (urlVariants.length) {
+        const [ticketRes, eventRes, sourceRes] = await Promise.all([
+            supabaseClient.from('events').select('id').in('ticket_url', urlVariants),
+            supabaseClient.from('events').select('id').in('event_url', urlVariants),
+            supabaseClient.from('events').select('id').in('source_url', urlVariants),
+        ]);
+        if (ticketRes.error) throw ticketRes.error;
+        if (eventRes.error) throw eventRes.error;
+        if (sourceRes.error) throw sourceRes.error;
+        (ticketRes.data || []).forEach((row: any) => urlEventIds.add(String(row?.id)));
+        (eventRes.data || []).forEach((row: any) => urlEventIds.add(String(row?.id)));
+        (sourceRes.data || []).forEach((row: any) => urlEventIds.add(String(row?.id)));
+    }
+    if (!organizerIdList.length && !urlEventIds.size) return;
+    if (organizerIdList.length) {
+        const { error } = await supabaseClient
+            .from('events')
+            .update({ approval_status })
+            .in('organizer_id', organizerIdList);
+        if (error) throw error;
+    }
+    if (urlEventIds.size) {
+        const { error } = await supabaseClient
+            .from('events')
+            .update({ approval_status })
+            .in('id', Array.from(urlEventIds));
+        if (error) throw error;
+    }
+    await flushEvents();
+};
 
 router.get('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const includeAll = req.query.includeAll === 'true' || req.query.include_all === 'true';
@@ -32,7 +147,7 @@ router.get('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res:
 });
 
 router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
-    const { id, source, method, identifier, identifier_type, metadata = {}, event_defaults = {}, approval_status, message_sent } = req.body || {};
+    const { id, source, method, identifier, identifier_type, metadata = {}, event_defaults = {}, approval_status, message_sent, is_festival, is_excluded } = req.body || {};
     if (!source || !method || !identifier) {
         res.status(400).json({ error: 'source, method, and identifier are required' });
         return;
@@ -48,7 +163,11 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
         : (approval_status ?? null);
 
     const normalizedMessageSent = typeof message_sent === 'boolean' ? message_sent : undefined;
-
+    const normalizedFestival = typeof is_festival === 'boolean' ? is_festival : undefined;
+    const normalizedExcluded = typeof is_excluded === 'boolean' ? is_excluded : undefined;
+    const resolvedExcluded = normalizedExcluded !== undefined
+        ? normalizedExcluded
+        : (!id ? computedApproval !== 'approved' : undefined);
     const payload: any = {
         ...(id ? { id } : {}),
         source,
@@ -67,6 +186,12 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
     if (normalizedMessageSent !== undefined) {
         payload.message_sent = normalizedMessageSent;
     }
+    if (normalizedFestival !== undefined) {
+        payload.is_festival = normalizedFestival;
+    }
+    if (resolvedExcluded !== undefined) {
+        payload.is_excluded = resolvedExcluded;
+    }
 
     const { data, error } = await supabaseClient
         .from('import_sources')
@@ -78,6 +203,17 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
         console.error('Failed to insert import_source', error);
         res.status(500).json({ error: error.message });
         return;
+    }
+
+    if (data) {
+        try {
+            const targetStatus = resolveSourceEventApprovalStatus(data);
+            await updateEventsForSourceApproval(data, targetStatus);
+        } catch (err: any) {
+            console.error('Failed to update events for import_source', err);
+            res.status(500).json({ error: err?.message || String(err) });
+            return;
+        }
     }
 
     res.json(data);
@@ -100,6 +236,17 @@ router.post('/:id/approve', authenticateAdminRequest, async (req: AuthenticatedR
         console.error('Failed to approve import_source', error);
         res.status(500).json({ error: error.message });
         return;
+    }
+
+    if (data) {
+        try {
+            const targetStatus = resolveSourceEventApprovalStatus(data);
+            await updateEventsForSourceApproval(data, targetStatus);
+        } catch (err: any) {
+            console.error('Failed to approve events for import_source', err);
+            res.status(500).json({ error: err?.message || String(err) });
+            return;
+        }
     }
 
     res.json(data);
