@@ -154,7 +154,7 @@ export const ImportEventURLsScreen = () => {
         setResult(null);
         setErrorMessage(null);
         try {
-            const response = await importEvents.mutateAsync({ urls });
+            const response = await importEvents.mutateAsync({ urls, sync: true });
             setResult(response);
             setStatus('done');
         } catch (err: any) {

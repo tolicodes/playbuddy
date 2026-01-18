@@ -32,6 +32,37 @@ const normalizeGmailSources = (raw: any): GmailSourceConfig[] => {
         .filter((entry: GmailSourceConfig) => Boolean(entry.source_email));
 };
 
+const parseSyncFlag = (value: unknown): boolean => {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value === 1;
+    if (typeof value !== 'string') return false;
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return false;
+    return ['1', 'true', 'yes', 'y', 'sync'].includes(normalized);
+};
+
+const resolveImportMode = (req: AuthenticatedRequest) => {
+    const rawMode = req.query?.mode ?? req.body?.mode;
+    if (typeof rawMode === 'string') {
+        const normalized = rawMode.trim().toLowerCase();
+        if (normalized === 'sync' || normalized === 'async') return normalized;
+    }
+    const syncFlag = parseSyncFlag(req.query?.sync ?? req.body?.sync);
+    return syncFlag ? 'sync' : 'async';
+};
+
+const mergeEventDefaults = (
+    eventDefaults: Partial<NormalizedEventInput>,
+    metadata?: Partial<NormalizedEventInput> | null
+) => ({
+    ...eventDefaults,
+    ...(metadata || {}),
+    organizer: {
+        ...(eventDefaults.organizer || {}),
+        ...((metadata as any)?.organizer || {}),
+    },
+});
+
 // Run all scrapers (Eventbrite organizers, Plura, TantraNY) and enqueue
 router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     try {
@@ -117,6 +148,31 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
         return;
     }
     try {
+        const mode = resolveImportMode(req);
+        if (mode === 'async') {
+            const tasks = urls
+                .map((input: any) => (typeof input === 'string' ? { url: input } : input))
+                .filter((input: any) => typeof input?.url === 'string' && input.url.trim().length > 0)
+                .map((input: any) => ({
+                    url: input.url,
+                    multipleEvents: input.multipleEvents,
+                    extractFromListPage: input.extractFromListPage,
+                    eventDefaults: mergeEventDefaults(eventDefaults, input.metadata),
+                }));
+            if (!tasks.length) {
+                res.status(400).json({ error: 'urls (array) is required' });
+                return;
+            }
+            const jobId = await createJob(tasks as any, 5, { authUserId: req.authUserId, source: 'import_urls' });
+            res.json({
+                mode,
+                jobId,
+                requested: urls.length,
+                enqueued: tasks.length,
+            });
+            return;
+        }
+
         const scraped: NormalizedEventInput[] = await scrapeURLs(urls as any[], eventDefaults);
 
         const results = [];
@@ -132,7 +188,7 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
         }
 
         await flushEvents();
-        // Run classifier synchronously so the caller gets the final version.
+        // Run classifier synchronously when requested to return finalized events.
         await classifyEventsInBatches();
 
         // Fetch final versions of the upserted events after classification
@@ -161,6 +217,7 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
         );
 
         res.json({
+            mode,
             requested: urls.length,
             scraped: scraped.length,
             counts,

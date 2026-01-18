@@ -108,7 +108,7 @@ export const useToggleWeeklyPickEvent = () => {
 
 export const useImportEventURLs = () => {
     return useMutation({
-        mutationFn: async (data: { urls: string[] }) => {
+        mutationFn: async (data: { urls: string[]; sync?: boolean }) => {
             return axios.post(API_BASE_URL + '/events/import-urls', data).then((response: any) => response.data);
         },
     });

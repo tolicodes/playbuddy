@@ -69,7 +69,7 @@ export default function ImportEventURLsScreen() {
     setStatus('importing');
     setResult(null);
     try {
-      const res = await importEvents.mutateAsync({ urls });
+      const res = await importEvents.mutateAsync({ urls, sync: true });
       setResult(res);
       setStatus('done');
     } catch (err) {
