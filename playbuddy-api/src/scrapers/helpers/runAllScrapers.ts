@@ -136,15 +136,19 @@ export const runAllScrapers = async (authUserId?: string, opts: { scenario?: str
     const importSourceSummary = {
         total: importSources.length,
         excluded: 0,
+        rejected: 0,
         handles: 0,
         invalid: 0,
         urls: 0,
     };
     const importSourceTasks = importSources.reduce((acc, source) => {
         const approval = source?.approval_status || null;
-        if (source?.is_excluded || approval === 'rejected') {
+        const isExcluded = !!source?.is_excluded;
+        if (isExcluded) {
             importSourceSummary.excluded += 1;
-            return acc;
+        }
+        if (approval === 'rejected') {
+            importSourceSummary.rejected += 1;
         }
         if (isHandleImportSource(source)) {
             importSourceSummary.handles += 1;
@@ -172,7 +176,13 @@ export const runAllScrapers = async (authUserId?: string, opts: { scenario?: str
             source_url: eventDefaults.source_url ?? url,
         };
         if (eventDefaultsWithSource.approval_status === undefined || eventDefaultsWithSource.approval_status === null) {
-            eventDefaultsWithSource.approval_status = sourceApproval === 'pending' ? 'pending' : 'approved';
+            if (sourceApproval === 'pending') {
+                eventDefaultsWithSource.approval_status = 'pending';
+            } else if (sourceApproval === 'rejected') {
+                eventDefaultsWithSource.approval_status = 'rejected';
+            } else {
+                eventDefaultsWithSource.approval_status = 'approved';
+            }
         }
         const multipleEvents = parseOptionalBoolean(
             metadata.multipleEvents ?? metadata.multiple_events ?? defaults.multipleEvents ?? defaults.multiple_events
@@ -221,7 +231,7 @@ export const runAllScrapers = async (authUserId?: string, opts: { scenario?: str
     const includeGmail = ENABLE_GMAIL && !urlsOnly && gmailSources.length > 0;
     console.log(`[scrapers] includeEB=${includeEB} includePlura=${includePlura} includeTantra=${includeTantra} includeGmail=${includeGmail} includeImportSources=${includeImportSources} extraUrls=${extraUrls.length} importSources=${importSourceTasks.length}`);
     if (includeImportSources) {
-        console.log(`[scrapers] import_sources total=${importSourceSummary.total} urls=${importSourceSummary.urls} handles=${importSourceSummary.handles} excluded=${importSourceSummary.excluded} invalid=${importSourceSummary.invalid}`);
+        console.log(`[scrapers] import_sources total=${importSourceSummary.total} urls=${importSourceSummary.urls} handles=${importSourceSummary.handles} excluded=${importSourceSummary.excluded} rejected=${importSourceSummary.rejected} invalid=${importSourceSummary.invalid}`);
     }
 
     const ebEvents = includeEB
