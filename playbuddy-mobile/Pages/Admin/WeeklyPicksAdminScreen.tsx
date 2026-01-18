@@ -17,6 +17,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as Clipboard from 'expo-clipboard';
 import axios from 'axios';
+import moment from 'moment-timezone';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 
@@ -27,6 +28,8 @@ import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
 import { useGroupedEvents } from '../Calendar/hooks/useGroupedEventsMain';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
 import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
+import { useCreateWeeklyPicksBranchLink } from '../../Common/db-axios/useBranchLinks';
+import { useAddDeepLink } from '../../Common/db-axios/useDeepLinks';
 import { useFetchWishlistByCode } from '../../Common/db-axios/useWishlist';
 import { useToggleWeeklyPickEvent } from '../../Common/db-axios/useEvents';
 import { ADMIN_EMAILS, API_BASE_URL } from '../../config';
@@ -42,11 +45,33 @@ import {
 
 const PB_SHARE_CODE = 'DCK9PD';
 const HEADER_HEIGHT = 34;
+const BRANCH_TZ = 'America/New_York';
+
+const getWeekRangeLabel = (start: moment.Moment) => {
+    const end = start.clone().add(6, 'days');
+    return `${start.format('MMM D')} - ${end.format('MMM D')}`;
+};
+
+const buildWeeklyPicksCampaignName = (weekLabel: string) => `Weekly Picks (${weekLabel})`;
+const buildWeeklyPicksOgDescription = (weekLabel: string) => `Weekly Picks for ${weekLabel} on Playbuddy.`;
+
+const extractBranchSlug = (link?: string | null) => {
+    if (!link) return '';
+    const trimmed = link.trim();
+    if (!trimmed) return '';
+    try {
+        const url = new URL(trimmed);
+        return url.pathname.replace(/^\/+/, '').split('/')[0] ?? '';
+    } catch {
+        return trimmed.replace(/^https?:\/\/l\.playbuddy\.me\//i, '').split(/[?#]/)[0];
+    }
+};
 
 type PreviewHeaderProps = {
     previewLoading: boolean[];
     downloadLoading: boolean;
     generationInProgress: boolean;
+    generateBusy: boolean;
     generationCountdown: number;
     countdownLabel: string;
     previewSources: { uri: string; cache?: 'default' | 'reload' | 'force-cache' | 'only-if-cached' }[];
@@ -63,6 +88,7 @@ const PreviewHeader = React.memo(({
     previewLoading,
     downloadLoading,
     generationInProgress,
+    generateBusy,
     generationCountdown,
     countdownLabel,
     previewSources,
@@ -81,12 +107,12 @@ const PreviewHeader = React.memo(({
                 <TouchableOpacity
                     style={[
                         styles.previewActionButton,
-                        (downloadLoading || generationInProgress) && styles.previewActionButtonDisabled,
+                        (downloadLoading || generateBusy) && styles.previewActionButtonDisabled,
                     ]}
                     onPress={onGenerate}
-                    disabled={downloadLoading || generationInProgress}
+                    disabled={downloadLoading || generateBusy}
                 >
-                    {generationInProgress ? (
+                    {generateBusy ? (
                         <ActivityIndicator size="small" color={colors.brandIndigo} />
                     ) : (
                         <Ionicons
@@ -96,7 +122,7 @@ const PreviewHeader = React.memo(({
                         />
                     )}
                     <Text style={styles.previewActionText}>
-                        {generationInProgress ? 'Generating' : 'Generate'}
+                        {generateBusy ? 'Generating' : 'Generate'}
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -200,11 +226,15 @@ export const WeeklyPicksAdminScreen = () => {
     const { data: attendees = [] } = useFetchAttendees();
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { mutate: toggleWeeklyPickEvent, isPending: togglePending } = useToggleWeeklyPickEvent();
+    const createWeeklyPicksBranchLink = useCreateWeeklyPicksBranchLink();
+    const createWeeklyPicksDeepLink = useAddDeepLink();
     const [previewVersion, setPreviewVersion] = useState<string | null>(null);
     const [previewLoading, setPreviewLoading] = useState([true, true]);
     const [previewError, setPreviewError] = useState([false, false]);
     const [downloadLoading, setDownloadLoading] = useState(false);
     const [generationInProgress, setGenerationInProgress] = useState(false);
+    const [branchCreationInProgress, setBranchCreationInProgress] = useState(false);
+    const [branchCreationError, setBranchCreationError] = useState<string | null>(null);
     const [generationCountdown, setGenerationCountdown] = useState(0);
     const lastLoadedPreviewUrlRef = useRef<string[]>([]);
     const [shareLink, setShareLink] = useState('');
@@ -248,10 +278,12 @@ export const WeeklyPicksAdminScreen = () => {
     const screenWidth = Dimensions.get('window').width;
     const previewScale = 3;
     const previewWidth = Math.round((screenWidth - spacing.lg * 2) * previewScale);
-    const previewVersionParam = previewVersion ? `&v=${previewVersion}` : '';
-    const previewUrls = [1, 2].map(
-        (part) => `${API_BASE_URL}/events/weekly-picks/image?width=${previewWidth}&part=${part}&format=jpg${previewVersionParam}`
-    );
+    const previewUrls = useMemo(() => {
+        const previewVersionParam = previewVersion ? `&v=${previewVersion}` : '';
+        return [1, 2].map(
+            (part) => `${API_BASE_URL}/events/weekly-picks/image?width=${previewWidth}&part=${part}&format=jpg${previewVersionParam}`
+        );
+    }, [previewVersion, previewWidth]);
     const previewSources = useMemo(
         () => previewUrls.map((uri) => ({ uri, cache: 'force-cache' })),
         [previewUrls]
@@ -344,8 +376,55 @@ export const WeeklyPicksAdminScreen = () => {
         return () => clearInterval(interval);
     }, [generationInProgress]);
 
+    const handleCreateBranchLink = useCallback(async () => {
+        if (branchCreationInProgress) return;
+        setBranchCreationError(null);
+        setBranchCreationInProgress(true);
+        let failedAt: 'link' | 'deep' = 'link';
+        try {
+            const weekLabel = getWeekRangeLabel(moment().tz(BRANCH_TZ).startOf('isoWeek').add(1, 'week'));
+            const campaignName = buildWeeklyPicksCampaignName(weekLabel);
+            const description = buildWeeklyPicksOgDescription(weekLabel);
+            const response = await createWeeklyPicksBranchLink.mutateAsync({
+                weekOffset: 1,
+                title: campaignName,
+                socialTitle: campaignName,
+                socialDescription: description,
+            });
+            const link = response.link?.trim() || '';
+            if (!link) {
+                throw new Error('Branch quick link was not returned.');
+            }
+            setShareLink(link);
+            const slug = extractBranchSlug(link);
+            if (!slug) {
+                throw new Error('Unable to extract Branch slug.');
+            }
+            failedAt = 'deep';
+            await createWeeklyPicksDeepLink.mutateAsync({
+                campaign: response.title,
+                slug,
+                type: 'weekly_picks',
+            });
+        } catch (error: any) {
+            const status = error?.response?.status;
+            const message = error?.response?.data?.error
+                || error?.message
+                || (failedAt === 'deep' ? 'Unable to create deep link.' : 'Unable to create Branch link.');
+            const formatted = status ? `HTTP ${status}: ${message}` : message;
+            setBranchCreationError(formatted);
+            Alert.alert(failedAt === 'deep' ? 'Deep link failed' : 'Branch link failed', formatted);
+            console.warn('[weekly-picks] branch link failed', error);
+        } finally {
+            setBranchCreationInProgress(false);
+        }
+    }, [branchCreationInProgress, createWeeklyPicksBranchLink, createWeeklyPicksDeepLink]);
+
     const handleGeneratePreview = async () => {
-        if (downloadLoading || generationInProgress) return;
+        if (downloadLoading || generationInProgress || branchCreationInProgress) return;
+        if (!shareLink.trim()) {
+            void handleCreateBranchLink();
+        }
         try {
             setPreviewError([false, false]);
             setPreviewLoading([false, false]);
@@ -555,6 +634,7 @@ export const WeeklyPicksAdminScreen = () => {
                                 previewLoading={previewLoading}
                                 downloadLoading={downloadLoading}
                                 generationInProgress={generationInProgress}
+                                generateBusy={generationInProgress || branchCreationInProgress}
                                 generationCountdown={generationCountdown}
                                 countdownLabel={countdownLabel}
                                 previewSources={previewSources}
@@ -569,14 +649,42 @@ export const WeeklyPicksAdminScreen = () => {
                             <View style={styles.copyCard}>
                                 <View style={styles.copyHeaderRow}>
                                     <Text style={styles.copyTitle}>Weekly Picks Message</Text>
-                                    <TouchableOpacity style={styles.copyButton} onPress={handleCopyShareMessage}>
-                                        <Ionicons name="copy-outline" size={16} color={colors.brandIndigo} />
-                                        <Text style={styles.copyButtonText}>Copy</Text>
-                                    </TouchableOpacity>
+                                    <View style={styles.copyHeaderActions}>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.copyButton,
+                                                branchCreationInProgress && styles.copyButtonDisabled,
+                                            ]}
+                                            onPress={handleCreateBranchLink}
+                                            disabled={branchCreationInProgress}
+                                        >
+                                            {branchCreationInProgress ? (
+                                                <ActivityIndicator size="small" color={colors.brandIndigo} />
+                                            ) : (
+                                                <Ionicons name="link-outline" size={16} color={colors.brandIndigo} />
+                                            )}
+                                            <Text style={styles.copyButtonText}>
+                                                {branchCreationInProgress ? 'Creating' : 'Create Branch Link'}
+                                            </Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity style={styles.copyButton} onPress={handleCopyShareMessage}>
+                                            <Ionicons name="copy-outline" size={16} color={colors.brandIndigo} />
+                                            <Text style={styles.copyButtonText}>Copy</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                                 <Text style={styles.copySubtitle}>
-                                    Paste the Branch link, then copy the full message.
+                                    Create the Branch link, then copy the full message.
                                 </Text>
+                                {branchCreationInProgress && (
+                                    <View style={styles.branchStatusRow}>
+                                        <ActivityIndicator size="small" color={colors.brandIndigo} />
+                                        <Text style={styles.branchStatusText}>Creating Branch link...</Text>
+                                    </View>
+                                )}
+                                {branchCreationError && (
+                                    <Text style={styles.branchStatusError}>{branchCreationError}</Text>
+                                )}
                                 <TextInput
                                     value={shareLink}
                                     onChangeText={setShareLink}
@@ -736,10 +844,16 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
         marginBottom: spacing.xs,
     },
+    copyHeaderActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        flexWrap: 'wrap',
+    },
     copyTitle: {
         fontSize: fontSizes.base,
         fontWeight: '700',
-        color: colors.white,
+        color: colors.black,
         fontFamily: fontFamilies.display,
         letterSpacing: 1.1,
         textTransform: 'uppercase',
@@ -754,17 +868,37 @@ const styles = StyleSheet.create({
         borderColor: colors.borderOnDarkSoft,
         backgroundColor: colors.surfaceWhiteStrong,
     },
+    copyButtonDisabled: {
+        opacity: 0.6,
+    },
     copyButtonText: {
         marginLeft: spacing.xs,
         fontSize: fontSizes.sm,
-        color: colors.brandIndigo,
+        color: colors.black,
         fontFamily: fontFamilies.body,
         fontWeight: '600',
     },
     copySubtitle: {
         marginBottom: spacing.sm,
         fontSize: fontSizes.sm,
-        color: colors.textOnDarkMuted,
+        color: colors.black,
+        fontFamily: fontFamilies.body,
+    },
+    branchStatusRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        marginBottom: spacing.sm,
+    },
+    branchStatusText: {
+        fontSize: fontSizes.sm,
+        color: colors.black,
+        fontFamily: fontFamilies.body,
+    },
+    branchStatusError: {
+        marginBottom: spacing.sm,
+        fontSize: fontSizes.sm,
+        color: colors.danger,
         fontFamily: fontFamilies.body,
     },
     copyLinkInput: {
@@ -775,7 +909,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
         fontSize: fontSizes.sm,
-        color: colors.textPrimary,
+        color: colors.black,
         fontFamily: fontFamilies.body,
         marginBottom: spacing.sm,
     },
@@ -788,14 +922,14 @@ const styles = StyleSheet.create({
     },
     copyMessageText: {
         fontSize: fontSizes.base,
-        color: colors.textPrimary,
+        color: colors.black,
         fontFamily: fontFamilies.body,
         lineHeight: 20,
     },
     copyStatus: {
         marginTop: spacing.xs,
         fontSize: fontSizes.sm,
-        color: colors.textOnDarkMuted,
+        color: colors.black,
         fontFamily: fontFamilies.body,
     },
     previewImageGrid: {},
