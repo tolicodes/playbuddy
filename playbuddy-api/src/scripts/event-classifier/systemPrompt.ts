@@ -38,6 +38,7 @@ Mapping
 - use classification ID for keys in the output (ex: type vs Type)
 - type must be one of: workshop, munch, play_party, festival, conference, retreat, event.
 - only choose a specific type when the title/description is explicit; otherwise use "event".
+- if Start Date and End Date span multiple days, type must be retreat, festival, or conference; choose festival/conference only when explicit, otherwise use retreat.
 - JSON output should be an array of objects containing a key "events" which is an  array of objects with the above structure
 - input event.id maps to event_id (the integer) NOT the original_id
 - do not put in tags something that already exists in another field (ex: queer, workshop)

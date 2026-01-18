@@ -22,6 +22,43 @@ const normalizeField = (value: string) =>
     value.trim().toLowerCase().replace(/[\s-]+/g, '_');
 const normalizeFieldList = (fields?: string[]) =>
     Array.isArray(fields) ? fields.map(normalizeField).filter(Boolean) : [];
+const normalizeExperienceLevel = (value?: string | null) => {
+    if (!value) return value;
+    const normalized = value.trim().toLowerCase().replace(/[_-]+/g, ' ');
+    if (normalized === 'all levels' || normalized === 'all level' || normalized === 'all') {
+        return 'All';
+    }
+    return value;
+};
+const MULTI_DAY_MIN_HOURS = 20;
+const MULTI_DAY_TYPES = new Set(['retreat', 'festival', 'conference']);
+const CONFERENCE_RE = /\b(conference|convention|summit|congress|symposium)\b/i;
+const FESTIVAL_RE = /\b(festival|fest|camp|gathering|burn|convergence)\b/i;
+const RETREAT_RE = /\b(retreat|immersion|residency)\b/i;
+
+const parseEventDate = (value?: string | null) => {
+    if (!value) return null;
+    const parsed = new Date(value);
+    if (Number.isNaN(parsed.getTime())) return null;
+    return parsed;
+};
+
+const isMultiDayEvent = (event: Event) => {
+    const start = parseEventDate(event.start_date);
+    const end = parseEventDate(event.end_date);
+    if (!start || !end) return false;
+    const durationMs = end.getTime() - start.getTime();
+    if (durationMs <= 0) return false;
+    return (durationMs / (1000 * 60 * 60)) >= MULTI_DAY_MIN_HOURS;
+};
+
+const pickMultiDayType = (event: Event) => {
+    const haystack = `${event.name || ''} ${event.description || ''}`.toLowerCase();
+    if (CONFERENCE_RE.test(haystack)) return 'conference';
+    if (FESTIVAL_RE.test(haystack)) return 'festival';
+    if (RETREAT_RE.test(haystack)) return 'retreat';
+    return 'retreat';
+};
 
 async function fetchQueuedEvents(options: ClassifyOptions = {}): Promise<Event[]> {
     const nowIso = new Date().toISOString();
@@ -167,7 +204,7 @@ async function updateSupabaseAndWriteToFile(
             const classificationPayload: Record<string, any> = {};
             if (shouldUpdate('tags') && c.tags !== undefined) classificationPayload.tags = c.tags;
             if (shouldUpdate('experience_level') && c.experience_level !== undefined) {
-                classificationPayload.experience_level = c.experience_level;
+                classificationPayload.experience_level = normalizeExperienceLevel(c.experience_level);
             }
             if (shouldUpdate('interactivity_level') && c.interactivity_level !== undefined) {
                 classificationPayload.interactivity_level = c.interactivity_level;
@@ -242,7 +279,7 @@ async function updateSupabaseAndWriteToFile(
                 [{
                     event_id,
                     tags: c.tags,
-                    experience_level: c.experience_level,
+                    experience_level: normalizeExperienceLevel(c.experience_level),
                     interactivity_level: c.interactivity_level,
                     inclusivity: c.inclusivity,
                 }],
@@ -339,6 +376,10 @@ const OUTPUT_PATH = './classifications.json';
 export async function classifyEventsInBatches(batchSize = 10, options: ClassifyOptions = {}) {
     const fieldList = normalizeFieldList(options.fields);
     const fieldSet = new Set(fieldList);
+    const enforceMultiDayType =
+        !options.neighborhoodOnly
+        && !options.priceOnly
+        && (fieldSet.size === 0 || fieldSet.has('type'));
     const promptNeighborhoodOnly =
         options.neighborhoodOnly === true ||
         (!options.priceOnly && !options.neighborhoodOnly && fieldSet.size === 1 && fieldSet.has('neighborhood'));
@@ -372,6 +413,8 @@ export async function classifyEventsInBatches(batchSize = 10, options: ClassifyO
                 ID: ${event.id}
                 Title: ${event.name}
                 Organizer: ${event.organizer?.name || ''}
+                Start Date: ${event.start_date || ''}
+                End Date: ${event.end_date || ''}
                 Price: ${event.price || ''}
                 Location: ${event.location || ''}
                 City: ${event.city || ''}
@@ -397,6 +440,19 @@ export async function classifyEventsInBatches(batchSize = 10, options: ClassifyO
         });
 
         const classifications = JSON.parse(response.choices[0].message.content!).events;
+        if (enforceMultiDayType) {
+            const eventsById = new Map(batch.map(event => [String(event.id), event]));
+            for (const item of classifications || []) {
+                const event = eventsById.get(String(item?.event_id ?? ''));
+                if (!event || !isMultiDayEvent(event)) continue;
+                const rawType = typeof item?.type === 'string' ? item.type.trim().toLowerCase() : '';
+                if (rawType && MULTI_DAY_TYPES.has(rawType)) {
+                    item.type = rawType;
+                    continue;
+                }
+                item.type = pickMultiDayType(event);
+            }
+        }
         results.push(...classifications);
         await updateSupabaseAndWriteToFile(results, options);
 
