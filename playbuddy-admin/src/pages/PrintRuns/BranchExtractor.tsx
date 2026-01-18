@@ -16,7 +16,7 @@ interface BranchExtractorProps {
 }
 
 const escapeRegExp = (str: string) =>
-    str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&')
 
 export default function BranchExtractor({
     assignee,
@@ -25,7 +25,6 @@ export default function BranchExtractor({
     count,
     onExtract
 }: BranchExtractorProps) {
-    const [file, setFile] = useState<File | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [mappings, setMappings] = useState<Mapping[]>([])
@@ -34,7 +33,6 @@ export default function BranchExtractor({
         const file = e.target.files?.[0]
         if (!file) return
 
-        setFile(file)
         setLoading(true)
         setError(null)
         setMappings([])

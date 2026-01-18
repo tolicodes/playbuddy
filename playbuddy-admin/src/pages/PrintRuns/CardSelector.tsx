@@ -65,7 +65,6 @@ export default function CardSelector({
             setDrawing(false)
             return
         }
-        const stage = stageRef.current
         const stageHeight = img.height || 0
 
         // convert y from top-left origin to bottom-left origin

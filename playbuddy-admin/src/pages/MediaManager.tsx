@@ -36,7 +36,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({ media, onMediaChange
 
         for (const file of acceptedFiles) {
             const path = `media/${Date.now()}-${file.name}`;
-            const { data: uploadData, error } = await supabaseClient
+            const { error } = await supabaseClient
                 .storage
                 .from('general')
                 .upload(path, file);

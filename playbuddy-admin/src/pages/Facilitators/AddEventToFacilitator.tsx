@@ -10,7 +10,6 @@ import {
     TableCell,
     TableBody,
     Autocomplete,
-    Stack,
 } from '@mui/material';
 import { Delete } from '@mui/icons-material';
 import CheckIcon from '@mui/icons-material/Check';

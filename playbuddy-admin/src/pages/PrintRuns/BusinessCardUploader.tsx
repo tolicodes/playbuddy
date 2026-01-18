@@ -70,7 +70,7 @@ export default function BusinessCardUploader({ onComplete }: BusinessCardUploade
         if (frontUrl && backUrl && qr) {
             onComplete(frontUrl, backUrl, qr)
         }
-    }, [frontUrl, backUrl, qr])
+    }, [frontUrl, backUrl, qr, onComplete])
 
     return (
         <div style={{ fontFamily: 'sans-serif', marginBottom: 24 }}>

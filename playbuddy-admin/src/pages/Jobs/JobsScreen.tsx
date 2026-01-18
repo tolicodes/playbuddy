@@ -1,6 +1,4 @@
 import React from "react";
-import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
 import {
   Accordion,
   AccordionSummary,
@@ -8,7 +6,6 @@ import {
   Box,
   Chip,
   Collapse,
-  Divider,
   LinearProgress,
   Stack,
   Typography,
@@ -21,7 +18,6 @@ import {
 } from "../../common/db-axios/useScrapeJobs";
 import { useFetchOrganizers } from "../../common/db-axios/useOrganizers";
 import type { Event } from "../../common/types/commonTypes";
-import { API_BASE_URL } from "../../common/config";
 import { useFetchEvents } from "../../common/db-axios/useEvents";
 
 const statusColor = (status: string) => {

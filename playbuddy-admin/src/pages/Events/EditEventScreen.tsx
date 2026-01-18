@@ -10,7 +10,7 @@ export default function EditEventPage() {
         const pathSegments = window.location.pathname.split('/');
         const lastSegment = pathSegments[pathSegments.length - 1];
 
-        if (lastSegment && lastSegment !== 'new' && /^[a-zA-Z0-9\-]+$/.test(lastSegment)) {
+        if (lastSegment && lastSegment !== 'new' && /^[a-zA-Z0-9-]+$/.test(lastSegment)) {
             setEditingId(lastSegment);
         } else {
             setEditingId(null);
