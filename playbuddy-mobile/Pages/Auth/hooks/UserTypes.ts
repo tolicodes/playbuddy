@@ -10,6 +10,7 @@ export interface UserProfile {
     selected_community_id?: string | null;
     initial_deep_link_id?: string | null;
     joined_newsletter?: boolean | null;
+    share_calendar?: boolean | null;
 }
 
 export type SignUpParams = {

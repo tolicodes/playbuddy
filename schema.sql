@@ -319,6 +319,7 @@ CREATE TABLE IF NOT EXISTS "public"."events" (
     "dataset" "text",
     "event_url" "text",
     "approval_status" "text",
+    "user_submitted" boolean DEFAULT false,
     "vetted" boolean DEFAULT false,
     "classification_status" "text",
     "type" "text" DEFAULT 'event'::"text",
@@ -577,7 +578,8 @@ CREATE TABLE IF NOT EXISTS "public"."users" (
     "avatar_url" "text",
     "selected_location_area_id" "uuid",
     "selected_community_id" "uuid",
-    "joined_newsletter" boolean DEFAULT false
+    "joined_newsletter" boolean DEFAULT false,
+    "share_calendar" boolean DEFAULT false
 );
 
 

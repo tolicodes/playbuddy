@@ -25,7 +25,7 @@ router.get('/buddies', authenticateRequest, async (req: AuthenticatedRequest, re
     // Fetch buddies' wishlists
     const { data: buddiesWishlists, error: buddiesWishlistsError } = await supabaseClient
         .from('event_wishlist')
-        .select('event_id, user:users(user_id, name, avatar_url)')
+        .select('event_id, user:users(user_id, name, avatar_url, share_calendar)')
         .in('user_id', buddyIds)
         .returns<BuddyWishlistRaw[]>();
 
@@ -40,6 +40,7 @@ router.get('/buddies', authenticateRequest, async (req: AuthenticatedRequest, re
             user_id: string;
             name: string;
             avatar_url: string | null;
+            share_calendar?: boolean | null;
         };
         event_id: string
     }
@@ -51,7 +52,9 @@ router.get('/buddies', authenticateRequest, async (req: AuthenticatedRequest, re
         events: string[];
     }
 
-    const out = buddiesWishlists.reduce((acc, curr) => {
+    const shareableWishlists = buddiesWishlists.filter((entry) => entry.user?.share_calendar);
+
+    const out = shareableWishlists.reduce((acc, curr) => {
         const existingUser = acc.find(user => user.user_id === curr.user.user_id);
         if (existingUser) {
             existingUser.events.push(curr.event_id);
@@ -235,7 +238,8 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
                 user:user_id (
                     user_id,
                     name,
-                    avatar_url
+                    avatar_url,
+                    share_calendar
                 )
             `)
             .in('user_id', buddyIds);
@@ -252,6 +256,7 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
                 user_id: string;
                 name: string;
                 avatar_url: string | null;
+                share_calendar?: boolean | null;
             };
         };
 
@@ -269,6 +274,7 @@ router.get('/sharedEvents', authenticateRequest, async (req: AuthenticatedReques
 
         // @ts-ignore
         buddiesWishlists.forEach((item: SharedEventRaw) => {
+            if (!item.user?.share_calendar) return;
             if (userWishlistSet.has(item.event_id)) {
                 if (!sharedEventsMap.has(item.event_id)) {
                     sharedEventsMap.set(item.event_id, { eventId: item.event_id, sharedBuddies: [] });

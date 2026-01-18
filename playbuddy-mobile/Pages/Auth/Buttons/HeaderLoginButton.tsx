@@ -177,7 +177,7 @@ const HeaderLoginButton = ({
     const avatarContainerStyle = headerButton ? styles.headerAvatarContainer : styles.avatarContainer;
     const showBadge = headerButton && unreadCount > 0;
     const badgeLabel = unreadCount > 9 ? '9+' : String(unreadCount);
-    const menuHeight = 360;
+    const menuHeight = authUserId ? 460 : 400;
 
     return (
         <>
@@ -285,6 +285,31 @@ const HeaderLoginButton = ({
                                     </Text>
                                 </View>
                             )}
+                        </Pressable>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.sheetItem,
+                                styles.sheetItemShadow,
+                                pressed && styles.sheetItemPressed,
+                            ]}
+                            onPress={() => {
+                                logDebug('menu press: consent', { routeName: route.name });
+                                setMenuOpen(false);
+                                if (!authUserId) {
+                                    setTimeout(() => navigateToAuth(navigation, 'Login Form'), 0);
+                                    return;
+                                }
+                                setTimeout(() => navigateToHomeStackScreen(navigation, 'Consent', { source: 'settings' }), 0);
+                            }}
+                        >
+                            <View style={styles.sheetIconWrap}>
+                                <FAIcon name="hand-holding-heart" size={16} color={colors.brandIndigo} />
+                            </View>
+                            <View style={styles.sheetTextWrap}>
+                                <Text style={styles.sheetItemTitle}>Consent</Text>
+                                <Text style={styles.sheetItemSubtitle}>Control what you share and receive</Text>
+                            </View>
+                            <FAIcon name="chevron-right" size={14} color={colors.textMuted} />
                         </Pressable>
                         <Pressable
                             style={({ pressed }) => [

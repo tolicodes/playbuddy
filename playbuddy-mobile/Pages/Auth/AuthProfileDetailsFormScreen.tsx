@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from 'axios';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput, Switch } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, ActivityIndicator, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useUserContext } from "./hooks/UserContext";
 import { Avatar } from './Buttons/Avatar';
@@ -11,7 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../userEventTypes";
 import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
-import { navigateToTab } from "../../Common/Nav/navigationHelpers";
+import { navigateToHomeStackScreen, navigateToTab } from "../../Common/Nav/navigationHelpers";
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
 export const ProfileDetailsForm = () => {
@@ -23,11 +23,8 @@ export const ProfileDetailsForm = () => {
         || session?.user?.user_metadata?.full_name
         || ''
     );
-    const [subscribeToNewsletter, setSubscribeToNewsletter] = useState(true);
-
     const analyticsProps = useAnalyticsProps();
     const isEditing = !!userProfile?.name;
-    const showNewsletterOptIn = !isEditing;
 
     const onPressCreateAccount = async () => {
         const normalizedName = name.trim();
@@ -50,18 +47,16 @@ export const ProfileDetailsForm = () => {
                 name: string;
                 avatar_url?: string;
                 initial_deep_link_id?: string;
-                joined_newsletter?: boolean;
             } = {
                 name: normalizedName,
                 avatar_url: userProfile?.avatar_url,
                 initial_deep_link_id: !isEditing ? currentDeepLink?.id || undefined : undefined,
             };
-            if (showNewsletterOptIn) {
-                updatePayload.joined_newsletter = subscribeToNewsletter;
-            }
             await updateUserProfile(updatePayload);
             if (isEditing) {
                 navigation.goBack();
+            } else {
+                navigateToHomeStackScreen(navigation, 'Consent', { source: 'signup' });
             }
         } catch (error) {
             const errorMessage = axios.isAxiosError(error)
@@ -109,24 +104,6 @@ export const ProfileDetailsForm = () => {
                     <View style={{ marginVertical: 20 }}>
                         <Avatar name={name} />
                     </View>
-
-                    {showNewsletterOptIn && (
-                        <View style={styles.newsletterRow}>
-                            <View style={styles.newsletterCopy}>
-                                <Text style={styles.newsletterLabel}>Subscribe to the newsletter</Text>
-                                <Text style={styles.newsletterDescription}>
-                                    Weekly event drops and community tips in your inbox.
-                                </Text>
-                            </View>
-                            <Switch
-                                value={subscribeToNewsletter}
-                                onValueChange={setSubscribeToNewsletter}
-                                trackColor={{ false: colors.borderMutedAlt, true: colors.brandIndigo }}
-                                thumbColor={colors.white}
-                                ios_backgroundColor={colors.borderMutedAlt}
-                            />
-                        </View>
-                    )}
 
                     <TouchableOpacity style={styles.button} onPress={onPressCreateAccount}>
                         <Text style={styles.buttonText}>{isEditing ? 'Save Changes' : 'Create Account'}</Text>
@@ -212,36 +189,5 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
         ...shadows.card,
         width: '100%',
-    },
-    newsletterRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: spacing.md,
-        alignSelf: 'stretch',
-        paddingVertical: spacing.mdPlus,
-        paddingHorizontal: spacing.lg,
-        borderRadius: radius.sm,
-        backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
-        marginBottom: spacing.xl,
-        ...shadows.card,
-    },
-    newsletterCopy: {
-        flex: 1,
-        paddingRight: spacing.sm,
-    },
-    newsletterLabel: {
-        color: colors.textDeep,
-        fontSize: fontSizes.lg,
-        fontWeight: '600',
-        marginBottom: spacing.xs,
-        fontFamily: fontFamilies.body,
-    },
-    newsletterDescription: {
-        color: colors.brandTextMuted,
-        fontSize: fontSizes.base,
-        fontFamily: fontFamilies.body,
     },
 });

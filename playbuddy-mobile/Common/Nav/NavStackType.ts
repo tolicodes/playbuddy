@@ -34,6 +34,9 @@ export type NavStackProps = {
     // TODO: Move?
     'Profile Details': undefined;
     'Profile': undefined;
+    'Consent': {
+        source?: 'signup' | 'settings';
+    };
     'Login': undefined;
     'Notifications': undefined;
     'Debug': undefined;
@@ -76,6 +79,7 @@ export type NavStackProps = {
     'Retreats': undefined;
     'Moar': undefined;
     'Discover Game': undefined;
+    'Submit Event': undefined;
 
 }
 

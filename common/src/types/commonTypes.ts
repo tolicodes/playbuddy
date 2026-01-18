@@ -146,6 +146,11 @@ export interface Event extends EventDataSource {
     approval_status?: 'pending' | 'approved' | 'rejected' | null;
 
     /**
+     * True when submitted by end users through in-app submissions.
+     */
+    user_submitted?: boolean | null;
+
+    /**
      * Whether hidden from listings (default false).
      */
     hidden?: boolean | null;
@@ -392,6 +397,25 @@ export interface NormalizedEventInput extends Omit<Event, 'id' | 'organizer' | '
 }
 
 /**
+ * Payload for user-submitted events (manual entry).
+ */
+export type UserSubmittedEventInput = {
+    name: string;
+    organizer_name: string;
+    organizer_url?: string;
+    start_date: string;
+    end_date?: string;
+    ticket_url?: string;
+    event_url?: string;
+    image_url?: string;
+    location: string;
+    city?: string;
+    region?: string;
+    description: string;
+    price?: string;
+};
+
+/**
  * ResolvedDependenciesEventInput is the version of an event that is ready
  * to be inserted into the database. It has all dependencies resolved.
  *
@@ -528,6 +552,8 @@ export interface ImportSource {
     identifier_type?: IdentifierType;
     approval_status?: 'pending' | 'approved' | 'rejected' | null;
     message_sent?: boolean | null;
+    is_festival?: boolean | null;
+    is_excluded?: boolean | null;
     metadata: Record<string, any>;
     event_defaults: Record<string, any>;
     created_at: string;
@@ -950,6 +976,12 @@ export interface Users {
 
     /** References communities.id (nullable). */
     selected_community_id: string | null;
+
+    /** Consent to share calendar with other users (defaults to false). */
+    share_calendar: boolean | null;
+
+    /** Consent to receive the newsletter (defaults to false). */
+    joined_newsletter: boolean | null;
 
     /** References deep_links.id (nullable). */
     initial_deep_link_id: string | null;

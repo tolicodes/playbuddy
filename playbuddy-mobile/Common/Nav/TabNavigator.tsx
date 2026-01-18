@@ -22,6 +22,7 @@ import { MunchDetails } from "../../Pages/Munches/MunchDetails";
 import FacilitatorProfile from "../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile";
 import { ProfileDetailsForm } from "../../Pages/Auth/AuthProfileDetailsFormScreen";
 import AuthProfileScreen from "../../Pages/Auth/AuthProfileScreen";
+import ConsentScreen from "../../Pages/Auth/ConsentScreen";
 import { WeeklyPicks } from "../../Pages/Entries/WeeklyPicks";
 import { Facilitators } from "../../Pages/Facilitators/Facilitators";
 import { PromosListScreen } from "../../Pages/EventLists/PromosListScreen";
@@ -30,6 +31,7 @@ import { Retreats } from "../../Pages/EventLists/Retreats";
 import { MunchesScreen } from '../../Pages/Munches/MunchesScreen';
 import PlayParties from "../../Pages/EventLists/PlayParties";
 import Moar from "../../Pages/Moar";
+import SubmitEvent from "../../Pages/SubmitEvent";
 import { AdminScreen } from "../../Pages/Admin/AdminScreen";
 import ImportEventURLsScreen from "../../Pages/Admin/ImportEventURLsScreen";
 import WeeklyPicksAdminScreen from "../../Pages/Admin/WeeklyPicksAdminScreen";
@@ -54,6 +56,11 @@ const renderSharedStackScreens = () => (
             name="Profile"
             component={AuthProfileScreen}
             options={({ navigation }) => headerOptions({ navigation, title: 'Profile' })}
+        />
+        <Stack.Screen
+            name="Consent"
+            component={ConsentScreen}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Consent' })}
         />
         <Stack.Screen
             name="Notifications"
@@ -131,6 +138,11 @@ const renderSharedStackScreens = () => (
             name="Moar"
             component={Moar}
             options={({ navigation }) => headerOptions({ navigation, title: 'Moar' })}
+        />
+        <Stack.Screen
+            name="Submit Event"
+            component={SubmitEvent}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Add Your Event' })}
         />
         <Stack.Screen
             name="Admin"

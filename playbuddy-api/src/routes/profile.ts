@@ -13,7 +13,7 @@ router.get('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
     try {
         const { data, error } = await supabaseClient
             .from('users')
-            .select('user_id, share_code, name, avatar_url, selected_community_id, selected_location_area_id, joined_newsletter')
+            .select('user_id, share_code, name, avatar_url, selected_community_id, selected_location_area_id, joined_newsletter, share_calendar')
             .eq('user_id', authUserId)
             .single();
 
@@ -35,6 +35,7 @@ router.get('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
             selected_community_id: data.selected_community_id,
             selected_location_area_id: data.selected_location_area_id,
             joined_newsletter: data.joined_newsletter,
+            share_calendar: data.share_calendar,
         };
 
         return res.json(userProfile)
@@ -70,6 +71,7 @@ router.put('/me', authenticateRequest, asyncHandler(async (req: AuthenticatedReq
             'selected_community_id',
             'initial_deep_link_id',
             'joined_newsletter',
+            'share_calendar',
         ];
 
         const updateFields: any = { share_code: shareCode };

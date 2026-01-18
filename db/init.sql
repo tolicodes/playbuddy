@@ -135,3 +135,7 @@ ALTER TABLE users
 ADD COLUMN name TEXT;
 
 CREATE UNIQUE INDEX users_name_lower_unique ON users (lower(name));
+
+ALTER TABLE users
+ADD COLUMN joined_newsletter BOOLEAN DEFAULT FALSE,
+ADD COLUMN share_calendar BOOLEAN DEFAULT FALSE;
