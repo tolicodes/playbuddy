@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     Autocomplete,
-    Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Divider, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link, Collapse, IconButton,
+    Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link, Collapse, IconButton,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -20,6 +20,10 @@ import { useFetchEvents } from '../../common/db-axios/useEvents';
 const METHODS = ['chrome_scraper', 'eb_scraper', 'ai_scraper'];
 const SOURCES = ['fetlife_handle', 'eb_url', 'url'];
 const ID_TYPES = ['handle', 'url'];
+const ADMIN_APPROVAL_STATUSES = ['approved', 'pending', 'rejected'];
+const SOURCES_STICKY_TOP = 48;
+const SOURCES_STICKY_BAR_HEIGHT = 64;
+const SOURCES_TABLE_HEADER_TOP = SOURCES_STICKY_TOP + SOURCES_STICKY_BAR_HEIGHT;
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').toLowerCase().trim();
 const normalizeUrl = (val?: string | null) => {
@@ -55,6 +59,87 @@ const getOrganizerFetlifeHandles = (org: any) => {
     return Array.from(new Set(normalized));
 };
 
+const getSourceApprovalState = (status?: ImportSource['approval_status']) => {
+    if (status === 'pending') return 'pending';
+    if (status === 'rejected') return 'rejected';
+    return 'approved';
+};
+
+const SOURCE_STATUS_COLORS = {
+    rejected: '#d32f2f',
+    approved: '#2e7d32',
+    messaged: '#1976d2',
+    festival: '#7b1fa2',
+    none: '#d81b60',
+};
+
+const SOURCE_ROW_COLORS = {
+    rejected: '#fdecea',
+    approved: '#e8f5e9',
+    messaged: '#e3f2fd',
+    festival: '#f3e5f5',
+    none: '#fce4ec',
+};
+
+type SourceStatusKey = keyof typeof SOURCE_STATUS_COLORS;
+
+type SourceStatusFlags = {
+    isRejected: boolean;
+    isExcluded: boolean;
+    isApproved: boolean;
+    isMessaged: boolean;
+    isFestival: boolean;
+};
+
+type SourceStatusDotFlags = Pick<SourceStatusFlags, 'isRejected' | 'isApproved' | 'isMessaged' | 'isFestival'>;
+
+const getSourceStatusFlags = (src: ImportSource): SourceStatusFlags => {
+    const approvalState = getSourceApprovalState(src.approval_status);
+    const isRejected = approvalState === 'rejected';
+    const isExcluded = isRejected || !!src.is_excluded;
+    const isApproved = approvalState === 'approved' && !isExcluded;
+    const isMessaged = !!src.message_sent;
+    const isFestival = !!src.is_festival;
+    return { isRejected, isExcluded, isApproved, isMessaged, isFestival };
+};
+
+const getSourcePrimaryStatus = (flags: SourceStatusFlags): SourceStatusKey => {
+    if (flags.isRejected) return 'rejected';
+    if (flags.isApproved) return 'approved';
+    if (flags.isMessaged) return 'messaged';
+    if (flags.isFestival) return 'festival';
+    return 'none';
+};
+
+const SOURCE_SECTION_INDEX: Record<SourceStatusKey, number> = {
+    none: 0,
+    festival: 1,
+    messaged: 2,
+    approved: 3,
+    rejected: 4,
+};
+
+const SOURCE_SECTION_LABELS: Record<SourceStatusKey, string> = {
+    none: 'All Other',
+    festival: 'Festival',
+    messaged: 'Messaged',
+    approved: 'Approved',
+    rejected: 'Rejected',
+};
+
+const getSourceSection = (src: ImportSource) => SOURCE_SECTION_INDEX[getSourcePrimaryStatus(getSourceStatusFlags(src))];
+
+const getSourceStatusDots = (flags: SourceStatusDotFlags) => {
+    const { isRejected, isApproved, isMessaged, isFestival } = flags;
+    const dots: { key: string; color: string; title: string }[] = [];
+    if (isRejected) dots.push({ key: 'rejected', color: SOURCE_STATUS_COLORS.rejected, title: 'Rejected' });
+    if (isApproved) dots.push({ key: 'approved', color: SOURCE_STATUS_COLORS.approved, title: 'Approved' });
+    if (isMessaged) dots.push({ key: 'messaged', color: SOURCE_STATUS_COLORS.messaged, title: 'Messaged' });
+    if (isFestival) dots.push({ key: 'festival', color: SOURCE_STATUS_COLORS.festival, title: 'Festival' });
+    if (!dots.length) dots.push({ key: 'none', color: SOURCE_STATUS_COLORS.none, title: 'None' });
+    return dots;
+};
+
 const formatOrganizer = (src: ImportSource): string => {
     const meta = src?.metadata || {};
     const defaults = src?.event_defaults || {};
@@ -84,7 +169,7 @@ export default function ImportSourcesScreen() {
     const { data: sources = [], isLoading: isSourcesLoading } = useImportSources({ includeAll: true });
     const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
     const { data: events = [], isLoading: isEventsLoading } = useFetchEvents({
-        includeApprovalPending: true,
+        approvalStatuses: ADMIN_APPROVAL_STATUSES,
         includeHiddenOrganizers: true,
         includeHidden: true,
         includeFacilitatorOnly: true,
@@ -97,6 +182,8 @@ export default function ImportSourcesScreen() {
     const markMessageSent = useMarkImportSourceMessageSent();
     const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
     const [tab, setTab] = useState<'sources' | 'fet'>('sources');
+    const [showSuggestedFestivals, setShowSuggestedFestivals] = useState(false);
+    const [sourceSearch, setSourceSearch] = useState('');
     const [form, setForm] = useState({
         source: '',
         method: METHODS[0],
@@ -187,7 +274,7 @@ export default function ImportSourcesScreen() {
         message_sent: boolean;
     };
 
-    const formatOrganizerFromSources = (src: ImportSource): string => {
+    const formatOrganizerFromSources = useCallback((src: ImportSource): string => {
         const organizerId = (src.event_defaults as any)?.organizer_id || (src.event_defaults as any)?.organizerId || (src.metadata as any)?.organizer_id || (src.metadata as any)?.organizerId;
         if (organizerId && organizerById[organizerId]) return organizerById[organizerId];
 
@@ -197,7 +284,7 @@ export default function ImportSourcesScreen() {
             if (norm && organizerByHandle[norm]) return organizerByHandle[norm];
         }
         return formatOrganizer(src);
-    };
+    }, [organizerByHandle, organizerById]);
 
     const organizerOptions: OrganizerOption[] = useMemo(() => {
         return organizers.map((org: any) => ({
@@ -235,6 +322,80 @@ export default function ImportSourcesScreen() {
         await markMessageSent.mutateAsync({ id: String(src.id), message_sent: checked });
     };
 
+    const handleApprovalToggle = async (src: ImportSource, checked: boolean) => {
+        if (!src?.id) return;
+        const nextExcluded = checked ? false : undefined;
+        await updateSource.mutateAsync({
+            id: src.id,
+            source: src.source,
+            method: src.method,
+            identifier: src.identifier,
+            identifier_type: src.identifier_type,
+            metadata: src.metadata,
+            event_defaults: src.event_defaults,
+            approval_status: checked ? 'approved' : 'pending',
+            message_sent: src.message_sent,
+            is_excluded: nextExcluded,
+        });
+    };
+
+    const handleRejectedToggle = async (src: ImportSource, checked: boolean) => {
+        if (!src?.id) return;
+        const nextExcluded = checked ? true : undefined;
+        await updateSource.mutateAsync({
+            id: src.id,
+            source: src.source,
+            method: src.method,
+            identifier: src.identifier,
+            identifier_type: src.identifier_type,
+            metadata: src.metadata,
+            event_defaults: src.event_defaults,
+            approval_status: checked ? 'rejected' : 'pending',
+            message_sent: src.message_sent,
+            is_excluded: nextExcluded,
+        });
+    };
+
+    const handleFestivalToggle = async (src: ImportSource, checked: boolean) => {
+        if (!src?.id || src.source !== 'fetlife_handle') return;
+        await updateSource.mutateAsync({
+            id: src.id,
+            source: src.source,
+            method: src.method,
+            identifier: src.identifier,
+            identifier_type: src.identifier_type,
+            metadata: src.metadata,
+            event_defaults: src.event_defaults,
+            approval_status: src.approval_status,
+            message_sent: src.message_sent,
+            is_festival: checked,
+        });
+    };
+
+    const handleExcludedToggle = async (src: ImportSource, checked: boolean) => {
+        if (!src?.id) return;
+        const approvalState = src.approval_status === 'pending'
+            ? 'pending'
+            : src.approval_status === 'rejected'
+                ? 'rejected'
+                : 'approved';
+        const nextApprovalStatus = checked && approvalState === 'approved'
+            ? 'pending'
+            : src.approval_status;
+        await updateSource.mutateAsync({
+            id: src.id,
+            source: src.source,
+            method: src.method,
+            identifier: src.identifier,
+            identifier_type: src.identifier_type,
+            metadata: src.metadata,
+            event_defaults: src.event_defaults,
+            approval_status: nextApprovalStatus,
+            message_sent: src.message_sent,
+            is_excluded: checked,
+        });
+    };
+
     const toggleExpandedSource = (id: string) => {
         setExpandedSources(prev => ({ ...prev, [id]: !prev[id] }));
     };
@@ -252,9 +413,11 @@ export default function ImportSourcesScreen() {
     };
 
     const renderFetSourceAccordion = (entry: FetSourceEntry, showMessaged: boolean) => {
-        const isApproved = (entry.approval_status || 'pending') === 'approved';
-        const approvalColor: 'success' | 'warning' | 'default' = isApproved ? 'success' : 'warning';
-        const approvalLabel = isApproved ? 'Approved' : 'Pending approval';
+        const approvalState = getSourceApprovalState(entry.approval_status);
+        const isApproved = approvalState === 'approved';
+        const approvalColor: 'success' | 'warning' | 'error' =
+            approvalState === 'approved' ? 'success' : (approvalState === 'rejected' ? 'error' : 'warning');
+        const approvalLabel = approvalState === 'approved' ? 'Approved' : (approvalState === 'rejected' ? 'Rejected' : 'Pending approval');
         const fetUrl = `https://fetlife.com/${entry.handle}`;
         return (
             <Accordion key={entry.handle} disableGutters>
@@ -320,8 +483,7 @@ export default function ImportSourcesScreen() {
                     {entry.events.length ? (
                         <Stack spacing={1.5}>
                             {entry.events.map((ev) => {
-                                const statusLabel = (!ev.approval_status || ev.approval_status === 'approved') ? 'Approved' : (ev.approval_status || 'Pending');
-                                const statusColor: 'default' | 'success' | 'warning' = (!ev.approval_status || ev.approval_status === 'approved') ? 'success' : 'warning';
+                                const { label: statusLabel, color: statusColor } = getApprovalMeta(ev.approval_status);
                                 const ticketHref = ev.ticket_url || ev.event_url || '';
                                 return (
                                     <Stack key={`${entry.handle}-${ev.id}`} direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
@@ -352,9 +514,55 @@ export default function ImportSourcesScreen() {
         );
     };
 
-    const sorted = useMemo(() => [...sources].sort((a, b) =>
-        (b.created_at || '').localeCompare(a.created_at || '')
-    ), [sources]);
+    const sorted = useMemo(() => [...sources].sort((a, b) => {
+        const createdDiff = (b.created_at || '').localeCompare(a.created_at || '');
+        if (createdDiff !== 0) return createdDiff;
+        const idDiff = String(a.id || '').localeCompare(String(b.id || ''));
+        if (idDiff !== 0) return idDiff;
+        const sourceDiff = (a.source || '').localeCompare(b.source || '');
+        if (sourceDiff !== 0) return sourceDiff;
+        const methodDiff = (a.method || '').localeCompare(b.method || '');
+        if (methodDiff !== 0) return methodDiff;
+        return (a.identifier || '').localeCompare(b.identifier || '');
+    }), [sources]);
+
+    const filteredSources = useMemo(() => {
+        const query = sourceSearch.trim().toLowerCase();
+        const baseList = query ? sorted.filter((src: ImportSource) => {
+            const isHandleSource =
+                (src.identifier_type || '').toLowerCase() === 'handle' ||
+                src.source === 'fetlife_handle';
+            const isUrlSource =
+                (src.identifier_type || '').toLowerCase() === 'url' ||
+                src.source === 'eb_url' ||
+                src.source === 'url' ||
+                /^https?:\/\//i.test(src.identifier || '');
+            const identifier = src.identifier || '';
+            const normalizedIdentifier = isHandleSource
+                ? normalizeHandle(identifier)
+                : (isUrlSource ? normalizeUrl(identifier) : '');
+            const organizerLabel = formatOrganizerFromSources(src);
+            const parts = [
+                src.source,
+                src.method,
+                identifier,
+                normalizedIdentifier,
+                src.identifier_type,
+                organizerLabel,
+            ].filter(Boolean) as string[];
+            return parts.join(' ').toLowerCase().includes(query);
+        }) : [...sorted];
+        const decorated = baseList.map((src, index) => ({
+            src,
+            index,
+            section: getSourceSection(src),
+        }));
+        decorated.sort((a, b) => {
+            if (a.section !== b.section) return a.section - b.section;
+            return a.index - b.index;
+        });
+        return decorated.map(({ src }) => src);
+    }, [sorted, sourceSearch, formatOrganizerFromSources]);
 
     const formatEventDate = (ev: Event) => {
         const dateStr = ev.start_date || ev.end_date;
@@ -362,6 +570,13 @@ export default function ImportSourcesScreen() {
         const date = new Date(dateStr);
         if (Number.isNaN(date.getTime())) return dateStr;
         return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+    };
+
+    const getApprovalMeta = (status?: Event['approval_status']) => {
+        const normalized = status ?? 'approved';
+        if (normalized === 'approved') return { label: 'Approved', color: 'success' as const };
+        if (normalized === 'pending') return { label: 'Pending', color: 'warning' as const };
+        return { label: 'Rejected', color: 'error' as const };
     };
 
     const eventsByOrganizerId = useMemo(() => {
@@ -480,11 +695,11 @@ export default function ImportSourcesScreen() {
     }, [fetEventsByHandle, sorted]);
 
     const approvedFetSources = useMemo(() => fetSourceEntries.filter(entry =>
-        (entry.approval_status || 'pending') === 'approved' || entry.hasApprovedEvents
+        getSourceApprovalState(entry.approval_status) !== 'pending' || entry.hasApprovedEvents
     ), [fetSourceEntries]);
 
     const pendingFetSources = useMemo(() => fetSourceEntries.filter(entry =>
-        !((entry.approval_status || 'pending') === 'approved' || entry.hasApprovedEvents)
+        !(getSourceApprovalState(entry.approval_status) !== 'pending' || entry.hasApprovedEvents)
     ), [fetSourceEntries]);
 
     return (
@@ -571,40 +786,132 @@ export default function ImportSourcesScreen() {
                         </Stack>
                     </Paper>
 
-                    <Paper sx={{ p: 2 }}>
-                        <Stack direction="row" alignItems="center" spacing={2} mb={2}>
-                            <Typography variant="h6">Existing Sources</Typography>
-                            <Chip label={`${sources.length}`} size="small" />
-                            {isSourcesLoading && <Chip label="Loading" size="small" color="warning" />}
-                        </Stack>
-                        <Divider sx={{ mb: 2 }} />
-                        <Table size="small">
+                    <Paper sx={{ p: 0 }}>
+                        <Box
+                            sx={{
+                                position: 'sticky',
+                                top: SOURCES_STICKY_TOP,
+                                zIndex: 2,
+                                backgroundColor: '#fff',
+                                borderBottom: '1px solid #e5e7eb',
+                            }}
+                        >
+                            <Stack
+                                direction="row"
+                                alignItems="center"
+                                spacing={2}
+                                sx={{
+                                    px: 2,
+                                    minHeight: SOURCES_STICKY_BAR_HEIGHT,
+                                    overflowX: 'auto',
+                                    overflowY: 'hidden',
+                                    flexWrap: 'nowrap',
+                                }}
+                            >
+                                <Typography variant="h6" sx={{ whiteSpace: 'nowrap' }}>Existing Sources</Typography>
+                                <Chip label={`${filteredSources.length}/${sources.length}`} size="small" />
+                                {isSourcesLoading && <Chip label="Loading" size="small" color="warning" />}
+                                <FormControlLabel
+                                    label="Show suggested festivals"
+                                    control={
+                                        <Checkbox
+                                            size="small"
+                                            checked={showSuggestedFestivals}
+                                            onChange={(e) => setShowSuggestedFestivals(e.target.checked)}
+                                        />
+                                    }
+                                />
+                                <Box sx={{ flex: 1, minWidth: 16 }} />
+                                <TextField
+                                    size="small"
+                                    label="Search sources"
+                                    value={sourceSearch}
+                                    onChange={(e) => setSourceSearch(e.target.value)}
+                                    sx={{ minWidth: 240 }}
+                                />
+                            </Stack>
+                        </Box>
+                        <Box sx={{ p: 2 }}>
+                            <Table
+                                size="small"
+                                stickyHeader
+                                sx={{ '& .MuiTableCell-stickyHeader': { top: SOURCES_TABLE_HEADER_TOP, backgroundColor: '#fff' } }}
+                            >
                             <TableHead>
                                 <TableRow>
                                     <TableCell>Source</TableCell>
                                     <TableCell>Method</TableCell>
                                     <TableCell>Identifier</TableCell>
-                                    <TableCell>Type</TableCell>
                                     <TableCell>Organizer</TableCell>
-                                    <TableCell>Created</TableCell>
+                                    <TableCell align="center">Messaged</TableCell>
+                                    <TableCell align="center">Approved</TableCell>
+                                    <TableCell align="center">Rejected</TableCell>
+                                    <TableCell align="center">Festival</TableCell>
+                                    <TableCell align="center">Excluded</TableCell>
                                     <TableCell>Events</TableCell>
                                     <TableCell>Actions</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {sorted.map((src: ImportSource) => {
+                                {filteredSources.map((src: ImportSource, index: number) => {
                                     const associatedEvents = associatedEventsBySourceId.get(String(src.id)) || [];
                                     const isExpanded = !!expandedSources[String(src.id)];
                                     const hasEvents = associatedEvents.length > 0;
+                                    const isFetlifeSource = src.source === 'fetlife_handle';
+                                    const hasNonNyEvents = isFetlifeSource && associatedEvents.some(ev => !!ev.non_ny);
+                                    const statusFlags = getSourceStatusFlags(src);
+                                    const { isRejected, isExcluded, isApproved, isFestival: isFestivalSource } = statusFlags;
+                                    const shouldHighlight = showSuggestedFestivals && hasNonNyEvents;
                                     const isHandleSource =
                                         (src.identifier_type || '').toLowerCase() === 'handle' ||
                                         src.source === 'fetlife_handle';
                                     const normalizedHandle = isHandleSource ? normalizeHandle(src.identifier) : '';
                                     const fetlifeProfileUrl = normalizedHandle ? `https://fetlife.com/${normalizedHandle}` : '';
+                                    const statusKey = getSourcePrimaryStatus(statusFlags);
+                                    const currentSection = SOURCE_SECTION_INDEX[statusKey];
+                                    const prevSection = index > 0 ? getSourceSection(filteredSources[index - 1]) : currentSection;
+                                    const shouldInsertSectionHeader = index === 0 || prevSection !== currentSection;
+                                    const rowSx = shouldHighlight
+                                        ? {
+                                            backgroundColor: SOURCE_ROW_COLORS[statusKey],
+                                            backgroundImage: 'linear-gradient(0deg, rgba(255, 246, 216, 0.45), rgba(255, 246, 216, 0.45))',
+                                        }
+                                        : { backgroundColor: SOURCE_ROW_COLORS[statusKey] };
+                                    const statusDots = getSourceStatusDots(statusFlags);
                                     return (
-                                        <React.Fragment key={`${src.source}-${src.method}-${src.identifier}`}>
-                                            <TableRow>
-                                                <TableCell>{src.source}</TableCell>
+                                        <React.Fragment key={String(src.id)}>
+                                            {shouldInsertSectionHeader && (
+                                                <TableRow>
+                                                    <TableCell colSpan={11} sx={{ p: 0, borderBottom: 'none' }}>
+                                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, py: 0.75, px: 1.5, backgroundColor: '#f5f5f5' }}>
+                                                            <Typography variant="caption" sx={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+                                                                {SOURCE_SECTION_LABELS[statusKey]}
+                                                            </Typography>
+                                                            <Box sx={{ flex: 1, height: 2, backgroundColor: '#c1c7d0' }} />
+                                                        </Box>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                            <TableRow sx={rowSx}>
+                                                <TableCell>
+                                                    <Stack direction="row" alignItems="center" spacing={1}>
+                                                        <Stack direction="row" alignItems="center" spacing={0.5}>
+                                                            {statusDots.map((dot) => (
+                                                                <Box
+                                                                    key={dot.key}
+                                                                    title={dot.title}
+                                                                    sx={{
+                                                                        width: 10,
+                                                                        height: 10,
+                                                                        borderRadius: '50%',
+                                                                        backgroundColor: dot.color,
+                                                                    }}
+                                                                />
+                                                            ))}
+                                                        </Stack>
+                                                        <Typography variant="body2">{src.source}</Typography>
+                                                    </Stack>
+                                                </TableCell>
                                                 <TableCell>{src.method}</TableCell>
                                                 <TableCell>
                                                     {fetlifeProfileUrl ? (
@@ -615,7 +922,6 @@ export default function ImportSourcesScreen() {
                                                         src.identifier
                                                     )}
                                                 </TableCell>
-                                                <TableCell>{src.identifier_type || '—'}</TableCell>
                                                 <TableCell sx={{ minWidth: 240 }}>
                                                     <Autocomplete<OrganizerOption, false, false, false>
                                                         options={organizerOptions}
@@ -655,7 +961,60 @@ export default function ImportSourcesScreen() {
                                                         loading={updateSource.isPending}
                                                     />
                                                 </TableCell>
-                                                <TableCell>{src.created_at ? new Date(src.created_at).toLocaleString() : '—'}</TableCell>
+                                                <TableCell align="center">
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={!!src.message_sent}
+                                                        onChange={(e) => {
+                                                            void handleMessagedToggle(src, e.target.checked);
+                                                        }}
+                                                        disabled={markMessageSent.isPending}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={isApproved}
+                                                        onChange={(e) => {
+                                                            void handleApprovalToggle(src, e.target.checked);
+                                                        }}
+                                                        disabled={updateSource.isPending}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={isRejected}
+                                                        onChange={(e) => {
+                                                            void handleRejectedToggle(src, e.target.checked);
+                                                        }}
+                                                        disabled={updateSource.isPending}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    {isFetlifeSource ? (
+                                                        <Checkbox
+                                                            size="small"
+                                                            checked={isFestivalSource}
+                                                            onChange={(e) => {
+                                                                void handleFestivalToggle(src, e.target.checked);
+                                                            }}
+                                                            disabled={updateSource.isPending}
+                                                        />
+                                                    ) : (
+                                                        <Typography variant="body2" color="text.secondary">—</Typography>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell align="center">
+                                                    <Checkbox
+                                                        size="small"
+                                                        checked={isExcluded}
+                                                        onChange={(e) => {
+                                                            void handleExcludedToggle(src, e.target.checked);
+                                                        }}
+                                                        disabled={updateSource.isPending || isRejected}
+                                                    />
+                                                </TableCell>
                                                 <TableCell>
                                                     <Stack direction="row" alignItems="center" spacing={1}>
                                                         <IconButton
@@ -680,17 +1039,16 @@ export default function ImportSourcesScreen() {
                                                     </Button>
                                                 </TableCell>
                                             </TableRow>
-                                            <TableRow>
-                                                <TableCell colSpan={8} sx={{ py: 0 }}>
+                                            <TableRow sx={rowSx}>
+                                                <TableCell colSpan={11} sx={{ py: 0 }}>
                                                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                                                         <Box sx={{ py: 1.5, px: 2 }}>
                                                             {hasEvents ? (
                                                                 <Stack spacing={1}>
                                                                     {associatedEvents.map((ev) => {
-                                                                        const statusLabel = (!ev.approval_status || ev.approval_status === 'approved') ? 'Approved' : (ev.approval_status || 'Pending');
-                                                                        const statusColor: 'default' | 'success' | 'warning' =
-                                                                            (!ev.approval_status || ev.approval_status === 'approved') ? 'success' : 'warning';
+                                                                        const { label: statusLabel, color: statusColor } = getApprovalMeta(ev.approval_status);
                                                                         const ticketHref = ev.ticket_url || ev.event_url || (ev as any)?.source_url || '';
+                                                                        const nonNyLabel = ev.non_ny ? ' • Non-NY' : '';
                                                                         return (
                                                                             <Stack
                                                                                 key={`${src.id}-event-${ev.id}`}
@@ -710,7 +1068,7 @@ export default function ImportSourcesScreen() {
                                                                                         <Typography variant="body2">{ev.name || `Event ${ev.id}`}</Typography>
                                                                                     )}
                                                                                     <Typography variant="caption" color="text.secondary">
-                                                                                        {formatEventDate(ev)}{ev.location ? ` • ${ev.location}` : ''}
+                                                                                        {formatEventDate(ev)}{ev.location ? ` • ${ev.location}` : ''}{nonNyLabel}
                                                                                     </Typography>
                                                                                 </Stack>
                                                                                 <Chip label={statusLabel} size="small" color={statusColor} />
@@ -728,13 +1086,14 @@ export default function ImportSourcesScreen() {
                                         </React.Fragment>
                                     );
                                 })}
-                                {!sorted.length && (
+                                {!filteredSources.length && (
                                     <TableRow>
-                                        <TableCell colSpan={8} align="center">No sources yet</TableCell>
+                                        <TableCell colSpan={11} align="center">No sources yet</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
-                        </Table>
+                            </Table>
+                        </Box>
                     </Paper>
                 </>
             )}
