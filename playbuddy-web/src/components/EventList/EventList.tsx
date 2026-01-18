@@ -4,8 +4,19 @@ import { EventListItem } from "./EventListItem";
 import styles from './EventList.module.css';
 import type { EventWithMetadata, SectionType } from "./util/types";
 import { getTagChipTone, getTagChips } from "./util/tagUtils";
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from "../../../../common/src/types/commonTypes";
 
 const normalizeSearchText = (value: string) => value.toLowerCase().replace(/\s+/g, ' ').trim();
+const EVENT_TYPE_FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'play_party', label: 'Play Party' },
+    { key: 'munch', label: 'Munch' },
+    { key: 'workshop', label: 'Workshop' },
+    { key: 'festival', label: 'Festival' },
+    { key: 'conference', label: 'Conference' },
+    { key: 'retreat', label: 'Retreat' },
+    { key: FALLBACK_EVENT_TYPE, label: 'Event' },
+];
 
 export const EventList = ({
     events,
@@ -16,6 +27,7 @@ export const EventList = ({
 }) => {
     const [selectedEvent, setSelectedEvent] = useState<EventWithMetadata | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const normalizedSearch = useMemo(() => normalizeSearchText(searchQuery), [searchQuery]);
     const searchTokens = useMemo(
         () => (normalizedSearch ? normalizedSearch.split(' ') : []),
@@ -23,8 +35,19 @@ export const EventList = ({
     );
 
     const filteredEvents = useMemo(() => {
-        if (!searchTokens.length) return events;
+        if (!searchTokens.length && selectedTypes.length === 0) return events;
         return events.filter((event) => {
+            const resolvedType = event.play_party || event.type === 'play_party'
+                ? 'play_party'
+                : event.is_munch || event.munch_id || event.type === 'munch'
+                    ? 'munch'
+                    : event.type && ACTIVE_EVENT_TYPES.includes(event.type as (typeof ACTIVE_EVENT_TYPES)[number])
+                        ? event.type
+                        : FALLBACK_EVENT_TYPE;
+            if (selectedTypes.length > 0 && !selectedTypes.includes(resolvedType)) {
+                return false;
+            }
+            if (!searchTokens.length) return true;
             const organizerAliases = Array.isArray(event.organizer?.aliases)
                 ? event.organizer.aliases
                 : [];
@@ -42,7 +65,19 @@ export const EventList = ({
                 .join(' '));
             return searchTokens.every((token) => searchTarget.includes(token));
         });
-    }, [events, searchTokens]);
+    }, [events, searchTokens, selectedTypes]);
+
+    const toggleTypeFilter = (typeKey: string) => {
+        if (typeKey === 'all') {
+            setSelectedTypes([]);
+            return;
+        }
+        setSelectedTypes((prev) => (
+            prev.includes(typeKey)
+                ? prev.filter((type) => type !== typeKey)
+                : [...prev, typeKey]
+        ));
+    };
 
     const { sections } = useGroupedEvents(filteredEvents);
 
@@ -79,7 +114,9 @@ export const EventList = ({
         window.location.href = `/event/${selectedEvent.id}`;
     }, [selectedEvent]);
 
-    const emptyLabel = searchTokens.length > 0 ? 'No matching events found' : 'No events found';
+    const emptyLabel = searchTokens.length > 0 || selectedTypes.length > 0
+        ? 'No matching events found'
+        : 'No events found';
 
     return (
         <div className={styles.eventList}>
@@ -89,24 +126,53 @@ export const EventList = ({
                 </div>
             )}
             <div className={styles.eventListInner}>
-                <div className={styles.searchBar}>
-                    <input
-                        type="search"
-                        className={styles.searchInput}
-                        placeholder="Search events, tags, organizers"
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        aria-label="Search events, tags, organizers"
-                    />
-                    {searchQuery.length > 0 && (
-                        <button
-                            type="button"
-                            className={styles.searchClear}
-                            onClick={() => setSearchQuery('')}
-                        >
-                            Clear
-                        </button>
-                    )}
+                <div className={styles.searchPanel}>
+                    <div className={styles.searchBar}>
+                        <input
+                            type="search"
+                            className={styles.searchInput}
+                            placeholder="Search events, tags, organizers"
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            aria-label="Search events, tags, organizers"
+                        />
+                        {searchQuery.length > 0 && (
+                            <button
+                                type="button"
+                                className={styles.searchClear}
+                                onClick={() => setSearchQuery('')}
+                            >
+                                Clear
+                            </button>
+                        )}
+                    </div>
+                    <div className={styles.filtersRow}>
+                        {EVENT_TYPE_FILTERS.map((filter) => {
+                            const isAll = filter.key === 'all';
+                            const isActive = isAll
+                                ? selectedTypes.length === 0
+                                : selectedTypes.includes(filter.key);
+                            const tone = isAll
+                                ? { background: '#2f2a3a', text: '#ffffff', border: '#2f2a3a' }
+                                : getTagChipTone({ label: filter.label, kind: 'type' });
+                            return (
+                                <button
+                                    key={filter.key}
+                                    type="button"
+                                    className={`${styles.filterChip} ${isActive ? styles.filterChipActive : ''}`}
+                                    style={isActive ? {
+                                        backgroundColor: tone.background,
+                                        borderColor: tone.border,
+                                        color: tone.text,
+                                    } : undefined}
+                                    onClick={() => toggleTypeFilter(filter.key)}
+                                    aria-pressed={isActive}
+                                >
+                                    {filter.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
                 {weeklyPicks.length > 0 && (
                     <section className={styles.weeklySection}>

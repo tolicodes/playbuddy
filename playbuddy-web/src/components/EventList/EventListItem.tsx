@@ -3,13 +3,28 @@ import type { KeyboardEvent } from "react";
 import { getBestPromoCode } from "../../../../playbuddy-mobile/utils/getBestPromoCode";
 import { formatDate } from "../../../../playbuddy-mobile/utils/formatDate";
 import type { EventWithMetadata } from "./util/types";
-import {
-    EVENT_RAIL_COLORS,
-    getEventTypeKey,
-    getTagChipTone,
-    getTagChips,
-} from "./util/tagUtils";
-import { CalendarIcon, MapPinIcon, TagIcon } from "./util/Icons";
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from "../../../../common/src/types/commonTypes";
+import { getTagChipTone } from "./util/tagUtils";
+
+const EVENT_FALLBACK_GRADIENTS: Record<string, [string, string]> = {
+    event: ["#F7F5FF", "#E7DEFF"],
+    play_party: ["#F3EEFF", "#E7DEFF"],
+    munch: ["#FFFAF0", "#FFF8D6"],
+    retreat: ["#F6F7F9", "#F7F5FF"],
+    festival: ["#F3F7FF", "#DCE5FF"],
+    conference: ["#F3F7FF", "#DCE5FF"],
+    workshop: ["#FFF1F2", "#FFF5F6"],
+};
+
+const TYPE_LABEL_MAP: Record<string, string> = {
+    event: "Event",
+    play_party: "Play Party",
+    munch: "Munch",
+    retreat: "Retreat",
+    festival: "Festival",
+    conference: "Conference",
+    workshop: "Workshop",
+};
 
 export const EventListItem = ({
     item,
@@ -21,13 +36,36 @@ export const EventListItem = ({
     const promoCode = getBestPromoCode(item);
     const imageUrl = item.image_url;
     const formattedDate = formatDate(item);
-    const locationLabel = item.neighborhood || item.location || item.city || item.region || "";
-    const tagChips = getTagChips(item);
-    const eventTypeKey = getEventTypeKey(item);
-    const eventRailColor = EVENT_RAIL_COLORS[eventTypeKey] || EVENT_RAIL_COLORS.default;
-    const organizerColor = item.organizerColor || "#c4c4c4";
-    const placeholderLabel = item.is_munch || item.munch_id ? "Munch" : "Event";
-    const displayPrice = item.short_price || item.price;
+    const locationLabel = (item.neighborhood || "").trim();
+    const organizerName = item.organizer?.name?.trim() || "Organizer";
+    const displayPrice = item.short_price || item.price || "";
+    const metaLine = [formattedDate, locationLabel, displayPrice].filter(Boolean).join(" - ");
+
+    const isActiveEventType = (value?: string | null) =>
+        !!value && ACTIVE_EVENT_TYPES.includes(value as (typeof ACTIVE_EVENT_TYPES)[number]);
+    const resolvedType = item.play_party || item.type === "play_party"
+        ? "play_party"
+        : item.is_munch || item.munch_id || item.type === "munch"
+            ? "munch"
+            : item.type && isActiveEventType(item.type)
+                ? item.type
+                : FALLBACK_EVENT_TYPE;
+    const primaryTypeLabel = TYPE_LABEL_MAP[resolvedType] || resolvedType.replace(/_/g, " ");
+    const extraTags = [...(item.classification?.tags || []), ...(item.tags || [])];
+    const normalizedTypeLabel = primaryTypeLabel.trim().toLowerCase();
+    const primaryTagLabel =
+        extraTags
+            .map((tag) => tag.trim())
+            .find((tag) => tag && tag.toLowerCase() !== normalizedTypeLabel) || "";
+    const displayTypeLabel = resolvedType === FALLBACK_EVENT_TYPE ? "" : primaryTypeLabel;
+    const typeTagLabel = displayTypeLabel
+        ? primaryTagLabel
+            ? `${displayTypeLabel} | ${primaryTagLabel}`
+            : displayTypeLabel
+        : primaryTagLabel;
+    const typeKey = (displayTypeLabel || primaryTypeLabel).trim().toLowerCase();
+    const typeTagColors = getTagChipTone({ label: typeKey, kind: "type" });
+    const fallbackGradient = EVENT_FALLBACK_GRADIENTS[resolvedType] ?? EVENT_FALLBACK_GRADIENTS.event;
 
     const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -51,10 +89,6 @@ export const EventListItem = ({
             tabIndex={0}
             aria-label={`Open event ${item.name}`}
         >
-            <div
-                className={styles.typeRail}
-                style={{ backgroundColor: eventRailColor }}
-            />
             <div className={styles.poster}>
                 {imageUrl ? (
                     <img
@@ -65,63 +99,40 @@ export const EventListItem = ({
                         decoding="async"
                     />
                 ) : (
-                    <div className={styles.posterPlaceholder}>
-                        <span className={styles.placeholderText}>{placeholderLabel}</span>
+                    <div
+                        className={styles.posterPlaceholder}
+                        style={{
+                            backgroundImage: `linear-gradient(135deg, ${fallbackGradient[0]}, ${fallbackGradient[1]})`,
+                        }}
+                    >
+                        <span className={styles.placeholderText}>{primaryTypeLabel}</span>
                     </div>
                 )}
-                <div className={styles.posterGradient} />
                 {promoLabel && <div className={styles.discountBadge}>{promoLabel}</div>}
-                <div className={styles.posterFooter}>
-                    <div className={styles.eventTitle}>{item.name}</div>
-                    <div className={styles.organizerRow}>
+                {typeTagLabel && (
+                    <div
+                        className={styles.typeTagBadge}
+                        style={{
+                            backgroundColor: typeTagColors.background,
+                            borderColor: typeTagColors.border,
+                        }}
+                    >
                         <span
-                            className={styles.organizerDot}
-                            style={{ backgroundColor: organizerColor }}
-                        />
-                        <span className={styles.organizerName}>
-                            {item.organizer?.name || "Organizer"}
+                            className={styles.typeTagText}
+                            style={{ color: typeTagColors.text }}
+                        >
+                            {typeTagLabel}
                         </span>
                     </div>
-                </div>
+                )}
             </div>
-            <div className={styles.metaRow}>
-                <div className={styles.metaItem}>
-                    <CalendarIcon className={styles.metaIcon} />
-                    <span>{formattedDate}</span>
-                </div>
-                {locationLabel ? (
-                    <div className={styles.metaItem}>
-                        <MapPinIcon className={styles.metaIcon} />
-                        <span>{locationLabel}</span>
-                    </div>
-                ) : null}
-                {displayPrice ? (
-                    <div className={styles.metaItem}>
-                        <TagIcon className={styles.metaIcon} />
-                        <span>{displayPrice}</span>
-                    </div>
+            <div className={styles.detailsPanel}>
+                <div className={styles.eventTitle}>{item.name}</div>
+                <div className={styles.organizerName}>{organizerName}</div>
+                {metaLine ? (
+                    <div className={styles.metaText}>{metaLine}</div>
                 ) : null}
             </div>
-            {tagChips.length > 0 && (
-                <div className={styles.tagRow}>
-                    {tagChips.map((tag) => {
-                        const colors = getTagChipTone(tag);
-                        return (
-                            <span
-                                key={`${item.id}-${tag.label}`}
-                                className={styles.tagChip}
-                                style={{
-                                    backgroundColor: colors.background,
-                                    borderColor: colors.border,
-                                    color: colors.text,
-                                }}
-                            >
-                                {tag.label}
-                            </span>
-                        );
-                    })}
-                </div>
-            )}
         </div>
     );
 };
