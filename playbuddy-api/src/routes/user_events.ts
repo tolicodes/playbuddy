@@ -350,13 +350,8 @@ router.post('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentic
             ?? (user_event_props as Record<string, unknown>)?.deviceId
     );
     const device_id = normalizeDeviceId(req.body.device_id ?? req.body.deviceId) ?? propsDeviceId;
-    const propsAuthUserId = normalizeAuthUserId(
-        (user_event_props as Record<string, unknown>)?.auth_user_id
-            ?? (user_event_props as Record<string, unknown>)?.authUserId
-    );
-    const bodyAuthUserId = normalizeAuthUserId(req.body.auth_user_id ?? req.body.authUserId);
     const authUserIdFromRequest = normalizeAuthUserId(req.authUserId);
-    const auth_user_id = authUserIdFromRequest ?? bodyAuthUserId ?? propsAuthUserId ?? null;
+    const auth_user_id = authUserIdFromRequest ?? null;
 
     const safeProps: Record<string, unknown> = user_event_props && typeof user_event_props === 'object'
         ? { ...(user_event_props as Record<string, unknown>) }
