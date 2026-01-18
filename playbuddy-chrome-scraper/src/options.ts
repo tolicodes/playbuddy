@@ -34,7 +34,7 @@ type ProgressRun = { runId: string; startedAt: number; entries: ProgressEntry[] 
 type RunTableEntry = { runId: string; source?: string; html: string; updatedAt?: number };
 
 const SOURCE_LABELS: Record<string, string> = {
-    fetlife: 'FetLife Events',
+    fetlife: 'FetLife Events (deprecated)',
     fetlifeNearby: 'FetLife Nearby (HTML)',
     fetlifeNearbyApi: 'FetLife Nearby (API)',
     fetlifeFestivals: 'FetLife Festivals',
@@ -137,7 +137,6 @@ function init() {
     const apiStatus = document.getElementById('apiStatus') as HTMLSpanElement | null;
     const apiEnvSelect = document.getElementById('apiEnv') as HTMLSelectElement | null;
     const autoFetlifeCheckbox = document.getElementById('autoFetlife') as HTMLInputElement | null;
-    const autoFetlifeNearbyCheckbox = document.getElementById('autoFetlifeNearby') as HTMLInputElement | null;
     const runLogsDiv = document.getElementById('runLogs') as HTMLDivElement | null;
     const logDiv = document.getElementById('log') as HTMLDivElement | null;
     const tableDiv = document.getElementById('tableOutput') as HTMLDivElement | null;
@@ -174,19 +173,15 @@ function init() {
         });
     }
     if (autoFetlifeCheckbox) {
-        chrome.storage.local.get(AUTO_FETLIFE_KEY, res => {
-            autoFetlifeCheckbox.checked = !!res[AUTO_FETLIFE_KEY];
+        chrome.storage.local.get([AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY], res => {
+            autoFetlifeCheckbox.checked = !!res[AUTO_FETLIFE_KEY] || !!res[AUTO_FETLIFE_NEARBY_KEY];
         });
         autoFetlifeCheckbox.addEventListener('change', () => {
-            chrome.storage.local.set({ [AUTO_FETLIFE_KEY]: !!autoFetlifeCheckbox.checked });
-        });
-    }
-    if (autoFetlifeNearbyCheckbox) {
-        chrome.storage.local.get(AUTO_FETLIFE_NEARBY_KEY, res => {
-            autoFetlifeNearbyCheckbox.checked = !!res[AUTO_FETLIFE_NEARBY_KEY];
-        });
-        autoFetlifeNearbyCheckbox.addEventListener('change', () => {
-            chrome.storage.local.set({ [AUTO_FETLIFE_NEARBY_KEY]: !!autoFetlifeNearbyCheckbox.checked });
+            const enabled = !!autoFetlifeCheckbox.checked;
+            chrome.storage.local.set({
+                [AUTO_FETLIFE_KEY]: enabled,
+                [AUTO_FETLIFE_NEARBY_KEY]: enabled,
+            });
         });
     }
 
@@ -263,7 +258,11 @@ function init() {
         });
     }
 
-    bindScrapeButton('startFetlife', 'fetlife');
+    const deprecatedFetlifeBtn = document.getElementById('startFetlife') as HTMLButtonElement | null;
+    if (deprecatedFetlifeBtn) {
+        deprecatedFetlifeBtn.disabled = true;
+        deprecatedFetlifeBtn.title = 'Deprecated: use FetLife Nearby or Festivals.';
+    }
     bindScrapeButton('startFetlifeNearby', 'fetlifeNearby');
     bindScrapeButton('startFetlifeNearbyApi', 'fetlifeNearbyApi');
     bindScrapeButton('startFetlifeFestivals', 'fetlifeFestivals');

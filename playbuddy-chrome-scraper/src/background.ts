@@ -5,8 +5,9 @@ import type { EventResult } from './types';
 import { postStatus, setActiveRunId, resetLiveLog, sleep } from './utils';
 import { getApiBase, AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY } from './config.js';
 import { fetchImportSources } from './data.js';
+import { createPartifulInvite, type PartifulInvitePayload, type PartifulInviteResult, type PartifulLogLevel } from './partiful';
 
-type ScrapeAction = 'scrapeSingleSource' | 'setStage2Handles' | 'branchStatsScrape';
+type BackgroundAction = 'scrapeSingleSource' | 'setStage2Handles' | 'branchStatsScrape' | 'partifulCreateInvite';
 type DoScrapeOpts = {
     scrapeFn?: () => Promise<EventResult[]>;
     approvalStatus?: 'pending' | 'approved' | 'rejected';
@@ -15,14 +16,18 @@ type DoScrapeOpts = {
     filenamePrefix?: string;
 };
 
-interface ScrapeMessage {
-    action: ScrapeAction;
+interface BackgroundMessage {
+    action: BackgroundAction;
     source?: string;
     handles?: string[];
+    requestId?: string;
+    payload?: PartifulInvitePayload;
 }
 
-interface ScrapeResponse {
+interface BackgroundResponse {
     ok: boolean;
+    result?: PartifulInviteResult;
+    error?: string;
 }
 
 // Minimal browser JS: map your FetLife JSON array -> /events/bulk (no batching)
@@ -576,16 +581,61 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
 }
 
 chrome.runtime.onMessage.addListener((
-    msg: ScrapeMessage,
-    _,
-    sendResponse: (response: ScrapeResponse) => void
+    msg: BackgroundMessage,
+    sender,
+    sendResponse: (response: BackgroundResponse) => void
 ) => {
     console.log('🔔 [SW] got message:', msg);
 
     (async () => {
+        if (msg.action === 'partifulCreateInvite') {
+            const requestId = msg.requestId || `partiful-${Date.now()}`;
+            const tabId = sender?.tab?.id;
+            const relayLog = (level: PartifulLogLevel, message: string, data?: Record<string, unknown>) => {
+                if (typeof tabId !== 'number') {
+                    console.log(`[partiful:${level}] ${message}`, data || {});
+                    return;
+                }
+                try {
+                    chrome.tabs.sendMessage(tabId, {
+                        action: 'partifulLog',
+                        requestId,
+                        level,
+                        message,
+                        data,
+                    });
+                } catch (err) {
+                    console.warn('Failed to relay Partiful log', err);
+                }
+            };
+
+            const payload = msg.payload;
+            if (!payload || typeof payload !== 'object' || !('event' in payload)) {
+                relayLog('error', 'Missing Partiful invite payload.');
+                sendResponse({ ok: false, error: 'Missing Partiful invite payload.' });
+                return;
+            }
+
+            try {
+                relayLog('info', 'Starting Partiful invite flow.');
+                const result = await createPartifulInvite(payload, relayLog);
+                sendResponse({ ok: true, result });
+            } catch (err: any) {
+                const errorMessage = err?.message || String(err);
+                relayLog('error', 'Partiful invite failed.', { error: errorMessage });
+                sendResponse({ ok: false, error: errorMessage });
+            }
+            return;
+        }
+
         if (msg.action === 'scrapeSingleSource') {
             const { source } = msg;
             if (!source) {
+                sendResponse({ ok: false });
+                return;
+            }
+            if (source === 'fetlife') {
+                postStatus('Deprecated: FetLife events is disabled. Use FetLife Nearby or Festivals.');
                 sendResponse({ ok: false });
                 return;
             }
@@ -665,10 +715,10 @@ async function getAutoSources(): Promise<ScrapeSource[]> {
     try {
         const res = await chrome.storage.local.get([AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY]);
         const sources: ScrapeSource[] = [];
-        if (res[AUTO_FETLIFE_KEY]) {
-            sources.push('fetlife', 'fetlifeFestivals');
+        const autoEnabled = !!res[AUTO_FETLIFE_KEY] || !!res[AUTO_FETLIFE_NEARBY_KEY];
+        if (autoEnabled) {
+            sources.push('fetlifeFestivals', 'fetlifeNearby');
         }
-        if (res[AUTO_FETLIFE_NEARBY_KEY]) sources.push('fetlifeNearby');
         return sources;
     } catch {
         return [];
@@ -678,7 +728,7 @@ async function getAutoSources(): Promise<ScrapeSource[]> {
 async function runScheduledScrapes() {
     const sources = await getAutoSources();
     if (!sources.length) {
-        postStatus('⏸️ Auto-run disabled for Fetlife/FetlifeNearby/Festivals; skipping scheduled scrape.');
+        postStatus('⏸️ Auto-run disabled for Fetlife Nearby/Festivals; skipping scheduled scrape.');
         return;
     }
     await runSourcesSequential(sources);
