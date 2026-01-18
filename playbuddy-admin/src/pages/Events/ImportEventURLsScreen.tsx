@@ -8,7 +8,7 @@ type upsertEventResult = {
   error?: AnyObj;     // presence indicates failure
 } & AnyObj;
 
-function getRowStatus(row: upsertEventResult | AnyObj): 'Inserted' | 'Upserted' | 'Failed' | 'OK' {
+function getRowStatus(row: upsertEventResult | AnyObj): 'Inserted' | 'Updated' | 'Failed' | 'OK' {
   const r: AnyObj = row || {};
   const statusStr = (r.status || r.result || '').toString().toLowerCase();
   const success = r.success;
@@ -16,7 +16,7 @@ function getRowStatus(row: upsertEventResult | AnyObj): 'Inserted' | 'Upserted' 
   // Fail checks
   if (r.error || statusStr === 'error' || success === false) return 'Failed';
 
-  // Inserted/Upserted checks (support several shapes)
+  // Inserted/Updated checks (support several shapes)
   if (
     r.created === true ||
     statusStr === 'created' ||
@@ -26,8 +26,9 @@ function getRowStatus(row: upsertEventResult | AnyObj): 'Inserted' | 'Upserted' 
   if (
     r.updated === true ||
     statusStr === 'updated' ||
+    statusStr === 'upserted' ||
     r.upserted === true
-  ) return 'Upserted';
+  ) return 'Updated';
 
   // Default
   return 'OK';
@@ -103,26 +104,26 @@ export default function ImportEventURLsScreen() {
     return { weekday, monthDay };
   };
 
-  // Build detailed counts (inserted, upserted, failed)
+  // Build detailed counts (inserted, updated, failed)
   const derivedCounts = (() => {
     if (!eventsArray?.length) return null;
 
-    let inserted = 0, upserted = 0, failed = 0, ok = 0;
+    let inserted = 0, updated = 0, failed = 0, ok = 0;
     for (const row of eventsArray) {
       const s = getRowStatus(row);
       if (s === 'Inserted') inserted++;
-      else if (s === 'Upserted') upserted++;
+      else if (s === 'Updated') updated++;
       else if (s === 'Failed') failed++;
       else ok++;
     }
-    return { inserted, upserted, failed, ok, total: eventsArray.length };
+    return { inserted, updated, failed, ok, total: eventsArray.length };
   })();
 
   // Prefer server-provided counts if they exist; otherwise use derived
   const counts = result?.counts
     ? {
       inserted: result.counts.inserted ?? derivedCounts?.inserted ?? 0,
-      upserted: result.counts.upserted ?? derivedCounts?.upserted ?? 0,
+      updated: result.counts.updated ?? result.counts.upserted ?? derivedCounts?.updated ?? 0,
       failed: result.counts.failed ?? derivedCounts?.failed ?? 0,
       total: result.counts.total ?? derivedCounts?.total ?? eventsArray.length,
     }
@@ -182,8 +183,8 @@ export default function ImportEventURLsScreen() {
                   <div className={styles.statValue}>{counts.inserted}</div>
                 </div>
                 <div className={styles.statCard}>
-                  <div className={styles.statLabel}>Upserted</div>
-                  <div className={styles.statValue}>{counts.upserted}</div>
+                  <div className={styles.statLabel}>Updated</div>
+                  <div className={styles.statValue}>{counts.updated}</div>
                 </div>
                 <div className={styles.statCard}>
                   <div className={styles.statLabel}>Failed</div>
@@ -245,7 +246,7 @@ export default function ImportEventURLsScreen() {
                 const statusClass =
                   rowStatus === 'Failed' ? styles.statusFailed :
                     rowStatus === 'Inserted' ? styles.statusInserted :
-                      rowStatus === 'Upserted' ? styles.statusUpserted :
+                      rowStatus === 'Updated' ? styles.statusUpdated :
                         styles.statusNeutral;
                 const isOpen = !!expanded[idx];
 

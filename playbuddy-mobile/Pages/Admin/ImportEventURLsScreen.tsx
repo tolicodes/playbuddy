@@ -41,7 +41,7 @@ const parseUrls = (input: string) => {
     };
 };
 
-type ImportRowStatus = 'Inserted' | 'Upserted' | 'Failed' | 'OK';
+type ImportRowStatus = 'Inserted' | 'Updated' | 'Failed' | 'OK';
 
 const getRowStatus = (row: AnyObj): ImportRowStatus => {
     const r: AnyObj = row || {};
@@ -51,7 +51,7 @@ const getRowStatus = (row: AnyObj): ImportRowStatus => {
     if (r.error || statusStr === 'error' || success === false) return 'Failed';
 
     if (r.created === true || statusStr === 'created' || r.inserted === true) return 'Inserted';
-    if (r.updated === true || statusStr === 'updated' || r.upserted === true) return 'Upserted';
+    if (r.updated === true || statusStr === 'updated' || statusStr === 'upserted' || r.upserted === true) return 'Updated';
 
     return 'OK';
 };
@@ -86,7 +86,7 @@ const getStatusTone = (status: ImportRowStatus) => {
             text: colors.success,
         };
     }
-    if (status === 'Upserted') {
+    if (status === 'Updated') {
         return {
             background: colors.accentBlueSoft,
             border: colors.accentBlueBorder,
@@ -127,21 +127,21 @@ export const ImportEventURLsScreen = () => {
     const counts = useMemo(() => {
         if (!eventsArray.length) return null;
         let inserted = 0;
-        let upserted = 0;
+        let updated = 0;
         let failed = 0;
         let ok = 0;
         eventsArray.forEach((row) => {
             const rowStatus = getRowStatus(row);
             if (rowStatus === 'Inserted') inserted += 1;
-            else if (rowStatus === 'Upserted') upserted += 1;
+            else if (rowStatus === 'Updated') updated += 1;
             else if (rowStatus === 'Failed') failed += 1;
             else ok += 1;
         });
-        const derived = { inserted, upserted, failed, ok, total: eventsArray.length };
+        const derived = { inserted, updated, failed, ok, total: eventsArray.length };
         if (!result?.counts) return derived;
         return {
             inserted: result.counts.inserted ?? derived.inserted,
-            upserted: result.counts.upserted ?? derived.upserted,
+            updated: result.counts.updated ?? result.counts.upserted ?? derived.updated,
             failed: result.counts.failed ?? derived.failed,
             ok: derived.ok,
             total: result.counts.total ?? derived.total,
@@ -263,8 +263,8 @@ export const ImportEventURLsScreen = () => {
                                 <Text style={styles.statValue}>{counts.inserted}</Text>
                             </View>
                             <View style={styles.statCard}>
-                                <Text style={styles.statLabel}>Upserted</Text>
-                                <Text style={styles.statValue}>{counts.upserted}</Text>
+                                <Text style={styles.statLabel}>Updated</Text>
+                                <Text style={styles.statValue}>{counts.updated}</Text>
                             </View>
                             <View style={styles.statCard}>
                                 <Text style={styles.statLabel}>Failed</Text>

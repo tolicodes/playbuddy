@@ -208,19 +208,19 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
         const counts = results.reduce(
             (acc, r: any) => {
                 if (r.result === 'inserted') acc.inserted += 1;
-                else if (r.result === 'updated') acc.upserted += 1;
+                else if (r.result === 'updated') acc.updated += 1;
                 else acc.failed += 1;
                 acc.total += 1;
                 return acc;
             },
-            { inserted: 0, upserted: 0, failed: 0, total: 0 }
+            { inserted: 0, updated: 0, failed: 0, total: 0 }
         );
 
         res.json({
             mode,
             requested: urls.length,
             scraped: scraped.length,
-            counts,
+            counts: { ...counts, upserted: counts.updated },
             events: results,
             finalEvents,
         });
