@@ -28,6 +28,8 @@ export const EVENT_SECTION_HEADER_HEIGHT = HEADER_HEIGHT + spacing.md + spacing.
 type SectionType = {
     title: string;              // e.g., "Apr 13, 2025"
     data: EventWithMetadata[];  // events for that date
+    date?: string;
+    key?: string;
 };
 
 interface EventListProps {
@@ -37,6 +39,10 @@ interface EventListProps {
     viewMode?: EventListViewMode;
     listHeaderComponent?: React.ReactNode;
     listHeaderHeight?: number;
+    onListScroll?: (offsetY: number, layoutHeight: number, contentHeight: number) => void;
+    onListScrollBeginDrag?: () => void;
+    onListScrollEndDrag?: () => void;
+    onListMomentumScrollEnd?: () => void;
 }
 
 const EventList: React.FC<EventListProps> = ({
@@ -46,6 +52,10 @@ const EventList: React.FC<EventListProps> = ({
     viewMode,
     listHeaderComponent,
     listHeaderHeight = 0,
+    onListScroll,
+    onListScrollBeginDrag,
+    onListScrollEndDrag,
+    onListMomentumScrollEnd,
 }) => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
@@ -99,6 +109,22 @@ const EventList: React.FC<EventListProps> = ({
                 getSectionHeaderHeight: () => EVENT_SECTION_HEADER_HEIGHT,
                 getListHeaderHeight: () => listHeaderHeight,
             })}
+            onScroll={
+                onListScroll
+                    ? (event) => {
+                        const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+                        onListScroll(
+                            contentOffset.y,
+                            layoutMeasurement.height,
+                            contentSize.height
+                        );
+                    }
+                    : undefined
+            }
+            onScrollBeginDrag={onListScrollBeginDrag}
+            onScrollEndDrag={onListScrollEndDrag}
+            onMomentumScrollEnd={onListMomentumScrollEnd}
+            scrollEventThrottle={onListScroll ? 16 : undefined}
             ListEmptyComponent={
                 <View style={styles.emptyList}>
                     {isLoadingEvents ? (

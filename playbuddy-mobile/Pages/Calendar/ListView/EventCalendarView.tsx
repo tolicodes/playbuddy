@@ -114,6 +114,13 @@ const EventCalendarView: React.FC<Props> = ({
     const pendingScrollDateRef = useRef<Date | null>(null);
     const lastScrollDateRef = useRef<Date | null>(null);
     const lastScrollHeaderHeightRef = useRef<number | null>(null);
+    const listScrollSyncRef = useRef({
+        isProgrammatic: false,
+        targetDateKey: null as string | null,
+        lastSyncedDateKey: null as string | null,
+    });
+    const navUpdateSourceRef = useRef<'list' | 'other'>('other');
+    const weekStripAnimationDirectionRef = useRef<"prev" | "next" | null>(null);
     const pendingCoachRef = useRef(false);
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const toastAnim = useRef(new Animated.Value(0)).current;
@@ -123,8 +130,12 @@ const EventCalendarView: React.FC<Props> = ({
     const { myCommunities } = useCommonContext();
     const { wishlistEvents, wishlistEntryMap } = useCalendarContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const approvalStatuses = useMemo(
+        () => (isAdmin ? ['approved', 'pending', 'rejected'] : undefined),
+        [isAdmin]
+    );
     const { data: fetchedEventsData, isLoading: isLoadingEvents } = useFetchEvents({
-        includeApprovalPending: isAdmin,
+        approvalStatuses,
         includePrivate: !!authUserId,
     });
     const fetchedEvents = fetchedEventsData ?? EMPTY_EVENTS;
@@ -855,6 +866,8 @@ const EventCalendarView: React.FC<Props> = ({
     // Re-sanitize selection when filters change
     useEffect(() => {
         const recomputed = computeInitialState(filteredEvents);
+        navUpdateSourceRef.current = 'other';
+        weekStripAnimationDirectionRef.current = null;
         setNav((prev) => {
             const selectedStillOk = !ny.isBeforeToday(prev.selectedDate);
             if (selectedStillOk) {
@@ -888,6 +901,7 @@ const EventCalendarView: React.FC<Props> = ({
 
     const scrollToDate = (date: Date) => {
         lastScrollDateRef.current = date;
+        const targetDateKey = formatDayKey(date);
         if (hasListHeader && listHeaderHeight === 0) {
             pendingScrollDateRef.current = date;
             return;
@@ -901,6 +915,10 @@ const EventCalendarView: React.FC<Props> = ({
                 return total + EVENT_SECTION_HEADER_HEIGHT + section.data.length * rowHeight;
             }, headerOffset);
             lastScrollHeaderHeightRef.current = headerOffset;
+            const syncState = listScrollSyncRef.current;
+            syncState.isProgrammatic = true;
+            syncState.targetDateKey = targetDateKey;
+            syncState.lastSyncedDateKey = targetDateKey;
             scrollListToOffset(Math.max(0, offset));
         }
     };
@@ -939,6 +957,11 @@ const EventCalendarView: React.FC<Props> = ({
         }
     };
 
+    const markNavUpdateFromUser = () => {
+        navUpdateSourceRef.current = 'other';
+        weekStripAnimationDirectionRef.current = null;
+    };
+
     const onSelectDay = (day: Date) => {
         if (!isDaySelectable(day)) {
             return;
@@ -946,6 +969,7 @@ const EventCalendarView: React.FC<Props> = ({
         const chosen = resolveEventDay(day);
         const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
 
+        markNavUpdateFromUser();
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen);
@@ -957,6 +981,7 @@ const EventCalendarView: React.FC<Props> = ({
         if (!isDaySelectable(prevDay)) return;
         const chosen = resolveEventDay(prevDay);
         const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
+        markNavUpdateFromUser();
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen);
@@ -967,6 +992,7 @@ const EventCalendarView: React.FC<Props> = ({
         if (!isDaySelectable(nextDay)) return;
         const chosen = resolveEventDay(nextDay);
         const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
+        markNavUpdateFromUser();
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen);
@@ -981,6 +1007,7 @@ const EventCalendarView: React.FC<Props> = ({
                 ? resolveNextWeekSelection(nextWeekAnchor, nextSelected)
                 : nextSelected;
         const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
+        markNavUpdateFromUser();
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen);
@@ -999,6 +1026,7 @@ const EventCalendarView: React.FC<Props> = ({
         if (!isDaySelectable(today)) return;
         const chosen = resolveEventDay(today);
         const next = { weekAnchorDate: ny.startOfWeek(chosen).toDate(), selectedDate: chosen };
+        markNavUpdateFromUser();
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen);
@@ -1092,7 +1120,7 @@ const EventCalendarView: React.FC<Props> = ({
 
     const shouldShowCommunityBanner =
         isMainEventsView && !communityBannerHidden && !hasFollowedOrganizers;
-    const hasRecommendationSources = hasFollowedOrganizers || wishlistEvents.length > 0;
+    const hasRecommendationSources = hasFollowedOrganizers || (wishlistEvents || []).length > 0;
     const shouldShowRecommendations =
         isMainEventsView && hasRecommendationSources && recommendationsHidden !== true;
     const shouldShowHiddenRecommendations =
@@ -1101,13 +1129,110 @@ const EventCalendarView: React.FC<Props> = ({
         shouldShowCommunityBanner || shouldShowRecommendations || shouldShowHiddenRecommendations;
     const hasListHeader = shouldShowListHeader;
     const bannerCtaLabel = "Follow";
+    const listHeaderOffset = hasListHeader ? listHeaderHeight : 0;
+    const sectionOffsetIndex = useMemo(() => {
+        const rowHeight = listViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
+        let cursor = listHeaderOffset;
+        return sections.map((section) => {
+            const sectionHeight = EVENT_SECTION_HEADER_HEIGHT + section.data.length * rowHeight;
+            const start = cursor;
+            const end = cursor + sectionHeight;
+            cursor = end;
+            const rawDate = (section as { date?: string }).date;
+            const isValidDate = !!rawDate && moment(rawDate, "YYYY-MM-DD", true).isValid();
+            const date = isValidDate ? moment.tz(rawDate as string, "YYYY-MM-DD", TZ).toDate() : null;
+            return { start, end, dateKey: isValidDate ? (rawDate as string) : null, date };
+        });
+    }, [sections, listViewMode, listHeaderOffset]);
+
+    const handleListScrollBeginDrag = () => {
+        const syncState = listScrollSyncRef.current;
+        syncState.isProgrammatic = false;
+        syncState.targetDateKey = null;
+    };
+
+    const handleListScroll = (offsetY: number, layoutHeight: number, contentHeight: number) => {
+        if (sectionOffsetIndex.length === 0) return;
+        if (hasListHeader && listHeaderHeight === 0) return;
+        if (offsetY < listHeaderOffset) return;
+
+        const targetOffset = offsetY + 1;
+        let lo = 0;
+        let hi = sectionOffsetIndex.length - 1;
+        let match: (typeof sectionOffsetIndex)[number] | null = null;
+
+        while (lo <= hi) {
+            const mid = Math.floor((lo + hi) / 2);
+            const entry = sectionOffsetIndex[mid];
+            if (targetOffset < entry.start) {
+                hi = mid - 1;
+            } else if (targetOffset >= entry.end) {
+                lo = mid + 1;
+            } else {
+                match = entry;
+                break;
+            }
+        }
+
+        const atBottom =
+            layoutHeight > 0 &&
+            contentHeight > 0 &&
+            offsetY + layoutHeight >= contentHeight - 1;
+        if (atBottom) {
+            for (let i = sectionOffsetIndex.length - 1; i >= 0; i -= 1) {
+                const entry = sectionOffsetIndex[i];
+                if (entry.dateKey && entry.date) {
+                    match = entry;
+                    break;
+                }
+            }
+        }
+
+        if (!match?.dateKey || !match.date) return;
+
+        const syncState = listScrollSyncRef.current;
+        if (syncState.isProgrammatic) {
+            if (syncState.targetDateKey && syncState.targetDateKey !== match.dateKey) {
+                return;
+            }
+            syncState.isProgrammatic = false;
+            syncState.targetDateKey = null;
+        }
+        if (syncState.lastSyncedDateKey === match.dateKey) {
+            return;
+        }
+        syncState.lastSyncedDateKey = match.dateKey;
+
+        if (ny.isSameDay(nav.selectedDate, match.date)) {
+            return;
+        }
+
+        const nextWeekAnchor = ny.startOfWeek(match.date).toDate();
+        let direction: "prev" | "next" | null = null;
+        if (moment(nextWeekAnchor).tz(TZ).isAfter(moment(nav.weekAnchorDate).tz(TZ), "day")) {
+            direction = "next";
+        } else if (moment(nextWeekAnchor).tz(TZ).isBefore(moment(nav.weekAnchorDate).tz(TZ), "day")) {
+            direction = "prev";
+        }
+
+        navUpdateSourceRef.current = 'list';
+        weekStripAnimationDirectionRef.current = direction;
+        setNav({ weekAnchorDate: nextWeekAnchor, selectedDate: match.date });
+        setMonthAnchorDate((prev) => {
+            const next = moment(match.date).startOf("month");
+            if (moment(prev).isSame(next, "month")) {
+                return prev;
+            }
+            return next.toDate();
+        });
+    };
 
     useEffect(() => {
         if (!__DEV__ || !isMainEventsView) return;
         console.log("[recommendations] state", {
             hasFollowedOrganizers,
             followedOrganizerCount: followedOrganizerIds.size,
-            calendarEventCount: wishlistEvents.length,
+            calendarEventCount: (wishlistEvents || []).length,
             recommendationsHidden,
             recommendationsCount: recommendations.length,
         });
@@ -1142,6 +1267,13 @@ const EventCalendarView: React.FC<Props> = ({
         if (lastScrollHeaderHeightRef.current === headerOffset) return;
         requestAnimationFrame(() => scrollToDate(lastScrollDateRef.current as Date));
     }, [hasListHeader, listHeaderHeight]);
+
+    useEffect(() => {
+        if (navUpdateSourceRef.current === 'list') {
+            navUpdateSourceRef.current = 'other';
+        }
+        weekStripAnimationDirectionRef.current = null;
+    }, [nav.selectedDate, nav.weekAnchorDate]);
 
     const toastTranslateY = toastAnim.interpolate({
         inputRange: [0, 1],
@@ -1321,6 +1453,8 @@ const EventCalendarView: React.FC<Props> = ({
                     onSwipeNextDay={handleStripSwipeNextDay}
                     onLongPress={handleStripLongPress}
                     containerWidth={Math.max(0, windowWidth - spacing.lg * 2)}
+                    animateToCurrentWeek={navUpdateSourceRef.current === 'list'}
+                    animateDirection={weekStripAnimationDirectionRef.current}
                 />
                 <View style={styles.headerDivider} />
             </View>
@@ -1426,6 +1560,8 @@ const EventCalendarView: React.FC<Props> = ({
                     isLoadingEvents={isLoadingList}
                     viewMode={listViewMode}
                     listHeaderHeight={listHeaderHeight}
+                    onListScroll={handleListScroll}
+                    onListScrollBeginDrag={handleListScrollBeginDrag}
                     listHeaderComponent={
                         shouldShowListHeader ? (
                             <View

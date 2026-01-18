@@ -33,6 +33,8 @@ type Props = {
     onLongPress?: (day: Date) => void;
 
     containerWidth?: number;
+    animateToCurrentWeek?: boolean;
+    animateDirection?: "prev" | "next" | null;
 };
 
 export const WeekStrip: React.FC<Props> = ({
@@ -47,10 +49,13 @@ export const WeekStrip: React.FC<Props> = ({
     onSwipeNextDay,
     onLongPress,
     containerWidth,
+    animateToCurrentWeek = false,
+    animateDirection = null,
 }) => {
     const pageWidth = containerWidth || SCREEN_WIDTH;
     const longPressTriggeredRef = useRef(false);
     const scrollRef = useRef<ScrollView>(null);
+    const isUserScrollingRef = useRef(false);
     const weekAnchor = weekDays[0]?.getTime() ?? 0;
 
     const isSameDayNY = (a: Date, b: Date) =>
@@ -60,10 +65,24 @@ export const WeekStrip: React.FC<Props> = ({
         moment(d).tz(TZ).isSame(moment().tz(TZ), "day");
 
     useEffect(() => {
-        scrollRef.current?.scrollTo({ x: pageWidth, animated: false });
-    }, [pageWidth, weekAnchor]);
+        const scrollView = scrollRef.current;
+        if (!scrollView) return;
+        if (animateToCurrentWeek && animateDirection) {
+            const startX = animateDirection === "next" ? 0 : pageWidth * 2;
+            scrollView.scrollTo({ x: startX, animated: false });
+            requestAnimationFrame(() => {
+                scrollView.scrollTo({ x: pageWidth, animated: true });
+            });
+            return;
+        }
+        scrollView.scrollTo({ x: pageWidth, animated: false });
+    }, [pageWidth, weekAnchor, animateToCurrentWeek, animateDirection]);
 
     const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+        if (!isUserScrollingRef.current) {
+            return;
+        }
+        isUserScrollingRef.current = false;
         const offsetX = event.nativeEvent.contentOffset.x;
         const pageIndex = Math.round(offsetX / pageWidth);
         if (pageIndex === 0) {
@@ -143,6 +162,9 @@ export const WeekStrip: React.FC<Props> = ({
                 horizontal
                 pagingEnabled
                 showsHorizontalScrollIndicator={false}
+                onScrollBeginDrag={() => {
+                    isUserScrollingRef.current = true;
+                }}
                 onMomentumScrollEnd={handleMomentumEnd}
                 contentOffset={{ x: pageWidth, y: 0 }}
                 contentContainerStyle={s.scrollContainer}
