@@ -13,7 +13,7 @@ import {
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Markdown from 'react-native-markdown-display';
+import Markdown from '../../../components/Markdown';
 import { WebView } from 'react-native-webview';
 import { useNavigation } from '@react-navigation/native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';

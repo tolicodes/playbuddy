@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Markdown from 'react-native-markdown-display';
+import Markdown from '../../../components/Markdown';
 import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 import type { Facilitator } from '../../../Common/types/commonTypes';
 

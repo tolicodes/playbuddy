@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
-import Markdown from 'react-native-markdown-display';
+import Markdown from '../components/Markdown';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import type { EventPopup } from '../commonTypes';
