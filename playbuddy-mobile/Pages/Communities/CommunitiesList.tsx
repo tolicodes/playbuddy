@@ -27,6 +27,7 @@ import type { Event } from "../../Common/types/commonTypes";
 import type { NavStack } from "../../Common/Nav/NavStackType";
 import { UE } from "../../userEventTypes";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
 import { useFetchOrganizers } from "../../Common/db-axios/useOrganizers";
 import { WishlistHeart } from "../Calendar/ListView/WishlistHeart";
@@ -105,6 +106,7 @@ export const CommunitiesList = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const { authUserId } = useUserContext();
+    const analyticsProps = useAnalyticsProps();
     const { width } = useWindowDimensions();
 
     const joinCommunity = useJoinCommunity();
@@ -115,6 +117,15 @@ export const CommunitiesList = ({
     const isOrganizer = entityType === "organizer";
     const entityLabel = "communities";
     const organizerListMode = listMode || (showSearch ? "discover" : "my");
+    const hasOrganizerFollows = useMemo(
+        () =>
+            myCommunities.some(
+                (community) =>
+                    community.type === "organizer_public_community" ||
+                    community.type === "organizer_private_community"
+            ),
+        [myCommunities]
+    );
     const [searchQuery, setSearchQuery] = useState("");
     const [showNoEventOrganizers, setShowNoEventOrganizers] = useState(false);
     const searchPlaceholder =
@@ -163,7 +174,7 @@ export const CommunitiesList = ({
         [myCommunities]
     );
     const toggleMembership = useCallback(
-        (communityIds: string[], shouldJoin: boolean) => {
+        (communityIds: string[], shouldJoin: boolean, organizerIds?: string[], source?: string) => {
             const validCommunityIds = getJoinableCommunityIds(communityIds);
             if (validCommunityIds.length === 0) {
                 return;
@@ -175,6 +186,26 @@ export const CommunitiesList = ({
             const targetIds = shouldJoin
                 ? validCommunityIds.filter((id) => !myCommunityIds.has(id))
                 : validCommunityIds.filter((id) => myCommunityIds.has(id));
+
+            if (shouldJoin && isOrganizer && targetIds.length > 0) {
+                const organizerId = organizerIds?.[0];
+                const communityId = targetIds[0];
+                const followSource = source ?? `organizer_list_${organizerListMode}`;
+                logEvent(UE.OrganizerFollowPressed, {
+                    ...analyticsProps,
+                    organizer_id: organizerId,
+                    community_id: communityId,
+                    source: followSource,
+                });
+                if (!hasOrganizerFollows) {
+                    logEvent(UE.OrganizerFirstFollowed, {
+                        ...analyticsProps,
+                        organizer_id: organizerId,
+                        community_id: communityId,
+                        source: followSource,
+                    });
+                }
+            }
 
             targetIds.forEach((communityId) => {
                 if (shouldJoin) {
@@ -191,7 +222,17 @@ export const CommunitiesList = ({
                 }
             });
         },
-        [authUserId, entityType, joinCommunity, leaveCommunity, myCommunityIds]
+        [
+            analyticsProps,
+            authUserId,
+            entityType,
+            hasOrganizerFollows,
+            isOrganizer,
+            joinCommunity,
+            leaveCommunity,
+            myCommunityIds,
+            organizerListMode,
+        ]
     );
 
     const communityEntities = useMemo<CommunityEntity[]>(() => {
@@ -513,7 +554,7 @@ export const CommunitiesList = ({
         const isJoined = isEntityJoined(entity);
         const joinableCommunityIds = getJoinableCommunityIds(entity.communityIds);
         const canFollow = joinableCommunityIds.length > 0;
-        const heartSize = Math.max(44, Math.min(56, Math.round(options.height * 0.34)));
+        const heartSize = Math.max(30, Math.min(38, Math.round(options.height * 0.22)));
         const imageUrl = getSafeImageUrl(meta.imageUrl ? getSmallAvatarUrl(meta.imageUrl) : undefined);
         const badgeLabel = options.badgeLabel || getEventCountLabel(meta.eventCount);
         return (
@@ -568,7 +609,12 @@ export const CommunitiesList = ({
                                 alert('This community is not followable yet.');
                                 return;
                             }
-                            toggleMembership(entity.communityIds, !isJoined);
+                            toggleMembership(
+                                entity.communityIds,
+                                !isJoined,
+                                entity.organizerIds,
+                                `organizer_list_${organizerListMode}`
+                            );
                         }}
                         size={heartSize}
                         variant={isJoined ? "solid" : "outline"}
@@ -754,7 +800,12 @@ export const CommunitiesList = ({
                                     alert('This community is not followable yet.');
                                     return;
                                 }
-                                toggleMembership(item.communityIds, !isJoined);
+                                toggleMembership(
+                                    item.communityIds,
+                                    !isJoined,
+                                    item.organizerIds,
+                                    `organizer_list_${organizerListMode}`
+                                );
                             }}
                             variant={isJoined ? "solid" : "outline"}
                             containerStyle={[
@@ -989,7 +1040,9 @@ const styles = StyleSheet.create({
         fontFamily: fontFamilies.body,
     },
     imageTileHeartWrap: {
-        ...StyleSheet.absoluteFillObject,
+        position: "absolute",
+        right: spacing.sm,
+        bottom: spacing.sm,
         alignItems: "center",
         justifyContent: "center",
         zIndex: 2,
@@ -1003,7 +1056,7 @@ const styles = StyleSheet.create({
     imageTileFooter: {
         position: "absolute",
         left: spacing.md,
-        right: spacing.md,
+        right: spacing.xxxl + spacing.sm,
         bottom: spacing.md,
     },
     imageTileTitle: {

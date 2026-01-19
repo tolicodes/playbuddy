@@ -23,7 +23,7 @@ const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }
         ) > 0;
     }, [myCommunities, type]);
     const [activeTab, setActiveTab] = useState<TabKey>(() => (
-        !isLoadingCommunities && !hasMyCommunities ? 'all' : 'favorite'
+        hasMyCommunities ? 'favorite' : 'all'
     ));
     const [hasUserSelectedTab, setHasUserSelectedTab] = useState(false);
     const analyticsProps = useAnalyticsProps();
@@ -35,8 +35,9 @@ const CommunitiesNav = ({ type = 'private' }: { type?: 'organizer' | 'private' }
 
     useEffect(() => {
         if (hasUserSelectedTab || isLoadingCommunities) return;
-        if (!hasMyCommunities && activeTab === 'favorite') {
-            setActiveTab('all');
+        const defaultTab: TabKey = hasMyCommunities ? 'favorite' : 'all';
+        if (activeTab !== defaultTab) {
+            setActiveTab(defaultTab);
         }
     }, [activeTab, hasMyCommunities, hasUserSelectedTab, isLoadingCommunities]);
 
