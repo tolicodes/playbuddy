@@ -10,6 +10,7 @@ type WishlistPlusButtonProps = {
     wobble?: boolean;
     size?: number;
     containerStyle?: ViewStyle;
+    variant?: 'filled' | 'subtle';
 };
 
 const MAX_LABEL = 'Saved';
@@ -40,6 +41,7 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
     wobble = false,
     size = 36,
     containerStyle,
+    variant = 'filled',
 }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const wobbleAnim = useRef(new Animated.Value(0)).current;
@@ -48,8 +50,15 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
     const { iconSize, fontSize, paddingX, gap, minWidth } = buildButtonMetrics(size);
     const heightValue = Math.max(28, Math.round(size * 0.86));
     const label = itemIsOnWishlist ? 'Saved' : 'Save';
-    const iconName = itemIsOnWishlist ? 'check' : 'plus';
-    const contentColor = itemIsOnWishlist ? colors.white : colors.brandInk;
+    const iconName = itemIsOnWishlist ? 'bookmark' : 'bookmark-o';
+    const isSubtle = variant === 'subtle';
+    const contentColor = itemIsOnWishlist
+        ? (isSubtle ? colors.brandIndigo : colors.white)
+        : colors.brandInk;
+    const baseStyle = isSubtle ? styles.buttonSubtle : styles.button;
+    const stateStyle = isSubtle
+        ? (itemIsOnWishlist ? styles.buttonSubtleActive : styles.buttonSubtleInactive)
+        : (itemIsOnWishlist ? styles.buttonActive : styles.buttonInactive);
 
     useEffect(() => {
         Animated.sequence([
@@ -115,8 +124,10 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
         outputRange: ['-6deg', '6deg'],
     });
 
+    const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
+
     return (
-        <TouchableOpacity
+        <AnimatedTouchable
             onPress={(event) => {
                 event.stopPropagation?.();
                 if (longPressTriggeredRef.current) {
@@ -138,13 +149,14 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
                 }, 0);
             }}
             style={[
-                styles.button,
-                itemIsOnWishlist ? styles.buttonActive : styles.buttonInactive,
+                baseStyle,
+                stateStyle,
                 {
                     height: heightValue,
                     minWidth,
                     borderRadius: heightValue / 2,
                     paddingHorizontal: paddingX,
+                    transform: [{ scale: scaleAnim }, { rotate: wobbleRotation }],
                 },
                 containerStyle,
             ]}
@@ -152,22 +164,18 @@ export const WishlistPlusButton: React.FC<WishlistPlusButtonProps> = ({
             activeOpacity={0.75}
             delayLongPress={350}
         >
-            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-                <View style={styles.contentRow}>
-                    <Animated.View style={{ transform: [{ rotate: wobbleRotation }] }}>
-                        <FAIcon
-                            name={iconName}
-                            size={iconSize}
-                            color={contentColor}
-                            style={{ marginRight: gap }}
-                        />
-                    </Animated.View>
-                    <Text style={[styles.label, { color: contentColor, fontSize }]}>
-                        {label}
-                    </Text>
-                </View>
-            </Animated.View>
-        </TouchableOpacity>
+            <View style={styles.contentRow}>
+                <FAIcon
+                    name={iconName}
+                    size={iconSize}
+                    color={contentColor}
+                    style={{ marginRight: gap }}
+                />
+                <Text style={[styles.label, { color: contentColor, fontSize }]}>
+                    {label}
+                </Text>
+            </View>
+        </AnimatedTouchable>
     );
 };
 
@@ -190,6 +198,23 @@ const styles = StyleSheet.create({
     },
     buttonInactive: {
         backgroundColor: colors.surfaceWhiteFrosted,
+        borderColor: colors.borderMutedLight,
+    },
+    buttonSubtle: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        shadowOffset: { width: 0, height: 0 },
+        elevation: 0,
+    },
+    buttonSubtleActive: {
+        borderColor: colors.brandIndigo,
+    },
+    buttonSubtleInactive: {
         borderColor: colors.borderMutedLight,
     },
     contentRow: {

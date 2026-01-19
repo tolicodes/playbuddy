@@ -42,6 +42,7 @@ import { ACTIVE_EVENT_TYPES } from '../../../Common/types/commonTypes';
 import SectionCard from './SectionCard';
 import { TZ } from '../ListView/calendarNavUtils';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
+import { WishlistPlusButton } from '../ListView/WishlistPlusButton';
 
 /* 
  * VideoPlayer
@@ -95,6 +96,13 @@ const ORGANIZER_RECOMMENDATION_COUNT = 2;
 const FOLLOWED_RECOMMENDATION_COUNT = 3;
 const RECOMMENDATION_WINDOW_START_DAYS = 2;
 const RECOMMENDATION_WINDOW_END_DAYS = 10;
+const SECONDARY_ACTION_SIZE = 40;
+const SECONDARY_ACTION_HEIGHT = Math.max(28, Math.round(SECONDARY_ACTION_SIZE * 0.86));
+const SECONDARY_ACTION_ICON_SIZE = Math.round(SECONDARY_ACTION_HEIGHT * 0.5);
+const SECONDARY_ACTION_PADDING_X = Math.round(SECONDARY_ACTION_HEIGHT * 0.18);
+const SECONDARY_ACTION_ICON_ONLY_MIN_WIDTH = Math.round(
+    SECONDARY_ACTION_PADDING_X * 2 + SECONDARY_ACTION_ICON_SIZE
+);
 
 const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string }) => {
     const { currentDeepLink, authUserId } = useUserContext();
@@ -485,17 +493,29 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
                             />
                         <Text style={styles.ticketText}>{ticketLabel}</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.calendarButton} onPress={handleToggleWishlist}>
+                    <WishlistPlusButton
+                        itemIsOnWishlist={isWishlisted}
+                        handleToggleEventWishlist={handleToggleWishlist}
+                        size={SECONDARY_ACTION_SIZE}
+                        variant="subtle"
+                    />
+                    <TouchableOpacity
+                        style={[
+                            styles.secondaryActionButton,
+                            {
+                                height: SECONDARY_ACTION_HEIGHT,
+                                borderRadius: SECONDARY_ACTION_HEIGHT / 2,
+                                paddingHorizontal: SECONDARY_ACTION_PADDING_X,
+                                minWidth: SECONDARY_ACTION_ICON_ONLY_MIN_WIDTH,
+                            },
+                        ]}
+                        onPress={handleShare}
+                    >
                         <FAIcon
-                            name="heart"
-                            size={22}
-                            color={colors.badgeAlert}
-                            solid={isWishlisted}
-                            regular={!isWishlisted}
+                            name="share-square"
+                            size={SECONDARY_ACTION_ICON_SIZE}
+                            color={colors.brandIndigo}
                         />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-                        <FAIcon name="share-square" size={18} color={colors.brandIndigo} />
                     </TouchableOpacity>
                 </View>
 
@@ -1165,17 +1185,12 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         alignSelf: 'flex-start',
-        backgroundColor: colors.overlayHero,
+        backgroundColor: colors.surfaceGlassStrong,
         borderRadius: radius.pill,
         paddingVertical: spacing.sm,
         paddingHorizontal: spacing.mdPlus,
         borderWidth: 1,
-        borderColor: colors.borderOnDarkMedium,
-        shadowColor: colors.black,
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 3,
+        borderColor: colors.borderOnDarkSoft,
     },
     heroOrganizerRow: {
         flexDirection: 'row',
@@ -1208,12 +1223,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     heroFollowButtonActive: {
-        backgroundColor: colors.overlayHero,
-        borderColor: colors.borderOnDarkMedium,
+        backgroundColor: colors.surfaceGlassStrong,
+        borderColor: colors.borderOnDarkSoft,
     },
     heroFollowButtonInactive: {
-        backgroundColor: colors.white,
-        borderColor: colors.white,
+        backgroundColor: colors.surfaceGlass,
+        borderColor: colors.borderOnDarkSoft,
     },
     heroFollowButtonDisabled: {
         opacity: 0.6,
@@ -1298,6 +1313,7 @@ const styles = StyleSheet.create({
     },
     ctaRow: {
         flexDirection: 'row',
+        alignItems: 'center',
         gap: spacing.smPlus,
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.xsPlus,
@@ -1309,7 +1325,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         backgroundColor: colors.brandIndigo,
         paddingVertical: spacing.md,
+        minHeight: 50,
         borderRadius: radius.hero,
+        shadowColor: colors.black,
+        shadowOpacity: 0.24,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 5,
     },
     ticketButtonDisabled: {
         backgroundColor: colors.brandMuted,
@@ -1323,30 +1345,12 @@ const styles = StyleSheet.create({
         color: colors.white,
         fontFamily: fontFamilies.body,
     },
-    calendarButton: {
-        width: 44,
-        height: 44,
-        borderRadius: radius.xxl,
-        borderWidth: 1.5,
-        borderColor: colors.badgeAlert,
-        backgroundColor: colors.surfaceRose,
+    secondaryActionButton: {
         alignItems: 'center',
         justifyContent: 'center',
-        shadowColor: colors.black,
-        shadowOpacity: 0.12,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
-    },
-    shareButton: {
-        width: 44,
-        height: 44,
-        borderRadius: radius.xxl,
         borderWidth: 1,
-        borderColor: colors.borderAccent,
-        backgroundColor: colors.white,
-        alignItems: 'center',
-        justifyContent: 'center',
+        borderColor: colors.borderMutedLight,
+        backgroundColor: colors.surfaceWhiteFrosted,
     },
     tabBarWrap: {
         paddingHorizontal: spacing.lg,

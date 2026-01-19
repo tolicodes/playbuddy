@@ -301,7 +301,30 @@ export const TabNavigator = () => {
                     component={MyCalendarStack}
                     options={{
                         tabBarIcon: ({ color, size }) => (
-                            <FAIcon name="heart" size={size} color={color} />
+                            <View
+                                style={[
+                                    styles.myCalendarTabIcon,
+                                    {
+                                        width: size + 6,
+                                        height: size + 6,
+                                    },
+                                ]}
+                            >
+                                <FAIcon name="calendar" size={size} color={color} />
+                                <View
+                                    style={[
+                                        styles.myCalendarTabBadge,
+                                        {
+                                            borderColor: color,
+                                            width: Math.round(size * 0.6),
+                                            height: Math.round(size * 0.6),
+                                            borderRadius: Math.round(size * 0.3),
+                                        },
+                                    ]}
+                                >
+                                    <FAIcon name="check" size={Math.round(size * 0.35)} color={color} />
+                                </View>
+                            </View>
                         ),
                     }}
                 />
@@ -380,5 +403,19 @@ const styles = StyleSheet.create({
         fontSize: fontSizes.xxl,
         fontWeight: '600',
         color: colors.textPrimary,
+    },
+    myCalendarTabIcon: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    myCalendarTabBadge: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1.5,
+        backgroundColor: colors.white,
     },
 });

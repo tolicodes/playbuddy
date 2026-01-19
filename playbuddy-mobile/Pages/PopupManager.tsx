@@ -592,7 +592,7 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 dismissPopup('calendar_add_coach');
                 return;
             }
-            showCalendarCoachToast('press the + save button to add to calendar', 'intro', {
+            showCalendarCoachToast('press the save button to add to calendar', 'intro', {
                 durationMs: CALENDAR_COACH_INTRO_TOAST_MS,
                 onComplete: () => dismissPopup('calendar_add_coach'),
             });
