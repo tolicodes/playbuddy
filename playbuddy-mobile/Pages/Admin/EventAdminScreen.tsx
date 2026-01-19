@@ -27,7 +27,7 @@ import type { EventAttendees } from '../../commonTypes';
 import type { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
 import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
 import { useFetchEvents, useUpdateEvent } from '../../Common/db-axios/useEvents';
-import type { Event } from '../../Common/types/commonTypes';
+import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE, type Event } from '../../Common/types/commonTypes';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useGroupedEvents } from '../Calendar/hooks/useGroupedEventsMain';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
@@ -96,7 +96,7 @@ const buildDraftFromEvent = (event: Event): EventDraft => ({
     custom_description: event.custom_description ?? '',
     description: event.description ?? '',
     tagsText: (event.tags || []).join(', '),
-    type: event.type ?? 'event',
+    type: event.type ?? FALLBACK_EVENT_TYPE,
     visibility: event.visibility ?? 'public',
     approval_status: event.approval_status ?? 'approved',
     weekly_pick: !!event.weekly_pick,
@@ -128,6 +128,16 @@ const formatDateTimeDisplay = (value?: string | null) => {
     return date ? date.toLocaleString() : '';
 };
 
+const formatEventTypeLabel = (value: string) =>
+    value
+        .replace(/[_-]+/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((word) => word[0].toUpperCase() + word.slice(1))
+        .join(' ');
+
+const BASE_EVENT_TYPES: string[] = [FALLBACK_EVENT_TYPE, ...ACTIVE_EVENT_TYPES];
+
 const OptionPill = ({
     label,
     active,
@@ -154,12 +164,16 @@ export const EventAdminScreen = () => {
     const fallbackTopInset = initialWindowMetrics?.insets?.top ?? 0;
     const statusBarTop = Platform.OS === 'android' ? (StatusBar.currentHeight ?? 0) : 0;
     const safeTop = Math.max(insets.top, fallbackTopInset, statusBarTop);
+    const approvalStatuses = useMemo(
+        () => (isAdmin ? ['approved', 'pending', 'rejected'] : undefined),
+        [isAdmin]
+    );
 
     const { data: events = [], isLoading, error } = useFetchEvents({
         includeFacilitatorOnly: true,
         includeHidden: true,
         includeHiddenOrganizers: true,
-        includeApprovalPending: true,
+        approvalStatuses,
     });
     const { data: attendees = [] } = useFetchAttendees();
     const updateEvent = useUpdateEvent();
@@ -167,11 +181,19 @@ export const EventAdminScreen = () => {
     const [search, setSearch] = useState('');
     const [visibilityFilter, setVisibilityFilter] = useState<VisibilityFilter>('all');
     const [approvalFilter, setApprovalFilter] = useState<ApprovalFilter>('unapproved');
+    const [userSubmittedOnly, setUserSubmittedOnly] = useState(false);
     const [editingEvent, setEditingEvent] = useState<Event | null>(null);
     const [draft, setDraft] = useState<EventDraft | null>(null);
     const [savingId, setSavingId] = useState<number | null>(null);
     const [savingOrganizerId, setSavingOrganizerId] = useState<number | null>(null);
     const [activePicker, setActivePicker] = useState<'start' | 'end' | null>(null);
+
+    const eventTypeOptions = useMemo(() => {
+        if (!draft?.type || BASE_EVENT_TYPES.includes(draft.type)) {
+            return BASE_EVENT_TYPES;
+        }
+        return [...BASE_EVENT_TYPES, draft.type];
+    }, [draft?.type]);
 
     const sortedEvents = useMemo(() => {
         return [...events].sort((a, b) => {
@@ -197,14 +219,18 @@ export const EventAdminScreen = () => {
 
     const filteredEvents = useMemo(() => {
         if (approvalFilter === 'all') {
-            return visibilityFilteredEvents;
+            return userSubmittedOnly
+                ? visibilityFilteredEvents.filter((event) => !!event.user_submitted)
+                : visibilityFilteredEvents;
         }
         const wantsApproved = approvalFilter === 'approved';
-        return visibilityFilteredEvents.filter((event) => {
+        const approvalFiltered = visibilityFilteredEvents.filter((event) => {
             const approved = isApprovedStatus(event.approval_status);
             return wantsApproved ? approved : !approved;
         });
-    }, [approvalFilter, visibilityFilteredEvents]);
+        if (!userSubmittedOnly) return approvalFiltered;
+        return approvalFiltered.filter((event) => !!event.user_submitted);
+    }, [approvalFilter, userSubmittedOnly, visibilityFilteredEvents]);
 
     const attendeesByEvent = useMemo(() => {
         const map = new Map<number, EventAttendees['attendees']>();
@@ -369,13 +395,41 @@ export const EventAdminScreen = () => {
                             const isOrganizerSaving = !!organizerId && savingOrganizerId === organizerId;
                             const isActionDisabled = isSavingEvent || isOrganizerSaving;
                             const isApproved = isApprovedStatus(item.approval_status);
-                            const approvalLabel = item.approval_status === 'rejected' ? 'Rejected' : 'Pending';
-                            const approvalIcon = item.approval_status === 'rejected'
-                                ? 'close-circle-outline'
-                                : 'alert-circle-outline';
+                            const approvalStatus = item.approval_status ?? 'approved';
+                            const approvalLabel = approvalStatus === 'approved'
+                                ? 'Approved'
+                                : approvalStatus === 'rejected'
+                                    ? 'Rejected'
+                                    : 'Pending';
+                            const approvalIcon = approvalStatus === 'approved'
+                                ? 'checkmark-circle-outline'
+                                : approvalStatus === 'rejected'
+                                    ? 'close-circle-outline'
+                                    : 'alert-circle-outline';
+                            const approvalTint = approvalStatus === 'approved'
+                                ? colors.success
+                                : approvalStatus === 'rejected'
+                                    ? colors.danger
+                                    : colors.warning;
+                            const approvalPillStyle = approvalStatus === 'approved'
+                                ? styles.actionPillSuccess
+                                : approvalStatus === 'rejected'
+                                    ? styles.actionPillDanger
+                                    : styles.actionPillWarning;
+                            const approvalTextStyle = approvalStatus === 'approved'
+                                ? styles.actionTextSuccess
+                                : approvalStatus === 'rejected'
+                                    ? styles.actionTextDanger
+                                    : styles.actionTextWarning;
 
                             const adminFooter = (
                                 <View style={styles.adminActions}>
+                                    <View style={[styles.actionPill, styles.actionPillReadOnly, approvalPillStyle]}>
+                                        <Ionicons name={approvalIcon} size={16} color={approvalTint} />
+                                        <Text style={[styles.actionText, approvalTextStyle]}>
+                                            {approvalLabel}
+                                        </Text>
+                                    </View>
                                     <TouchableOpacity
                                         style={[
                                             styles.actionPill,
@@ -410,14 +464,6 @@ export const EventAdminScreen = () => {
                                         <Ionicons name="create-outline" size={16} color={colors.textMuted} />
                                         <Text style={styles.actionText}>Edit</Text>
                                     </TouchableOpacity>
-                                    {!isApproved && (
-                                        <View style={[styles.actionPill, styles.actionPillWarning]}>
-                                            <Ionicons name={approvalIcon} size={16} color={colors.warning} />
-                                            <Text style={[styles.actionText, styles.actionTextWarning]}>
-                                                {approvalLabel}
-                                            </Text>
-                                        </View>
-                                    )}
                                     {!isApproved && (
                                         <TouchableOpacity
                                             style={[styles.actionPill, styles.actionPillApprove]}
@@ -542,6 +588,16 @@ export const EventAdminScreen = () => {
                                             label="Unapproved"
                                             active={approvalFilter === 'unapproved'}
                                             onPress={() => setApprovalFilter('unapproved')}
+                                        />
+                                    </View>
+                                    <View style={styles.filterToggleRow}>
+                                        <Text style={styles.filterToggleLabel}>User submitted only</Text>
+                                        <Switch
+                                            value={userSubmittedOnly}
+                                            onValueChange={setUserSubmittedOnly}
+                                            trackColor={{ false: colors.borderMutedAlt, true: colors.tintViolet }}
+                                            thumbColor={userSubmittedOnly ? colors.brandIndigo : colors.surfaceWhiteStrong}
+                                            ios_backgroundColor={colors.borderMutedAlt}
                                         />
                                     </View>
                                     <View style={styles.filterMetaRow}>
@@ -815,6 +871,20 @@ export const EventAdminScreen = () => {
                                     </View>
 
                                     <View style={styles.optionGroup}>
+                                        <Text style={styles.label}>Event type</Text>
+                                        <View style={styles.optionRow}>
+                                            {eventTypeOptions.map((eventType) => (
+                                                <OptionPill
+                                                    key={eventType}
+                                                    label={formatEventTypeLabel(eventType)}
+                                                    active={draft.type === eventType}
+                                                    onPress={() => setDraft((prev) => ({ ...prev!, type: eventType }))}
+                                                />
+                                            ))}
+                                        </View>
+                                    </View>
+
+                                    <View style={styles.optionGroup}>
                                         <Text style={styles.label}>Visibility</Text>
                                         <View style={styles.optionRow}>
                                             <OptionPill
@@ -1069,6 +1139,23 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
         marginTop: spacing.xs,
     },
+    filterToggleRow: {
+        marginTop: spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        backgroundColor: colors.surfaceSubtle,
+    },
+    filterToggleLabel: {
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
     filterMetaRow: {
         marginTop: spacing.md,
         flexDirection: 'row',
@@ -1157,6 +1244,14 @@ const styles = StyleSheet.create({
         backgroundColor: colors.surfaceWarning,
         borderColor: colors.borderGoldSoft,
     },
+    actionPillSuccess: {
+        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+        borderColor: 'rgba(46, 125, 50, 0.25)',
+    },
+    actionPillDanger: {
+        backgroundColor: 'rgba(255, 59, 48, 0.08)',
+        borderColor: 'rgba(255, 59, 48, 0.25)',
+    },
     actionPillReadOnly: {
         backgroundColor: colors.surfaceSubtle,
         borderColor: colors.borderSubtle,
@@ -1177,6 +1272,14 @@ const styles = StyleSheet.create({
     },
     actionTextWarning: {
         color: colors.warning,
+        fontWeight: '600',
+    },
+    actionTextSuccess: {
+        color: colors.success,
+        fontWeight: '600',
+    },
+    actionTextDanger: {
+        color: colors.danger,
         fontWeight: '600',
     },
     emptyState: {

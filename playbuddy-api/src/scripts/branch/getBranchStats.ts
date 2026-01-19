@@ -470,13 +470,53 @@ async function applyDateRangeIfPossible(p: Page): Promise<string | null> {
     return null;
 }
 
+async function trySetRowsPerPageInput(input: Locator, size: number): Promise<boolean> {
+    const desired = String(size);
+    const current = (await input.evaluate(el => (el as HTMLInputElement).value).catch(() => null)) ?? "";
+    if (current.trim() === desired) return true;
+
+    const isEditable = await input.evaluate(el => {
+        const element = el as HTMLInputElement;
+        return !element.disabled && !element.readOnly;
+    }).catch(() => false);
+    const isVisible = await input.isVisible().catch(() => false);
+
+    if (isEditable && isVisible) {
+        await input.fill(desired).catch(() => { });
+        await input.press("Enter").catch(() => { });
+    } else {
+        await input.evaluate((el, value) => {
+            const element = el as HTMLInputElement;
+            element.value = value;
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+            element.dispatchEvent(new Event("change", { bubbles: true }));
+        }, desired).catch(() => { });
+    }
+
+    const updated = (await input.evaluate(el => (el as HTMLInputElement).value).catch(() => null)) ?? "";
+    return updated.trim() === desired;
+}
+
 async function setRowsPerPage(page: Page, size: number) {
     const paginator = page.locator('.MuiTablePagination-root');
     await paginator.waitFor({ state: "visible", timeout: 30_000 });
 
+    const input = paginator.locator('input[value="25"], input[aria-label*="Rows per page"], input[value]').first();
+    if (await input.count()) {
+        const isVisible = await input.isVisible().catch(() => false);
+        if (isVisible) {
+            const updated = await trySetRowsPerPageInput(input, size);
+            if (updated) {
+                await waitForManagerReady(page);
+                return;
+            }
+        }
+    }
+
     const sizeButton = paginator.locator('[role="button"][aria-haspopup="listbox"]').first();
-    const current = (await sizeButton.textContent())?.trim();
-    if (current === String(size)) return; // already set
+    if (!(await sizeButton.count())) return;
+    const current = (await sizeButton.textContent())?.trim() ?? "";
+    if (current === String(size) || current.startsWith(`${size} `)) return; // already set
 
     await sizeButton.click();
 
@@ -518,9 +558,16 @@ function emitProgress(payload: { processed: number; total?: number | null }) {
 
 async function goToNextPageIfPossible(page: Page): Promise<boolean> {
     const paginator = page.locator('.MuiTablePagination-root');
-    const nextBtn = paginator.getByRole('button', { name: /go to next page/i }).first();
+    let nextBtn = paginator.locator('button[aria-label="Go to next page"]').first();
+    if (!(await nextBtn.count())) {
+        nextBtn = paginator.getByRole('button', { name: /go to next page/i }).first();
+    }
+    if (!(await nextBtn.count())) return false;
 
-    const disabled = await nextBtn.isDisabled().catch(() => true);
+    const disabled = await nextBtn.isDisabled().catch(async () => {
+        const attr = await nextBtn.getAttribute("disabled").catch(() => null);
+        return attr !== null;
+    });
     if (disabled) return false;
 
     const before = await getDisplayedRowsText(page);

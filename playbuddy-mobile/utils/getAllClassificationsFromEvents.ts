@@ -22,6 +22,15 @@ const resolveEventType = (event: Event) => {
     return FALLBACK_EVENT_TYPE;
 };
 
+const normalizeExperienceLevel = (value?: string | null) => {
+    if (!value) return value;
+    const normalized = value.trim().toLowerCase().replace(/[_-]+/g, ' ');
+    if (normalized === 'all levels' || normalized === 'all level' || normalized === 'all') {
+        return 'All';
+    }
+    return value.trim();
+};
+
 export function getAllClassificationsFromEvents(events: Event[]): TagCountsByCategory {
     const counters: Record<keyof TagCountsByCategory, Record<string, number>> = {
         tags: {},
@@ -36,8 +45,10 @@ export function getAllClassificationsFromEvents(events: Event[]): TagCountsByCat
         });
 
         if (event.classification?.experience_level) {
-            const level = event.classification.experience_level;
-            counters.experience_levels[level] = (counters.experience_levels[level] || 0) + 1;
+            const level = normalizeExperienceLevel(event.classification.experience_level);
+            if (level) {
+                counters.experience_levels[level] = (counters.experience_levels[level] || 0) + 1;
+            }
         }
 
         if (event.classification?.interactivity_level) {

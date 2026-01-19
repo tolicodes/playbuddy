@@ -16,6 +16,7 @@ import { logEvent } from '../../../Common/hooks/logger';
 import { getEventPromoCodes } from '../../Auth/usePromoCode';
 import { calendarTypeChips, colors, eventImageFallbackGradients, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
+import { ADMIN_EMAILS } from '../../../config';
 import { AttendeeCarousel } from '../common/AttendeeCarousel';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { WishlistPlusButton, getWishlistButtonWidth } from './WishlistPlusButton';
@@ -45,6 +46,7 @@ export interface EventListItemProps {
     cardVariant?: 'heart' | 'type-icon';
     disableClickAnalytics?: boolean;
     hideSaveButton?: boolean;
+    wobbleSaveButton?: boolean;
 }
 
 export const EventListItem: React.FC<EventListItemProps> = ({
@@ -61,17 +63,22 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     cardVariant,
     disableClickAnalytics,
     hideSaveButton,
+    wobbleSaveButton,
 }) => {
-    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
-    const { authUserId } = useUserContext();
+    const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
+    const { authUserId, userProfile } = useUserContext();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
     const calendarCoach = useCalendarCoach();
     const [shareMenuOpen, setShareMenuOpen] = useState(false);
 
     const promoCode = getEventPromoCodes(item)?.[0];
+    const resolvedIsAdmin = typeof isAdmin === 'boolean'
+        ? isAdmin
+        : !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const formattedDate = formatDate(item, fullDate);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const wobblePlus = calendarCoach?.wobblePlus ?? false;
+    const shouldWobbleSave = (wobblePlus || wobbleSaveButton) && !itemIsOnWishlist;
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const locationLabel = (item.neighborhood || '').trim();
     const organizerName = item.organizer?.name?.trim() || 'Organizer';
@@ -177,7 +184,20 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         }
     };
 
-    const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
+    const approvalStatus = item.approval_status ?? null;
+    const isSourceExcluded = resolvedIsAdmin && isEventSourceExcluded?.(item);
+    const showApprovalBorder = resolvedIsAdmin && approvalStatus && approvalStatus !== 'approved';
+    const showRejectedBorder = resolvedIsAdmin && approvalStatus === 'rejected';
+    const showPendingBorder = showApprovalBorder && !showRejectedBorder;
+    const statusBadge = resolvedIsAdmin
+        ? isSourceExcluded
+            ? { label: 'Excluded', tone: 'excluded' as const }
+            : approvalStatus === 'rejected'
+                ? { label: 'Rejected', tone: 'rejected' as const }
+                : approvalStatus === 'pending'
+                    ? { label: 'Pending', tone: 'pending' as const }
+                    : null
+        : null;
     const resolvedCardVariant = cardVariant ?? 'heart';
     const showActionButton = !hideSaveButton;
 
@@ -213,7 +233,8 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                     styles.cardWrapper,
                     !useAutoHeight && { height: resolvedCardHeight },
                     noPadding && styles.noPadding,
-                    showApprovalBorder && styles.pendingBorder,
+                    showPendingBorder && styles.pendingBorder,
+                    showRejectedBorder && styles.rejectedBorder,
                 ]}
             >
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
@@ -291,6 +312,28 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     <AttendeeCarousel attendees={attendees} scrollEnabled={false} />
                                 </View>
                             )}
+                            {statusBadge && (
+                                <View
+                                    style={[
+                                        styles.statusBadge,
+                                        statusBadge.tone === 'pending' && styles.statusBadgePending,
+                                        statusBadge.tone === 'rejected' && styles.statusBadgeRejected,
+                                        statusBadge.tone === 'excluded' && styles.statusBadgeExcluded,
+                                        { left: badgeInset, bottom: badgeInset },
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.statusBadgeText,
+                                            statusBadge.tone === 'pending' && styles.statusBadgeTextPending,
+                                            statusBadge.tone === 'rejected' && styles.statusBadgeTextRejected,
+                                            statusBadge.tone === 'excluded' && styles.statusBadgeTextExcluded,
+                                        ]}
+                                    >
+                                        {statusBadge.label}
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                         <LinearGradient
                             colors={[colors.white, colors.surfaceLavenderLight]}
@@ -322,7 +365,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     handleToggleEventWishlist={handleToggleEventWishlist}
                                     onLongPress={() => setShareMenuOpen(true)}
                                     size={actionButtonSize}
-                                    wobble={wobblePlus && !itemIsOnWishlist}
+                                    wobble={shouldWobbleSave}
                                     containerStyle={[
                                         styles.actionButton,
                                         { right: actionButtonRight, bottom: actionButtonInset },
@@ -395,6 +438,11 @@ const styles = StyleSheet.create({
     pendingBorder: {
         borderColor: colors.warning,
         borderStyle: 'dotted',
+        borderWidth: 3,
+    },
+    rejectedBorder: {
+        borderColor: colors.danger,
+        borderStyle: 'solid',
         borderWidth: 3,
     },
     footer: {
@@ -514,6 +562,42 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         shadowOffset: { width: 0, height: 2 },
         elevation: 3,
+    },
+    statusBadge: {
+        position: 'absolute',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        backgroundColor: colors.surfaceMuted,
+        borderColor: colors.borderMutedLight,
+    },
+    statusBadgePending: {
+        backgroundColor: colors.surfaceWarning,
+        borderColor: colors.borderGoldLight,
+    },
+    statusBadgeRejected: {
+        backgroundColor: colors.surfaceRoseSoft,
+        borderColor: colors.borderRose,
+    },
+    statusBadgeExcluded: {
+        backgroundColor: colors.surfaceMuted,
+        borderColor: colors.borderMutedLight,
+    },
+    statusBadgeText: {
+        fontSize: fontSizes.sm,
+        fontWeight: '700',
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    statusBadgeTextPending: {
+        color: colors.warning,
+    },
+    statusBadgeTextRejected: {
+        color: colors.danger,
+    },
+    statusBadgeTextExcluded: {
+        color: colors.textMuted,
     },
     shareSheet: {
         paddingHorizontal: spacing.lg,

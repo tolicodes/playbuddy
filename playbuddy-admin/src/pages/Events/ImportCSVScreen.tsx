@@ -25,7 +25,6 @@ import TurndownService from 'turndown';
 import { useCreateEventBulk } from '../../common/db-axios/useEvents';
 import { useUpdateMunch } from '../../common/db-axios/useMunches';
 import { useFetchMunches } from '../../common/db-axios/useMunches';
-import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useImportSources } from '../../common/db-axios/useImportSources';
 import { Munch, Event, EventTypes, NormalizedEventInput } from '../../common/types/commonTypes';
 
@@ -45,7 +44,6 @@ interface MappedEvent extends ImportedEvent {
 
 export default function ImportCSVScreen() {
   const { data: munches = [] } = useFetchMunches();
-  const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true }); // kept for other parts of the screen if needed
   const { data: importSources = [] } = useImportSources();
   const createEventBulk = useCreateEventBulk();
   const updateMunch = useUpdateMunch();
@@ -123,7 +121,7 @@ export default function ImportCSVScreen() {
 
     console.log('grouped', grouped)
     return grouped;
-  }, [importedEvents, munchMap]);
+  }, [futureImportedEvents, munchMap]);
 
   const sortedGroupEntries = useMemo(() => {
     return Object.entries(groupedEvents)

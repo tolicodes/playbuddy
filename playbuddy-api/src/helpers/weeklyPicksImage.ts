@@ -53,6 +53,8 @@ const THEME = {
         borderOnDarkStrong: 'rgba(255,255,255,0.8)',
         borderMuted: '#DADAE6',
         borderMutedLight: '#E2E0EA',
+        borderRose: '#F2B8C0',
+        borderGoldLight: '#F3E6CF',
         gold: '#FFD700',
         warning: '#D97706',
         danger: '#FF3B30',
@@ -130,6 +132,32 @@ const TYPE_TAG_COLORS: Record<string, { background: string; text: string; border
     vetted: { background: '#E9F8EF', text: '#2F6E4A', border: '#D7F0E1' },
 };
 
+type StatusBadgeTone = 'pending' | 'rejected' | 'excluded';
+
+const STATUS_BADGE_STYLES: Record<
+    StatusBadgeTone,
+    { label: string; background: string; text: string; border: string }
+> = {
+    pending: {
+        label: 'Pending',
+        background: THEME.colors.surfaceGoldLight,
+        text: THEME.colors.warning,
+        border: THEME.colors.borderGoldLight,
+    },
+    rejected: {
+        label: 'Rejected',
+        background: THEME.colors.surfaceRoseSoft,
+        text: THEME.colors.danger,
+        border: THEME.colors.borderRose,
+    },
+    excluded: {
+        label: 'Excluded',
+        background: THEME.colors.surfaceMuted,
+        text: THEME.colors.textSlate,
+        border: THEME.colors.borderMutedLight,
+    },
+};
+
 type WeeklyPicksImageLogLevel = 'info' | 'warn' | 'error';
 type WeeklyPicksImageLogger = (level: WeeklyPicksImageLogLevel, message: string) => void;
 
@@ -167,6 +195,7 @@ type WeeklyPickItem = {
     priceLabel: string;
     typeTagLabel: string;
     typeTagColors: { background: string; text: string; border: string };
+    approvalStatus?: string | null;
 };
 
 type WeeklyPicksImageOptions = {
@@ -413,6 +442,14 @@ const resolveTypeTagInfo = (event: WeeklyPickEventRow) => {
     return { typeTagLabel, typeTagColors };
 };
 
+const resolveStatusBadge = (approvalStatus?: string | null) => {
+    const normalized = (approvalStatus || '').trim().toLowerCase();
+    if (normalized === 'rejected') return { tone: 'rejected' as const, ...STATUS_BADGE_STYLES.rejected };
+    if (normalized === 'excluded') return { tone: 'excluded' as const, ...STATUS_BADGE_STYLES.excluded };
+    if (normalized === 'pending') return { tone: 'pending' as const, ...STATUS_BADGE_STYLES.pending };
+    return null;
+};
+
 const formatPrimaryMetaLabel = (event: WeeklyPickEventRow) => {
     const start = event.start_date ? moment.tz(event.start_date, TZ) : null;
     const end = event.end_date ? moment.tz(event.end_date, TZ) : null;
@@ -640,6 +677,12 @@ const buildSvg = ({
     const discountOffset = s(0);
     const discountFont = s(13);
 
+    const statusBadgePaddingX = s(10);
+    const statusBadgePaddingY = s(4);
+    const statusBadgeRadius = s(12);
+    const statusBadgeFont = s(12);
+    const statusBadgeOffset = s(10);
+
     const glowTopSize = s(240);
     const glowMidSize = s(220);
     const glowBottomSize = s(300);
@@ -803,6 +846,11 @@ const buildSvg = ({
                 const imageData = imagesById.get(item.eventId) || null;
                 const fallbackGradientId = item.typeKey in IMAGE_THEMES ? `fallback_${item.typeKey}` : 'fallback_event';
                 const detailsY = cardY + imageHeight;
+                const approvalStatus = item.approvalStatus ?? null;
+                const isRejected = approvalStatus === 'rejected';
+                const statusBadge = resolveStatusBadge(approvalStatus);
+                const cardStroke = isRejected ? THEME.colors.danger : THEME.colors.borderLavenderSoft;
+                const cardStrokeWidth = isRejected ? s(3) : s(1);
                 const detailsFullWidth = Math.max(0, cardWidth - detailsPaddingX * 2);
                 const maxTitleChars = Math.max(8, estimateMaxChars(detailsFullWidth, titleFont, 0.6));
                 const maxOrganizerChars = estimateMaxChars(detailsFullWidth, organizerFont, 0.6);
@@ -826,7 +874,7 @@ const buildSvg = ({
     </defs>
     <g filter="url(#cardShadow)">
       <rect x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="${cardRadius}" ry="${cardRadius}"
-            fill="url(#glassPanel)" stroke="${THEME.colors.borderLavenderSoft}" stroke-width="${s(1)}" />
+            fill="url(#glassPanel)" stroke="${cardStroke}" stroke-width="${cardStrokeWidth}" />
     </g>`);
 
                 content.push(`
@@ -909,6 +957,21 @@ const buildSvg = ({
     <path d="${tagPath}" fill="${item.typeTagColors.background}" stroke="${tagBorder}" stroke-width="${s(1)}" />
     <text x="${tagX + tagWidth / 2}" y="${tagY + tagHeight / 2}" font-size="${typeTagFont}" font-family="${fontBody}"
           font-weight="700" fill="${item.typeTagColors.text}" dominant-baseline="middle" text-anchor="middle">${escapeXml(tagText)}</text>`);
+                }
+
+                if (statusBadge) {
+                    const badgeText = statusBadge.label;
+                    const badgeTextWidth = estimateTextWidth(badgeText, statusBadgeFont, 0);
+                    const badgeWidth = badgeTextWidth + statusBadgePaddingX * 2;
+                    const badgeHeight = statusBadgeFont + statusBadgePaddingY * 2;
+                    const badgeX = paddingX + statusBadgeOffset;
+                    const badgeY = cardY + imageHeight - statusBadgeOffset - badgeHeight;
+                    const badgeRadius = Math.min(statusBadgeRadius, badgeHeight / 2, badgeWidth / 2);
+                    content.push(`
+    <rect x="${badgeX}" y="${badgeY}" width="${badgeWidth}" height="${badgeHeight}" rx="${badgeRadius}" ry="${badgeRadius}"
+          fill="${statusBadge.background}" stroke="${statusBadge.border}" stroke-width="${s(1)}" />
+    <text x="${badgeX + badgeWidth / 2}" y="${badgeY + badgeHeight / 2}" font-size="${statusBadgeFont}" font-family="${fontBody}"
+          font-weight="700" fill="${statusBadge.text}" dominant-baseline="middle" text-anchor="middle">${escapeXml(badgeText)}</text>`);
                 }
 
                 if (item.promoCodeDiscount) {
@@ -1140,6 +1203,7 @@ export const generateWeeklyPicksImage = async (
             timeLabel: formatPrimaryMetaLabel(event),
             locationLabel: formatLocationLabel(event),
             priceLabel: formatPriceLabel(event),
+            approvalStatus: event.approval_status ?? null,
             ...resolveTypeTagInfo(event),
         };
     });

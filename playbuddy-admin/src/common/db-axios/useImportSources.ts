@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { ImportSource } from "../types/commonTypes";
 
-export const useImportSources = ({ includeAll = false }: { includeAll?: boolean } = {}) => {
+export const useImportSources = ({
+    includeAll = false,
+    enabled = true,
+}: { includeAll?: boolean; enabled?: boolean } = {}) => {
     return useQuery({
         queryKey: ['import_sources', { includeAll }],
         queryFn: async () => {
@@ -11,6 +14,7 @@ export const useImportSources = ({ includeAll = false }: { includeAll?: boolean 
                 params: includeAll ? { includeAll: true } : undefined,
             });
             return res.data as ImportSource[];
-        }
+        },
+        enabled,
     });
 }

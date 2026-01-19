@@ -14,6 +14,7 @@ import { logEvent } from '../../../Common/hooks/logger';
 import { colors, eventImageFallbackGradients, fontFamilies, fontSizes, radius, shadows, spacing } from '../../../components/styles';
 import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
+import { ADMIN_EMAILS } from '../../../config';
 import type { EventListItemProps } from './EventListItem';
 
 export const CLASSIC_ITEM_HEIGHT = 128;
@@ -30,8 +31,8 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     autoHeight,
     listViewMode,
 }) => {
-    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
-    const { authUserId } = useUserContext();
+    const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
+    const { authUserId, userProfile } = useUserContext();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const formattedDate = formatDate(item, fullDate);
@@ -88,7 +89,23 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
         <FAIcon name="calendar" size={22} color={colors.textSlate} />
     );
 
-    const showApprovalBorder = isAdmin && item.approval_status && item.approval_status !== 'approved';
+    const approvalStatus = item.approval_status ?? null;
+    const resolvedIsAdmin = typeof isAdmin === 'boolean'
+        ? isAdmin
+        : !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const isSourceExcluded = resolvedIsAdmin && isEventSourceExcluded?.(item);
+    const showApprovalBorder = resolvedIsAdmin && approvalStatus && approvalStatus !== 'approved';
+    const showRejectedBorder = resolvedIsAdmin && approvalStatus === 'rejected';
+    const showPendingBorder = showApprovalBorder && !showRejectedBorder;
+    const statusBadge = resolvedIsAdmin
+        ? isSourceExcluded
+            ? { label: 'Excluded', tone: 'excluded' as const }
+            : approvalStatus === 'rejected'
+                ? { label: 'Rejected', tone: 'rejected' as const }
+                : approvalStatus === 'pending'
+                    ? { label: 'Pending', tone: 'pending' as const }
+                    : null
+        : null;
 
     const resolvedHeight = cardHeight ?? CLASSIC_ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
@@ -101,7 +118,8 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                     styles.cardWrapper,
                     !useAutoHeight && { height: resolvedCardHeight },
                     noPadding && styles.noPadding,
-                    showApprovalBorder && styles.pendingBorder,
+                    showPendingBorder && styles.pendingBorder,
+                    showRejectedBorder && styles.rejectedBorder,
                 ]}
             >
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9} style={styles.cardPressable}>
@@ -160,6 +178,27 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                         color={itemIsOnWishlist ? colors.danger : colors.textMuted}
                     />
                 </TouchableOpacity>
+                {statusBadge && (
+                    <View
+                        style={[
+                            styles.statusBadge,
+                            statusBadge.tone === 'pending' && styles.statusBadgePending,
+                            statusBadge.tone === 'rejected' && styles.statusBadgeRejected,
+                            statusBadge.tone === 'excluded' && styles.statusBadgeExcluded,
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.statusBadgeText,
+                                statusBadge.tone === 'pending' && styles.statusBadgeTextPending,
+                                statusBadge.tone === 'rejected' && styles.statusBadgeTextRejected,
+                                statusBadge.tone === 'excluded' && styles.statusBadgeTextExcluded,
+                            ]}
+                        >
+                            {statusBadge.label}
+                        </Text>
+                    </View>
+                )}
                 {footerContent && <View style={styles.footer}>{footerContent}</View>}
             </View>
         </View>
@@ -189,6 +228,11 @@ const styles = StyleSheet.create({
     pendingBorder: {
         borderColor: colors.warning,
         borderStyle: 'dotted',
+        borderWidth: 3,
+    },
+    rejectedBorder: {
+        borderColor: colors.danger,
+        borderStyle: 'solid',
         borderWidth: 3,
     },
     cardPressable: {
@@ -263,6 +307,44 @@ const styles = StyleSheet.create({
         padding: spacing.xs,
         backgroundColor: colors.surfaceWhiteOpaque,
         borderRadius: radius.pill,
+    },
+    statusBadge: {
+        position: 'absolute',
+        left: spacing.sm,
+        bottom: spacing.sm,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        backgroundColor: colors.surfaceMuted,
+        borderColor: colors.borderMutedLight,
+    },
+    statusBadgePending: {
+        backgroundColor: colors.surfaceWarning,
+        borderColor: colors.borderGoldLight,
+    },
+    statusBadgeRejected: {
+        backgroundColor: colors.surfaceRoseSoft,
+        borderColor: colors.borderRose,
+    },
+    statusBadgeExcluded: {
+        backgroundColor: colors.surfaceMuted,
+        borderColor: colors.borderMutedLight,
+    },
+    statusBadgeText: {
+        fontSize: fontSizes.sm,
+        fontWeight: '700',
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    statusBadgeTextPending: {
+        color: colors.warning,
+    },
+    statusBadgeTextRejected: {
+        color: colors.danger,
+    },
+    statusBadgeTextExcluded: {
+        color: colors.textMuted,
     },
     footer: {
         borderTopWidth: 1,

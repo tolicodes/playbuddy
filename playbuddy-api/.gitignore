@@ -6,6 +6,7 @@ cloudconfig
 dist
 .logs
 classifications.json
+.partiful/
 
 src/scripts/qrcodes/inputs/*
 src/scripts/qrcodes/output/*

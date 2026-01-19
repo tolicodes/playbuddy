@@ -37,8 +37,8 @@
   margin-bottom: 18px;
   animation: fadeUp 600ms ease-out both;
   color: #fff;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .screen {
@@ -58,8 +58,8 @@
   flex-wrap: wrap;
   animation: fadeUp 600ms ease-out both;
   color: #fff;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .subtitle {
@@ -67,9 +67,7 @@
   color: rgba(255, 255, 255, 0.86);
   max-width: 520px;
   font-size: 0.95rem;
-  text-align: center;
-  margin-left: auto;
-  margin-right: auto;
+  text-align: left;
 }
 
 .logo {
@@ -94,7 +92,7 @@ h1 {
   font-size: clamp(1.6rem, 3.2vw, 2.3rem);
   letter-spacing: -0.01em;
   color: #fff;
-  text-align: center;
+  text-align: left;
 }
 
 .number-card {
@@ -710,7 +708,8 @@ h1 {
   .top-bar {
     margin-bottom: 14px;
     flex-direction: column;
-    text-align: center;
+    align-items: flex-start;
+    text-align: left;
   }
 
   .subtitle {
@@ -719,7 +718,8 @@ h1 {
 
   .contact-header {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    text-align: left;
   }
 
   .logo {

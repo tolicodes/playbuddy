@@ -6,12 +6,20 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "webstore:upload": "chrome-webstore-upload upload",
+    "webstore:publish": "chrome-webstore-upload publish",
+    "webstore:deploy": "npm run build && chrome-webstore-upload",
+    "webstore:zip": "npm run build && cd dist && zip -r ../playbuddy-chrome-scraper.zip ."
+  },
+  "webExt": {
+    "sourceDir": "dist"
   },
   "devDependencies": {
     "@crxjs/vite-plugin": "^2.0.2",
     "@types/chrome": "^0.0.332",
     "@types/turndown": "^5.0.5",
+    "chrome-webstore-upload-cli": "^3.5.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.3"
   },

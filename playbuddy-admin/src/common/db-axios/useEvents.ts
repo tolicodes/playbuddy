@@ -10,6 +10,7 @@ export const useFetchEvents = ({
     includeHiddenOrganizers = false,
     includeHidden = false,
     includeApprovalPending = false,
+    approvalStatuses,
 }: {
     includeFacilitatorOnly?: boolean;
     includeNonNY?: boolean;
@@ -17,6 +18,7 @@ export const useFetchEvents = ({
     includeHiddenOrganizers?: boolean;
     includeHidden?: boolean;
     includeApprovalPending?: boolean;
+    approvalStatuses?: string[];
 } = {
         includeFacilitatorOnly: false,
         includeNonNY: false,
@@ -26,13 +28,17 @@ export const useFetchEvents = ({
         includeApprovalPending: false,
     }) => {
     return useQuery<Event[]>({
-        queryKey: ['events', { includeFacilitatorOnly, includeNonNY, includePrivate, includeHiddenOrganizers, includeHidden, includeApprovalPending }],
+        queryKey: ['events', { includeFacilitatorOnly, includeNonNY, includePrivate, includeHiddenOrganizers, includeHidden, includeApprovalPending, approvalStatuses }],
         queryFn: async () => {
             const params = new URLSearchParams();
             if (includeHiddenOrganizers) params.set('includeHiddenOrganizers', 'true');
             if (includeHidden) params.set('includeHidden', 'true');
             if (includePrivate) params.set('visibility', 'private');
-            if (includeApprovalPending) params.set('approval_status', 'approved,pending');
+            if (approvalStatuses && approvalStatuses.length) {
+                params.set('approval_status', approvalStatuses.join(','));
+            } else if (includeApprovalPending) {
+                params.set('approval_status', 'approved,pending');
+            }
 
             const queryString = params.toString() ? `?${params.toString()}` : '';
 

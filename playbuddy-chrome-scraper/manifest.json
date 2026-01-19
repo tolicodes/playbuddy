@@ -9,6 +9,13 @@
       "service_worker": "src/background.ts",
       "type": "module"
     },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["src/contentScript.ts"],
+        "run_at": "document_start"
+      }
+    ],
     "options_page": "src/options.html"
   }
   

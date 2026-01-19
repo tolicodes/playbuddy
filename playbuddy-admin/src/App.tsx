@@ -16,6 +16,7 @@ import DeepLinksListScreen from "./pages/DeepLinks/DeepLinksListScreen";
 import EditDeepLinkScreen from "./pages/DeepLinks/EditDeepLinksScreen";
 import ImportEventURLsScreen from "./pages/Events/ImportEventURLsScreen";
 import EventDuplicatesScreen from "./pages/Events/EventDuplicatesScreen";
+import PartifulInviteScreen from "./pages/Events/PartifulInviteScreen";
 import { supabaseClient } from "./lib/supabaseClient";
 import JobsScreen from "./pages/Jobs/JobsScreen";
 import VisualizerScreen from "./pages/Visualizer/VisualizerScreen";
@@ -154,6 +155,7 @@ export default function App() {
   const tabRoutes = [
     "/weekly-picks",
     "/events/import-urls",
+    "/events/partiful",
     "/events",
     "/promo-codes",
     "/deep-links",
@@ -191,6 +193,7 @@ export default function App() {
           >
             <Tab label="Weekly Picks" component={RouterLink} to="/weekly-picks" />
             <Tab label="Import URLs" component={RouterLink} to="/events/import-urls" />
+            <Tab label="Partiful" component={RouterLink} to="/events/partiful" />
             <Tab label="Events" component={RouterLink} to="/events" />
             <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
             <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
@@ -214,6 +217,7 @@ export default function App() {
         <Route path="/events" element={<EventsListScreen />} />
         <Route path="/events/duplicates" element={<EventDuplicatesScreen />} />
         <Route path="/events/add" element={<AddEventScreen />} />
+        <Route path="/events/partiful" element={<PartifulInviteScreen />} />
         <Route path="/events/:id" element={<AddEventScreen />} />
         <Route path="/events/import-csv" element={<ImportCSVScreen />} />
         <Route path="/events/import-urls" element={<ImportEventURLsScreen />} />

@@ -4,9 +4,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const POPUP_INTERVAL_DAYS = 3;
 export const POPUP_INTERVAL_MS = POPUP_INTERVAL_DAYS * DAY_MS;
 const DEFAULT_SNOOZE_MS = 14 * DAY_MS;
-const DEFAULT_INITIAL_DELAY_MS = 0;
-const LIST_VIEW_INTRO_DELAY_MS = 5 * 60 * 1000;
-const CALENDAR_ADD_COACH_DELAY_MS = 10 * 60 * 1000;
+const LIST_VIEW_INTRO_DELAY_MS = 3 * 60 * 1000;
+const CALENDAR_ADD_COACH_DELAY_MS = 5 * 60 * 1000;
+const NEWSLETTER_DELAY_MS = 3 * DAY_MS;
+const EDGE_PLAY_DELAY_MS = 6 * DAY_MS;
+const RATE_APP_DELAY_MS = 9 * DAY_MS;
+const DISCOVER_GAME_DELAY_MS = 12 * DAY_MS;
 
 export const POPUP_SCHEDULE = [
     {
@@ -24,23 +27,30 @@ export const POPUP_SCHEDULE = [
         useInterval: false,
     },
     {
+        id: 'newsletter_signup',
+        label: 'Weekly newsletter',
+        initialDelayMs: NEWSLETTER_DELAY_MS,
+        snoozeMs: DEFAULT_SNOOZE_MS,
+        useInterval: true,
+    },
+    {
         id: 'whatsapp_group',
         label: 'EdgePlay WhatsApp group',
-        initialDelayMs: DEFAULT_INITIAL_DELAY_MS,
+        initialDelayMs: EDGE_PLAY_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: true,
     },
     {
         id: 'rate_app',
         label: 'Rate the app',
-        initialDelayMs: DEFAULT_INITIAL_DELAY_MS,
+        initialDelayMs: RATE_APP_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: true,
     },
     {
         id: 'discover_game',
         label: 'Try Discover Game',
-        initialDelayMs: DEFAULT_INITIAL_DELAY_MS,
+        initialDelayMs: DISCOVER_GAME_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: true,
     },
@@ -232,9 +242,14 @@ export const getPopupReadyAt = (state: PopupManagerState, now: number, id: Popup
     return Math.max(baseReadyAt, initialReadyAt, snoozeUntil);
 };
 
-export const getNextPopupId = (state: PopupManagerState, now: number): PopupId | null => {
+export const getNextPopupId = (
+    state: PopupManagerState,
+    now: number,
+    isEligible?: (id: PopupId) => boolean,
+): PopupId | null => {
     for (const id of POPUP_ORDER) {
         if (state.popups[id]?.dismissed) continue;
+        if (isEligible && !isEligible(id)) continue;
         const readyAt = getPopupReadyAt(state, now, id);
         if (now < readyAt) continue;
         return id;
@@ -243,11 +258,16 @@ export const getNextPopupId = (state: PopupManagerState, now: number): PopupId |
     return null;
 };
 
-export const getNextScheduledPopup = (state: PopupManagerState, now: number) => {
+export const getNextScheduledPopup = (
+    state: PopupManagerState,
+    now: number,
+    isEligible?: (id: PopupId) => boolean,
+) => {
     let next: { id: PopupId; readyAt: number } | null = null;
 
     for (const id of POPUP_ORDER) {
         if (state.popups[id]?.dismissed) continue;
+        if (isEligible && !isEligible(id)) continue;
         const readyAt = getPopupReadyAt(state, now, id);
         if (!next || readyAt < next.readyAt) {
             next = { id, readyAt };

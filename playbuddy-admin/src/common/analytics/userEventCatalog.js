@@ -1,9 +1,10 @@
-import { UE } from "../types/userEventTypes";
+import { UE } from "../types/userEventTypes.js";
 const C = {
     auth: "Auth",
     profile: "Profile",
     onboarding: "Onboarding",
     calendar: "Calendar",
+    dateBar: "Date Bar",
     filters: "Filters",
     eventDetail: "Event Detail",
     eventList: "Event List",
@@ -37,8 +38,10 @@ const S = {
     },
     calendarEntity: { key: "entity", type: "string" },
     calendarDay: { key: "day", type: "string" },
+    calendarExpanded: { key: "expanded", type: "boolean", trueLabel: "Expanded", falseLabel: "Collapsed" },
     filterTag: { key: "tag_name", type: "string" },
     filterSearch: { key: "search_text", type: "string" },
+    followSource: { key: "source", type: "string" },
     wishlistToggle: { key: "is_on_wishlist", type: "boolean", trueLabel: "Added", falseLabel: "Removed" },
     moarLink: { key: "link_name", type: "string" },
     weeklyIndex: { key: "index", type: "number" },
@@ -74,6 +77,8 @@ export const USER_EVENT_CATALOG = [
     { event: UE.WelcomeScreenRegisterClicked, category: C.onboarding, name: "Welcome register clicked" },
     { event: UE.WelcomeScreenSkipped, category: C.onboarding, name: "Welcome skipped" },
     { event: UE.PersonalizationModalConfirmed, category: C.onboarding, name: "Personalization confirmed" },
+    { event: UE.OrganizerFirstFollowed, category: C.onboarding, name: "First organizer followed", state: S.followSource },
+    { event: UE.WishlistFirstAdded, category: C.onboarding, name: "First wishlist added" },
     // Calendar
     { event: UE.EventCalendarViewFiltersEnabled, category: C.calendar, name: "Calendar filters enabled", state: S.calendarEntity },
     { event: UE.EventCalendarViewFiltersDisabled, category: C.calendar, name: "Calendar filters disabled", state: S.calendarEntity },
@@ -87,9 +92,19 @@ export const USER_EVENT_CATALOG = [
     { event: UE.EventCalendarViewGoToToday, category: C.calendar, name: "Calendar go to today", state: S.calendarEntity },
     { event: UE.EventCalendarViewSearchChanged, category: C.calendar, name: "Calendar search changed", state: S.calendarEntity },
     { event: UE.MyCalendarShareWishlistClick, category: C.calendar, name: "Share wishlist clicked" },
+    // Date Bar
+    { event: UE.DateBarSwipePrev, category: C.dateBar, name: "Date bar swipe previous", state: S.calendarEntity },
+    { event: UE.DateBarSwipeNext, category: C.dateBar, name: "Date bar swipe next", state: S.calendarEntity },
+    { event: UE.DateBarLongPress, category: C.dateBar, name: "Date bar long press", state: S.calendarDay },
+    { event: UE.DateBarCalendarPressed, category: C.dateBar, name: "Date bar calendar pressed", state: S.calendarExpanded },
+    { event: UE.DateBarTodayPressed, category: C.dateBar, name: "Date bar today pressed", state: S.calendarEntity },
     // Filters
     { event: UE.FilterTagSelected, category: C.filters, name: "Filter tag selected", state: S.filterTag },
     { event: UE.FilterSearchChanged, category: C.filters, name: "Filter search changed", state: S.filterSearch },
+    { event: UE.FilterSearchFocused, category: C.filters, name: "Filter search focused", state: S.calendarEntity },
+    { event: UE.FilterSearchTyped, category: C.filters, name: "Filter search typed", state: S.filterSearch },
+    { event: UE.FilterMorePressed, category: C.filters, name: "Filter more pressed", state: S.calendarEntity },
+    { event: UE.FilterTagAdded, category: C.filters, name: "Filter tag added", state: S.filterTag },
     // Event Detail
     { event: UE.EventDetailGetTicketsClicked, category: C.eventDetail, name: "Get tickets clicked" },
     { event: UE.EventDetailGoogleCalendarClicked, category: C.eventDetail, name: "Add to Google Calendar" },
@@ -117,6 +132,7 @@ export const USER_EVENT_CATALOG = [
     { event: UE.CommunityListCommunityLeft, category: C.communities, name: "Community left", state: S.communityId },
     { event: UE.CommunityListNavigateToCommunityEvents, category: C.communities, name: "Open community events", state: S.communityId },
     { event: UE.CommunityListNavigateToJoinCommunityButtonPressed, category: C.communities, name: "Join community button" },
+    { event: UE.OrganizerFollowPressed, category: C.communities, name: "Organizer followed", state: S.followSource },
     // Deep Links
     { event: UE.DeepLinkAttributed, category: C.deepLinks, name: "Deep link attributed" },
     { event: UE.DeepLinkDetected, category: C.deepLinks, name: "Deep link detected", state: S.deepLinkSource },

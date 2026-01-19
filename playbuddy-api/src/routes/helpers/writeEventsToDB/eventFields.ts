@@ -31,6 +31,7 @@ export const EVENT_FIELDS = [
     'vetting_url',
     'video_url',
     'approval_status',
+    'user_submitted',
     'city',
     'region',
     'country',

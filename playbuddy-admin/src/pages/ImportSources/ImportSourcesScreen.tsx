@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Autocomplete,
     Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link, Collapse, IconButton,
@@ -184,6 +184,7 @@ export default function ImportSourcesScreen() {
     const [tab, setTab] = useState<'sources' | 'fet'>('sources');
     const [showSuggestedFestivals, setShowSuggestedFestivals] = useState(false);
     const [sourceSearch, setSourceSearch] = useState('');
+    const scrollRestoreRef = useRef<number | null>(null);
     const [form, setForm] = useState({
         source: '',
         method: METHODS[0],
@@ -191,6 +192,20 @@ export default function ImportSourcesScreen() {
         identifier_type: 'handle',
         organizerId: '',
     });
+
+    const rememberScrollPosition = useCallback(() => {
+        if (typeof window === 'undefined') return;
+        scrollRestoreRef.current = window.scrollY;
+    }, []);
+
+    useEffect(() => {
+        if (scrollRestoreRef.current === null) return;
+        const y = scrollRestoreRef.current;
+        scrollRestoreRef.current = null;
+        window.requestAnimationFrame(() => {
+            window.scrollTo({ top: y });
+        });
+    }, [sources]);
 
     const handleChange = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
 
@@ -212,6 +227,7 @@ export default function ImportSourcesScreen() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.source || !form.identifier) return;
+        rememberScrollPosition();
         const saved = await createSource.mutateAsync({
             source: form.source,
             method: form.method,
@@ -299,6 +315,7 @@ export default function ImportSourcesScreen() {
             ...(src.event_defaults || {}),
             organizer_id: organizerId || null,
         };
+        rememberScrollPosition();
         const updated = await updateSource.mutateAsync({
             id: src.id,
             source: src.source,
@@ -319,11 +336,13 @@ export default function ImportSourcesScreen() {
 
     const handleMessagedToggle = async (src: ImportSource, checked: boolean) => {
         if (!src?.id) return;
+        rememberScrollPosition();
         await markMessageSent.mutateAsync({ id: String(src.id), message_sent: checked });
     };
 
     const handleApprovalToggle = async (src: ImportSource, checked: boolean) => {
         if (!src?.id) return;
+        rememberScrollPosition();
         const nextExcluded = checked ? false : undefined;
         await updateSource.mutateAsync({
             id: src.id,
@@ -341,6 +360,7 @@ export default function ImportSourcesScreen() {
 
     const handleRejectedToggle = async (src: ImportSource, checked: boolean) => {
         if (!src?.id) return;
+        rememberScrollPosition();
         const nextExcluded = checked ? true : undefined;
         await updateSource.mutateAsync({
             id: src.id,
@@ -358,6 +378,7 @@ export default function ImportSourcesScreen() {
 
     const handleFestivalToggle = async (src: ImportSource, checked: boolean) => {
         if (!src?.id || src.source !== 'fetlife_handle') return;
+        rememberScrollPosition();
         await updateSource.mutateAsync({
             id: src.id,
             source: src.source,
@@ -374,6 +395,7 @@ export default function ImportSourcesScreen() {
 
     const handleExcludedToggle = async (src: ImportSource, checked: boolean) => {
         if (!src?.id) return;
+        rememberScrollPosition();
         const approvalState = src.approval_status === 'pending'
             ? 'pending'
             : src.approval_status === 'rejected'
@@ -405,6 +427,7 @@ export default function ImportSourcesScreen() {
         const name = src.identifier || src.source || 'this source';
         const confirmed = window.confirm(`Delete import source "${name}"?`);
         if (!confirmed) return;
+        rememberScrollPosition();
         try {
             await deleteSource.mutateAsync(String(src.id));
         } catch (err) {

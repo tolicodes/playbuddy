@@ -42,12 +42,12 @@ export const AttendeeCarousel: React.FC<AttendeeCarouselProps> = ({ attendees, s
     if (!scrollEnabled) {
         return (
             <View style={styles.scrollContainer}>
-                {attendeesDeduped.map((attendee) => (
+                {attendeesDeduped.map((attendee, index) => (
                     <TouchableOpacity
                         key={attendee.id}
                         onPress={() => handlePress(attendee)}
                     >
-                        <View style={styles.avatarContainer}>
+                        <View style={[styles.avatarContainer, index > 0 && styles.avatarSpacing]}>
                             <AvatarCircle userProfile={attendee} size={25} />
                         </View>
                     </TouchableOpacity>
@@ -62,12 +62,12 @@ export const AttendeeCarousel: React.FC<AttendeeCarouselProps> = ({ attendees, s
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.scrollContainer}
         >
-            {attendeesDeduped.map((attendee) => (
+            {attendeesDeduped.map((attendee, index) => (
                 <TouchableOpacity
                     key={attendee.id}
                     onPress={() => handlePress(attendee)}
                 >
-                    <View style={styles.avatarContainer}>
+                    <View style={[styles.avatarContainer, index > 0 && styles.avatarSpacing]}>
                         <AvatarCircle userProfile={attendee} size={25} />
                     </View>
                 </TouchableOpacity>
@@ -85,6 +85,8 @@ const styles = StyleSheet.create({
     avatarContainer: {
         position: 'relative',
         overflow: 'visible',
+    },
+    avatarSpacing: {
         marginLeft: 3,
     },
 });

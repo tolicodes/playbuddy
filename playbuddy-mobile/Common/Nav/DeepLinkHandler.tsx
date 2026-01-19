@@ -27,11 +27,15 @@ export default function DeepLinkHandler() {
     const { data: deepLinks = [], isLoading: loadingLinks } = useFetchDeepLinks();
     const addDeepLink = useAddDeepLinkToUser();
     const { setCurrentDeepLink, currentDeepLink, authUserId } = useUserContext();
-    const queue = useRef<string | null>(null);
+    const queue = useRef<{
+        url: string;
+        source: 'branch' | 'clipboard' | 'cold_start';
+    } | null>(null);
     const handledUrls = useRef<Set<string>>(new Set());
     const handledDeepLinks = useRef<Set<string>>(new Set());
     const attributedDeepLinks = useRef<Set<string>>(new Set());
     const attributedAnonymousSession = useRef(false);
+    const detectedThisSession = useRef(false);
 
     const matchDeepLink = useCallback(
         (url: string): DeepLink | undefined => {
@@ -53,7 +57,7 @@ export default function DeepLinkHandler() {
             console.log('DeepLinkHandler: received url', { source, normalizedUrl });
             if (loadingLinks) {
                 console.log('DeepLinkHandler: links still loading, queueing url');
-                queue.current = normalizedUrl;
+                queue.current = { url: normalizedUrl, source };
                 return;
             }
             const dl = matchDeepLink(normalizedUrl);
@@ -96,12 +100,15 @@ export default function DeepLinkHandler() {
                 promo_code_id: dl.featured_promo_code?.id ?? null,
             };
 
-            logEvent(UE.DeepLinkDetected, {
-                ...deepLinkAnalyticsProps,
-                url: normalizedUrl,
-                source,
-            });
-            console.log('DeepLinkHandler: DeepLinkDetected logged', deepLinkAnalyticsProps);
+            if (!detectedThisSession.current) {
+                logEvent(UE.DeepLinkDetected, {
+                    ...deepLinkAnalyticsProps,
+                    url: normalizedUrl,
+                    source,
+                });
+                detectedThisSession.current = true;
+                console.log('DeepLinkHandler: DeepLinkDetected logged', deepLinkAnalyticsProps);
+            }
 
             const shouldAttribute = authUserId
                 ? !attributedDeepLinks.current.has(dl.id)
@@ -128,9 +135,11 @@ export default function DeepLinkHandler() {
             if (uri) handleUrl(uri, 'branch');
         });
         branch.getLatestReferringParams().then(data => {
-            const url = data['+url'] || data['~referring_link'];
-            console.log('DeepLinkHandler: latest referring params', { url });
-            if (url) handleUrl(url, 'cold_start');
+            const url = data?.['+url'] || data?.['~referring_link'];
+            const clicked = data?.['+clicked_branch_link'];
+            const wasClicked = clicked === true || clicked === 'true';
+            console.log('DeepLinkHandler: latest referring params', { url, wasClicked });
+            if (wasClicked && url) handleUrl(url, 'cold_start');
         });
 
         // Clipboard fallback — but only once ever
@@ -152,7 +161,7 @@ export default function DeepLinkHandler() {
     useEffect(() => {
         // Re-process any queued URL once links finish loading
         if (!loadingLinks && queue.current) {
-            handleUrl(queue.current, 'branch');
+            handleUrl(queue.current.url, queue.current.source);
         }
     }, [loadingLinks, handleUrl]);
 

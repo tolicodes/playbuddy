@@ -1,13 +1,16 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Animated, StyleSheet, Text, View } from 'react-native';
+import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useUserContext } from './Auth/hooks/UserContext';
 import { EdgePlayGroupModal } from './EdgePlayGroupModal';
 import { RateAppModal } from './RateAppModal';
 import { EventPopupModal } from './EventPopupModal';
 import { DiscoverGameModal } from './DiscoverGameModal';
+import { NewsletterSignupModal } from './NewsletterSignupModal';
 import { EventListViewIntroModal } from './Calendar/ListView/EventListViewIntroModal';
 import {
     EventListViewMode,
@@ -20,15 +23,15 @@ import { useFetchActiveEventPopups } from '../Common/db-axios/useEventPopups';
 import type { EventPopup } from '../commonTypes';
 import type { EventWithMetadata, NavStack } from '../Common/Nav/NavStackType';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
+import { MISC_URLS } from '../config';
 import {
     createEmptyPopupManagerState,
     getForcedPopupId,
-    getNextScheduledPopup,
-    getNextPopupId,
     getPopupReadyAt,
     loadPopupManagerState,
     normalizePopupManagerState,
     POPUP_CONFIG,
+    POPUP_ORDER,
     PopupId,
     PopupManagerState,
     PopupState,
@@ -39,6 +42,7 @@ import {
 const EVENT_POPUP_HIDE_KEY_PREFIX = 'event_popup_hide_';
 const EVENT_POPUP_FORCE_KEY = 'popup_manager_force_event_popup';
 const EVENT_POPUP_SEEN_KEY_PREFIX = 'event_popup_seen_';
+const APP_INSTALL_FLAG_KEY = 'app_install_flag_v1';
 const EVENT_POPUP_DELAY_MS = __DEV__ ? 5 * 1000 : 60 * 1000;
 const DEBUG_ALWAYS_ENABLE_EVENT_POPUP = __DEV__;
 const LIST_VIEW_INTRO_CUTOFF_MS = Date.parse('2026-01-12T00:00:00Z');
@@ -59,6 +63,14 @@ export const useCalendarCoach = () => useContext(CalendarCoachContext);
 
 const getEventPopupHideKey = (id: string) => `${EVENT_POPUP_HIDE_KEY_PREFIX}${id}`;
 const getEventPopupSeenKey = (id: string) => `${EVENT_POPUP_SEEN_KEY_PREFIX}${id}`;
+const NEWSLETTER_KEYWORD = 'newsletter';
+const NEWSLETTER_URL = MISC_URLS.newsletterSignup.toLowerCase();
+const isSessionPopup = (id: PopupId) => id === 'list_view_intro' || id === 'calendar_add_coach';
+
+const isNewsletterPopup = (popup: EventPopup) => {
+    const haystack = `${popup.title ?? ''}\n${popup.body_markdown ?? ''}`.toLowerCase();
+    return haystack.includes(NEWSLETTER_URL) || haystack.includes(NEWSLETTER_KEYWORD);
+};
 
 const parseIsoTimestamp = (value?: string | null) => {
     if (!value) return undefined;
@@ -66,6 +78,9 @@ const parseIsoTimestamp = (value?: string | null) => {
     if (Number.isNaN(parsed)) return undefined;
     return parsed;
 };
+
+const getEventPopupShowAt = (popup: EventPopup) =>
+    parseIsoTimestamp(popup.published_at) ?? parseIsoTimestamp(popup.created_at);
 
 const getEventPopupEndAt = (popup: EventPopup) => {
     const endAt = parseIsoTimestamp(popup.event?.end_date);
@@ -81,8 +96,11 @@ const isEventPopupExpired = (popup: EventPopup, now: number) => {
     return false;
 };
 
-const isEventPopupEligible = (popup: EventPopup, _installAt: number | undefined, now: number) => {
+const isEventPopupEligible = (popup: EventPopup, signupAt: number | null, now: number) => {
     if (isEventPopupExpired(popup, now)) return false;
+    const showAt = getEventPopupShowAt(popup);
+    if (showAt && showAt > now) return false;
+    if (signupAt && showAt && showAt <= signupAt) return false;
     return true;
 };
 
@@ -96,6 +114,9 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
     const insets = useSafeAreaInsets();
+    const { authUserId, userProfile, session } = useUserContext();
+    const [hasInstallFlag, setHasInstallFlag] = useState(false);
+    const [sessionStartAt, setSessionStartAt] = useState<number | null>(null);
     const [state, setState] = useState<PopupManagerState | null>(null);
     const [hasShownThisSession, setHasShownThisSession] = useState(false);
     const [activePopupId, setActivePopupId] = useState<PopupId | null>(null);
@@ -127,9 +148,17 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         let mounted = true;
 
         (async () => {
-            const nextState = await loadPopupManagerState();
-            const forcedId = await getForcedPopupId();
-            const forcedEventRaw = await AsyncStorage.getItem(EVENT_POPUP_FORCE_KEY);
+            const [
+                nextState,
+                forcedId,
+                forcedEventRaw,
+                installFlag,
+            ] = await Promise.all([
+                loadPopupManagerState(),
+                getForcedPopupId(),
+                AsyncStorage.getItem(EVENT_POPUP_FORCE_KEY),
+                AsyncStorage.getItem(APP_INSTALL_FLAG_KEY),
+            ]);
             let forcedEvent: EventPopup | null = null;
             if (forcedEventRaw) {
                 try {
@@ -138,10 +167,17 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                     await AsyncStorage.removeItem(EVENT_POPUP_FORCE_KEY);
                 }
             }
+            const hasInstall = !!installFlag;
+            if (!hasInstall) {
+                await AsyncStorage.setItem(APP_INSTALL_FLAG_KEY, 'true');
+            }
+            const launchAt = Date.now();
             if (mounted) {
                 setState(nextState);
                 setForcedPopupIdState(forcedId);
                 setForcedEventPopup(forcedEvent);
+                setHasInstallFlag(hasInstall);
+                setSessionStartAt(launchAt);
             }
         })();
 
@@ -268,6 +304,14 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         }
 
         if (listViewPopup?.dismissed) return;
+        if (!hasInstallFlag) return;
+        const launchAt = sessionStartAt ?? Date.now();
+        const targetSnoozeUntil = launchAt + POPUP_CONFIG.list_view_intro.initialDelayMs;
+        if (!listViewPopup?.lastShownAt && listViewPopup?.snoozeUntil !== targetSnoozeUntil) {
+            updatePopupState('list_view_intro', {
+                snoozeUntil: targetSnoozeUntil,
+            });
+        }
         let isActive = true;
         (async () => {
             const [introSeen, listViewMode] = await Promise.all([
@@ -279,18 +323,45 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 updatePopupState('list_view_intro', { dismissed: true, snoozeUntil: undefined });
                 return;
             }
+        })();
 
-            if (!listViewPopup?.lastShownAt && !listViewPopup?.snoozeUntil) {
-                updatePopupState('list_view_intro', {
-                    snoozeUntil: Date.now() + POPUP_CONFIG.list_view_intro.initialDelayMs,
-                });
+        return () => {
+            isActive = false;
+        };
+    }, [state, hasInstallFlag, sessionStartAt, updatePopupState]);
+
+    useEffect(() => {
+        if (!state) return;
+        const calendarPopup = state.popups.calendar_add_coach;
+        if (calendarPopup?.dismissed) return;
+        const launchAt = sessionStartAt ?? Date.now();
+        const targetSnoozeUntil = launchAt + POPUP_CONFIG.calendar_add_coach.initialDelayMs;
+        if (!calendarPopup?.lastShownAt && calendarPopup?.snoozeUntil !== targetSnoozeUntil) {
+            updatePopupState('calendar_add_coach', { snoozeUntil: targetSnoozeUntil });
+        }
+        let isActive = true;
+
+        (async () => {
+            const completed = await AsyncStorage.getItem(CALENDAR_ADD_COACH_COMPLETED_KEY);
+            if (!isActive) return;
+            if (completed === 'true') {
+                updatePopupState('calendar_add_coach', { dismissed: true, snoozeUntil: undefined });
+                return;
             }
         })();
 
         return () => {
             isActive = false;
         };
-    }, [state]);
+    }, [state, sessionStartAt, updatePopupState]);
+
+    useEffect(() => {
+        if (!state) return;
+        if (!userProfile || userProfile.joined_newsletter !== true) return;
+        const newsletterPopup = state.popups.newsletter_signup;
+        if (newsletterPopup?.dismissed) return;
+        updatePopupState('newsletter_signup', { dismissed: true, snoozeUntil: undefined });
+    }, [state, updatePopupState, userProfile]);
 
     useEffect(() => {
         if (!forcedPopupId) return;
@@ -393,17 +464,35 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
     }, [eventPopups]);
 
     const eventPopupReady = dismissedReady && !isLoadingEventPopups;
+    const canShowNewsletterPopup = !!authUserId && hasInstallFlag;
+    const canShowListViewIntro = hasInstallFlag;
+    const canShowNewsletterModal = !!authUserId
+        && !!userProfile
+        && userProfile.joined_newsletter !== true
+        && hasInstallFlag;
+    const signupAt = useMemo(() => {
+        const profileCreatedAt = (userProfile as { created_at?: string | null } | null)?.created_at ?? null;
+        const sessionCreatedAt = session?.user?.created_at ?? null;
+        return parseIsoTimestamp(profileCreatedAt) ?? parseIsoTimestamp(sessionCreatedAt) ?? null;
+    }, [session, userProfile]);
 
     const nextEventPopup = useMemo(() => {
         if (!state) return null;
         const now = Date.now();
         for (const popup of sortedEventPopups) {
             if (dismissedPopupIds[popup.id]) continue;
-            if (!isEventPopupEligible(popup, state.firstSeenAt, now)) continue;
+            if (isNewsletterPopup(popup) && !canShowNewsletterPopup) continue;
+            if (!isEventPopupEligible(popup, signupAt, now)) continue;
             return popup;
         }
         return null;
-    }, [dismissedPopupIds, sortedEventPopups, state]);
+    }, [dismissedPopupIds, sortedEventPopups, state, canShowNewsletterPopup, signupAt]);
+
+    const isPopupEligible = useCallback((id: PopupId) => {
+        if (id === 'list_view_intro') return canShowListViewIntro;
+        if (id === 'newsletter_signup') return canShowNewsletterModal;
+        return true;
+    }, [canShowListViewIntro, canShowNewsletterModal]);
 
     const hasPendingEventPopup = eventPopupReady && !!nextEventPopup;
 
@@ -429,9 +518,7 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
             if (activeEventPopup || activePopupId) return;
             if (hasShownThisSession && !DEBUG_ALWAYS_ENABLE_EVENT_POPUP) return;
             const now = Date.now();
-            const currentState = stateRef.current;
-            if (!currentState) return;
-            if (!isEventPopupEligible(nextEventPopup, currentState.firstSeenAt, now)) return;
+            if (!isEventPopupEligible(nextEventPopup, signupAt, now)) return;
             const shownAt = now;
             setActiveEventPopup(nextEventPopup);
             setHasShownThisSession(true);
@@ -457,16 +544,17 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         activePopupId,
         hasShownThisSession,
         updateState,
+        signupAt,
     ]);
 
-    const canShowPopupNow = () => {
+    const canShowPopupNow = useCallback((id: PopupId) => {
         const currentState = stateRef.current;
         if (!currentState) return false;
         if (activePopupIdRef.current || activeEventPopupRef.current) return false;
-        if (hasShownThisSessionRef.current) return false;
-        if (!eventPopupReadyRef.current || hasPendingEventPopupRef.current) return false;
+        if (!isSessionPopup(id) && hasShownThisSessionRef.current) return false;
+        if (!isSessionPopup(id) && (!eventPopupReadyRef.current || hasPendingEventPopupRef.current)) return false;
         return true;
-    };
+    }, []);
 
     useEffect(() => {
         if (popupTimerRef.current) {
@@ -474,53 +562,62 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
             popupTimerRef.current = null;
         }
 
-        if (!state || activePopupId || hasShownThisSession) return;
-        if (!eventPopupReady || hasPendingEventPopup || activeEventPopup) return;
+        if (!state || activePopupId || activeEventPopup) return;
 
         const now = Date.now();
-        const listViewIntroState = state.popups.list_view_intro;
-        let showNowId: PopupId | null = null;
-        let scheduledId: PopupId | null = null;
-        let scheduledAt = 0;
+        const getSessionReadyAt = (id: PopupId) => {
+            const sessionBase = sessionStartAt ?? now;
+            const sessionReadyAt = sessionBase + POPUP_CONFIG[id].initialDelayMs;
+            const snoozeUntil = state.popups[id]?.snoozeUntil ?? 0;
+            return Math.max(sessionReadyAt, snoozeUntil);
+        };
 
-        if (listViewIntroState && !listViewIntroState.dismissed) {
-            const readyAt = getPopupReadyAt(state, now, 'list_view_intro');
-            if (now >= readyAt) {
-                showNowId = 'list_view_intro';
-            } else {
-                scheduledId = 'list_view_intro';
-                scheduledAt = readyAt;
-            }
-        } else {
-            const nextId = getNextPopupId(state, now);
-            if (nextId) {
-                showNowId = nextId;
-            } else {
-                const nextScheduled = getNextScheduledPopup(state, now);
-                if (nextScheduled) {
-                    scheduledId = nextScheduled.id;
-                    scheduledAt = nextScheduled.readyAt;
-                }
+        let showNowId: PopupId | null = null;
+        if (!hasShownThisSession) {
+            for (const id of POPUP_ORDER) {
+                if (isSessionPopup(id)) continue;
+                if (state.popups[id]?.dismissed) continue;
+                if (!isPopupEligible(id)) continue;
+                if (now < getPopupReadyAt(state, now, id)) continue;
+                showNowId = id;
+                break;
             }
         }
 
-        if (showNowId) {
+        if (showNowId && canShowPopupNow(showNowId)) {
             setActivePopupId(showNowId);
             setHasShownThisSession(true);
             markPopupShown(showNowId, now);
-            return () => undefined;
         }
 
-        if (scheduledId) {
-            const delayMs = Math.max(scheduledAt - now, 0);
-            if (delayMs > 0) {
-                const targetId = scheduledId;
+        let nextSession: { id: PopupId; readyAt: number } | null = null;
+        for (const id of POPUP_ORDER) {
+            if (!isSessionPopup(id)) continue;
+            if (state.popups[id]?.dismissed) continue;
+            if (!isPopupEligible(id)) continue;
+            const readyAt = getSessionReadyAt(id);
+            if (!nextSession || readyAt < nextSession.readyAt) {
+                nextSession = { id, readyAt };
+            }
+        }
+
+        if (nextSession) {
+            if (now >= nextSession.readyAt) {
+                if (canShowPopupNow(nextSession.id)) {
+                    setActivePopupId(nextSession.id);
+                    setHasShownThisSession(true);
+                    markPopupShown(nextSession.id, now);
+                }
+            } else {
+                const targetId = nextSession.id;
+                const delayMs = Math.max(nextSession.readyAt - now, 0);
                 popupTimerRef.current = setTimeout(() => {
                     popupTimerRef.current = null;
-                    if (!canShowPopupNow()) return;
+                    if (!canShowPopupNow(targetId)) return;
                     const currentState = stateRef.current;
                     if (!currentState) return;
                     if (currentState.popups[targetId]?.dismissed) return;
+                    if (!isPopupEligible(targetId)) return;
                     const fireAt = Date.now();
                     setActivePopupId(targetId);
                     setHasShownThisSession(true);
@@ -539,9 +636,9 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         state,
         activePopupId,
         hasShownThisSession,
-        eventPopupReady,
-        hasPendingEventPopup,
         activeEventPopup,
+        isPopupEligible,
+        sessionStartAt,
     ]);
 
     const dismissPopup = useCallback((id: PopupId) => {
@@ -679,6 +776,11 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 onDismiss={() => dismissPopup('discover_game')}
                 onSnooze={() => snoozePopup('discover_game')}
             />
+            <NewsletterSignupModal
+                visible={activePopupId === 'newsletter_signup'}
+                onDismiss={() => dismissPopup('newsletter_signup')}
+                onSnooze={() => snoozePopup('newsletter_signup')}
+            />
             <View
                 pointerEvents="none"
                 accessibilityElementsHidden={!calendarCoachToast}
@@ -694,7 +796,13 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                         },
                     ]}
                 >
-                    <Text style={styles.calendarCoachText}>{calendarCoachToast?.message ?? ''}</Text>
+                    <View style={styles.calendarCoachRow}>
+                        <View style={styles.calendarCoachSavePill}>
+                            <FAIcon name="bookmark-o" size={14} color={colors.brandInk} />
+                            <Text style={styles.calendarCoachSaveText}>Save</Text>
+                        </View>
+                        <Text style={styles.calendarCoachText}>{calendarCoachToast?.message ?? ''}</Text>
+                    </View>
                 </Animated.View>
             </View>
         </CalendarCoachContext.Provider>
@@ -713,10 +821,10 @@ const styles = StyleSheet.create({
     calendarCoachCard: {
         maxWidth: 420,
         width: '100%',
-        backgroundColor: colors.surfaceWhiteOpaque,
+        backgroundColor: colors.surfaceWarning,
         borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: colors.borderLavenderSoft,
+        borderColor: colors.borderGoldLight,
         paddingHorizontal: spacing.lgPlus,
         paddingVertical: spacing.mdPlus,
         ...shadows.card,
@@ -725,12 +833,35 @@ const styles = StyleSheet.create({
         shadowRadius: 14,
         elevation: 8,
     },
+    calendarCoachRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    calendarCoachSavePill: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+        backgroundColor: colors.surfaceWhiteFrosted,
+    },
+    calendarCoachSaveText: {
+        marginLeft: spacing.xs,
+        fontSize: fontSizes.sm,
+        fontWeight: '600',
+        color: colors.brandInk,
+        fontFamily: fontFamilies.body,
+    },
     calendarCoachText: {
+        flex: 1,
         color: colors.textPrimary,
         fontSize: fontSizes.basePlus,
         fontWeight: '600',
         fontFamily: fontFamilies.body,
-        textAlign: 'center',
+        textAlign: 'left',
         letterSpacing: 0.2,
     },
 });

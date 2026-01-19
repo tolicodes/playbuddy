@@ -5,18 +5,20 @@ import { connectRedisClient } from '../connections/redisClient.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { createIcal } from '../helpers/ical.js';
 import { fetchAndCacheData } from '../helpers/cacheHelper.js';
-import { Event } from '../commonTypes.js';
+import type { Event, NormalizedEventInput } from '../commonTypes.js';
 import { getMyPrivateCommunities } from './helpers/getMyPrivateCommunities.js';
-import { authenticateAdminRequest, AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
+import { authenticateAdminRequest, authenticateRequest, AuthenticatedRequest, optionalAuthenticateRequest } from '../middleware/authenticateRequest.js';
 import { upsertEvent } from './helpers/writeEventsToDB/upsertEvent.js';
 import { upsertEventsClassifyAndStats } from './helpers/upsertEventsBatch.js';
 import { flushEvents } from '../helpers/flushCache.js';
 import { transformMedia } from './helpers/transformMedia.js';
 import scrapeRoutes from './eventsScrape.js';
+import scrapeURLs from '../scrapers/helpers/scrapeURLs.js';
 import { ADMIN_EMAILS } from '../config.js';
 import { fetchAllRows } from '../helpers/fetchAllRows.js';
 import { openai, MODEL } from '../scrapers/ai/config.js';
 import type { WeeklyPicksImageLogger } from '../helpers/weeklyPicksImage.js';
+import { notifyAdminsOfPendingEvents } from '../helpers/adminPushNotifications.js';
 import {
     forceGenerateWeeklyPicksImage,
     getCachedWeeklyPicksImage,
@@ -53,6 +55,53 @@ const parsePartCount = (value: unknown) => {
     const parsed = parsePart(value);
     if (!parsed) return undefined;
     return parsed === 1 ? 1 : 2;
+};
+
+const normalizeInputText = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+const normalizeOptionalInput = (value: unknown) => {
+    const trimmed = normalizeInputText(value);
+    return trimmed ? trimmed : undefined;
+};
+
+const parseIsoDateInput = (value: unknown) => {
+    if (typeof value !== 'string' || !value) return null;
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return null;
+    return date.toISOString();
+};
+
+const isValidUrl = (value: string) => /^https?:\/\/\S+$/i.test(value);
+const normalizeUrlList = (payload: any): string[] => {
+    const rawUrls = Array.isArray(payload?.urls) ? payload.urls : [];
+    if (typeof payload?.url === 'string') rawUrls.push(payload.url);
+    return rawUrls
+        .map((url: any) => (typeof url === 'string' ? url.trim() : ''))
+        .filter((url: string) => url && isValidUrl(url));
+};
+
+const fetchPreviewEvent = async (event: NormalizedEventInput) => {
+    const select = '*, organizer:organizers(name)';
+
+    if (event.original_id) {
+        const { data, error } = await supabaseClient
+            .from('events')
+            .select(select)
+            .eq('original_id', event.original_id)
+            .maybeSingle();
+        if (!error && data) return data;
+    }
+
+    if (event.start_date && event.name) {
+        const { data, error } = await supabaseClient
+            .from('events')
+            .select(select)
+            .eq('start_date', event.start_date)
+            .eq('name', event.name)
+            .maybeSingle();
+        if (!error && data) return data;
+    }
+
+    return null;
 };
 
 const extractWeeklyPicksImageOptions = (req: AuthenticatedRequest) => {
@@ -352,7 +401,7 @@ const mergeEventPatch = (source: any, target: any, preferSource: boolean) => {
         'lat', 'lon',
     ].forEach(applyValue);
 
-    ['frozen', 'facilitator_only', 'play_party', 'is_munch', 'non_ny', 'vetted', 'hidden'].forEach(applyBoolean);
+    ['frozen', 'facilitator_only', 'play_party', 'is_munch', 'non_ny', 'vetted', 'hidden', 'user_submitted'].forEach(applyBoolean);
 
     if (target.weekly_pick !== true && source.weekly_pick === true) {
         patch.weekly_pick = true;
@@ -740,6 +789,10 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
     const includeHiddenEvents = req.query.includeHidden === 'true';
     const cacheKey = includeHiddenEvents ? `${cacheKeyBase}:includeHidden` : cacheKeyBase;
 
+    if (flushCache) {
+        await flushEvents();
+    }
+
     if (req.query.visibility === 'private') {
         if (!req.authUserId) {
             console.error('User not specified for private events');
@@ -794,7 +847,27 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
             responseData = JSON.stringify(await runQuery());
         }
 
-        let response = JSON.parse(responseData);
+        const parseEventsPayload = (raw: string) => {
+            if (typeof raw !== 'string') return { ok: false, value: [] as any[] };
+            try {
+                const parsed = JSON.parse(raw);
+                return { ok: Array.isArray(parsed), value: Array.isArray(parsed) ? parsed : [] };
+            } catch {
+                return { ok: false, value: [] as any[] };
+            }
+        };
+
+        let parsed = parseEventsPayload(responseData);
+        if (!parsed.ok && redisClient) {
+            console.warn(`[events] cache parse failed for ${cacheKey}, refreshing`);
+            responseData = await fetchAndCacheData(redisClient, cacheKey, runQuery, true);
+            parsed = parseEventsPayload(responseData);
+        }
+        if (!parsed.ok) {
+            throw new Error(`Invalid JSON in events cache for key ${cacheKey}`);
+        }
+
+        let response = parsed.value;
 
         const transformPromoCodes = (response: any) => {
             return response.map((responseItem: any) => {
@@ -895,6 +968,135 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
         console.error("Error:", error);
         throw error;
     }
+}));
+
+router.post('/user-submissions/import-urls', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const urls = normalizeUrlList(req.body || {});
+    if (!urls.length) {
+        res.status(400).json({ error: 'urls (array) or url (string) is required' });
+        return;
+    }
+
+    const eventDefaults = {
+        approval_status: 'pending' as const,
+        user_submitted: true,
+    };
+
+    try {
+        const scraped = await scrapeURLs(urls, eventDefaults);
+        const results = [];
+
+        for (const ev of scraped) {
+            ev.approval_status = 'pending';
+            (ev as any).user_submitted = true;
+            try {
+                const upsertRes = await upsertEvent(ev, req.authUserId, {
+                    ignoreFrozen: true,
+                    skipExisting: true,
+                    skipExistingNoApproval: true,
+                });
+                if (!upsertRes.event) {
+                    try {
+                        const previewEvent = await fetchPreviewEvent(ev);
+                        if (previewEvent) {
+                            results.push({ ...upsertRes, event: previewEvent });
+                            continue;
+                        }
+                    } catch (previewError) {
+                        console.warn('Failed to fetch preview event', previewError);
+                    }
+                }
+                results.push(upsertRes);
+            } catch (err: any) {
+                results.push({ result: 'failed', event: null, error: err?.message || String(err) });
+            }
+        }
+
+        await flushEvents();
+
+        const insertedEvents = results.filter((item: any) => item?.result === 'inserted' && item?.event);
+        const submissionCount = insertedEvents.length || scraped.length || urls.length || 1;
+        const primaryEvent = insertedEvents[0]?.event ?? scraped[0] ?? null;
+        void notifyAdminsOfPendingEvents({
+            count: submissionCount,
+            eventName: submissionCount === 1 ? primaryEvent?.name : undefined,
+            eventId: insertedEvents.length === 1 ? insertedEvents[0]?.event?.id : undefined,
+        }).catch((error) => {
+            console.warn('[events] failed to notify admins of user submissions', error);
+        });
+
+        res.json({
+            requested: urls.length,
+            scraped: scraped.length,
+            events: results,
+        });
+    } catch (err: any) {
+        console.error('Failed to import user-submitted urls', err);
+        res.status(500).json({ error: err?.message || 'failed to import user-submitted urls' });
+    }
+}));
+
+router.post('/user-submissions', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const body = req.body || {};
+
+    const name = normalizeInputText(body.name);
+    const organizerName = normalizeInputText(body.organizer_name ?? body.organizerName);
+    const startDate = parseIsoDateInput(body.start_date ?? body.startDate);
+    const location = normalizeInputText(body.location);
+    const description = normalizeInputText(body.description);
+
+    if (!name || !organizerName || !startDate || !location || !description) {
+        res.status(400).json({ error: 'name, organizer_name, start_date, location, and description are required' });
+        return;
+    }
+
+    const endDateInput = parseIsoDateInput(body.end_date ?? body.endDate);
+    const endDate = endDateInput
+        ?? new Date(new Date(startDate).getTime() + 4 * 60 * 60 * 1000).toISOString();
+
+    const ticketUrl = normalizeOptionalInput(body.ticket_url ?? body.ticketUrl);
+    const eventUrl = normalizeOptionalInput(body.event_url ?? body.eventUrl);
+    const imageUrl = normalizeOptionalInput(body.image_url ?? body.imageUrl);
+    const organizerUrl = normalizeOptionalInput(body.organizer_url ?? body.organizerUrl);
+
+    const event = {
+        name,
+        start_date: startDate,
+        end_date: endDate,
+        ticket_url: ticketUrl ?? '',
+        event_url: eventUrl ?? '',
+        image_url: imageUrl,
+        location,
+        city: normalizeOptionalInput(body.city),
+        region: normalizeOptionalInput(body.region),
+        price: normalizeOptionalInput(body.price),
+        description,
+        organizer: {
+            name: organizerName,
+            url: organizerUrl,
+        },
+        approval_status: 'pending',
+        user_submitted: true,
+        visibility: 'public',
+        type: body.type ?? 'event',
+    };
+
+    const result = await upsertEvent(event as any, req.authUserId, {
+        ignoreFrozen: true,
+        skipExisting: true,
+        skipExistingNoApproval: true,
+    });
+    await flushEvents();
+
+    void notifyAdminsOfPendingEvents({
+        count: 1,
+        eventName: result?.event?.name || name,
+        eventId: result?.event?.id ?? undefined,
+    }).catch((error) => {
+        console.warn('[events] failed to notify admins of user submission', error);
+    });
+
+    res.json(result);
 }));
 
 router.post('/', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {

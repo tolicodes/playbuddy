@@ -24,8 +24,11 @@
     "@types/react-dom": "^19.1.5",
     "axios": "^1.9.0",
     "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.15.0",
+    "highcharts": "^12.4.0",
+    "highcharts-react-official": "^3.2.2",
     "jszip": "^3.10.1",
     "moment-timezone": "^0.6.0",
     "papaparse": "^5.5.3",
@@ -71,6 +74,7 @@
   },
   "devDependencies": {
     "@types/d3": "^7.4.3",
+    "@types/d3-sankey": "^0.12.5",
     "@types/papaparse": "^5.3.16",
     "@types/turndown": "^5.0.5",
     "os-browserify": "^0.3.0"

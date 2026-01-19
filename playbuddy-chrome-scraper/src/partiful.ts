@@ -32,6 +32,43 @@ const PARTIFUL_CREATE_EVENT_URL = "https://api.partiful.com/createEvent";
 const LOGIN_WAIT_TIMEOUT_MS = 45_000;
 const LOGIN_POLL_MS = 1000;
 const RESPONSE_BODY_LOG_LIMIT = 500;
+const DEFAULT_EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
+
+const ensurePartifulEndDate = (
+  event: Record<string, unknown>,
+  log: LogFn
+): Record<string, unknown> => {
+  const startValue = event.startDate ?? event.start_date;
+  const endValue = event.endDate ?? event.end_date;
+  const startText = typeof startValue === "string" ? startValue : "";
+  const endText = typeof endValue === "string" ? endValue : "";
+
+  if (endText) {
+    if (!("endDate" in event)) {
+      return { ...event, endDate: endText };
+    }
+    return event;
+  }
+
+  if (!startText) {
+    throw new Error("Partiful invite requires endDate (missing startDate).");
+  }
+
+  const startDate = new Date(startText);
+  if (Number.isNaN(startDate.getTime())) {
+    throw new Error("Partiful invite requires endDate (invalid startDate).");
+  }
+
+  const fallbackEndDate = new Date(
+    startDate.getTime() + DEFAULT_EVENT_DURATION_MS
+  ).toISOString();
+  log("warn", "Partiful invite missing endDate; defaulting to +2h.", {
+    startDate: startText,
+    endDate: fallbackEndDate,
+  });
+
+  return { ...event, endDate: fallbackEndDate };
+};
 
 const readPartifulSessionInfo = async (tabId: number): Promise<PartifulSessionInfo> => {
   const results = await chrome.scripting.executeScript({
@@ -248,9 +285,10 @@ export const createPartifulInvite = async (
       throw new Error("Partiful userId not found. Log in and try again.");
     }
 
+    const normalizedEvent = ensurePartifulEndDate(payload.event, log);
     const dataPayload: Record<string, unknown> = {
       params: {
-        event: payload.event,
+        event: normalizedEvent,
         cohostIds: payload.cohostIds ?? [],
       },
       userId: session.userId,

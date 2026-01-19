@@ -35,6 +35,8 @@ import eventPopupsRoute from './routes/event_popups.js'
 import pushNotificationsRoute from './routes/push_notifications.js'
 import pushTokensRoute from './routes/push_tokens.js'
 import branchStatsRoute from './routes/branch_stats.js'
+import analyticsRoute from './routes/analytics.js'
+import branchLinksRoute from './routes/branch_links.js'
 
 console.log('API Started')
 
@@ -125,6 +127,8 @@ app.use('/event_popups', wrapRouter(eventPopupsRoute));
 app.use('/push_notifications', wrapRouter(pushNotificationsRoute));
 app.use('/push_tokens', wrapRouter(pushTokensRoute));
 app.use('/branch_stats', wrapRouter(branchStatsRoute));
+app.use('/branch_links', wrapRouter(branchLinksRoute));
+app.use('/analytics', wrapRouter(analyticsRoute));
 
 // Log and return 404s for unmatched routes
 app.use((req, res, next) => {

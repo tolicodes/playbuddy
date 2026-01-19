@@ -34,10 +34,18 @@ Whenever making changes to Event Card layout, remember to update
 Whenever I ask to do a commit, only commit the changes made in this chat
 Only commit files related to the task; ignore unrelated changes even if modified.
 
+Also commit the common/ types and axios changes and their copies when committing.
+
 ## Building
 
-Build the apps using npm build or expo equivalent after making a change to check for errors
+Except for mobile, after making a change run `npm run build`
 
-To surface mobile errors, it is ok to start another Metro instance. Run:
-- `cd playbuddy-mobile && npm run start`
-- press `i` for iOS
+## Mobile
+
+### Modal
+
+Whenever adding an a modal, make sure to add it to the debug menu as well
+
+## Admin
+
+Whenever adding an admin screen, add it in web as well as mobile

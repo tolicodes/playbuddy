@@ -26,6 +26,9 @@ export const UE = {
     HeaderLoginButtonClicked: 'header_login_button_clicked',
     // Onboarding & Misc
     ProfileInitialDeepLinkAssigned: 'profile_initial_deep_link_assigned',
+    OrganizerFollowPressed: 'organizer_follow_pressed',
+    OrganizerFirstFollowed: 'organizer_first_followed',
+    WishlistFirstAdded: 'wishlist_first_added',
     // Avatar
     AvatarPressPickImage: 'avatar_press_pick_image',
     AvatarUploadCompleted: 'avatar_upload_completed',
@@ -34,6 +37,12 @@ export const UE = {
     EventCalendarViewFiltersEnabled: 'event_calendar_view_filters_enabled',
     EventCalendarViewFiltersDisabled: 'event_calendar_view_filters_disabled',
     EventCalendarViewFiltersSet: 'event_calendar_view_filters_set',
+    // Date Bar
+    DateBarSwipePrev: 'date_bar_swipe_prev',
+    DateBarSwipeNext: 'date_bar_swipe_next',
+    DateBarLongPress: 'date_bar_long_press',
+    DateBarCalendarPressed: 'date_bar_calendar_pressed',
+    DateBarTodayPressed: 'date_bar_today_pressed',
     EventCalendarViewExpand: 'event_calendar_view_expand',
     EventCalendarViewToday: 'event_calendar_view_today',
     EventCalendarViewGoogleCalendar: 'event_calendar_view_google_calendar',
@@ -44,6 +53,10 @@ export const UE = {
     // Filters
     FilterTagSelected: 'filter_tag_selected',
     FilterSearchChanged: 'filter_search_changed',
+    FilterSearchFocused: 'filter_search_focused',
+    FilterSearchTyped: 'filter_search_typed',
+    FilterMorePressed: 'filter_more_pressed',
+    FilterTagAdded: 'filter_tag_added',
     // Event-Detail & Tickets Flow
     EventDetailGetTicketsClicked: 'event_detail_get_tickets_clicked',
     EventDetailGoogleCalendarClicked: 'event_detail_google_calendar_clicked',

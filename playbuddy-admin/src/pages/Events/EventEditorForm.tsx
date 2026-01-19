@@ -204,6 +204,15 @@ const CLASSIFICATION_TAG_OPTIONS = [
     'Connection',
 ];
 
+const REQUIRED_FIELD_LABELS: Partial<Record<keyof FormValues, string>> = {
+    name: 'Event name',
+    start_date: 'Start date',
+    end_date: 'End date',
+    ticket_url: 'Ticket URL',
+    image_url: 'Image URL',
+    description: 'Description',
+};
+
 export default function EventEditorForm({
     event,
     mode,
@@ -392,8 +401,24 @@ export default function EventEditorForm({
 
     return (
         // @ts-ignore
-        <form onSubmit={handleSubmit(onSubmit, (err) => {
-            alert('Validation failed: ' + JSON.stringify(err));
+        <form onSubmit={handleSubmit(onSubmit, (formErrors) => {
+            const missing = Object.entries(REQUIRED_FIELD_LABELS)
+                .map(([fieldKey, label]) => {
+                    const fieldError = formErrors[fieldKey as keyof FormValues];
+                    if (!fieldError) return null;
+                    const message = typeof (fieldError as any).message === 'string'
+                        ? (fieldError as any).message
+                        : '';
+                    return message ? `${label}: ${message}` : label;
+                })
+                .filter(Boolean) as string[];
+
+            if (missing.length) {
+                alert(`Please check: ${missing.join(', ')}`);
+                return;
+            }
+
+            alert('Validation failed. Please check the highlighted fields.');
         })}>
             <Typography variant="subtitle1" sx={{ mt: 1 }}>
                 Details

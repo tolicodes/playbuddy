@@ -21,13 +21,16 @@ const EVENT_TYPE_FILTERS = [
 export const EventList = ({
     events,
     isLoadingEvents,
+    selectedType,
+    onSelectType,
 }: {
     events: EventWithMetadata[];
     isLoadingEvents: boolean;
+    selectedType: string | null;
+    onSelectType: (type: string | null) => void;
 }) => {
     const [selectedEvent, setSelectedEvent] = useState<EventWithMetadata | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const normalizedSearch = useMemo(() => normalizeSearchText(searchQuery), [searchQuery]);
     const searchTokens = useMemo(
         () => (normalizedSearch ? normalizedSearch.split(' ') : []),
@@ -35,7 +38,7 @@ export const EventList = ({
     );
 
     const filteredEvents = useMemo(() => {
-        if (!searchTokens.length && selectedTypes.length === 0) return events;
+        if (!searchTokens.length && !selectedType) return events;
         return events.filter((event) => {
             const resolvedType = event.play_party || event.type === 'play_party'
                 ? 'play_party'
@@ -44,7 +47,7 @@ export const EventList = ({
                     : event.type && ACTIVE_EVENT_TYPES.includes(event.type as (typeof ACTIVE_EVENT_TYPES)[number])
                         ? event.type
                         : FALLBACK_EVENT_TYPE;
-            if (selectedTypes.length > 0 && !selectedTypes.includes(resolvedType)) {
+            if (selectedType && resolvedType !== selectedType) {
                 return false;
             }
             if (!searchTokens.length) return true;
@@ -65,18 +68,14 @@ export const EventList = ({
                 .join(' '));
             return searchTokens.every((token) => searchTarget.includes(token));
         });
-    }, [events, searchTokens, selectedTypes]);
+    }, [events, searchTokens, selectedType]);
 
     const toggleTypeFilter = (typeKey: string) => {
         if (typeKey === 'all') {
-            setSelectedTypes([]);
+            onSelectType(null);
             return;
         }
-        setSelectedTypes((prev) => (
-            prev.includes(typeKey)
-                ? prev.filter((type) => type !== typeKey)
-                : [...prev, typeKey]
-        ));
+        onSelectType(selectedType === typeKey ? null : typeKey);
     };
 
     const { sections } = useGroupedEvents(filteredEvents);
@@ -114,7 +113,7 @@ export const EventList = ({
         window.location.href = `/event/${selectedEvent.id}`;
     }, [selectedEvent]);
 
-    const emptyLabel = searchTokens.length > 0 || selectedTypes.length > 0
+    const emptyLabel = searchTokens.length > 0 || !!selectedType
         ? 'No matching events found'
         : 'No events found';
 
@@ -150,8 +149,8 @@ export const EventList = ({
                         {EVENT_TYPE_FILTERS.map((filter) => {
                             const isAll = filter.key === 'all';
                             const isActive = isAll
-                                ? selectedTypes.length === 0
-                                : selectedTypes.includes(filter.key);
+                                ? !selectedType
+                                : selectedType === filter.key;
                             const tone = isAll
                                 ? { background: '#2f2a3a', text: '#ffffff', border: '#2f2a3a' }
                                 : getTagChipTone({ label: filter.label, kind: 'type' });

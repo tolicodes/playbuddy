@@ -13,6 +13,8 @@ type UpdatePayload = Partial<ImportSource> & {
     metadata?: Record<string, any>;
     approval_status?: 'pending' | 'approved' | 'rejected' | null;
     message_sent?: boolean | null;
+    is_festival?: boolean | null;
+    is_excluded?: boolean | null;
 };
 
 export const useUpdateImportSource = () => {

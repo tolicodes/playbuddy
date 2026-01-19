@@ -1,0 +1,166 @@
+{
+  "cookies": [
+    {
+      "name": "_csrf",
+      "value": "fQBQl5MrPy7u_8kYnFPK1GHy",
+      "domain": "dashboard.branch.io",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "dashboard_external_referrer",
+      "value": "",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1768945681,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "branch_loggedin",
+      "value": "1",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1768816088.887759,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "branch_has_loggedin",
+      "value": "1",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1800308888.887815,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "dash_oauth_state",
+      "value": "6b81861c0ac6723f7bbb8507e1caf274070a351e2db36dc39e",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1768859283.162838,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "bnc_returning_visitor",
+      "value": "1",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1771364884,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.322276081.1768772884",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1803332884.495735,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_fbp",
+      "value": "fb.1.1768772885395.20912558871938321",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1776548885,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_s",
+      "value": "E3tq6I9en%2B52suQZIdSYMcr02vZr%2FCj0nJA%2BddQg6gxzN8DjlNNQygsQeCvNzAb1",
+      "domain": ".app.link",
+      "path": "/",
+      "expires": 1800308885.954844,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "branch_session_info",
+      "value": "%7B%22user_id%22%3A%221392996579337589394%22%2C%22is_internal%22%3Afalse%7D",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1769377686,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "AMP_c945c546a2",
+      "value": "JTdCJTIyZGV2aWNlSWQlMjIlM0ElMjJiNjVhZmI1ZS03MTVjLTRhZWQtYjQ3Mi05OTI5YzdkOWI2NGMlMjIlMkMlMjJ1c2VySWQlMjIlM0ElMjIxMzkyOTk2NTc5MzM3NTg5Mzk0JTIyJTJDJTIyc2Vzc2lvbklkJTIyJTNBMTc2ODc3Mjg4NzI4NyUyQyUyMm9wdE91dCUyMiUzQWZhbHNlJTJDJTIybGFzdEV2ZW50VGltZSUyMiUzQTE3Njg3NzI4ODc0ODYlMkMlMjJsYXN0RXZlbnRJZCUyMiUzQTYlMkMlMjJwYWdlQ291bnRlciUyMiUzQTElN0Q=",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1800308887,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_9FJRZHNBGY",
+      "value": "GS2.1.s1768772884$o1$g1$t1768772888$j56$l0$h0",
+      "domain": ".branch.io",
+      "path": "/",
+      "expires": 1803332888.388486,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "branch_dashboard",
+      "value": "b4DoDLqBvBVrSFn1uClRWbx%2BHcPLCDQI5YTxgpFYEcvpzPw%3D",
+      "domain": "dashboard.branch.io",
+      "path": "/",
+      "expires": 1768816088.887832,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://dashboard.branch.io",
+      "localStorage": [
+        {
+          "name": "amplitude.engagement.ENGAGEMENT_c945c546a2_DEFAULT_USER_PROVIDER",
+          "value": "{\"first_seen\":\"1768772886.786\"}"
+        },
+        {
+          "name": "AMP_unsent_c945c546a2",
+          "value": "[{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887287,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"70ea267f-a99b-40c7-b0ff-42881b9b623b\",\"event_type\":\"session_start\",\"event_id\":0,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\",\"event_properties\":{}},{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887291,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"1c211863-189d-42e5-9e17-8d7187a7f7be\",\"event_type\":\"[Amplitude] Page Viewed\",\"event_properties\":{\"referrer\":\"https://dashboard.branch.io/login?emailId=toli%40toli.me&userOrigin=CLASSIC\",\"referring_domain\":\"dashboard.branch.io\",\"[Amplitude] Page Domain\":\"dashboard.branch.io\",\"[Amplitude] Page Location\":\"https://dashboard.branch.io/login?emailId=toli%40toli.me&userOrigin=CLASSIC\",\"[Amplitude] Page Path\":\"/login\",\"[Amplitude] Page Title\":\"Dashboard - Branch Metrics\",\"[Amplitude] Page URL\":\"https://dashboard.branch.io/login\",\"[Amplitude] Page Counter\":1},\"event_id\":1,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\"},{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887292,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"28e95b38-c8a9-4bc5-aa41-99229aa05539\",\"event_type\":\"$groupidentify\",\"group_properties\":{\"$set\":{\"app_category\":\"SELF_SERVE\"}},\"groups\":{\"apps\":\"1392996578951713425\"},\"event_id\":2,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\",\"event_properties\":{}},{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887293,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"0cac4af6-f432-4396-9354-7b5ee8959c87\",\"event_type\":\"$identify\",\"user_properties\":{\"$set\":{\"name\":\"Toli Zaslavskiy\",\"email\":\"toli@toli.me\",\"is_internal\":false,\"is_agency_user\":false,\"user_id\":\"1392996579337589394\"}},\"event_id\":3,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\",\"event_properties\":{}},{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887299,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"273a2cb2-85f1-417b-b9fa-c6ccd4e1b191\",\"event_type\":\"$identify\",\"user_properties\":{\"$set\":{\"apps\":\"1392996578951713425\"}},\"groups\":{\"apps\":\"1392996578951713425\"},\"event_id\":4,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\",\"event_properties\":{}},{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887300,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"18ceeee4-b89f-4ed8-a3f8-aacb18744000\",\"event_type\":\"$groupidentify\",\"group_properties\":{\"$set\":{\"app_name\":\"PlayBuddy\",\"app_id\":\"1392996578951713425\"}},\"groups\":{\"apps\":\"1392996578951713425\"},\"event_id\":5,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\",\"event_properties\":{}},{\"user_id\":\"1392996579337589394\",\"device_id\":\"b65afb5e-715c-4aed-b472-9929c7d9b64c\",\"session_id\":1768772887287,\"time\":1768772887486,\"platform\":\"Web\",\"language\":\"en-US\",\"ip\":\"$remote\",\"insert_id\":\"057af50d-12db-4a52-bb70-521ad9fee885\",\"event_type\":\"$identify\",\"user_properties\":{\"$set\":{\"origin\":\"CLASSIC\"}},\"event_id\":6,\"library\":\"amplitude-ts-gtm/3.15.0\",\"user_agent\":\"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.7499.4 Safari/537.36\",\"event_properties\":{}}]"
+        },
+        {
+          "name": "branch_session_first",
+          "value": "{\"browser_fingerprint_id\":\"MTU0MTU1MjA5MjAxOTc1MzY0OQ==\",\"data\":\"{\\\"+clicked_branch_link\\\":false,\\\"+is_first_session\\\":true}\",\"has_app\":false,\"identity_id\":\"1541552094334031668\",\"link\":\"https://branch.link/a/key_live_jpc4Hi6KhTtrwVHvdvMAQpokDxpB4Poc?%24identity_id=1541552094334031668\",\"session_id\":\"1541552094333788731\",\"identity\":null}"
+        },
+        {
+          "name": "BRANCH_SHAREABLE",
+          "value": "{\"1392996579337589394\":{\"1392996578951713425\":{\"summary\":{\"summary-time-series__all\":{\"events\":[\"eo_install\"],\"query\":{\"data_sources\":[\"eo_install\"],\"filter\":{},\"dimensions\":[\"date_range\"]},\"sourceQuery\":{\"calculated_eCPA\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_actions\"},{\"data_source\":\"eo_commerce_event\",\"name\":\"PURCHASE\"}]}},\"calculated_eCPA_in_local_currency\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_actions\",\"metric\":\"cost_in_app_local_currency\"},{\"data_source\":\"eo_commerce_event\",\"name\":\"PURCHASE\"}]}},\"calculated_eCPC\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_clicks\"},{\"data_source\":\"xx_click\"}]}},\"calculated_eCPC_in_local_currency\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_clicks\",\"metric\":\"cost_in_app_local_currency\"},{\"data_source\":\"xx_click\"}]}},\"calculated_eCPI\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_installs\"},{\"data_source\":\"eo_install\"}]}},\"calculated_eCPI_in_local_currency\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_installs\",\"metric\":\"cost_in_app_local_currency\"},{\"data_source\":\"eo_install\"}]}},\"calculated_eCPM\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_impressions\"},{\"fn\":\"/\",\"fields\":[{\"data_source\":\"xx_impression\"},{\"constant\":1000}]}]}},\"calculated_eCPM_in_local_currency\":{\"calculation\":{\"fn\":\"/\",\"fields\":[{\"data_source\":\"cost_impressions\",\"metric\":\"cost_in_app_local_currency\"},{\"fn\":\"/\",\"fields\":[{\"data_source\":\"xx_impression\"},{\"constant\":1000}]}]}},\"calculated_ROI\":{\"calculation\":{\"fn\":\"/\",\"metric\":\"percentage\",\"fields\":[{\"fn\":\"-\",\"fields\":[{\"data_source\":\"eo_commerce_event\",\"name\":\"PURCHASE\",\"metric\":\"revenue\"},{\"data_source\":\"cost\"}]},{\"data_source\":\"cost\"}]}},\"calculated_ROAS\":{\"calculation\":{\"fn\":\"/\",\"metric\":\"percentage\",\"fields\":[{\"data_source\":\"eo_commerce_event\",\"name\":\"PURCHASE\",\"metric\":\"revenue\"},{\"data_source\":\"cost\"}]}},\"eo_click\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"ROBOT\",\"OTHER\"]}},{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"last_attributed_touch_data_plus_current_feature\",\"values\":[\"DESKTOP_DEEPVIEWS\"]}}]}},\"eo_impression\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"ROBOT\"]}}]}},\"eo_user_lifecycle_event\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"ROBOT\",null]}}]}},\"eo_content_event\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"ROBOT\",null]}}]}},\"eo_custom_event\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"ROBOT\",null]}}]}},\"eo_install\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_APP\",\"ANDROID_APP\",\"IOS_TV\",\"ANDROID_TV\",\"DESKTOP_APP\",\"TV_APP\"]}]}},\"eo_open\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_APP\",\"ANDROID_APP\",\"IOS_TV\",\"ANDROID_TV\",\"DESKTOP_APP\",\"TV_APP\"]}]}},\"eo_reinstall\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_APP\",\"ANDROID_APP\",\"IOS_TV\",\"ANDROID_TV\",\"DESKTOP_APP\",\"TV_APP\"]}]}},\"eo_pageview\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_WEB\",\"ANDROID_WEB\",\"DESKTOP_WEB\",\"TV_WEB\"]}]}},\"eo_branch_cta_view\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_WEB\",\"ANDROID_WEB\",\"DESKTOP_WEB\",\"TV_WEB\"]}]}},\"eo_web_session_start\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_WEB\",\"ANDROID_WEB\",\"DESKTOP_WEB\",\"TV_WEB\"]}]}},\"eo_sms_sent\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_WEB\",\"ANDROID_WEB\",\"DESKTOP_WEB\",\"TV_WEB\"]}]}},\"eo_dismissal\":{\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"IOS_WEB\",\"ANDROID_WEB\",\"DESKTOP_WEB\",\"TV_WEB\"]}]}},\"eo_commerce_event\":{\"aggregations\":[\"total_count\",\"revenue\",\"revenue_in_local_currency\"],\"filter\":{\"type\":\"and\",\"fields\":[{\"type\":\"not\",\"field\":{\"type\":\"in\",\"dimension\":\"user_data_platform\",\"values\":[\"ROBOT\",null]}}]}},\"skadnetwork-valid-messages\":{\"aggregations\":[\"total_count\"]}},\"unique\":true,\"organic\":false,\"webOnly\":false,\"granularity\":\"day\",\"runFullReport\":false},\"isMigratedToSummaryProductTabsV2\":true}}}}"
+        }
+      ]
+    },
+    {
+      "origin": "https://app.branch.io",
+      "localStorage": [
+        {
+          "name": "i18nextLng",
+          "value": "en-US"
+        }
+      ]
+    }
+  ]
+}

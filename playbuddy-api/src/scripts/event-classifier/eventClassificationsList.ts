@@ -93,6 +93,11 @@ export const event_classifications = [
                 "description": "Designed for experienced individuals looking to deepen their expertise.",
                 "related": ["advanced_techniques", "expert_discussions"]
             },
+            {
+                "name": "All",
+                "description": "Open to all levels of experience.",
+                "related": ["all levels", "all_level", "all_levels"]
+            },
         ]
     },
     {

@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import {
     Box, Button, MenuItem, Paper, TextField, Typography
 } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
 import { useFetchEvents } from '../../common/db-axios/useEvents';
 import { useFetchPromoCodes } from '../../common/db-axios/usePromoCodes';
 import { useFetchFacilitators } from '../../common/db-axios/useFacilitators';
@@ -12,8 +11,6 @@ import { PromoCode } from '../../common/types/commonTypes';
 import { createBranchCSV } from '../../lib/createBranchCSV';
 
 export default function AddDeepLinkForm() {
-    const navigate = useNavigate();
-
     const { data: events = [] } = useFetchEvents();
     const { data: promoCodes = [] } = useFetchPromoCodes();
     const { data: facilitators = [] } = useFetchFacilitators();

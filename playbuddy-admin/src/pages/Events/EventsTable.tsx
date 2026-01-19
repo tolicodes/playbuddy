@@ -192,12 +192,24 @@ export default function EventsTable({
                             const hiddenEvent = !!event.hidden;
                             const hiddenOrganizer = !!event.organizer?.hidden;
                             const isHidden = hiddenEvent || hiddenOrganizer;
+                            const isRejected = event.approval_status === 'rejected';
                             const resolvedType = typeOverrides[event.id] ?? resolveEventType(event);
                             const isSavingType = !!savingTypeIds[event.id];
                             const isLegacyType = !isKnownEventType(resolvedType);
+                            const rowSx = {
+                                ...(isHidden ? { opacity: 0.7 } : null),
+                                ...(isRejected ? {
+                                    '& td': {
+                                        borderTop: '1px solid #fecaca',
+                                        borderBottom: '1px solid #fecaca',
+                                    },
+                                    '& td:first-of-type': { borderLeft: '2px solid #ef4444' },
+                                    '& td:last-of-type': { borderRight: '2px solid #ef4444' },
+                                } : null),
+                            };
 
                             return (
-                            <TableRow key={event.id} sx={isHidden ? { opacity: 0.7 } : undefined}>
+                            <TableRow key={event.id} sx={rowSx}>
                                 <TableCell>{formatEventDate(event.start_date, event.end_date)}</TableCell>
                                 <TableCell>
                                     {event.image_url ? (

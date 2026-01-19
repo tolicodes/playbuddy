@@ -31,17 +31,21 @@ import type { Event, EventTypes } from '../../common/types/commonTypes';
 import EventsTable from './EventsTable';
 import { EVENT_TYPE_OPTIONS, formatEventTypeLabel } from './eventTypeOptions';
 
+const ADMIN_APPROVAL_STATUSES = ['approved', 'pending', 'rejected'];
+
 export default function EventsListScreen() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const { data: events = [], isLoading: loadingEvents, error: errorEvents } = useFetchEvents({
         includeFacilitatorOnly: true,
+        approvalStatuses: ADMIN_APPROVAL_STATUSES,
     });
     const { data: organizers = [], isLoading: loadingOrganizers, error: errorOrganizers } = useFetchOrganizers();
 
     const [searchText, setSearchText] = useState('');
   const [selectedOrganizerId, setSelectedOrganizerId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<EventTypes | 'all'>('all');
+  const [userSubmittedOnly, setUserSubmittedOnly] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { mutateAsync: reclassifyEvent } = useReclassifyEvents();
   const [reclassifyStartTimes, setReclassifyStartTimes] = useState<Record<number, number>>({});
@@ -97,6 +101,9 @@ export default function EventsListScreen() {
             if (selectedType !== 'all' && resolveEventType(event) !== selectedType) {
                 return false;
             }
+            if (userSubmittedOnly && !event.user_submitted) {
+                return false;
+            }
             if (normalizedSearch) {
                 const haystack = [
                     event.name,
@@ -113,7 +120,7 @@ export default function EventsListScreen() {
             }
             return true;
     });
-  }, [events, searchText, selectedOrganizerId, selectedType]);
+  }, [events, searchText, selectedOrganizerId, selectedType, userSubmittedOnly]);
 
   const selectableEventIds = useMemo(() => {
     return filteredEvents.filter(isFutureEvent).map((event) => event.id);
@@ -288,6 +295,16 @@ export default function EventsListScreen() {
                             sx={{ minWidth: 280 }}
                         />
                     </Stack>
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={userSubmittedOnly}
+                                onChange={(e) => setUserSubmittedOnly(e.target.checked)}
+                            />
+                        }
+                        label="User submitted only"
+                    />
                 </Stack>
             </Box>
 

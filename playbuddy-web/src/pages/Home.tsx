@@ -4,7 +4,10 @@ import { useState } from 'react';
 import WebEntryModal from '../components/WebEntryModal/WebEntryModal';
 
 export const Home = () => {
-    const { data: events = [], isLoading } = useFetchEvents();
+    const [selectedType, setSelectedType] = useState<string | null>(null);
+    const { data: events = [], isLoading } = useFetchEvents({
+        includeNonNY: ['retreat', 'festival', 'conference'].includes(selectedType ?? ''),
+    });
 
     const [showModal, setShowModal] = useState(true);
 
@@ -14,6 +17,8 @@ export const Home = () => {
             <EventList
                 events={events}
                 isLoadingEvents={isLoading}
+                selectedType={selectedType}
+                onSelectType={setSelectedType}
             />
         </div>
     );

@@ -39,6 +39,13 @@ const baseMenuGroups: MenuGroup[] = [
         items: [
             { title: 'Play Parties', icon: 'mask', route: 'Play Parties' },
             { title: 'Munches', icon: 'utensils', route: 'Munches' },
+            { title: 'Retreats', icon: 'campground', route: 'Retreats' },
+        ],
+    },
+    {
+        title: 'Contribute',
+        items: [
+            { title: 'Add Your Event', icon: 'plus-circle', route: 'Submit Event' },
         ],
     },
     {

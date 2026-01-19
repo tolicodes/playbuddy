@@ -583,19 +583,20 @@ export const WeeklyPicksAdminScreen = () => {
         );
 
         return (
-            <EventListItem
-                item={item}
-                attendees={attendeesForEvent}
-                onPress={(event) =>
-                    navigation.push('Event Details', {
-                        selectedEvent: event,
-                        title: event.name,
-                    })
-                }
-                isAdmin
-                footerContent={adminFooter}
-                autoHeight
-            />
+                <EventListItem
+                    item={item}
+                    attendees={attendeesForEvent}
+                    onPress={(event) =>
+                        navigation.push('Event Details', {
+                            selectedEvent: event,
+                            title: event.name,
+                        })
+                    }
+                    isAdmin
+                    footerContent={adminFooter}
+                    autoHeight
+                    wobbleSaveButton
+                />
         );
     };
 
