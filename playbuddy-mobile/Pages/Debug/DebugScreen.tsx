@@ -1,24 +1,34 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Notifications from 'expo-notifications';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { useUserContext } from '../Auth/hooks/UserContext';
+import { NewsletterSignupModal } from '../NewsletterSignupModal';
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { EventListViewIntroModal } from '../Calendar/ListView/EventListViewIntroModal';
+import { setEventListIntroSeen, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
 import { buildRecommendations, type RecommendationPick } from '../Calendar/hooks/recommendations';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
+import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { useFetchActiveEventPopups, useFetchEventPopups } from '../../Common/db-axios/useEventPopups';
-import { navigateToTab } from '../../Common/Nav/navigationHelpers';
+import { useImportSources } from '../../Common/db-axios/useImportSources';
+import type { Event, EventPopup, ImportSource } from '../../Common/types/commonTypes';
 import type { NavStack } from '../../Common/Nav/NavStackType';
-import type { Event, EventPopup } from '../../Common/types/commonTypes';
-import { ADMIN_EMAILS } from '../../config';
+import { navigateToTab } from '../../Common/Nav/navigationHelpers';
+import { ADMIN_EMAILS, API_BASE_URL } from '../../config';
 import { TZ } from '../Calendar/ListView/calendarNavUtils';
+import { DiscoverGameModal } from '../DiscoverGameModal';
+import { EdgePlayGroupModal } from '../EdgePlayGroupModal';
+import { EventPopupModal } from '../EventPopupModal';
+import { RateAppModal } from '../RateAppModal';
 import {
     getForcedPopupId,
     getLatestPopupShown,
@@ -45,6 +55,10 @@ import {
     setPushNotificationsPrompted,
     unregisterRemotePushToken,
 } from '../../Common/notifications/organizerPushNotifications';
+import {
+    promptDiscoverGameNotifications,
+    resetDiscoverGameNotifications,
+} from '../../Common/notifications/discoverGameNotifications';
 
 type AccordionSectionProps = {
     title: string;
@@ -72,6 +86,7 @@ type ManualPopupItem = {
     id: string;
     title: string;
     eventName: string;
+    hasEvent: boolean;
     createdAt?: number;
     publishedAt?: number;
     expiresAt?: number;
@@ -91,6 +106,10 @@ type PopupNextSummary = {
     daysUntil: number;
 };
 
+type OverallNextSummary =
+    | (PopupNextSummary & { source: 'local' })
+    | { label: string; readyAt: number; daysUntil: number; source: 'manual' };
+
 type PopupStatusTone = 'ready' | 'snoozed' | 'dismissed' | 'shown' | 'pending';
 type PopupStatusCounts = Record<PopupStatusTone, number>;
 
@@ -100,6 +119,7 @@ const POPUP_ICON_MAP: Record<PopupId, { icon: string; color: string; bg: string 
     whatsapp_group: { icon: 'whatsapp', color: colors.accentOrange, bg: colors.accentOrangeSoft },
     rate_app: { icon: 'star', color: colors.accentPurple, bg: colors.accentPurpleSoft },
     discover_game: { icon: 'gamepad', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
+    newsletter_signup: { icon: 'envelope-open-text', color: colors.accentBlue, bg: colors.accentBlueSoft },
 };
 
 const MANUAL_POPUP_ICON = {
@@ -110,7 +130,6 @@ const MANUAL_POPUP_ICON = {
 
 const EVENT_POPUP_HIDE_KEY_PREFIX = 'event_popup_hide_';
 const EVENT_POPUP_SEEN_KEY_PREFIX = 'event_popup_seen_';
-const EVENT_POPUP_FORCE_KEY = 'popup_manager_force_event_popup';
 const CALENDAR_ADD_COACH_COMPLETED_KEY = 'calendar_add_coach_completed_v1';
 
 const getEventPopupHideKey = (id: string) => `${EVENT_POPUP_HIDE_KEY_PREFIX}${id}`;
@@ -186,19 +205,25 @@ const AccordionSection = ({ title, subtitle, expanded, onToggle, children }: Acc
     </View>
 );
 
+const EVENT_STATUS_PREVIEW = 6;
+const SOURCE_STATUS_PREVIEW = 6;
+
 export const DebugScreen = () => {
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
-    const { allEvents, wishlistEvents, wishlistEntryMap } = useCalendarContext();
+    const { allEvents, availableCardsToSwipe, wishlistEvents, wishlistEntryMap } = useCalendarContext();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const { data: publishedEventPopups = [], isLoading: isLoadingPublishedEventPopups, error: publishedEventPopupsError } =
         useFetchEventPopups({ status: 'published' });
     const { data: activeEventPopups = [], isLoading: isLoadingActiveEventPopups } = useFetchActiveEventPopups();
     const [notificationExpanded, setNotificationExpanded] = useState(true);
+    const [statusExpanded, setStatusExpanded] = useState(false);
     const [popupExpanded, setPopupExpanded] = useState(true);
     const [recommendationsExpanded, setRecommendationsExpanded] = useState(false);
+    const [debugPopupId, setDebugPopupId] = useState<PopupId | null>(null);
+    const [debugEventPopup, setDebugEventPopup] = useState<EventPopup | null>(null);
     const [debugStatus, setDebugStatus] = useState<string | null>(null);
     const [notificationDebugLines, setNotificationDebugLines] = useState<string[]>([]);
     const [popupDebugLines, setPopupDebugLines] = useState<string[]>([]);
@@ -206,6 +231,8 @@ export const DebugScreen = () => {
     const [popupDebugStatus, setPopupDebugStatus] = useState<string | null>(null);
     const [popupNextSummary, setPopupNextSummary] = useState<PopupNextSummary | null>(null);
     const [popupInstallAt, setPopupInstallAt] = useState<number | null>(null);
+    const [cacheFlushStatus, setCacheFlushStatus] = useState<string | null>(null);
+    const [cacheFlushPending, setCacheFlushPending] = useState(false);
     const [scheduledNotifications, setScheduledNotifications] = useState<
         {
             id: string;
@@ -216,6 +243,26 @@ export const DebugScreen = () => {
     >([]);
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const canAccess = __DEV__ || isAdmin;
+    const approvalStatuses = canAccess ? ['approved', 'pending', 'rejected'] : undefined;
+
+    const {
+        data: statusEvents = [],
+        isLoading: isLoadingStatusEvents,
+        error: statusEventsError,
+        refetch: refetchStatusEvents,
+    } = useFetchEvents({
+        includeFacilitatorOnly: true,
+        includeHiddenOrganizers: true,
+        includeHidden: true,
+        approvalStatuses,
+    });
+
+    const {
+        data: importSources = [],
+        isLoading: isLoadingImportSources,
+        error: importSourcesError,
+        refetch: refetchImportSources,
+    } = useImportSources({ includeAll: true });
 
     const organizerIdsFromCommunities = useMemo(() => {
         const organizerCommunities = [
@@ -232,6 +279,62 @@ export const DebugScreen = () => {
         const followIds = (follows?.organizer || []).map((id) => id.toString());
         return new Set([...followIds, ...organizerIdsFromCommunities]);
     }, [follows?.organizer, organizerIdsFromCommunities]);
+
+    const eventStatusSummary = useMemo(() => {
+        const buckets: Record<'approved' | 'pending' | 'rejected' | 'unknown', Event[]> = {
+            approved: [],
+            pending: [],
+            rejected: [],
+            unknown: [],
+        };
+        statusEvents.forEach((event) => {
+            const status = event.approval_status ?? 'approved';
+            if (status === 'approved') buckets.approved.push(event);
+            else if (status === 'pending') buckets.pending.push(event);
+            else if (status === 'rejected') buckets.rejected.push(event);
+            else buckets.unknown.push(event);
+        });
+        return buckets;
+    }, [statusEvents]);
+
+    const sourceStatusSummary = useMemo(() => {
+        const totals = { approved: 0, pending: 0, rejected: 0, excluded: 0, total: 0 };
+        const excludedSources: ImportSource[] = [];
+        const rejectedSources: ImportSource[] = [];
+        importSources.forEach((source) => {
+            totals.total += 1;
+            const status = source.approval_status ?? 'approved';
+            if (status === 'approved') totals.approved += 1;
+            else if (status === 'pending') totals.pending += 1;
+            else if (status === 'rejected') {
+                totals.rejected += 1;
+                rejectedSources.push(source);
+            }
+            if (source.is_excluded) {
+                totals.excluded += 1;
+                excludedSources.push(source);
+            }
+        });
+        return { totals, excludedSources, rejectedSources };
+    }, [importSources]);
+
+    const formatEventLabel = (event: Event) => {
+        const name = event.name || `Event ${event.id}`;
+        const organizer = event.organizer?.name ? ` • ${event.organizer.name}` : '';
+        return `${name}${organizer}`;
+    };
+
+    const formatSourceLabel = (source: ImportSource) => {
+        const identifier = source.identifier || '';
+        const base = identifier ? `${source.source}: ${identifier}` : source.source;
+        const status = source.approval_status || 'approved';
+        return `${base} (${status}${source.is_excluded ? ', excluded' : ''})`;
+    };
+
+    const formatQueryError = (error: unknown) => {
+        if (!error) return null;
+        return error instanceof Error ? error.message : String(error);
+    };
 
     const getPromoCodesForEvent = useCallback((event: Event) => {
         const deepLinkPromo =
@@ -279,10 +382,26 @@ export const DebugScreen = () => {
         const reasonLabel = pick.reason.replace("-", " ");
         const addedAt = pick.wishlistCreatedAt ? ` • added ${pick.wishlistCreatedAt}` : "";
         const startsAt = pick.event.start_date ? ` • starts ${pick.event.start_date}` : "";
-        const name = pick.event.name || `Event ${pick.event.id}`;
-        const organizer = pick.event.organizer?.name ? ` • ${pick.event.organizer.name}` : "";
-        return `${promoLabel} • ${reasonLabel} • ${name}${organizer}${addedAt}${startsAt}`;
+        return `${promoLabel} • ${reasonLabel} • ${formatEventLabel(pick.event)}${addedAt}${startsAt}`;
     };
+
+    const onPressFlushEventsCache = useCallback(async () => {
+        if (!canAccess || cacheFlushPending) return;
+        setCacheFlushPending(true);
+        setCacheFlushStatus('Flushing events cache...');
+        try {
+            await axios.get(`${API_BASE_URL}/events`, {
+                params: { flushCache: true },
+            });
+            setCacheFlushStatus('Events cache flushed.');
+            await refetchStatusEvents();
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            setCacheFlushStatus(`Events cache flush failed: ${message}`);
+        } finally {
+            setCacheFlushPending(false);
+        }
+    }, [API_BASE_URL, cacheFlushPending, canAccess, refetchStatusEvents]);
 
     const refreshNotificationDebugInfo = useCallback(
         async (context?: string) => {
@@ -585,6 +704,18 @@ export const DebugScreen = () => {
         })();
     };
 
+    const onPressDiscoverGameNotificationPrompt = () => {
+        void promptDiscoverGameNotifications({ availableCardsToSwipe });
+    };
+
+    const onPressResetDiscoverGameNotifications = () => {
+        void (async () => {
+            await resetDiscoverGameNotifications();
+            setDebugStatus('Reset Discover Game notification state.');
+            await refreshNotificationDebugInfo('reset discover game notifications');
+        })();
+    };
+
     const onPressResetNotificationPermissions = () => {
         Alert.alert(
             'Reset notifications?',
@@ -627,21 +758,36 @@ export const DebugScreen = () => {
         })();
     }, [refreshPopupDebugInfo]);
 
+    const dismissDebugPopup = useCallback(() => {
+        setDebugPopupId(null);
+    }, []);
+
+    const dismissDebugEventPopup = useCallback(() => {
+        setDebugEventPopup(null);
+    }, []);
+
     const onPressShowPopup = useCallback((popupId: PopupId) => {
-        void (async () => {
-            await setForcedPopupId(popupId);
-            setPopupDebugStatus(`Queued ${POPUP_CONFIG[popupId].label} popup. Opening Calendar...`);
-            navigateToTab(navigation, 'Calendar');
-        })();
+        if (popupId === 'calendar_add_coach') {
+            setDebugEventPopup(null);
+            setDebugPopupId(null);
+            setPopupDebugStatus(`Showing ${POPUP_CONFIG[popupId].label} popup.`);
+            void (async () => {
+                await setForcedPopupId(popupId);
+                navigation.popToTop();
+                navigateToTab(navigation, 'Calendar', { screen: 'Calendar Home' });
+            })();
+            return;
+        }
+        setDebugEventPopup(null);
+        setDebugPopupId(popupId);
+        setPopupDebugStatus(`Showing ${POPUP_CONFIG[popupId].label} popup.`);
     }, [navigation]);
 
     const onPressShowManualPopup = useCallback((popup: EventPopup) => {
-        void (async () => {
-            await AsyncStorage.setItem(EVENT_POPUP_FORCE_KEY, JSON.stringify(popup));
-            setPopupDebugStatus(`Queued ${popup.title} special event popup. Opening Calendar...`);
-            navigateToTab(navigation, 'Calendar');
-        })();
-    }, [navigation]);
+        setDebugPopupId(null);
+        setDebugEventPopup(popup);
+        setPopupDebugStatus(`Showing ${popup.title} message popup.`);
+    }, []);
 
     const onPressClearCalendarAddToast = useCallback(() => {
         void (async () => {
@@ -654,6 +800,12 @@ export const DebugScreen = () => {
             }
         })();
     }, []);
+
+    const handleDebugListViewChoice = useCallback((mode: 'classic' | 'image') => {
+        void setEventListViewMode(mode);
+        void setEventListIntroSeen(true);
+        dismissDebugPopup();
+    }, [dismissDebugPopup]);
 
     const now = Date.now();
     const manualPopupSource = isAdmin ? publishedEventPopups : activeEventPopups;
@@ -721,44 +873,44 @@ export const DebugScreen = () => {
             return (a.publishedAt ?? 0) - (b.publishedAt ?? 0);
         });
     }, [manualPopupSource, now, popupInstallAt, manualPopupStateMap]);
-    const nextManualPopup = useMemo(() => {
+    const nextManualPopupItem = useMemo(() => {
         const candidates = manualPopupItems.filter(
             (item) => item.status !== 'expired' && !item.createdAfterInstall
         );
         if (!candidates.length) return null;
-        return candidates.reduce<{
-            label: string;
-            readyAt: number;
-            daysUntil: number;
-        } | null>((best, item) => {
+        return candidates.reduce<{ item: ManualPopupItem; readyAt: number } | null>((best, item) => {
             const readyAt = item.status === 'scheduled'
                 ? item.publishedAt ?? now
                 : now;
             if (!best || readyAt < best.readyAt) {
-                return {
-                    label: item.title,
-                    readyAt,
-                    daysUntil: getDaysFromNow(readyAt, now),
-                };
+                return { item, readyAt };
             }
             return best;
         }, null);
     }, [manualPopupItems, now]);
+    const nextManualPopupSummary = useMemo(() => {
+        if (!nextManualPopupItem) return null;
+        return {
+            label: nextManualPopupItem.item.title,
+            readyAt: nextManualPopupItem.readyAt,
+            daysUntil: getDaysFromNow(nextManualPopupItem.readyAt, now),
+        };
+    }, [nextManualPopupItem, now]);
     const overallNextSummary = useMemo(() => {
-        if (!popupNextSummary && !nextManualPopup) return null;
-        if (!nextManualPopup) {
+        if (!popupNextSummary && !nextManualPopupSummary) return null;
+        if (!nextManualPopupSummary) {
             return popupNextSummary
                 ? { ...popupNextSummary, source: 'local' as const }
                 : null;
         }
         if (!popupNextSummary) {
-            return { ...nextManualPopup, source: 'manual' as const };
+            return { ...nextManualPopupSummary, source: 'manual' as const };
         }
-        if (popupNextSummary.readyAt <= nextManualPopup.readyAt) {
+        if (popupNextSummary.readyAt <= nextManualPopupSummary.readyAt) {
             return { ...popupNextSummary, source: 'local' as const };
         }
-        return { ...nextManualPopup, source: 'manual' as const };
-    }, [nextManualPopup, popupNextSummary]);
+        return { ...nextManualPopupSummary, source: 'manual' as const };
+    }, [nextManualPopupSummary, popupNextSummary]);
     const popupStats = getPopupStats(popupDebugItems, now);
     const popupStatCards = [
         {
@@ -793,6 +945,19 @@ export const DebugScreen = () => {
         : overallNextSummary && 'id' in overallNextSummary
             ? POPUP_ICON_MAP[overallNextSummary.id]
             : null;
+    const handleShowNextPopup = useCallback(() => {
+        if (!overallNextSummary) return;
+        if (overallNextSummary.source === 'manual') {
+            const manualItem = nextManualPopupItem?.item;
+            if (!manualItem) {
+                setPopupDebugStatus('Unable to locate the next special popup.');
+                return;
+            }
+            onPressShowManualPopup(manualItem.source);
+            return;
+        }
+        onPressShowPopup(overallNextSummary.id);
+    }, [overallNextSummary, nextManualPopupItem, onPressShowManualPopup, onPressShowPopup]);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -813,6 +978,97 @@ export const DebugScreen = () => {
 
                     {canAccess && (
                         <AccordionSection
+                            title="Event approvals"
+                            subtitle="Approved, rejected, and excluded snapshot"
+                            expanded={statusExpanded}
+                            onToggle={() => setStatusExpanded((prev) => !prev)}
+                        >
+                            <TouchableOpacity
+                                style={styles.secondaryButton}
+                                onPress={() => {
+                                    void refetchStatusEvents();
+                                    void refetchImportSources();
+                                }}
+                            >
+                                <Text style={styles.secondaryButtonText}>Refresh status snapshot</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.secondaryButton}
+                                onPress={onPressFlushEventsCache}
+                                disabled={cacheFlushPending}
+                            >
+                                <Text style={styles.secondaryButtonText}>
+                                    Flush events cache
+                                </Text>
+                            </TouchableOpacity>
+                            {!isAdmin && (
+                                <Text style={styles.debugMeta}>
+                                    Admin auth required to see rejected/excluded data.
+                                </Text>
+                            )}
+                            {(isLoadingStatusEvents || isLoadingImportSources) && (
+                                <Text style={styles.debugMeta}>Loading status snapshot...</Text>
+                            )}
+                            {formatQueryError(statusEventsError) && (
+                                <Text style={styles.debugMeta}>
+                                    Event status error: {formatQueryError(statusEventsError)}
+                                </Text>
+                            )}
+                            {formatQueryError(importSourcesError) && (
+                                <Text style={styles.debugMeta}>
+                                    Source status error: {formatQueryError(importSourcesError)}
+                                </Text>
+                            )}
+                            {!!cacheFlushStatus && (
+                                <Text style={styles.debugMeta}>{cacheFlushStatus}</Text>
+                            )}
+                            <Text style={styles.debugMeta}>
+                                Events: approved {eventStatusSummary.approved.length} • pending {eventStatusSummary.pending.length} • rejected {eventStatusSummary.rejected.length} • unknown {eventStatusSummary.unknown.length}
+                            </Text>
+                            <Text style={styles.debugMeta}>
+                                Sources: approved {sourceStatusSummary.totals.approved} • pending {sourceStatusSummary.totals.pending} • rejected {sourceStatusSummary.totals.rejected} • excluded {sourceStatusSummary.totals.excluded} • total {sourceStatusSummary.totals.total}
+                            </Text>
+                            <View style={{ marginTop: spacing.sm, gap: spacing.xxs }}>
+                                <Text style={styles.debugMeta}>Rejected events (first {EVENT_STATUS_PREVIEW}):</Text>
+                                {eventStatusSummary.rejected.length ? (
+                                    eventStatusSummary.rejected.slice(0, EVENT_STATUS_PREVIEW).map((event) => (
+                                        <Text key={`rejected-${event.id}`} style={styles.debugMeta}>
+                                            {formatEventLabel(event)}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.debugMeta}>No rejected events found.</Text>
+                                )}
+                            </View>
+                            <View style={{ marginTop: spacing.sm, gap: spacing.xxs }}>
+                                <Text style={styles.debugMeta}>Excluded sources (first {SOURCE_STATUS_PREVIEW}):</Text>
+                                {sourceStatusSummary.excludedSources.length ? (
+                                    sourceStatusSummary.excludedSources.slice(0, SOURCE_STATUS_PREVIEW).map((source) => (
+                                        <Text key={`excluded-${source.id ?? source.identifier}`} style={styles.debugMeta}>
+                                            {formatSourceLabel(source)}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.debugMeta}>No excluded sources found.</Text>
+                                )}
+                            </View>
+                            <View style={{ marginTop: spacing.sm, gap: spacing.xxs }}>
+                                <Text style={styles.debugMeta}>Rejected sources (first {SOURCE_STATUS_PREVIEW}):</Text>
+                                {sourceStatusSummary.rejectedSources.length ? (
+                                    sourceStatusSummary.rejectedSources.slice(0, SOURCE_STATUS_PREVIEW).map((source) => (
+                                        <Text key={`rejected-source-${source.id ?? source.identifier}`} style={styles.debugMeta}>
+                                            {formatSourceLabel(source)}
+                                        </Text>
+                                    ))
+                                ) : (
+                                    <Text style={styles.debugMeta}>No rejected sources found.</Text>
+                                )}
+                            </View>
+                        </AccordionSection>
+                    )}
+
+                    {canAccess && (
+                        <AccordionSection
                             title="Notifications"
                             subtitle="Reminders, permissions, and scheduled jobs"
                             expanded={notificationExpanded}
@@ -826,6 +1082,18 @@ export const DebugScreen = () => {
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.secondaryButton} onPress={onPressClearOrganizerReminders}>
                                 <Text style={styles.secondaryButtonText}>Clear organizer reminders</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.secondaryButton}
+                                onPress={onPressDiscoverGameNotificationPrompt}
+                            >
+                                <Text style={styles.secondaryButtonText}>Prompt Discover Game notifications</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.secondaryButton}
+                                onPress={onPressResetDiscoverGameNotifications}
+                            >
+                                <Text style={styles.secondaryButtonText}>Reset Discover Game notifications</Text>
                             </TouchableOpacity>
                             {__DEV__ && (
                                 <TouchableOpacity
@@ -870,7 +1138,7 @@ export const DebugScreen = () => {
                     {canAccess && (
                         <AccordionSection
                             title="Recommendations"
-                            subtitle="My Calendar picks vs followed organizers"
+                            subtitle="Calendar picks vs followed organizers"
                             expanded={recommendationsExpanded}
                             onToggle={() => setRecommendationsExpanded((prev) => !prev)}
                         >
@@ -1016,6 +1284,12 @@ export const DebugScreen = () => {
                                             </Text>
                                         </View>
                                     </View>
+                                    <TouchableOpacity
+                                        style={styles.popupShowButton}
+                                        onPress={handleShowNextPopup}
+                                    >
+                                        <Text style={styles.popupShowButtonText}>Show now</Text>
+                                    </TouchableOpacity>
                                 </View>
                             )}
                             <View style={styles.popupQueueSection}>
@@ -1117,17 +1391,17 @@ export const DebugScreen = () => {
                                 )}
                             </View>
                             <View style={styles.popupManualSection}>
-                                <Text style={styles.popupQueueHeader}>Special Event Popups</Text>
+                                <Text style={styles.popupQueueHeader}>Special Message Popups</Text>
                                 {manualPopupsLoading && (
-                                    <Text style={styles.debugMeta}>Loading special event popups...</Text>
+                                    <Text style={styles.debugMeta}>Loading message popups...</Text>
                                 )}
                                 {!!manualPopupsError && (
                                     <Text style={styles.debugMeta}>
-                                        Special event popups unavailable (admin access required).
+                                        Message popups unavailable (admin access required).
                                     </Text>
                                 )}
                                 {!manualPopupsLoading && !manualPopupsError && manualPopupItems.length === 0 && (
-                                    <Text style={styles.debugMeta}>No special event popups scheduled.</Text>
+                                    <Text style={styles.debugMeta}>No message popups scheduled.</Text>
                                 )}
                                 <View style={styles.manualPopupList}>
                                     {manualPopupItems.map((popup) => {
@@ -1151,7 +1425,7 @@ export const DebugScreen = () => {
                                                     <View style={styles.popupCardTitleBlock}>
                                                         <Text style={styles.popupCardTitle}>{popup.title}</Text>
                                                         <Text style={styles.popupCardSubtitle}>
-                                                            {`Event · ${popup.eventName}`}
+                                                            {popup.hasEvent ? `Event · ${popup.eventName}` : 'Message only'}
                                                         </Text>
                                                     </View>
                                                     <View
@@ -1207,6 +1481,37 @@ export const DebugScreen = () => {
                         </AccordionSection>
                     )}
                 </ScrollView>
+                <EventPopupModal
+                    visible={!!debugEventPopup}
+                    popup={debugEventPopup}
+                    onDismiss={dismissDebugEventPopup}
+                    onPrimaryAction={dismissDebugEventPopup}
+                />
+                <EventListViewIntroModal
+                    visible={debugPopupId === 'list_view_intro'}
+                    onSwitchToClassic={() => handleDebugListViewChoice('classic')}
+                    onKeepNew={() => handleDebugListViewChoice('image')}
+                />
+                <EdgePlayGroupModal
+                    visible={debugPopupId === 'whatsapp_group'}
+                    onDismiss={dismissDebugPopup}
+                    onSnooze={dismissDebugPopup}
+                />
+                <RateAppModal
+                    visible={debugPopupId === 'rate_app'}
+                    onDismiss={dismissDebugPopup}
+                    onSnooze={dismissDebugPopup}
+                />
+                <DiscoverGameModal
+                    visible={debugPopupId === 'discover_game'}
+                    onDismiss={dismissDebugPopup}
+                    onSnooze={dismissDebugPopup}
+                />
+                <NewsletterSignupModal
+                    visible={debugPopupId === 'newsletter_signup'}
+                    onDismiss={dismissDebugPopup}
+                    onSnooze={dismissDebugPopup}
+                />
             </LinearGradient>
         </SafeAreaView>
     );
@@ -1685,7 +1990,8 @@ const buildManualPopupItem = (
     const publishedAt = parseIsoTimestamp(popup.published_at);
     const expiresAt = parseIsoTimestamp(popup.expires_at);
     const eventEndsAt = parseIsoTimestamp(popup.event?.end_date ?? popup.event?.start_date);
-    const eventName = popup.event?.name || (popup.event_id ? `Event #${popup.event_id}` : 'Event');
+    const hasEvent = !!(popup.event || popup.event_id);
+    const eventName = popup.event?.name || (popup.event_id ? `Event #${popup.event_id}` : 'No event');
     const status = getManualPopupStatus(publishedAt, expiresAt, eventEndsAt, now);
     const createdAfterInstall = !!(installAt && createdAt && createdAt > installAt);
     const dismissed = localState?.dismissed;
@@ -1696,6 +2002,7 @@ const buildManualPopupItem = (
         id: popup.id,
         title: popup.title,
         eventName,
+        hasEvent,
         createdAt,
         publishedAt,
         expiresAt,

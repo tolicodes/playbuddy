@@ -210,6 +210,11 @@ export const NotificationsScreen = () => {
 
     const onPressNotification = useCallback(
         async (item: NotificationHistoryItem) => {
+            if (item.source === 'discover_game') {
+                await setNotificationHistorySeenAt(Date.now());
+                navigateToTab(navigation, 'More', { screen: 'Discover Game' });
+                return;
+            }
             const rawEventId = item.eventId;
             const eventId = typeof rawEventId === 'number' ? rawEventId : Number(rawEventId);
             if (!eventId || Number.isNaN(eventId)) return;
@@ -278,7 +283,7 @@ export const NotificationsScreen = () => {
                                 const eventId = typeof rawEventId === 'number' ? rawEventId : Number(rawEventId);
                                 const event = Number.isNaN(eventId) ? null : eventsById.get(eventId);
                                 const imageUrl = item.imageUrl || event?.image_url || '';
-                                const isInteractive = !!event;
+                                const isInteractive = !!event || item.source === 'discover_game';
                                 return (
                                     <Pressable
                                         key={item.id}

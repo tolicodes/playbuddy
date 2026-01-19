@@ -6,7 +6,7 @@ export type NotificationHistoryItem = {
     title: string;
     body: string;
     createdAt: number;
-    source?: 'organizer' | 'test' | 'badge' | 'broadcast' | 'admin_review';
+    source?: 'organizer' | 'test' | 'badge' | 'broadcast' | 'admin_review' | 'discover_game';
     eventId?: number;
     imageUrl?: string;
 };

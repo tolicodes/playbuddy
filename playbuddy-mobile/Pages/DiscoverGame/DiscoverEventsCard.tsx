@@ -71,29 +71,13 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event })
         logEvent(UE.DiscoverEventsMoreInfoClicked, { event_id: event.id });
     }, [event.id, ticketUrl]);
 
-    const footerContent = description || ticketUrl || adminLines.length ? (
+    const footerContent = description || ticketUrl ? (
         <View>
             <View style={styles.footerDivider} />
             {description ? (
                 <Text style={styles.description} numberOfLines={4}>
                     {description}
                 </Text>
-            ) : null}
-            {adminLines.length ? (
-                <View style={styles.adminSection}>
-                    <Text style={styles.adminHeading}>Admin details</Text>
-                    <ScrollView
-                        style={styles.adminScroll}
-                        contentContainerStyle={styles.adminScrollContent}
-                        showsVerticalScrollIndicator
-                    >
-                        {adminLines.map(line => (
-                            <Text key={line.label} style={styles.adminLine}>
-                                <Text style={styles.adminLabel}>{line.label}:</Text> {line.value}
-                            </Text>
-                        ))}
-                    </ScrollView>
-                </View>
             ) : null}
             {ticketUrl ? (
                 <TouchableOpacity
@@ -119,7 +103,24 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event })
                 isAdmin={isAdmin}
                 cardHeight={DISCOVER_CARD_HEIGHT}
                 footerContent={footerContent ?? undefined}
+                hideSaveButton
             />
+            {adminLines.length ? (
+                <View style={styles.adminSection}>
+                    <Text style={styles.adminHeading}>Admin details</Text>
+                    <ScrollView
+                        style={styles.adminScroll}
+                        contentContainerStyle={styles.adminScrollContent}
+                        showsVerticalScrollIndicator
+                    >
+                        {adminLines.map(line => (
+                            <Text key={line.label} style={styles.adminLine}>
+                                <Text style={styles.adminLabel}>{line.label}:</Text> {line.value}
+                            </Text>
+                        ))}
+                    </ScrollView>
+                </View>
+            ) : null}
         </View>
     );
 };
@@ -143,6 +144,7 @@ const styles = StyleSheet.create({
         borderRadius: 1,
     },
     adminSection: {
+        marginTop: spacing.mdPlus,
         marginBottom: spacing.mdPlus,
     },
     adminHeading: {

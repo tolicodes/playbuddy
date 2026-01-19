@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 
 import type { Event } from '../../commonTypes';
 import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
+import { navigateToTab } from '../Nav/navigationHelpers';
 import { navigationRef } from '../Nav/navigationRef';
 import { setNotificationHistorySeenAt, upsertNotificationHistoryItem } from './notificationHistory';
 
@@ -14,8 +15,20 @@ type NotificationData = {
     sendAt?: number;
 };
 
+const ALLOWED_SOURCES = new Set(['test', 'badge', 'organizer', 'broadcast', 'admin_review', 'discover_game']);
+
 const MAX_NAVIGATION_ATTEMPTS = 5;
 const NAVIGATION_RETRY_DELAY_MS = 300;
+
+const navigateToDiscoverGame = (attempts = MAX_NAVIGATION_ATTEMPTS) => {
+    if (navigationRef.isReady()) {
+        navigateToTab(navigationRef as any, 'More', { screen: 'Discover Game' });
+        return;
+    }
+
+    if (attempts <= 0) return;
+    setTimeout(() => navigateToDiscoverGame(attempts - 1), NAVIGATION_RETRY_DELAY_MS);
+};
 
 const navigateToEventDetails = (event: Event, attempts = MAX_NAVIGATION_ATTEMPTS) => {
     if (navigationRef.isReady()) {
@@ -58,18 +71,14 @@ export const NotificationResponseHandler = () => {
                     ? notificationDate
                     : Date.now();
 
-            const source =
-                data?.source === 'test' ||
-                data?.source === 'badge' ||
-                data?.source === 'organizer' ||
-                data?.source === 'broadcast'
-                    ? data.source
-                    : 'organizer';
+            const source = typeof data?.source === 'string' && ALLOWED_SOURCES.has(data.source)
+                ? data.source
+                : 'organizer';
 
             const rawEventId = data?.eventId;
             const eventId = typeof rawEventId === 'number' ? rawEventId : Number(rawEventId);
             const hasEventId = !!eventId && !Number.isNaN(eventId);
-            if (!hasEventId && source !== 'broadcast') return;
+            if (!hasEventId && source !== 'broadcast' && source !== 'admin_review' && source !== 'discover_game') return;
 
             await upsertNotificationHistoryItem({
                 title: content.title || 'Notification',
@@ -100,6 +109,13 @@ export const NotificationResponseHandler = () => {
 
             const data = response.notification.request.content.data as NotificationData | undefined;
             const rawEventId = data?.eventId;
+            const source = typeof data?.source === 'string' && ALLOWED_SOURCES.has(data.source)
+                ? data.source
+                : null;
+            if (source === 'discover_game') {
+                navigateToDiscoverGame();
+                return;
+            }
             const eventId = typeof rawEventId === 'number' ? rawEventId : Number(rawEventId);
             if (!eventId || Number.isNaN(eventId)) return;
 

@@ -41,7 +41,7 @@ export function DiscoverGameModal({ visible, onDismiss, onSnooze }: DiscoverGame
                     <View style={styles.iconWrap}>
                         <FontAwesome5 name="gamepad" size={26} color={colors.accentGreen} />
                     </View>
-                    <Text style={styles.title}>Try Discover Game</Text>
+                    <Text style={styles.title}>Swipe Your Week</Text>
                     <Text style={styles.subtitle}>
                         Discover Game is a fast, fun way to swipe through events and add favorites to your
                         calendar. Plan your week in minutes.

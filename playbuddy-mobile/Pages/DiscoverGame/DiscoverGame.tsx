@@ -22,6 +22,10 @@ import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useBadgeNotifications } from '../../Common/Nav/useBadgeNotifications';
 import { logEvent } from '../../Common/hooks/logger';
+import {
+    promptDiscoverGameNotifications,
+    recordDiscoverGameSwipe,
+} from '../../Common/notifications/discoverGameNotifications';
 
 import { DiscoverEventsTour } from './DiscoverEventsTour';
 import { DiscoverEventsCard } from './DiscoverEventsCard';
@@ -46,7 +50,7 @@ export const DiscoverGame: React.FC = () => {
 
     const { visible: discoverEventsTourVisible, saveVisible: setDiscoverEventsTourVisible } = useShowDiscoverEventsTour();
 
-    // Show a badge count for how many cards remain
+    // Keep Discover Game reminder notifications in sync with new events.
     useBadgeNotifications({ availableCardsToSwipe });
 
     // history for undo
@@ -97,6 +101,13 @@ export const DiscoverGame: React.FC = () => {
                     ...history,
                     { index: cardIndex, direction }
                 ]);
+
+                void (async () => {
+                    const swipeCount = await recordDiscoverGameSwipe();
+                    if (swipeCount >= 10) {
+                        await promptDiscoverGameNotifications({ availableCardsToSwipe });
+                    }
+                })();
             };
 
     const onSwipeRight = handleSwipe('right');
