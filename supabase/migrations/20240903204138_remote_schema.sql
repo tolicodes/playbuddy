@@ -1,0 +1,1 @@
+-- Remote migration placeholder; upstream recorded this version with no statements.
