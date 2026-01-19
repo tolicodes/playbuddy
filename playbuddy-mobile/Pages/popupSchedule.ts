@@ -7,9 +7,11 @@ const DEFAULT_SNOOZE_MS = 14 * DAY_MS;
 const LIST_VIEW_INTRO_DELAY_MS = 3 * 60 * 1000;
 const CALENDAR_ADD_COACH_DELAY_MS = 5 * 60 * 1000;
 const NEWSLETTER_DELAY_MS = 3 * DAY_MS;
+const SHARE_CALENDAR_DELAY_MS = NEWSLETTER_DELAY_MS;
 const EDGE_PLAY_DELAY_MS = 6 * DAY_MS;
 const RATE_APP_DELAY_MS = 9 * DAY_MS;
 const DISCOVER_GAME_DELAY_MS = 12 * DAY_MS;
+const BUDDY_LIST_COACH_DELAY_MS = DISCOVER_GAME_DELAY_MS + POPUP_INTERVAL_MS;
 
 export const POPUP_SCHEDULE = [
     {
@@ -25,6 +27,13 @@ export const POPUP_SCHEDULE = [
         initialDelayMs: CALENDAR_ADD_COACH_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: false,
+    },
+    {
+        id: 'share_calendar',
+        label: 'Share your calendar',
+        initialDelayMs: SHARE_CALENDAR_DELAY_MS,
+        snoozeMs: DEFAULT_SNOOZE_MS,
+        useInterval: true,
     },
     {
         id: 'newsletter_signup',
@@ -51,6 +60,13 @@ export const POPUP_SCHEDULE = [
         id: 'discover_game',
         label: 'Try Discover Game',
         initialDelayMs: DISCOVER_GAME_DELAY_MS,
+        snoozeMs: DEFAULT_SNOOZE_MS,
+        useInterval: true,
+    },
+    {
+        id: 'buddy_list_coach',
+        label: 'Buddy list coach',
+        initialDelayMs: BUDDY_LIST_COACH_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: true,
     },

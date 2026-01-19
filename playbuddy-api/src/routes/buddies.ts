@@ -49,6 +49,47 @@ router.get('/', authenticateRequest, asyncHandler(async (req: AuthenticatedReque
     }
 }));
 
+// Search for buddies
+router.get('/search', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+    if (!query || query.length < 2) {
+        return res.status(200).json([]);
+    }
+
+    const { data: buddyRows, error: buddiesError } = await supabaseClient
+        .from('buddies')
+        .select('auth_user_id, buddy_auth_user_id')
+        .or(`auth_user_id.eq.${req.authUserId},buddy_auth_user_id.eq.${req.authUserId}`);
+
+    if (buddiesError) {
+        console.error('Error fetching buddies for search', buddiesError);
+        return res.status(500).json({ error: 'Failed to search buddies' });
+    }
+
+    const buddyIds = new Set<string>();
+    for (const buddy of buddyRows || []) {
+        const buddyId = buddy.buddy_auth_user_id === req.authUserId ? buddy.auth_user_id : buddy.buddy_auth_user_id;
+        if (buddyId) buddyIds.add(buddyId);
+    }
+    if (req.authUserId) {
+        buddyIds.add(req.authUserId);
+    }
+
+    const { data, error } = await supabaseClient
+        .from('users')
+        .select('user_id, name, avatar_url')
+        .or(`name.ilike.%${query}%,share_code.ilike.%${query}%`)
+        .limit(25);
+
+    if (error) {
+        console.error('Error searching buddies', error);
+        return res.status(500).json({ error: 'Failed to search buddies' });
+    }
+
+    const filtered = (data || []).filter((user) => user?.user_id && !buddyIds.has(user.user_id));
+    return res.status(200).json(filtered);
+}));
+
 // Add a new buddy
 router.post('/add', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     let { buddyUserId, shareCode } = req.body;
@@ -87,6 +128,34 @@ router.post('/add', authenticateRequest, asyncHandler(async (req: AuthenticatedR
         } else {
             return res.status(500).json({ error: 'Failed to add buddy' });
         }
+    }
+}));
+
+// Remove a buddy
+router.delete('/:buddyUserId', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const { buddyUserId } = req.params;
+
+    if (!buddyUserId) {
+        return res.status(400).json({ error: 'Buddy user ID is required' });
+    }
+
+    try {
+        const { error } = await supabaseClient
+            .from('buddies')
+            .delete()
+            .or(
+                `and(auth_user_id.eq.${req.authUserId},buddy_auth_user_id.eq.${buddyUserId}),` +
+                `and(auth_user_id.eq.${buddyUserId},buddy_auth_user_id.eq.${req.authUserId})`
+            );
+
+        if (error) throw error;
+
+        return res.status(200).json({ success: true });
+    } catch (error) {
+        if (error instanceof Error) {
+            return res.status(500).json({ error: error.message });
+        }
+        return res.status(500).json({ error: 'Failed to remove buddy' });
     }
 }));
 

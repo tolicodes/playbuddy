@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import FAIcon from 'react-native-vector-icons/FontAwesome';
 import { useIsFocused, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { RateAppModal } from './RateAppModal';
 import { EventPopupModal } from './EventPopupModal';
 import { DiscoverGameModal } from './DiscoverGameModal';
 import { NewsletterSignupModal } from './NewsletterSignupModal';
+import { ShareCalendarModal } from './ShareCalendarModal';
 import { EventListViewIntroModal } from './Calendar/ListView/EventListViewIntroModal';
 import {
     EventListViewMode,
@@ -47,8 +48,7 @@ const EVENT_POPUP_DELAY_MS = __DEV__ ? 5 * 1000 : 60 * 1000;
 const DEBUG_ALWAYS_ENABLE_EVENT_POPUP = __DEV__;
 const LIST_VIEW_INTRO_CUTOFF_MS = Date.parse('2026-01-12T00:00:00Z');
 const CALENDAR_ADD_COACH_COMPLETED_KEY = 'calendar_add_coach_completed_v1';
-const CALENDAR_COACH_INTRO_TOAST_MS = 9000;
-const CALENDAR_COACH_SUCCESS_TOAST_MS = 8000;
+const CALENDAR_COACH_TITLE = 'Calendar coach';
 
 type CalendarCoachVariant = 'intro' | 'success';
 
@@ -138,7 +138,6 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         variant: CalendarCoachVariant;
     } | null>(null);
     const calendarCoachAnim = useRef(new Animated.Value(0)).current;
-    const calendarCoachTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const calendarCoachOnHideRef = useRef<(() => void) | null>(null);
     const calendarCoachIntroSeenRef = useRef(false);
     const { data: eventPopups, isLoading: isLoadingEventPopups } = useFetchActiveEventPopups();
@@ -207,36 +206,23 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         hasShownThisSessionRef.current = hasShownThisSession;
     }, [hasShownThisSession]);
 
-    const clearCalendarCoachTimer = useCallback(() => {
-        if (calendarCoachTimerRef.current) {
-            clearTimeout(calendarCoachTimerRef.current);
-            calendarCoachTimerRef.current = null;
-        }
-    }, []);
-
     const showCalendarCoachToast = useCallback((
         message: string,
         variant: CalendarCoachVariant,
-        options?: { durationMs?: number; onComplete?: () => void },
+        options?: { onComplete?: () => void },
     ) => {
         setCalendarCoachToast({ message, variant });
         calendarCoachOnHideRef.current = options?.onComplete ?? null;
-        clearCalendarCoachTimer();
-        const durationMs = options?.durationMs
-            ?? (variant === 'intro' ? CALENDAR_COACH_INTRO_TOAST_MS : CALENDAR_COACH_SUCCESS_TOAST_MS);
-        calendarCoachTimerRef.current = setTimeout(() => {
-            setCalendarCoachToast(null);
-            const onComplete = calendarCoachOnHideRef.current;
-            calendarCoachOnHideRef.current = null;
-            if (onComplete) {
-                onComplete();
-            }
-        }, durationMs);
-    }, [clearCalendarCoachTimer]);
+    }, []);
 
-    useEffect(() => () => {
-        clearCalendarCoachTimer();
-    }, [clearCalendarCoachTimer]);
+    const handleCalendarCoachDismiss = useCallback(() => {
+        setCalendarCoachToast(null);
+        const onComplete = calendarCoachOnHideRef.current;
+        calendarCoachOnHideRef.current = null;
+        if (onComplete) {
+            onComplete();
+        }
+    }, []);
 
     useEffect(() => {
         if (calendarCoachToast) {
@@ -364,7 +350,15 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
     }, [state, updatePopupState, userProfile]);
 
     useEffect(() => {
-        if (!forcedPopupId) return;
+        if (!state) return;
+        if (!userProfile || userProfile.share_calendar !== true) return;
+        const shareCalendarPopup = state.popups.share_calendar;
+        if (shareCalendarPopup?.dismissed) return;
+        updatePopupState('share_calendar', { dismissed: true, snoozeUntil: undefined });
+    }, [state, updatePopupState, userProfile]);
+
+    useEffect(() => {
+        if (!forcedPopupId || forcedPopupId === 'buddy_list_coach') return;
         if (activePopupId || activeEventPopup) return;
         const now = Date.now();
 
@@ -470,6 +464,10 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         && !!userProfile
         && userProfile.joined_newsletter !== true
         && hasInstallFlag;
+    const canShowShareCalendarModal = !!authUserId
+        && !!userProfile
+        && userProfile.share_calendar !== true
+        && hasInstallFlag;
     const signupAt = useMemo(() => {
         const profileCreatedAt = (userProfile as { created_at?: string | null } | null)?.created_at ?? null;
         const sessionCreatedAt = session?.user?.created_at ?? null;
@@ -491,8 +489,10 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
     const isPopupEligible = useCallback((id: PopupId) => {
         if (id === 'list_view_intro') return canShowListViewIntro;
         if (id === 'newsletter_signup') return canShowNewsletterModal;
+        if (id === 'buddy_list_coach') return false;
+        if (id === 'share_calendar') return canShowShareCalendarModal;
         return true;
-    }, [canShowListViewIntro, canShowNewsletterModal]);
+    }, [canShowListViewIntro, canShowNewsletterModal, canShowShareCalendarModal]);
 
     const hasPendingEventPopup = eventPopupReady && !!nextEventPopup;
 
@@ -690,7 +690,6 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 return;
             }
             showCalendarCoachToast('press the save button to add to calendar', 'intro', {
-                durationMs: CALENDAR_COACH_INTRO_TOAST_MS,
                 onComplete: () => dismissPopup('calendar_add_coach'),
             });
         })();
@@ -781,8 +780,13 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 onDismiss={() => dismissPopup('newsletter_signup')}
                 onSnooze={() => snoozePopup('newsletter_signup')}
             />
+            <ShareCalendarModal
+                visible={activePopupId === 'share_calendar'}
+                onDismiss={() => dismissPopup('share_calendar')}
+                onSnooze={() => snoozePopup('share_calendar')}
+            />
             <View
-                pointerEvents="none"
+                pointerEvents={calendarCoachToast ? 'box-none' : 'none'}
                 accessibilityElementsHidden={!calendarCoachToast}
                 importantForAccessibility={calendarCoachToast ? 'yes' : 'no-hide-descendants'}
                 style={[styles.calendarCoachBackdrop, { bottom: calendarCoachBottom }]}
@@ -796,7 +800,20 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                         },
                     ]}
                 >
-                    <View style={styles.calendarCoachRow}>
+                    <View style={styles.calendarCoachHeader}>
+                        <View style={styles.calendarCoachIcon}>
+                            <FAIcon name="calendar-plus" size={12} color={colors.brandInk} />
+                        </View>
+                        <Text style={styles.calendarCoachTitle}>{CALENDAR_COACH_TITLE}</Text>
+                        <TouchableOpacity
+                            style={styles.calendarCoachClose}
+                            onPress={handleCalendarCoachDismiss}
+                            accessibilityLabel="Close calendar coach"
+                        >
+                            <FAIcon name="times" size={12} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.calendarCoachBody}>
                         <View style={styles.calendarCoachSavePill}>
                             <FAIcon name="bookmark-o" size={14} color={colors.brandInk} />
                             <Text style={styles.calendarCoachSaveText}>Save</Text>
@@ -833,7 +850,37 @@ const styles = StyleSheet.create({
         shadowRadius: 14,
         elevation: 8,
     },
-    calendarCoachRow: {
+    calendarCoachHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        marginBottom: spacing.sm,
+    },
+    calendarCoachIcon: {
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderWidth: 1,
+        borderColor: colors.borderGoldLight,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    calendarCoachTitle: {
+        fontSize: fontSizes.basePlus,
+        fontWeight: '700',
+        color: colors.brandInk,
+        fontFamily: fontFamilies.body,
+    },
+    calendarCoachClose: {
+        marginLeft: 'auto',
+        padding: spacing.xs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+    },
+    calendarCoachBody: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,

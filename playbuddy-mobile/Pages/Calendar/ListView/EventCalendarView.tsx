@@ -86,6 +86,7 @@ interface Props {
     entity?: string;
     featuredEvents?: EventWithMetadata[];
     entityId?: string;
+    headerContent?: React.ReactNode;
 }
 
 const DATE_COACH_COUNT_KEY = "dateCoachShownCount";
@@ -102,6 +103,7 @@ const EventCalendarView: React.FC<Props> = ({
     featuredEvents,
     entity = "events",
     entityId,
+    headerContent,
 }) => {
     type DateCoachMeta = { count: number; lastShownAt: number | null };
     const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
@@ -1338,6 +1340,9 @@ const EventCalendarView: React.FC<Props> = ({
                         onSearchQueryChange={handleSearchQueryChange}
                     />
 
+                    {headerContent ? (
+                        <View style={styles.headerSlot}>{headerContent}</View>
+                    ) : null}
                     <View style={styles.headerSurface}>
                 <TopBar
                     searchQuery={searchQuery}
@@ -1778,6 +1783,11 @@ const styles = StyleSheet.create({
         backgroundColor: colors.brandGlowWarm,
     },
     container: { flex: 1, backgroundColor: "transparent" },
+    headerSlot: {
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        marginBottom: spacing.sm,
+    },
     headerSurface: {
         marginHorizontal: spacing.lg,
         marginTop: spacing.sm,

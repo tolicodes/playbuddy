@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+    Animated,
     View,
     Text,
     StyleSheet,
@@ -15,9 +16,10 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Markdown from '../../../components/Markdown';
 import { WebView } from 'react-native-webview';
-import { useNavigation } from '@react-navigation/native';
+import { useIsFocused, useNavigation } from '@react-navigation/native';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import moment from 'moment-timezone';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { formatDate } from '../hooks/calendarUtils';
 import { logEvent } from '../../../Common/hooks/logger';
@@ -27,6 +29,7 @@ import { UE } from '../../../userEventTypes';
 import { getBestPromoCode } from '../../../utils/getBestPromoCode';
 import { useFetchEvents } from '../../../Common/db-axios/useEvents';
 import { useFetchAttendees } from '../../../Common/db-axios/useAttendees';
+import { useCreateBuddy, useDeleteBuddy, useFetchBuddies, useFetchBuddyWishlists } from '../../../Common/db-axios/useBuddies';
 import { useFetchFollows } from '../../../Common/db-axios/useFollows';
 import { useCommonContext } from '../../../Common/hooks/CommonContext';
 import { useJoinCommunity, useLeaveCommunity } from '../../../Common/hooks/useCommunities';
@@ -43,6 +46,17 @@ import SectionCard from './SectionCard';
 import { TZ } from '../ListView/calendarNavUtils';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 import { WishlistPlusButton } from '../ListView/WishlistPlusButton';
+import { navigateToTab } from '../../../Common/Nav/navigationHelpers';
+import {
+    clearForcedPopupId,
+    getForcedPopupId,
+    getPopupReadyAt,
+    loadPopupManagerState,
+    normalizePopupManagerState,
+    savePopupManagerState,
+    type PopupId,
+} from '../../popupSchedule';
+import { ShareCalendarModal } from '../../ShareCalendarModal';
 
 /* 
  * VideoPlayer
@@ -103,6 +117,9 @@ const SECONDARY_ACTION_PADDING_X = Math.round(SECONDARY_ACTION_HEIGHT * 0.18);
 const SECONDARY_ACTION_ICON_ONLY_MIN_WIDTH = Math.round(
     SECONDARY_ACTION_PADDING_X * 2 + SECONDARY_ACTION_ICON_SIZE
 );
+const BUDDY_LIST_COACH_ID: PopupId = 'buddy_list_coach';
+const BUDDY_LIST_COACH_MESSAGE =
+    'Follow your buddies by scrolling down and tapping their profile photos.\nYou can also search in More > Buddy Lists.';
 
 const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string }) => {
     const { currentDeepLink, authUserId } = useUserContext();
@@ -578,6 +595,14 @@ const ATTENDEE_ITEM_WIDTH = 88;
 
 const AttendeesSection = ({ eventId }: { eventId: number }) => {
     const { data: attendees = [] } = useFetchAttendees();
+    const navigation = useNavigation<NavStack>();
+    const { authUserId } = useUserContext();
+    const analyticsProps = useAnalyticsProps();
+    const { data: buddies = [] } = useFetchBuddies(authUserId);
+    const { data: buddyWishlists = [] } = useFetchBuddyWishlists(authUserId);
+    const { mutateAsync: createBuddy, isPending: isAddingBuddy } = useCreateBuddy(authUserId);
+    const { mutateAsync: deleteBuddy, isPending: isRemovingBuddy } = useDeleteBuddy(authUserId);
+    const [pendingBuddyId, setPendingBuddyId] = useState<string | null>(null);
 
     const attendeesForEvent = useMemo(() => {
         const eventAttendees = attendees.find((entry) => entry.event_id === eventId)?.attendees || [];
@@ -592,6 +617,85 @@ const AttendeesSection = ({ eventId }: { eventId: number }) => {
         });
     }, [attendees, eventId]);
 
+    const buddyIdSet = useMemo(() => {
+        const ids = new Set<string>();
+        for (const buddy of buddies) {
+            if (buddy.user_id) ids.add(buddy.user_id);
+        }
+        return ids;
+    }, [buddies]);
+
+    const shareableBuddyIds = useMemo(() => {
+        const ids = new Set<string>();
+        for (const buddy of buddyWishlists) {
+            if (buddy.user_id) ids.add(buddy.user_id);
+        }
+        return ids;
+    }, [buddyWishlists]);
+
+    const handleBuddyPress = (buddyId: string, displayName: string) => {
+        if (!buddyId) return;
+        if (buddyId === authUserId) {
+            navigateToTab(navigation, 'My Calendar');
+            return;
+        }
+        navigation.navigate('Buddy Events', { buddyId, buddyName: displayName });
+    };
+
+    const handleAddBuddy = async (buddyId: string, displayName: string) => {
+        if (!authUserId) {
+            Alert.alert('Login required', 'Create an account to add buddies.');
+            return;
+        }
+        if (!buddyId || buddyId === authUserId || buddyIdSet.has(buddyId)) return;
+
+        try {
+            setPendingBuddyId(buddyId);
+            logEvent(UE.BuddyAddPressed, {
+                ...analyticsProps,
+                buddy_user_id: buddyId,
+                source: 'attendees',
+                event_id: eventId,
+            });
+            await createBuddy({ buddyUserId: buddyId });
+            logEvent(UE.BuddyAddSucceeded, {
+                ...analyticsProps,
+                buddy_user_id: buddyId,
+                source: 'attendees',
+                event_id: eventId,
+            });
+        } catch (error) {
+            console.error('Failed to add buddy', error);
+            logEvent(UE.BuddyAddFailed, {
+                ...analyticsProps,
+                buddy_user_id: buddyId,
+                source: 'attendees',
+                event_id: eventId,
+            });
+            Alert.alert('Could not add buddy', `Try again later for ${displayName}.`);
+        } finally {
+            setPendingBuddyId(null);
+        }
+    };
+
+    const handleRemoveBuddy = async (buddyId: string, displayName: string) => {
+        if (!authUserId) {
+            Alert.alert('Login required', 'Create an account to manage buddies.');
+            return;
+        }
+        if (!buddyId || buddyId === authUserId) return;
+
+        try {
+            setPendingBuddyId(buddyId);
+            await deleteBuddy(buddyId);
+        } catch (error) {
+            console.error('Failed to remove buddy', error);
+            Alert.alert('Could not remove buddy', `Try again later for ${displayName}.`);
+        } finally {
+            setPendingBuddyId(null);
+        }
+    };
+
     if (attendeesForEvent.length === 0) return null;
 
     return (
@@ -604,12 +708,60 @@ const AttendeesSection = ({ eventId }: { eventId: number }) => {
                 >
                     {attendeesForEvent.map((attendee) => {
                         const displayName = attendee?.name?.trim() || 'Anonymous';
+                        const isSelf = attendee.id === authUserId;
+                        const isBuddy = buddyIdSet.has(attendee.id);
+                        const isPending = pendingBuddyId === attendee.id;
+                        const canToggleBuddy = !!authUserId && !isSelf;
                         return (
                             <View key={attendee.id} style={styles.attendeeItem}>
-                                <AvatarCircle userProfile={attendee} size={ATTENDEE_AVATAR_SIZE} />
-                                <Text style={styles.attendeeName} numberOfLines={2}>
-                                    {displayName}
-                                </Text>
+                                <TouchableOpacity
+                                    style={styles.attendeeProfileButton}
+                                    onPress={() => handleBuddyPress(attendee.id, displayName)}
+                                    activeOpacity={0.85}
+                                >
+                                    <AvatarCircle userProfile={attendee} size={ATTENDEE_AVATAR_SIZE} />
+                                    <Text style={styles.attendeeName} numberOfLines={2}>
+                                        {displayName}
+                                    </Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.buddyHeartButton,
+                                        isBuddy && styles.buddyHeartButtonActive,
+                                        (!canToggleBuddy || isPending || isAddingBuddy || isRemovingBuddy) &&
+                                            styles.buddyHeartButtonDisabled,
+                                    ]}
+                                    onPress={() => {
+                                        if (isBuddy) {
+                                            Alert.alert(
+                                                `Remove ${displayName}?`,
+                                                'They will no longer appear in your buddy list.',
+                                                [
+                                                    { text: 'Cancel', style: 'cancel' },
+                                                    {
+                                                        text: 'Remove',
+                                                        style: 'destructive',
+                                                        onPress: () => handleRemoveBuddy(attendee.id, displayName),
+                                                    },
+                                                ]
+                                            );
+                                            return;
+                                        }
+                                        handleAddBuddy(attendee.id, displayName);
+                                    }}
+                                    disabled={!canToggleBuddy || isPending || isAddingBuddy || isRemovingBuddy}
+                                    accessibilityLabel={
+                                        isBuddy
+                                            ? `Remove ${displayName} from buddies`
+                                            : `Add ${displayName} as a buddy`
+                                    }
+                                >
+                                    <MaterialIcons
+                                        name={isBuddy ? 'favorite' : 'favorite-border'}
+                                        size={16}
+                                        color={isBuddy ? colors.white : colors.danger}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         );
                     })}
@@ -1049,14 +1201,20 @@ const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
 export const EventDetails = ({ route }) => {
 
     const { selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string } = route.params || {};
-    const { currentDeepLink, authUserId } = useUserContext();
+    const { currentDeepLink, authUserId, userProfile } = useUserContext();
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
     const [activeTab, setActiveTab] = useState<string>('details');
+    const isFocused = useIsFocused();
+    const insets = useSafeAreaInsets();
+    const [buddyCoachVisible, setBuddyCoachVisible] = useState(false);
+    const [shareCalendarVisible, setShareCalendarVisible] = useState(false);
+    const buddyCoachAnim = useRef(new Animated.Value(0)).current;
+    const buddyCoachArrowAnim = useRef(new Animated.Value(0)).current;
+    const buddyCoachArrowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+    const selectedEventId = selectedEvent?.id;
+    const scrollViewRef = useRef<ScrollView>(null);
 
     const eventAnalyticsProps = useEventAnalyticsProps(selectedEvent);
-
-    // If no event is provided, render nothing.
-    if (!selectedEvent || !eventAnalyticsProps.event_id) return null;
 
     const handleCopyPromoCode = () => {
         if (!promoCode) return;
@@ -1065,6 +1223,118 @@ export const EventDetails = ({ route }) => {
 
     const hasMedia = (selectedEvent.media?.length || 0) > 1;
 
+    useEffect(() => {
+        if (!isFocused || buddyCoachVisible || !selectedEventId) return;
+        let isActive = true;
+
+        (async () => {
+            const [popupState, forcedId] = await Promise.all([
+                loadPopupManagerState(),
+                getForcedPopupId(),
+            ]);
+            if (!isActive) return;
+            const isForced = forcedId === BUDDY_LIST_COACH_ID;
+            if (!isForced && !authUserId) return;
+            if (popupState.popups[BUDDY_LIST_COACH_ID]?.dismissed && !isForced) return;
+            const now = Date.now();
+            if (!isForced && now < getPopupReadyAt(popupState, now, BUDDY_LIST_COACH_ID)) return;
+
+            setBuddyCoachVisible(true);
+            const shownAt = now;
+            const nextState = normalizePopupManagerState({
+                ...popupState,
+                lastPopupShownAt: Math.max(popupState.lastPopupShownAt ?? 0, shownAt),
+                popups: {
+                    ...popupState.popups,
+                    [BUDDY_LIST_COACH_ID]: {
+                        ...popupState.popups[BUDDY_LIST_COACH_ID],
+                        dismissed: true,
+                        snoozeUntil: undefined,
+                        lastShownAt: shownAt,
+                    },
+                },
+            });
+            await savePopupManagerState(nextState);
+            if (isForced) {
+                await clearForcedPopupId();
+            }
+        })();
+
+        return () => {
+            isActive = false;
+        };
+    }, [authUserId, buddyCoachVisible, isFocused, selectedEventId]);
+
+    useEffect(() => {
+        if (buddyCoachVisible) {
+            buddyCoachAnim.setValue(0);
+            Animated.spring(buddyCoachAnim, {
+                toValue: 1,
+                friction: 7,
+                tension: 120,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            Animated.timing(buddyCoachAnim, {
+                toValue: 0,
+                duration: 180,
+                useNativeDriver: true,
+            }).start();
+        }
+    }, [buddyCoachVisible, buddyCoachAnim]);
+
+    useEffect(() => {
+        if (buddyCoachVisible) {
+            if (buddyCoachArrowLoopRef.current) {
+                buddyCoachArrowLoopRef.current.stop();
+            }
+            buddyCoachArrowAnim.setValue(0);
+            const loop = Animated.loop(
+                Animated.sequence([
+                    Animated.timing(buddyCoachArrowAnim, {
+                        toValue: 1,
+                        duration: 520,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(buddyCoachArrowAnim, {
+                        toValue: 0,
+                        duration: 520,
+                        useNativeDriver: true,
+                    }),
+                ])
+            );
+            buddyCoachArrowLoopRef.current = loop;
+            loop.start();
+        } else if (buddyCoachArrowLoopRef.current) {
+            buddyCoachArrowLoopRef.current.stop();
+            buddyCoachArrowLoopRef.current = null;
+        }
+        return () => {
+            if (buddyCoachArrowLoopRef.current) {
+                buddyCoachArrowLoopRef.current.stop();
+                buddyCoachArrowLoopRef.current = null;
+            }
+        };
+    }, [buddyCoachVisible, buddyCoachArrowAnim]);
+
+    const buddyCoachTranslateY = buddyCoachAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-10, 0],
+    });
+    const buddyCoachScale = buddyCoachAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.96, 1],
+    });
+    const buddyCoachArrowTranslateY = buddyCoachArrowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 8],
+    });
+    const buddyCoachTop = Math.max(insets.top + spacing.lg, spacing.xl);
+    const canShareCalendar = userProfile?.share_calendar !== true;
+
+    // If no event is provided, render nothing.
+    if (!selectedEvent || !eventAnalyticsProps.event_id) return null;
+
     const enabledTabs = [
         { name: 'Details', value: 'details' },
         ...(hasMedia ? [{ name: 'Media', value: 'media' }] : []),
@@ -1072,7 +1342,7 @@ export const EventDetails = ({ route }) => {
 
     return (
         <>
-            <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+            <ScrollView ref={scrollViewRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
 
                 <EventHeader selectedEvent={selectedEvent} source={source} />
 
@@ -1100,6 +1370,69 @@ export const EventDetails = ({ route }) => {
                 <RecommendedEvents event={selectedEvent} />
 
             </ScrollView>
+            <View
+                pointerEvents={buddyCoachVisible ? 'box-none' : 'none'}
+                accessibilityElementsHidden={!buddyCoachVisible}
+                importantForAccessibility={buddyCoachVisible ? 'yes' : 'no-hide-descendants'}
+                style={[styles.buddyCoachBackdrop, { top: buddyCoachTop }]}
+            >
+                <Animated.View
+                    style={[
+                        styles.buddyCoachCard,
+                        {
+                            opacity: buddyCoachAnim,
+                            transform: [{ translateY: buddyCoachTranslateY }, { scale: buddyCoachScale }],
+                        },
+                    ]}
+                >
+                    <View style={styles.buddyCoachHeader}>
+                        <View style={styles.buddyCoachIcon}>
+                            <FAIcon name="user-friends" size={14} color={colors.brandPurpleDark} />
+                        </View>
+                        <Text style={styles.buddyCoachTitle}>Buddy tip</Text>
+                        <TouchableOpacity
+                            style={styles.buddyCoachClose}
+                            onPress={() => setBuddyCoachVisible(false)}
+                            accessibilityLabel="Close buddy coach"
+                        >
+                            <MaterialIcons name="close" size={18} color={colors.textSecondary} />
+                        </TouchableOpacity>
+                    </View>
+                    <Text style={styles.buddyCoachText}>{BUDDY_LIST_COACH_MESSAGE}</Text>
+                    {canShareCalendar && (
+                        <TouchableOpacity
+                            style={styles.buddyCoachShareButton}
+                            onPress={() => setShareCalendarVisible(true)}
+                            activeOpacity={0.85}
+                        >
+                            <FAIcon name="share-alt" size={14} color={colors.white} />
+                            <Text style={styles.buddyCoachShareText}>Share my calendar</Text>
+                        </TouchableOpacity>
+                    )}
+                </Animated.View>
+                <TouchableOpacity
+                    onPress={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                    activeOpacity={0.8}
+                >
+                    <Animated.View
+                        style={[
+                            styles.buddyCoachArrowWrap,
+                            {
+                                opacity: buddyCoachAnim,
+                                transform: [{ translateY: buddyCoachArrowTranslateY }],
+                            },
+                        ]}
+                    >
+                        <MaterialIcons name="keyboard-arrow-down" size={30} color={colors.brandPurpleDark} />
+                    </Animated.View>
+                </TouchableOpacity>
+            </View>
+            <ShareCalendarModal
+                visible={shareCalendarVisible}
+                onDismiss={() => setShareCalendarVisible(false)}
+                onSnooze={() => setShareCalendarVisible(false)}
+                source="buddy_list"
+            />
 
         </>
     );
@@ -1112,6 +1445,100 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         paddingBottom: spacing.xxxl,
+    },
+    buddyCoachBackdrop: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        alignItems: 'center',
+        paddingHorizontal: spacing.lg,
+        zIndex: 30,
+    },
+    buddyCoachCard: {
+        maxWidth: 420,
+        width: '100%',
+        backgroundColor: colors.surfaceInfo,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.accentBlueBorder,
+        paddingHorizontal: spacing.lgPlus,
+        paddingVertical: spacing.mdPlus,
+        ...shadows.card,
+        shadowOpacity: 0.16,
+        shadowOffset: { width: 0, height: 8 },
+        shadowRadius: 14,
+        elevation: 8,
+    },
+    buddyCoachHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+        gap: spacing.sm,
+    },
+    buddyCoachIcon: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: colors.surfaceInfoStrong,
+        borderWidth: 1,
+        borderColor: colors.accentBlueBorder,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buddyCoachTitle: {
+        fontSize: fontSizes.basePlus,
+        fontWeight: '700',
+        color: colors.brandPurpleDark,
+        fontFamily: fontFamilies.body,
+    },
+    buddyCoachClose: {
+        marginLeft: 'auto',
+        padding: spacing.xs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderWidth: 1,
+        borderColor: colors.borderMutedLight,
+    },
+    buddyCoachText: {
+        color: colors.textPrimary,
+        fontSize: fontSizes.basePlus,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
+        lineHeight: lineHeights.lg,
+        letterSpacing: 0.2,
+    },
+    buddyCoachShareButton: {
+        marginTop: spacing.md,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        alignSelf: 'center',
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.pill,
+        backgroundColor: colors.brandPurple,
+    },
+    buddyCoachShareText: {
+        color: colors.white,
+        fontSize: fontSizes.basePlus,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
+    },
+    buddyCoachArrowWrap: {
+        marginTop: spacing.sm,
+        width: 34,
+        height: 34,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceInfoStrong,
+        borderWidth: 1,
+        borderColor: colors.accentBlueBorder,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...shadows.card,
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 6 },
+        shadowRadius: 10,
+        elevation: 6,
     },
     heroWrapper: {
         marginBottom: 0,
@@ -1392,6 +1819,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: spacing.md,
     },
+    attendeeProfileButton: {
+        alignItems: 'center',
+    },
     attendeeName: {
         marginTop: spacing.xsPlus,
         fontSize: fontSizes.smPlus,
@@ -1399,6 +1829,23 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         textAlign: 'center',
         fontFamily: fontFamilies.body,
+    },
+    buddyHeartButton: {
+        marginTop: spacing.xsPlus,
+        padding: spacing.xs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceRoseSoft,
+        borderWidth: 1,
+        borderColor: colors.borderRose,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    buddyHeartButtonActive: {
+        backgroundColor: colors.danger,
+        borderColor: colors.danger,
+    },
+    buddyHeartButtonDisabled: {
+        opacity: 0.4,
     },
     vettedInfoText: {
         fontSize: fontSizes.base,
