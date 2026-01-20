@@ -5,4 +5,5 @@ export { scrapeFestivals } from './fetlife/scrapeFestivals.js';
 export { scrapeFriendsStage1, scrapeFriendsStage2FromStorage, saveStage2Handles } from './fetlife/scrapeFriends.js';
 export { scrapeFetlifeFriendsApiStage1, scrapeFetlifeFriendsApiStage2FromStorage } from './fetlife/scrapeFriendsApi.js';
 export { parseRawDatetime } from './fetlife/parsers.js';
+export { ensureFetlifeLogin } from './fetlife/login.js';
 export type { SkippedEntry, TableRow, TableRowStatus, FetlifeResult, FriendResult } from './fetlife/types.js';

@@ -104,6 +104,7 @@ const getSkipOverwrite = async () => {
 };
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
+const shouldEnsureFetlifeLogin = (source: ScrapeSource) => source.startsWith('fetlife');
 
 async function fetchImportSourceHandles(): Promise<Set<string>> {
     const out = new Set<string>();
@@ -445,7 +446,13 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
     // Keep prior table; do not clear between runs
     postStatus(`▶️ Started ${source} (${runId})`);
     const scrapeFn = opts.scrapeFn || (() => scrapeBySource(source));
-    return scrapeFn()
+    const runScrape = async () => {
+        if (shouldEnsureFetlifeLogin(source)) {
+            await fetlife.ensureFetlifeLogin();
+        }
+        return scrapeFn();
+    };
+    return runScrape()
         .then(async (events: EventResult[]) => {
             try {
                 console.log('events', events)

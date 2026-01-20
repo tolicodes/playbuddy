@@ -98,7 +98,14 @@ function labelFromRunId(runId: string): string {
 }
 
 function getLatestRunId(): string | null {
-    return cachedRunLogs[0]?.id || cachedProgressRuns[0]?.runId || null;
+    const latestLog = cachedRunLogs[0];
+    const latestProgress = cachedProgressRuns[0];
+    if (!latestLog && !latestProgress) return null;
+    if (!latestLog) return latestProgress.runId;
+    if (!latestProgress) return latestLog.id;
+    const logTs = typeof latestLog.startedAt === 'number' ? latestLog.startedAt : 0;
+    const progressTs = typeof latestProgress.startedAt === 'number' ? latestProgress.startedAt : 0;
+    return progressTs > logTs ? latestProgress.runId : latestLog.id;
 }
 
 function getRunTableEntry(runId: string | null): RunTableEntry | null {
@@ -478,9 +485,12 @@ function init() {
         if (!tableDiv) return;
         const entry = getRunTableEntry(selectedRunId);
         const latestRunId = getLatestRunId();
+        const isProgressRun = !!selectedRunId && cachedProgressRuns.some(p => p.runId === selectedRunId);
         let html = entry?.html || '';
         if (!html) {
             if (!selectedRunId) {
+                html = latestTableHtml || '';
+            } else if (isProgressRun) {
                 html = latestTableHtml || '';
             } else if (latestRunId && selectedRunId === latestRunId) {
                 html = latestTableHtml || '';
