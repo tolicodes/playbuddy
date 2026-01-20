@@ -170,6 +170,33 @@ router.delete(
 );
 
 // admin
+router.delete(
+    '/:id',
+    authenticateAdminRequest,
+    async (req: AuthenticatedRequest, res: Response) => {
+        try {
+            const { id } = req.params;
+            const authUserId = req.authUser?.id;
+            if (!authUserId) {
+                return res.status(401).json({ error: 'Not authenticated' });
+            }
+            if (!id) {
+                return res.status(400).json({ error: 'Missing id' });
+            }
+
+            const { data, error } = await supabaseClient
+                .from('facilitators')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+            return res.status(200).json(data);
+        } catch (err: any) {
+            console.error('Error deleting facilitator:', err);
+            return res.status(500).json({ error: err.message || 'Internal server error' });
+        }
+    }
+);
 
 
 

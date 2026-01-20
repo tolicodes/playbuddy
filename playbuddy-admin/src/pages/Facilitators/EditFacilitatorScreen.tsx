@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Paper,
     Box,
@@ -20,6 +21,7 @@ import {
     useFetchFacilitators,
     useCreateFacilitator,
     useUpdateFacilitator,
+    useDeleteFacilitator,
 } from '../../common/db-axios/useFacilitators';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useFetchEvents } from '../../common/db-axios/useEvents';
@@ -76,6 +78,8 @@ export default function EditFacilitatorScreen() {
     const { data: list, isLoading, error, refetch } = useFetchFacilitators();
     const createFac = useCreateFacilitator();
     const updateFac = useUpdateFacilitator();
+    const deleteFac = useDeleteFacilitator();
+    const navigate = useNavigate();
     const { data: organizers } = useFetchOrganizers();
     const { data: events } = useFetchEvents({ includeFacilitatorOnly: true });
 
@@ -182,6 +186,20 @@ export default function EditFacilitatorScreen() {
         }
         refetch();
         reset();
+    };
+
+    const handleDelete = async () => {
+        if (!editingId) return;
+        const name = f?.name || 'this facilitator';
+        const confirmed = window.confirm(`Delete facilitator "${name}"?`);
+        if (!confirmed) return;
+        try {
+            await deleteFac.mutateAsync(editingId);
+            await refetch();
+            navigate('/facilitators');
+        } catch (err) {
+            console.warn('Failed to delete facilitator', err);
+        }
     };
 
     if (isLoading) return <CircularProgress />;
@@ -398,8 +416,26 @@ export default function EditFacilitatorScreen() {
                 />
 
                 {/* Submit Button */}
-                <Box sx={{ mt: 3, textAlign: 'right' }}>
-                    <Button type="submit" variant="contained" disabled={isSubmitting}>
+                <Box
+                    sx={{
+                        mt: 3,
+                        display: 'flex',
+                        justifyContent: editingId ? 'space-between' : 'flex-end',
+                        alignItems: 'center',
+                        gap: 2,
+                    }}
+                >
+                    {editingId && (
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={handleDelete}
+                            disabled={deleteFac.isPending}
+                        >
+                            Delete
+                        </Button>
+                    )}
+                    <Button type="submit" variant="contained" disabled={isSubmitting || deleteFac.isPending}>
                         {editingId ? 'Update' : 'Create'}
                     </Button>
                 </Box>
