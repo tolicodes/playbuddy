@@ -88,34 +88,36 @@ export const BuddyEventsScreen = ({ route }: { route: BuddyEventsRoute }) => {
 
     const renderHeaderCard = (subtitle: string) => (
         <View style={styles.headerCard}>
-            <AvatarCircle
-                userProfile={{ id: buddyId, name: displayName, avatar_url: buddyProfile?.avatar_url || '' }}
-                size={64}
-                name={displayName}
-            />
-            <View style={styles.headerCopy}>
-                <View style={styles.headerTitleRow}>
-                    <Text style={styles.headerTitle}>{displayName}</Text>
-                    <View style={[styles.headerHeartBadge, !isBuddy && styles.headerHeartBadgeMuted]}>
-                        <FAIcon
-                            name="heart"
-                            size={12}
-                            color={isBuddy ? colors.white : colors.textSlate}
-                            solid={isBuddy}
-                        />
-                    </View>
-                </View>
-                <Text style={styles.headerSubtitle}>{subtitle}</Text>
-            </View>
             <TouchableOpacity
-                style={styles.headerAction}
+                style={styles.headerListButton}
                 onPress={() => navigation.navigate('Buddy List')}
                 activeOpacity={0.85}
-                accessibilityLabel="Go to buddy list"
+                accessibilityLabel="View your buddy list"
             >
                 <FAIcon name="user-friends" size={14} color={colors.brandPurpleDark} />
-                <Text style={styles.headerActionText}>Buddy List</Text>
+                <Text style={styles.headerListButtonText}>View your buddy list</Text>
             </TouchableOpacity>
+            <View style={styles.headerMainRow}>
+                <AvatarCircle
+                    userProfile={{ id: buddyId, name: displayName, avatar_url: buddyProfile?.avatar_url || '' }}
+                    size={64}
+                    name={displayName}
+                />
+                <View style={styles.headerCopy}>
+                    <View style={styles.headerTitleRow}>
+                        <Text style={styles.headerTitle}>{displayName}</Text>
+                        <View style={[styles.headerHeartBadge, !isBuddy && styles.headerHeartBadgeMuted]}>
+                            <FAIcon
+                                name="heart"
+                                size={12}
+                                color={isBuddy ? colors.white : colors.textSlate}
+                                solid={isBuddy}
+                            />
+                        </View>
+                    </View>
+                    <Text style={styles.headerSubtitle}>{subtitle}</Text>
+                </View>
+            </View>
         </View>
     );
 
@@ -193,13 +195,13 @@ export const BuddyEventsScreen = ({ route }: { route: BuddyEventsRoute }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.surfaceMuted,
+        backgroundColor: 'transparent',
     },
     loadingState: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.surfaceMuted,
+        backgroundColor: 'transparent',
     },
     headerCard: {
         padding: spacing.mdPlus,
@@ -207,13 +209,35 @@ const styles = StyleSheet.create({
         backgroundColor: colors.surfaceWhiteFrosted,
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
         shadowColor: colors.black,
         shadowOpacity: 0.08,
         shadowOffset: { width: 0, height: 4 },
         shadowRadius: 10,
         elevation: 3,
+    },
+    headerListButton: {
+        width: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: spacing.xs,
+        paddingVertical: spacing.sm,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderAlt,
+        backgroundColor: colors.surfaceLavenderAlt,
+        marginBottom: spacing.md,
+    },
+    headerListButtonText: {
+        fontSize: fontSizes.basePlus,
+        fontWeight: '600',
+        color: colors.brandPurpleDark,
+        fontFamily: fontFamilies.body,
+    },
+    headerMainRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     headerCardWrap: {
         marginHorizontal: spacing.lg,
@@ -223,23 +247,6 @@ const styles = StyleSheet.create({
     headerCopy: {
         flex: 1,
         marginLeft: spacing.md,
-    },
-    headerAction: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.xs,
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.sm,
-        borderRadius: radius.pill,
-        borderWidth: 1,
-        borderColor: colors.borderLavenderAlt,
-        backgroundColor: colors.surfaceLavenderAlt,
-    },
-    headerActionText: {
-        fontSize: fontSizes.sm,
-        fontWeight: '600',
-        color: colors.brandPurpleDark,
-        fontFamily: fontFamilies.body,
     },
     headerTitle: {
         fontSize: fontSizes.xxl,

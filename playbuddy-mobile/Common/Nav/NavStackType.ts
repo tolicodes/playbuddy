@@ -58,8 +58,13 @@ export type NavStackProps = {
         selectedEvent: EventWithMetadata;
         title: string;
     };
+    'Buddy List': {
+        promptBuddyName?: string;
+        promptBuddyId?: string;
+    } | undefined;
     'Buddy Events': {
         buddyId: string;
+        buddyName?: string;
     };
 
     'Munches': undefined;

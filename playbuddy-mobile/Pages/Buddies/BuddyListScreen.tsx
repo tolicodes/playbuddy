@@ -15,7 +15,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useIsFocused, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 
-import TabBar from '../../components/TabBar';
 import { LoginToAccess } from '../../components/LoginToAccess';
 import { AvatarCircle } from '../Auth/Buttons/AvatarCircle';
 import { useUserContext } from '../Auth/hooks/UserContext';
@@ -32,6 +31,7 @@ import {
     useFetchBuddyWishlists,
     useSearchBuddies,
 } from '../../Common/db-axios/useBuddies';
+import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { UE } from '../../userEventTypes';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
@@ -80,17 +80,32 @@ export const BuddyListScreen = () => {
 
     const { data: buddies = [], isLoading: isLoadingBuddies } = useFetchBuddies(authUserId);
     const { data: buddyWishlists = [] } = useFetchBuddyWishlists(authUserId);
+    const { data: allEvents = [] } = useFetchEvents({ includePrivate: !!authUserId });
     const { mutateAsync: createBuddy, isPending: isAddingBuddy } = useCreateBuddy(authUserId);
     const { mutateAsync: deleteBuddy, isPending: isRemovingBuddy } = useDeleteBuddy(authUserId);
+
+    const futureEventIdSet = useMemo(() => {
+        const now = Date.now();
+        const ids = new Set<string>();
+        for (const event of allEvents) {
+            const startTime = Date.parse(event.start_date);
+            if (Number.isNaN(startTime)) continue;
+            if (startTime >= now) ids.add(String(event.id));
+        }
+        return ids;
+    }, [allEvents]);
 
     const buddyEventCountMap = useMemo(() => {
         const map = new Map<string, number>();
         for (const entry of buddyWishlists) {
             if (!entry.user_id || entry.user_id === authUserId) continue;
-            map.set(entry.user_id, entry.events.length);
+            const futureCount = entry.events.filter((eventId) =>
+                futureEventIdSet.has(String(eventId))
+            ).length;
+            map.set(entry.user_id, futureCount);
         }
         return map;
-    }, [authUserId, buddyWishlists]);
+    }, [authUserId, buddyWishlists, futureEventIdSet]);
 
     const buddyIdSet = useMemo(() => {
         const ids = new Set<string>();
@@ -132,8 +147,9 @@ export const BuddyListScreen = () => {
             isRemovingBuddy,
             isAddingBuddy,
             shareCalendar: userProfile?.share_calendar ?? null,
+            futureEventCount: futureEventIdSet.size,
         }),
-        [pendingBuddyId, isRemovingBuddy, isAddingBuddy, userProfile?.share_calendar]
+        [pendingBuddyId, isRemovingBuddy, isAddingBuddy, userProfile?.share_calendar, futureEventIdSet]
     );
     const searchExtraData = useMemo(
         () => ({
@@ -452,25 +468,35 @@ export const BuddyListScreen = () => {
     return (
         <SafeAreaView style={styles.container} edges={['left', 'right', 'bottom']}>
             <View style={styles.tabBarWrap}>
-                <LinearGradient
-                    colors={[colors.brandIndigo, colors.accentPurple]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.tabBarGradient}
-                >
-                    <TabBar
-                        tabs={TABS}
-                        active={activeTab}
-                        onPress={(value) => {
-                            const nextTab = value === 'search' ? 'search' : 'list';
-                            setActiveTab(nextTab);
-                            logEvent(UE.BuddyListTabChanged, {
-                                ...analyticsProps,
-                                tab: nextTab,
-                            });
-                        }}
-                    />
-                </LinearGradient>
+                <View style={styles.segmentedWrap}>
+                    {TABS.map((tab) => {
+                        const isActive = activeTab === tab.value;
+                        return (
+                            <TouchableOpacity
+                                key={tab.value}
+                                onPress={() => {
+                                    const nextTab = tab.value === 'search' ? 'search' : 'list';
+                                    setActiveTab(nextTab);
+                                    logEvent(UE.BuddyListTabChanged, {
+                                        ...analyticsProps,
+                                        tab: nextTab,
+                                    });
+                                }}
+                                style={[
+                                    styles.segmentedButton,
+                                    isActive && styles.segmentedButtonActive,
+                                ]}
+                                activeOpacity={0.85}
+                                accessibilityRole="button"
+                                accessibilityState={{ selected: isActive }}
+                            >
+                                <Text style={isActive ? styles.segmentedTextActive : styles.segmentedText}>
+                                    {tab.name}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
             </View>
 
             {activeTab === 'list' ? (
@@ -594,17 +620,47 @@ export const BuddyListScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.surfaceMuted,
+        backgroundColor: 'transparent',
     },
     tabBarWrap: {
-        paddingHorizontal: spacing.lg,
         paddingTop: spacing.sm,
         paddingBottom: spacing.xs,
+        alignItems: 'center',
     },
-    tabBarGradient: {
-        borderRadius: radius.xl,
-        paddingVertical: spacing.xs,
-        paddingHorizontal: spacing.xs,
+    segmentedWrap: {
+        flexDirection: 'row',
+        alignSelf: 'center',
+        padding: spacing.xs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceGlass,
+        borderWidth: 1,
+        borderColor: colors.borderOnDark,
+        marginBottom: spacing.smPlus,
+    },
+    segmentedButton: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
+        borderRadius: radius.pill,
+    },
+    segmentedButtonActive: {
+        backgroundColor: colors.accentPurple,
+        shadowColor: colors.black,
+        shadowOpacity: 0.18,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    segmentedText: {
+        fontSize: fontSizes.base,
+        fontWeight: '600',
+        color: colors.textOnDarkMuted,
+        fontFamily: fontFamilies.body,
+    },
+    segmentedTextActive: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.white,
+        fontFamily: fontFamilies.body,
     },
     listContent: {
         paddingTop: spacing.xs,
