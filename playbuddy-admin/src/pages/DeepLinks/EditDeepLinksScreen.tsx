@@ -52,14 +52,16 @@ export default function AddDeepLinkForm() {
 
     const handleSubmit = () => {
         const slug = slugUrl.trim().replace('https://l.playbuddy.me/', '');
+        const organizerIdNumber = Number(organizerId);
+        const featuredEventIdNumber = Number(featuredEventId);
         const deepLinkData = {
             campaign,
             slug,
             type,
-            featured_event_id: featuredEventId,
+            featured_event_id: Number.isFinite(featuredEventIdNumber) ? featuredEventIdNumber : undefined,
             featured_promo_code_id: featuredPromoCodeId,
             facilitator_id: facilitatorId,
-            organizer_id: organizerId,
+            organizer_id: Number.isFinite(organizerIdNumber) ? organizerIdNumber : undefined,
             campaign_start_date: campaignStartDate,
             campaign_end_date: campaignEndDate,
             channel,

@@ -117,6 +117,10 @@ export interface Event extends EventDataSource {
      */
     tags?: string[];
     /**
+     * Optional event categories (freeform text).
+     */
+    event_categories?: string | null;
+    /**
      * The type of the event (workshop, munch, play_party, festival, conference, retreat; fallback: event; legacy: performance, discussion)
      */
     type: EventTypes;
@@ -144,6 +148,10 @@ export interface Event extends EventDataSource {
      * Approval workflow status
      */
     approval_status?: 'pending' | 'approved' | 'rejected' | null;
+    /**
+     * Classification workflow status.
+     */
+    classification_status?: 'queued' | 'auto_classified' | 'admin_classified' | string | null;
 
     /**
      * True when submitted by end users through in-app submissions.
@@ -162,6 +170,12 @@ export interface Event extends EventDataSource {
 
     // Only shows in facilitator profile
     facilitator_only?: boolean
+
+    /**
+     * Foreign keys (when loaded directly from events table).
+     */
+    organizer_id?: number | null;
+    location_area_id?: string | null;
 
     /**
      * DEPENDENCIES
@@ -225,6 +239,11 @@ export interface Event extends EventDataSource {
     bio?: string;
 
     hosts?: string[];
+
+    /**
+     * Facilitator ids (uuid array).
+     */
+    facilitators?: string[] | null;
 }
 
 export type EventDuplicateMode = 'heuristic' | 'ai' | 'hybrid';
@@ -307,7 +326,7 @@ export type ScrapeTaskRecord = {
     status: string;
     priority: number;
     attempts: number;
-    event_id?: string | null;
+    event_id?: number | null;
     result?: {
         inserted?: boolean;
         updated?: boolean;
@@ -446,7 +465,7 @@ export type ResolvedDependenciesEventInput =
         /**
          * ID of the resolved organizer (upserted beforehand)
          */
-        organizer_id: string;
+        organizer_id: number;
 
         /**
          * ID of the resolved location area (upserted beforehand)
@@ -571,31 +590,33 @@ export interface Classification {
     /** References events.id (unique, required). */
     event_id: number;
 
+    comfort_level?: string | null;
+    experience_level?: string | null;
+    inclusivity?: string[] | null; // queer, bipoc, etc
+    consent_and_safety_policies?: string[] | null;
+    alcohol_and_substance_policies?: string[] | null;
+    venue_type?: string | null;
+    interactivity_level?: string | null;
+    dress_code?: string | null;
+    accessibility?: string[] | null;
+    tags?: string[] | null;
+
     short_description?: string;
+    type?: EventTypes;
 
-    type: EventTypes;
-
-    tags: string[];
-    experience_level: string;
-    interactivity_level: string;
-
-    inclusivity: string[]; // queer, bipoc, etc
-
-
-    non_ny: boolean;
-    location: string;
+    non_ny?: boolean;
+    location?: string;
     neighborhood?: string;
 
-    hosts: string[];
-    price: string;
+    hosts?: string[];
+    price?: string;
     short_price?: string | null;
 
-    vetted: boolean;
+    vetted?: boolean;
     vetting_url?: string;
 
-
-    created_at: string | null;
-    updated_at: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 /**
@@ -775,6 +796,9 @@ export interface Organizer {
     /** Whether hidden from listings (default false). */
     hidden?: boolean | null;
 
+    /** Organizer bio (nullable). */
+    bio?: string | null;
+
     /** 
      * The promo codes for the event
      * May be event specific or organizer specific
@@ -785,8 +809,8 @@ export interface Organizer {
     fetlife_handle?: string;
     fetlife_handles?: string[] | null;
 
-    membership_app_url: string;
-    membership_only: boolean
+    membership_app_url?: string | null;
+    membership_only?: boolean | null;
 }
 
 export type CreateOrganizerInput = {
@@ -985,6 +1009,9 @@ export interface Users {
 
     /** References deep_links.id (nullable). */
     initial_deep_link_id: string | null;
+
+    /** User role (nullable). */
+    role?: string | null;
 }
 
 export interface DeepLinkEvent {
@@ -993,7 +1020,22 @@ export interface DeepLinkEvent {
     featured_promo_code: PromoCode;
 }
 
+export interface DeepLinkEventRecord {
+    deep_link_id: string;
+    event_id: number;
+    featured_promo_code_id?: string | null;
+    description?: string | null;
+}
+
+export interface DeepLinkPromoCode {
+    id: string;
+    deep_link_id: string;
+    promo_code_id: string;
+}
+
 export interface DeepLinkBranchStats {
+    id?: number;
+    deep_link_id?: string | null;
     range_start_date?: string | null;
     range_end_date?: string | null;
     range_label?: string | null;
@@ -1014,6 +1056,8 @@ export interface DeepLinkBranchStats {
     desktop_android_reopen?: number | null;
     source_url?: string | null;
     source_name?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
 }
 
 /**
@@ -1046,6 +1090,17 @@ export interface DeepLink {
      */
     type?: string;
 
+    organizer_id?: number | null;
+    community_id?: string | null;
+    featured_event_id?: number | null;
+    featured_promo_code_id?: string | null;
+    status?: string | null;
+    initialized_on?: string | null;
+    print_run_id?: number | null;
+    marketing_assignee_id?: number | null;
+    print_run_asset_number?: number | null;
+    facilitator_id?: string | null;
+
     /**
      * An array of promo codes associated with this deep link.
      */
@@ -1073,9 +1128,16 @@ export interface DeepLink {
 
 export interface DeepLinkInput {
     id?: string;
+    name?: string;
     campaign?: string;
     slug?: string;
     type?: string;
+    organizer_id?: number;
+    community_id?: string;
+    featured_event_id?: number;
+    featured_promo_code_id?: string;
+    status?: string;
+    initialized_on?: string;
     featured_event?: Event;
     featured_promo_code?: string;
     facilitator_id?: string;
@@ -1085,6 +1147,14 @@ export interface DeepLinkInput {
     print_run_id?: number;
     marketing_assignee_id?: number;
     print_run_asset_number?: number;
+}
+
+export interface UserDeepLink {
+    id: string;
+    created_at: string;
+    auth_user_id?: string | null;
+    deep_link_id?: string | null;
+    claimed_on?: string | null;
 }
 
 export type EventPopupStatus = 'draft' | 'published' | 'stopped';
@@ -1165,22 +1235,33 @@ export interface MarketingAssignee {
     id: number;
     name: string | null;
     role: string | null;
-    createdAt: string;
+    created_at?: string | null;
+    createdAt?: string | null;
 }
 
 export interface PrintRun {
     id: number;
-    marketingAssigneeId: number | null;
-    startNumber: number | null;
-    count: number | null;
-    mediaType: 'business_card' | null;
-    version: string | null;
-    qrX: number | null;
-    qrY: number | null;
-    qrWidth: number | null;
-    qrHeight: number | null;
-    createdAt: string;
-    updatedAt: string | null;
+    marketing_assignee_id?: number | null;
+    start_number?: number | null;
+    count?: number | null;
+    media_type?: string | null;
+    version?: string | null;
+    qr_x?: number | null;
+    qr_y?: number | null;
+    qr_width?: number | null;
+    qr_height?: number | null;
+    created_at?: string | null;
+    updated_at?: string | null;
+
+    marketingAssigneeId?: number | null;
+    startNumber?: number | null;
+    mediaType?: 'business_card' | null;
+    qrX?: number | null;
+    qrY?: number | null;
+    qrWidth?: number | null;
+    qrHeight?: number | null;
+    createdAt?: string | null;
+    updatedAt?: string | null;
 }
 
 
@@ -1198,7 +1279,7 @@ export interface Munch {
     main_audience: string;
     status: string;
     notes: string;
-    verified: string;
+    verified: boolean | null;
     tags: string[];
     website: string;
     fetlife_handle: string;
@@ -1207,7 +1288,7 @@ export interface Munch {
 
 export interface Media {
     id: string; // UUID
-    auth_user_id: string; // UUID, FK to users.user_id
+    auth_user_id?: string | null; // UUID, FK to users.user_id
     title: string | null;
     description: string | null;
     type: 'video' | 'image';
@@ -1224,7 +1305,7 @@ export interface Tag {
     id: string;        // UUID
     name: string;
     entity: string;    // e.g. 'facilitator'
-    type?: string;      // e.g. 'specialty'
+    type?: string | null;      // e.g. 'specialty'
 }
 
 // A media item (image or video) in the facilitator’s carousel
@@ -1235,6 +1316,13 @@ export interface FacilitatorMedia extends Media {
     created_at: string;     // ISO timestamp
 }
 
+export interface FacilitatorMediaLink {
+    id: string;
+    facilitator_id: string;
+    sort_order: number;
+    created_at: string;
+    media_id?: string | null;
+}
 
 export interface EventMedia extends Media {
     id: string; // UUID
@@ -1243,6 +1331,14 @@ export interface EventMedia extends Media {
     created_at: string;     // ISO timestamp
 
 };
+
+export interface EventMediaLink {
+    id: string;
+    media_id: string;
+    sort_order?: number | null;
+    event_id: number;
+    created_at?: string | null;
+}
 
 
 // Main Facilitator record, matching the updated schema
@@ -1267,6 +1363,35 @@ export interface Facilitator {
     title?: string;
     website?: string;
     organizer_id?: number;
+}
+
+export interface FacilitatorAlias {
+    id: string;
+    facilitator_id: string;
+    alias: string;
+}
+
+export interface FacilitatorEvent {
+    facilitator_id: string;
+    event_id: number;
+}
+
+export interface FacilitatorFollower {
+    facilitator_id: string;
+    auth_user_id: string;
+    followed_at: string;
+}
+
+export interface FacilitatorNotification {
+    facilitator_id: string;
+    auth_user_id: string;
+    subscribed: boolean;
+    created_at: string;
+}
+
+export interface FacilitatorTag {
+    facilitator_id: string;
+    tag_id: string;
 }
 
 export type CreateFacilitatorInput = Omit<
