@@ -222,7 +222,7 @@ export const WeeklyPicksAdminScreen = () => {
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
-    const { allEvents, isLoadingEvents } = useCalendarContext();
+    const { allEvents, isLoadingEvents, isEventSourceExcluded } = useCalendarContext();
     const { data: attendees = [] } = useFetchAttendees();
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { mutate: toggleWeeklyPickEvent, isPending: togglePending } = useToggleWeeklyPickEvent();
@@ -273,7 +273,15 @@ export const WeeklyPicksAdminScreen = () => {
     }, [attendees]);
 
     const wishlistSet = useMemo(() => new Set(wishlist), [wishlist]);
-    const { sections } = useGroupedEvents(allEvents);
+    const eligibleEvents = useMemo(() => {
+        return allEvents.filter((event) => {
+            const approval = event.approval_status ?? null;
+            if (approval && approval !== 'approved') return false;
+            if (isEventSourceExcluded?.(event)) return false;
+            return true;
+        });
+    }, [allEvents, isEventSourceExcluded]);
+    const { sections } = useGroupedEvents(eligibleEvents);
     const eventListConfig = eventListThemes.welcome;
     const screenWidth = Dimensions.get('window').width;
     const previewScale = 3;

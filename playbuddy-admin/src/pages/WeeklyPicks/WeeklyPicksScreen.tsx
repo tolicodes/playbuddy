@@ -24,9 +24,11 @@ import {
     useToggleWeeklyPickEvent,
     type WeeklyPicksImageOptions,
 } from '../../common/db-axios/useEvents';
+import { useImportSources } from '../../common/db-axios/useImportSources';
 import EventsTable from '../Events/EventsTable';
 import { useCreateWeeklyPicksBranchLink, useFetchWeeklyPicksBranchLinkStatus } from '../../common/db-axios/useBranchLinks';
 import { useAddDeepLink } from '../../common/db-axios/useDeepLinks';
+import type { Event, ImportSource } from '../../common/types/commonTypes';
 
 const PB_SHARE_CODE = 'DCK9PD';
 const BRANCH_MANAGER_URL = 'https://dashboard.branch.io/quick-links/manager?v=latest';
@@ -80,9 +82,116 @@ const normalizeLogs = (value: unknown) => (
         : []
 );
 
+type ExcludedSourceLookup = {
+    organizerIds: Set<string>;
+    handles: Set<string>;
+    urls: Set<string>;
+};
+
+const normalizeHandle = (value?: string | null) => (value || '').replace(/^@/, '').trim().toLowerCase();
+const normalizeUrl = (value?: string | null) => {
+    if (!value) return '';
+    const raw = value.trim();
+    if (!raw) return '';
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+        const url = new URL(withScheme);
+        url.hash = '';
+        url.search = '';
+        const normalized = `${url.host}${url.pathname}`.replace(/\/$/, '');
+        return normalized.toLowerCase();
+    } catch {
+        return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+    }
+};
+
+const addOrganizerId = (target: Set<string>, value: unknown) => {
+    if (value === undefined || value === null) return;
+    const trimmed = String(value).trim();
+    if (trimmed) target.add(trimmed);
+};
+
+const addHandle = (target: Set<string>, value: unknown) => {
+    if (value === undefined || value === null) return;
+    const normalized = normalizeHandle(String(value));
+    if (normalized) target.add(normalized);
+};
+
+const addUrl = (target: Set<string>, value: unknown) => {
+    if (value === undefined || value === null) return;
+    const normalized = normalizeUrl(String(value));
+    if (normalized) target.add(normalized);
+};
+
+const buildExcludedSourceLookup = (sources: ImportSource[]): ExcludedSourceLookup => {
+    const organizerIds = new Set<string>();
+    const handles = new Set<string>();
+    const urls = new Set<string>();
+
+    sources.forEach((source) => {
+        if (!source?.is_excluded) return;
+        const status = source.approval_status ?? null;
+        if (status === 'approved' || status === 'rejected') return;
+
+        const defaults = source.event_defaults || {};
+        const metadata = source.metadata || {};
+        addOrganizerId(organizerIds, (defaults as any).organizer_id);
+        addOrganizerId(organizerIds, (defaults as any).organizerId);
+        addOrganizerId(organizerIds, (metadata as any).organizer_id);
+        addOrganizerId(organizerIds, (metadata as any).organizerId);
+
+        const identifierType = (source.identifier_type || '').toLowerCase();
+        const sourceType = (source.source || '').toLowerCase();
+        if (identifierType === 'handle' || sourceType === 'fetlife_handle') {
+            addHandle(handles, source.identifier);
+        }
+        const isUrlSource =
+            identifierType === 'url' ||
+            sourceType === 'eb_url' ||
+            sourceType === 'url' ||
+            /^https?:\/\//i.test(source.identifier || '');
+        if (isUrlSource) {
+            addUrl(urls, source.identifier);
+        }
+    });
+
+    return { organizerIds, handles, urls };
+};
+
+const isEventSourceExcluded = (event: Event, lookup: ExcludedSourceLookup) => {
+    const organizerId = event.organizer?.id ?? event.organizer_id ?? null;
+    if (organizerId != null && lookup.organizerIds.has(String(organizerId))) {
+        return true;
+    }
+
+    const organizerHandles = [
+        event.organizer?.fetlife_handle,
+        ...(event.organizer?.fetlife_handles || []),
+    ]
+        .filter(Boolean)
+        .map((handle) => normalizeHandle(String(handle)))
+        .filter(Boolean);
+
+    if (organizerHandles.some((handle) => lookup.handles.has(handle))) {
+        return true;
+    }
+
+    const urlCandidates = [
+        event.ticket_url,
+        event.event_url,
+        event.source_url,
+    ]
+        .filter(Boolean)
+        .map((url) => normalizeUrl(String(url)))
+        .filter(Boolean);
+
+    return urlCandidates.some((url) => lookup.urls.has(url));
+};
+
 export default function WeeklyPicksScreen() {
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { data: events = [], isLoading: eventsLoading, error: eventsError } = useFetchEvents();
+    const { data: importSources = [], isLoading: importSourcesLoading, error: importSourcesError } = useImportSources({ includeAll: true });
     const {
         mutate: toggleWeeklyPickEvent,
         isPending: toggleWeeklyPickEventLoading,
@@ -151,11 +260,22 @@ export default function WeeklyPicksScreen() {
     );
 
     const wishlistSet = useMemo(() => new Set<number>(wishlist), [wishlist]);
-    const isLoading = eventsLoading || wishlistLoading;
+    const excludedSourceLookup = useMemo(() => buildExcludedSourceLookup(importSources), [importSources]);
+    const filteredEvents = useMemo(() => {
+        return events.filter((event) => {
+            const approval = event.approval_status ?? null;
+            if (approval && approval !== 'approved') return false;
+            if (isEventSourceExcluded(event, excludedSourceLookup)) return false;
+            return true;
+        });
+    }, [events, excludedSourceLookup]);
+    const isLoading = eventsLoading || wishlistLoading || importSourcesLoading;
     const errorMessage = eventsError
         ? `Error fetching events: ${eventsError.message}`
         : wishlistError
             ? `Error fetching wishlist: ${wishlistError.message}`
+            : importSourcesError
+                ? `Error fetching import sources: ${importSourcesError.message}`
             : null;
     const isGenerating = generateWeeklyPicksImage.isPending || partsLoading;
     const isStreamingLogs = shouldPollGenerationLogs || weeklyImageLogs?.status === 'running';
@@ -681,7 +801,7 @@ export default function WeeklyPicksScreen() {
             )}
 
             <EventsTable
-                events={events}
+                events={filteredEvents}
                 actionsHeader="Weekly Picks"
                 emptyMessage="No events available."
                 renderActions={(event) => {

@@ -206,6 +206,15 @@ type WeeklyPicksImageOptions = {
     partCount?: number;
 };
 
+type WeeklyPicksImageTimings = {
+    fetchEventsMs: number;
+    imageFetchMs: number;
+    renderSvgMs: number;
+    rasterMs: number;
+    pngEncodeMs: number;
+    jpgEncodeMs: number;
+};
+
 type WeeklyPicksImagePart = {
     jpg: Buffer;
     height: number;
@@ -219,6 +228,7 @@ type WeeklyPicksImageResult = {
     height: number;
     weekOffset: number;
     weekLabel: string;
+    timings: WeeklyPicksImageTimings;
 };
 
 type DayLayout = {
@@ -227,12 +237,22 @@ type DayLayout = {
     endY: number;
 };
 
+type WeeklyPicksSvgBuild = {
+    defs: string[];
+    content: string[];
+    height: number;
+    dayLayouts: DayLayout[];
+};
+
 type WeeklyPickEventRow = {
     id: number;
     name: string | null;
     start_date: string | null;
     end_date?: string | null;
     image_url: string | null;
+    ticket_url?: string | null;
+    event_url?: string | null;
+    source_url?: string | null;
     short_description: string | null;
     short_price?: string | null;
     price?: string | null;
@@ -243,6 +263,7 @@ type WeeklyPickEventRow = {
     approval_status?: string | null;
     facilitator_only?: boolean | null;
     non_ny?: boolean | null;
+    organizer_id?: number | null;
     location?: string | null;
     city?: string | null;
     region?: string | null;
@@ -254,9 +275,152 @@ type WeeklyPickEventRow = {
         id?: number | null;
         name?: string | null;
         hidden?: boolean | null;
+        fetlife_handle?: string | null;
+        fetlife_handles?: string[] | null;
         promo_codes?: { discount?: number | null; discount_type?: string | null; scope?: string | null }[] | null;
     } | null;
     promo_code_event?: { promo_codes?: { discount?: number | null; discount_type?: string | null; scope?: string | null } | null }[] | null;
+};
+
+type ImportSourceRow = {
+    id?: string | null;
+    source?: string | null;
+    identifier?: string | null;
+    identifier_type?: string | null;
+    approval_status?: string | null;
+    is_excluded?: boolean | null;
+    metadata?: Record<string, any> | null;
+    event_defaults?: Record<string, any> | null;
+};
+
+type ExcludedSourceLookup = {
+    organizerIds: Set<string>;
+    handles: Set<string>;
+    urls: Set<string>;
+};
+
+const normalizeHandle = (value?: string | null) => (value || '').replace(/^@/, '').trim().toLowerCase();
+const normalizeUrl = (value?: string | null) => {
+    if (!value) return '';
+    const raw = value.trim();
+    if (!raw) return '';
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    try {
+        const url = new URL(withScheme);
+        url.hash = '';
+        url.search = '';
+        const normalized = `${url.host}${url.pathname}`.replace(/\/$/, '');
+        return normalized.toLowerCase();
+    } catch {
+        return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+    }
+};
+
+const resolveSourceApprovalStatus = (source: ImportSourceRow) => {
+    const status = source?.approval_status ?? null;
+    if (status === 'rejected') return 'rejected';
+    if (status === 'approved') return 'approved';
+    if (status === null) return source?.is_excluded ? 'pending' : 'approved';
+    return 'pending';
+};
+
+const isHandleSource = (source: ImportSourceRow) => {
+    const identifierType = (source?.identifier_type || '').toLowerCase();
+    const sourceType = (source?.source || '').toLowerCase();
+    return identifierType === 'handle' || sourceType === 'fetlife_handle';
+};
+
+const isUrlSource = (source: ImportSourceRow) => {
+    const identifierType = (source?.identifier_type || '').toLowerCase();
+    const sourceType = (source?.source || '').toLowerCase();
+    const identifier = source?.identifier || '';
+    return identifierType === 'url' || sourceType === 'eb_url' || sourceType === 'url' || /^https?:\/\//i.test(identifier);
+};
+
+const addOrganizerId = (target: Set<string>, value: unknown) => {
+    if (value === undefined || value === null) return;
+    const trimmed = String(value).trim();
+    if (trimmed) target.add(trimmed);
+};
+
+const addHandle = (target: Set<string>, value: unknown) => {
+    if (value === undefined || value === null) return;
+    const normalized = normalizeHandle(String(value));
+    if (normalized) target.add(normalized);
+};
+
+const addUrl = (target: Set<string>, value: unknown) => {
+    if (value === undefined || value === null) return;
+    const normalized = normalizeUrl(String(value));
+    if (normalized) target.add(normalized);
+};
+
+const buildExcludedSourceLookup = async (): Promise<ExcludedSourceLookup> => {
+    const { data, error } = await supabaseClient
+        .from('import_sources')
+        .select('source, identifier, identifier_type, approval_status, is_excluded, metadata, event_defaults');
+
+    if (error) {
+        throw new Error(`Supabase error: ${error.message}`);
+    }
+
+    const organizerIds = new Set<string>();
+    const handles = new Set<string>();
+    const urls = new Set<string>();
+
+    (data || []).forEach((source) => {
+        const resolvedStatus = resolveSourceApprovalStatus(source as ImportSourceRow);
+        if (resolvedStatus === 'approved') return;
+
+        const defaults = (source as ImportSourceRow)?.event_defaults || {};
+        const metadata = (source as ImportSourceRow)?.metadata || {};
+        addOrganizerId(organizerIds, (defaults as any).organizer_id);
+        addOrganizerId(organizerIds, (defaults as any).organizerId);
+        addOrganizerId(organizerIds, (metadata as any).organizer_id);
+        addOrganizerId(organizerIds, (metadata as any).organizerId);
+
+        if (isHandleSource(source as ImportSourceRow)) {
+            addHandle(handles, (source as ImportSourceRow)?.identifier);
+        }
+        if (isUrlSource(source as ImportSourceRow)) {
+            addUrl(urls, (source as ImportSourceRow)?.identifier);
+        }
+    });
+
+    return { organizerIds, handles, urls };
+};
+
+const hasExcludedSources = (lookup: ExcludedSourceLookup) =>
+    lookup.organizerIds.size > 0 || lookup.handles.size > 0 || lookup.urls.size > 0;
+
+const isEventSourceExcluded = (event: WeeklyPickEventRow, lookup: ExcludedSourceLookup) => {
+    const organizerId = event.organizer?.id ?? event.organizer_id ?? null;
+    if (organizerId != null && lookup.organizerIds.has(String(organizerId))) {
+        return true;
+    }
+
+    const organizerHandles = [
+        event.organizer?.fetlife_handle,
+        ...(event.organizer?.fetlife_handles || []),
+    ]
+        .filter(Boolean)
+        .map((handle) => normalizeHandle(String(handle)))
+        .filter(Boolean);
+
+    if (organizerHandles.some((handle) => lookup.handles.has(handle))) {
+        return true;
+    }
+
+    const urlCandidates = [
+        event.ticket_url,
+        event.event_url,
+        event.source_url,
+    ]
+        .filter(Boolean)
+        .map((url) => normalizeUrl(String(url)))
+        .filter(Boolean);
+
+    return urlCandidates.some((url) => lookup.urls.has(url));
 };
 
 const fontDisplay = `'AvenirNext-DemiBold','Avenir Next','AvenirNext','Helvetica Neue',Helvetica,Arial,sans-serif`;
@@ -510,6 +674,24 @@ const estimateTextWidth = (text: string, fontSize: number, letterSpacing: number
     return text.length * avgCharWidth + Math.max(0, text.length - 1) * letterSpacing;
 };
 
+const formatBytes = (value: number) => {
+    if (!Number.isFinite(value) || value <= 0) return '0b';
+    const units = ['b', 'kb', 'mb', 'gb'];
+    let idx = 0;
+    let num = value;
+    while (num >= 1024 && idx < units.length - 1) {
+        num /= 1024;
+        idx += 1;
+    }
+    const rounded = idx === 0 ? Math.round(num) : Math.round(num * 10) / 10;
+    return `${rounded}${units[idx]}`;
+};
+
+const memorySummary = () => {
+    const mem = process.memoryUsage();
+    return `rss=${formatBytes(mem.rss)} heap=${formatBytes(mem.heapUsed)} ext=${formatBytes(mem.external)}`;
+};
+
 const SUPABASE_PUBLIC_PATH = '/storage/v1/object/public/';
 const SUPABASE_RENDER_PATH = '/storage/v1/render/image/public/';
 
@@ -615,7 +797,7 @@ const buildSvg = ({
     weekLabel: string;
     days: Array<{ dateKey: string; dayLabel: string; dateLabel: string; items: WeeklyPickItem[] }>;
     imagesById: Map<number, string | null>;
-}): { svg: string; height: number; dayLayouts: DayLayout[] } => {
+}): WeeklyPicksSvgBuild => {
     const s = (value: number) => value * scale;
 
     const paddingX = s(16);
@@ -683,10 +865,6 @@ const buildSvg = ({
     const statusBadgeFont = s(12);
     const statusBadgeOffset = s(10);
 
-    const glowTopSize = s(240);
-    const glowMidSize = s(220);
-    const glowBottomSize = s(300);
-
     let cursorY = paddingTop;
 
     const showEmpty = days.length === 0;
@@ -709,13 +887,6 @@ const buildSvg = ({
     cursorY += paddingBottom;
 
     const finalHeight = Math.max(height, Math.ceil(cursorY));
-
-    const brandShadowDy = s(10);
-    const brandShadowBlur = s(18);
-    const cardShadowDy = s(4);
-    const cardShadowBlur = s(10);
-    const discountShadowDy = s(1);
-    const discountShadowBlur = s(3);
 
     const defs: string[] = [];
 
@@ -743,19 +914,6 @@ const buildSvg = ({
       <stop offset="100%" stop-color="${THEME.colors.surfaceLavenderLight}" />
     </linearGradient>`);
 
-    defs.push(`
-    <filter id="brandCardShadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feDropShadow dx="0" dy="${brandShadowDy}" stdDeviation="${brandShadowBlur}" flood-color="${THEME.colors.shadowPlum}" flood-opacity="0.18" />
-    </filter>`);
-    defs.push(`
-    <filter id="cardShadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feDropShadow dx="0" dy="${cardShadowDy}" stdDeviation="${cardShadowBlur}" flood-color="${THEME.colors.black}" flood-opacity="0.12" />
-    </filter>`);
-    defs.push(`
-    <filter id="discountShadow" x="-20%" y="-20%" width="140%" height="160%">
-      <feDropShadow dx="0" dy="${discountShadowDy}" stdDeviation="${discountShadowBlur}" flood-color="${THEME.colors.black}" flood-opacity="0.2" />
-    </filter>`);
-
     Object.entries(IMAGE_THEMES).forEach(([key, value]) => {
         defs.push(`
     <linearGradient id="fallback_${key}" x1="50%" y1="0%" x2="50%" y2="100%">
@@ -764,20 +922,10 @@ const buildSvg = ({
     </linearGradient>`);
     });
 
-    const glowTopX = width - s(90) - glowTopSize;
-    const glowTopY = -s(80);
-    const glowMidX = -s(110);
-    const glowMidY = s(120);
-    const glowBottomX = -s(90);
-    const glowBottomY = finalHeight + s(80) - glowBottomSize;
-
     const content: string[] = [];
 
     content.push(`
-    <rect width="${width}" height="${finalHeight}" fill="url(#bgGradient)" />
-    <circle cx="${glowTopX + glowTopSize / 2}" cy="${glowTopY + glowTopSize / 2}" r="${glowTopSize / 2}" fill="${THEME.colors.brandGlowTop}" />
-    <circle cx="${glowMidX + glowMidSize / 2}" cy="${glowMidY + glowMidSize / 2}" r="${glowMidSize / 2}" fill="${THEME.colors.brandGlowMid}" />
-    <circle cx="${glowBottomX + glowBottomSize / 2}" cy="${glowBottomY + glowBottomSize / 2}" r="${glowBottomSize / 2}" fill="${THEME.colors.brandGlowWarm}" />`);
+    <rect width="${width}" height="${finalHeight}" fill="url(#bgGradient)" />`);
 
     const dayLayouts: DayLayout[] = [];
 
@@ -790,7 +938,7 @@ const buildSvg = ({
         const emptyCardHeight = emptyCardPaddingY * 2 + emptyTextLine;
 
         content.push(`
-    <g filter="url(#brandCardShadow)">
+    <g>
       <rect x="${emptyCardX}" y="${emptyCardY}" width="${emptyCardWidth}" height="${emptyCardHeight}" rx="${s(24)}" ry="${s(24)}"
             fill="${THEME.colors.surfaceWhiteFrosted}" stroke="${THEME.colors.borderOnDarkStrong}" stroke-width="${s(1)}" />
     </g>
@@ -803,7 +951,7 @@ const buildSvg = ({
         const weekSelectorWidth = width - paddingX * 2;
 
         content.push(`
-    <g filter="url(#brandCardShadow)">
+    <g>
       <rect x="${weekSelectorX}" y="${weekSelectorY}" width="${weekSelectorWidth}" height="${weekSelectorHeight}" rx="${weekSelectorRadius}" ry="${weekSelectorRadius}"
             fill="${THEME.colors.surfaceWhiteFrosted}" stroke="${THEME.colors.borderOnDarkStrong}" stroke-width="${s(1)}" />
     </g>`);
@@ -872,7 +1020,7 @@ const buildSvg = ({
         <rect x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="${cardRadius}" ry="${cardRadius}" />
       </clipPath>
     </defs>
-    <g filter="url(#cardShadow)">
+    <g>
       <rect x="${paddingX}" y="${cardY}" width="${cardWidth}" height="${cardHeight}" rx="${cardRadius}" ry="${cardRadius}"
             fill="url(#glassPanel)" stroke="${cardStroke}" stroke-width="${cardStrokeWidth}" />
     </g>`);
@@ -997,7 +1145,7 @@ const buildSvg = ({
                         'Z',
                     ].join(' ');
                     content.push(`
-    <g filter="url(#discountShadow)">
+    <g>
       <path d="${bubblePath}" fill="${THEME.colors.discountBadge}" />
     </g>
     <text x="${bubbleX + bubbleWidth / 2}" y="${bubbleY + bubbleHeight / 2}"
@@ -1013,15 +1161,31 @@ const buildSvg = ({
         });
     }
 
-    const svg = `
-  <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${finalHeight}" viewBox="0 0 ${width} ${finalHeight}">
-    <defs>
-      ${defs.join('\n')}
-    </defs>
-    ${content.join('\n')}
-  </svg>`;
-    return { svg, height: finalHeight, dayLayouts };
+    return { defs, content, height: finalHeight, dayLayouts };
 };
+
+const renderSvgMarkup = ({
+    width,
+    height,
+    viewBoxY = 0,
+    viewBoxHeight = height,
+    defsMarkup,
+    contentMarkup,
+}: {
+    width: number;
+    height: number;
+    viewBoxY?: number;
+    viewBoxHeight?: number;
+    defsMarkup: string;
+    contentMarkup: string;
+}) => `
+  <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"
+       viewBox="0 ${viewBoxY} ${width} ${viewBoxHeight}" overflow="hidden">
+    <defs>
+      ${defsMarkup}
+    </defs>
+    ${contentMarkup}
+  </svg>`;
 
 const selectSplitAt = (totalHeight: number, dayLayouts: DayLayout[]) => {
     const target = totalHeight / 2;
@@ -1051,6 +1215,9 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
             start_date,
             end_date,
             image_url,
+            ticket_url,
+            event_url,
+            source_url,
             short_description,
             short_price,
             price,
@@ -1061,6 +1228,7 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
             approval_status,
             facilitator_only,
             non_ny,
+            organizer_id,
             location,
             city,
             region,
@@ -1076,6 +1244,8 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
                 id,
                 name,
                 hidden,
+                fetlife_handle,
+                fetlife_handles,
                 promo_codes(
                     discount,
                     discount_type,
@@ -1102,7 +1272,7 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
     }
 
     const rows = (data || []) as WeeklyPickEventRow[];
-    return rows.filter((event) => {
+    const baseFiltered = rows.filter((event) => {
         const approval = event.approval_status ?? null;
         if (approval && approval !== 'approved') return false;
         if (event.organizer?.hidden) return false;
@@ -1110,6 +1280,22 @@ const fetchWeeklyPickEvents = async (rangeStart: moment.Moment, rangeEnd: moment
         if (event.non_ny) return false;
         return true;
     });
+
+    if (!baseFiltered.length) {
+        return baseFiltered;
+    }
+
+    try {
+        const excludedLookup = await buildExcludedSourceLookup();
+        if (!hasExcludedSources(excludedLookup)) {
+            return baseFiltered;
+        }
+        return baseFiltered.filter((event) => !isEventSourceExcluded(event, excludedLookup));
+    } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.warn(`[weekly-picks] Failed to load import sources for approval check: ${message}`);
+        return baseFiltered;
+    }
 };
 
 export const generateWeeklyPicksImage = async (
@@ -1119,6 +1305,32 @@ export const generateWeeklyPicksImage = async (
     const logPrefix = '[weekly-picks]';
     const log = (level: WeeklyPicksImageLogLevel, message: string) =>
         logWeeklyPicksMessage(logger, level, message);
+    const STALL_LOG_INTERVAL_MS = 15000;
+    const runStage = async <T>(
+        label: string,
+        details: string | undefined,
+        fn: () => Promise<T>
+    ): Promise<{ result: T; ms: number }> => {
+        const startedAt = Date.now();
+        const detailSuffix = details ? ` ${details}` : '';
+        log('info', `${logPrefix} ${label} start${detailSuffix}`);
+        const interval = setInterval(() => {
+            const elapsed = Date.now() - startedAt;
+            log('info', `${logPrefix} ${label} still running ms=${elapsed} ${memorySummary()}`);
+        }, STALL_LOG_INTERVAL_MS);
+        try {
+            const result = await fn();
+            const ms = Date.now() - startedAt;
+            return { result, ms };
+        } catch (error) {
+            const ms = Date.now() - startedAt;
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            log('error', `${logPrefix} ${label} failed ms=${ms} error=${errorMessage}`);
+            throw error;
+        } finally {
+            clearInterval(interval);
+        }
+    };
     const requestedOffset = Number.isFinite(options.weekOffset)
         ? Number(options.weekOffset)
         : 0;
@@ -1144,9 +1356,11 @@ export const generateWeeklyPicksImage = async (
     const rangeStart = weekStarts[0].clone().startOf('day');
     const rangeEnd = weekStarts[2].clone().add(6, 'days').endOf('day');
 
-    const fetchEventsStart = Date.now();
-    const events = await fetchWeeklyPickEvents(rangeStart, rangeEnd);
-    const fetchEventsMs = Date.now() - fetchEventsStart;
+    const { result: events, ms: fetchEventsMs } = await runStage(
+        'Fetch events',
+        `range=${rangeStart.format('YYYY-MM-DD')}..${rangeEnd.format('YYYY-MM-DD')}`,
+        () => fetchWeeklyPickEvents(rangeStart, rangeEnd)
+    );
     log('info',
         `${logPrefix} Loaded ${events.length} events for range ${rangeStart.format('YYYY-MM-DD')}..${rangeEnd.format('YYYY-MM-DD')} in ${fetchEventsMs}ms`
     );
@@ -1239,58 +1453,224 @@ export const generateWeeklyPicksImage = async (
     }
     let completedImages = 0;
     const progressStep = totalImages <= 5 ? 1 : Math.max(1, Math.floor(totalImages / 4));
-    const imageFetchStart = Date.now();
-    await Promise.all(
-        items.map(async (item, index) => {
-            const dataUri = await fetchImageDataUri(
-                item.image,
-                cardWidth,
-                imageHeight,
-                {
-                    eventId: item.eventId,
-                    index: index + 1,
-                    total: totalImages,
-                },
-                logger
+    const { ms: imageFetchMs } = await runStage(
+        'Fetch images',
+        `count=${totalImages} card=${cardWidth}x${imageHeight}`,
+        async () => {
+            await Promise.all(
+                items.map(async (item, index) => {
+                    const dataUri = await fetchImageDataUri(
+                        item.image,
+                        cardWidth,
+                        imageHeight,
+                        {
+                            eventId: item.eventId,
+                            index: index + 1,
+                            total: totalImages,
+                        },
+                        logger
+                    );
+                    imagesById.set(item.eventId, dataUri);
+                    completedImages += 1;
+                    if (
+                        completedImages === totalImages ||
+                        (progressStep > 0 && completedImages % progressStep === 0)
+                    ) {
+                        log('info', `${logPrefix} Image fetch ${completedImages}/${totalImages}`);
+                    }
+                })
             );
-            imagesById.set(item.eventId, dataUri);
-            completedImages += 1;
-            if (
-                completedImages === totalImages ||
-                (progressStep > 0 && completedImages % progressStep === 0)
-            ) {
-                log('info', `${logPrefix} Image fetch ${completedImages}/${totalImages}`);
-            }
-        })
+        }
     );
-    const imageFetchMs = Date.now() - imageFetchStart;
     log('info', `${logPrefix} Image fetch total ${imageFetchMs}ms`);
 
-    log('info', `${logPrefix} Rendering SVG`);
-    const renderSvgStart = Date.now();
-    const { svg, height: renderedHeight, dayLayouts } = buildSvg({
+    const { result: svgResult, ms: renderSvgMs } = await runStage(
+        'Render SVG',
+        `width=${width} scale=${scale.toFixed(2)} items=${items.length}`,
+        async () => buildSvg({
+            width,
+            height: Math.round(844 * scale),
+            scale,
+            weekLabel,
+            days,
+            imagesById,
+        })
+    );
+    const { defs, content, height: renderedHeight, dayLayouts } = svgResult;
+    const defsMarkup = defs.join('\n');
+    const contentMarkup = content.join('\n');
+    const fullSvg = renderSvgMarkup({
         width,
-        height: Math.round(844 * scale),
-        scale,
-        weekLabel,
-        days,
-        imagesById,
+        height: renderedHeight,
+        defsMarkup,
+        contentMarkup,
     });
-    const renderSvgMs = Date.now() - renderSvgStart;
-    log('info', `${logPrefix} SVG rendered height=${renderedHeight} in ${renderSvgMs}ms`);
+    const svgBytes = Buffer.byteLength(fullSvg);
+    log('info', `${logPrefix} SVG rendered height=${renderedHeight} bytes=${svgBytes} in ${renderSvgMs}ms`);
 
-    log('info', `${logPrefix} Rasterizing PNG`);
-    const rasterStart = Date.now();
-    const png = await sharp(Buffer.from(svg))
-        .png({ compressionLevel: 1, adaptiveFiltering: false })
-        .toBuffer();
-    const rasterMs = Date.now() - rasterStart;
-    log('info', `${logPrefix} PNG ready (${png.length} bytes) in ${rasterMs}ms`);
+    const pixelCount = width * renderedHeight;
+    log('info', `${logPrefix} Rasterize SVG start pixels=${width}x${renderedHeight} (${Math.round(pixelCount / 1000000)}mp) svgBytes=${svgBytes}`);
+
+    const MAX_SEGMENT_HEIGHT = 2000;
+    const buildSegments = (startY: number, endY: number) => {
+        const safeStart = Math.max(0, Math.round(startY));
+        const safeEnd = Math.max(safeStart, Math.round(endY));
+        const segments: Array<{ offsetY: number; height: number }> = [];
+        if (safeEnd === safeStart) {
+            return [{ offsetY: safeStart, height: 1 }];
+        }
+        for (let y = safeStart; y < safeEnd; y += MAX_SEGMENT_HEIGHT) {
+            const height = Math.min(MAX_SEGMENT_HEIGHT, safeEnd - y);
+            segments.push({ offsetY: y, height });
+        }
+        return segments;
+    };
+
+    type RasterSegment = {
+        offsetY: number;
+        height: number;
+        data: Buffer;
+        info: { width: number; height: number; channels: number };
+    };
+
+    const rasterizeSegments = async (segments: Array<{ offsetY: number; height: number }>, label: string) => {
+        const rasterSegments: RasterSegment[] = [];
+        let totalMs = 0;
+        for (let i = 0; i < segments.length; i += 1) {
+            const segment = segments[i];
+            const { result, ms } = await runStage(
+                `Rasterize SVG ${label}`,
+                `segment=${i + 1}/${segments.length} offsetY=${segment.offsetY} height=${segment.height}`,
+                async () => {
+                    const segmentSvg = renderSvgMarkup({
+                        width,
+                        height: segment.height,
+                        viewBoxY: segment.offsetY,
+                        viewBoxHeight: segment.height,
+                        defsMarkup,
+                        contentMarkup,
+                    });
+                    return sharp(Buffer.from(segmentSvg))
+                        .raw()
+                        .toBuffer({ resolveWithObject: true });
+                }
+            );
+            totalMs += ms;
+            rasterSegments.push({
+                offsetY: segment.offsetY,
+                height: result.info.height,
+                data: result.data,
+                info: result.info,
+            });
+            log('info',
+                `${logPrefix} Raster segment ${label} ${i + 1}/${segments.length} ready ` +
+                `${result.info.width}x${result.info.height} in ${ms}ms`
+            );
+        }
+        return { segments: rasterSegments, totalMs };
+    };
+
+    const toSharpChannels = (value: number): 1 | 2 | 3 | 4 => {
+        if (value === 1 || value === 2 || value === 3 || value === 4) return value;
+        return 4;
+    };
+
+    const assertSegments = (segments: RasterSegment[]) => {
+        if (segments.length === 0) {
+            throw new Error('No raster segments rendered.');
+        }
+        const { width: segWidth } = segments[0].info;
+        const channels = toSharpChannels(segments[0].info.channels);
+        segments.forEach((segment) => {
+            if (segment.info.width !== segWidth || segment.info.channels !== channels) {
+                throw new Error('Raster segments have inconsistent dimensions.');
+            }
+        });
+        return { segWidth, channels };
+    };
+
+    const buildComposite = (
+        segments: RasterSegment[],
+        totalHeight: number,
+        offsetBase = 0
+    ) => {
+        const { segWidth, channels } = assertSegments(segments);
+        const compositeInputs = segments.map((segment) => ({
+            input: segment.data,
+            raw: {
+                width: segWidth,
+                height: segment.info.height,
+                channels,
+            },
+            left: 0,
+            top: segment.offsetY - offsetBase,
+        }));
+        return sharp({
+            create: {
+                width: segWidth,
+                height: totalHeight,
+                channels,
+                background: { r: 0, g: 0, b: 0, alpha: 0 },
+            },
+        } as any).composite(compositeInputs as any);
+    };
+
+    const { splitAt, usedFallback } = partCount === 1
+        ? { splitAt: renderedHeight, usedFallback: false }
+        : selectSplitAt(renderedHeight, dayLayouts);
+    if (usedFallback) {
+        log('info', `${logPrefix} Split fallback at y=${splitAt}`);
+    }
+    const clampedSplitAt = Math.min(Math.max(1, Math.round(splitAt)), renderedHeight - 1);
+
+    let rasterMs = 0;
+    let fullSegments: RasterSegment[] = [];
+    let topSegments: RasterSegment[] = [];
+    let bottomSegments: RasterSegment[] = [];
 
     if (partCount === 1) {
-        const jpg = await sharp(png)
-            .jpeg({ quality: 90 })
-            .toBuffer();
+        const segments = buildSegments(0, renderedHeight);
+        const raster = await rasterizeSegments(segments, 'full');
+        rasterMs = raster.totalMs;
+        fullSegments = raster.segments;
+    } else {
+        const topSpec = buildSegments(0, clampedSplitAt);
+        const bottomSpec = buildSegments(clampedSplitAt, renderedHeight);
+        const topRaster = await rasterizeSegments(topSpec, 'top');
+        const bottomRaster = await rasterizeSegments(bottomSpec, 'bottom');
+        rasterMs = topRaster.totalMs + bottomRaster.totalMs;
+        topSegments = topRaster.segments;
+        bottomSegments = bottomRaster.segments;
+        fullSegments = topSegments.concat(bottomSegments);
+    }
+
+    const { result: png, ms: pngEncodeMs } = await runStage(
+        'PNG encode',
+        `segments=${fullSegments.length} height=${renderedHeight}`,
+        () => buildComposite(fullSegments, renderedHeight)
+            .png({ compressionLevel: 1, adaptiveFiltering: false })
+            .toBuffer()
+    );
+    log('info', `${logPrefix} PNG encoded (${png.length} bytes) in ${pngEncodeMs}ms`);
+
+    const buildTimings = (jpgEncodeMs: number): WeeklyPicksImageTimings => ({
+        fetchEventsMs,
+        imageFetchMs,
+        renderSvgMs,
+        rasterMs,
+        pngEncodeMs,
+        jpgEncodeMs,
+    });
+
+    if (partCount === 1) {
+        const { result: jpg, ms: jpgEncodeMs } = await runStage(
+            'JPG encode',
+            `segments=${fullSegments.length} height=${renderedHeight}`,
+            () => buildComposite(fullSegments, renderedHeight)
+                .jpeg({ quality: 90 })
+                .toBuffer()
+        );
+        log('info', `${logPrefix} JPG ready (${jpg.length} bytes) in ${jpgEncodeMs}ms`);
         return {
             png,
             parts: [
@@ -1304,26 +1684,28 @@ export const generateWeeklyPicksImage = async (
             height: renderedHeight,
             weekOffset: selectedOffset,
             weekLabel,
+            timings: buildTimings(jpgEncodeMs),
         };
     }
 
-    const { splitAt, usedFallback } = selectSplitAt(renderedHeight, dayLayouts);
-    if (usedFallback) {
-        log('info', `${logPrefix} Split fallback at y=${splitAt}`);
-    }
-    const clampedSplitAt = Math.min(Math.max(1, Math.round(splitAt)), renderedHeight - 1);
     const topHeight = clampedSplitAt;
     const bottomHeight = renderedHeight - clampedSplitAt;
-    const [topJpg, bottomJpg] = await Promise.all([
-        sharp(png)
-            .extract({ left: 0, top: 0, width, height: topHeight })
-            .jpeg({ quality: 90 })
-            .toBuffer(),
-        sharp(png)
-            .extract({ left: 0, top: clampedSplitAt, width, height: bottomHeight })
-            .jpeg({ quality: 90 })
-            .toBuffer(),
-    ]);
+    const { result: jpgParts, ms: jpgEncodeMs } = await runStage(
+        'JPG encode parts',
+        `splitAt=${clampedSplitAt} top=${topHeight} bottom=${bottomHeight}`,
+        async () =>
+            Promise.all([
+                buildComposite(topSegments, topHeight)
+                    .jpeg({ quality: 90 })
+                    .toBuffer(),
+                buildComposite(bottomSegments, bottomHeight, clampedSplitAt)
+                    .jpeg({ quality: 90 })
+                    .toBuffer(),
+            ])
+    );
+    const [topJpg, bottomJpg] = jpgParts;
+    const totalJpgBytes = topJpg.length + bottomJpg.length;
+    log('info', `${logPrefix} JPG parts ready (${totalJpgBytes} bytes) in ${jpgEncodeMs}ms`);
     const parts: WeeklyPicksImagePart[] = [
         {
             jpg: topJpg,
@@ -1343,6 +1725,7 @@ export const generateWeeklyPicksImage = async (
         height: renderedHeight,
         weekOffset: selectedOffset,
         weekLabel,
+        timings: buildTimings(jpgEncodeMs),
     };
 };
 
@@ -1351,4 +1734,5 @@ export type {
     WeeklyPicksImageLogger,
     WeeklyPicksImageOptions,
     WeeklyPicksImageResult,
+    WeeklyPicksImageTimings,
 };
