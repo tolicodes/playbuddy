@@ -31,6 +31,7 @@ import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
 import { useFetchOrganizers } from "../../Common/db-axios/useOrganizers";
 import { WishlistHeart } from "../Calendar/ListView/WishlistHeart";
+import { useGuestSaveModal } from "../GuestSaveModal";
 import { getSafeImageUrl, getSmallAvatarUrl } from "../../Common/hooks/imageUtils";
 import type { Organizer } from "../../Common/types/commonTypes";
 import { colors, fontFamilies, fontSizes, gradients, radius, spacing } from "../../components/styles";
@@ -106,6 +107,7 @@ export const CommunitiesList = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const { authUserId } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const analyticsProps = useAnalyticsProps();
     const { width } = useWindowDimensions();
 
@@ -180,7 +182,11 @@ export const CommunitiesList = ({
                 return;
             }
             if (!authUserId) {
-                alert('Create an account to join a community!');
+                showGuestSaveModal({
+                    title: 'Create an account to join communities',
+                    message: 'Follow organizers and join community events with an account.',
+                    iconName: 'users',
+                });
                 return;
             }
             const targetIds = shouldJoin
@@ -232,6 +238,7 @@ export const CommunitiesList = ({
             leaveCommunity,
             myCommunityIds,
             organizerListMode,
+            showGuestSaveModal,
         ]
     );
 

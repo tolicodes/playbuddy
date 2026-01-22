@@ -24,6 +24,7 @@ import type { EventListViewMode } from './eventListViewMode';
 import { ActionSheet } from '../../../components/ActionSheet';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 import { useCalendarCoach } from '../../PopupManager';
+import { useGuestSaveModal } from '../../GuestSaveModal';
 
 const DETAILS_PANEL_HEIGHT = 100;
 const CARD_IMAGE_ASPECT_RATIO = 2;
@@ -67,6 +68,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 }) => {
     const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
     const { authUserId, userProfile } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
     const calendarCoach = useCalendarCoach();
     const [shareMenuOpen, setShareMenuOpen] = useState(false);
@@ -142,7 +144,11 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 
     const handleToggleEventWishlist = () => {
         if (!authUserId) {
-            alert('You need an account to add events to your calendar');
+            showGuestSaveModal({
+                title: 'Create an account to save events',
+                message: 'Save events to your calendar and keep your picks in sync.',
+                iconName: 'heart',
+            });
             return;
         }
 

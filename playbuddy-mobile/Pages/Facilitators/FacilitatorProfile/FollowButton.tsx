@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, TouchableOpacity, StyleSheet, Alert, View } from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, View } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
 import { useUserContext } from '../../Auth/hooks/UserContext';
@@ -7,6 +7,7 @@ import { useFetchFollows, useFollow, useUnfollow } from '../../../Common/db-axio
 import { logEvent } from '../../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { UE } from '../../../userEventTypes';
+import { useGuestSaveModal } from '../../GuestSaveModal';
 
 type Props = {
     followeeId: string;
@@ -19,12 +20,17 @@ export const FollowButton = ({ followeeId, followeeType }: Props) => {
     const { mutate: follow } = useFollow(authUserId || undefined);
     const { mutate: unfollow } = useUnfollow(authUserId || undefined);
     const analyticsProps = useAnalyticsProps();
+    const { showGuestSaveModal } = useGuestSaveModal();
 
     const isFollowed = follows?.[followeeType]?.includes(followeeId);
 
     const handlePress = () => {
         if (!authUserId) {
-            Alert.alert('You must be logged in to follow');
+            showGuestSaveModal({
+                title: 'Create an account to follow',
+                message: 'Follow facilitators and organizers with an account.',
+                iconName: 'user-plus',
+            });
             return;
         }
 

@@ -20,6 +20,7 @@ import 'react-native-get-random-values';
 
 import { useCreateEventSubmission, useCreateEventSubmissionFromUrl } from '../Common/db-axios/useEventSubmissions';
 import { useUserContext } from './Auth/hooks/UserContext';
+import { useGuestSaveModal } from './GuestSaveModal';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
 import type { Attendee, Event } from '../commonTypes';
 import type { EventWithMetadata } from '../Common/Nav/NavStackType';
@@ -50,6 +51,7 @@ const toValidDate = (value?: string | null) => {
 
 export const SubmitEvent = () => {
     const { authUserId } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const submitFromUrl = useCreateEventSubmissionFromUrl();
     const submitManual = useCreateEventSubmission();
 
@@ -106,7 +108,11 @@ export const SubmitEvent = () => {
 
     const handlePickImage = async () => {
         if (isLocked) {
-            Alert.alert('Sign in required', 'Please sign in to upload an image.');
+            showGuestSaveModal({
+                title: 'Create an account to submit events',
+                message: 'Upload images and submit events to the community.',
+                iconName: 'image',
+            });
             return;
         }
 
@@ -162,7 +168,11 @@ export const SubmitEvent = () => {
 
     const handleSubmitUrl = async () => {
         if (isLocked) {
-            Alert.alert('Sign in required', 'Please sign in to submit an event.');
+            showGuestSaveModal({
+                title: 'Create an account to submit events',
+                message: 'Submit links and share events with the community.',
+                iconName: 'calendar-plus',
+            });
             return;
         }
         if (!isUrlReady) {
@@ -204,7 +214,11 @@ export const SubmitEvent = () => {
 
     const handleSubmitManual = async () => {
         if (isLocked) {
-            Alert.alert('Sign in required', 'Please sign in to submit an event.');
+            showGuestSaveModal({
+                title: 'Create an account to submit events',
+                message: 'Submit events and keep the community updated.',
+                iconName: 'calendar-plus',
+            });
             return;
         }
 

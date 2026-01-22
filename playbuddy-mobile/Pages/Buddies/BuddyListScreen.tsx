@@ -19,6 +19,7 @@ import { LoginToAccess } from '../../components/LoginToAccess';
 import { AvatarCircle } from '../Auth/Buttons/AvatarCircle';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { ShareCalendarModal } from '../ShareCalendarModal';
+import { useGuestSaveModal } from '../GuestSaveModal';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { logEvent } from '../../Common/hooks/logger';
 import type { NavStack, NavStackProps } from '../../Common/Nav/NavStackType';
@@ -65,6 +66,7 @@ export const BuddyListScreen = () => {
     const route = useRoute<RouteProp<NavStackProps, 'Buddy List'>>();
     const isFocused = useIsFocused();
     const { authUserId, userProfile } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const insets = useSafeAreaInsets();
     const analyticsProps = useAnalyticsProps();
 
@@ -237,7 +239,11 @@ export const BuddyListScreen = () => {
 
     const handleAddBuddy = useCallback(async (buddyId: string, name?: string | null) => {
         if (!authUserId) {
-            Alert.alert('Login required', 'Create an account to add buddies.');
+            showGuestSaveModal({
+                title: 'Create an account to add buddies',
+                message: 'Add buddies to share calendars and plan nights out.',
+                iconName: 'user-friends',
+            });
             return;
         }
         if (!buddyId || buddyId === authUserId || buddyIdSet.has(buddyId)) return;
@@ -266,11 +272,15 @@ export const BuddyListScreen = () => {
         } finally {
             setPendingBuddyId(null);
         }
-    }, [analyticsProps, authUserId, buddyIdSet, createBuddy]);
+    }, [analyticsProps, authUserId, buddyIdSet, createBuddy, showGuestSaveModal]);
 
     const handleRemoveBuddy = useCallback(async (buddyId: string, name?: string | null) => {
         if (!authUserId) {
-            Alert.alert('Login required', 'Create an account to manage buddies.');
+            showGuestSaveModal({
+                title: 'Create an account to manage buddies',
+                message: 'Manage buddies and shared plans with an account.',
+                iconName: 'user-friends',
+            });
             return;
         }
         if (!buddyId || buddyId === authUserId) return;
@@ -284,7 +294,7 @@ export const BuddyListScreen = () => {
         } finally {
             setPendingBuddyId(null);
         }
-    }, [authUserId, deleteBuddy]);
+    }, [authUserId, deleteBuddy, showGuestSaveModal]);
 
     if (!authUserId) {
         return <LoginToAccess entityToAccess="Buddy list" />;

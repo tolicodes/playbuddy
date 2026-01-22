@@ -21,6 +21,7 @@ import { useUserContext } from './hooks/UserContext';
 import { useUpdateUserProfile } from './hooks/useUserProfile';
 import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
+import { useGuestSaveModal } from '../GuestSaveModal';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import {
     cancelOrganizerNotifications,
@@ -82,6 +83,7 @@ export const ConsentScreen = () => {
     const navigation = useNavigation<NavStack>();
     const route = useRoute<ConsentRoute>();
     const { authUserId, userProfile, isLoadingUserProfile } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const { mutateAsync: updateUserProfile } = useUpdateUserProfile(authUserId || '');
     const { allEvents } = useCalendarContext();
     const { myCommunities } = useCommonContext();
@@ -101,7 +103,11 @@ export const ConsentScreen = () => {
     const saveConsent = useCallback(
         async (nextValues: { joined_newsletter?: boolean; share_calendar?: boolean }, onError?: () => void) => {
             if (!authUserId) {
-                Alert.alert('Sign in required', 'Please sign in to update your consent.');
+                showGuestSaveModal({
+                    title: 'Create an account to update consent',
+                    message: 'Create an account or sign in to manage your preferences.',
+                    iconName: 'shield-alt',
+                });
                 onError?.();
                 return;
             }
@@ -117,7 +123,7 @@ export const ConsentScreen = () => {
                 onError?.();
             }
         },
-        [authUserId, updateUserProfile]
+        [authUserId, showGuestSaveModal, updateUserProfile]
     );
 
     const handleToggleNewsletter = useCallback(
@@ -239,7 +245,11 @@ export const ConsentScreen = () => {
 
     const handleSave = async () => {
         if (!authUserId) {
-            Alert.alert('Sign in required', 'Please sign in to update your consent.');
+            showGuestSaveModal({
+                title: 'Create an account to update consent',
+                message: 'Create an account or sign in to manage your preferences.',
+                iconName: 'shield-alt',
+            });
             return;
         }
         setIsSaving(true);

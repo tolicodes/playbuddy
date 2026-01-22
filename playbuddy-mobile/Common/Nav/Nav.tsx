@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, View } from "react-native";
 import { gradients } from "../../components/styles";
 import { navigationRef } from "./navigationRef";
+import { GuestSaveModalProvider } from "../../Pages/GuestSaveModal";
 
 const navTheme = {
     ...DefaultTheme,
@@ -26,20 +27,21 @@ export default function AppNavigator() {
             theme={navTheme}
             ref={navigationRef}
         >
-
-            <View style={styles.root}>
-                <LinearGradient
-                    colors={gradients.nav}
-                    locations={[0, 0.55, 1]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={StyleSheet.absoluteFill}
-                >
-                </LinearGradient>
+            <GuestSaveModalProvider>
                 <View style={styles.root}>
-                    <DrawerNav />
+                    <LinearGradient
+                        colors={gradients.nav}
+                        locations={[0, 0.55, 1]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={StyleSheet.absoluteFill}
+                    >
+                    </LinearGradient>
+                    <View style={styles.root}>
+                        <DrawerNav />
+                    </View>
                 </View>
-            </View>
+            </GuestSaveModalProvider>
         </NavigationContainer>
     );
 }

@@ -22,6 +22,7 @@ import { logEvent } from '../../Common/hooks/logger';
 import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
 import { WishlistHeart } from '../Calendar/ListView/WishlistHeart';
+import { useGuestSaveModal } from '../GuestSaveModal';
 import { colors, fontFamilies, fontSizes, radius, spacing, sizes } from '../../components/styles';
 
 const ADMIN_EMAIL = 'toli@toli.me';
@@ -35,6 +36,7 @@ export const FacilitatorsList = ({
 }) => {
     const navigation = useNavigation<NavStack>();
     const { authUserId, userProfile } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const { data: events } = useFetchEvents({
         includeFacilitatorOnly: true
     });
@@ -50,11 +52,15 @@ export const FacilitatorsList = ({
 
     const handleFollow = useCallback((id: string) => {
         if (!authUserId) {
-            alert('Create an account to follow a facilitator!');
+            showGuestSaveModal({
+                title: 'Create an account to follow facilitators',
+                message: 'Follow facilitators and get new workshop updates.',
+                iconName: 'user-plus',
+            });
             return;
         }
         follow({ followee_type: 'facilitator', followee_id: id });
-    }, [authUserId, follow]);
+    }, [authUserId, follow, showGuestSaveModal]);
 
     const handleUnfollow = useCallback((id: string) => {
         unfollow({ followee_type: 'facilitator', followee_id: id });

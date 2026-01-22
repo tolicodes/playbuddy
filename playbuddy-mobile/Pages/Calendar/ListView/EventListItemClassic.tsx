@@ -16,6 +16,7 @@ import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
 import { ADMIN_EMAILS } from '../../../config';
 import type { EventListItemProps } from './EventListItem';
+import { useGuestSaveModal } from '../../GuestSaveModal';
 
 export const CLASSIC_ITEM_HEIGHT = 128;
 const THUMB_SIZE = 56;
@@ -33,6 +34,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
 }) => {
     const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
     const { authUserId, userProfile } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const formattedDate = formatDate(item, fullDate);
@@ -61,7 +63,11 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
 
     const handleToggleEventWishlist = () => {
         if (!authUserId) {
-            alert('You need an account to add events to your calendar');
+            showGuestSaveModal({
+                title: 'Create an account to save events',
+                message: 'Save events to your calendar and keep your picks in sync.',
+                iconName: 'heart',
+            });
             return;
         }
 

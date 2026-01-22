@@ -8,7 +8,6 @@ import {
     Animated,
     Platform,
     StatusBar,
-    Alert,
     Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +22,7 @@ import { colors, fontFamilies, fontSizes, radius, spacing } from "../../componen
 import { useCommonContext } from "../hooks/CommonContext";
 import { useJoinCommunity, useLeaveCommunity } from "../hooks/useCommunities";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
+import { useGuestSaveModal } from "../../Pages/GuestSaveModal";
 import type { NavStackProps } from "../Nav/NavStackType";
 
 // Custom Back Button
@@ -99,6 +99,7 @@ const CommunityHeaderFollowButton = ({
 }) => {
     const { authUserId } = useUserContext();
     const { myCommunities } = useCommonContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
 
@@ -118,7 +119,11 @@ const CommunityHeaderFollowButton = ({
     const handlePress = () => {
         if (!canFollow) return;
         if (!authUserId) {
-            Alert.alert('Create an account to join a community!');
+            showGuestSaveModal({
+                title: 'Create an account to join communities',
+                message: 'Follow organizers and join community events with an account.',
+                iconName: 'users',
+            });
             return;
         }
         if (isJoined) {
