@@ -18,9 +18,10 @@ import { buildRecommendations, type RecommendationPick } from '../Calendar/hooks
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
+import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
 import { useFetchActiveEventPopups, useFetchEventPopups } from '../../Common/db-axios/useEventPopups';
 import { useImportSources } from '../../Common/db-axios/useImportSources';
-import type { Event, EventPopup, ImportSource } from '../../Common/types/commonTypes';
+import type { Event, EventAttendees, EventPopup, ImportSource } from '../../Common/types/commonTypes';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { ADMIN_EMAILS, API_BASE_URL } from '../../config';
@@ -28,7 +29,9 @@ import { TZ } from '../Calendar/ListView/calendarNavUtils';
 import { DiscoverGameModal } from '../DiscoverGameModal';
 import { EdgePlayGroupModal } from '../EdgePlayGroupModal';
 import { EventPopupModal } from '../EventPopupModal';
+import { useGuestSaveModal } from '../GuestSaveModal';
 import { RateAppModal } from '../RateAppModal';
+import { ShareCalendarModal } from '../ShareCalendarModal';
 import {
     getForcedPopupId,
     getLatestPopupShown,
@@ -120,6 +123,8 @@ const POPUP_ICON_MAP: Record<PopupId, { icon: string; color: string; bg: string 
     rate_app: { icon: 'star', color: colors.accentPurple, bg: colors.accentPurpleSoft },
     discover_game: { icon: 'gamepad', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
     newsletter_signup: { icon: 'envelope-open-text', color: colors.accentBlue, bg: colors.accentBlueSoft },
+    buddy_list_coach: { icon: 'user-friends', color: colors.accentSkyDeep, bg: colors.accentSkySoft },
+    share_calendar: { icon: 'calendar-check', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
 };
 
 const MANUAL_POPUP_ICON = {
@@ -208,13 +213,28 @@ const AccordionSection = ({ title, subtitle, expanded, onToggle, children }: Acc
 const EVENT_STATUS_PREVIEW = 6;
 const SOURCE_STATUS_PREVIEW = 6;
 
+const hasValidAttendee = (entry: EventAttendees, authUserId?: string | null) => {
+    const seen = new Set<string>();
+    return (entry.attendees ?? []).some((attendee) => {
+        const attendeeId = attendee?.id;
+        if (!attendeeId || seen.has(attendeeId)) return false;
+        if (authUserId && attendeeId === authUserId) return false;
+        const name = attendee?.name?.trim();
+        if (name === '0') return false;
+        seen.add(attendeeId);
+        return true;
+    });
+};
+
 export const DebugScreen = () => {
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const { allEvents, availableCardsToSwipe, wishlistEvents, wishlistEntryMap } = useCalendarContext();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
+    const { data: attendeeGroups = [] } = useFetchAttendees();
     const { data: publishedEventPopups = [], isLoading: isLoadingPublishedEventPopups, error: publishedEventPopupsError } =
         useFetchEventPopups({ status: 'published' });
     const { data: activeEventPopups = [], isLoading: isLoadingActiveEventPopups } = useFetchActiveEventPopups();
@@ -279,6 +299,21 @@ export const DebugScreen = () => {
         const followIds = (follows?.organizer || []).map((id) => id.toString());
         return new Set([...followIds, ...organizerIdsFromCommunities]);
     }, [follows?.organizer, organizerIdsFromCommunities]);
+
+    const attendeeEventIds = useMemo(() => {
+        const ids = new Set<number>();
+        attendeeGroups.forEach((entry) => {
+            if (hasValidAttendee(entry, authUserId)) {
+                ids.add(entry.event_id);
+            }
+        });
+        return ids;
+    }, [attendeeGroups, authUserId]);
+
+    const eventWithAttendees = useMemo(() => {
+        const candidates = [...(availableCardsToSwipe ?? []), ...(allEvents ?? [])];
+        return candidates.find((event) => attendeeEventIds.has(event.id));
+    }, [availableCardsToSwipe, allEvents, attendeeEventIds]);
 
     const eventStatusSummary = useMemo(() => {
         const buckets: Record<'approved' | 'pending' | 'rejected' | 'unknown', Event[]> = {
@@ -767,6 +802,24 @@ export const DebugScreen = () => {
     }, []);
 
     const onPressShowPopup = useCallback((popupId: PopupId) => {
+        if (popupId === 'buddy_list_coach') {
+            setDebugEventPopup(null);
+            setDebugPopupId(null);
+            const targetEvent = eventWithAttendees;
+            if (!targetEvent) {
+                setPopupDebugStatus('No events with attendees besides you for buddy coach.');
+                return;
+            }
+            setPopupDebugStatus(`Buddy list coach queued for ${targetEvent.name || 'event'}.`);
+            void (async () => {
+                await setForcedPopupId(popupId);
+                navigation.navigate('Event Details', {
+                    selectedEvent: targetEvent,
+                    title: targetEvent.name,
+                });
+            })();
+            return;
+        }
         if (popupId === 'calendar_add_coach') {
             setDebugEventPopup(null);
             setDebugPopupId(null);
@@ -781,7 +834,7 @@ export const DebugScreen = () => {
         setDebugEventPopup(null);
         setDebugPopupId(popupId);
         setPopupDebugStatus(`Showing ${POPUP_CONFIG[popupId].label} popup.`);
-    }, [navigation]);
+    }, [eventWithAttendees, navigation]);
 
     const onPressShowManualPopup = useCallback((popup: EventPopup) => {
         setDebugPopupId(null);
@@ -1221,6 +1274,12 @@ export const DebugScreen = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.secondaryButton}
+                                    onPress={() => showGuestSaveModal()}
+                                >
+                                    <Text style={styles.secondaryButtonText}>Show guest save modal</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.secondaryButton}
                                     onPress={() => void refreshPopupDebugInfo('manual refresh')}
                                 >
                                     <Text style={styles.secondaryButtonText}>Refresh popup debug</Text>
@@ -1509,6 +1568,11 @@ export const DebugScreen = () => {
                 />
                 <NewsletterSignupModal
                     visible={debugPopupId === 'newsletter_signup'}
+                    onDismiss={dismissDebugPopup}
+                    onSnooze={dismissDebugPopup}
+                />
+                <ShareCalendarModal
+                    visible={debugPopupId === 'share_calendar'}
                     onDismiss={dismissDebugPopup}
                     onSnooze={dismissDebugPopup}
                 />

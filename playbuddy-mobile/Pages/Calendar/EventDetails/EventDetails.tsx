@@ -41,12 +41,13 @@ import { AvatarCircle } from '../../Auth/Buttons/AvatarCircle';
 import { useAnalyticsProps, useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
 import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../../components/styles';
-import { ACTIVE_EVENT_TYPES } from '../../../Common/types/commonTypes';
+import { ACTIVE_EVENT_TYPES, type Attendee, type EventAttendees } from '../../../Common/types/commonTypes';
 import SectionCard from './SectionCard';
 import { TZ } from '../ListView/calendarNavUtils';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 import { WishlistPlusButton } from '../ListView/WishlistPlusButton';
 import { navigateToTab } from '../../../Common/Nav/navigationHelpers';
+import { useGuestSaveModal } from '../../GuestSaveModal';
 import {
     clearForcedPopupId,
     getForcedPopupId,
@@ -119,7 +120,7 @@ const SECONDARY_ACTION_ICON_ONLY_MIN_WIDTH = Math.round(
 );
 const BUDDY_LIST_COACH_ID: PopupId = 'buddy_list_coach';
 const BUDDY_LIST_COACH_MESSAGE =
-    'Follow your buddies by scrolling down and tapping their profile photos.\nYou can also search in More > Buddy Lists.';
+    'Scroll down to follow your buddies by tapping their profile photos.\nYou can also find them in More > Buddy Lists.';
 
 const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string }) => {
     const { currentDeepLink, authUserId } = useUserContext();
@@ -233,7 +234,11 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
     // Toggles the wishlist status for the event.
     const handleToggleWishlist = () => {
         if (!authUserId) {
-            alert('You need an account to add events to your wishlist');
+            showGuestSaveModal({
+                title: 'Create an account to save events',
+                message: 'Save events to your calendar and keep your picks in sync.',
+                iconName: 'heart',
+            });
             return;
         }
 
@@ -302,7 +307,11 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
     const handleOrganizerFollow = () => {
         if (!canFollowOrganizer) return;
         if (!authUserId) {
-            Alert.alert('Create an account to follow organizers!');
+            showGuestSaveModal({
+                title: 'Create an account to follow organizers',
+                message: 'Follow organizers and get new event updates.',
+                iconName: 'user-plus',
+            });
             return;
         }
         if (isOrganizerFollowed) {
@@ -593,10 +602,24 @@ const MediaTab = ({ event }: { event: EventWithMetadata }) => {
 const ATTENDEE_AVATAR_SIZE = 64;
 const ATTENDEE_ITEM_WIDTH = 88;
 
-const AttendeesSection = ({ eventId }: { eventId: number }) => {
-    const { data: attendees = [] } = useFetchAttendees();
+const filterEventAttendees = (entries: EventAttendees[], eventId?: number | null): Attendee[] => {
+    if (eventId == null) return [];
+    const eventAttendees = entries.find((entry) => entry.event_id === eventId)?.attendees || [];
+    const seen = new Set<string>();
+    return eventAttendees.filter((attendee) => {
+        const attendeeId = attendee?.id;
+        if (!attendeeId || seen.has(attendeeId)) return false;
+        const name = attendee?.name?.trim();
+        if (name === '0') return false;
+        seen.add(attendeeId);
+        return true;
+    });
+};
+
+const AttendeesSection = ({ eventId, attendees }: { eventId: number; attendees: Attendee[] }) => {
     const navigation = useNavigation<NavStack>();
     const { authUserId } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
     const analyticsProps = useAnalyticsProps();
     const { data: buddies = [] } = useFetchBuddies(authUserId);
     const { data: buddyWishlists = [] } = useFetchBuddyWishlists(authUserId);
@@ -604,18 +627,7 @@ const AttendeesSection = ({ eventId }: { eventId: number }) => {
     const { mutateAsync: deleteBuddy, isPending: isRemovingBuddy } = useDeleteBuddy(authUserId);
     const [pendingBuddyId, setPendingBuddyId] = useState<string | null>(null);
 
-    const attendeesForEvent = useMemo(() => {
-        const eventAttendees = attendees.find((entry) => entry.event_id === eventId)?.attendees || [];
-        const seen = new Set<string>();
-        return eventAttendees.filter((attendee) => {
-            const attendeeId = attendee?.id;
-            if (!attendeeId || seen.has(attendeeId)) return false;
-            const name = attendee?.name?.trim();
-            if (name === '0') return false;
-            seen.add(attendeeId);
-            return true;
-        });
-    }, [attendees, eventId]);
+    const attendeesForEvent = attendees;
 
     const buddyIdSet = useMemo(() => {
         const ids = new Set<string>();
@@ -644,7 +656,11 @@ const AttendeesSection = ({ eventId }: { eventId: number }) => {
 
     const handleAddBuddy = async (buddyId: string, displayName: string) => {
         if (!authUserId) {
-            Alert.alert('Login required', 'Create an account to add buddies.');
+            showGuestSaveModal({
+                title: 'Create an account to add buddies',
+                message: 'Add buddies to share calendars and plan nights out.',
+                iconName: 'user-friends',
+            });
             return;
         }
         if (!buddyId || buddyId === authUserId || buddyIdSet.has(buddyId)) return;
@@ -680,7 +696,11 @@ const AttendeesSection = ({ eventId }: { eventId: number }) => {
 
     const handleRemoveBuddy = async (buddyId: string, displayName: string) => {
         if (!authUserId) {
-            Alert.alert('Login required', 'Create an account to manage buddies.');
+            showGuestSaveModal({
+                title: 'Create an account to manage buddies',
+                message: 'Manage buddies and shared plans with an account.',
+                iconName: 'user-friends',
+            });
             return;
         }
         if (!buddyId || buddyId === authUserId) return;
@@ -1202,6 +1222,8 @@ export const EventDetails = ({ route }) => {
 
     const { selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string } = route.params || {};
     const { currentDeepLink, authUserId, userProfile } = useUserContext();
+    const { showGuestSaveModal } = useGuestSaveModal();
+    const { data: attendees = [] } = useFetchAttendees();
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
     const [activeTab, setActiveTab] = useState<string>('details');
     const isFocused = useIsFocused();
@@ -1213,6 +1235,14 @@ export const EventDetails = ({ route }) => {
     const buddyCoachArrowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
     const selectedEventId = selectedEvent?.id;
     const scrollViewRef = useRef<ScrollView>(null);
+    const attendeesForEvent = useMemo(
+        () => filterEventAttendees(attendees, selectedEventId),
+        [attendees, selectedEventId],
+    );
+    const hasOtherAttendees = useMemo(() => {
+        if (!authUserId) return attendeesForEvent.length > 0;
+        return attendeesForEvent.some((attendee) => attendee?.id && attendee.id !== authUserId);
+    }, [attendeesForEvent, authUserId]);
 
     const eventAnalyticsProps = useEventAnalyticsProps(selectedEvent);
 
@@ -1224,7 +1254,7 @@ export const EventDetails = ({ route }) => {
     const hasMedia = (selectedEvent.media?.length || 0) > 1;
 
     useEffect(() => {
-        if (!isFocused || buddyCoachVisible || !selectedEventId) return;
+        if (!isFocused || buddyCoachVisible || !selectedEventId || !hasOtherAttendees) return;
         let isActive = true;
 
         (async () => {
@@ -1263,7 +1293,7 @@ export const EventDetails = ({ route }) => {
         return () => {
             isActive = false;
         };
-    }, [authUserId, buddyCoachVisible, isFocused, selectedEventId]);
+    }, [authUserId, buddyCoachVisible, hasOtherAttendees, isFocused, selectedEventId]);
 
     useEffect(() => {
         if (buddyCoachVisible) {
@@ -1365,11 +1395,15 @@ export const EventDetails = ({ route }) => {
 
                 {hasMedia && <MediaTab event={selectedEvent} />}
 
-                <AttendeesSection eventId={selectedEvent.id} />
+                <AttendeesSection eventId={selectedEvent.id} attendees={attendeesForEvent} />
 
                 <RecommendedEvents event={selectedEvent} />
 
             </ScrollView>
+            <Animated.View
+                pointerEvents="none"
+                style={[styles.buddyCoachScrim, { opacity: buddyCoachAnim }]}
+            />
             <View
                 pointerEvents={buddyCoachVisible ? 'box-none' : 'none'}
                 accessibilityElementsHidden={!buddyCoachVisible}
@@ -1411,7 +1445,10 @@ export const EventDetails = ({ route }) => {
                     )}
                 </Animated.View>
                 <TouchableOpacity
-                    onPress={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+                    onPress={() => {
+                        scrollViewRef.current?.scrollToEnd({ animated: true });
+                        setBuddyCoachVisible(false);
+                    }}
                     activeOpacity={0.8}
                 >
                     <Animated.View
@@ -1453,6 +1490,11 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
         zIndex: 30,
+    },
+    buddyCoachScrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        zIndex: 25,
     },
     buddyCoachCard: {
         maxWidth: 420,
