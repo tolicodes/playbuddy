@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useUserContext } from '../hooks/UserContext';
@@ -21,28 +21,54 @@ export const Avatar = ({ name }: { name?: string }) => {
     );
 
     const [uploading, setUploading] = useState(false);
+    const [awaitingProfileUpdate, setAwaitingProfileUpdate] = useState(false);
+    const previousAvatarUrlRef = useRef<string | null>(null);
+    const uploadRequestIdRef = useRef(0);
     const uploadAvatar = useUploadAvatar(authUserId!);
 
     // Automatically upload the image after selection
     useEffect(() => {
         if (uploadImageUri && authUserId) {
+            const uploadRequestId = ++uploadRequestIdRef.current;
+            previousAvatarUrlRef.current = userProfile?.avatar_url ?? null;
             setUploading(true);
-            uploadAvatar.mutate({ avatarUrl: uploadImageUri });
             logEvent(UE.AvatarUploadStarted, analyticsProps);
+            setAwaitingProfileUpdate(false);
+            uploadAvatar.mutate(
+                { avatarUrl: uploadImageUri },
+                {
+                    onSuccess: () => {
+                        if (uploadRequestIdRef.current !== uploadRequestId) return;
+                        setUploading(false);
+                        setAwaitingProfileUpdate(true);
+                        logEvent(UE.AvatarUploadCompleted, analyticsProps);
+                    },
+                    onError: (error) => {
+                        if (uploadRequestIdRef.current !== uploadRequestId) return;
+                        console.error('uploadAvatar.isError', error);
+                        setUploading(false);
+                        setAwaitingProfileUpdate(false);
+                        alert('Uploading Avatar failed');
+                        logEvent(UE.AvatarUploadFailed, analyticsProps);
+                    },
+                }
+            );
         }
     }, [uploadImageUri, authUserId]);
 
     useEffect(() => {
-        if (uploadAvatar.isSuccess) {
-            setUploading(false);
-            logEvent(UE.AvatarUploadCompleted, analyticsProps);
-        } else if (uploadAvatar.isError) {
-            console.error('uploadAvatar.isError', uploadAvatar.error);
-            setUploading(false);
-            alert('Uploading Avatar failed');
-            logEvent(UE.AvatarUploadFailed, analyticsProps);
+        if (!awaitingProfileUpdate) return;
+        const currentAvatarUrl = userProfile?.avatar_url ?? null;
+        const previousAvatarUrl = previousAvatarUrlRef.current;
+        if (
+            currentAvatarUrl &&
+            currentAvatarUrl !== previousAvatarUrl &&
+            currentAvatarUrl !== uploadImageUri &&
+            /^https?:\/\//.test(currentAvatarUrl)
+        ) {
+            setAwaitingProfileUpdate(false);
         }
-    }, [uploadAvatar.isSuccess, uploadAvatar.isError]);
+    }, [awaitingProfileUpdate, userProfile?.avatar_url, uploadImageUri]);
 
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -66,6 +92,7 @@ export const Avatar = ({ name }: { name?: string }) => {
         }
     };
 
+    const showSpinner = uploading || awaitingProfileUpdate;
     const Uploading = <ActivityIndicator color={colors.brandIndigo} />;
     const AvatarElement = <AvatarCircle userProfile={userProfile} size={AVATAR_SIZE} name={name} />;
     const UploadText = <Text style={styles.uploadText}>Upload</Text>;
@@ -77,7 +104,7 @@ export const Avatar = ({ name }: { name?: string }) => {
             </Text>
             <TouchableOpacity onPress={pickImage} style={styles.circleContainer}>
                 <View style={styles.circle}>
-                    {uploading ? (
+                    {showSpinner ? (
                         Uploading
                     ) : (
                         <View style={styles.avatarContainer}>
