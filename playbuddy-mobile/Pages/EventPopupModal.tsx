@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
     Modal,
     View,
@@ -13,6 +13,9 @@ import { Image } from 'expo-image';
 import Markdown from '../components/Markdown';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
+import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
+import { logEvent } from '../Common/hooks/logger';
+import { UE } from '../userEventTypes';
 import type { EventPopup } from '../commonTypes';
 import { formatDate } from './Calendar/hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../Common/hooks/imageUtils';
@@ -34,9 +37,48 @@ type EventPopupModalProps = {
 };
 
 export function EventPopupModal({ visible, popup, onDismiss, onPrimaryAction }: EventPopupModalProps) {
+    const analyticsProps = useAnalyticsProps();
+    const popupEventId = popup?.event_id ?? popup?.event?.id ?? null;
+    const loggedPopupIdRef = useRef<string | null>(null);
+    const { height: windowHeight } = useWindowDimensions();
+
+    useEffect(() => {
+        if (!visible || !popup) return;
+        if (loggedPopupIdRef.current === popup.id) return;
+        loggedPopupIdRef.current = popup.id;
+        logEvent(UE.EventPopupModalShown, {
+            ...analyticsProps,
+            popup_id: popup.id,
+            event_id: popupEventId,
+        });
+    }, [analyticsProps, popup, popupEventId, visible]);
+
+    useEffect(() => {
+        if (!visible) {
+            loggedPopupIdRef.current = null;
+        }
+    }, [visible]);
+
     if (!visible || !popup) return null;
 
-    const { height: windowHeight } = useWindowDimensions();
+    const handlePrimaryAction = () => {
+        logEvent(UE.EventPopupModalPrimaryAction, {
+            ...analyticsProps,
+            popup_id: popup.id,
+            event_id: popupEventId,
+        });
+        onPrimaryAction();
+    };
+
+    const handleDismiss = () => {
+        logEvent(UE.EventPopupModalSkipped, {
+            ...analyticsProps,
+            popup_id: popup.id,
+            event_id: popupEventId,
+        });
+        onDismiss();
+    };
+
     const maxContentHeight = Math.min(windowHeight * 0.5, 420);
     const event = popup.event;
     const hasEvent = !!(popup.event || popup.event_id);
@@ -49,10 +91,10 @@ export function EventPopupModal({ visible, popup, onDismiss, onPrimaryAction }: 
     const bodyMarkdown = popup.body_markdown ? popup.body_markdown.replace(/\n/g, '\n\n') : '';
 
     return (
-        <Modal transparent animationType="fade" onRequestClose={onDismiss}>
+        <Modal transparent animationType="fade" onRequestClose={handleDismiss}>
             <View style={styles.backdrop}>
                 <View style={styles.card}>
-                    <TouchableOpacity style={styles.closeButton} onPress={onDismiss}>
+                    <TouchableOpacity style={styles.closeButton} onPress={handleDismiss}>
                         <Text style={styles.closeText}>✕</Text>
                     </TouchableOpacity>
 
@@ -77,7 +119,7 @@ export function EventPopupModal({ visible, popup, onDismiss, onPrimaryAction }: 
                         ) : null}
 
                         {hasEvent && (
-                            <TouchableOpacity style={styles.eventCard} onPress={onPrimaryAction} activeOpacity={0.9}>
+                            <TouchableOpacity style={styles.eventCard} onPress={handlePrimaryAction} activeOpacity={0.9}>
                                 <View style={styles.eventImageWrap}>
                                     {imageUrl ? (
                                         <Image
@@ -116,11 +158,11 @@ export function EventPopupModal({ visible, popup, onDismiss, onPrimaryAction }: 
                     </ScrollView>
 
                     <View style={styles.footer}>
-                        <TouchableOpacity style={styles.primaryButton} onPress={onPrimaryAction}>
+                        <TouchableOpacity style={styles.primaryButton} onPress={handlePrimaryAction}>
                             <Text style={styles.primaryButtonText}>{hasEvent ? 'Check it out' : 'Got it'}</Text>
                         </TouchableOpacity>
                         {hasEvent && (
-                            <TouchableOpacity style={styles.secondaryButton} onPress={onDismiss}>
+                            <TouchableOpacity style={styles.secondaryButton} onPress={handleDismiss}>
                                 <Text style={styles.secondaryButtonText}>Not now</Text>
                             </TouchableOpacity>
                         )}
