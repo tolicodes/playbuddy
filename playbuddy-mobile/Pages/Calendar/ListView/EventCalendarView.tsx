@@ -130,30 +130,43 @@ const EventCalendarView: React.FC<Props> = ({
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const { myCommunities } = useCommonContext();
-    const { wishlistEvents, wishlistEntryMap } = useCalendarContext();
+    const {
+        allEvents: calendarEvents,
+        organizers: calendarOrganizers,
+        isLoadingEvents: isCalendarLoadingEvents,
+        wishlistEvents,
+        wishlistEntryMap,
+    } = useCalendarContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const approvalStatuses = useMemo(
         () => (isAdmin ? ['approved', 'pending', 'rejected'] : undefined),
         [isAdmin]
     );
+    const isMainEventsView = !events && entity === "events";
     const { data: fetchedEventsData, isLoading: isLoadingEvents } = useFetchEvents({
         approvalStatuses,
         includePrivate: !!authUserId,
     });
     const fetchedEvents = fetchedEventsData ?? EMPTY_EVENTS;
     const { data: follows } = useFetchFollows(authUserId);
-    const organizers = useMemo(() => getAvailableOrganizers(fetchedEvents), [fetchedEvents]);
-    const organizerColorMap = useMemo(() => mapOrganizerColors(organizers as any), [organizers]);
+    const resolvedOrganizers = useMemo(
+        () => (isMainEventsView ? calendarOrganizers : getAvailableOrganizers(fetchedEvents)),
+        [calendarOrganizers, fetchedEvents, isMainEventsView]
+    );
+    const organizerColorMap = useMemo(() => mapOrganizerColors(resolvedOrganizers as any), [resolvedOrganizers]);
     const eventsWithMetadata = useMemo(
-        () => addEventMetadata({ events: fetchedEvents, organizerColorMap }),
-        [fetchedEvents, organizerColorMap]
+        () => (isMainEventsView ? calendarEvents : addEventMetadata({ events: fetchedEvents, organizerColorMap })),
+        [calendarEvents, fetchedEvents, organizerColorMap, isMainEventsView]
     );
     const sourceEvents = useMemo(
         () => (events ? addEventMetadata({ events, organizerColorMap }) : eventsWithMetadata),
         [events, eventsWithMetadata, organizerColorMap]
     );
-    const isLoadingList = events ? false : isLoadingEvents;
-    const isMainEventsView = !events && entity === "events";
+    const isLoadingList = events
+        ? false
+        : isMainEventsView
+            ? isCalendarLoadingEvents && calendarEvents.length === 0
+            : isLoadingEvents;
     const organizerIdsFromCommunities = useMemo(() => {
         const organizerIds = myCommunities.allMyCommunities
             .map((community) => community.organizer_id)

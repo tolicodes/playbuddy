@@ -304,6 +304,16 @@ const readCacheEntry = async (key: string, maxAgeMs: number): Promise<CacheEntry
   }
 };
 
+export const readCachedAxiosData = async <T = unknown>(
+  config: AxiosRequestConfig,
+  maxAgeMs: number = cacheSettings.maxAgeMs,
+): Promise<T | null> => {
+  const cacheKey = getCacheKey(config);
+  if (!cacheKey) return null;
+  const cached = await readCacheEntry(cacheKey, maxAgeMs);
+  return cached ? (cached.data as T) : null;
+};
+
 const writeCacheEntry = async (key: string, entry: CacheEntry): Promise<void> => {
   try {
     const raw = JSON.stringify(entry);
@@ -379,6 +389,10 @@ export const setupAxiosOfflineCache = ({
   maxEntryBytes = DEFAULT_MAX_ENTRY_BYTES,
   reconnectPollMs = DEFAULT_RECONNECT_POLL_MS,
 }: SetupOptions) => {
+  if (typeof globalThis !== 'undefined') {
+    (globalThis as typeof globalThis & { __PB_READ_AXIOS_CACHE__?: typeof readCachedAxiosData })
+      .__PB_READ_AXIOS_CACHE__ = readCachedAxiosData;
+  }
   if (hasSetup) return;
   hasSetup = true;
   cacheSettings = { maxAgeMs, maxEntries, maxBytes, maxEntryBytes };
