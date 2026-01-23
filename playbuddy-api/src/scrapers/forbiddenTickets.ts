@@ -3,8 +3,9 @@ import TurndownService from 'turndown';
 import { DateTime } from 'luxon';
 import * as cheerio from 'cheerio';
 import { ScraperParams } from './types.js';
-import { EventDataSource, NormalizedEventInput } from '../commonTypes.js';
+import { NormalizedEventInput } from '../commonTypes.js';
 import { EventTypes } from '../common/types/commonTypes.js';
+import { resolveSourceFields } from './helpers/sourceTracking.js';
 
 const turndown = new TurndownService();
 
@@ -64,9 +65,15 @@ export const scrapeForbiddenTicketsEvent = async ({ url, eventDefaults }: Scrape
     }).get().filter(p => typeof p === 'number');
 
     const price = prices.length ? Math.min(...prices) : 0;
+    const sourceFields = resolveSourceFields({
+        eventDefaults,
+        sourceUrl: url,
+        ticketingPlatform: "Forbidden Tickets",
+    });
 
     return [{
         ...eventDefaults,
+        ...sourceFields,
         original_id: `forbidden-tickets-${eventId}`,
         ticket_url: url,
         name,
@@ -79,6 +86,5 @@ export const scrapeForbiddenTicketsEvent = async ({ url, eventDefaults }: Scrape
         price: String(price),
         location,
         tags: [category],
-        source_ticketing_platform: "Forbidden Tickets" as EventDataSource['source_ticketing_platform'],
     }];
 };

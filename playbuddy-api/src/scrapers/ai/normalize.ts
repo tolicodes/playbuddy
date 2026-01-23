@@ -1,19 +1,32 @@
 // src/scrapers/ai/normalize.ts
 import type { NormalizedEventInput } from '../../commonTypes.js';
 
+const safeParseUrl = (value: string) => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+    try {
+        return new URL(withScheme);
+    } catch {
+        return null;
+    }
+};
+
 export function classifyPlatform(url: string): string {
-    const host = new URL(url).hostname.toLowerCase();
+    const parsed = safeParseUrl(url);
+    if (!parsed) return 'website';
+    const host = parsed.hostname.toLowerCase();
     if (host.includes('eventbrite')) return 'Eventbrite';
     if (host.includes('tickettailor') || host.includes('buytickets.at')) return 'TicketTailor';
-    if (host.includes('forbiddentickets')) return 'ForbiddenTickets';
-    if (host.includes('plura')) return 'Plura';
+    if (host.includes('forbiddentickets')) return 'Forbidden Tickets';
+    if (host.includes('plura') || host.includes('joinbloom')) return 'Plura';
     if (host.includes('dice.fm')) return 'DICE';
     if (host.includes('withfriends')) return 'WithFriends';
     if (host.includes('lu.ma')) return 'Luma';
     if (host.includes('partiful')) return 'Partiful';
     if (host.includes('meetup')) return 'Meetup';
     if (host.includes('ra.co')) return 'ResidentAdvisor';
-    return 'Unknown';
+    return 'website';
 }
 
 export function deriveOriginalId(url: string, platform: string): string | null {

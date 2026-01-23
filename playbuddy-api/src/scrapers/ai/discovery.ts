@@ -166,6 +166,7 @@ async function extractEventsFromListPage(
         const startISO = toISO(it?.start_time);
         const endISO = toISO(it?.end_time);
         const ticketUrl = it?.ticket_url ? (() => { try { return new URL(it.ticket_url, u).toString(); } catch { return null; } })() : null;
+        const inferredPlatform = classifyPlatform(ticketUrl || baseUrl);
 
         if (!name || !startISO) continue;
         if (!isFutureEvent({ start_date: startISO } as any, nowISO)) continue;
@@ -185,7 +186,7 @@ async function extractEventsFromListPage(
             description: it?.description_md || it?.description || null,
             image_url: it?.image_url || null,
             price: it?.price || null,
-            source_ticketing_platform: ticketUrl ? classifyPlatform(ticketUrl) : (eventDefaults as any)?.source_ticketing_platform,
+            source_ticketing_platform: (eventDefaults as any)?.source_ticketing_platform ?? inferredPlatform,
             type: 'event',
         };
         out.push(mapped);

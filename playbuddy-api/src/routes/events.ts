@@ -1056,6 +1056,7 @@ router.post('/user-submissions/import-urls', authenticateRequest, asyncHandler(a
     const eventDefaults = {
         approval_status: 'pending' as const,
         user_submitted: true,
+        source_origination_platform: 'user_submitted' as const,
     };
 
     try {
@@ -1153,6 +1154,7 @@ router.post('/user-submissions', authenticateRequest, asyncHandler(async (req: A
         },
         approval_status: 'pending',
         user_submitted: true,
+        source_origination_platform: 'user_submitted' as const,
         visibility: 'public',
         type: body.type ?? 'event',
     };
@@ -1177,7 +1179,10 @@ router.post('/user-submissions', authenticateRequest, asyncHandler(async (req: A
 
 router.post('/', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     console.log('post events')
-    const event = req.body;
+    const event = req.body || {};
+    if (!event.source_origination_platform) {
+        event.source_origination_platform = 'admin';
+    }
     const eventResult = await upsertEvent(event, req.authUserId, { ignoreFrozen: true })
     await flushEvents();
 
@@ -1189,7 +1194,11 @@ router.post('/bulk', authenticateAdminRequest, asyncHandler(async (req: Authenti
     if (replayToLargeInstance(req, res)) {
         return;
     }
-    const events = req.body;
+    const rawEvents = Array.isArray(req.body) ? req.body : [];
+    const events = rawEvents.map((ev: any) => {
+        if (!ev || ev.source_origination_platform) return ev;
+        return { ...ev, source_origination_platform: 'admin' };
+    });
     // Default to skipping existing events unless explicitly overridden with skipExisting=false
     const skipExisting = req.query.skipExisting !== 'false';
     const approveExisting = req.query.approveExisting === 'true';
@@ -1566,6 +1575,74 @@ router.post('/merge', authenticateAdminRequest, asyncHandler(async (req: Authent
         merged_from: sourceId,
         merged_into: targetId,
         event: mergedEvent,
+        warnings: warnings.length ? warnings : undefined,
+    });
+}));
+
+router.delete('/:id', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    const eventId = Number(req.params.id);
+    if (!Number.isFinite(eventId)) {
+        res.status(400).json({ error: 'event id is required' });
+        return;
+    }
+
+    const { data: existing, error: existingError } = await supabaseClient
+        .from('events')
+        .select('id, name')
+        .eq('id', eventId)
+        .maybeSingle();
+    if (existingError || !existing) {
+        res.status(404).json({ error: existingError?.message || 'Event not found' });
+        return;
+    }
+
+    const warnings: { table: string; message: string }[] = [];
+    const warn = (table: string, error: any) => {
+        warnings.push({ table, message: error?.message || String(error) });
+    };
+
+    const deleteByEventId = async (table: string, column = 'event_id') => {
+        const { error } = await supabaseClient
+            .from(table)
+            .delete()
+            .eq(column, eventId);
+        if (error) warn(table, error);
+    };
+
+    const updateByEventId = async (table: string, column: string, updates: Record<string, any>) => {
+        const { error } = await supabaseClient
+            .from(table)
+            .update(updates)
+            .eq(column, eventId);
+        if (error) warn(table, error);
+    };
+
+    await deleteByEventId('event_wishlist');
+    await deleteByEventId('swipe_mode_choices');
+    await deleteByEventId('event_communities');
+    await deleteByEventId('promo_code_event');
+    await deleteByEventId('event_media');
+    await deleteByEventId('classifications');
+    await deleteByEventId('facilitator_events');
+    await deleteByEventId('event_popups');
+    await deleteByEventId('push_notifications');
+    await deleteByEventId('deep_link_events');
+    await updateByEventId('deep_links', 'featured_event_id', { featured_event_id: null });
+
+    const { error: deleteError } = await supabaseClient
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+    if (deleteError) {
+        res.status(500).json({ error: deleteError.message });
+        return;
+    }
+
+    await flushEvents();
+
+    res.status(200).json({
+        deleted: eventId,
+        event: existing,
         warnings: warnings.length ? warnings : undefined,
     });
 }));

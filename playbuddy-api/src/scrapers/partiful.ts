@@ -5,6 +5,7 @@ import { ScraperParams } from "./types.js";
 import { NormalizedEventInput } from '../common/types/commonTypes.js'
 import { puppeteerConfig } from "../config.js";
 import TurndownService from "turndown";
+import { resolveSourceFields } from "./helpers/sourceTracking.js";
 
 async function scrapePartifulEvent({
     url: eventId,
@@ -91,9 +92,15 @@ async function scrapePartifulEvent({
         const description = turndownService.turndown((event.description));
 
         const tags: string[] = []; // Tags are not provided in the JSON data
+        const sourceFields = resolveSourceFields({
+            eventDefaults,
+            sourceUrl: url,
+            ticketingPlatform: "Partiful",
+        });
 
         const eventDetails: NormalizedEventInput = {
             ...eventDefaults,
+            ...sourceFields,
             type: "event",
             recurring: "none",
             original_id: `partiful-${eventId}`,
@@ -112,7 +119,6 @@ async function scrapePartifulEvent({
             price,
             description,
             tags,
-            source_ticketing_platform: "Partiful",
         };
 
         return [eventDetails];

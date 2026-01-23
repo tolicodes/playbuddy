@@ -3,6 +3,7 @@ import { DateTime } from 'luxon';
 import TurndownService from 'turndown';
 import { NormalizedEventInput } from '../../commonTypes.js';
 import { ScraperParams } from '../types.js';
+import { resolveSourceFields } from '../helpers/sourceTracking.js';
 
 const API_URL = 'https://tantrany.com/api/events-listings.json.php?user=toli';
 const ORGANIZER_PAGE = 'https://tantrany.com';
@@ -66,6 +67,11 @@ export const scrapeOrganizerTantraNY = async ({
     try {
         console.log(`[tantraNY] fetching ${url}`);
         const data = await axios.get(url);
+        const sourceFields = resolveSourceFields({
+            eventDefaults,
+            sourceUrl: url,
+            ticketingPlatform: 'Eventbrite',
+        });
 
         const events = Object.values(data.data as EventDetails[]).map((event: EventDetails): NormalizedEventInput => {
             const startDate = parseTimeWithAMPM(event.Date, event.StartTime);
@@ -83,6 +89,7 @@ export const scrapeOrganizerTantraNY = async ({
 
             return {
                 ...eventDefaults,
+                ...sourceFields,
                 original_id: `organizer-tantra_ny-${event.EventId}`,
                 type: 'event',
                 recurring: 'none',
@@ -101,7 +108,6 @@ export const scrapeOrganizerTantraNY = async ({
                 description,
                 short_description: event.DescShort || '',
                 tags: ['tantra'],
-                source_ticketing_platform: 'Eventbrite',
                 vetted,
                 vetting_url: vetted ? VETTING_URL : '',
                 play_party,

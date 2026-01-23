@@ -366,15 +366,40 @@ export interface EventDataSource {
 
     /**
      * The platform the event was scraped from
-     * For example, WhatsApp, Eventbrite, Plura, etc
+     * For example, WhatsApp, gmail, website-ai-discovery, ticketing-eventbrite
      */
-    source_origination_platform?: "WhatsApp" | "organizer_api" | 'acrofestivals' | 'facebook' | 'lu.ma' | 'csv';
+    source_origination_platform?:
+        | "WhatsApp"
+        | "organizer_api"
+        | 'acrofestivals'
+        | 'facebook'
+        | 'lu.ma'
+        | 'csv'
+        | 'website-ai-discovery'
+        | 'gmail'
+        | 'user_submitted'
+        | 'admin'
+        | `ticketing-${string}`;
 
     /**
      * The ticketing platform the event is sold on
-     * For example, Eventbrite, Plura, Partiful, lu.ma, etc
+     * For example, Eventbrite, Plura, Partiful, Luma, website, etc
      */
-    source_ticketing_platform?: "Eventbrite" | "Plura" | "Partiful" | "lu.ma";
+    source_ticketing_platform?:
+        | "Eventbrite"
+        | "Plura"
+        | "Partiful"
+        | "Luma"
+        | "lu.ma"
+        | "Forbidden Tickets"
+        | "ForbiddenTickets"
+        | "TicketTailor"
+        | "DICE"
+        | "WithFriends"
+        | "Meetup"
+        | "ResidentAdvisor"
+        | "website"
+        | "Unknown";
 
     /**
      * The group id the event belongs to

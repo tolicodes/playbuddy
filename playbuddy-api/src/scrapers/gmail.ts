@@ -310,7 +310,13 @@ export async function scrapeGmailSource(
     const sourceEmail = url?.trim();
     if (!sourceEmail) return [];
     const auth = await authorizeGmailFromToken();
-    return scrapeGmailSourceWithAuth(auth, sourceEmail, eventDefaults, maxResults);
+    const sourceUrl = `gmail:${sourceEmail}`;
+    const mergedDefaults: Partial<NormalizedEventInput> = {
+        ...(eventDefaults || {}),
+        source_origination_platform: eventDefaults?.source_origination_platform ?? 'gmail',
+        source_url: eventDefaults?.source_url ?? sourceUrl,
+    };
+    return scrapeGmailSourceWithAuth(auth, sourceEmail, mergedDefaults, maxResults);
 }
 
 export async function scrapeGmailSources(
@@ -328,9 +334,11 @@ export async function scrapeGmailSources(
         const status = (source.event_status || '').toLowerCase();
         const approval_status = status === 'approved' || status === 'pending' ? status : undefined;
         logDebug('source config', { sourceEmail, approval_status });
+        const sourceUrl = `gmail:${sourceEmail}`;
         const eventDefaults: Partial<NormalizedEventInput> = {
             ...(approval_status ? { approval_status } : {}),
-            source_origination_group_name: sourceEmail,
+            source_origination_platform: 'gmail',
+            source_url: sourceUrl,
         };
 
         const events = await scrapeGmailSourceWithAuth(auth, sourceEmail, eventDefaults, opts.maxResults);

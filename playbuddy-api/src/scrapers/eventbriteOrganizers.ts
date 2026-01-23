@@ -25,6 +25,10 @@ const scrapeOrganizerPage = async ({
     eventDefaults,
 }: ScraperParams): Promise<NormalizedEventInput[]> => {
     const allEvents: NormalizedEventInput[] = [];
+    const organizerDefaults = {
+        ...eventDefaults,
+        source_url: eventDefaults?.source_url || url,
+    };
 
     try {
         const organizerId = url.split('/').pop()?.split('-').pop();
@@ -58,7 +62,7 @@ const scrapeOrganizerPage = async ({
                     scrapeEventbriteEvent({
                         url: ev.url,
                         eventDefaults: {
-                            ...eventDefaults,
+                            ...organizerDefaults,
                             non_ny: (() => {
                                 const region = getRegion(ev);
                                 const flag = region ? region !== 'NY' : undefined;
@@ -68,7 +72,7 @@ const scrapeOrganizerPage = async ({
                             location:
                                 ev?.venue?.address?.localized_address_display ||
                                 ev?.venue?.address?.localized_multi_line_address_display?.join(' ') ||
-                                eventDefaults?.location,
+                                organizerDefaults?.location,
                         },
                     })
                 )

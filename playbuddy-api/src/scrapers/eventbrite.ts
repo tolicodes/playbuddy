@@ -2,9 +2,10 @@ import TurndownService from 'turndown';
 import { DateTime } from 'luxon';
 import * as cheerio from 'cheerio';
 import { ScraperParams } from './types.js';
-import { EventDataSource, NormalizedEventInput } from '../commonTypes.js';
+import { NormalizedEventInput } from '../commonTypes.js';
 import { EventTypes } from '../common/types/commonTypes.js';
 import { addURLToQueue } from './helpers/getUsingProxy.js';
+import { resolveSourceFields } from './helpers/sourceTracking.js';
 
 const turndown = new TurndownService();
 
@@ -90,9 +91,16 @@ export const scrapeEventbriteEvent = async (
     const non_ny = region ? region !== 'NY' : eventDefaults?.non_ny ?? false;
     const location = eventDefaults?.location || computedLocation;
 
+    const sourceFields = resolveSourceFields({
+        eventDefaults,
+        sourceUrl: url,
+        ticketingPlatform: 'Eventbrite',
+    });
+
     // 10) Build output (keep parity with your Forbidden Tickets shape)
     const out: NormalizedEventInput = {
         ...eventDefaults,
+        ...sourceFields,
         original_id,
         ticket_url: ev.url || url,
         name: name!,
@@ -105,7 +113,6 @@ export const scrapeEventbriteEvent = async (
         price,
         location,
         tags,
-        source_ticketing_platform: 'Eventbrite' as EventDataSource['source_ticketing_platform'],
         non_ny,
     };
 

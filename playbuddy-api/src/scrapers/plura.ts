@@ -2,6 +2,7 @@ import axios from 'axios';
 import TurndownService from 'turndown';
 import moment from 'moment-timezone';
 import { NormalizedEventInput } from '../commonTypes.js';
+import { resolveSourceFields } from './helpers/sourceTracking.js';
 
 const API_URL = 'https://api.joinbloom.community/events?perPage=1000';
 
@@ -21,6 +22,11 @@ export const scrapePluraEvents = async ({
     const data = response.data;
 
     const turndownService = new TurndownService();
+    const sourceFields = resolveSourceFields({
+        eventDefaults,
+        sourceUrl: API_URL,
+        ticketingPlatform: 'Plura',
+    });
 
     return (data.hangouts || [])
         .filter((event: any) => event.location?.city === 'New York' || event.location?.metroId === '109c15cd-ce60-4f7c-b394-8a6d3d3e5526')
@@ -28,6 +34,7 @@ export const scrapePluraEvents = async ({
             const description = turndownService.turndown(event.details || '');
             return {
                 ...eventDefaults,
+                ...sourceFields,
                 original_id: `plura-${event.id}`,
                 organizer: {
                     name: event.organization?.name,
@@ -43,7 +50,6 @@ export const scrapePluraEvents = async ({
                 price: '',
                 description,
                 tags: [],
-                source_ticketing_platform: 'Plura',
             } as NormalizedEventInput;
         });
 };

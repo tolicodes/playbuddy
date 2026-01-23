@@ -83,6 +83,13 @@ export const scrapeURLs = async (
                 ...((metadata as any)?.organizer || {}),
             },
         };
+        const normalizedSourceUrl = typeof mergedDefaults.source_url === 'string' && mergedDefaults.source_url.trim()
+            ? mergedDefaults.source_url.trim()
+            : url;
+        const sourceDefaults: Partial<NormalizedEventInput> = {
+            ...mergedDefaults,
+            ...(normalizedSourceUrl ? { source_url: normalizedSourceUrl } : {}),
+        };
         console.log(`[scrapeURLs] [${i + 1}/${uniqueInputs.length}] ${url}`);
 
         const domain = getDomainKey(url);
@@ -93,7 +100,7 @@ export const scrapeURLs = async (
                 console.log(`[scrapeURLs] using Eventbrite organizer scraper for ${url}`);
                 const organizerEvents = await scrapeEventbriteOrganizers({
                     organizerURLs: [url],
-                    eventDefaults,
+                    eventDefaults: sourceDefaults,
                 });
                 results.push(...organizerEvents);
                 console.log(`[scrapeURLs] organizer events added=${organizerEvents.length}`);
@@ -108,7 +115,11 @@ export const scrapeURLs = async (
         // If no explicit scraper, let AI decide multi vs single
         if (!config) {
             console.log(`[scrapeURLs] no explicit scraper for ${domain}, delegating to AI (multipleEvents=${!!multipleEvents}, extractFromListPage=${!!extractFromListPage})`);
-            const aiEvents = await aiAutoScrapeUrl({ url, eventDefaults: mergedDefaults, multipleEvents, extractFromListPage });
+            const aiDefaults: Partial<NormalizedEventInput> = {
+                ...sourceDefaults,
+                source_origination_platform: sourceDefaults.source_origination_platform ?? 'website-ai-discovery',
+            };
+            const aiEvents = await aiAutoScrapeUrl({ url, eventDefaults: aiDefaults, multipleEvents, extractFromListPage });
             if (aiEvents?.length) results.push(...aiEvents);
             console.log(`[scrapeURLs] AI results=${aiEvents?.length || 0}`);
             continue;
@@ -124,7 +135,7 @@ export const scrapeURLs = async (
 
         try {
             console.log(`[scrapeURLs] using scraper for ${domain} id=${eventId}`);
-            const scraped = await config.scraper({ url: eventId, eventDefaults: mergedDefaults });
+            const scraped = await config.scraper({ url: eventId, eventDefaults: sourceDefaults });
             if (scraped) results.push(...scraped);
             console.log(`[scrapeURLs] scraped count=${scraped?.length || 0} for ${url}`);
         } catch (err: any) {
