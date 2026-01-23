@@ -8,10 +8,14 @@ primary_region = 'iad'
 
 [build]
 
-[http_service]
-  internal_port = 8080
-  force_https = true
+[processes]
+  app = "node ./dist/app.js"
+  large = "node ./dist/app.js"
+
+[[services]]
   processes = ['app']
+  internal_port = 8080
+  protocol = "tcp"
 
   # Keep the machine warm; no scale-to-zero
   auto_start_machines = true
@@ -19,12 +23,53 @@ primary_region = 'iad'
   min_machines_running = 1
 
   # Still good to have limits to protect the instance
-  [http_service.concurrency]
+  [services.concurrency]
     type = "requests"
     soft_limit = 40
     hard_limit = 80
 
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+[[services]]
+  processes = ['large']
+  internal_port = 8080
+  protocol = "tcp"
+
+  # On-demand large machines should scale to zero.
+  auto_start_machines = true
+  auto_stop_machines  = true
+  min_machines_running = 0
+  max_machines_running = 1
+
+  [services.concurrency]
+    type = "requests"
+    soft_limit = 40
+    hard_limit = 80
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
 [[vm]]
+  processes = ['app']
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
+
+[[vm]]
+  processes = ['large']
+  memory = '32gb'
+  cpu_kind = 'performance'
+  cpus = 8

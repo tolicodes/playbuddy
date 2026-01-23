@@ -19,11 +19,13 @@ import { fetchAllRows } from '../helpers/fetchAllRows.js';
 import { openai, MODEL } from '../scrapers/ai/config.js';
 import type { WeeklyPicksImageLogger } from '../helpers/weeklyPicksImage.js';
 import { notifyAdminsOfPendingEvents } from '../helpers/adminPushNotifications.js';
+import { replayToLargeInstance } from '../middleware/replayToLargeInstance.js';
 import {
     forceGenerateWeeklyPicksImage,
     getCachedWeeklyPicksImage,
     getWeeklyPicksImageCacheStatus,
     getWeeklyPicksImageLogStatus,
+    getStoredWeeklyPicksImage,
 } from '../helpers/weeklyPicksImageCache.js';
 
 const router = Router();
@@ -421,6 +423,9 @@ const mergeEventPatch = (source: any, target: any, preferSource: boolean) => {
 };
 
 router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const options = extractWeeklyPicksImageOptions(req);
     const status = getWeeklyPicksImageCacheStatus(options);
     res.status(200).json({
@@ -430,6 +435,7 @@ router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedR
         version: status.entry?.version ?? null,
         generatedAt: status.entry?.generatedAt ?? null,
         durationMs: status.entry?.durationMs ?? null,
+        timings: status.entry?.timings ?? null,
         width: status.entry?.width ?? null,
         height: status.entry?.height ?? null,
         weekOffset: status.entry?.weekOffset ?? null,
@@ -441,12 +447,18 @@ router.get('/weekly-picks/image/status', asyncHandler(async (req: AuthenticatedR
 }));
 
 router.get('/weekly-picks/image/logs', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const options = extractWeeklyPicksImageOptions(req);
     const status = getWeeklyPicksImageLogStatus(options);
     res.status(200).json(status);
 }));
 
 router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const startedAt = Date.now();
     const options = extractWeeklyPicksImageOptions(req);
     const responseFormat = String((req.query.format ?? (req.body as Record<string, unknown>)?.format ?? 'json')).toLowerCase();
@@ -480,6 +492,9 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
         res.set('X-Weekly-Picks-Version', entry.version);
         res.set('X-Weekly-Picks-Generated-At', entry.generatedAt);
         res.set('X-Weekly-Picks-Generate-Duration-Ms', String(entry.durationMs));
+        res.set('X-Weekly-Picks-Raster-Ms', String(entry.timings.rasterMs));
+        res.set('X-Weekly-Picks-Png-Encode-Ms', String(entry.timings.pngEncodeMs));
+        res.set('X-Weekly-Picks-Jpg-Encode-Ms', String(entry.timings.jpgEncodeMs));
         res.set('X-Weekly-Picks-Week-Offset', String(entry.weekOffset));
         res.set('X-Weekly-Picks-Week-Label', entry.weekLabel);
         res.set('X-Weekly-Picks-Width', String(entry.width));
@@ -510,6 +525,7 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
             version: entry.version,
             generatedAt: entry.generatedAt,
             durationMs: entry.durationMs,
+            timings: entry.timings,
             weekOffset: entry.weekOffset,
             weekLabel: entry.weekLabel,
             width: entry.width,
@@ -528,6 +544,9 @@ router.post('/weekly-picks/image/generate', authenticateAdminRequest, asyncHandl
 }));
 
 router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const startedAt = Date.now();
     const options = extractWeeklyPicksImageOptions(req);
     const responseFormat = String(req.query.format ?? 'jpg').toLowerCase();
@@ -538,6 +557,57 @@ router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest,
         `${logPrefix} GET start cacheKey=${cacheKey} inProgress=${inProgress} width=${options.width ?? 'auto'} weekOffset=${options.weekOffset ?? 0} format=${responseFormat}`
     );
     if (!entry) {
+        const stored = await getStoredWeeklyPicksImage(options, responseFormat, requestedPart);
+        if (stored.ok) {
+            const { manifest } = stored;
+            res.set('Cache-Control', 'no-store');
+            res.set('X-Weekly-Picks-Cache-Key', manifest.cacheKey ?? cacheKey);
+            res.set('X-Weekly-Picks-Version', manifest.version);
+            res.set('X-Weekly-Picks-Generated-At', manifest.generatedAt);
+            res.set('X-Weekly-Picks-Generate-Duration-Ms', String(manifest.durationMs));
+            res.set('X-Weekly-Picks-Week-Offset', String(manifest.weekOffset));
+            res.set('X-Weekly-Picks-Week-Label', manifest.weekLabel);
+            res.set('X-Weekly-Picks-Width', String(manifest.width));
+            res.set('X-Weekly-Picks-Height', String(manifest.height));
+            res.set('X-Weekly-Picks-Part-Count', String(manifest.partCount));
+            res.set('X-Weekly-Picks-Part-Heights', manifest.partHeights.join(','));
+            res.set('X-Weekly-Picks-Split-At', String(manifest.splitAt));
+            res.set('X-Weekly-Picks-Cache-Source', 'storage');
+            if (inProgress) {
+                res.set('X-Weekly-Picks-Generating', 'true');
+            }
+            if (responseFormat === 'png') {
+                console.log(
+                    `${logPrefix} storage hit cacheKey=${cacheKey} pngBytes=${stored.buffer.length} generatedMs=${manifest.durationMs}`
+                );
+                res.set('Content-Type', stored.contentType);
+                res.status(200).send(stored.buffer);
+                const durationMs = Date.now() - startedAt;
+                console.log(`${logPrefix} GET done cacheKey=${cacheKey} durationMs=${durationMs}`);
+                return;
+            }
+
+            if (stored.partIndex && stored.partHeight) {
+                res.set('Content-Type', stored.contentType);
+                res.set('X-Weekly-Picks-Part', String(stored.partIndex));
+                res.set('X-Weekly-Picks-Part-Height', String(stored.partHeight));
+                console.log(
+                    `${logPrefix} storage hit cacheKey=${cacheKey} part=${stored.partIndex} jpgBytes=${stored.buffer.length} generatedMs=${manifest.durationMs}`
+                );
+                res.status(200).send(stored.buffer);
+                const durationMs = Date.now() - startedAt;
+                console.log(`${logPrefix} GET done cacheKey=${cacheKey} durationMs=${durationMs}`);
+                return;
+            }
+        }
+        if (!stored.ok && stored.reason === 'invalid-part') {
+            res.status(400).json({ error: 'Invalid part requested.' });
+            return;
+        }
+        if (!stored.ok && stored.reason === 'download-failed') {
+            res.status(500).json({ error: 'Failed to load stored weekly picks image.' });
+            return;
+        }
         const durationMs = Date.now() - startedAt;
         console.log(`${logPrefix} cache miss cacheKey=${cacheKey} durationMs=${durationMs}`);
         res.status(404).json({ error: 'No cached weekly picks image. Generate first.' });
@@ -589,6 +659,9 @@ router.get('/weekly-picks/image', asyncHandler(async (req: AuthenticatedRequest,
 }));
 
 router.post('/duplicates', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const body = req.body || {};
     const modeInput = String(body.mode ?? 'hybrid').toLowerCase();
     const mode: DuplicateMode = (['heuristic', 'ai', 'hybrid'] as const).includes(modeInput as DuplicateMode)
@@ -971,6 +1044,9 @@ router.get('/', optionalAuthenticateRequest, asyncHandler(async (req: Authentica
 }));
 
 router.post('/user-submissions/import-urls', authenticateRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const urls = normalizeUrlList(req.body || {});
     if (!urls.length) {
         res.status(400).json({ error: 'urls (array) or url (string) is required' });
@@ -1110,6 +1186,9 @@ router.post('/', authenticateAdminRequest, asyncHandler(async (req: Authenticate
 
 
 router.post('/bulk', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const events = req.body;
     // Default to skipping existing events unless explicitly overridden with skipExisting=false
     const skipExisting = req.query.skipExisting !== 'false';

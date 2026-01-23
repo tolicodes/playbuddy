@@ -1,15 +1,50 @@
 import { generateWeeklyPicksImage, logWeeklyPicksMessage } from './weeklyPicksImage.js';
 import type {
     WeeklyPicksImageLogger,
+    WeeklyPicksImageLogLevel,
     WeeklyPicksImageOptions,
     WeeklyPicksImageResult,
 } from './weeklyPicksImage.js';
+import { supabaseClient } from '../connections/supabaseClient.js';
 
 type WeeklyPicksImageCacheEntry = WeeklyPicksImageResult & {
     generatedAt: string;
     durationMs: number;
     version: string;
 };
+
+type WeeklyPicksImageStorageManifest = {
+    cacheKey: string;
+    version: string;
+    generatedAt: string;
+    durationMs: number;
+    timings?: WeeklyPicksImageResult['timings'];
+    weekOffset: number;
+    weekLabel: string;
+    width: number;
+    height: number;
+    partCount: number;
+    partHeights: number[];
+    splitAt: number;
+    bucket: string;
+    pngPath: string;
+    parts: Array<{
+        path: string;
+        height: number;
+    }>;
+};
+
+export type StoredWeeklyPicksImageResult =
+    | {
+        ok: true;
+        cacheKey: string;
+        manifest: WeeklyPicksImageStorageManifest;
+        buffer: Buffer;
+        contentType: string;
+        partIndex?: number;
+        partHeight?: number;
+    }
+    | { ok: false; reason: 'missing' | 'invalid-part' | 'download-failed' };
 
 type WeeklyPicksImageCacheStatus = {
     cacheKey: string;
@@ -41,6 +76,7 @@ const cache = new Map<string, WeeklyPicksImageCacheEntry>();
 const inFlight = new Map<string, Promise<WeeklyPicksImageCacheEntry>>();
 const logStore = new Map<string, WeeklyPicksImageLogState>();
 const MAX_WEEKLY_PICKS_LOGS = 500;
+const WEEKLY_PICKS_BUCKET = process.env.WEEKLY_PICKS_BUCKET ?? 'weekly-picks';
 
 const normalizeNumber = (value?: number) =>
     Number.isFinite(value) ? Number(value) : undefined;
@@ -70,6 +106,13 @@ const buildVersion = () =>
     `${Date.now()}-${Math.floor(Math.random() * 1000000)}`;
 
 const nowIso = () => new Date().toISOString();
+const encodeCacheKey = (cacheKey: string) => encodeURIComponent(cacheKey);
+
+const buildStoragePrefix = (cacheKey: string, version: string) =>
+    `${encodeCacheKey(cacheKey)}/${version}`;
+
+const buildManifestPath = (cacheKey: string) =>
+    `${encodeCacheKey(cacheKey)}/latest.json`;
 
 const startLogState = (cacheKey: string) => {
     const state: WeeklyPicksImageLogState = {
@@ -113,6 +156,111 @@ const buildLogSink = (cacheKey: string, logger?: WeeklyPicksImageLogger): Weekly
         logWeeklyPicksMessage(undefined, level, message);
     };
 
+const toBuffer = async (data: unknown): Promise<Buffer> => {
+    if (!data) return Buffer.alloc(0);
+    if (Buffer.isBuffer(data)) return data;
+    if (data instanceof ArrayBuffer) return Buffer.from(data);
+    const maybeBlob = data as { arrayBuffer?: () => Promise<ArrayBuffer> };
+    if (typeof maybeBlob.arrayBuffer === 'function') {
+        return Buffer.from(await maybeBlob.arrayBuffer());
+    }
+    return Buffer.from(data as any);
+};
+
+const uploadStorageObject = async (path: string, body: Buffer, contentType: string) => {
+    const { error } = await supabaseClient.storage
+        .from(WEEKLY_PICKS_BUCKET)
+        .upload(path, body, {
+            contentType,
+            upsert: true,
+            cacheControl: '3600',
+        });
+    if (error) {
+        throw error;
+    }
+};
+
+const storeWeeklyPicksImage = async (
+    cacheKey: string,
+    entry: WeeklyPicksImageCacheEntry,
+    logger?: WeeklyPicksImageLogger
+) => {
+    const log = (level: WeeklyPicksImageLogLevel, message: string) =>
+        logWeeklyPicksMessage(logger, level, message);
+    const prefix = buildStoragePrefix(cacheKey, entry.version);
+    const pngPath = `${prefix}/weekly-picks.png`;
+    const parts = entry.parts.map((part, index) => ({
+        path: `${prefix}/weekly-picks-part-${index + 1}.jpg`,
+        height: part.height,
+    }));
+    const uploadStart = Date.now();
+    log('info', `[weekly-picks] Storage upload start cacheKey=${cacheKey} bucket=${WEEKLY_PICKS_BUCKET}`);
+    const stallInterval = setInterval(() => {
+        const elapsed = Date.now() - uploadStart;
+        log('info', `[weekly-picks] Storage upload still running cacheKey=${cacheKey} ms=${elapsed}`);
+    }, 15000);
+    try {
+        await uploadStorageObject(pngPath, entry.png, 'image/png');
+        await Promise.all(
+            parts.map((part, index) => uploadStorageObject(part.path, entry.parts[index].jpg, 'image/jpeg'))
+        );
+        const manifest: WeeklyPicksImageStorageManifest = {
+            cacheKey,
+            version: entry.version,
+            generatedAt: entry.generatedAt,
+            durationMs: entry.durationMs,
+            timings: entry.timings,
+            weekOffset: entry.weekOffset,
+            weekLabel: entry.weekLabel,
+            width: entry.width,
+            height: entry.height,
+            partCount: entry.parts.length,
+            partHeights: entry.parts.map((part) => part.height),
+            splitAt: entry.splitAt,
+            bucket: WEEKLY_PICKS_BUCKET,
+            pngPath,
+            parts,
+        };
+        await uploadStorageObject(
+            buildManifestPath(cacheKey),
+            Buffer.from(JSON.stringify(manifest)),
+            'application/json'
+        );
+        const uploadMs = Date.now() - uploadStart;
+        log('info', `[weekly-picks] Storage upload done cacheKey=${cacheKey} ms=${uploadMs}`);
+    } finally {
+        clearInterval(stallInterval);
+    }
+};
+
+const fetchStoredManifest = async (
+    cacheKey: string
+): Promise<WeeklyPicksImageStorageManifest | null> => {
+    const manifestPath = buildManifestPath(cacheKey);
+    const { data, error } = await supabaseClient.storage
+        .from(WEEKLY_PICKS_BUCKET)
+        .download(manifestPath);
+    if (error || !data) {
+        return null;
+    }
+    const raw = await toBuffer(data);
+    try {
+        return JSON.parse(raw.toString('utf8')) as WeeklyPicksImageStorageManifest;
+    } catch {
+        return null;
+    }
+};
+
+const downloadStoredObject = async (path: string): Promise<Buffer | null> => {
+    const { data, error } = await supabaseClient.storage
+        .from(WEEKLY_PICKS_BUCKET)
+        .download(path);
+    if (error || !data) {
+        return null;
+    }
+    return toBuffer(data);
+};
+
 const generateAndCacheWeeklyPicksImage = async (
     options: WeeklyPicksImageOptions,
     cacheKey: string,
@@ -136,6 +284,12 @@ const generateAndCacheWeeklyPicksImage = async (
             'info',
             `[weekly-picks] Generated image ${cacheKey} in ${durationMs}ms parts=${entry.parts.length} jpgBytes=${jpgBytes}`
         );
+        try {
+            await storeWeeklyPicksImage(cacheKey, entry, logSink);
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            logSink('error', `[weekly-picks] Storage upload failed ${cacheKey} error=${errorMessage}`);
+        }
         finalizeLogState(cacheKey, 'completed');
         return entry;
     } catch (error) {
@@ -194,6 +348,47 @@ export const getCachedWeeklyPicksImage = (
     const cacheKey = buildCacheKey(options);
     const entry = cache.get(cacheKey);
     return { cacheKey, entry, inProgress: inFlight.has(cacheKey) };
+};
+
+export const getStoredWeeklyPicksImage = async (
+    options: WeeklyPicksImageOptions,
+    format: string,
+    requestedPart?: number
+): Promise<StoredWeeklyPicksImageResult> => {
+    const cacheKey = buildCacheKey(options);
+    const manifest = await fetchStoredManifest(cacheKey);
+    if (!manifest) {
+        return { ok: false, reason: 'missing' };
+    }
+
+    if (format === 'png') {
+        const buffer = await downloadStoredObject(manifest.pngPath);
+        if (!buffer) return { ok: false, reason: 'download-failed' };
+        return {
+            ok: true,
+            cacheKey,
+            manifest,
+            buffer,
+            contentType: 'image/png',
+        };
+    }
+
+    const partIndex = (requestedPart ?? 1) - 1;
+    const part = manifest.parts[partIndex];
+    if (!part) {
+        return { ok: false, reason: 'invalid-part' };
+    }
+    const buffer = await downloadStoredObject(part.path);
+    if (!buffer) return { ok: false, reason: 'download-failed' };
+    return {
+        ok: true,
+        cacheKey,
+        manifest,
+        buffer,
+        contentType: 'image/jpeg',
+        partIndex: partIndex + 1,
+        partHeight: part.height,
+    };
 };
 
 export const getOrGenerateWeeklyPicksImage = async (

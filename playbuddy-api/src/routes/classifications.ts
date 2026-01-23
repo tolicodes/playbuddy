@@ -1,5 +1,6 @@
 import express, { Response } from 'express';
 import { AuthenticatedRequest, authenticateRequest } from '../middleware/authenticateRequest.js';
+import { replayToLargeInstance } from '../middleware/replayToLargeInstance.js';
 import { supabaseClient } from '../connections/supabaseClient.js';
 import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 import { flushEvents } from '../helpers/flushCache.js';
@@ -38,6 +39,9 @@ router.get('/', authenticateRequest, async (req: AuthenticatedRequest, res: Resp
 });
 
 router.get('/classify', async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const rawNeighborhood = req.query.neighborhoodOnly ?? req.query.neighborhood_only;
     const rawPrice = req.query.priceOnly ?? req.query.price_only;
     const neighborhoodOnly = rawNeighborhood === 'true' || rawNeighborhood === '1';
@@ -48,6 +52,9 @@ router.get('/classify', async (req: AuthenticatedRequest, res: Response) => {
 });
 
 router.post('/reclassify', authenticateRequest, async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const rawFields: unknown[] = Array.isArray(req.body?.fields) ? req.body.fields : [];
     const fields = Array.from(
         new Set(rawFields.map((field) => normalizeField(String(field))))

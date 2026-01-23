@@ -13,6 +13,7 @@ import { flushEvents } from '../helpers/flushCache.js';
 import { NormalizedEventInput } from '../commonTypes.js';
 import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 import { scrapeGmailSources, type GmailSourceConfig } from '../scrapers/gmail.js';
+import { replayToLargeInstance } from '../middleware/replayToLargeInstance.js';
 
 const router = Router();
 const __filename = fileURLToPath(import.meta.url);
@@ -65,6 +66,9 @@ const mergeEventDefaults = (
 
 // Run all scrapers (Eventbrite organizers, Plura, TantraNY) and enqueue
 router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     try {
         const scenario = req.query.scenario?.toString();
         const { jobId, enqueued } = await runAllScrapers(req.authUserId, { scenario });
@@ -91,6 +95,9 @@ router.post('/scrape', authenticateAdminRequest, async (req: AuthenticatedReques
 
 // Scrape urls.json only (AI/auto routes)
 router.post('/scrape-ai-urls', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     try {
         const { jobId, enqueued } = await runAllScrapers(req.authUserId, { scenario: 'urls_json' });
         res.json({ jobId, enqueued, scenario: 'urls_json' });
@@ -101,6 +108,9 @@ router.post('/scrape-ai-urls', authenticateAdminRequest, async (req: Authenticat
 });
 
 router.post('/scrape-gmail', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     try {
         const { sources, maxResults } = req.body || {};
         let gmailSources: GmailSourceConfig[] = [];
@@ -142,6 +152,9 @@ router.post('/scrape-gmail', authenticateAdminRequest, async (req: Authenticated
 });
 
 router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
     const { urls, eventDefaults = {} } = req.body || {};
     if (!Array.isArray(urls) || urls.length === 0) {
         res.status(400).json({ error: 'urls (array) is required' });

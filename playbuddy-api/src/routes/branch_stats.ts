@@ -6,6 +6,7 @@ import { existsSync } from "fs";
 import { fileURLToPath } from "url";
 import { parse as parseCsv } from "csv-parse/sync";
 import { authenticateAdminRequest, type AuthenticatedRequest } from "../middleware/authenticateRequest.js";
+import { replayToLargeInstance } from "../middleware/replayToLargeInstance.js";
 
 type BranchStatsRow = {
   name: string | null;
@@ -429,6 +430,9 @@ export const startBranchStatsScrape = (
 };
 
 router.post("/scrape", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+  if (replayToLargeInstance(req, res)) {
+    return;
+  }
   const requestedHeadless = req.body?.headless;
   const result = startBranchStatsScrape(
     typeof requestedHeadless === "boolean" ? { headless: requestedHeadless } : undefined
@@ -448,7 +452,10 @@ router.post("/scrape", authenticateAdminRequest, async (req: AuthenticatedReques
   res.json(result.state);
 });
 
-router.get("/scrape/status", authenticateAdminRequest, (_req: AuthenticatedRequest, res: Response) => {
+router.get("/scrape/status", authenticateAdminRequest, (req: AuthenticatedRequest, res: Response) => {
+  if (replayToLargeInstance(req, res)) {
+    return;
+  }
   res.json(scrapeState);
 });
 
