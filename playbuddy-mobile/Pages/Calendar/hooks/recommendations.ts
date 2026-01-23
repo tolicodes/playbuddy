@@ -211,9 +211,9 @@ export const buildRecommendations = ({
         };
     };
 
-    const calendarResult = pickRecentWithPromo(wishlistEvents, 2, new Set());
+    const calendarResult = pickRecentWithPromo(wishlistEvents, 4, new Set());
     const calendarPickIds = new Set(calendarResult.picks.map((pick) => pick.event.id));
-    const organizerResult = pickRandomWithPromo(organizerEvents, 3, calendarPickIds);
+    const organizerResult = pickRandomWithPromo(organizerEvents, 6, calendarPickIds);
 
     const combined = [...calendarResult.picks, ...organizerResult.picks];
     const promoPicks = combined.filter((pick) => pick.promo);

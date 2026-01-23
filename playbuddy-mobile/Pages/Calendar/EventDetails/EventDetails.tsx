@@ -106,9 +106,9 @@ const getTagTone = (tag: string) => {
 };
 
 const MAX_COLLAPSED_TAGS = 6;
-const RECOMMENDED_EVENTS_TOTAL = 5;
-const ORGANIZER_RECOMMENDATION_COUNT = 2;
-const FOLLOWED_RECOMMENDATION_COUNT = 3;
+const RECOMMENDED_EVENTS_TOTAL = 10;
+const ORGANIZER_RECOMMENDATION_COUNT = 4;
+const FOLLOWED_RECOMMENDATION_COUNT = 6;
 const RECOMMENDATION_WINDOW_START_DAYS = 2;
 const RECOMMENDATION_WINDOW_END_DAYS = 10;
 const SECONDARY_ACTION_SIZE = 40;
@@ -1224,6 +1224,7 @@ export const EventDetails = ({ route }) => {
     const { currentDeepLink, authUserId, userProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
     const { data: attendees = [] } = useFetchAttendees();
+    const analyticsProps = useAnalyticsProps();
     const promoCode = getBestPromoCode(selectedEvent, currentDeepLink);
     const [activeTab, setActiveTab] = useState<string>('details');
     const isFocused = useIsFocused();
@@ -1233,6 +1234,7 @@ export const EventDetails = ({ route }) => {
     const buddyCoachAnim = useRef(new Animated.Value(0)).current;
     const buddyCoachArrowAnim = useRef(new Animated.Value(0)).current;
     const buddyCoachArrowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+    const buddyCoachDismissedRef = useRef(false);
     const selectedEventId = selectedEvent?.id;
     const scrollViewRef = useRef<ScrollView>(null);
     const attendeesForEvent = useMemo(
@@ -1270,6 +1272,10 @@ export const EventDetails = ({ route }) => {
             if (!isForced && now < getPopupReadyAt(popupState, now, BUDDY_LIST_COACH_ID)) return;
 
             setBuddyCoachVisible(true);
+            logEvent(UE.BuddyListCoachShown, {
+                ...analyticsProps,
+                event_id: selectedEventId ?? null,
+            });
             const shownAt = now;
             const nextState = normalizePopupManagerState({
                 ...popupState,
@@ -1361,6 +1367,54 @@ export const EventDetails = ({ route }) => {
     });
     const buddyCoachTop = Math.max(insets.top + spacing.lg, spacing.xl);
     const canShareCalendar = userProfile?.share_calendar !== true;
+    const markBuddyCoachDismissed = async () => {
+        if (buddyCoachDismissedRef.current) return;
+        buddyCoachDismissedRef.current = true;
+        logEvent(UE.BuddyListCoachDismissed, {
+            ...analyticsProps,
+            event_id: selectedEventId ?? null,
+        });
+        const popupState = await loadPopupManagerState();
+        if (popupState.popups[BUDDY_LIST_COACH_ID]?.dismissed) return;
+        const now = Date.now();
+        const nextState = normalizePopupManagerState({
+            ...popupState,
+            lastPopupShownAt: Math.max(popupState.lastPopupShownAt ?? 0, now),
+            popups: {
+                ...popupState.popups,
+                [BUDDY_LIST_COACH_ID]: {
+                    ...popupState.popups[BUDDY_LIST_COACH_ID],
+                    dismissed: true,
+                    snoozeUntil: undefined,
+                    lastShownAt: popupState.popups[BUDDY_LIST_COACH_ID]?.lastShownAt ?? now,
+                },
+            },
+        });
+        await savePopupManagerState(nextState);
+    };
+
+    const handleBuddyCoachDismiss = () => {
+        void markBuddyCoachDismissed();
+        setBuddyCoachVisible(false);
+    };
+    const handleBuddyCoachScroll = () => {
+        void markBuddyCoachDismissed();
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+        setBuddyCoachVisible(false);
+    };
+    const handleBuddyCoachShare = () => {
+        logEvent(UE.BuddyListCoachSharePressed, {
+            ...analyticsProps,
+            event_id: selectedEventId ?? null,
+        });
+        setShareCalendarVisible(true);
+    };
+
+    useEffect(() => {
+        if (isFocused || !buddyCoachVisible) return;
+        void markBuddyCoachDismissed();
+        setBuddyCoachVisible(false);
+    }, [buddyCoachVisible, isFocused, analyticsProps, selectedEventId]);
 
     // If no event is provided, render nothing.
     if (!selectedEvent || !eventAnalyticsProps.event_id) return null;
@@ -1426,7 +1480,7 @@ export const EventDetails = ({ route }) => {
                         <Text style={styles.buddyCoachTitle}>Buddy tip</Text>
                         <TouchableOpacity
                             style={styles.buddyCoachClose}
-                            onPress={() => setBuddyCoachVisible(false)}
+                            onPress={handleBuddyCoachDismiss}
                             accessibilityLabel="Close buddy coach"
                         >
                             <MaterialIcons name="close" size={18} color={colors.textSecondary} />
@@ -1436,7 +1490,7 @@ export const EventDetails = ({ route }) => {
                     {canShareCalendar && (
                         <TouchableOpacity
                             style={styles.buddyCoachShareButton}
-                            onPress={() => setShareCalendarVisible(true)}
+                            onPress={handleBuddyCoachShare}
                             activeOpacity={0.85}
                         >
                             <FAIcon name="share-alt" size={14} color={colors.white} />
@@ -1445,10 +1499,7 @@ export const EventDetails = ({ route }) => {
                     )}
                 </Animated.View>
                 <TouchableOpacity
-                    onPress={() => {
-                        scrollViewRef.current?.scrollToEnd({ animated: true });
-                        setBuddyCoachVisible(false);
-                    }}
+                    onPress={handleBuddyCoachScroll}
                     activeOpacity={0.8}
                 >
                     <Animated.View
