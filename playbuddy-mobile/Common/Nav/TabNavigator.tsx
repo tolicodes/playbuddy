@@ -17,6 +17,8 @@ import { colors, fontSizes, gradients, radius, spacing } from "../../components/
 import { NotificationsScreen } from "../../Pages/Notifications/NotificationsScreen";
 import DebugScreen from "../../Pages/Debug/DebugScreen";
 import EventDetails from "../../Pages/Calendar/EventDetails/EventDetails";
+import { BuddyEventsScreen } from "../../Pages/Buddies/BuddyEventsScreen";
+import { BuddyListScreen } from "../../Pages/Buddies/BuddyListScreen";
 import { CommunityEvents } from "../../Pages/Communities/CommunityEvents";
 import { MunchDetails } from "../../Pages/Munches/MunchDetails";
 import FacilitatorProfile from "../../Pages/Facilitators/FacilitatorProfile/FacilitatorProfile";
@@ -35,12 +37,15 @@ import SubmitEvent from "../../Pages/SubmitEvent";
 import { AdminScreen } from "../../Pages/Admin/AdminScreen";
 import ImportEventURLsScreen from "../../Pages/Admin/ImportEventURLsScreen";
 import WeeklyPicksAdminScreen from "../../Pages/Admin/WeeklyPicksAdminScreen";
+import AnalyticsAdminScreen from "../../Pages/Admin/AnalyticsAdminScreen";
 import OrganizerAdminScreen from "../../Pages/Admin/OrganizerAdminScreen";
 import EventAdminScreen from "../../Pages/Admin/EventAdminScreen";
 import PromoCodeAdminScreen from "../../Pages/Admin/PromoCodeAdminScreen";
 import EventPopupAdminScreen from "../../Pages/Admin/EventPopupAdminScreen";
 import PushNotificationsAdminScreen from "../../Pages/Admin/PushNotificationsAdminScreen";
 import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
+import type { HomeTabName } from "./navigationHelpers";
+import { TabHighlightContext } from "./TabHighlightContext";
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -83,6 +88,16 @@ const renderSharedStackScreens = () => (
                 }),
                 cardStyle: { backgroundColor: colors.lavenderBackground },
             })}
+        />
+        <Stack.Screen
+            name="Buddy List"
+            component={BuddyListScreen}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Buddy List' })}
+        />
+        <Stack.Screen
+            name="Buddy Events"
+            component={BuddyEventsScreen}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Buddy Events' })}
         />
         <Stack.Screen
             name="Community Events"
@@ -160,6 +175,11 @@ const renderSharedStackScreens = () => (
             options={({ navigation }) => headerOptions({ navigation, title: 'Weekly Picks Admin' })}
         />
         <Stack.Screen
+            name="Analytics Admin"
+            component={AnalyticsAdminScreen}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Analytics' })}
+        />
+        <Stack.Screen
             name="Organizer Admin"
             component={OrganizerAdminScreen}
             options={({ navigation }) => headerOptions({ navigation, title: 'Organizer Admin' })}
@@ -222,6 +242,11 @@ export const TabNavigator = () => {
     const analyticsProps = useAnalyticsProps();
     const { height: windowHeight } = useWindowDimensions();
     const [isMoreOpen, setIsMoreOpen] = useState(false);
+    const [highlightedTab, setHighlightedTab] = useState<HomeTabName | null>(null);
+    const tabHighlightValue = useMemo(() => ({
+        highlightedTab,
+        setHighlightedTab,
+    }), [highlightedTab]);
 
     const CalendarStack = useMemo(
         () => createTabStack({
@@ -261,32 +286,44 @@ export const TabNavigator = () => {
 
     const moreSheetHeight = Math.min(windowHeight * 0.85, 680);
 
+    const isMoreHighlighted = highlightedTab === 'More';
+
     return (
-        <>
-            <Tab.Navigator
-                screenOptions={({ route }) => ({
-                    headerShown: false,
-                    tabBarButton: (props: BottomTabBarButtonProps) => (
-                        <TouchableOpacity
-                            {...props}
-                            onPress={(e) => {
-                                const tabName = props.accessibilityLabel?.replace(/,.*/g, '') || route.name;
-                                logEvent(UE.TabNavigatorTabClicked, {
-                                    ...analyticsProps,
-                                    tab_name: tabName,
-                                });
+        <TabHighlightContext.Provider value={tabHighlightValue}>
+            <>
+                <Tab.Navigator
+                    screenOptions={({ route }) => ({
+                        headerShown: false,
+                        tabBarButton: (props: BottomTabBarButtonProps) => {
+                            const { children, ...buttonProps } = props;
+                            const tabName = props.accessibilityLabel?.replace(/,.*/g, '') || route.name;
+                            const isHighlighted = highlightedTab === route.name;
+                            return (
+                                <TouchableOpacity
+                                    {...buttonProps}
+                                    onPress={(e) => {
+                                        logEvent(UE.TabNavigatorTabClicked, {
+                                            ...analyticsProps,
+                                            tab_name: tabName,
+                                        });
 
-                                if (route.name === 'More') {
-                                    setIsMoreOpen((prev) => !prev);
-                                    return;
-                                }
+                                        if (route.name === 'More') {
+                                            setIsMoreOpen((prev) => !prev);
+                                            return;
+                                        }
 
-                                props.onPress?.(e);
-                            }}
-                        />
-                    ),
-                })}
-            >
+                                        props.onPress?.(e);
+                                    }}
+                                >
+                                    <View style={styles.tabHighlightContainer}>
+                                        {isHighlighted && <View style={styles.tabHighlightBackdrop} />}
+                                        {children}
+                                    </View>
+                                </TouchableOpacity>
+                            );
+                        },
+                    })}
+                >
                 <Tab.Screen
                     name="Calendar"
                     component={CalendarStack}
@@ -344,34 +381,35 @@ export const TabNavigator = () => {
                     options={{
                         tabBarIcon: ({ color, size }) => (
                             <View>
-                                <FAIcon name="ellipsis-h" size={size} color={color} />
+                                <FAIcon name="ellipsis-h" size={size} color={isMoreHighlighted ? colors.brandIndigo : color} />
                             </View>
                         ),
                     }}
                 />
-            </Tab.Navigator>
-            <ActionSheet
-                visible={isMoreOpen}
-                height={moreSheetHeight}
-                debugId="more-menu"
-                onClose={() => setIsMoreOpen(false)}
-                dismissOnBackdropPress
-            >
-                <View style={styles.moreSheet}>
-                    <View style={styles.moreHandle} />
-                    <View style={styles.moreHeader}>
-                        <Text style={styles.moreTitle}>More</Text>
-                        <TouchableOpacity
-                            onPress={() => setIsMoreOpen(false)}
-                            accessibilityLabel="Close more menu"
-                        >
-                            <FAIcon name="times" size={18} color={colors.textMuted} />
-                        </TouchableOpacity>
+                </Tab.Navigator>
+                <ActionSheet
+                    visible={isMoreOpen}
+                    height={moreSheetHeight}
+                    debugId="more-menu"
+                    onClose={() => setIsMoreOpen(false)}
+                    dismissOnBackdropPress
+                >
+                    <View style={styles.moreSheet}>
+                        <View style={styles.moreHandle} />
+                        <View style={styles.moreHeader}>
+                            <Text style={styles.moreTitle}>More</Text>
+                            <TouchableOpacity
+                                onPress={() => setIsMoreOpen(false)}
+                                accessibilityLabel="Close more menu"
+                            >
+                                <FAIcon name="times" size={18} color={colors.textMuted} />
+                            </TouchableOpacity>
+                        </View>
+                        <DiscoverPageModal onRequestClose={() => setIsMoreOpen(false)} />
                     </View>
-                    <DiscoverPageModal onRequestClose={() => setIsMoreOpen(false)} />
-                </View>
-            </ActionSheet>
-        </>
+                </ActionSheet>
+            </>
+        </TabHighlightContext.Provider>
     );
 };
 
@@ -417,5 +455,25 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         borderWidth: 1.5,
         backgroundColor: colors.white,
+    },
+    tabHighlightContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    tabHighlightBackdrop: {
+        position: 'absolute',
+        top: -6,
+        bottom: -6,
+        left: -12,
+        right: -12,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceLavenderLight,
+        borderWidth: 1,
+        borderColor: colors.brandIndigo,
+        shadowColor: colors.brandIndigo,
+        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 6,
+        elevation: 4,
     },
 });

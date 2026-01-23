@@ -5,6 +5,7 @@ import { existsSync } from "fs";
 import { fileURLToPath } from "url";
 import { parse as parseCsv } from "csv-parse/sync";
 import { authenticateAdminRequest, type AuthenticatedRequest } from "../middleware/authenticateRequest.js";
+import { replayToLargeInstance } from "../middleware/replayToLargeInstance.js";
 import { pgQuery } from "../connections/postgres.js";
 import { USER_EVENT_CATALOG } from "../common/analytics/userEventCatalog.js";
 import { UE } from "../common/types/userEventTypes.js";
@@ -312,9 +313,98 @@ const MODAL_ANALYTICS_DEFINITIONS: ModalDefinition[] = [
     ],
   },
   {
+    id: "calendar_add_coach",
+    label: "Calendar add coach",
+    shownEvents: [UE.CalendarAddCoachShown],
+    actions: [
+      {
+        id: "save_pressed",
+        label: "Save pressed",
+        role: "primary",
+        events: [UE.CalendarAddCoachSavePressed],
+      },
+      {
+        id: "dismissed",
+        label: "Dismissed",
+        role: "skip",
+        events: [UE.CalendarAddCoachDismissed],
+      },
+    ],
+  },
+  {
+    id: "buddy_list_coach",
+    label: "Buddy list coach",
+    shownEvents: [UE.BuddyListCoachShown],
+    actions: [
+      {
+        id: "share_calendar",
+        label: "Share calendar",
+        role: "primary",
+        events: [UE.BuddyListCoachSharePressed],
+      },
+      {
+        id: "dismissed",
+        label: "Dismissed",
+        role: "skip",
+        events: [UE.BuddyListCoachDismissed],
+      },
+    ],
+  },
+  {
+    id: "buddy_share_toast",
+    label: "Buddy share toast",
+    shownEvents: [UE.BuddyShareToastShown],
+    actions: [
+      {
+        id: "share_calendar",
+        label: "Share calendar",
+        role: "primary",
+        events: [UE.BuddyShareToastSharePressed],
+      },
+      {
+        id: "dismissed",
+        label: "Dismissed",
+        role: "skip",
+        events: [UE.BuddyShareToastDismissed],
+      },
+    ],
+  },
+  {
+    id: "event_popup",
+    label: "Event popup",
+    shownEvents: [UE.EventPopupModalShown],
+    actions: [
+      {
+        id: "primary_action",
+        label: "Primary action",
+        role: "primary",
+        events: [UE.EventPopupModalPrimaryAction],
+      },
+      {
+        id: "skipped",
+        label: "Skipped",
+        role: "skip",
+        events: [UE.EventPopupModalSkipped],
+      },
+    ],
+  },
+  {
+    id: "personalization",
+    label: "Personalization",
+    shownEvents: [],
+    actions: [
+      {
+        id: "confirmed",
+        label: "Confirmed",
+        role: "primary",
+        events: [UE.PersonalizationModalConfirmed],
+      },
+    ],
+  },
+  {
     id: "edgeplay_group",
     label: "EdgePlay group",
-    shownEvents: [],
+    shownEvents: [UE.EdgePlayGroupModalShown],
     actions: [
       {
         id: "open_whatsapp",
@@ -333,7 +423,7 @@ const MODAL_ANALYTICS_DEFINITIONS: ModalDefinition[] = [
   {
     id: "newsletter_signup",
     label: "Newsletter signup",
-    shownEvents: [],
+    shownEvents: [UE.NewsletterSignupModalShown],
     actions: [
       {
         id: "open_signup",
@@ -352,13 +442,76 @@ const MODAL_ANALYTICS_DEFINITIONS: ModalDefinition[] = [
   {
     id: "rate_app",
     label: "Rate app",
-    shownEvents: [],
+    shownEvents: [UE.RateAppModalShown],
     actions: [
       {
         id: "open_store",
         label: "Open store",
         role: "primary",
         events: [UE.RateAppModalOpenStore],
+      },
+      {
+        id: "skipped",
+        label: "Skipped",
+        role: "skip",
+        events: [UE.RateAppModalSkipped],
+      },
+    ],
+  },
+  {
+    id: "discover_game",
+    label: "Discover game",
+    shownEvents: [UE.DiscoverGameModalShown],
+    actions: [
+      {
+        id: "play_now",
+        label: "Play now",
+        role: "primary",
+        events: [UE.DiscoverGameModalPlayNow],
+      },
+      {
+        id: "skipped",
+        label: "Skipped",
+        role: "skip",
+        events: [UE.DiscoverGameModalSkipped],
+      },
+    ],
+  },
+  {
+    id: "event_list_view_intro",
+    label: "Event list view intro",
+    shownEvents: [UE.EventListViewIntroModalShown],
+    actions: [
+      {
+        id: "keep_new",
+        label: "Keep new view",
+        role: "primary",
+        events: [UE.EventListViewIntroModalKeepNew],
+      },
+      {
+        id: "switch_classic",
+        label: "Switch to classic",
+        role: "secondary",
+        events: [UE.EventListViewIntroModalSwitchClassic],
+      },
+    ],
+  },
+  {
+    id: "share_calendar",
+    label: "Share calendar",
+    shownEvents: [UE.ShareCalendarModalShown],
+    actions: [
+      {
+        id: "share_calendar",
+        label: "Share calendar",
+        role: "primary",
+        events: [UE.BuddyShareCalendarPressed],
+      },
+      {
+        id: "skipped",
+        label: "Skipped",
+        role: "skip",
+        events: [UE.ShareCalendarModalSkipped],
       },
     ],
   },
@@ -1164,6 +1317,17 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
     [startDate, endDate, MODAL_EVENT_NAMES]
   );
 
+  const dayResult = await pgQuery(
+    `
+      ${modalEventCte}
+      SELECT modal_id,
+             COUNT(DISTINCT created_at::date)::int AS day_count
+      FROM joined
+      GROUP BY modal_id;
+    `,
+    [startDate, endDate, MODAL_EVENT_NAMES]
+  );
+
   const firstSeenResult = await pgQuery(
     `
       ${modalEventCte}
@@ -1202,6 +1366,11 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
     roleCountMap.set(key, entry);
   });
 
+  const dayCountMap = new Map<string, number>();
+  dayResult.rows.forEach((row: any) => {
+    dayCountMap.set(String(row.modal_id), Number(row.day_count ?? 0));
+  });
+
   const firstSeenMap = new Map<string, Date>();
   firstSeenResult.rows.forEach((row: any) => {
     if (!row.first_seen) return;
@@ -1210,6 +1379,12 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
       firstSeenMap.set(String(row.modal_id), seenDate);
     }
   });
+
+  const formatModalLabel = (modalId: string, label: string) => {
+    const dayCount = dayCountMap.get(modalId) ?? 0;
+    if (dayCount <= 0) return label;
+    return `${label} (+${dayCount}d)`;
+  };
 
   const orderedModals = MODAL_ANALYTICS_DEFINITIONS.map((modal, index) => ({
     id: modal.id,
@@ -1237,7 +1412,7 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
     const modalOrder = modalOrderMap.get(modal.id) ?? 0;
     nodes.push({
       id: modalNodeId,
-      label: modal.label,
+      label: formatModalLabel(modal.id, modal.label),
       stage: 0,
       value: shownCount,
       order: modalOrder,
@@ -1270,7 +1445,7 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
     const skipCount = hasSkipEvents ? roleCounts.skip : Math.max(0, shownCount - roleCounts.primary);
     return {
       modalId: modal.id,
-      modalLabel: modal.label,
+      modalLabel: formatModalLabel(modal.id, modal.label),
       primaryUsers: roleCounts.primary,
       skipUsers: skipCount,
       shownUsers: shownCount,
@@ -1283,10 +1458,16 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
 };
 
 router.get("/index", authenticateAdminRequest, async (_req: AuthenticatedRequest, res: Response) => {
+  if (replayToLargeInstance(_req, res)) {
+    return;
+  }
   res.json({ dashboards: DASHBOARDS, charts: CHARTS });
 });
 
 router.get("/users-over-time", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+  if (replayToLargeInstance(req, res)) {
+    return;
+  }
   try {
     const { startDate, endDate, error } = getDateRange(req.query);
     if (error) {
@@ -1312,6 +1493,9 @@ router.get("/users-over-time", authenticateAdminRequest, async (req: Authenticat
 });
 
 router.get("/charts/:chartId", authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+  if (replayToLargeInstance(req, res)) {
+    return;
+  }
   try {
     const chartId = String(req.params.chartId || "");
     const chart = CHARTS.find((item) => item.id === chartId);
@@ -1990,54 +2174,50 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
     if (chartId === "skip_to_signup") {
       const skipResult = await pgQuery(
         `
-          WITH actors AS (
+          WITH skip_actors AS (
             SELECT
               COALESCE(auth_user_id::text, device_id) AS actor_id,
-              MIN(created_at) FILTER (WHERE user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.welcomeSkipped)}')
-                AS welcome_skipped_at,
-              NULLIF(
-                LEAST(
-                  COALESCE(MIN(created_at) FILTER (WHERE user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.authSignupEmail)}'), 'infinity'::timestamp),
-                  COALESCE(MIN(created_at) FILTER (WHERE user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.authLoginEmail)}'), 'infinity'::timestamp),
-                  COALESCE(MIN(created_at) FILTER (WHERE user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.authGoogle)}'), 'infinity'::timestamp),
-                  COALESCE(MIN(created_at) FILTER (WHERE user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.authApple)}'), 'infinity'::timestamp),
-                  COALESCE(MIN(created_at) FILTER (WHERE user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.authPhone)}'), 'infinity'::timestamp)
-                ),
-                'infinity'::timestamp
-              ) AS auth_time
+              MIN(created_at) AS welcome_skipped_at
             FROM public.user_events
             WHERE created_at::date BETWEEN $1 AND $2
-              AND user_event_name = ANY($3)
+              AND user_event_name = '${escapeSqlLiteral(ONBOARDING_EVENTS.welcomeSkipped)}'
               AND (auth_user_id IS NOT NULL OR device_id IS NOT NULL)
             GROUP BY 1
           ),
+          auth_events AS (
+            SELECT
+              sa.actor_id,
+              MIN(ue.created_at) AS auth_time
+            FROM skip_actors sa
+            LEFT JOIN public.user_events ue
+              ON COALESCE(ue.auth_user_id::text, ue.device_id) = sa.actor_id
+             AND ue.user_event_name = ANY($3)
+             AND ue.created_at >= sa.welcome_skipped_at
+            GROUP BY sa.actor_id
+          ),
           durations AS (
-            SELECT EXTRACT(EPOCH FROM (auth_time - welcome_skipped_at)) AS duration_seconds
-            FROM actors
-            WHERE welcome_skipped_at IS NOT NULL
-              AND auth_time IS NOT NULL
-              AND auth_time >= welcome_skipped_at
+            SELECT
+              sa.actor_id,
+              sa.welcome_skipped_at,
+              ae.auth_time,
+              CASE
+                WHEN ae.auth_time IS NOT NULL AND ae.auth_time >= sa.welcome_skipped_at
+                  THEN EXTRACT(EPOCH FROM (ae.auth_time - sa.welcome_skipped_at))
+                ELSE NULL
+              END AS duration_seconds
+            FROM skip_actors sa
+            LEFT JOIN auth_events ae ON ae.actor_id = sa.actor_id
           )
-          SELECT COUNT(*)::int AS user_count,
+          SELECT COUNT(*) FILTER (WHERE duration_seconds IS NOT NULL)::int AS user_count,
                  COALESCE(AVG(duration_seconds), 0)::float AS avg_seconds,
                  COALESCE(
                    PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY duration_seconds),
                    0
-                 )::float AS median_seconds
+                 )::float AS median_seconds,
+                 COUNT(*) FILTER (WHERE duration_seconds IS NULL)::int AS never_signed_up
           FROM durations;
         `,
-        [
-          startDate,
-          endDate,
-          [
-            ONBOARDING_EVENTS.welcomeSkipped,
-            ONBOARDING_EVENTS.authSignupEmail,
-            ONBOARDING_EVENTS.authLoginEmail,
-            ONBOARDING_EVENTS.authGoogle,
-            ONBOARDING_EVENTS.authApple,
-            ONBOARDING_EVENTS.authPhone,
-          ],
-        ]
+        [startDate, endDate, AUTH_EVENT_NAMES]
       );
       const row = skipResult.rows[0] ?? {};
       res.json({
@@ -2047,6 +2227,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
           userCount: Number(row.user_count ?? 0),
           avgSeconds: Number(row.avg_seconds ?? 0),
           medianSeconds: Number(row.median_seconds ?? 0),
+          neverSignedUp: Number(row.never_signed_up ?? 0),
         },
       });
       return;

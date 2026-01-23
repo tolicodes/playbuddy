@@ -27,6 +27,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import EventIcon from "@mui/icons-material/Event";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExploreIcon from "@mui/icons-material/Explore";
+import FavoriteIcon from "@mui/icons-material/Favorite";
 import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import FlagIcon from "@mui/icons-material/Flag";
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -290,6 +291,7 @@ const CATEGORY_ICON_MAP: Record<string, { icon: React.ReactNode; color: string }
   Discover: { icon: <ExploreIcon fontSize="small" />, color: "#1d4ed8" },
   Tags: { icon: <LocalOfferIcon fontSize="small" />, color: "#be123c" },
   Attendees: { icon: <PeopleIcon fontSize="small" />, color: "#0f172a" },
+  Buddies: { icon: <FavoriteIcon fontSize="small" />, color: "#e11d48" },
 };
 
 const getCategoryIcon = (category: string) =>
@@ -1654,6 +1656,7 @@ const ChartCard = ({
         userCount: number;
         avgSeconds: number;
         medianSeconds: number;
+        neverSignedUp: number;
       };
       return (
         <Stack spacing={1.5}>
@@ -1671,6 +1674,10 @@ const ChartCard = ({
             <Box>
               <Typography variant="caption" color="text.secondary">Median time to signup</Typography>
               <Typography variant="subtitle1">{formatDuration(summary.medianSeconds)}</Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" color="text.secondary">Never signed up</Typography>
+              <Typography variant="subtitle1">{formatNumber(summary.neverSignedUp)}</Typography>
             </Box>
           </Stack>
         </Stack>

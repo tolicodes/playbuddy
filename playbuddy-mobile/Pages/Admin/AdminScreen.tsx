@@ -43,6 +43,14 @@ const QUICK_ACTIONS: QuickAction[] = [
         iconColor: colors.brandIndigo,
     },
     {
+        title: 'Analytics',
+        subtitle: 'Dashboards and funnels',
+        icon: 'chart-line',
+        route: 'Analytics Admin',
+        tone: colors.surfaceInfo,
+        iconColor: colors.brandBlue,
+    },
+    {
         title: 'Events',
         subtitle: 'Edit and hide events',
         icon: 'calendar-alt',
@@ -130,7 +138,7 @@ export const AdminScreen = () => {
                 <Text style={styles.heroKicker}>Admin control</Text>
                 <Text style={styles.heroTitle}>Command Center</Text>
                 <Text style={styles.heroSubtitle}>
-                    Admin tools for events, imports, organizers, weekly picks, promo codes, and push.
+                    Admin tools for analytics, events, imports, organizers, weekly picks, promo codes, and push.
                 </Text>
             </LinearGradient>
 

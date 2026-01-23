@@ -16,6 +16,7 @@ import PopularEvents from "../../Pages/EventLists/PopularEvents";
 import { AdminScreen } from "../../Pages/Admin/AdminScreen";
 import ImportEventURLsScreen from "../../Pages/Admin/ImportEventURLsScreen";
 import WeeklyPicksAdminScreen from "../../Pages/Admin/WeeklyPicksAdminScreen";
+import AnalyticsAdminScreen from "../../Pages/Admin/AnalyticsAdminScreen";
 import OrganizerAdminScreen from "../../Pages/Admin/OrganizerAdminScreen";
 import EventAdminScreen from "../../Pages/Admin/EventAdminScreen";
 import PromoCodeAdminScreen from "../../Pages/Admin/PromoCodeAdminScreen";
@@ -207,6 +208,16 @@ export const DrawerNav = () => {
                             drawerItemStyle: { height: 0, marginVertical: 0 },
                         })}
                         listeners={onPressItemLogEventListener('Weekly Picks Admin', 'Weekly Picks Admin')}
+                    />
+                    <Drawer.Screen
+                        name="Analytics Admin"
+                        component={AnalyticsAdminScreen}
+                        options={({ navigation }) => ({
+                            ...headerOptions({ navigation, title: 'Analytics' }),
+                            drawerLabel: () => null,
+                            drawerItemStyle: { height: 0, marginVertical: 0 },
+                        })}
+                        listeners={onPressItemLogEventListener('Analytics Admin', 'Analytics Admin')}
                     />
                     <Drawer.Screen
                         name="Organizer Admin"
