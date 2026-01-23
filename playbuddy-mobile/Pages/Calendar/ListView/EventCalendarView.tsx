@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Animated,
     Image,
@@ -39,7 +39,7 @@ import { CLASSIC_ITEM_HEIGHT } from "./EventListItemClassic";
 import { logEvent } from "../../../Common/hooks/logger";
 import { ADMIN_EMAILS, MISC_URLS } from "../../../config";
 import { EventWithMetadata, NavStack } from "../../../Common/Nav/NavStackType";
-import { PopupManager } from "../../PopupManager";
+import { PopupManager, useCalendarCoach } from "../../PopupManager";
 import { TopBar, ChipTone, QuickFilterItem, TypeaheadSuggestion, ActiveFilterChip } from "./TopBar";
 import { WeekStrip } from "./WeekStrip";
 import { SECTION_DATE_FORMAT } from "../hooks/useGroupedEventsMain";
@@ -96,6 +96,17 @@ const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const COMMUNITY_BANNER_HIDDEN_KEY = "communityBannerHidden";
 const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
 const EMPTY_EVENTS: EventWithMetadata[] = [];
+const CALENDAR_COACH_SCROLL_OFFSET_PX = 600;
+const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
+const CALENDAR_COACH_SCREEN_SCRIM = "rgba(64, 64, 64, 0.8)";
+const CALENDAR_COACH_SCROLL_RETRY_DELAY_MS = 150;
+const CALENDAR_COACH_SCROLL_RETRY_LIMIT = 8;
+
+const CalendarCoachScreenScrim = () => {
+    const calendarCoach = useCalendarCoach();
+    if (!calendarCoach?.showOverlay) return null;
+    return <View pointerEvents="none" style={styles.calendarCoachScreenScrim} />;
+};
 
 const EventCalendarView: React.FC<Props> = ({
     events,
@@ -127,6 +138,11 @@ const EventCalendarView: React.FC<Props> = ({
     const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const toastAnim = useRef(new Animated.Value(0)).current;
     const monthModalAnim = useRef(new Animated.Value(0)).current;
+    const listScrollOffsetRef = useRef(0);
+    const calendarCoachScrollRef = useRef(false);
+    const pendingCalendarCoachScrollRef = useRef<number | null>(null);
+    const calendarCoachScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const calendarCoachScrollRetryRef = useRef(0);
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const { myCommunities } = useCommonContext();
@@ -137,6 +153,8 @@ const EventCalendarView: React.FC<Props> = ({
         wishlistEvents,
         wishlistEntryMap,
     } = useCalendarContext();
+    const calendarCoach = useCalendarCoach();
+    const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const approvalStatuses = useMemo(
         () => (isAdmin ? ['approved', 'pending', 'rejected'] : undefined),
@@ -354,24 +372,65 @@ const EventCalendarView: React.FC<Props> = ({
     const scrollToTopToken = (route.params as { scrollToTop?: number } | undefined)?.scrollToTop;
     const didFilterScrollRef = useRef(false);
 
-    const scrollListToOffset = (offset: number, animated = true) => {
+    const scrollListToOffset = useCallback((offset: number, animated = true) => {
         const list = sectionListRef.current;
-        if (!list) return;
+        if (!list) return false;
         if (typeof list.scrollToOffset === "function") {
             list.scrollToOffset({ offset, animated });
-            return;
+            return true;
         }
         const responder = (list as { getScrollResponder?: () => { scrollTo?: (options: { y: number; animated: boolean }) => void } })
             .getScrollResponder?.();
         if (typeof responder?.scrollTo === "function") {
             responder.scrollTo({ y: offset, animated });
-            return;
+            return true;
         }
         const fallback = list as { scrollTo?: (options: { y: number; animated: boolean }) => void };
         if (typeof fallback.scrollTo === "function") {
             fallback.scrollTo({ y: offset, animated });
+            return true;
         }
-    };
+        return false;
+    }, []);
+
+    const attemptCalendarCoachScroll = useCallback((offset: number) => {
+        const didScroll = scrollListToOffset(offset, true);
+        if (didScroll) {
+            calendarCoachScrollRef.current = true;
+            pendingCalendarCoachScrollRef.current = null;
+            calendarCoachScrollRetryRef.current = 0;
+            if (calendarCoachScrollTimeoutRef.current) {
+                clearTimeout(calendarCoachScrollTimeoutRef.current);
+                calendarCoachScrollTimeoutRef.current = null;
+            }
+            return;
+        }
+        pendingCalendarCoachScrollRef.current = offset;
+        if (calendarCoachScrollRetryRef.current >= CALENDAR_COACH_SCROLL_RETRY_LIMIT) return;
+        if (calendarCoachScrollTimeoutRef.current) return;
+        calendarCoachScrollRetryRef.current += 1;
+        calendarCoachScrollTimeoutRef.current = setTimeout(() => {
+            calendarCoachScrollTimeoutRef.current = null;
+            attemptCalendarCoachScroll(offset);
+        }, CALENDAR_COACH_SCROLL_RETRY_DELAY_MS);
+    }, [scrollListToOffset]);
+
+    const handleCalendarCoachIntro = useCallback(() => {
+        if (calendarCoachScrollRef.current) return;
+        const targetOffset = Math.max(0, listScrollOffsetRef.current + CALENDAR_COACH_SCROLL_OFFSET_PX);
+        pendingCalendarCoachScrollRef.current = targetOffset;
+        requestAnimationFrame(() => {
+            attemptCalendarCoachScroll(targetOffset);
+        });
+    }, [attemptCalendarCoachScroll]);
+
+    useEffect(() => {
+        return () => {
+            if (calendarCoachScrollTimeoutRef.current) {
+                clearTimeout(calendarCoachScrollTimeoutRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         if (!scrollToTopToken) return;
@@ -1167,6 +1226,7 @@ const EventCalendarView: React.FC<Props> = ({
     };
 
     const handleListScroll = (offsetY: number, layoutHeight: number, contentHeight: number) => {
+        listScrollOffsetRef.current = offsetY;
         if (sectionOffsetIndex.length === 0) return;
         if (hasListHeader && listHeaderHeight === 0) return;
         if (offsetY < listHeaderOffset) return;
@@ -1324,7 +1384,11 @@ const EventCalendarView: React.FC<Props> = ({
             end={{ x: 0.9, y: 1 }}
             style={styles.screenGradient}
         >
-            <PopupManager events={sourceEvents} onListViewModeChange={handleListViewModeChange}>
+            <PopupManager
+                events={sourceEvents}
+                onListViewModeChange={handleListViewModeChange}
+                onCalendarCoachIntro={handleCalendarCoachIntro}
+            >
                 <View pointerEvents="none" style={styles.screenGlowTop} />
                 <View pointerEvents="none" style={styles.screenGlowMid} />
                 <View pointerEvents="none" style={styles.screenGlowBottom} />
@@ -1356,7 +1420,7 @@ const EventCalendarView: React.FC<Props> = ({
                     {headerContent ? (
                         <View style={styles.headerSlot}>{headerContent}</View>
                     ) : null}
-                    <View style={styles.headerSurface}>
+                    <View style={[styles.headerSurface, showCoachOverlay && styles.headerSurfaceCoach]}>
                 <TopBar
                     searchQuery={searchQuery}
                     setSearchQuery={handleSearchQueryChange}
@@ -1474,7 +1538,7 @@ const EventCalendarView: React.FC<Props> = ({
                     animateToCurrentWeek={navUpdateSourceRef.current === 'list'}
                     animateDirection={weekStripAnimationDirectionRef.current}
                 />
-                <View style={styles.headerDivider} />
+                <View style={[styles.headerDivider, showCoachOverlay && styles.headerDividerCoach]} />
             </View>
 
             <Modal
@@ -1572,6 +1636,7 @@ const EventCalendarView: React.FC<Props> = ({
             </View>
 
             <View style={styles.eventListContainer}>
+                <CalendarCoachScreenScrim />
                 <EventList
                     sections={sections}
                     sectionListRef={sectionListRef}
@@ -1595,10 +1660,10 @@ const EventCalendarView: React.FC<Props> = ({
                                             colors={[colors.surfaceGoldWarm, colors.surfaceGoldLight]}
                                             start={{ x: 0, y: 0 }}
                                             end={{ x: 1, y: 1 }}
-                                            style={styles.noticeCard}
+                                            style={[styles.noticeCard, showCoachOverlay && styles.noticeCardCoach]}
                                         >
                                             <TouchableOpacity
-                                                style={styles.noticeCloseButton}
+                                                style={[styles.noticeCloseButton, showCoachOverlay && styles.noticeCloseButtonCoach]}
                                                 onPress={handleHideCommunityBanner}
                                                 accessibilityRole="button"
                                                 accessibilityLabel="Hide banner"
@@ -1606,7 +1671,7 @@ const EventCalendarView: React.FC<Props> = ({
                                                 <FAIcon name="times" size={12} color={colors.textGoldMuted} />
                                             </TouchableOpacity>
                                             <View style={styles.noticeHeader}>
-                                                <View style={styles.noticeIcon}>
+                                                <View style={[styles.noticeIcon, showCoachOverlay && styles.noticeIconCoach]}>
                                                     <FAIcon name="star" size={14} color={colors.textGold} />
                                                 </View>
                                                 <View style={styles.noticeCopy}>
@@ -1630,12 +1695,12 @@ const EventCalendarView: React.FC<Props> = ({
                                 )}
                                 {shouldShowRecommendations ? (
                                     <View style={styles.recommendationsHeaderWrap}>
-                                        <View style={styles.recommendationsCard}>
+                                        <View style={[styles.recommendationsCard, showCoachOverlay && styles.recommendationsCardCoach]}>
                                             <View style={styles.recommendationsHeader}>
                                                 <Text style={styles.recommendationsTitle}>Recommended</Text>
                                                 <View style={styles.recommendationsActions}>
                                                     <TouchableOpacity
-                                                        style={styles.recommendationsActionButton}
+                                                        style={[styles.recommendationsActionButton, showCoachOverlay && styles.recommendationsActionButtonCoach]}
                                                         onPress={handleHideRecommendations}
                                                         accessibilityRole="button"
                                                         accessibilityLabel="Hide Recommended"
@@ -1645,7 +1710,7 @@ const EventCalendarView: React.FC<Props> = ({
                                                 </View>
                                             </View>
                                             {recommendations.length === 0 && (
-                                                <View style={styles.recommendationsEmpty}>
+                                                <View style={[styles.recommendationsEmpty, showCoachOverlay && styles.recommendationsEmptyCoach]}>
                                                     <Text style={styles.recommendationsEmptyText}>
                                                         No recommended events yet.
                                                     </Text>
@@ -1676,6 +1741,7 @@ const EventCalendarView: React.FC<Props> = ({
                                                                 key={event.id}
                                                                 style={[
                                                                     styles.recommendationCard,
+                                                                    showCoachOverlay && styles.recommendationCardCoach,
                                                                     {
                                                                         width: recommendationCardWidth,
                                                                         marginRight:
@@ -1736,12 +1802,12 @@ const EventCalendarView: React.FC<Props> = ({
                                     </View>
                                 ) : shouldShowHiddenRecommendations ? (
                                     <View style={styles.recommendationsHeaderWrap}>
-                                        <View style={styles.recommendationsHiddenCard}>
+                                        <View style={[styles.recommendationsHiddenCard, showCoachOverlay && styles.recommendationsHiddenCardCoach]}>
                                             <Text style={styles.recommendationsHiddenText}>
                                                 Recommended is hidden
                                             </Text>
                                             <TouchableOpacity
-                                                style={styles.recommendationsHiddenButton}
+                                                style={[styles.recommendationsHiddenButton, showCoachOverlay && styles.recommendationsHiddenButtonCoach]}
                                                 onPress={handleShowRecommendations}
                                                 accessibilityRole="button"
                                                 accessibilityLabel="Show Recommended"
@@ -1815,12 +1881,18 @@ const styles = StyleSheet.create({
         shadowRadius: 12,
         elevation: 4,
     },
+    headerSurfaceCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     headerDivider: {
         height: StyleSheet.hairlineWidth,
         backgroundColor: colors.borderLavenderSoft,
         marginTop: spacing.xs,
         marginHorizontal: spacing.lg,
         opacity: 0.8,
+    },
+    headerDividerCoach: {
+        backgroundColor: CALENDAR_COACH_BORDER_COLOR,
     },
     listHeaderWrap: {
         paddingBottom: spacing.xs,
@@ -1839,6 +1911,9 @@ const styles = StyleSheet.create({
         borderColor: colors.borderGoldSoft,
         overflow: "hidden",
         ...shadows.card,
+    },
+    noticeCardCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     noticeHeader: {
         flexDirection: "row",
@@ -1863,6 +1938,9 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         zIndex: 2,
     },
+    noticeCloseButtonCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     noticeIcon: {
         width: NOTICE_ICON_SIZE,
         height: NOTICE_ICON_SIZE,
@@ -1873,6 +1951,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         marginRight: spacing.md,
+    },
+    noticeIconCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     noticeCopy: {
         flex: 1,
@@ -1919,6 +2000,9 @@ const styles = StyleSheet.create({
         padding: spacing.md,
         ...shadows.card,
     },
+    recommendationsCardCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     recommendationsHeader: {
         flexDirection: "row",
         alignItems: "center",
@@ -1944,6 +2028,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.borderMutedLight,
     },
+    recommendationsActionButtonCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     recommendationsActionText: {
         color: colors.textMuted,
         fontSize: fontSizes.smPlus,
@@ -1965,6 +2052,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
     },
+    recommendationsHiddenCardCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     recommendationsHiddenText: {
         color: colors.textMuted,
         fontSize: fontSizes.smPlus,
@@ -1978,6 +2068,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white,
         borderWidth: 1,
         borderColor: colors.borderMutedLight,
+    },
+    recommendationsHiddenButtonCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     recommendationsHiddenButtonText: {
         color: colors.textPrimary,
@@ -1994,6 +2087,9 @@ const styles = StyleSheet.create({
         borderColor: colors.borderMutedLight,
         marginBottom: spacing.sm,
     },
+    recommendationsEmptyCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     recommendationsEmptyText: {
         color: colors.textMuted,
         fontSize: fontSizes.smPlus,
@@ -2007,6 +2103,9 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.borderSubtle,
         overflow: "hidden",
+    },
+    recommendationCardCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     recommendationMedia: {
         width: "100%",

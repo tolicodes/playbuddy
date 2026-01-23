@@ -16,10 +16,13 @@ import { useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../../Common/types/commonTypes';
 import { ADMIN_EMAILS } from '../../../config';
 import type { EventListItemProps } from './EventListItem';
+import { useCalendarCoach } from '../../PopupManager';
 import { useGuestSaveModal } from '../../GuestSaveModal';
 
 export const CLASSIC_ITEM_HEIGHT = 128;
 const THUMB_SIZE = 56;
+const CALENDAR_COACH_DIM_OVERLAY = 'rgba(64, 64, 64, 0.8)';
+const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
 
 export const EventListItemClassic: React.FC<EventListItemProps> = ({
     item,
@@ -35,8 +38,10 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
     const { authUserId, userProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
+    const calendarCoach = useCalendarCoach();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
     const itemIsOnWishlist = isOnWishlist(item.id);
+    const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const formattedDate = formatDate(item, fullDate);
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const organizerName = item.organizer?.name?.trim();
@@ -126,6 +131,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                     noPadding && styles.noPadding,
                     showPendingBorder && styles.pendingBorder,
                     showRejectedBorder && styles.rejectedBorder,
+                    showCoachOverlay && styles.cardWrapperCoach,
                 ]}
             >
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9} style={styles.cardPressable}>
@@ -170,8 +176,11 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                         </View>
                     </View>
                 </TouchableOpacity>
+                {showCoachOverlay && (
+                    <View pointerEvents="none" style={styles.calendarCoachScrim} />
+                )}
                 <TouchableOpacity
-                    style={styles.wishlistButton}
+                    style={[styles.wishlistButton, showCoachOverlay && styles.wishlistButtonCoach]}
                     onPress={(event) => {
                         event.stopPropagation?.();
                         handleToggleEventWishlist();
@@ -227,6 +236,9 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 3 },
         shadowRadius: 8,
         elevation: 3,
+    },
+    cardWrapperCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     noPadding: {
         marginHorizontal: 0,
@@ -313,6 +325,15 @@ const styles = StyleSheet.create({
         padding: spacing.xs,
         backgroundColor: colors.surfaceWhiteOpaque,
         borderRadius: radius.pill,
+    },
+    wishlistButtonCoach: {
+        zIndex: 2,
+        elevation: 6,
+    },
+    calendarCoachScrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: CALENDAR_COACH_DIM_OVERLAY,
+        zIndex: 1,
     },
     statusBadge: {
         position: 'absolute',

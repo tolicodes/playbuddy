@@ -13,8 +13,10 @@ import {
 import moment from "moment-timezone";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
+import { useCalendarCoach } from "../../PopupManager";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const CALENDAR_COACH_BORDER_COLOR = "transparent";
 
 type Props = {
     prevWeekDays: Date[];
@@ -52,6 +54,8 @@ export const WeekStrip: React.FC<Props> = ({
     animateToCurrentWeek = false,
     animateDirection = null,
 }) => {
+    const calendarCoach = useCalendarCoach();
+    const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const pageWidth = containerWidth || SCREEN_WIDTH;
     const longPressTriggeredRef = useRef(false);
     const scrollRef = useRef<ScrollView>(null);
@@ -93,7 +97,7 @@ export const WeekStrip: React.FC<Props> = ({
     };
 
     const renderWeek = (days: Date[]) => (
-        <View style={[s.weekStrip, { width: pageWidth }]}>
+        <View style={[s.weekStrip, { width: pageWidth }, showCoachOverlay && s.weekStripCoach]}>
             {days.map((day) => {
                 const dayMoment = moment(day).tz(TZ);
                 const key = String(day instanceof Date ? day.getTime() : +new Date(day));
@@ -127,6 +131,8 @@ export const WeekStrip: React.FC<Props> = ({
                             hasEvent ? s.dayHasEvent : s.dayNoEvent,
                             selected && s.daySelected,
                             showTodayRing && s.todayRing,
+                            showCoachOverlay && selected && s.daySelectedCoach,
+                            showCoachOverlay && showTodayRing && s.todayRingCoach,
                         ]}
                         accessibilityState={{ disabled: !selectable, selected }}
                         accessibilityLabel={`${dayMoment.format("dddd, MMM D")}${selectable ? "" : " (unavailable)"}`}
@@ -195,6 +201,9 @@ const s = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
     },
+    weekStripCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     dayCell: {
         flex: 1,
         minWidth: 0,
@@ -223,7 +232,11 @@ const s = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         elevation: 2,
     },
+    daySelectedCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     todayRing: { borderWidth: 1, borderColor: colors.brandPurpleDark },
+    todayRingCoach: { borderColor: CALENDAR_COACH_BORDER_COLOR },
     dowText: {
         fontSize: fontSizes.xs,
         letterSpacing: 0.8,

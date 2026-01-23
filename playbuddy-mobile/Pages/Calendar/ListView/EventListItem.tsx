@@ -32,6 +32,8 @@ const DEFAULT_CARD_WIDTH = Math.max(0, Dimensions.get('window').width - spacing.
 const DEFAULT_IMAGE_HEIGHT = Math.round(DEFAULT_CARD_WIDTH / CARD_IMAGE_ASPECT_RATIO);
 const CARD_HEIGHT = DEFAULT_IMAGE_HEIGHT + DETAILS_PANEL_HEIGHT;
 export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
+const CALENDAR_COACH_DIM_OVERLAY = 'rgba(64, 64, 64, 0.8)';
+const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
 
 export interface EventListItemProps {
     item: EventWithMetadata;
@@ -80,6 +82,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const formattedDate = formatDate(item, fullDate);
     const itemIsOnWishlist = isOnWishlist(item.id);
     const wobblePlus = calendarCoach?.wobblePlus ?? false;
+    const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const shouldWobbleSave = (wobblePlus || wobbleSaveButton) && !itemIsOnWishlist;
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const locationLabel = (item.neighborhood || '').trim();
@@ -241,6 +244,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                     noPadding && styles.noPadding,
                     showPendingBorder && styles.pendingBorder,
                     showRejectedBorder && styles.rejectedBorder,
+                    showCoachOverlay && styles.cardWrapperCoach,
                 ]}
             >
                 <TouchableOpacity onPress={handlePressEvent} activeOpacity={0.9}>
@@ -285,6 +289,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                             backgroundColor: typeTagColors.background,
                                             borderColor: typeTagColors.border || 'rgba(255, 255, 255, 0.25)',
                                         },
+                                        showCoachOverlay && styles.typeTagBadgeCoach,
                                     ]}
                                 >
                                     <Text style={[styles.typeTagText, { color: typeTagColors.text }]}>
@@ -340,6 +345,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     </Text>
                                 </View>
                             )}
+                            {showCoachOverlay && (
+                                <View pointerEvents="none" style={styles.calendarCoachScrim} />
+                            )}
                         </View>
                         <LinearGradient
                             colors={[colors.white, colors.surfaceLavenderLight]}
@@ -349,6 +357,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                 styles.detailsPanel,
                                 !useAutoHeight && { height: detailsHeight },
                                 hasFooter && styles.detailsPanelWithFooter,
+                                showCoachOverlay && styles.detailsPanelCoach,
                             ]}
                         >
                             <Text
@@ -365,6 +374,9 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     {metaLine}
                                 </Text>
                             ) : null}
+                            {showCoachOverlay && (
+                                <View pointerEvents="none" style={styles.calendarCoachScrim} />
+                            )}
                             {showActionButton && (
                                 <WishlistPlusButton
                                     itemIsOnWishlist={itemIsOnWishlist}
@@ -374,6 +386,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                                     wobble={shouldWobbleSave}
                                     containerStyle={[
                                         styles.actionButton,
+                                        showCoachOverlay && styles.actionButtonCoach,
                                         { right: actionButtonRight, bottom: actionButtonInset },
                                     ]}
                                 />
@@ -438,6 +451,9 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 3,
     },
+    cardWrapperCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     noPadding: {
         marginHorizontal: 0,
     },
@@ -480,6 +496,15 @@ const styles = StyleSheet.create({
     actionButton: {
         position: 'absolute',
     },
+    actionButtonCoach: {
+        zIndex: 2,
+        elevation: 6,
+    },
+    calendarCoachScrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: CALENDAR_COACH_DIM_OVERLAY,
+        zIndex: 1,
+    },
     typeIconBubble: {
         backgroundColor: colors.surfaceMutedAlt,
         alignItems: 'center',
@@ -495,6 +520,9 @@ const styles = StyleSheet.create({
         borderTopWidth: StyleSheet.hairlineWidth,
         borderTopColor: colors.borderLavenderSoft,
     },
+    detailsPanelCoach: {
+        borderTopColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     detailsPanelWithFooter: {
         paddingBottom: spacing.mdPlus,
     },
@@ -509,6 +537,9 @@ const styles = StyleSheet.create({
         borderRadius: radius.pill,
         borderTopRightRadius: radius.lg,
         borderBottomRightRadius: 0,
+    },
+    typeTagBadgeCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     typeTagText: {
         fontSize: fontSizes.smPlus,

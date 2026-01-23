@@ -3,6 +3,7 @@ import { View, TextInput, TouchableOpacity, StyleSheet, ScrollView, Text } from 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { colors, fontFamilies, fontSizes, radius, spacing } from '../../../components/styles';
+import { useCalendarCoach } from '../../PopupManager';
 
 // All analytics in EventCalendarView
 
@@ -42,6 +43,8 @@ export interface TopBarProps {
     onSelectTypeaheadSuggestion: (suggestion: TypeaheadSuggestion) => void;
 }
 
+const CALENDAR_COACH_BORDER_COLOR = 'transparent';
+
 // UE handled upstream
 export const TopBar = ({
     searchQuery,
@@ -57,6 +60,8 @@ export const TopBar = ({
     typeaheadSuggestions,
     onSelectTypeaheadSuggestion,
 }: TopBarProps) => {
+    const calendarCoach = useCalendarCoach();
+    const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [isSearchPinned, setIsSearchPinned] = useState(false);
     const [isInteracting, setIsInteracting] = useState(false);
@@ -156,6 +161,7 @@ export const TopBar = ({
                             isSearchExpanded
                                 ? topBarStyles.searchBubbleExpanded
                                 : topBarStyles.searchBubbleCollapsed,
+                            showCoachOverlay && topBarStyles.searchBubbleCoach,
                         ]}
                     >
                         <Ionicons name="search" size={20} color={colors.textMuted} style={topBarStyles.searchIcon} />
@@ -176,6 +182,7 @@ export const TopBar = ({
                             style={[
                                 topBarStyles.filterButton,
                                 filtersEnabled && topBarStyles.filterButtonActive,
+                                showCoachOverlay && topBarStyles.filterButtonCoach,
                             ]}
                             onPress={() => {
                                 setIsInteracting(false);
@@ -190,7 +197,7 @@ export const TopBar = ({
                     </View>
                 </View>
                 {tagMatches.length > 0 && (
-                    <View style={topBarStyles.typeahead}>
+                    <View style={[topBarStyles.typeahead, showCoachOverlay && topBarStyles.typeaheadCoach]}>
                         {tagMatches.map((suggestion, index) => {
                             const isLast = index === tagMatches.length - 1;
                             const iconName =
@@ -207,7 +214,11 @@ export const TopBar = ({
                             return (
                                 <TouchableOpacity
                                     key={suggestion.id}
-                                    style={[topBarStyles.typeaheadItem, isLast && topBarStyles.typeaheadItemLast]}
+                                    style={[
+                                        topBarStyles.typeaheadItem,
+                                        isLast && topBarStyles.typeaheadItemLast,
+                                        showCoachOverlay && topBarStyles.typeaheadItemCoach,
+                                    ]}
                                     onPress={() => onSelectTypeaheadSuggestion(suggestion)}
                                 >
                                     <View
@@ -217,6 +228,7 @@ export const TopBar = ({
                                                 backgroundColor: tone.background,
                                                 borderColor: tone.border,
                                             },
+                                            showCoachOverlay && topBarStyles.typeaheadIconWrapCoach,
                                         ]}
                                     >
                                         <FAIcon
@@ -253,6 +265,7 @@ export const TopBar = ({
                                         borderColor: tone.text,
                                         borderWidth: 2,
                                     },
+                                    showCoachOverlay && topBarStyles.chipCoach,
                                 ];
                                 const textColor = tone?.text || colors.white;
                                 return (
@@ -306,6 +319,7 @@ export const TopBar = ({
                                         borderColor: tone.text,
                                         borderWidth: 2,
                                     },
+                                    showCoachOverlay && topBarStyles.chipCoach,
                                 ];
                                 const textColor = selected && !tone ? colors.white : tone?.text || colors.textMuted;
                                 return (
@@ -343,7 +357,11 @@ export const TopBar = ({
                         </ScrollView>
                         {isSearchExpanded && (
                             <TouchableOpacity
-                                style={[topBarStyles.chip, topBarStyles.chipMore]}
+                                style={[
+                                    topBarStyles.chip,
+                                    topBarStyles.chipMore,
+                                    showCoachOverlay && topBarStyles.chipCoach,
+                                ]}
                                 onPressIn={() => setIsInteracting(true)}
                                 onPressOut={() => setIsInteracting(false)}
                                 onPress={onPressQuickFilterMore}
@@ -397,6 +415,9 @@ const topBarStyles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 4,
     },
+    typeaheadCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
+    },
     typeaheadItem: {
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.smPlus,
@@ -404,6 +425,9 @@ const topBarStyles = StyleSheet.create({
         borderBottomColor: colors.borderSubtle,
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    typeaheadItemCoach: {
+        borderBottomColor: CALENDAR_COACH_BORDER_COLOR,
     },
     typeaheadItemLast: {
         borderBottomWidth: 0,
@@ -418,6 +442,9 @@ const topBarStyles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.sm,
+    },
+    typeaheadIconWrapCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     typeaheadText: {
         fontSize: fontSizes.base,
@@ -434,6 +461,9 @@ const topBarStyles = StyleSheet.create({
         paddingVertical: spacing.sm,
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
+    },
+    searchBubbleCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     searchBubbleExpanded: {
         width: '100%',
@@ -454,6 +484,9 @@ const topBarStyles = StyleSheet.create({
         backgroundColor: colors.surfaceLavenderLight,
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
+    },
+    filterButtonCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     filterButtonActive: {
         backgroundColor: colors.surfaceLavenderStrong,
@@ -481,6 +514,9 @@ const topBarStyles = StyleSheet.create({
         marginRight: spacing.sm,
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    chipCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     chipText: {
         fontSize: fontSizes.sm,

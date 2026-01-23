@@ -21,6 +21,9 @@ import {
     setEventListViewMode,
 } from './Calendar/ListView/eventListViewMode';
 import { useFetchActiveEventPopups } from '../Common/db-axios/useEventPopups';
+import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
+import { logEvent } from '../Common/hooks/logger';
+import { UE } from '../userEventTypes';
 import type { EventPopup } from '../commonTypes';
 import type { EventWithMetadata, NavStack } from '../Common/Nav/NavStackType';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
@@ -48,12 +51,13 @@ const EVENT_POPUP_DELAY_MS = __DEV__ ? 5 * 1000 : 60 * 1000;
 const DEBUG_ALWAYS_ENABLE_EVENT_POPUP = __DEV__;
 const LIST_VIEW_INTRO_CUTOFF_MS = Date.parse('2026-01-12T00:00:00Z');
 const CALENDAR_ADD_COACH_COMPLETED_KEY = 'calendar_add_coach_completed_v1';
-const CALENDAR_COACH_TITLE = 'Calendar coach';
+const CALENDAR_COACH_TITLE = 'Add To Calendar';
 
 type CalendarCoachVariant = 'intro' | 'success';
 
 type CalendarCoachContextValue = {
     wobblePlus: boolean;
+    showOverlay: boolean;
     notifyWishlistAdded: () => void | Promise<void>;
 };
 
@@ -107,14 +111,21 @@ const isEventPopupEligible = (popup: EventPopup, signupAt: number | null, now: n
 type PopupManagerProps = {
     events?: EventWithMetadata[];
     onListViewModeChange?: (mode: EventListViewMode) => void;
+    onCalendarCoachIntro?: () => void;
     children?: React.ReactNode;
 };
 
-export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewModeChange, children }) => {
+export const PopupManager: React.FC<PopupManagerProps> = ({
+    events,
+    onListViewModeChange,
+    onCalendarCoachIntro,
+    children,
+}) => {
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
     const insets = useSafeAreaInsets();
     const { authUserId, userProfile, session } = useUserContext();
+    const analyticsProps = useAnalyticsProps();
     const [hasInstallFlag, setHasInstallFlag] = useState(false);
     const [sessionStartAt, setSessionStartAt] = useState<number | null>(null);
     const [state, setState] = useState<PopupManagerState | null>(null);
@@ -211,18 +222,28 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         variant: CalendarCoachVariant,
         options?: { onComplete?: () => void },
     ) => {
+        logEvent(UE.CalendarAddCoachShown, {
+            ...analyticsProps,
+            variant,
+        });
         setCalendarCoachToast({ message, variant });
         calendarCoachOnHideRef.current = options?.onComplete ?? null;
-    }, []);
+    }, [analyticsProps]);
 
     const handleCalendarCoachDismiss = useCallback(() => {
+        if (calendarCoachToast) {
+            logEvent(UE.CalendarAddCoachDismissed, {
+                ...analyticsProps,
+                variant: calendarCoachToast.variant,
+            });
+        }
         setCalendarCoachToast(null);
         const onComplete = calendarCoachOnHideRef.current;
         calendarCoachOnHideRef.current = null;
         if (onComplete) {
             onComplete();
         }
-    }, []);
+    }, [analyticsProps, calendarCoachToast]);
 
     useEffect(() => {
         if (calendarCoachToast) {
@@ -689,7 +710,8 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 dismissPopup('calendar_add_coach');
                 return;
             }
-            showCalendarCoachToast('press the save button to add to calendar', 'intro', {
+            onCalendarCoachIntro?.();
+            showCalendarCoachToast('Press the save button to add to your calendar', 'intro', {
                 onComplete: () => dismissPopup('calendar_add_coach'),
             });
         })();
@@ -731,10 +753,12 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
         setActiveEventPopup(null);
     };
 
+    const showCalendarCoachOverlay = calendarCoachToast?.variant === 'intro';
     const calendarCoachContextValue = useMemo(() => ({
-        wobblePlus: calendarCoachToast?.variant === 'intro',
+        wobblePlus: showCalendarCoachOverlay,
+        showOverlay: showCalendarCoachOverlay,
         notifyWishlistAdded: handleCalendarCoachWishlistAdded,
-    }), [calendarCoachToast?.variant, handleCalendarCoachWishlistAdded]);
+    }), [handleCalendarCoachWishlistAdded, showCalendarCoachOverlay]);
 
     const calendarCoachTranslateY = calendarCoachAnim.interpolate({
         inputRange: [0, 1],
@@ -802,22 +826,18 @@ export const PopupManager: React.FC<PopupManagerProps> = ({ events, onListViewMo
                 >
                     <View style={styles.calendarCoachHeader}>
                         <View style={styles.calendarCoachIcon}>
-                            <FAIcon name="calendar-plus" size={12} color={colors.brandInk} />
+                            <FAIcon name="calendar-plus-o" size={12} color={colors.brandInk} />
                         </View>
                         <Text style={styles.calendarCoachTitle}>{CALENDAR_COACH_TITLE}</Text>
                         <TouchableOpacity
                             style={styles.calendarCoachClose}
                             onPress={handleCalendarCoachDismiss}
-                            accessibilityLabel="Close calendar coach"
+                            accessibilityLabel="Close add to calendar"
                         >
                             <FAIcon name="times" size={12} color={colors.textSecondary} />
                         </TouchableOpacity>
                     </View>
                     <View style={styles.calendarCoachBody}>
-                        <View style={styles.calendarCoachSavePill}>
-                            <FAIcon name="bookmark-o" size={14} color={colors.brandInk} />
-                            <Text style={styles.calendarCoachSaveText}>Save</Text>
-                        </View>
                         <Text style={styles.calendarCoachText}>{calendarCoachToast?.message ?? ''}</Text>
                     </View>
                 </Animated.View>
@@ -838,10 +858,10 @@ const styles = StyleSheet.create({
     calendarCoachCard: {
         maxWidth: 420,
         width: '100%',
-        backgroundColor: colors.surfaceWarning,
+        backgroundColor: colors.surfaceLavender,
         borderRadius: radius.lg,
         borderWidth: 1,
-        borderColor: colors.borderGoldLight,
+        borderColor: colors.borderLavenderStrong,
         paddingHorizontal: spacing.lgPlus,
         paddingVertical: spacing.mdPlus,
         ...shadows.card,
@@ -860,9 +880,9 @@ const styles = StyleSheet.create({
         width: 26,
         height: 26,
         borderRadius: 13,
-        backgroundColor: colors.surfaceWhiteFrosted,
+        backgroundColor: colors.surfaceLavenderOpaque,
         borderWidth: 1,
-        borderColor: colors.borderGoldLight,
+        borderColor: colors.borderLavenderStrong,
         alignItems: 'center',
         justifyContent: 'center',
     },
@@ -876,31 +896,13 @@ const styles = StyleSheet.create({
         marginLeft: 'auto',
         padding: spacing.xs,
         borderRadius: radius.pill,
-        backgroundColor: colors.surfaceWhiteFrosted,
+        backgroundColor: colors.surfaceLavenderOpaque,
         borderWidth: 1,
-        borderColor: colors.borderMutedLight,
+        borderColor: colors.borderLavenderSoft,
     },
     calendarCoachBody: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: spacing.sm,
-    },
-    calendarCoachSavePill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xxs,
-        borderRadius: radius.pill,
-        borderWidth: 1,
-        borderColor: colors.borderMutedLight,
-        backgroundColor: colors.surfaceWhiteFrosted,
-    },
-    calendarCoachSaveText: {
-        marginLeft: spacing.xs,
-        fontSize: fontSizes.sm,
-        fontWeight: '600',
-        color: colors.brandInk,
-        fontFamily: fontFamilies.body,
     },
     calendarCoachText: {
         flex: 1,

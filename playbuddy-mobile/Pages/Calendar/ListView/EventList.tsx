@@ -21,9 +21,11 @@ import { useUserContext } from "../../Auth/hooks/UserContext";
 import { useFetchAttendees } from "../../../Common/db-axios/useAttendees";
 import { ADMIN_EMAILS } from "../../../config";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
+import { useCalendarCoach } from "../../PopupManager";
 
 const HEADER_HEIGHT = 34;
 export const EVENT_SECTION_HEADER_HEIGHT = HEADER_HEIGHT + spacing.md + spacing.lg;
+const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
 
 type SectionType = {
     title: string;              // e.g., "Apr 13, 2025"
@@ -64,6 +66,8 @@ const EventList: React.FC<EventListProps> = ({
     const resolvedViewMode: EventListViewMode = viewMode ?? 'image';
     const itemHeight = resolvedViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
     const ItemComponent = resolvedViewMode === 'classic' ? EventListItemClassic : EventListItem;
+    const calendarCoach = useCalendarCoach();
+    const showCoachOverlay = !!calendarCoach?.showOverlay;
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
         const attendeesForEvent = attendees?.find((a) => a.event_id === event.id)?.attendees || [];
@@ -87,11 +91,19 @@ const EventList: React.FC<EventListProps> = ({
 
     const renderSectionHeader = ({ section }: { section: SectionType }) => (
         <View style={styles.sectionHeaderOuterWrapper}>
-            <View style={styles.sectionHeaderPill}>
+            <View style={[styles.sectionHeaderPill, showCoachOverlay && styles.sectionHeaderPillCoach]}>
                 <Text style={styles.sectionHeaderText}>{section.title}</Text>
+                {showCoachOverlay && <View pointerEvents="none" style={styles.calendarCoachScrim} />}
             </View>
         </View>
     );
+
+    const listHeaderWithScrim = listHeaderComponent ? (
+        <View style={styles.listHeaderContainer}>
+            {listHeaderComponent}
+            {showCoachOverlay && <View pointerEvents="none" style={styles.calendarCoachScrim} />}
+        </View>
+    ) : null;
 
     return (
         <SectionList
@@ -103,7 +115,7 @@ const EventList: React.FC<EventListProps> = ({
             stickySectionHeadersEnabled={true}
             renderItem={renderItem}
             renderSectionHeader={renderSectionHeader}
-            ListHeaderComponent={listHeaderComponent ?? null}
+            ListHeaderComponent={listHeaderWithScrim}
             getItemLayout={sectionListGetItemLayout({
                 getItemHeight: () => itemHeight,
                 getSectionHeaderHeight: () => EVENT_SECTION_HEADER_HEIGHT,
@@ -167,6 +179,10 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 3 },
         elevation: 3,
+        overflow: 'hidden',
+    },
+    sectionHeaderPillCoach: {
+        borderColor: CALENDAR_COACH_BORDER_COLOR,
     },
     sectionHeaderText: {
         fontSize: fontSizes.base,
@@ -188,5 +204,12 @@ const styles = StyleSheet.create({
     },
     eventItemWrapper: {
         backgroundColor: 'transparent',
+    },
+    listHeaderContainer: {
+        position: 'relative',
+    },
+    calendarCoachScrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(64, 64, 64, 0.8)',
     },
 });
