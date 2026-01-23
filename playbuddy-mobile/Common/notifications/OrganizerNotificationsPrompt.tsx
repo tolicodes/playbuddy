@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { Alert } from 'react-native';
 
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
-import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../../Pages/Calendar/hooks/useCalendarData';
 import { useFetchFollows } from '../db-axios/useFollows';
 import { useCommonContext } from '../hooks/CommonContext';
 import {
@@ -17,7 +17,7 @@ import {
 
 export const OrganizerNotificationsPrompt = () => {
     const { authUserId } = useUserContext();
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const { myCommunities, isLoadingCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const lastOrganizerCountRef = useRef<number | null>(null);

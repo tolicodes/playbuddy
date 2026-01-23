@@ -16,7 +16,7 @@ import { UE } from '../../userEventTypes';
 import { navigateToAuth, navigateToHome, navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { EventListViewMode, getEventListViewMode, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
-import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import {
@@ -38,7 +38,7 @@ export default function AccountDetails() {
     const [listViewMode, setListViewMode] = useState<EventListViewMode>('image');
     const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
     const [scheduledNotifications, setScheduledNotifications] = useState<Notifications.NotificationRequest[]>([]);
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -24,6 +24,7 @@ import {
 import type { Event, Organizer, PromoCode } from '../../Common/types/commonTypes';
 import type { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
 import { useGroupedEvents } from '../Calendar/hooks/useGroupedEventsMain';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { ADMIN_EMAILS } from '../../config';
@@ -68,6 +69,7 @@ export const PromoCodeAdminScreen = () => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const { isOnWishlist, toggleWishlistEvent, wishlistEvents, isEventSourceExcluded } = useCalendarData();
 
     const { data: organizers = [], isLoading: loadingOrganizers, error: organizerError } = useFetchOrganizers({ includeHidden: true });
     const { data: events = [], isLoading: loadingEvents, error: eventsError } = useFetchEvents({
@@ -89,6 +91,13 @@ export const PromoCodeAdminScreen = () => {
     const [scope, setScope] = useState<PromoScope>('event');
     const [selectedPromoCodeId, setSelectedPromoCodeId] = useState<string | null>(null);
     const [processingEventId, setProcessingEventId] = useState<number | null>(null);
+    const wishlistEventsCount = wishlistEvents.length;
+    const handleToggleWishlist = useCallback(
+        (eventId: number, isOnWishlistValue: boolean) => {
+            toggleWishlistEvent.mutate({ eventId, isOnWishlist: isOnWishlistValue });
+        },
+        [toggleWishlistEvent]
+    );
 
     const selectedOrganizer = useMemo(
         () => organizers.find((org) => org.id === selectedOrganizerId) || null,
@@ -323,6 +332,10 @@ export const PromoCodeAdminScreen = () => {
                                 })
                             }
                             isAdmin
+                            isOnWishlist={isOnWishlist}
+                            onToggleWishlist={handleToggleWishlist}
+                            wishlistEventsCount={wishlistEventsCount}
+                            isEventSourceExcluded={isEventSourceExcluded}
                             footerContent={adminFooter}
                             autoHeight
                         />

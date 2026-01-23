@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { useHeaderHeight } from '@react-navigation/elements';
 
-import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { useRecordSwipeChoice } from '../Calendar/hooks/useWishlist';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useBadgeNotifications } from '../../Common/Nav/useBadgeNotifications';
@@ -39,7 +39,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type SwipeDirection = 'left' | 'right';
 
 export const DiscoverGame: React.FC = () => {
-    const { availableCardsToSwipe, toggleWishlistEvent } = useCalendarContext();
+    const { availableCardsToSwipe, toggleWishlistEvent } = useCalendarData();
     const { authUserId } = useUserContext();
     const recordSwipe = useRecordSwipeChoice();
     const swiperRef = useRef<Swiper<any> | null>(null);

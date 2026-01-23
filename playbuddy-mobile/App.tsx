@@ -6,7 +6,6 @@ import 'expo-dev-client';
 import { useFonts } from 'expo-font';
 
 import { UserProvider } from './Pages/Auth/hooks/UserContext';
-import { CalendarProvider } from './Pages/Calendar/hooks/CalendarContext';
 import Nav from './Common/Nav/Nav';
 import * as Sentry from '@sentry/react-native';
 import * as amplitude from '@amplitude/analytics-react-native';
@@ -62,15 +61,13 @@ const App = () => {
         <UserProvider>
           <CommonProvider>
             <BuddiesProvider>
-              <CalendarProvider>
-                <PaperProvider>
-                  <DeepLinkHandler />
-                  <NotificationResponseHandler />
-                  <OrganizerNotificationsPrompt />
-                  <OrganizerNotificationsRefresher />
-                  <Nav />
-                </PaperProvider>
-              </CalendarProvider>
+              <PaperProvider>
+                <DeepLinkHandler />
+                <NotificationResponseHandler />
+                <OrganizerNotificationsPrompt />
+                <OrganizerNotificationsRefresher />
+                <Nav />
+              </PaperProvider>
             </BuddiesProvider>
           </CommonProvider>
         </UserProvider>

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
-import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../../Pages/Calendar/hooks/useCalendarData';
 import { TabNavigator } from './TabNavigator';
 import { PromosEntryScreen } from '../../Pages/Entries/PromosEntryScreen';
 import { NavigationProp, ParamListBase, useNavigation } from '@react-navigation/native';
@@ -41,7 +41,7 @@ export function HomeStackNavigator() {
         currentDeepLink,
         hasFetchedSession,
     } = useUserContext();
-    const { isLoadingEvents } = useCalendarContext();
+    const { isLoadingEvents } = useCalendarData();
 
     const getActiveRouteChain = (state?: { index?: number; routes?: Array<{ name: string; state?: any }> }) => {
         const chain: string[] = [];

@@ -14,17 +14,17 @@ import {
     useWindowDimensions,
 } from "react-native";
 import { useIsFocused, useNavigation, useRoute } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import moment from "moment-timezone";
 import FAIcon from "react-native-vector-icons/FontAwesome5";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LinearGradient } from "expo-linear-gradient";
 
 import { useFetchEvents } from "../../../Common/db-axios/useEvents";
 import { useFetchFollows } from "../../../Common/db-axios/useFollows";
 import { useCommonContext } from "../../../Common/hooks/CommonContext";
 import { getAvailableOrganizers } from "../hooks/calendarUtils";
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from "../hooks/eventHelpers";
-import { useCalendarContext } from "../hooks/CalendarContext";
+import { useCalendarData } from "../hooks/useCalendarData";
 import {
     buildRecommendations,
     RECOMMENDATION_WINDOW_END_DAYS,
@@ -55,7 +55,6 @@ import {
     calendarOrganizerTone,
     calendarTypeChips,
     colors,
-    eventListThemes,
     fontFamilies,
     fontSizes,
     lineHeights,
@@ -87,6 +86,8 @@ interface Props {
     featuredEvents?: EventWithMetadata[];
     entityId?: string;
     headerContent?: React.ReactNode;
+    scrollToTodayToken?: number | null;
+    scrollToTodayOffset?: number;
 }
 
 const DATE_COACH_COUNT_KEY = "dateCoachShownCount";
@@ -96,11 +97,15 @@ const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const COMMUNITY_BANNER_HIDDEN_KEY = "communityBannerHidden";
 const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
 const EMPTY_EVENTS: EventWithMetadata[] = [];
-const CALENDAR_COACH_SCROLL_OFFSET_PX = 600;
-const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
+const DATE_TOAST_GRADIENT = [
+    "rgba(107, 87, 208, 0.8)",
+    "rgba(75, 42, 191, 0.8)",
+    "rgba(255, 38, 117, 0.8)",
+] as const;
+const DATE_TOAST_BACKGROUND = "rgba(75, 42, 191, 0.8)";
+const CALENDAR_COACH_SCROLL_OFFSET_PX = 200;
+const CALENDAR_COACH_BORDER_COLOR = "transparent";
 const CALENDAR_COACH_SCREEN_SCRIM = "rgba(64, 64, 64, 0.8)";
-const CALENDAR_COACH_SCROLL_RETRY_DELAY_MS = 150;
-const CALENDAR_COACH_SCROLL_RETRY_LIMIT = 8;
 
 const CalendarCoachScreenScrim = () => {
     const calendarCoach = useCalendarCoach();
@@ -115,6 +120,8 @@ const EventCalendarView: React.FC<Props> = ({
     entity = "events",
     entityId,
     headerContent,
+    scrollToTodayToken = null,
+    scrollToTodayOffset = 0,
 }) => {
     type DateCoachMeta = { count: number; lastShownAt: number | null };
     const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
@@ -124,8 +131,9 @@ const EventCalendarView: React.FC<Props> = ({
     const [recommendationsHidden, setRecommendationsHidden] = useState<boolean | null>(null);
     const [listHeaderHeight, setListHeaderHeight] = useState(0);
     const [recommendationsLaneWidth, setRecommendationsLaneWidth] = useState(0);
-    const pendingScrollDateRef = useRef<Date | null>(null);
+    const pendingScrollDateRef = useRef<{ date: Date; extraOffset: number } | null>(null);
     const lastScrollDateRef = useRef<Date | null>(null);
+    const lastScrollOffsetRef = useRef(0);
     const lastScrollHeaderHeightRef = useRef<number | null>(null);
     const listScrollSyncRef = useRef({
         isProgrammatic: false,
@@ -140,9 +148,6 @@ const EventCalendarView: React.FC<Props> = ({
     const monthModalAnim = useRef(new Animated.Value(0)).current;
     const listScrollOffsetRef = useRef(0);
     const calendarCoachScrollRef = useRef(false);
-    const pendingCalendarCoachScrollRef = useRef<number | null>(null);
-    const calendarCoachScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const calendarCoachScrollRetryRef = useRef(0);
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const navigation = useNavigation<NavStack>();
     const { myCommunities } = useCommonContext();
@@ -150,9 +155,13 @@ const EventCalendarView: React.FC<Props> = ({
         allEvents: calendarEvents,
         organizers: calendarOrganizers,
         isLoadingEvents: isCalendarLoadingEvents,
+        isUsingCachedFallback: isCalendarCachedFallback,
         wishlistEvents,
         wishlistEntryMap,
-    } = useCalendarContext();
+        isOnWishlist,
+        toggleWishlistEvent,
+        isEventSourceExcluded,
+    } = useCalendarData();
     const calendarCoach = useCalendarCoach();
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
@@ -161,7 +170,11 @@ const EventCalendarView: React.FC<Props> = ({
         [isAdmin]
     );
     const isMainEventsView = !events && entity === "events";
-    const { data: fetchedEventsData, isLoading: isLoadingEvents } = useFetchEvents({
+    const {
+        data: fetchedEventsData,
+        isLoading: isLoadingEvents,
+        isUsingCachedFallback: isFetchedCachedFallback,
+    } = useFetchEvents({
         approvalStatuses,
         includePrivate: !!authUserId,
     });
@@ -185,6 +198,13 @@ const EventCalendarView: React.FC<Props> = ({
         : isMainEventsView
             ? isCalendarLoadingEvents && calendarEvents.length === 0
             : isLoadingEvents;
+    const isOfflineFallbackActive = isMainEventsView ? isCalendarCachedFallback : isFetchedCachedFallback;
+    const handleToggleWishlist = useCallback(
+        (eventId: number, isOnWishlistValue: boolean) => {
+            toggleWishlistEvent.mutate({ eventId, isOnWishlist: isOnWishlistValue });
+        },
+        [toggleWishlistEvent]
+    );
     const organizerIdsFromCommunities = useMemo(() => {
         const organizerIds = myCommunities.allMyCommunities
             .map((community) => community.organizer_id)
@@ -354,9 +374,6 @@ const EventCalendarView: React.FC<Props> = ({
     const analyticsProps = useEventAnalyticsProps();
     const analyticsPropsPlusEntity = { ...analyticsProps, entity, entityId };
 
-    const eventListTheme = 'welcome' as const;
-    const eventListConfig = eventListThemes[eventListTheme];
-    const eventListColors = eventListConfig.colors;
     const monthModalWidth = Math.max(0, windowWidth - spacing.lg * 2);
     const monthModalTranslateY = monthModalAnim.interpolate({
         inputRange: [0, 1],
@@ -369,7 +386,10 @@ const EventCalendarView: React.FC<Props> = ({
 
     const sectionListRef = useRef<SectionList>(null);
     const route = useRoute();
-    const scrollToTopToken = (route.params as { scrollToTop?: number } | undefined)?.scrollToTop;
+    const routeParams = route.params as { scrollToTop?: number; offlineMode?: boolean } | undefined;
+    const scrollToTopToken = routeParams?.scrollToTop;
+    const isOfflineMode = routeParams?.offlineMode === true;
+    const shouldShowOfflineHeader = isMainEventsView && (isOfflineMode || isOfflineFallbackActive);
     const didFilterScrollRef = useRef(false);
 
     const scrollListToOffset = useCallback((offset: number, animated = true) => {
@@ -393,44 +413,11 @@ const EventCalendarView: React.FC<Props> = ({
         return false;
     }, []);
 
-    const attemptCalendarCoachScroll = useCallback((offset: number) => {
-        const didScroll = scrollListToOffset(offset, true);
-        if (didScroll) {
-            calendarCoachScrollRef.current = true;
-            pendingCalendarCoachScrollRef.current = null;
-            calendarCoachScrollRetryRef.current = 0;
-            if (calendarCoachScrollTimeoutRef.current) {
-                clearTimeout(calendarCoachScrollTimeoutRef.current);
-                calendarCoachScrollTimeoutRef.current = null;
-            }
-            return;
-        }
-        pendingCalendarCoachScrollRef.current = offset;
-        if (calendarCoachScrollRetryRef.current >= CALENDAR_COACH_SCROLL_RETRY_LIMIT) return;
-        if (calendarCoachScrollTimeoutRef.current) return;
-        calendarCoachScrollRetryRef.current += 1;
-        calendarCoachScrollTimeoutRef.current = setTimeout(() => {
-            calendarCoachScrollTimeoutRef.current = null;
-            attemptCalendarCoachScroll(offset);
-        }, CALENDAR_COACH_SCROLL_RETRY_DELAY_MS);
-    }, [scrollListToOffset]);
-
     const handleCalendarCoachIntro = useCallback(() => {
         if (calendarCoachScrollRef.current) return;
-        const targetOffset = Math.max(0, listScrollOffsetRef.current + CALENDAR_COACH_SCROLL_OFFSET_PX);
-        pendingCalendarCoachScrollRef.current = targetOffset;
-        requestAnimationFrame(() => {
-            attemptCalendarCoachScroll(targetOffset);
-        });
-    }, [attemptCalendarCoachScroll]);
-
-    useEffect(() => {
-        return () => {
-            if (calendarCoachScrollTimeoutRef.current) {
-                clearTimeout(calendarCoachScrollTimeoutRef.current);
-            }
-        };
-    }, []);
+        calendarCoachScrollRef.current = true;
+        goToToday(CALENDAR_COACH_SCROLL_OFFSET_PX);
+    }, [goToToday]);
 
     useEffect(() => {
         if (!scrollToTopToken) return;
@@ -973,27 +960,37 @@ const EventCalendarView: React.FC<Props> = ({
         [nav.weekAnchorDate]
     );
 
-    const scrollToDate = (date: Date) => {
+    const scrollToDate = (date: Date, extraOffset = 0) => {
         lastScrollDateRef.current = date;
+        lastScrollOffsetRef.current = extraOffset;
         const targetDateKey = formatDayKey(date);
         if (hasListHeader && listHeaderHeight === 0) {
-            pendingScrollDateRef.current = date;
+            pendingScrollDateRef.current = { date, extraOffset };
             return;
         }
         const formatted = moment(date).tz(TZ).format(SECTION_DATE_FORMAT);
         const idx = sections.findIndex((s) => s.title === formatted);
-        if (idx !== -1 && sectionListRef.current) {
-            const rowHeight = listViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
-            const headerOffset = hasListHeader ? listHeaderHeight : 0;
-            const offset = sections.slice(0, idx).reduce((total, section) => {
-                return total + EVENT_SECTION_HEADER_HEIGHT + section.data.length * rowHeight;
-            }, headerOffset);
-            lastScrollHeaderHeightRef.current = headerOffset;
-            const syncState = listScrollSyncRef.current;
-            syncState.isProgrammatic = true;
-            syncState.targetDateKey = targetDateKey;
-            syncState.lastSyncedDateKey = targetDateKey;
-            scrollListToOffset(Math.max(0, offset));
+        if (idx === -1 || !sectionListRef.current) {
+            pendingScrollDateRef.current = { date, extraOffset };
+            return;
+        }
+        const rowHeight = listViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
+        const headerOffset = hasListHeader ? listHeaderHeight : 0;
+        const offset = sections.slice(0, idx).reduce((total, section) => {
+            return total + EVENT_SECTION_HEADER_HEIGHT + section.data.length * rowHeight;
+        }, headerOffset);
+        lastScrollHeaderHeightRef.current = headerOffset;
+        const syncState = listScrollSyncRef.current;
+        syncState.isProgrammatic = true;
+        syncState.targetDateKey = targetDateKey;
+        syncState.lastSyncedDateKey = targetDateKey;
+        const baseOffset = Math.max(0, offset);
+        scrollListToOffset(baseOffset);
+        if (extraOffset) {
+            const finalOffset = Math.max(0, offset + extraOffset);
+            if (finalOffset !== baseOffset) {
+                requestAnimationFrame(() => scrollListToOffset(finalOffset));
+            }
         }
     };
 
@@ -1047,7 +1044,6 @@ const EventCalendarView: React.FC<Props> = ({
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen);
-        closeMonthModal();
     };
 
     const goToPrevDay = () => {
@@ -1095,7 +1091,7 @@ const EventCalendarView: React.FC<Props> = ({
         shiftWeek(1);
     };
 
-    const goToToday = () => {
+    const goToToday = (extraOffset = 0) => {
         const today = moment().tz(TZ).toDate();
         if (!isDaySelectable(today)) return;
         const chosen = resolveEventDay(today);
@@ -1103,18 +1099,30 @@ const EventCalendarView: React.FC<Props> = ({
         markNavUpdateFromUser();
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
-        scrollToDate(chosen);
+        scrollToDate(chosen, extraOffset);
     };
+
+    useEffect(() => {
+        if (!scrollToTodayToken) return;
+        goToToday(scrollToTodayOffset);
+    }, [scrollToTodayOffset, scrollToTodayToken]);
 
     const openMonthModal = (day?: Date) => {
         const anchor = day ?? nav.selectedDate;
         setMonthAnchorDate(moment(anchor).startOf("month").toDate());
         if (!isMonthModalOpen) {
             logEvent(UE.DateBarCalendarPressed, { ...analyticsPropsPlusEntity, expanded: true });
+            logEvent(UE.CalendarMonthModalShown, {
+                ...analyticsPropsPlusEntity,
+                day: formatDayKey(anchor),
+            });
         }
         setIsMonthModalOpen(true);
     };
-    const closeMonthModal = () => {
+    const closeMonthModal = (reason: "dismiss" | "select" = "dismiss") => {
+        if (reason === "dismiss" && isMonthModalOpen) {
+            logEvent(UE.CalendarMonthModalDismissed, analyticsPropsPlusEntity);
+        }
         Animated.timing(monthModalAnim, {
             toValue: 0,
             duration: 160,
@@ -1160,9 +1168,19 @@ const EventCalendarView: React.FC<Props> = ({
         openMonthModal(day);
     };
 
+    const handleMonthModalSelectDay = (day: Date) => {
+        logEvent(UE.CalendarMonthModalDaySelected, {
+            ...analyticsPropsPlusEntity,
+            day: formatDayKey(day),
+        });
+        onSelectDay(day);
+        closeMonthModal("select");
+    };
+
     const handleMonthModalTodayPress = () => {
+        const today = moment().tz(TZ).toDate();
         logEvent(UE.DateBarTodayPressed, analyticsPropsPlusEntity);
-        onSelectDay(moment().tz(TZ).toDate());
+        handleMonthModalSelectDay(today);
     };
 
     const handleHideCommunityBanner = () => {
@@ -1326,21 +1344,25 @@ const EventCalendarView: React.FC<Props> = ({
     }, [shouldShowListHeader]);
 
     useEffect(() => {
-        if (listHeaderHeight === 0 || !pendingScrollDateRef.current) return;
+        if (!pendingScrollDateRef.current) return;
+        if (hasListHeader && listHeaderHeight === 0) return;
         const target = pendingScrollDateRef.current;
         pendingScrollDateRef.current = null;
-        requestAnimationFrame(() => scrollToDate(target));
-    }, [listHeaderHeight]);
+        requestAnimationFrame(() => scrollToDate(target.date, target.extraOffset));
+    }, [hasListHeader, listHeaderHeight, listViewMode, sections]);
 
     useEffect(() => {
         if (!lastScrollDateRef.current) return;
         if (hasListHeader && listHeaderHeight === 0) {
-            pendingScrollDateRef.current = lastScrollDateRef.current;
+            pendingScrollDateRef.current = {
+                date: lastScrollDateRef.current,
+                extraOffset: lastScrollOffsetRef.current,
+            };
             return;
         }
         const headerOffset = hasListHeader ? listHeaderHeight : 0;
         if (lastScrollHeaderHeightRef.current === headerOffset) return;
-        requestAnimationFrame(() => scrollToDate(lastScrollDateRef.current as Date));
+        requestAnimationFrame(() => scrollToDate(lastScrollDateRef.current as Date, lastScrollOffsetRef.current));
     }, [hasListHeader, listHeaderHeight]);
 
     useEffect(() => {
@@ -1377,21 +1399,12 @@ const EventCalendarView: React.FC<Props> = ({
     };
 
     return (
-        <LinearGradient
-            colors={eventListColors}
-            locations={eventListConfig.locations}
-            start={{ x: 0.1, y: 0 }}
-            end={{ x: 0.9, y: 1 }}
-            style={styles.screenGradient}
-        >
+        <View style={styles.screenGradient}>
             <PopupManager
                 events={sourceEvents}
                 onListViewModeChange={handleListViewModeChange}
                 onCalendarCoachIntro={handleCalendarCoachIntro}
             >
-                <View pointerEvents="none" style={styles.screenGlowTop} />
-                <View pointerEvents="none" style={styles.screenGlowMid} />
-                <View pointerEvents="none" style={styles.screenGlowBottom} />
                 <View style={styles.container}>
                     <FiltersView
                         onApply={(f) => {
@@ -1417,195 +1430,224 @@ const EventCalendarView: React.FC<Props> = ({
                         onSearchQueryChange={handleSearchQueryChange}
                     />
 
-                    {headerContent ? (
-                        <View style={styles.headerSlot}>{headerContent}</View>
-                    ) : null}
-                    <View style={[styles.headerSurface, showCoachOverlay && styles.headerSurfaceCoach]}>
-                <TopBar
-                    searchQuery={searchQuery}
-                    setSearchQuery={handleSearchQueryChange}
-                    onSearchFocus={() => {
-                        logEvent(UE.FilterSearchFocused, analyticsPropsPlusEntity);
-                    }}
-                    onPressFilters={() => {
-                        if (hasActiveFilters) {
-                            if (hasSheetFilters) {
-                                logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
-                            }
-                            setFilters({ tags: [], event_types: [], experience_levels: [], interactivity_levels: [] });
-                            setQuickFilter(null);
-                            setTypeaheadSelection(null);
-                            return;
-                        }
-                        logEvent(UE.EventCalendarViewFiltersEnabled, analyticsPropsPlusEntity);
-                        setFiltersVisible(true);
-                    }}
-                    onPressGoogleCalendar={() => {
-                        logEvent(UE.EventCalendarViewGoogleCalendar, analyticsPropsPlusEntity);
-                        Linking.openURL(MISC_URLS.addGoogleCalendar());
-                    }}
-                    showGoogleCalendar={showGoogleCalendar}
-                    filtersEnabled={hasActiveFilters}
-                    quickFilters={quickFilters}
-                    activeFilters={activeFilterChips}
-                    selectedQuickFilterId={selectedQuickFilterId}
-                    onSelectQuickFilter={(filterId) => {
-                        if (filterId === selectedQuickFilterId) {
-                            setQuickFilter(null);
-                            setTypeaheadSelection(null);
-                            return;
-                        }
-                        if (filterId.startsWith('category:')) {
-                            setTypeaheadSelection(null);
-                            const key = filterId.replace('category:', '') as QuickFilterCategory;
-                            setQuickFilter({ type: 'category', key });
-                            return;
-                        }
-                        if (filterId.startsWith('tag:')) {
-                            setTypeaheadSelection(null);
-                            const tag = filterId.replace('tag:', '');
-                            logEvent(UE.FilterTagAdded, {
-                                ...analyticsPropsPlusEntity,
-                                tag_name: tag,
-                                tag_count: filters.tags.length + 1,
-                            });
-                            setQuickFilter({ type: 'tag', tag });
-                            return;
-                        }
-                        if (filterId.startsWith('organizer:')) {
-                            setTypeaheadSelection(null);
-                            const organizer = filterId.replace('organizer:', '');
-                            setQuickFilter({ type: 'organizer', organizer });
-                            return;
-                        }
-                        if (filterId.startsWith('event_type:')) {
-                            setTypeaheadSelection(null);
-                            const eventType = filterId.replace('event_type:', '');
-                            setQuickFilter({ type: 'event_type', eventType });
-                            return;
-                        }
-                        if (filterId.startsWith('experience:')) {
-                            setTypeaheadSelection(null);
-                            const level = filterId.replace('experience:', '');
-                            setQuickFilter({ type: 'experience', level });
-                            return;
-                        }
-                        if (filterId.startsWith('interactivity:')) {
-                            setTypeaheadSelection(null);
-                            const level = filterId.replace('interactivity:', '');
-                            setQuickFilter({ type: 'interactivity', level });
-                        }
-                    }}
-                    onPressQuickFilterMore={() => {
-                        logEvent(UE.FilterMorePressed, analyticsPropsPlusEntity);
-                        setFiltersVisible(true);
-                    }}
-                    typeaheadSuggestions={typeaheadSuggestions}
-                    onSelectTypeaheadSuggestion={(suggestion) => {
-                        setTypeaheadSelection(suggestion);
-                        if (suggestion.type === 'organizer') {
-                            setQuickFilter({ type: 'organizer', organizer: suggestion.label });
-                        } else if (suggestion.type === 'event_type') {
-                            setQuickFilter({ type: 'event_type', eventType: suggestion.value || suggestion.label });
-                        } else if (suggestion.type === 'experience') {
-                            setQuickFilter({ type: 'experience', level: suggestion.value || suggestion.label });
-                        } else if (suggestion.type === 'interactivity') {
-                            setQuickFilter({ type: 'interactivity', level: suggestion.value || suggestion.label });
-                        } else {
-                            logEvent(UE.FilterTagAdded, {
-                                ...analyticsPropsPlusEntity,
-                                tag_name: suggestion.label,
-                                tag_count: filters.tags.length + 1,
-                            });
-                            setQuickFilter({ type: 'tag', tag: suggestion.label });
-                        }
-                        setSearchQuery('');
-                    }}
-                />
-
-                <WeekStrip
-                    prevWeekDays={prevWeekDays}
-                    weekDays={weekDays}
-                    nextWeekDays={nextWeekDays}
-                    selectedDay={nav.selectedDate}
-                    onChangeSelectedDay={handleStripSelectDay}
-                    isDaySelectable={isDaySelectable}
-                    hasEventsOnDay={hasEventsOnDay}
-                    onSwipePrevDay={handleStripSwipePrevDay}
-                    onSwipeNextDay={handleStripSwipeNextDay}
-                    onLongPress={handleStripLongPress}
-                    containerWidth={Math.max(0, windowWidth - spacing.lg * 2)}
-                    animateToCurrentWeek={navUpdateSourceRef.current === 'list'}
-                    animateDirection={weekStripAnimationDirectionRef.current}
-                />
-                <View style={[styles.headerDivider, showCoachOverlay && styles.headerDividerCoach]} />
-            </View>
-
-            <Modal
-                transparent
-                animationType="none"
-                visible={isMonthModalOpen}
-                onRequestClose={closeMonthModal}
-            >
-                <Animated.View style={[styles.monthModalBackdrop, { opacity: monthModalAnim }]}>
-                    <Pressable style={StyleSheet.absoluteFillObject} onPress={closeMonthModal} />
-                    <Animated.View
-                        style={[
-                            styles.monthModalCard,
-                            {
-                                width: monthModalWidth,
-                                opacity: monthModalAnim,
-                                transform: [{ translateY: monthModalTranslateY }, { scale: monthModalScale }],
-                            },
-                        ]}
-                    >
-                        <TouchableOpacity
-                            style={styles.monthModalClose}
-                            onPress={closeMonthModal}
-                            accessibilityLabel="Close month picker"
-                        >
-                            <Text style={styles.monthModalCloseText}>X</Text>
-                        </TouchableOpacity>
-
-                        <View style={styles.monthModalHeader}>
-                            <TouchableOpacity
-                                style={styles.monthNavButton}
-                                onPress={goToPrevMonth}
-                                accessibilityLabel="Previous month"
-                            >
-                                <FAIcon name="chevron-left" size={16} color={colors.white} />
-                            </TouchableOpacity>
-                            <Text style={styles.monthModalTitle} numberOfLines={1} ellipsizeMode="tail">
-                                {monthLabel}
-                            </Text>
-                            <TouchableOpacity
-                                style={styles.monthNavButton}
-                                onPress={goToNextMonth}
-                                accessibilityLabel="Next month"
-                            >
-                                <FAIcon name="chevron-right" size={16} color={colors.white} />
-                            </TouchableOpacity>
+                    {shouldShowOfflineHeader || headerContent ? (
+                        <View style={styles.headerSlot}>
+                            {shouldShowOfflineHeader ? (
+                                <View style={styles.offlineHeaderCard}>
+                                    <Text style={styles.offlineHeaderText}>offline mode</Text>
+                                </View>
+                            ) : null}
+                            {headerContent}
                         </View>
+                    ) : null}
+                    <View style={styles.headerLayer}>
+                        <View style={[styles.headerSurface, showCoachOverlay && styles.headerSurfaceCoach]}>
+                            <TopBar
+                                searchQuery={searchQuery}
+                                setSearchQuery={handleSearchQueryChange}
+                                onSearchFocus={() => {
+                                    logEvent(UE.FilterSearchFocused, analyticsPropsPlusEntity);
+                                }}
+                                onPressFilters={() => {
+                                    if (hasActiveFilters) {
+                                        if (hasSheetFilters) {
+                                            logEvent(UE.EventCalendarViewFiltersDisabled, analyticsPropsPlusEntity);
+                                        }
+                                        setFilters({
+                                            tags: [],
+                                            event_types: [],
+                                            experience_levels: [],
+                                            interactivity_levels: [],
+                                        });
+                                        setQuickFilter(null);
+                                        setTypeaheadSelection(null);
+                                        return;
+                                    }
+                                    logEvent(UE.EventCalendarViewFiltersEnabled, analyticsPropsPlusEntity);
+                                    setFiltersVisible(true);
+                                }}
+                                onPressGoogleCalendar={() => {
+                                    logEvent(UE.EventCalendarViewGoogleCalendar, analyticsPropsPlusEntity);
+                                    Linking.openURL(MISC_URLS.addGoogleCalendar());
+                                }}
+                                showGoogleCalendar={showGoogleCalendar}
+                                filtersEnabled={hasActiveFilters}
+                                quickFilters={quickFilters}
+                                activeFilters={activeFilterChips}
+                                selectedQuickFilterId={selectedQuickFilterId}
+                                onSelectQuickFilter={(filterId) => {
+                                    if (filterId === selectedQuickFilterId) {
+                                        setQuickFilter(null);
+                                        setTypeaheadSelection(null);
+                                        return;
+                                    }
+                                    if (filterId.startsWith('category:')) {
+                                        setTypeaheadSelection(null);
+                                        const key = filterId.replace('category:', '') as QuickFilterCategory;
+                                        setQuickFilter({ type: 'category', key });
+                                        return;
+                                    }
+                                    if (filterId.startsWith('tag:')) {
+                                        setTypeaheadSelection(null);
+                                        const tag = filterId.replace('tag:', '');
+                                        logEvent(UE.FilterTagAdded, {
+                                            ...analyticsPropsPlusEntity,
+                                            tag_name: tag,
+                                            tag_count: filters.tags.length + 1,
+                                        });
+                                        setQuickFilter({ type: 'tag', tag });
+                                        return;
+                                    }
+                                    if (filterId.startsWith('organizer:')) {
+                                        setTypeaheadSelection(null);
+                                        const organizer = filterId.replace('organizer:', '');
+                                        setQuickFilter({ type: 'organizer', organizer });
+                                        return;
+                                    }
+                                    if (filterId.startsWith('event_type:')) {
+                                        setTypeaheadSelection(null);
+                                        const eventType = filterId.replace('event_type:', '');
+                                        setQuickFilter({ type: 'event_type', eventType });
+                                        return;
+                                    }
+                                    if (filterId.startsWith('experience:')) {
+                                        setTypeaheadSelection(null);
+                                        const level = filterId.replace('experience:', '');
+                                        setQuickFilter({ type: 'experience', level });
+                                        return;
+                                    }
+                                    if (filterId.startsWith('interactivity:')) {
+                                        setTypeaheadSelection(null);
+                                        const level = filterId.replace('interactivity:', '');
+                                        setQuickFilter({ type: 'interactivity', level });
+                                    }
+                                }}
+                                onPressQuickFilterMore={() => {
+                                    logEvent(UE.FilterMorePressed, analyticsPropsPlusEntity);
+                                    setFiltersVisible(true);
+                                }}
+                                typeaheadSuggestions={typeaheadSuggestions}
+                                onSelectTypeaheadSuggestion={(suggestion) => {
+                                    setTypeaheadSelection(suggestion);
+                                    if (suggestion.type === 'organizer') {
+                                        setQuickFilter({ type: 'organizer', organizer: suggestion.label });
+                                    } else if (suggestion.type === 'event_type') {
+                                        setQuickFilter({
+                                            type: 'event_type',
+                                            eventType: suggestion.value || suggestion.label,
+                                        });
+                                    } else if (suggestion.type === 'experience') {
+                                        setQuickFilter({ type: 'experience', level: suggestion.value || suggestion.label });
+                                    } else if (suggestion.type === 'interactivity') {
+                                        setQuickFilter({
+                                            type: 'interactivity',
+                                            level: suggestion.value || suggestion.label,
+                                        });
+                                    } else {
+                                        logEvent(UE.FilterTagAdded, {
+                                            ...analyticsPropsPlusEntity,
+                                            tag_name: suggestion.label,
+                                            tag_count: filters.tags.length + 1,
+                                        });
+                                        setQuickFilter({ type: 'tag', tag: suggestion.label });
+                                    }
+                                    setSearchQuery('');
+                                }}
+                            />
 
-                        <TouchableOpacity
-                            style={styles.monthModalToday}
-                            onPress={handleMonthModalTodayPress}
-                            accessibilityLabel="Select today"
+                            <WeekStrip
+                                prevWeekDays={prevWeekDays}
+                                weekDays={weekDays}
+                                nextWeekDays={nextWeekDays}
+                                selectedDay={nav.selectedDate}
+                                onChangeSelectedDay={handleStripSelectDay}
+                                isDaySelectable={isDaySelectable}
+                                hasEventsOnDay={hasEventsOnDay}
+                                onSwipePrevDay={handleStripSwipePrevDay}
+                                onSwipeNextDay={handleStripSwipeNextDay}
+                                onLongPress={handleStripLongPress}
+                                containerWidth={Math.max(0, windowWidth - spacing.lg * 2)}
+                                animateToCurrentWeek={navUpdateSourceRef.current === 'list'}
+                                animateDirection={weekStripAnimationDirectionRef.current}
+                            />
+                            <View style={[styles.headerDivider, showCoachOverlay && styles.headerDividerCoach]} />
+                        </View>
+                    </View>
+
+                    <CalendarCoachScreenScrim />
+
+                    <View style={styles.listLayer}>
+                        <Modal
+                            transparent
+                            animationType="none"
+                            visible={isMonthModalOpen}
+                            onRequestClose={() => closeMonthModal("dismiss")}
                         >
-                            <FAIcon name="calendar-day" size={12} color={colors.white} />
-                            <Text style={styles.monthModalTodayText}>Today</Text>
-                        </TouchableOpacity>
+                            <Animated.View style={[styles.monthModalBackdrop, { opacity: monthModalAnim }]}>
+                                <Pressable
+                                    style={StyleSheet.absoluteFillObject}
+                                    onPress={() => closeMonthModal("dismiss")}
+                                />
+                                <Animated.View
+                                    style={[
+                                        styles.monthModalCard,
+                                        {
+                                            width: monthModalWidth,
+                                            opacity: monthModalAnim,
+                                            transform: [
+                                                { translateY: monthModalTranslateY },
+                                                { scale: monthModalScale },
+                                            ],
+                                        },
+                                    ]}
+                                >
+                                    <TouchableOpacity
+                                        style={styles.monthModalClose}
+                                        onPress={() => closeMonthModal("dismiss")}
+                                        accessibilityLabel="Close month picker"
+                                    >
+                                        <Text style={styles.monthModalCloseText}>X</Text>
+                                    </TouchableOpacity>
 
-                        <FullCalendar
-                            currentDate={monthAnchorDate}
-                            onSelectDay={onSelectDay}
-                            hasEventsOnDay={hasEventsOnDay}
-                            selectedDate={nav.selectedDate}
-                            onMonthChange={onMonthChange}
-                        />
-                    </Animated.View>
-                </Animated.View>
-            </Modal>
+                                    <View style={styles.monthModalHeader}>
+                                        <TouchableOpacity
+                                            style={styles.monthNavButton}
+                                            onPress={goToPrevMonth}
+                                            accessibilityLabel="Previous month"
+                                        >
+                                            <FAIcon name="chevron-left" size={16} color={colors.white} />
+                                        </TouchableOpacity>
+                                        <Text style={styles.monthModalTitle} numberOfLines={1} ellipsizeMode="tail">
+                                            {monthLabel}
+                                        </Text>
+                                        <TouchableOpacity
+                                            style={styles.monthNavButton}
+                                            onPress={goToNextMonth}
+                                            accessibilityLabel="Next month"
+                                        >
+                                            <FAIcon name="chevron-right" size={16} color={colors.white} />
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={styles.monthModalToday}
+                                        onPress={handleMonthModalTodayPress}
+                                        accessibilityLabel="Select today"
+                                    >
+                                        <FAIcon name="calendar-day" size={12} color={colors.white} />
+                                        <Text style={styles.monthModalTodayText}>Today</Text>
+                                    </TouchableOpacity>
+
+                                    <FullCalendar
+                                        currentDate={monthAnchorDate}
+                                        onSelectDay={handleMonthModalSelectDay}
+                                        hasEventsOnDay={hasEventsOnDay}
+                                        selectedDate={nav.selectedDate}
+                                        onMonthChange={onMonthChange}
+                                    />
+                                </Animated.View>
+                            </Animated.View>
+                        </Modal>
             <View
                 pointerEvents="none"
                 accessibilityElementsHidden={!showDateToast}
@@ -1622,7 +1664,7 @@ const EventCalendarView: React.FC<Props> = ({
                     ]}
                 >
                     <LinearGradient
-                        colors={[colors.brandIndigo, colors.brandPurple, colors.brandPink]}
+                        colors={DATE_TOAST_GRADIENT}
                         start={{ x: 0, y: 0 }}
                         end={{ x: 1, y: 1 }}
                         style={styles.dateToastGradient}
@@ -1636,12 +1678,15 @@ const EventCalendarView: React.FC<Props> = ({
             </View>
 
             <View style={styles.eventListContainer}>
-                <CalendarCoachScreenScrim />
                 <EventList
                     sections={sections}
                     sectionListRef={sectionListRef}
                     isLoadingEvents={isLoadingList}
                     viewMode={listViewMode}
+                    isOnWishlist={isOnWishlist}
+                    onToggleWishlist={handleToggleWishlist}
+                    wishlistEventsCount={wishlistEvents.length}
+                    isEventSourceExcluded={isEventSourceExcluded}
                     listHeaderHeight={listHeaderHeight}
                     onListScroll={handleListScroll}
                     onListScrollBeginDrag={handleListScrollBeginDrag}
@@ -1700,7 +1745,10 @@ const EventCalendarView: React.FC<Props> = ({
                                                 <Text style={styles.recommendationsTitle}>Recommended</Text>
                                                 <View style={styles.recommendationsActions}>
                                                     <TouchableOpacity
-                                                        style={[styles.recommendationsActionButton, showCoachOverlay && styles.recommendationsActionButtonCoach]}
+                                                        style={[
+                                                            styles.recommendationsActionButton,
+                                                            showCoachOverlay && styles.recommendationsActionButtonCoach,
+                                                        ]}
                                                         onPress={handleHideRecommendations}
                                                         accessibilityRole="button"
                                                         accessibilityLabel="Hide Recommended"
@@ -1737,14 +1785,14 @@ const EventCalendarView: React.FC<Props> = ({
                                                         );
 
                                                         return (
-                                                            <TouchableOpacity
-                                                                key={event.id}
-                                                                style={[
-                                                                    styles.recommendationCard,
-                                                                    showCoachOverlay && styles.recommendationCardCoach,
-                                                                    {
-                                                                        width: recommendationCardWidth,
-                                                                        marginRight:
+                                                        <TouchableOpacity
+                                                            key={event.id}
+                                                            style={[
+                                                                styles.recommendationCard,
+                                                                showCoachOverlay && styles.recommendationCardCoach,
+                                                                {
+                                                                    width: recommendationCardWidth,
+                                                                    marginRight:
                                                                             index === recommendations.length - 1 ? 0 : spacing.sm,
                                                                     },
                                                                 ]}
@@ -1807,7 +1855,10 @@ const EventCalendarView: React.FC<Props> = ({
                                                 Recommended is hidden
                                             </Text>
                                             <TouchableOpacity
-                                                style={[styles.recommendationsHiddenButton, showCoachOverlay && styles.recommendationsHiddenButtonCoach]}
+                                                style={[
+                                                    styles.recommendationsHiddenButton,
+                                                    showCoachOverlay && styles.recommendationsHiddenButtonCoach,
+                                                ]}
                                                 onPress={handleShowRecommendations}
                                                 accessibilityRole="button"
                                                 accessibilityLabel="Show Recommended"
@@ -1823,8 +1874,9 @@ const EventCalendarView: React.FC<Props> = ({
                 />
             </View>
             </View>
+            </View>
             </PopupManager>
-        </LinearGradient>
+        </View>
     );
 };
 
@@ -1834,38 +1886,44 @@ const NOTICE_ICON_SIZE = 36;
 
 const styles = StyleSheet.create({
     screenGradient: { flex: 1 },
-    screenGlowTop: {
-        position: 'absolute',
-        top: -70,
-        right: -80,
-        width: 240,
-        height: 240,
-        borderRadius: 120,
-        backgroundColor: colors.brandGlowTop,
+    container: { flex: 1, backgroundColor: "transparent", position: "relative" },
+    headerLayer: {
+        zIndex: 0,
     },
-    screenGlowMid: {
-        position: 'absolute',
-        top: 140,
-        left: -120,
-        width: 220,
-        height: 220,
-        borderRadius: 110,
-        backgroundColor: colors.brandGlowMid,
+    listLayer: {
+        flex: 1,
+        zIndex: 2,
     },
-    screenGlowBottom: {
-        position: 'absolute',
-        bottom: -70,
-        left: -90,
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: colors.brandGlowWarm,
+    calendarCoachScreenScrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: CALENDAR_COACH_SCREEN_SCRIM,
+        zIndex: 1,
     },
-    container: { flex: 1, backgroundColor: "transparent" },
     headerSlot: {
         marginHorizontal: spacing.lg,
         marginTop: spacing.lg,
         marginBottom: spacing.sm,
+        gap: spacing.sm,
+    },
+    offlineHeaderCard: {
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.md,
+        borderRadius: radius.lg,
+        backgroundColor: colors.surfaceWhiteFrosted,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: colors.black,
+        shadowOpacity: 0.08,
+        shadowOffset: { width: 0, height: 4 },
+        shadowRadius: 10,
+        elevation: 3,
+    },
+    offlineHeaderText: {
+        fontSize: fontSizes.lg,
+        fontFamily: fontFamilies.display,
+        color: colors.textPrimary,
     },
     headerSurface: {
         marginHorizontal: spacing.lg,
@@ -2263,7 +2321,7 @@ const styles = StyleSheet.create({
     dateToastCard: {
         maxWidth: 420,
         width: "100%",
-        backgroundColor: colors.brandPurple,
+        backgroundColor: DATE_TOAST_BACKGROUND,
         borderRadius: radius.pill,
         borderWidth: 1,
         borderColor: colors.borderOnDarkStrong,

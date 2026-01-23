@@ -3,13 +3,13 @@ import { Text, View, StyleSheet } from 'react-native';
 import { Image } from 'expo-image'
 import EventCalendarView from '../../Calendar/EventCalendarView/EventCalendarView';
 import { useBuddiesContext } from '../../../Common/hooks/BuddiesContext';
-import { useCalendarContext } from '../../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../../Calendar/hooks/useCalendarData';
 import { getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
 
 const BuddyEvents = ({ route }: { route: { params: { buddyAuthUserId: string } } }) => {
     const { buddyAuthUserId } = route.params;
     const { buddiesWishlists } = useBuddiesContext();
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
 
     const buddyInfo = useMemo(() => {
         return buddiesWishlists.data?.find(e => e.user_id === buddyAuthUserId)

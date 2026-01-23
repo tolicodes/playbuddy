@@ -25,7 +25,7 @@ import { useCalendarCoach } from "../../PopupManager";
 
 const HEADER_HEIGHT = 34;
 export const EVENT_SECTION_HEADER_HEIGHT = HEADER_HEIGHT + spacing.md + spacing.lg;
-const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
+const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 
 type SectionType = {
     title: string;              // e.g., "Apr 13, 2025"
@@ -39,6 +39,10 @@ interface EventListProps {
     sectionListRef?: React.RefObject<SectionList<Event>>;
     isLoadingEvents?: boolean;
     viewMode?: EventListViewMode;
+    isOnWishlist?: (eventId: number) => boolean;
+    onToggleWishlist?: (eventId: number, isOnWishlist: boolean) => void;
+    wishlistEventsCount?: number;
+    isEventSourceExcluded?: (event: EventWithMetadata) => boolean;
     listHeaderComponent?: React.ReactNode;
     listHeaderHeight?: number;
     onListScroll?: (offsetY: number, layoutHeight: number, contentHeight: number) => void;
@@ -52,6 +56,10 @@ const EventList: React.FC<EventListProps> = ({
     sectionListRef,
     isLoadingEvents,
     viewMode,
+    isOnWishlist,
+    onToggleWishlist,
+    wishlistEventsCount,
+    isEventSourceExcluded,
     listHeaderComponent,
     listHeaderHeight = 0,
     onListScroll,
@@ -84,6 +92,10 @@ const EventList: React.FC<EventListProps> = ({
                     attendees={attendeesForEvent}
                     isAdmin={isAdmin}
                     listViewMode={resolvedViewMode}
+                    isOnWishlist={isOnWishlist}
+                    onToggleWishlist={onToggleWishlist}
+                    wishlistEventsCount={wishlistEventsCount}
+                    isEventSourceExcluded={isEventSourceExcluded}
                 />
             </View>
         );
@@ -179,7 +191,7 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         shadowOffset: { width: 0, height: 3 },
         elevation: 3,
-        overflow: 'hidden',
+        overflow: "hidden",
     },
     sectionHeaderPillCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
@@ -206,10 +218,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     listHeaderContainer: {
-        position: 'relative',
+        position: "relative",
     },
     calendarCoachScrim: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(64, 64, 64, 0.8)',
+        backgroundColor: "rgba(64, 64, 64, 0.8)",
     },
 });

@@ -9,7 +9,7 @@ import { MISC_URLS } from '../config';
 import { logEvent } from '../Common/hooks/logger';
 import { UE } from '../userEventTypes';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
-import { useCalendarContext } from './Calendar/hooks/CalendarContext';
+import { useCalendarData } from './Calendar/hooks/useCalendarData';
 import type { NavStack } from '../Common/Nav/NavStackType';
 import { navigateToTab } from '../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
@@ -114,7 +114,7 @@ const sections: Section[] = [
 const Moar: React.FC = () => {
     const analyticsProps = useAnalyticsProps();
     const navigation = useNavigation<NavStack>();
-    const { availableCardsToSwipe } = useCalendarContext();
+    const { availableCardsToSwipe } = useCalendarData();
     const badgeCount = availableCardsToSwipe.length;
 
     const handlePress = useCallback((item: LinkItem) => {

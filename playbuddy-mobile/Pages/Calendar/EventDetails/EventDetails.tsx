@@ -34,7 +34,7 @@ import { useFetchFollows } from '../../../Common/db-axios/useFollows';
 import { useCommonContext } from '../../../Common/hooks/CommonContext';
 import { useJoinCommunity, useLeaveCommunity } from '../../../Common/hooks/useCommunities';
 import PromoCodeSection from './PromoCodeSection';
-import { useCalendarContext } from '../hooks/CalendarContext';
+import { useCalendarData } from '../hooks/useCalendarData';
 import TabBar from '../../../components/TabBar';
 import { MediaCarousel } from '../../../components/MediaCarousel';
 import { AvatarCircle } from '../../Auth/Buttons/AvatarCircle';
@@ -124,7 +124,7 @@ const BUDDY_LIST_COACH_MESSAGE =
 
 const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetadata; source?: string }) => {
     const { currentDeepLink, authUserId } = useUserContext();
-    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarContext();
+    const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarData();
     const { data: allEvents } = useFetchEvents()
     const navigation = useNavigation<NavStack>();
     const { myCommunities, communities } = useCommonContext();
@@ -934,7 +934,7 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
 
 const RecommendedEvents = ({ event }: { event: EventWithMetadata }) => {
     const navigation = useNavigation<NavStack>();
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const { authUserId, currentDeepLink } = useUserContext();
     const { data: follows } = useFetchFollows(authUserId);
     const { myCommunities } = useCommonContext();
@@ -1529,7 +1529,7 @@ export const EventDetails = ({ route }) => {
 const styles = StyleSheet.create({
     scrollView: {
         flex: 1,
-        backgroundColor: colors.lavenderBackground,
+        backgroundColor: 'transparent',
     },
     scrollContent: {
         paddingBottom: spacing.xxxl,

@@ -19,7 +19,7 @@ import { NavStack, NavStackProps } from '../../Common/Nav/NavStackType';
 import { navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { useUserContext } from './hooks/UserContext';
 import { useUpdateUserProfile } from './hooks/useUserProfile';
-import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useGuestSaveModal } from '../GuestSaveModal';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
@@ -85,7 +85,7 @@ export const ConsentScreen = () => {
     const { authUserId, userProfile, isLoadingUserProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
     const { mutateAsync: updateUserProfile } = useUpdateUserProfile(authUserId || '');
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const isFocused = useIsFocused();

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { AppState, AppStateStatus } from 'react-native';
 
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
-import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../../Pages/Calendar/hooks/useCalendarData';
 import { useCommonContext } from '../hooks/CommonContext';
 import { useFetchFollows } from '../db-axios/useFollows';
 import {
@@ -14,7 +14,7 @@ const REFRESH_COOLDOWN_MS = 2 * 60 * 1000;
 
 export const OrganizerNotificationsRefresher = () => {
     const { authUserId } = useUserContext();
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const lastRefreshAt = useRef(0);

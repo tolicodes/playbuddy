@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 
 import type { Event } from '../../commonTypes';
-import { useCalendarContext } from '../../Pages/Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../../Pages/Calendar/hooks/useCalendarData';
 import { navigateToTab } from '../Nav/navigationHelpers';
 import { navigationRef } from '../Nav/navigationRef';
 import { setNotificationHistorySeenAt, upsertNotificationHistoryItem } from './notificationHistory';
@@ -47,7 +47,7 @@ const navigateToEventDetails = (event: Event, attempts = MAX_NAVIGATION_ATTEMPTS
 };
 
 export const NotificationResponseHandler = () => {
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const handledResponseIds = useRef(new Set<string>());
     const recordedNotificationIds = useRef(new Set<string>());
     const pendingEventId = useRef<number | null>(null);

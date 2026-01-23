@@ -8,7 +8,7 @@ import moment from 'moment-timezone';
 import axios from 'axios';
 
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
-import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
@@ -38,7 +38,7 @@ export const NotificationsScreen = () => {
     const navigation = useNavigation<NavStack>();
     const isFocused = useIsFocused();
     const { authUserId, userProfile, session } = useUserContext();
-    const { allEvents } = useCalendarContext();
+    const { allEvents } = useCalendarData();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const [history, setHistory] = useState<NotificationHistoryItem[]>([]);

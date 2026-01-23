@@ -8,7 +8,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Attendee, Event } from '../../../commonTypes';
 import { UE } from '../../../Common/types/userEventTypes';
 import { EventWithMetadata } from '../../../Common/Nav/NavStackType';
-import { useCalendarContext } from '../hooks/CalendarContext';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
@@ -33,7 +32,7 @@ const DEFAULT_IMAGE_HEIGHT = Math.round(DEFAULT_CARD_WIDTH / CARD_IMAGE_ASPECT_R
 const CARD_HEIGHT = DEFAULT_IMAGE_HEIGHT + DETAILS_PANEL_HEIGHT;
 export const ITEM_HEIGHT = CARD_HEIGHT + spacing.lg;
 const CALENDAR_COACH_DIM_OVERLAY = 'rgba(64, 64, 64, 0.8)';
-const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
+const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 
 export interface EventListItemProps {
     item: EventWithMetadata;
@@ -42,6 +41,10 @@ export interface EventListItemProps {
     fullDate?: boolean;
     attendees: Attendee[];
     isAdmin?: boolean;
+    isOnWishlist?: (eventId: number) => boolean;
+    onToggleWishlist?: (eventId: number, isOnWishlist: boolean) => void;
+    wishlistEventsCount?: number;
+    isEventSourceExcluded?: (event: EventWithMetadata) => boolean;
     footerContent?: React.ReactNode;
     cardHeight?: number;
     autoHeight?: boolean;
@@ -59,6 +62,10 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     fullDate,
     attendees,
     isAdmin,
+    isOnWishlist,
+    onToggleWishlist,
+    wishlistEventsCount,
+    isEventSourceExcluded,
     footerContent,
     cardHeight,
     autoHeight,
@@ -68,7 +75,6 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     hideSaveButton,
     wobbleSaveButton,
 }) => {
-    const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
     const { authUserId, userProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
@@ -80,10 +86,12 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         ? isAdmin
         : !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const formattedDate = formatDate(item, fullDate);
-    const itemIsOnWishlist = isOnWishlist(item.id);
+    const itemIsOnWishlist = isOnWishlist ? isOnWishlist(item.id) : false;
+    const canToggleWishlist = typeof onToggleWishlist === 'function';
+    const resolvedWishlistCount = wishlistEventsCount ?? 0;
     const wobblePlus = calendarCoach?.wobblePlus ?? false;
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
-    const shouldWobbleSave = (wobblePlus || wobbleSaveButton) && !itemIsOnWishlist;
+    const shouldWobbleSave = wobblePlus || wobbleSaveButton;
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const locationLabel = (item.neighborhood || '').trim();
     const organizerName = item.organizer?.name?.trim() || 'Organizer';
@@ -154,21 +162,22 @@ export const EventListItem: React.FC<EventListItemProps> = ({
             });
             return;
         }
+        if (!canToggleWishlist) return;
 
         const willAdd = !itemIsOnWishlist;
 
-        if (willAdd && wishlistEvents.length === 0) {
+        if (willAdd && resolvedWishlistCount === 0) {
             logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
+        }
+        if (willAdd && calendarCoach?.wobblePlus) {
+            logEvent(UE.CalendarAddCoachSavePressed, eventAnalyticsProps);
         }
         logEvent(UE.EventListItemWishlistToggled, {
             ...eventAnalyticsProps,
             is_on_wishlist: !itemIsOnWishlist,
         });
 
-        toggleWishlistEvent.mutate({
-            eventId: item.id,
-            isOnWishlist: !itemIsOnWishlist,
-        });
+        onToggleWishlist(item.id, !itemIsOnWishlist);
 
         if (willAdd) {
             calendarCoach?.notifyWishlistAdded();
@@ -208,7 +217,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                     : null
         : null;
     const resolvedCardVariant = cardVariant ?? 'heart';
-    const showActionButton = !hideSaveButton;
+    const showActionButton = !hideSaveButton && canToggleWishlist;
 
     const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);

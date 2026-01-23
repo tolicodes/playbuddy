@@ -24,7 +24,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { EventAttendees } from '../../commonTypes';
 import type { EventWithMetadata, NavStack } from '../../Common/Nav/NavStackType';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { useGroupedEvents } from '../Calendar/hooks/useGroupedEventsMain';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
 import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
@@ -222,7 +222,14 @@ export const WeeklyPicksAdminScreen = () => {
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
-    const { allEvents, isLoadingEvents, isEventSourceExcluded } = useCalendarContext();
+    const {
+        allEvents,
+        isLoadingEvents,
+        isEventSourceExcluded,
+        isOnWishlist,
+        toggleWishlistEvent,
+        wishlistEvents,
+    } = useCalendarData();
     const { data: attendees = [] } = useFetchAttendees();
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { mutate: toggleWeeklyPickEvent, isPending: togglePending } = useToggleWeeklyPickEvent();
@@ -273,6 +280,13 @@ export const WeeklyPicksAdminScreen = () => {
     }, [attendees]);
 
     const wishlistSet = useMemo(() => new Set(wishlist), [wishlist]);
+    const wishlistEventsCount = wishlistEvents.length;
+    const handleToggleWishlist = useCallback(
+        (eventId: number, isOnWishlistValue: boolean) => {
+            toggleWishlistEvent.mutate({ eventId, isOnWishlist: isOnWishlistValue });
+        },
+        [toggleWishlistEvent]
+    );
     const eligibleEvents = useMemo(() => {
         return allEvents.filter((event) => {
             const approval = event.approval_status ?? null;
@@ -601,6 +615,10 @@ export const WeeklyPicksAdminScreen = () => {
                         })
                     }
                     isAdmin
+                    isOnWishlist={isOnWishlist}
+                    onToggleWishlist={handleToggleWishlist}
+                    wishlistEventsCount={wishlistEventsCount}
+                    isEventSourceExcluded={isEventSourceExcluded}
                     footerContent={adminFooter}
                     autoHeight
                     wobbleSaveButton

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
     View,
     Text,
@@ -30,6 +30,7 @@ import { useFetchEvents, useUpdateEvent } from '../../Common/db-axios/useEvents'
 import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE, type Event } from '../../Common/types/commonTypes';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { useGroupedEvents } from '../Calendar/hooks/useGroupedEventsMain';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
 import { ADMIN_EMAILS } from '../../config';
 import {
@@ -159,6 +160,7 @@ export const EventAdminScreen = () => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
+    const { isOnWishlist, toggleWishlistEvent, wishlistEvents, isEventSourceExcluded } = useCalendarData();
     const queryClient = useQueryClient();
     const insets = useSafeAreaInsets();
     const fallbackTopInset = initialWindowMetrics?.insets?.top ?? 0;
@@ -187,6 +189,13 @@ export const EventAdminScreen = () => {
     const [savingId, setSavingId] = useState<number | null>(null);
     const [savingOrganizerId, setSavingOrganizerId] = useState<number | null>(null);
     const [activePicker, setActivePicker] = useState<'start' | 'end' | null>(null);
+    const wishlistEventsCount = wishlistEvents.length;
+    const handleToggleWishlist = useCallback(
+        (eventId: number, isOnWishlistValue: boolean) => {
+            toggleWishlistEvent.mutate({ eventId, isOnWishlist: isOnWishlistValue });
+        },
+        [toggleWishlistEvent]
+    );
 
     const eventTypeOptions = useMemo(() => {
         if (!draft?.type || BASE_EVENT_TYPES.includes(draft.type)) {
@@ -514,6 +523,10 @@ export const EventAdminScreen = () => {
                                         })
                                     }
                                     isAdmin
+                                    isOnWishlist={isOnWishlist}
+                                    onToggleWishlist={handleToggleWishlist}
+                                    wishlistEventsCount={wishlistEventsCount}
+                                    isEventSourceExcluded={isEventSourceExcluded}
                                     footerContent={adminFooter}
                                     autoHeight
                                 />

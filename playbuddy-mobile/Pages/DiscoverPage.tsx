@@ -10,7 +10,7 @@ import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import { useNavigation } from '@react-navigation/native';
 import type { NavStack } from '../Common/Nav/NavStackType';
 import { useBadgeNotifications } from '../Common/Nav/useBadgeNotifications';
-import { useCalendarContext } from './Calendar/hooks/CalendarContext';
+import { useCalendarData } from './Calendar/hooks/useCalendarData';
 import { Badge } from 'react-native-paper';
 import { useAnalyticsProps } from '../Common/hooks/useAnalytics';
 import { UE } from '../userEventTypes';
@@ -40,6 +40,12 @@ const baseMenuGroups: MenuGroup[] = [
             { title: 'Play Parties', icon: 'mask', route: 'Play Parties' },
             { title: 'Munches', icon: 'utensils', route: 'Munches' },
             { title: 'Retreats', icon: 'campground', route: 'Retreats' },
+        ],
+    },
+    {
+        title: 'Connections',
+        items: [
+            { title: 'Buddy List', icon: 'user-friends', route: 'Buddy List' },
         ],
     },
     {
@@ -74,7 +80,7 @@ const DiscoverPageContent = ({ variant = 'screen', onRequestClose, onNavigate }:
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const canSeeDebug = __DEV__ || isAdmin;
 
-    const { availableCardsToSwipe } = useCalendarContext();
+    const { availableCardsToSwipe } = useCalendarData();
 
     useBadgeNotifications({ availableCardsToSwipe });
 

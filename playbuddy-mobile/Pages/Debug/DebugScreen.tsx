@@ -11,7 +11,7 @@ import axios from 'axios';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { NewsletterSignupModal } from '../NewsletterSignupModal';
-import { useCalendarContext } from '../Calendar/hooks/CalendarContext';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { EventListViewIntroModal } from '../Calendar/ListView/EventListViewIntroModal';
 import { setEventListIntroSeen, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
 import { buildRecommendations, type RecommendationPick } from '../Calendar/hooks/recommendations';
@@ -231,7 +231,7 @@ export const DebugScreen = () => {
     const isFocused = useIsFocused();
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
-    const { allEvents, availableCardsToSwipe, wishlistEvents, wishlistEntryMap } = useCalendarContext();
+    const { allEvents, availableCardsToSwipe, wishlistEvents, wishlistEntryMap } = useCalendarData();
     const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const { data: attendeeGroups = [] } = useFetchAttendees();

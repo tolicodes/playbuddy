@@ -6,7 +6,6 @@ import FAIcon from 'react-native-vector-icons/FontAwesome';
 import FA5Icon from 'react-native-vector-icons/FontAwesome5';
 
 import { UE } from '../../../Common/types/userEventTypes';
-import { useCalendarContext } from '../hooks/CalendarContext';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { formatDate } from '../hooks/calendarUtils';
 import { getSafeImageUrl, getSmallAvatarUrl } from '../../../Common/hooks/imageUtils';
@@ -22,7 +21,7 @@ import { useGuestSaveModal } from '../../GuestSaveModal';
 export const CLASSIC_ITEM_HEIGHT = 128;
 const THUMB_SIZE = 56;
 const CALENDAR_COACH_DIM_OVERLAY = 'rgba(64, 64, 64, 0.8)';
-const CALENDAR_COACH_BORDER_COLOR = colors.borderMuted;
+const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 
 export const EventListItemClassic: React.FC<EventListItemProps> = ({
     item,
@@ -30,17 +29,23 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     noPadding,
     fullDate,
     isAdmin,
+    isOnWishlist,
+    onToggleWishlist,
+    wishlistEventsCount,
+    isEventSourceExcluded,
     footerContent,
     cardHeight,
     autoHeight,
     listViewMode,
+    hideSaveButton,
 }) => {
-    const { toggleWishlistEvent, isOnWishlist, wishlistEvents, isEventSourceExcluded } = useCalendarContext();
     const { authUserId, userProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
     const calendarCoach = useCalendarCoach();
     const eventAnalyticsProps = useEventAnalyticsProps(item);
-    const itemIsOnWishlist = isOnWishlist(item.id);
+    const itemIsOnWishlist = isOnWishlist ? isOnWishlist(item.id) : false;
+    const canToggleWishlist = typeof onToggleWishlist === 'function';
+    const resolvedWishlistCount = wishlistEventsCount ?? 0;
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
     const formattedDate = formatDate(item, fullDate);
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
@@ -75,8 +80,9 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
             });
             return;
         }
+        if (!canToggleWishlist) return;
 
-        if (!itemIsOnWishlist && wishlistEvents.length === 0) {
+        if (!itemIsOnWishlist && resolvedWishlistCount === 0) {
             logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
         }
         logEvent(UE.EventListItemWishlistToggled, {
@@ -84,10 +90,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
             is_on_wishlist: !itemIsOnWishlist,
         });
 
-        toggleWishlistEvent.mutate({
-            eventId: item.id,
-            isOnWishlist: !itemIsOnWishlist,
-        });
+        onToggleWishlist(item.id, !itemIsOnWishlist);
     };
 
     const isPlayParty = item.play_party || item.type === 'play_party';
@@ -179,20 +182,22 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                 {showCoachOverlay && (
                     <View pointerEvents="none" style={styles.calendarCoachScrim} />
                 )}
-                <TouchableOpacity
-                    style={[styles.wishlistButton, showCoachOverlay && styles.wishlistButtonCoach]}
-                    onPress={(event) => {
-                        event.stopPropagation?.();
-                        handleToggleEventWishlist();
-                    }}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                    <FAIcon
-                        name={itemIsOnWishlist ? 'heart' : 'heart-o'}
-                        size={18}
-                        color={itemIsOnWishlist ? colors.danger : colors.textMuted}
-                    />
-                </TouchableOpacity>
+                {!hideSaveButton && canToggleWishlist && (
+                    <TouchableOpacity
+                        style={[styles.wishlistButton, showCoachOverlay && styles.wishlistButtonCoach]}
+                        onPress={(event) => {
+                            event.stopPropagation?.();
+                            handleToggleEventWishlist();
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <FAIcon
+                            name={itemIsOnWishlist ? 'heart' : 'heart-o'}
+                            size={18}
+                            color={itemIsOnWishlist ? colors.danger : colors.textMuted}
+                        />
+                    </TouchableOpacity>
+                )}
                 {statusBadge && (
                     <View
                         style={[
