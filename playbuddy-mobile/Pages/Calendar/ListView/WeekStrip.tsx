@@ -16,7 +16,7 @@ import { TZ } from "./calendarNavUtils";
 import { useCalendarCoach } from "../../PopupManager";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const CALENDAR_COACH_BORDER_COLOR = "transparent";
+const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 
 type Props = {
     prevWeekDays: Date[];
@@ -203,6 +203,7 @@ const s = StyleSheet.create({
     },
     weekStripCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     dayCell: {
         flex: 1,
@@ -234,9 +235,10 @@ const s = StyleSheet.create({
     },
     daySelectedCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     todayRing: { borderWidth: 1, borderColor: colors.brandPurpleDark },
-    todayRingCoach: { borderColor: CALENDAR_COACH_BORDER_COLOR },
+    todayRingCoach: { borderColor: CALENDAR_COACH_BORDER_COLOR, borderWidth: 0 },
     dowText: {
         fontSize: fontSizes.xs,
         letterSpacing: 0.8,

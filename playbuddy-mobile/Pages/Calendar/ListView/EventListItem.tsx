@@ -462,6 +462,7 @@ const styles = StyleSheet.create({
     },
     cardWrapperCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     noPadding: {
         marginHorizontal: 0,
@@ -508,6 +509,8 @@ const styles = StyleSheet.create({
     actionButtonCoach: {
         zIndex: 2,
         elevation: 6,
+        borderWidth: 0,
+        borderColor: 'transparent',
     },
     calendarCoachScrim: {
         ...StyleSheet.absoluteFillObject,
@@ -531,6 +534,7 @@ const styles = StyleSheet.create({
     },
     detailsPanelCoach: {
         borderTopColor: CALENDAR_COACH_BORDER_COLOR,
+        borderTopWidth: 0,
     },
     detailsPanelWithFooter: {
         paddingBottom: spacing.mdPlus,
@@ -549,6 +553,7 @@ const styles = StyleSheet.create({
     },
     typeTagBadgeCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     typeTagText: {
         fontSize: fontSizes.smPlus,

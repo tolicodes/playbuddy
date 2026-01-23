@@ -49,6 +49,7 @@ interface EventListProps {
     onListScrollBeginDrag?: () => void;
     onListScrollEndDrag?: () => void;
     onListMomentumScrollEnd?: () => void;
+    onListReady?: () => void;
 }
 
 const EventList: React.FC<EventListProps> = ({
@@ -66,6 +67,7 @@ const EventList: React.FC<EventListProps> = ({
     onListScrollBeginDrag,
     onListScrollEndDrag,
     onListMomentumScrollEnd,
+    onListReady,
 }) => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
@@ -149,6 +151,15 @@ const EventList: React.FC<EventListProps> = ({
             onScrollEndDrag={onListScrollEndDrag}
             onMomentumScrollEnd={onListMomentumScrollEnd}
             scrollEventThrottle={onListScroll ? 16 : undefined}
+            onContentSizeChange={
+                onListReady
+                    ? (_width, height) => {
+                        if (height > 0) {
+                            onListReady();
+                        }
+                    }
+                    : undefined
+            }
             ListEmptyComponent={
                 <View style={styles.emptyList}>
                     {isLoadingEvents ? (
@@ -195,6 +206,7 @@ const styles = StyleSheet.create({
     },
     sectionHeaderPillCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     sectionHeaderText: {
         fontSize: fontSizes.base,

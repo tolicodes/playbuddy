@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
     },
     cardWrapperCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     noPadding: {
         marginHorizontal: 0,

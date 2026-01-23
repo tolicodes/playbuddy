@@ -417,6 +417,7 @@ const topBarStyles = StyleSheet.create({
     },
     typeaheadCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     typeaheadItem: {
         paddingHorizontal: spacing.md,
@@ -428,6 +429,7 @@ const topBarStyles = StyleSheet.create({
     },
     typeaheadItemCoach: {
         borderBottomColor: CALENDAR_COACH_BORDER_COLOR,
+        borderBottomWidth: 0,
     },
     typeaheadItemLast: {
         borderBottomWidth: 0,
@@ -445,6 +447,7 @@ const topBarStyles = StyleSheet.create({
     },
     typeaheadIconWrapCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     typeaheadText: {
         fontSize: fontSizes.base,
@@ -464,6 +467,7 @@ const topBarStyles = StyleSheet.create({
     },
     searchBubbleCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     searchBubbleExpanded: {
         width: '100%',
@@ -487,6 +491,7 @@ const topBarStyles = StyleSheet.create({
     },
     filterButtonCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     filterButtonActive: {
         backgroundColor: colors.surfaceLavenderStrong,
@@ -517,6 +522,7 @@ const topBarStyles = StyleSheet.create({
     },
     chipCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     chipText: {
         fontSize: fontSizes.sm,
