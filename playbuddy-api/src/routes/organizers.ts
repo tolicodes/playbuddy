@@ -169,6 +169,78 @@ router.patch('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest,
     }
 });
 
+router.delete('/:id/events', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    const organizerId = Number(req.params.id);
+    const onlyWithoutAttendees = req.query.onlyWithoutAttendees === 'true';
+    if (!Number.isFinite(organizerId)) {
+        res.status(400).json({ error: 'Organizer id must be a number' });
+        return;
+    }
+
+    try {
+        const { data: events, error: eventsError } = await supabaseClient
+            .from('events')
+            .select('id')
+            .eq('organizer_id', organizerId);
+        if (eventsError) throw eventsError;
+
+        const eventIds = (events || [])
+            .map((event: { id?: number | null }) => event?.id)
+            .filter((id): id is number => Number.isFinite(id));
+
+        if (!eventIds.length) {
+            res.json({ organizerId, deleted: 0, skippedWithAttendees: 0 });
+            return;
+        }
+
+        let deletableIds = eventIds;
+        let skippedWithAttendees = 0;
+        if (onlyWithoutAttendees) {
+            const { data: wishlistRows, error: wishlistError } = await supabaseClient
+                .from('event_wishlist')
+                .select('event_id')
+                .in('event_id', eventIds);
+            if (wishlistError) throw wishlistError;
+            const attendedSet = new Set(
+                (wishlistRows || [])
+                    .map((row: { event_id?: number | null }) => row?.event_id)
+                    .filter((id): id is number => Number.isFinite(id))
+            );
+            deletableIds = eventIds.filter((id) => !attendedSet.has(id));
+            skippedWithAttendees = eventIds.length - deletableIds.length;
+        }
+
+        if (!deletableIds.length) {
+            res.json({ organizerId, deleted: 0, skippedWithAttendees });
+            return;
+        }
+
+        const { error: promoError } = await supabaseClient
+            .from('promo_code_event')
+            .delete()
+            .in('event_id', deletableIds);
+        if (promoError) throw promoError;
+
+        const { error: deepLinkError } = await supabaseClient
+            .from('deep_links')
+            .update({ featured_event_id: null })
+            .in('featured_event_id', deletableIds);
+        if (deepLinkError) throw deepLinkError;
+
+        const { error: deleteError } = await supabaseClient
+            .from('events')
+            .delete()
+            .in('id', deletableIds);
+        if (deleteError) throw deleteError;
+
+        await flushEvents();
+        res.json({ organizerId, deleted: deletableIds.length, skippedWithAttendees });
+    } catch (err: any) {
+        console.error('Error deleting organizer events', err);
+        res.status(500).json({ error: err?.message || 'Failed to delete organizer events' });
+    }
+});
+
 router.post('/merge', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const body = req.body || {};
     const sourceId = Number(body.sourceOrganizerId ?? body.source_id ?? body.from_id ?? body.fromId ?? body.source);

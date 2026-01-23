@@ -20,11 +20,15 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    Tooltip,
 } from '@mui/material';
+import { useFetchAttendees } from '../../common/db-axios/useAttendees';
+import { useFetchEvents } from '../../common/db-axios/useEvents';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
+import { useDeleteOrganizerEvents } from '../../common/db-axios/useDeleteOrganizerEvents';
 import { useMergeOrganizer } from '../../common/db-axios/useMergeOrganizer';
 import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
-import { Organizer } from '../../common/types/commonTypes';
+import { Event, Organizer } from '../../common/types/commonTypes';
 
 type OrganizerDraft = Partial<Organizer> & { fetlife_handles?: string | string[] | null };
 type OrganizerOption = { id: number; label: string; handles?: string };
@@ -58,8 +62,37 @@ const parseFetlifeHandlesValue = (draftValue: OrganizerDraft['fetlife_handles'],
     return (draftValue || []).map((handle) => normalizeHandle(handle)).filter(Boolean);
 };
 
+const formatSourceHost = (value?: string | null) => {
+    if (!value) return '';
+    try {
+        return new URL(value).hostname.replace(/^www\./, '');
+    } catch {
+        return value;
+    }
+};
+
+const formatEventSourceLabel = (event: Event) => {
+    return (
+        event.source_ticketing_platform ||
+        event.source_origination_platform ||
+        event.dataset ||
+        formatSourceHost(event.source_url) ||
+        formatSourceHost(event.event_url) ||
+        formatSourceHost(event.ticket_url) ||
+        ''
+    );
+};
+
 export default function OrganizerManager() {
     const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
+    const { data: events = [], isLoading: eventsLoading } = useFetchEvents({
+        includeFacilitatorOnly: true,
+        includeHiddenOrganizers: true,
+        includeHidden: true,
+        approvalStatuses: ['approved', 'pending', 'rejected'],
+    });
+    const { data: attendees = [], isLoading: attendeesLoading } = useFetchAttendees();
+    const deleteOrganizerEvents = useDeleteOrganizerEvents();
     const updateOrganizer = useUpdateOrganizer();
     const mergeOrganizer = useMergeOrganizer();
     const [drafts, setDrafts] = useState<Record<number, OrganizerDraft>>({});
@@ -70,6 +103,7 @@ export default function OrganizerManager() {
     const [showOnlyHidden, setShowOnlyHidden] = useState(false);
     const [mergeSource, setMergeSource] = useState<Organizer | null>(null);
     const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
+    const [deletingState, setDeletingState] = useState<{ organizerId: number; mode: 'all' | 'withoutAttendees' } | null>(null);
     const pageSize = 50;
 
     const organizerOptions = useMemo<OrganizerOption[]>(() => {
@@ -112,6 +146,73 @@ export default function OrganizerManager() {
                 };
             });
     }, [organizers]);
+
+    const attendeeCountByEventId = useMemo(() => {
+        const map = new Map<number, number>();
+        attendees.forEach((group) => {
+            if (Number.isFinite(group.event_id)) {
+                map.set(group.event_id, group.attendees?.length ?? 0);
+            }
+        });
+        return map;
+    }, [attendees]);
+
+    const organizerIdByEventId = useMemo(() => {
+        const map = new Map<number, number>();
+        events.forEach((event) => {
+            const organizerId = event.organizer?.id;
+            if (organizerId) {
+                map.set(event.id, organizerId);
+            }
+        });
+        return map;
+    }, [events]);
+
+    const savedPeopleByOrganizerId = useMemo(() => {
+        const attendeesByOrganizer = new Map<number, Set<string>>();
+        attendees.forEach((group) => {
+            const organizerId = organizerIdByEventId.get(group.event_id);
+            if (!organizerId) return;
+            const bucket = attendeesByOrganizer.get(organizerId) ?? new Set<string>();
+            attendeesByOrganizer.set(organizerId, bucket);
+            (group.attendees || []).forEach((attendee) => {
+                if (attendee?.id) bucket.add(attendee.id);
+            });
+        });
+        const counts: Record<number, number> = {};
+        attendeesByOrganizer.forEach((bucket, organizerId) => {
+            counts[organizerId] = bucket.size;
+        });
+        return counts;
+    }, [attendees, organizerIdByEventId]);
+
+    const eventsWithAttendeesByOrganizerId = useMemo(() => {
+        const map = new Map<number, Array<{ id: number; name: string; sourceLabel: string; attendeeCount: number; startDate?: string | null }>>();
+        events.forEach((event) => {
+            const organizerId = event.organizer?.id;
+            if (!organizerId) return;
+            const attendeeCount = attendeeCountByEventId.get(event.id) ?? 0;
+            if (attendeeCount <= 0) return;
+            const list = map.get(organizerId) ?? [];
+            list.push({
+                id: event.id,
+                name: event.name || `Event ${event.id}`,
+                sourceLabel: formatEventSourceLabel(event),
+                attendeeCount,
+                startDate: event.start_date,
+            });
+            map.set(organizerId, list);
+        });
+        map.forEach((list) => {
+            list.sort((a, b) => {
+                const aTime = a.startDate ? new Date(a.startDate).getTime() : Number.POSITIVE_INFINITY;
+                const bTime = b.startDate ? new Date(b.startDate).getTime() : Number.POSITIVE_INFINITY;
+                if (aTime === bTime) return a.name.localeCompare(b.name);
+                return aTime - bTime;
+            });
+        });
+        return map;
+    }, [attendeeCountByEventId, events]);
 
     const filtered = useMemo(() => {
         const needle = deferredSearch.trim().toLowerCase();
@@ -199,6 +300,49 @@ export default function OrganizerManager() {
         }
     };
 
+    const handleDeleteEvents = async ({
+        org,
+        totalEvents,
+        futureCount,
+        protectedCount,
+        deletableCount,
+        onlyWithoutAttendees,
+    }: {
+        org: Organizer;
+        totalEvents: number;
+        futureCount: number;
+        protectedCount: number;
+        deletableCount: number;
+        onlyWithoutAttendees: boolean;
+    }) => {
+        if (deleteOrganizerEvents.isPending) return;
+        const label = formatOrganizerLabel(org);
+        const confirmText = onlyWithoutAttendees
+            ? `Delete ${deletableCount} event${deletableCount === 1 ? '' : 's'} without attendees for "${label}" (#${org.id})?\n\n` +
+              `Events with attendees (${protectedCount}) will be kept. This cannot be undone.`
+            : `Delete all ${totalEvents} events for "${label}" (#${org.id})?\n\n` +
+              `This removes ${futureCount} upcoming event${futureCount === 1 ? '' : 's'} and cannot be undone.`;
+        const confirmed = window.confirm(confirmText);
+        if (!confirmed) return;
+        setDeletingState({ organizerId: org.id, mode: onlyWithoutAttendees ? 'withoutAttendees' : 'all' });
+        try {
+            const result = await deleteOrganizerEvents.mutateAsync({
+                organizerId: org.id,
+                onlyWithoutAttendees,
+            });
+            const deleted = result?.deleted ?? 0;
+            const skipped = result?.skippedWithAttendees ?? 0;
+            const skippedText = onlyWithoutAttendees && skipped
+                ? ` Skipped ${skipped} event${skipped === 1 ? '' : 's'} with attendees.`
+                : '';
+            window.alert(`Deleted ${deleted} event${deleted === 1 ? '' : 's'} for "${label}".${skippedText}`);
+        } catch (err: any) {
+            window.alert(err?.message || 'Failed to delete organizer events.');
+        } finally {
+            setDeletingState(null);
+        }
+    };
+
     return (
         <Box p={4} sx={{ background: '#f8fafc', minHeight: '100vh' }}>
             <Typography variant="h4" gutterBottom>Organizer Manager</Typography>
@@ -252,6 +396,42 @@ export default function OrganizerManager() {
                                 ? (typeof draft.aliases === 'string' ? draft.aliases : (draft.aliases || []).join(', '))
                                 : (org.aliases || []).join(', ');
                             const isHidden = (draft.hidden ?? org.hidden) ?? false;
+                            const totalEvents = ((org as any).events || []).length;
+                            const futureCount = (org as any)._futureCount ?? 0;
+                            const eventsWithAttendees = eventsWithAttendeesByOrganizerId.get(org.id) ?? [];
+                            const protectedCount = eventsWithAttendees.length;
+                            const deletableCount = Math.max(0, totalEvents - protectedCount);
+                            const isDeleting = deleteOrganizerEvents.isPending && deletingState?.organizerId === org.id;
+                            const isDeletingAll = isDeleting && deletingState?.mode === 'all';
+                            const isDeletingWithout = isDeleting && deletingState?.mode === 'withoutAttendees';
+                            const savedCount = savedPeopleByOrganizerId[org.id] ?? 0;
+                            const savedLabel = eventsLoading || attendeesLoading ? 'Saved: ...' : `Saved: ${savedCount}`;
+                            const deleteTooltipTitle = (
+                                <Box sx={{ maxWidth: 360 }}>
+                                    <Typography variant="subtitle2">Events with attendees</Typography>
+                                    {eventsWithAttendees.length === 0 ? (
+                                        <Typography variant="caption" color="text.secondary">
+                                            No events with attendees.
+                                        </Typography>
+                                    ) : (
+                                        <Stack spacing={0.75} mt={0.5} sx={{ maxHeight: 220, overflowY: 'auto' }}>
+                                            {eventsWithAttendees.slice(0, 10).map((event) => (
+                                                <Box key={event.id}>
+                                                    <Typography variant="body2">{event.name}</Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {event.sourceLabel || 'Source unknown'} - {event.attendeeCount} saved
+                                                    </Typography>
+                                                </Box>
+                                            ))}
+                                            {eventsWithAttendees.length > 10 && (
+                                                <Typography variant="caption" color="text.secondary">
+                                                    and {eventsWithAttendees.length - 10} more
+                                                </Typography>
+                                            )}
+                                        </Stack>
+                                    )}
+                                </Box>
+                            );
                             return (
                                 <TableRow key={org.id} hover>
                                     <TableCell sx={{ minWidth: 180 }}>
@@ -310,8 +490,8 @@ export default function OrganizerManager() {
                                             placeholder="alias1, alias2"
                                         />
                                     </TableCell>
-                                    <TableCell width={180}>
-                                        <Stack direction="row" spacing={1}>
+                                    <TableCell width={320}>
+                                        <Stack direction="row" spacing={1} flexWrap="wrap">
                                             <Button
                                                 variant="outlined"
                                                 size="small"
@@ -329,13 +509,54 @@ export default function OrganizerManager() {
                                             >
                                                 Merge
                                             </Button>
+                                            <Tooltip title={deleteTooltipTitle} arrow>
+                                                <span>
+                                                    <Button
+                                                        variant="contained"
+                                                        color="error"
+                                                        size="small"
+                                                        onClick={() => handleDeleteEvents({
+                                                            org,
+                                                            totalEvents,
+                                                            futureCount,
+                                                            protectedCount,
+                                                            deletableCount,
+                                                            onlyWithoutAttendees: false,
+                                                        })}
+                                                        disabled={isDeleting || !totalEvents}
+                                                    >
+                                                        {isDeletingAll ? 'Deleting...' : 'Delete events'}
+                                                    </Button>
+                                                </span>
+                                            </Tooltip>
+                                            <Button
+                                                variant="outlined"
+                                                color="error"
+                                                size="small"
+                                                onClick={() => handleDeleteEvents({
+                                                    org,
+                                                    totalEvents,
+                                                    futureCount,
+                                                    protectedCount,
+                                                    deletableCount,
+                                                    onlyWithoutAttendees: true,
+                                                })}
+                                                disabled={isDeleting || deletableCount === 0}
+                                            >
+                                                {isDeletingWithout ? 'Deleting...' : 'Delete no-saves'}
+                                            </Button>
+                                            <Chip
+                                                label={savedLabel}
+                                                size="small"
+                                                variant="outlined"
+                                            />
                                         </Stack>
                                     </TableCell>
                                 </TableRow>
                             );
                         })}
                         {!filtered.length && (
-                            <TableRow><TableCell colSpan={6} align="center">No organizers</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={8} align="center">No organizers</TableCell></TableRow>
                         )}
                     </TableBody>
                 </Table>

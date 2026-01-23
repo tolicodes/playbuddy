@@ -218,6 +218,26 @@ export const useUpdateEvent = () => {
     });
 };
 
+type DeleteEventResponse = {
+    deleted: number;
+    event?: { id: number; name?: string | null };
+    warnings?: { table: string; message: string }[];
+};
+
+export const useDeleteEvent = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: async (eventId: number) => {
+            const response = await axios.delete(`${API_BASE_URL}/events/${eventId}`);
+            return response.data as DeleteEventResponse;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['events'] });
+            queryClient.invalidateQueries({ queryKey: ['organizers'] });
+        },
+    });
+};
+
 export const useFlushEventsCache = () => {
     const queryClient = useQueryClient();
 

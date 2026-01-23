@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Autocomplete,
@@ -13,7 +13,9 @@ import {
   FormControlLabel,
   IconButton,
   InputLabel,
+  ListItemText,
   MenuItem,
+  Menu,
   Paper,
   Select,
     Stack,
@@ -21,9 +23,10 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material';
-import { AutoFixHigh, Edit } from '@mui/icons-material';
+import { AutoFixHigh, Delete, Edit } from '@mui/icons-material';
 import { useQueryClient } from '@tanstack/react-query';
-import { useFetchEvents } from '../../common/db-axios/useEvents';
+import { useDeleteEvent, useFetchEvents } from '../../common/db-axios/useEvents';
+import { useFetchAttendees } from '../../common/db-axios/useAttendees';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useReclassifyEvents } from '../../common/db-axios/useClassifications';
 import EventEditorForm from './EventEditorForm';
@@ -33,14 +36,93 @@ import { EVENT_TYPE_OPTIONS, formatEventTypeLabel } from './eventTypeOptions';
 
 const ADMIN_APPROVAL_STATUSES = ['approved', 'pending', 'rejected'];
 
+const formatUrlHost = (value?: string | null) => {
+    if (!value) return '';
+    try {
+        return new URL(value).hostname.replace(/^www\./, '');
+    } catch {
+        return value;
+    }
+};
+
+const formatEventSource = (event: Event) => {
+    return (
+        event.source_ticketing_platform ||
+        event.source_origination_platform ||
+        event.dataset ||
+        formatUrlHost(event.source_url) ||
+        formatUrlHost(event.event_url) ||
+        formatUrlHost(event.ticket_url) ||
+        '-'
+    );
+};
+
+const formatDateTime = (value?: string | null) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.toLocaleString() : value;
+};
+
+const formatBool = (value?: boolean | null) => {
+    if (value === null || value === undefined) return '-';
+    return value ? 'Yes' : 'No';
+};
+
+const formatText = (value?: string | null) => (value && value.trim()) || '-';
+
+const formatNumber = (value?: number | null) => (Number.isFinite(value ?? NaN) ? String(value) : '-');
+
+const formatTags = (value?: string[] | null) => {
+    if (!value?.length) return '-';
+    return value.filter(Boolean).join(', ') || '-';
+};
+
+const formatLongText = (value?: string | null, limit = 120) => {
+    if (!value) return '-';
+    const trimmed = value.trim();
+    if (!trimmed) return '-';
+    if (trimmed.length <= limit) return trimmed;
+    return `${trimmed.slice(0, limit)}...`;
+};
+
+const formatNameList = (value?: Array<{ name?: string | null }> | null) => {
+    if (!value?.length) return '-';
+    const names = value.map((item) => item?.name).filter(Boolean) as string[];
+    return names.length ? names.join(', ') : '-';
+};
+
+const formatPromoCodeList = (value?: Array<{ promo_code?: string | null }> | null) => {
+    if (!value?.length) return '-';
+    const codes = value.map((item) => item?.promo_code).filter(Boolean) as string[];
+    return codes.length ? codes.join(', ') : '-';
+};
+
+const formatMediaSummary = (value?: Array<{ type?: string | null }> | null) => {
+    if (!value?.length) return '-';
+    const counts = value.reduce<Record<string, number>>((acc, item) => {
+        const key = item?.type || 'media';
+        acc[key] = (acc[key] ?? 0) + 1;
+        return acc;
+    }, {});
+    return Object.entries(counts)
+        .map(([type, count]) => `${type}:${count}`)
+        .join(', ');
+};
+
+const DEFAULT_VISIBLE_EXTRA_COLUMNS = ['source'];
+
 export default function EventsListScreen() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { data: events = [], isLoading: loadingEvents, error: errorEvents } = useFetchEvents({
+  const { data: events = [], isLoading: loadingEvents, error: errorEvents } = useFetchEvents({
         includeFacilitatorOnly: true,
+        includeHidden: true,
+        includeHiddenOrganizers: true,
         approvalStatuses: ADMIN_APPROVAL_STATUSES,
     });
-    const { data: organizers = [], isLoading: loadingOrganizers, error: errorOrganizers } = useFetchOrganizers();
+  const { data: organizers = [], isLoading: loadingOrganizers, error: errorOrganizers } = useFetchOrganizers();
+  const { data: attendees = [] } = useFetchAttendees();
+  const deleteEventMutation = useDeleteEvent();
 
     const [searchText, setSearchText] = useState('');
   const [selectedOrganizerId, setSelectedOrganizerId] = useState<string | null>(null);
@@ -53,6 +135,75 @@ export default function EventsListScreen() {
   const [batchReclassifyMeta, setBatchReclassifyMeta] = useState<{ startedAt: number; total: number } | null>(null);
   const [etaNow, setEtaNow] = useState(Date.now());
   const ESTIMATED_SECONDS_PER_EVENT = 12;
+  const [deletingEventIds, setDeletingEventIds] = useState<Record<number, boolean>>({});
+  const [columnsMenuAnchorEl, setColumnsMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [visibleExtraColumnIds, setVisibleExtraColumnIds] = useState<string[]>(DEFAULT_VISIBLE_EXTRA_COLUMNS);
+
+  const extraColumns = useMemo(() => ([
+    { id: 'id', label: 'ID', minWidth: 80, render: (event: Event) => formatNumber(event.id) },
+    { id: 'source', label: 'Source', minWidth: 140, render: (event: Event) => formatEventSource(event) },
+    { id: 'source_url', label: 'Source URL', minWidth: 160, render: (event: Event) => formatUrlHost(event.source_url) || '-' },
+    { id: 'timestamp_scraped', label: 'Scraped At', minWidth: 160, render: (event: Event) => formatDateTime(event.timestamp_scraped) },
+    { id: 'source_origination_platform', label: 'Source Platform', minWidth: 160, render: (event: Event) => formatText(event.source_origination_platform) },
+    { id: 'source_ticketing_platform', label: 'Ticketing Platform', minWidth: 160, render: (event: Event) => formatText(event.source_ticketing_platform) },
+    { id: 'dataset', label: 'Dataset', minWidth: 140, render: (event: Event) => formatText(event.dataset) },
+    { id: 'source_origination_group_name', label: 'Source Group', minWidth: 160, render: (event: Event) => formatText(event.source_origination_group_name) },
+    { id: 'source_origination_group_id', label: 'Source Group ID', minWidth: 160, render: (event: Event) => formatText(event.source_origination_group_id) },
+    { id: 'original_id', label: 'Original ID', minWidth: 140, render: (event: Event) => formatText(event.original_id) },
+    { id: 'type', label: 'Type', minWidth: 140, render: (event: Event) => formatEventTypeLabel(event.type) || '-' },
+    { id: 'event_url', label: 'Event URL', minWidth: 160, render: (event: Event) => formatUrlHost(event.event_url) || '-' },
+    { id: 'ticket_url', label: 'Ticket URL', minWidth: 160, render: (event: Event) => formatUrlHost(event.ticket_url) || '-' },
+    { id: 'image_url', label: 'Image URL', minWidth: 160, render: (event: Event) => formatUrlHost(event.image_url) || '-' },
+    { id: 'video_url', label: 'Video URL', minWidth: 160, render: (event: Event) => formatUrlHost(event.video_url) || '-' },
+    { id: 'start_date', label: 'Start', minWidth: 160, render: (event: Event) => formatDateTime(event.start_date) },
+    { id: 'end_date', label: 'End', minWidth: 160, render: (event: Event) => formatDateTime(event.end_date) },
+    { id: 'visibility', label: 'Visibility', minWidth: 120, render: (event: Event) => formatText(event.visibility) },
+    { id: 'approval_status', label: 'Approval', minWidth: 120, render: (event: Event) => formatText(event.approval_status) },
+    { id: 'classification_status', label: 'Classification', minWidth: 140, render: (event: Event) => formatText(event.classification_status) },
+    { id: 'weekly_pick', label: 'Weekly Pick', minWidth: 120, render: (event: Event) => formatBool(event.weekly_pick) },
+    { id: 'hidden', label: 'Hidden', minWidth: 100, render: (event: Event) => formatBool(event.hidden) },
+    { id: 'user_submitted', label: 'User Submitted', minWidth: 140, render: (event: Event) => formatBool(event.user_submitted) },
+    { id: 'frozen', label: 'Frozen', minWidth: 100, render: (event: Event) => formatBool(event.frozen) },
+    { id: 'facilitator_only', label: 'Facilitator Only', minWidth: 160, render: (event: Event) => formatBool(event.facilitator_only) },
+    { id: 'play_party', label: 'Play Party', minWidth: 120, render: (event: Event) => formatBool(event.play_party) },
+    { id: 'is_munch', label: 'Munch', minWidth: 100, render: (event: Event) => formatBool(event.is_munch) },
+    { id: 'munch_id', label: 'Munch ID', minWidth: 120, render: (event: Event) => formatNumber(event.munch_id) },
+    { id: 'recurring', label: 'Recurring', minWidth: 120, render: (event: Event) => formatText(event.recurring) },
+    { id: 'vetted', label: 'Vetted', minWidth: 100, render: (event: Event) => formatBool(event.vetted) },
+    { id: 'vetting_url', label: 'Vetting URL', minWidth: 160, render: (event: Event) => formatUrlHost(event.vetting_url) || '-' },
+    { id: 'non_ny', label: 'Non-NY', minWidth: 100, render: (event: Event) => formatBool(event.non_ny) },
+    { id: 'organizer_id', label: 'Organizer ID', minWidth: 140, render: (event: Event) => formatNumber(event.organizer_id) },
+    { id: 'location_area_id', label: 'Location Area ID', minWidth: 160, render: (event: Event) => formatText(event.location_area_id) },
+    { id: 'location', label: 'Location', minWidth: 200, render: (event: Event) => formatText(event.location) },
+    { id: 'neighborhood', label: 'Neighborhood', minWidth: 140, render: (event: Event) => formatText(event.neighborhood) },
+    { id: 'city', label: 'City', minWidth: 120, render: (event: Event) => formatText(event.city) },
+    { id: 'region', label: 'Region', minWidth: 120, render: (event: Event) => formatText(event.region) },
+    { id: 'country', label: 'Country', minWidth: 120, render: (event: Event) => formatText(event.country) },
+    { id: 'location_area', label: 'Location Area', minWidth: 160, render: (event: Event) => formatText(event.location_area?.name) },
+    { id: 'price', label: 'Price', minWidth: 120, render: (event: Event) => formatText(event.price) },
+    { id: 'short_price', label: 'Short Price', minWidth: 120, render: (event: Event) => formatText(event.short_price) },
+    { id: 'event_categories', label: 'Categories', minWidth: 160, render: (event: Event) => formatText(event.event_categories) },
+    { id: 'tags', label: 'Tags', minWidth: 200, render: (event: Event) => formatTags(event.tags) },
+    { id: 'lat', label: 'Lat', minWidth: 120, render: (event: Event) => formatNumber(event.lat) },
+    { id: 'lon', label: 'Lon', minWidth: 120, render: (event: Event) => formatNumber(event.lon) },
+    { id: 'description', label: 'Description', minWidth: 240, render: (event: Event) => formatLongText(event.description, 160) },
+    { id: 'short_description', label: 'Short Description', minWidth: 220, render: (event: Event) => formatLongText(event.short_description, 160) },
+    { id: 'custom_description', label: 'Custom Description', minWidth: 220, render: (event: Event) => formatLongText(event.custom_description, 160) },
+    { id: 'bio', label: 'Bio', minWidth: 200, render: (event: Event) => formatLongText(event.bio, 160) },
+    { id: 'hosts', label: 'Hosts', minWidth: 160, render: (event: Event) => formatTags(event.hosts) },
+    { id: 'facilitators', label: 'Facilitators', minWidth: 160, render: (event: Event) => formatTags(event.facilitators) },
+    { id: 'communities', label: 'Communities', minWidth: 180, render: (event: Event) => formatNameList(event.communities) },
+    { id: 'promo_codes', label: 'Promo Codes', minWidth: 160, render: (event: Event) => formatPromoCodeList(event.promo_codes) },
+    { id: 'classification_id', label: 'Classification ID', minWidth: 160, render: (event: Event) => formatNumber(event.classification?.id) },
+    { id: 'classification_tags', label: 'Classification Tags', minWidth: 200, render: (event: Event) => formatTags(event.classification?.tags) },
+    { id: 'media', label: 'Media', minWidth: 140, render: (event: Event) => formatMediaSummary(event.media) },
+  ]), []);
+
+  const toggleExtraColumn = (columnId: string) => {
+    setVisibleExtraColumnIds((prev) => (
+      prev.includes(columnId) ? prev.filter((id) => id !== columnId) : [...prev, columnId]
+    ));
+  };
 
   useEffect(() => {
     if (!Object.keys(reclassifyStartTimes).length && !batchReclassifyMeta) return;
@@ -60,12 +211,30 @@ export default function EventsListScreen() {
     return () => clearInterval(interval);
   }, [batchReclassifyMeta, reclassifyStartTimes]);
 
-    const organizerOptions = useMemo(() => {
+  const isColumnsMenuOpen = Boolean(columnsMenuAnchorEl);
+  const handleOpenColumnsMenu = (event: MouseEvent<HTMLElement>) => {
+    setColumnsMenuAnchorEl(event.currentTarget);
+  };
+  const handleCloseColumnsMenu = () => {
+    setColumnsMenuAnchorEl(null);
+  };
+
+  const organizerOptions = useMemo(() => {
         return organizers
             .slice()
             .filter((org) => org?.name)
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [organizers]);
+
+  const attendeeCountByEventId = useMemo(() => {
+    const map = new Map<number, number>();
+    attendees.forEach((group) => {
+      if (Number.isFinite(group.event_id)) {
+        map.set(group.event_id, group.attendees?.length ?? 0);
+      }
+    });
+    return map;
+  }, [attendees]);
 
   const selectedOrganizer = useMemo(() => {
     return organizerOptions.find((org) => String(org.id) === selectedOrganizerId) || null;
@@ -207,6 +376,36 @@ export default function EventsListScreen() {
         }
     };
 
+  const handleDeleteEvent = async (event: Event) => {
+    const label = event.name || `Event ${event.id}`;
+    const attendeeCount = attendeeCountByEventId.get(event.id) ?? 0;
+    if (attendeeCount > 0) {
+      const confirmed = window.confirm(
+        `Delete "${label}" (#${event.id})?\n\n${attendeeCount} ${
+          attendeeCount === 1 ? 'person has' : 'people have'
+        } saved this event. This cannot be undone.`
+      );
+      if (!confirmed) return;
+    }
+    setDeletingEventIds((prev) => ({ ...prev, [event.id]: true }));
+    try {
+      await deleteEventMutation.mutateAsync(event.id);
+      setSelectedEventIds((prev) => prev.filter((id) => id !== event.id));
+      if (editingEvent?.id === event.id) {
+        setEditingEvent(null);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete event');
+    } finally {
+      setDeletingEventIds((prev) => {
+        const next = { ...prev };
+        delete next[event.id];
+        return next;
+      });
+    }
+  };
+
     if (loadingEvents) return <CircularProgress />;
     if (errorEvents) return <Typography color="error">Failed to load events</Typography>;
 
@@ -308,14 +507,35 @@ export default function EventsListScreen() {
                 </Stack>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2, alignItems: 'center' }}>
               <Typography variant="h6">
                 {filteredEvents.length} event{filteredEvents.length === 1 ? '' : 's'}
               </Typography>
-              <Button variant="contained" onClick={() => navigate('/events/new')}>
-                Add Event
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button variant="outlined" onClick={handleOpenColumnsMenu}>
+                  Columns
+                </Button>
+                <Button variant="contained" onClick={() => navigate('/events/new')}>
+                  Add Event
+                </Button>
+              </Stack>
             </Box>
+            <Menu
+              anchorEl={columnsMenuAnchorEl}
+              open={isColumnsMenuOpen}
+              onClose={handleCloseColumnsMenu}
+              MenuListProps={{ dense: true }}
+            >
+              {extraColumns.map((column) => {
+                const checked = visibleExtraColumnIds.includes(column.id);
+                return (
+                  <MenuItem key={column.id} onClick={() => toggleExtraColumn(column.id)}>
+                    <Checkbox size="small" checked={checked} />
+                    <ListItemText primary={column.label} />
+                  </MenuItem>
+                );
+              })}
+            </Menu>
 
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }} alignItems={{ md: 'center' }}>
               <FormControlLabel
@@ -353,8 +573,11 @@ export default function EventsListScreen() {
                 actionsHeader="Actions"
                 enableTypeEditor
                 enableHorizontalScroll
+                extraColumns={extraColumns}
+                visibleExtraColumnIds={visibleExtraColumnIds}
                 renderActions={(event) => {
                     const isReclassifying = Boolean(reclassifyStartTimes[event.id]);
+                    const isDeleting = Boolean(deletingEventIds[event.id]);
                     const etaSeconds = getEtaSeconds(event.id);
                     const futureEvent = isFutureEvent(event);
                     const isSelected = selectedEventIdSet.has(event.id);
@@ -374,6 +597,18 @@ export default function EventsListScreen() {
                                 <IconButton onClick={() => setEditingEvent(event)}>
                                     <Edit />
                                 </IconButton>
+                                <Tooltip title={isDeleting ? 'Deleting...' : 'Delete event'}>
+                                    <span>
+                                        <IconButton
+                                            size="small"
+                                            color="error"
+                                            onClick={() => handleDeleteEvent(event)}
+                                            disabled={isDeleting}
+                                        >
+                                            <Delete fontSize="small" />
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
                                 <Tooltip title={futureEvent ? 'Reclassify this event' : 'Only future events can be reclassified'}>
                                     <span>
                                         <Button

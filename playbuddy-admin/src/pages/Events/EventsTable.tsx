@@ -6,6 +6,14 @@ import { useUpdateEvent } from '../../common/db-axios/useEvents';
 import type { Event, EventTypes } from '../../common/types/commonTypes';
 import { EVENT_TYPE_OPTIONS, formatEventTypeLabel, isKnownEventType } from './eventTypeOptions';
 
+type EventsTableColumn = {
+    id: string;
+    label: ReactNode;
+    render: (event: Event) => ReactNode;
+    minWidth?: number;
+    align?: 'left' | 'center' | 'right' | 'inherit' | 'justify';
+};
+
 type EventsTableProps = {
     events: Event[];
     renderActions?: (event: Event) => ReactNode;
@@ -13,6 +21,8 @@ type EventsTableProps = {
     emptyMessage?: string;
     enableTypeEditor?: boolean;
     enableHorizontalScroll?: boolean;
+    extraColumns?: EventsTableColumn[];
+    visibleExtraColumnIds?: string[];
 };
 
 const formatEventDate = (start: string, end: string) => {
@@ -67,6 +77,8 @@ export default function EventsTable({
     emptyMessage,
     enableTypeEditor = false,
     enableHorizontalScroll = false,
+    extraColumns,
+    visibleExtraColumnIds,
 }: EventsTableProps) {
     const updateEventMutation = useUpdateEvent();
     const queryClient = useQueryClient();
@@ -107,17 +119,24 @@ export default function EventsTable({
         });
     }, [enableTypeEditor, events]);
 
-    if (groupedEvents.length === 0) {
+    const showActions = Boolean(renderActions);
+    const showTypeEditor = Boolean(enableTypeEditor);
+    const visibleExtraColumns = useMemo(() => {
+        if (!extraColumns?.length) return [];
+        if (!visibleExtraColumnIds) return extraColumns;
+        const visible = new Set(visibleExtraColumnIds);
+        return extraColumns.filter((column) => visible.has(column.id));
+    }, [extraColumns, visibleExtraColumnIds]);
+    const columnCount = 4 + visibleExtraColumns.length + (showTypeEditor ? 1 : 0) + (showActions ? 1 : 0);
+    const isEmpty = groupedEvents.length === 0;
+
+    if (isEmpty) {
         return (
             <Typography color="text.secondary">
                 {emptyMessage ?? 'No events available.'}
             </Typography>
         );
     }
-
-    const showActions = Boolean(renderActions);
-    const showTypeEditor = Boolean(enableTypeEditor);
-    const columnCount = 4 + (showTypeEditor ? 1 : 0) + (showActions ? 1 : 0);
 
     const handleTypeChange = async (event: Event, nextType: EventTypes) => {
         const eventId = event.id;
@@ -159,14 +178,30 @@ export default function EventsTable({
         }
     };
 
+    const minTableWidth = showTypeEditor ? 1200 : 1000;
     const table = (
-        <Table sx={enableHorizontalScroll ? { minWidth: showTypeEditor ? 1200 : 1000 } : undefined}>
+        <Table
+            sx={
+                enableHorizontalScroll
+                    ? { minWidth: minTableWidth + visibleExtraColumns.length * 140 }
+                    : undefined
+            }
+        >
             <TableHead>
                 <TableRow>
                     <TableCell>Date</TableCell>
                     <TableCell>Image</TableCell>
                     <TableCell>Title</TableCell>
                     <TableCell>Organizer</TableCell>
+                    {visibleExtraColumns.map((column) => (
+                        <TableCell
+                            key={column.id}
+                            sx={column.minWidth ? { minWidth: column.minWidth } : undefined}
+                            align={column.align}
+                        >
+                            {column.label}
+                        </TableCell>
+                    ))}
                     {showTypeEditor && <TableCell>Type</TableCell>}
                     {showActions && (
                         <TableCell>{actionsHeader ?? 'Actions'}</TableCell>
@@ -252,6 +287,11 @@ export default function EventsTable({
                                     </Box>
                                 </TableCell>
                                 <TableCell>{event.organizer?.name || '—'}</TableCell>
+                                {visibleExtraColumns.map((column) => (
+                                    <TableCell key={`${event.id}-${column.id}`} align={column.align}>
+                                        {column.render(event)}
+                                    </TableCell>
+                                ))}
                                 {showTypeEditor && (
                                     <TableCell>
                                         <FormControl size="small" sx={{ minWidth: 160 }}>
