@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Animated,
+    Easing,
     Image,
     View,
     StyleSheet,
@@ -104,8 +105,10 @@ const DATE_TOAST_GRADIENT = [
 ] as const;
 const DATE_TOAST_BACKGROUND = "rgba(75, 42, 191, 0.8)";
 const CALENDAR_COACH_SCROLL_OFFSET_PX = 200;
-const CALENDAR_COACH_BORDER_COLOR = "transparent";
+const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 const CALENDAR_COACH_SCREEN_SCRIM = "rgba(64, 64, 64, 0.8)";
+const EXTRA_SCROLL_DELAY_MS = 180;
+const SMOOTH_SCROLL_DURATION_MS = 320;
 
 const CalendarCoachScreenScrim = () => {
     const calendarCoach = useCalendarCoach();
@@ -147,6 +150,12 @@ const EventCalendarView: React.FC<Props> = ({
     const toastAnim = useRef(new Animated.Value(0)).current;
     const monthModalAnim = useRef(new Animated.Value(0)).current;
     const listScrollOffsetRef = useRef(0);
+    const smoothScrollValueRef = useRef(new Animated.Value(0));
+    const smoothScrollAnimRef = useRef<Animated.CompositeAnimation | null>(null);
+    const smoothScrollListenerRef = useRef<string | null>(null);
+    const extraScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingScrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendingScrollRetryRef = useRef(0);
     const calendarCoachScrollRef = useRef(false);
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const navigation = useNavigation<NavStack>();
@@ -413,11 +422,69 @@ const EventCalendarView: React.FC<Props> = ({
         return false;
     }, []);
 
+    const stopSmoothScroll = useCallback(() => {
+        if (smoothScrollAnimRef.current) {
+            smoothScrollAnimRef.current.stop();
+            smoothScrollAnimRef.current = null;
+        }
+        const value = smoothScrollValueRef.current;
+        if (smoothScrollListenerRef.current) {
+            value.removeListener(smoothScrollListenerRef.current);
+            smoothScrollListenerRef.current = null;
+        }
+        value.stopAnimation();
+    }, []);
+
+    const smoothScrollToOffset = useCallback(
+        (targetOffset: number, durationMs = SMOOTH_SCROLL_DURATION_MS) => {
+            if (!sectionListRef.current) return false;
+            stopSmoothScroll();
+            const startOffset = listScrollOffsetRef.current;
+            const delta = targetOffset - startOffset;
+            if (Math.abs(delta) < 1) {
+                scrollListToOffset(targetOffset, false);
+                return true;
+            }
+            const value = smoothScrollValueRef.current;
+            value.setValue(0);
+            smoothScrollListenerRef.current = value.addListener(({ value: progress }) => {
+                scrollListToOffset(startOffset + delta * progress, false);
+            });
+            smoothScrollAnimRef.current = Animated.timing(value, {
+                toValue: 1,
+                duration: durationMs,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: false,
+            });
+            smoothScrollAnimRef.current.start(() => {
+                if (smoothScrollListenerRef.current) {
+                    value.removeListener(smoothScrollListenerRef.current);
+                    smoothScrollListenerRef.current = null;
+                }
+                smoothScrollAnimRef.current = null;
+            });
+            return true;
+        },
+        [scrollListToOffset, stopSmoothScroll]
+    );
+
     const handleCalendarCoachIntro = useCallback(() => {
         if (calendarCoachScrollRef.current) return;
         calendarCoachScrollRef.current = true;
         goToToday(CALENDAR_COACH_SCROLL_OFFSET_PX);
     }, [goToToday]);
+
+    useEffect(() => {
+        return () => {
+            stopSmoothScroll();
+            if (extraScrollTimeoutRef.current) {
+                clearTimeout(extraScrollTimeoutRef.current);
+            }
+            if (pendingScrollTimeoutRef.current) {
+                clearTimeout(pendingScrollTimeoutRef.current);
+            }
+        };
+    }, [stopSmoothScroll]);
 
     useEffect(() => {
         if (!scrollToTopToken) return;
@@ -960,39 +1027,70 @@ const EventCalendarView: React.FC<Props> = ({
         [nav.weekAnchorDate]
     );
 
-    const scrollToDate = (date: Date, extraOffset = 0) => {
+    function schedulePendingScroll(date: Date, extraOffset: number) {
+        pendingScrollDateRef.current = { date, extraOffset };
+        if (pendingScrollTimeoutRef.current) return;
+        if (pendingScrollRetryRef.current >= 8) return;
+        pendingScrollRetryRef.current += 1;
+        pendingScrollTimeoutRef.current = setTimeout(() => {
+            pendingScrollTimeoutRef.current = null;
+            const pending = pendingScrollDateRef.current;
+            if (pending) {
+                scrollToDate(pending.date, pending.extraOffset);
+            }
+        }, 160);
+    }
+
+    function scrollToDate(date: Date, extraOffset = 0) {
+        stopSmoothScroll();
         lastScrollDateRef.current = date;
         lastScrollOffsetRef.current = extraOffset;
         const targetDateKey = formatDayKey(date);
         if (hasListHeader && listHeaderHeight === 0) {
-            pendingScrollDateRef.current = { date, extraOffset };
+            schedulePendingScroll(date, extraOffset);
             return;
         }
-        const formatted = moment(date).tz(TZ).format(SECTION_DATE_FORMAT);
-        const idx = sections.findIndex((s) => s.title === formatted);
-        if (idx === -1 || !sectionListRef.current) {
-            pendingScrollDateRef.current = { date, extraOffset };
-            return;
+        let targetEntry = sectionOffsetIndex.find((entry) => entry.dateKey === targetDateKey);
+        if (!targetEntry) {
+            const targetMoment = moment(date).tz(TZ);
+            targetEntry = sectionOffsetIndex.find((entry) => {
+                if (!entry.date) return false;
+                return moment(entry.date).tz(TZ).isSameOrAfter(targetMoment, "day");
+            });
         }
-        const rowHeight = listViewMode === 'classic' ? CLASSIC_ITEM_HEIGHT : ITEM_HEIGHT;
-        const headerOffset = hasListHeader ? listHeaderHeight : 0;
-        const offset = sections.slice(0, idx).reduce((total, section) => {
-            return total + EVENT_SECTION_HEADER_HEIGHT + section.data.length * rowHeight;
-        }, headerOffset);
-        lastScrollHeaderHeightRef.current = headerOffset;
-        const syncState = listScrollSyncRef.current;
-        syncState.isProgrammatic = true;
-        syncState.targetDateKey = targetDateKey;
-        syncState.lastSyncedDateKey = targetDateKey;
-        const baseOffset = Math.max(0, offset);
-        scrollListToOffset(baseOffset);
-        if (extraOffset) {
-            const finalOffset = Math.max(0, offset + extraOffset);
-            if (finalOffset !== baseOffset) {
-                requestAnimationFrame(() => scrollListToOffset(finalOffset));
+        if (!targetEntry) {
+            for (let i = sectionOffsetIndex.length - 1; i >= 0; i -= 1) {
+                if (sectionOffsetIndex[i].date) {
+                    targetEntry = sectionOffsetIndex[i];
+                    break;
+                }
             }
         }
-    };
+        if (!targetEntry || !sectionListRef.current) {
+            schedulePendingScroll(date, extraOffset);
+            return;
+        }
+        lastScrollHeaderHeightRef.current = hasListHeader ? listHeaderHeight : 0;
+        pendingScrollRetryRef.current = 0;
+        const syncState = listScrollSyncRef.current;
+        syncState.isProgrammatic = true;
+        syncState.targetDateKey = targetEntry.dateKey ?? targetDateKey;
+        syncState.lastSyncedDateKey = targetEntry.dateKey ?? targetDateKey;
+        const baseOffset = Math.max(0, targetEntry.start);
+        scrollListToOffset(baseOffset);
+        if (extraOffset) {
+            const finalOffset = Math.max(0, targetEntry.start + extraOffset);
+            if (finalOffset !== baseOffset) {
+                if (extraScrollTimeoutRef.current) {
+                    clearTimeout(extraScrollTimeoutRef.current);
+                }
+                extraScrollTimeoutRef.current = setTimeout(() => {
+                    extraScrollTimeoutRef.current = null;
+                    smoothScrollToOffset(finalOffset);
+                }, EXTRA_SCROLL_DELAY_MS);
+            }
+        }
+    }
 
     const shouldShowDateToast = (meta: DateCoachMeta) => {
         if (meta.count >= DATE_COACH_MAX_SHOWS) return false;
@@ -1091,7 +1189,7 @@ const EventCalendarView: React.FC<Props> = ({
         shiftWeek(1);
     };
 
-    const goToToday = (extraOffset = 0) => {
+    function goToToday(extraOffset = 0) {
         const today = moment().tz(TZ).toDate();
         if (!isDaySelectable(today)) return;
         const chosen = resolveEventDay(today);
@@ -1100,11 +1198,15 @@ const EventCalendarView: React.FC<Props> = ({
         setNav(next);
         setMonthAnchorDate(moment(chosen).startOf("month").toDate());
         scrollToDate(chosen, extraOffset);
-    };
+    }
 
     useEffect(() => {
         if (!scrollToTodayToken) return;
         goToToday(scrollToTodayOffset);
+        const retry = setTimeout(() => {
+            goToToday(scrollToTodayOffset);
+        }, 420);
+        return () => clearTimeout(retry);
     }, [scrollToTodayOffset, scrollToTodayToken]);
 
     const openMonthModal = (day?: Date) => {
@@ -1318,6 +1420,17 @@ const EventCalendarView: React.FC<Props> = ({
             }
             return next.toDate();
         });
+    };
+
+    const handleListReady = () => {
+        if (!pendingScrollDateRef.current) return;
+        if (pendingScrollTimeoutRef.current) {
+            clearTimeout(pendingScrollTimeoutRef.current);
+            pendingScrollTimeoutRef.current = null;
+        }
+        const target = pendingScrollDateRef.current;
+        pendingScrollDateRef.current = null;
+        requestAnimationFrame(() => scrollToDate(target.date, target.extraOffset));
     };
 
     useEffect(() => {
@@ -1690,6 +1803,7 @@ const EventCalendarView: React.FC<Props> = ({
                     listHeaderHeight={listHeaderHeight}
                     onListScroll={handleListScroll}
                     onListScrollBeginDrag={handleListScrollBeginDrag}
+                    onListReady={handleListReady}
                     listHeaderComponent={
                         shouldShowListHeader ? (
                             <View
@@ -1941,6 +2055,7 @@ const styles = StyleSheet.create({
     },
     headerSurfaceCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     headerDivider: {
         height: StyleSheet.hairlineWidth,
@@ -1972,6 +2087,7 @@ const styles = StyleSheet.create({
     },
     noticeCardCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     noticeHeader: {
         flexDirection: "row",
@@ -1998,6 +2114,7 @@ const styles = StyleSheet.create({
     },
     noticeCloseButtonCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     noticeIcon: {
         width: NOTICE_ICON_SIZE,
@@ -2012,6 +2129,7 @@ const styles = StyleSheet.create({
     },
     noticeIconCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     noticeCopy: {
         flex: 1,
@@ -2060,6 +2178,7 @@ const styles = StyleSheet.create({
     },
     recommendationsCardCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     recommendationsHeader: {
         flexDirection: "row",
@@ -2088,6 +2207,7 @@ const styles = StyleSheet.create({
     },
     recommendationsActionButtonCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     recommendationsActionText: {
         color: colors.textMuted,
@@ -2112,6 +2232,7 @@ const styles = StyleSheet.create({
     },
     recommendationsHiddenCardCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     recommendationsHiddenText: {
         color: colors.textMuted,
@@ -2129,6 +2250,7 @@ const styles = StyleSheet.create({
     },
     recommendationsHiddenButtonCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     recommendationsHiddenButtonText: {
         color: colors.textPrimary,
@@ -2147,6 +2269,7 @@ const styles = StyleSheet.create({
     },
     recommendationsEmptyCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     recommendationsEmptyText: {
         color: colors.textMuted,
@@ -2164,6 +2287,7 @@ const styles = StyleSheet.create({
     },
     recommendationCardCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
+        borderWidth: 0,
     },
     recommendationMedia: {
         width: "100%",

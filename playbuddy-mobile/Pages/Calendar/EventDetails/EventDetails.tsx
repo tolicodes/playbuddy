@@ -41,6 +41,7 @@ import { AvatarCircle } from '../../Auth/Buttons/AvatarCircle';
 import { useAnalyticsProps, useEventAnalyticsProps } from '../../../Common/hooks/useAnalytics';
 import { getSafeImageUrl } from '../../../Common/hooks/imageUtils';
 import { calendarTagTones, colors, fontFamilies, fontSizes, lineHeights, radius, shadows, spacing } from '../../../components/styles';
+import { EventListBackground } from '../../../components/EventListBackground';
 import { ACTIVE_EVENT_TYPES, type Attendee, type EventAttendees } from '../../../Common/types/commonTypes';
 import SectionCard from './SectionCard';
 import { TZ } from '../ListView/calendarNavUtils';
@@ -1425,7 +1426,8 @@ export const EventDetails = ({ route }) => {
     ]
 
     return (
-        <>
+        <View style={styles.screen}>
+            <EventListBackground />
             <ScrollView ref={scrollViewRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
 
                 <EventHeader selectedEvent={selectedEvent} source={source} />
@@ -1522,11 +1524,14 @@ export const EventDetails = ({ route }) => {
                 source="buddy_list"
             />
 
-        </>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    screen: {
+        flex: 1,
+    },
     scrollView: {
         flex: 1,
         backgroundColor: 'transparent',

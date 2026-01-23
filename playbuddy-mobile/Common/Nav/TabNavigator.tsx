@@ -43,6 +43,7 @@ import EventAdminScreen from "../../Pages/Admin/EventAdminScreen";
 import PromoCodeAdminScreen from "../../Pages/Admin/PromoCodeAdminScreen";
 import EventPopupAdminScreen from "../../Pages/Admin/EventPopupAdminScreen";
 import PushNotificationsAdminScreen from "../../Pages/Admin/PushNotificationsAdminScreen";
+import { LocationAreasAdminScreen } from "../../Pages/Admin/LocationAreasAdminScreen";
 import { DiscoverGame } from "../../Pages/DiscoverGame/DiscoverGame";
 import type { HomeTabName } from "./navigationHelpers";
 import { TabHighlightContext } from "./TabHighlightContext";
@@ -84,9 +85,7 @@ const renderSharedStackScreens = () => (
                 ...headerOptions({
                     navigation,
                     title: 'Event Details',
-                    backgroundColor: gradients.nav[0],
                 }),
-                cardStyle: { backgroundColor: colors.lavenderBackground },
             })}
         />
         <Stack.Screen
@@ -193,6 +192,11 @@ const renderSharedStackScreens = () => (
             name="Promo Codes Admin"
             component={PromoCodeAdminScreen}
             options={({ navigation }) => headerOptions({ navigation, title: 'Promo Codes Admin' })}
+        />
+        <Stack.Screen
+            name="Location Areas Admin"
+            component={LocationAreasAdminScreen}
+            options={({ navigation }) => headerOptions({ navigation, title: 'Location Areas' })}
         />
         <Stack.Screen
             name="Event Popups Admin"

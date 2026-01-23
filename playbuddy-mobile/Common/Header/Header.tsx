@@ -27,7 +27,7 @@ import { useGuestSaveModal } from "../../Pages/GuestSaveModal";
 import type { NavStackProps } from "../Nav/NavStackType";
 
 type HeaderBackgroundConfig = {
-    variant?: "nav" | "welcome";
+    variant?: "nav" | "welcome" | "inherit";
     splitRatio?: number;
 };
 
@@ -60,25 +60,25 @@ export const HomeButton = ({ navigation }: { navigation: NavigationProp<ParamLis
         navigateToTab(navigation, 'Calendar', { scrollToTop: Date.now() });
     };
     return (
-        <TouchableOpacity onPress={onPressHomeButton} accessibilityRole="button" accessibilityLabel="Menu">
+        <TouchableOpacity
+            onPress={onPressHomeButton}
+            style={styles.homeButton}
+            accessibilityRole="button"
+            accessibilityLabel="Menu"
+        >
             <Image style={styles.logo} source={require('../../assets/logo-transparent.png')} />
         </TouchableOpacity>
     );
 };
 
+const HEADER_TITLE_SCALE = 0.8;
+const EVENT_DETAILS_TITLE_SCALE = 0.5;
+
 // Header Title Text with Animation
-const HeaderTitleText = ({
-    title,
-    isSmall,
-    align = "left",
-}: {
-    title: string;
-    isSmall?: boolean;
-    align?: "left" | "center";
-}) => {
+const HeaderTitleText = ({ title, scale }: { title: string; scale: number }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
-    const fontSize = isSmall ? fontSizes.title : fontSizes.display;
-    const lineHeight = isSmall ? fontSizes.title + 2 : fontSizes.display + 2;
+    const fontSize = Math.round(fontSizes.display * scale);
+    const lineHeight = Math.round(fontSize * 1.2);
 
     useEffect(() => {
         Animated.timing(fadeAnim, {
@@ -89,14 +89,10 @@ const HeaderTitleText = ({
     }, [title]);
 
     return (
-        <Animated.View style={{ opacity: fadeAnim }}>
+        <Animated.View style={[styles.titleTextContainer, { opacity: fadeAnim }]}>
             <Text
                 numberOfLines={1}
-                style={[
-                    styles.headerTitleText,
-                    align === "center" ? styles.headerTitleTextCentered : styles.headerTitleTextLeft,
-                    { fontSize, lineHeight },
-                ]}
+                style={[styles.headerTitleText, { fontSize, lineHeight }]}
                 ellipsizeMode="tail"
             >
                 {title}
@@ -224,8 +220,9 @@ const Header = ({
 }) => {
     const route = useRoute();
     const routeTitle = route.params?.title;
+    const titleScale = route.name === 'Event Details' ? EVENT_DETAILS_TITLE_SCALE : HEADER_TITLE_SCALE;
     const headerBackground = (route.params as { headerBackground?: HeaderBackgroundConfig } | undefined)?.headerBackground;
-    const backgroundVariant = headerBackground?.variant === "welcome" ? "welcome" : "nav";
+    const backgroundVariant = headerBackground?.variant ?? "inherit";
     const splitRatio = headerBackground?.splitRatio;
     const isWelcomeBackground = backgroundVariant === "welcome";
     const gradientColors = isWelcomeBackground ? eventListThemes.welcome.colors : gradients.nav;
@@ -236,12 +233,13 @@ const Header = ({
         : 1;
     const gradientEnd = isWelcomeBackground ? { x: 0.9, y: gradientEndY } : { x: 1, y: 1 };
     const useSolidBackground = Boolean(backgroundColor);
+    const shouldRenderGradient = !useSolidBackground && backgroundVariant !== "inherit";
     return (
         <SafeAreaView
             style={[styles.headerContainer, backgroundColor ? { backgroundColor } : null]}
             edges={['top', 'left', 'right']}
         >
-            {!useSolidBackground && (
+            {shouldRenderGradient && (
                 <>
                     <LinearGradient
                         colors={gradientColors}
@@ -267,26 +265,20 @@ const Header = ({
                 </>
             )}
             <View style={styles.headerInnerContainer}>
-                <View style={styles.leftContainer}>
-                    {isRootScreen
-                        ? <HomeButton navigation={navigation} />
-                        : <CustomBackButton navigation={navigation} backToWelcome={backToWelcome} />
-                    }
+                <View style={styles.titleWrapper}>
+                    <View style={styles.titleRow}>
+                        {isRootScreen
+                            ? <HomeButton navigation={navigation} />
+                            : <CustomBackButton navigation={navigation} backToWelcome={backToWelcome} />
+                        }
+                        <View style={[styles.titleTextWrap, isRootScreen && styles.titleTextWrapRoot]}>
+                            <HeaderTitleText
+                                title={routeTitle || title}
+                                scale={titleScale}
+                            />
+                        </View>
+                    </View>
                 </View>
-
-            <View
-                style={[
-                    styles.titleWrapper,
-                    isRootScreen ? styles.titleWrapperLeft : styles.titleWrapperCentered,
-                ]}
-            >
-                <HeaderTitleText
-                    title={routeTitle || title}
-                    isSmall={routeTitle}
-                    align={isRootScreen ? "left" : "center"}
-                />
-            </View>
-
                 <HeaderRight />
             </View>
         </SafeAreaView>
@@ -347,19 +339,31 @@ const styles = StyleSheet.create({
         paddingTop: spacing.xs,
         paddingBottom: spacing.sm,
     },
-    leftContainer: {
-        width: 44,
-        justifyContent: 'center',
-    },
     titleWrapper: {
         flex: 1,
         justifyContent: 'center',
-    },
-    titleWrapperLeft: {
         alignItems: 'flex-start',
     },
-    titleWrapperCentered: {
+    titleRow: {
+        flexDirection: 'row',
         alignItems: 'center',
+        width: '100%',
+        minHeight: 40,
+    },
+    titleTextWrap: {
+        flex: 1,
+        marginLeft: spacing.sm,
+        minWidth: 0,
+        justifyContent: 'center',
+    },
+    titleTextWrapRoot: {
+        height: 40,
+        justifyContent: 'center',
+        marginTop: 3,
+    },
+    titleTextContainer: {
+        flex: 1,
+        justifyContent: 'center',
     },
     rightContainer: {
         minWidth: 44,
@@ -400,21 +404,27 @@ const styles = StyleSheet.create({
         color: colors.white,
     },
     iconButton: {
-        padding: spacing.sm,
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    homeButton: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 40,
+        height: 40,
     },
     headerTitleText: {
         fontSize: fontSizes.display,
         fontWeight: '600',
         color: colors.white,
+        width: '100%',
+        textAlign: 'left',
         fontFamily: fontFamilies.display,
         includeFontPadding: false,
-        width: '100%',
-    },
-    headerTitleTextLeft: {
-        textAlign: 'left',
-    },
-    headerTitleTextCentered: {
-        textAlign: 'center',
+        flexShrink: 1,
+        textAlignVertical: 'center',
     },
     glowTop: {
         position: 'absolute',
