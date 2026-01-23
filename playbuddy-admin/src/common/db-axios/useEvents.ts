@@ -4,7 +4,7 @@ import type { Event, NormalizedEventInput } from "../types/commonTypes";
 import axios from "axios";
 import { API_BASE_URL } from "../config";
 
-const EVENTS_CACHE_FALLBACK_DELAY_MS = 3000;
+const EVENTS_CACHE_FALLBACK_DELAY_MS = 1000;
 
 type CachedAxiosReader = (
     config: { url?: string; method?: string; params?: unknown; headers?: unknown },
@@ -29,8 +29,28 @@ const readCachedEvents = async (requestUrl: string): Promise<Event[] | null> => 
     const reader = getCachedAxiosReader();
     if (!reader) return null;
     try {
-        const cached = await reader({ url: requestUrl, method: "get" });
-        return extractCachedEvents(cached);
+        const defaultHeaders = axios.defaults?.headers as
+            | { common?: Record<string, unknown> }
+            | undefined;
+        const authHeader =
+            defaultHeaders?.common?.Authorization ??
+            defaultHeaders?.common?.authorization;
+        const configs = [
+            {
+                url: requestUrl,
+                method: "get",
+                headers: typeof authHeader === "string" ? { Authorization: authHeader } : undefined,
+            },
+            ...(typeof authHeader === "string"
+                ? [{ url: requestUrl, method: "get" }]
+                : []),
+        ];
+        for (const config of configs) {
+            const cached = await reader(config);
+            const extracted = extractCachedEvents(cached);
+            if (extracted) return extracted;
+        }
+        return null;
     } catch {
         return null;
     }
@@ -40,8 +60,8 @@ export const useFetchEvents = ({
     includeFacilitatorOnly = false,
     includeNonNY = false,
     includePrivate = false,
-    includeHiddenOrganizers = false,
-    includeHidden = false,
+    includeHiddenOrganizers,
+    includeHidden,
     includeApprovalPending = false,
     approvalStatuses,
 }: {
@@ -56,15 +76,16 @@ export const useFetchEvents = ({
         includeFacilitatorOnly: false,
         includeNonNY: false,
         includePrivate: false,
-        includeHiddenOrganizers: false,
-        includeHidden: false,
         includeApprovalPending: false,
     }) => {
+    const wantsAdminView = includeApprovalPending || (approvalStatuses?.length ?? 0) > 0;
+    const effectiveIncludeHidden = includeHidden ?? wantsAdminView;
+    const effectiveIncludeHiddenOrganizers = includeHiddenOrganizers ?? wantsAdminView;
     const approvalStatusesKey = useMemo(() => (approvalStatuses ? approvalStatuses.join(',') : ''), [approvalStatuses]);
     const requestUrl = useMemo(() => {
         const params = new URLSearchParams();
-        if (includeHiddenOrganizers) params.set('includeHiddenOrganizers', 'true');
-        if (includeHidden) params.set('includeHidden', 'true');
+        if (effectiveIncludeHiddenOrganizers) params.set('includeHiddenOrganizers', 'true');
+        if (effectiveIncludeHidden) params.set('includeHidden', 'true');
         if (includePrivate) params.set('visibility', 'private');
         if (approvalStatusesKey) {
             params.set('approval_status', approvalStatusesKey);
@@ -73,7 +94,7 @@ export const useFetchEvents = ({
         }
         const queryString = params.toString() ? `?${params.toString()}` : '';
         return API_BASE_URL + '/events' + queryString;
-    }, [includeHiddenOrganizers, includeHidden, includePrivate, includeApprovalPending, approvalStatusesKey]);
+    }, [effectiveIncludeHiddenOrganizers, effectiveIncludeHidden, includePrivate, includeApprovalPending, approvalStatusesKey]);
 
     const applyEventFilters = useMemo(() => {
         return (events: Event[]) => {
@@ -88,7 +109,7 @@ export const useFetchEvents = ({
     }, [includeFacilitatorOnly, includeNonNY]);
 
     const query = useQuery<Event[]>({
-        queryKey: ['events', { includeFacilitatorOnly, includeNonNY, includePrivate, includeHiddenOrganizers, includeHidden, includeApprovalPending, approvalStatuses }],
+        queryKey: ['events', { includeFacilitatorOnly, includeNonNY, includePrivate, includeHiddenOrganizers: effectiveIncludeHiddenOrganizers, includeHidden: effectiveIncludeHidden, includeApprovalPending, approvalStatuses }],
         queryFn: async () => {
             const requestStart = Date.now();
             const devFlag = typeof window !== "undefined" && (window as { __DEV__?: boolean }).__DEV__;
@@ -124,9 +145,11 @@ export const useFetchEvents = ({
     });
 
     const [cachedFallback, setCachedFallback] = useState<Event[] | undefined>(undefined);
+    const [cacheFallbackAttempted, setCacheFallbackAttempted] = useState(false);
 
     useEffect(() => {
         setCachedFallback(undefined);
+        setCacheFallbackAttempted(false);
     }, [requestUrl, includeFacilitatorOnly, includeNonNY]);
 
     useEffect(() => {
@@ -140,6 +163,7 @@ export const useFetchEvents = ({
         let cancelled = false;
         const timeoutId = setTimeout(async () => {
             if (cancelled || query.data !== undefined || !query.isFetching) return;
+            setCacheFallbackAttempted(true);
             const cached = await readCachedEvents(requestUrl);
             if (cancelled || !cached) return;
             setCachedFallback(applyEventFilters(cached));
@@ -151,11 +175,12 @@ export const useFetchEvents = ({
     }, [applyEventFilters, query.data, query.isFetching, requestUrl]);
 
     const data = query.data ?? cachedFallback;
-    const isLoading = query.isLoading && data === undefined;
+    const isLoading = query.isLoading && data === undefined && !cacheFallbackAttempted;
     const error = cachedFallback ? null : query.error;
     const isError = cachedFallback ? false : query.isError;
+    const isUsingCachedFallback = cachedFallback !== undefined && query.data === undefined;
 
-    return { ...query, data, isLoading, error, isError };
+    return { ...query, data, isLoading, error, isError, isUsingCachedFallback };
 };
 
 export const useFetchUnapprovedEvents = () => {

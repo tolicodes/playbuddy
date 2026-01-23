@@ -34,6 +34,7 @@ Whenever making changes to Event Card layout, remember to update
 Whenever I ask to do a commit, only commit the changes made in this chat
 Only commit files related to the task; ignore unrelated changes even if modified.
 
+Include all files related to the change, including any synced copies produced by `./common/copy_common.sh`.
 Also commit the common/ types and axios changes and their copies when committing.
 
 ## Building

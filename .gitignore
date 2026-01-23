@@ -17,3 +17,13 @@ playbuddy-api/facilitator_match_audit.json
 playbuddy-api/classifications.json
 playbuddy-api/classifications.json
 scripts/instagram/classifyKinkyProfiles/.env
+
+# Ignore JS copies of common TS files
+common/src/**/*.js
+playbuddy-admin/src/common/**/*.js
+playbuddy-mobile/Common/**/*.js
+playbuddy-festival-schedule/src/common/**/*.js
+playbuddy-api/src/common/**/*.js
+playbuddy-web/src/common/**/*.js
+playbuddy-chrome-scraper/src/common/**/*.js
+playbuddy-scraper/src/common/**/*.js

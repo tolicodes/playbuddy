@@ -57,6 +57,19 @@ for TARGET_DIR in "playbuddy-api" "playbuddy-scraper"; do
   fi
 done
 
+# Keep API ESM imports pointing at .js extensions in the synced copies.
+if [ -d "playbuddy-api/src" ]; then
+  if [ -f "playbuddy-api/src/commonTypes.ts" ]; then
+    perl -pi -e "s|from \"\\.\\/userEventTypes\"|from \"./userEventTypes.js\"|g" "playbuddy-api/src/commonTypes.ts"
+  fi
+  if [ -f "playbuddy-api/src/common/types/commonTypes.ts" ]; then
+    perl -pi -e "s|from \"\\.\\/userEventTypes\"|from \"./userEventTypes.js\"|g" "playbuddy-api/src/common/types/commonTypes.ts"
+  fi
+  if [ -f "playbuddy-api/src/common/analytics/userEventCatalog.ts" ]; then
+    perl -pi -e "s|from \"\\.\\./types/userEventTypes\"|from \"../types/userEventTypes.js\"|g" "playbuddy-api/src/common/analytics/userEventCatalog.ts"
+  fi
+fi
+
 
 ## CHROME EXTENSION ONLY NEEDS TYPES, no config
 SOURCE_DIRECTORY="common/src/types"

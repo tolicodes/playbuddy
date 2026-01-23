@@ -37,8 +37,8 @@ const DEFAULT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
 const DEFAULT_RECONNECT_POLL_MS = 15000;
 const CACHE_INDEX_KEY = `${CACHE_PREFIX}index`;
 const DEFAULT_MAX_ENTRIES = 120;
-const DEFAULT_MAX_BYTES = 3 * 1024 * 1024;
-const DEFAULT_MAX_ENTRY_BYTES = 256 * 1024;
+const DEFAULT_MAX_BYTES = 8 * 1024 * 1024;
+const DEFAULT_MAX_ENTRY_BYTES = 4 * 1024 * 1024;
 
 let hasSetup = false;
 let cacheIndex: CacheIndexEntry[] | null = null;
