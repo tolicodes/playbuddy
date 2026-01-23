@@ -86,6 +86,7 @@ export const TopBar = ({
     const filterIconColor = filtersEnabled ? colors.accentPurple : colors.textMuted;
     const filterIconName = filtersEnabled ? 'close' : 'filter';
     const showQuickFilters = isSearchExpanded;
+    const hideOtherTags = activeFilters.some((filter) => filter.icon === 'tag');
     const visibleQuickFilters = (isSearchExpanded
         ? quickFilters.filter(
             (filter) =>
@@ -93,6 +94,12 @@ export const TopBar = ({
                 !activeFilterLabelSet.has(normalizeLabel(filter.label))
         )
         : []).filter((filter) => {
+        if (
+            hideOtherTags
+            && (filter.id.startsWith('tag:') || filter.id.startsWith('category:'))
+        ) {
+            return false;
+        }
         const key = chipKey(filter.label, filter.icon);
         if (activeFilterChipKeys.has(key)) return false;
         activeFilterChipKeys.add(key);

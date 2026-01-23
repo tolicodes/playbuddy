@@ -536,7 +536,7 @@ export const FiltersView = ({
                             </TouchableOpacity>
                         )}
 
-                        {topTagChips.length > 0 && (
+                        {selectedTags.length === 0 && topTagChips.length > 0 && (
                             <View style={styles.topTagsSection}>
                                 <ScrollView
                                     horizontal
