@@ -60,7 +60,7 @@ import { useFetchAnalyticsChart } from "../../common/db-axios/useAnalyticsChart"
 import { useFetchAnalyticsIndex, type AnalyticsChartDefinition } from "../../common/db-axios/useAnalyticsIndex";
 import type { BranchStatsMeta, BranchStatsRow } from "../../common/db-axios/useBranchStats";
 
-type RangePreset = "month" | "quarter" | "year" | "all";
+type RangePreset = "week" | "month" | "quarter" | "year" | "all";
 
 type RangeConfig = {
   preset: RangePreset;
@@ -112,6 +112,11 @@ type UserProfileRow = {
   totalEvents: number;
   uniqueEvents: number;
   lastEventAt: string | null;
+  lastActiveAt: string | null;
+  activeDays: Array<{ date: string; totalEvents: number }>;
+  activeDaysCount: number;
+  mostActiveDay: string | null;
+  mostActiveDayCount: number | null;
   eventCounts: Array<{ eventName: string; total: number }>;
   likedEvents: Array<{
     eventId: number;
@@ -119,6 +124,22 @@ type UserProfileRow = {
     eventDate: string | null;
     organizerId: number | null;
     organizerName: string | null;
+    savedAt: string | null;
+  }>;
+  ticketClicks: Array<{
+    eventId: number;
+    eventName: string | null;
+    eventDate: string | null;
+    organizerId: number | null;
+    organizerName: string | null;
+    totalClicks: number;
+    lastClickedAt: string | null;
+  }>;
+  communityClicks: Array<{
+    communityId: string | null;
+    communityName: string | null;
+    totalClicks: number;
+    lastClickedAt: string | null;
   }>;
 };
 
@@ -265,6 +286,7 @@ type SankeyLinkDatum = {
 };
 
 const PRESET_OPTIONS: Array<{ value: RangePreset; label: string }> = [
+  { value: "week", label: "Past 7 days" },
   { value: "month", label: "Past month" },
   { value: "quarter", label: "Past 3 months" },
   { value: "year", label: "Past year" },
@@ -326,6 +348,7 @@ const buildRangeFromPreset = (preset: RangePreset): RangeConfig => {
     return { preset, startDate: "2000-01-01", endDate, label: "All time" };
   }
   const start = new Date(end);
+  if (preset === "week") start.setUTCDate(start.getUTCDate() - 7);
   if (preset === "year") start.setUTCDate(start.getUTCDate() - 365);
   if (preset === "quarter") start.setUTCDate(start.getUTCDate() - 90);
   if (preset === "month") start.setUTCDate(start.getUTCDate() - 30);
@@ -409,7 +432,7 @@ const LineChart = ({
               const seriesName = point.series?.name ?? "Value";
               const value = valueFormatter(Number(point.y ?? 0));
               const colorValue = typeof point.color === "string" ? point.color : color;
-              return `<div style="font-size:11px;"><span style="color:${colorValue};">●</span> ${seriesName}: <b>${value}</b></div>`;
+              return `<div style="font-size:11px;color:#fff;"><span style="color:${colorValue};">●</span> ${seriesName}: <b>${value}</b></div>`;
             })
             .join("");
           return `<div style="padding:4px 2px;"><div style="font-size:11px;color:#e5e7eb;margin-bottom:4px;">${header}</div>${rows}</div>`;
@@ -501,7 +524,7 @@ const MultiLineChart = ({
               const seriesName = point.series?.name ?? "Value";
               const value = valueFormatter(Number(point.y ?? 0));
               const colorValue = typeof point.color === "string" ? point.color : "#2563eb";
-              return `<div style="font-size:11px;"><span style="color:${colorValue};">●</span> ${seriesName}: <b>${value}</b></div>`;
+              return `<div style="font-size:11px;color:#fff;"><span style="color:${colorValue};">●</span> ${seriesName}: <b>${value}</b></div>`;
             })
             .join("");
           return `<div style="padding:4px 2px;"><div style="font-size:11px;color:#e5e7eb;margin-bottom:4px;">${header}</div>${rows}</div>`;
@@ -990,6 +1013,7 @@ const ChartCard = ({
   range: RangeConfig;
   focusRef?: (el: HTMLDivElement | null) => void;
 }) => {
+  const [userProfileSearch, setUserProfileSearch] = useState("");
   const { data, isLoading, error } = useFetchAnalyticsChart<any>({
     chartId: chart.id,
     startDate: range.startDate,
@@ -1193,95 +1217,219 @@ const ChartCard = ({
 
     if (chart.id === "user_profiles") {
       const rows = data.data as UserProfileRow[];
+      const usageValues = rows.map((row) => Math.max(0, row.activeDaysCount ?? 0));
+      const usageMax = Math.max(1, ...usageValues);
+      const usageScale = d3.scaleLog().domain([1, usageMax]).range([0.2, 0.95]).clamp(true);
+      const searchTerm = userProfileSearch.trim().toLowerCase();
+      const filteredRows = searchTerm
+        ? rows.filter((row) => {
+            const name = row.name?.toLowerCase() ?? "";
+            const authId = row.authUserId?.toLowerCase() ?? "";
+            return name.includes(searchTerm) || authId.includes(searchTerm);
+          })
+        : rows;
+      const sortedRows = [...filteredRows].sort((a, b) => {
+        const activeDaysDiff = (b.activeDaysCount ?? 0) - (a.activeDaysCount ?? 0);
+        if (activeDaysDiff !== 0) return activeDaysDiff;
+        const totalEventsDiff = (b.totalEvents ?? 0) - (a.totalEvents ?? 0);
+        if (totalEventsDiff !== 0) return totalEventsDiff;
+        return (b.uniqueEvents ?? 0) - (a.uniqueEvents ?? 0);
+      });
       return (
         <Stack spacing={1.5}>
-          {rows.map((row) => (
-            <Accordion key={`profile-${row.authUserId}`} variant="outlined">
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {row.name || row.authUserId}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {row.authUserId}
-                    {row.createdAt ? ` · Joined ${row.createdAt}` : ""}
-                    {row.lastEventAt ? ` · Last active ${row.lastEventAt}` : ""}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Box textAlign="right">
-                    <Typography variant="subtitle2">{formatNumber(row.uniqueEvents)}</Typography>
-                    <Typography variant="caption" color="text.secondary">Unique events</Typography>
-                  </Box>
-                  <Box textAlign="right">
-                    <Typography variant="subtitle2">{formatNumber(row.totalEvents)}</Typography>
-                    <Typography variant="caption" color="text.secondary">Total events</Typography>
-                  </Box>
-                </Stack>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="subtitle2" gutterBottom>Event activity</Typography>
-                    <TableContainer component={Paper} variant="outlined">
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Event</TableCell>
-                            <TableCell>Category</TableCell>
-                            <TableCell align="right">Count</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {row.eventCounts.map((eventRow, idx) => (
-                            <TableRow key={`profile-event-${row.authUserId}-${eventRow.eventName}-${idx}`}>
-                              <TableCell>{getUserEventDisplayName(eventRow.eventName)}</TableCell>
-                              <TableCell>{getUserEventCategory(eventRow.eventName)}</TableCell>
-                              <TableCell align="right">{formatNumber(eventRow.total)}</TableCell>
-                            </TableRow>
-                          ))}
-                          {row.eventCounts.length === 0 && (
+          <TextField
+            size="small"
+            label="Search users"
+            value={userProfileSearch}
+            onChange={(event) => setUserProfileSearch(event.target.value)}
+          />
+          {sortedRows.map((row) => {
+            const usageMetric = row.activeDaysCount ?? 0;
+            const usageColor = d3.interpolateGreens(usageScale(Math.max(1, usageMetric)));
+            const lastActive = row.lastActiveAt ?? row.lastEventAt;
+            const activeDayPoints = row.activeDays.map((day) => ({
+              date: day.date,
+              value: day.totalEvents,
+            }));
+            const ticketClickTotal = row.ticketClicks.reduce((sum, item) => sum + item.totalClicks, 0);
+            const communityClickTotal = row.communityClicks.reduce((sum, item) => sum + item.totalClicks, 0);
+
+            return (
+              <Accordion key={`profile-${row.authUserId}`} variant="outlined" sx={{ borderLeft: `6px solid ${usageColor}` }}>
+                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                  <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {row.name || row.authUserId}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {row.authUserId}
+                      {row.createdAt ? ` · Joined ${row.createdAt}` : ""}
+                      {lastActive ? ` · Last active ${lastActive}` : ""}
+                    </Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box textAlign="right">
+                      <Typography variant="subtitle2">{formatNumber(row.activeDaysCount)}</Typography>
+                      <Typography variant="caption" color="text.secondary">Active days</Typography>
+                    </Box>
+                    <Box textAlign="right">
+                      <Typography variant="subtitle2">{formatNumber(row.uniqueEvents)}</Typography>
+                      <Typography variant="caption" color="text.secondary">Unique events</Typography>
+                    </Box>
+                    <Box textAlign="right">
+                      <Typography variant="subtitle2">{formatNumber(row.totalEvents)}</Typography>
+                      <Typography variant="caption" color="text.secondary">Total events</Typography>
+                    </Box>
+                  </Stack>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={2}>
+                    <Stack direction="row" spacing={2} flexWrap="wrap">
+                      <Box>
+                        <Typography variant="subtitle2">{formatNumber(ticketClickTotal)}</Typography>
+                        <Typography variant="caption" color="text.secondary">Ticket clicks</Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2">{formatNumber(communityClickTotal)}</Typography>
+                        <Typography variant="caption" color="text.secondary">Community actions</Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="subtitle2">
+                          {row.mostActiveDay ?? "-"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Most active day{row.mostActiveDayCount ? ` (${row.mostActiveDayCount})` : ""}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>Active days</Typography>
+                      <LineChart points={activeDayPoints} height={160} color={usageColor} seriesLabel="Events" />
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>Event activity</Typography>
+                      <TableContainer component={Paper} variant="outlined">
+                        <Table size="small">
+                          <TableHead>
                             <TableRow>
-                              <TableCell colSpan={3}>No events in range.</TableCell>
+                              <TableCell>Event</TableCell>
+                              <TableCell>Category</TableCell>
+                              <TableCell align="right">Count</TableCell>
                             </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                  <Box>
-                    <Typography variant="subtitle2" gutterBottom>Liked events</Typography>
-                    <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Event</TableCell>
-                            <TableCell>Event date</TableCell>
-                            <TableCell>Organizer</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {row.likedEvents.map((liked) => (
-                            <TableRow key={`liked-${row.authUserId}-${liked.eventId}`}>
-                              <TableCell>{liked.eventName || "-"}</TableCell>
-                              <TableCell>{liked.eventDate || "-"}</TableCell>
-                              <TableCell>{liked.organizerName || "-"}</TableCell>
-                            </TableRow>
-                          ))}
-                          {row.likedEvents.length === 0 && (
+                          </TableHead>
+                          <TableBody>
+                            {row.eventCounts.map((eventRow, idx) => (
+                              <TableRow key={`profile-event-${row.authUserId}-${eventRow.eventName}-${idx}`}>
+                                <TableCell>{getUserEventDisplayName(eventRow.eventName)}</TableCell>
+                                <TableCell>{getUserEventCategory(eventRow.eventName)}</TableCell>
+                                <TableCell align="right">{formatNumber(eventRow.total)}</TableCell>
+                              </TableRow>
+                            ))}
+                            {row.eventCounts.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={3}>No events in range.</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>Ticket clicks</Typography>
+                      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+                        <Table size="small">
+                          <TableHead>
                             <TableRow>
-                              <TableCell colSpan={3}>No likes in range.</TableCell>
+                              <TableCell>Event</TableCell>
+                              <TableCell>Event date</TableCell>
+                              <TableCell>Organizer</TableCell>
+                              <TableCell align="right">Clicks</TableCell>
+                              <TableCell>Last clicked</TableCell>
                             </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                </Stack>
-              </AccordionDetails>
-            </Accordion>
-          ))}
-          {rows.length === 0 && (
+                          </TableHead>
+                          <TableBody>
+                            {row.ticketClicks.map((ticket) => (
+                              <TableRow key={`ticket-${row.authUserId}-${ticket.eventId}`}>
+                                <TableCell>{ticket.eventName || "-"}</TableCell>
+                                <TableCell>{ticket.eventDate || "-"}</TableCell>
+                                <TableCell>{ticket.organizerName || "-"}</TableCell>
+                                <TableCell align="right">{formatNumber(ticket.totalClicks)}</TableCell>
+                                <TableCell>{ticket.lastClickedAt || "-"}</TableCell>
+                              </TableRow>
+                            ))}
+                            {row.ticketClicks.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={5}>No ticket clicks in range.</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>Community clicks</Typography>
+                      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Community</TableCell>
+                              <TableCell align="right">Clicks</TableCell>
+                              <TableCell>Last clicked</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {row.communityClicks.map((community, idx) => (
+                              <TableRow key={`community-${row.authUserId}-${community.communityId ?? idx}`}>
+                                <TableCell>{community.communityName || community.communityId || "-"}</TableCell>
+                                <TableCell align="right">{formatNumber(community.totalClicks)}</TableCell>
+                                <TableCell>{community.lastClickedAt || "-"}</TableCell>
+                              </TableRow>
+                            ))}
+                            {row.communityClicks.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={3}>No community clicks in range.</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                    <Box>
+                      <Typography variant="subtitle2" gutterBottom>Saved events</Typography>
+                      <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+                        <Table size="small">
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Event</TableCell>
+                              <TableCell>Event date</TableCell>
+                              <TableCell>Organizer</TableCell>
+                              <TableCell>Saved at</TableCell>
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {row.likedEvents.map((liked) => (
+                              <TableRow key={`liked-${row.authUserId}-${liked.eventId}`}>
+                                <TableCell>{liked.eventName || "-"}</TableCell>
+                                <TableCell>{liked.eventDate || "-"}</TableCell>
+                                <TableCell>{liked.organizerName || "-"}</TableCell>
+                                <TableCell>{liked.savedAt || "-"}</TableCell>
+                              </TableRow>
+                            ))}
+                            {row.likedEvents.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={4}>No saves in range.</TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </Box>
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
+          {filteredRows.length === 0 && (
             <Typography variant="body2" color="text.secondary">No users found.</Typography>
           )}
         </Stack>
@@ -1993,7 +2141,7 @@ export default function AnalyticsScreen() {
               exclusive
               value={preset}
               onChange={(_event, value) => {
-                if (value === "month" || value === "quarter" || value === "year" || value === "all") {
+                if (value === "week" || value === "month" || value === "quarter" || value === "year" || value === "all") {
                   setPreset(value);
                 }
               }}

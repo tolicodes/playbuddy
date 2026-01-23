@@ -219,6 +219,14 @@ const TICKET_CLICK_EVENTS: string[] = [
   "event_detail_link_clicked",
 ];
 
+const COMMUNITY_CLICK_EVENTS: string[] = [
+  UE.CommunityEventsCommunityJoined,
+  UE.CommunityListCommunityJoined,
+  UE.CommunityListCommunityLeft,
+  UE.CommunityListNavigateToCommunityEvents,
+  UE.CommunityListNavigateToJoinCommunityButtonPressed,
+];
+
 const escapeSqlLiteral = (value: string) => value.replace(/'/g, "''");
 
 const FEATURE_CATALOG = USER_EVENT_CATALOG.filter(
@@ -309,6 +317,44 @@ const MODAL_ANALYTICS_DEFINITIONS: ModalDefinition[] = [
         label: "Promo code copied",
         role: "secondary",
         events: [UE.EventListItemPromoModalPromoCopied],
+      },
+    ],
+  },
+  {
+    id: "guest_save",
+    label: "Guest save",
+    shownEvents: [UE.GuestSaveModalShown],
+    actions: [
+      {
+        id: "create_account",
+        label: "Create account",
+        role: "primary",
+        events: [UE.GuestSaveModalCreateAccountPressed],
+      },
+      {
+        id: "dismissed",
+        label: "Dismissed",
+        role: "skip",
+        events: [UE.GuestSaveModalDismissed],
+      },
+    ],
+  },
+  {
+    id: "calendar_month_picker",
+    label: "Calendar month picker",
+    shownEvents: [UE.CalendarMonthModalShown],
+    actions: [
+      {
+        id: "day_selected",
+        label: "Day selected",
+        role: "primary",
+        events: [UE.CalendarMonthModalDaySelected],
+      },
+      {
+        id: "dismissed",
+        label: "Dismissed",
+        role: "skip",
+        events: [UE.CalendarMonthModalDismissed],
       },
     ],
   },
@@ -474,6 +520,38 @@ const MODAL_ANALYTICS_DEFINITIONS: ModalDefinition[] = [
         label: "Skipped",
         role: "skip",
         events: [UE.DiscoverGameModalSkipped],
+      },
+    ],
+  },
+  {
+    id: "media_carousel",
+    label: "Media carousel",
+    shownEvents: [UE.MediaCarouselOpenMedia],
+    actions: [
+      {
+        id: "toggle_mute",
+        label: "Toggle mute",
+        role: "secondary",
+        events: [UE.MediaCarouselToggleMute],
+      },
+      {
+        id: "closed",
+        label: "Closed",
+        role: "skip",
+        events: [UE.MediaCarouselClose],
+      },
+    ],
+  },
+  {
+    id: "facilitator_intro_video",
+    label: "Facilitator intro video",
+    shownEvents: [UE.FacilitatorsProfileIntroVideoPressed],
+    actions: [
+      {
+        id: "closed",
+        label: "Closed",
+        role: "skip",
+        events: [UE.FacilitatorsProfileIntroVideoClosed],
       },
     ],
   },
@@ -738,14 +816,16 @@ const getDateRange = (query: Record<string, unknown>) => {
   const endDateObj = new Date(`${endDate}T00:00:00Z`);
 
   let startDate = startDateParam;
-  if (!startDate) {
-    if (preset === "all") {
-      startDate = ALL_START_DATE;
-    } else if (preset === "year") {
-      startDate = formatDate(addDays(endDateObj, -365));
-    } else if (preset === "quarter") {
-      startDate = formatDate(addDays(endDateObj, -90));
-    } else if (preset === "month") {
+    if (!startDate) {
+      if (preset === "all") {
+        startDate = ALL_START_DATE;
+      } else if (preset === "week") {
+        startDate = formatDate(addDays(endDateObj, -7));
+      } else if (preset === "year") {
+        startDate = formatDate(addDays(endDateObj, -365));
+      } else if (preset === "quarter") {
+        startDate = formatDate(addDays(endDateObj, -90));
+      } else if (preset === "month") {
       startDate = formatDate(addDays(endDateObj, -30));
     } else {
       startDate = formatDate(addDays(endDateObj, -DEFAULT_RANGE_DAYS));
@@ -1389,8 +1469,12 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
   const orderedModals = MODAL_ANALYTICS_DEFINITIONS.map((modal, index) => ({
     id: modal.id,
     index,
+    dayCount: dayCountMap.get(modal.id) ?? 0,
     firstSeen: firstSeenMap.get(modal.id) ?? null,
   })).sort((a, b) => {
+    if (a.dayCount !== b.dayCount) {
+      return b.dayCount - a.dayCount;
+    }
     if (a.firstSeen && b.firstSeen) {
       return a.firstSeen.getTime() - b.firstSeen.getTime();
     }
@@ -1443,16 +1527,19 @@ const fetchModalAnalytics = async (startDate: string, endDate: string) => {
     const roleCounts = roleCountMap.get(modal.id) ?? { primary: 0, skip: 0 };
     const hasSkipEvents = modal.actions.some((action) => action.role === "skip");
     const skipCount = hasSkipEvents ? roleCounts.skip : Math.max(0, shownCount - roleCounts.primary);
+    const dayCount = dayCountMap.get(modal.id) ?? 0;
     return {
       modalId: modal.id,
       modalLabel: formatModalLabel(modal.id, modal.label),
       primaryUsers: roleCounts.primary,
       skipUsers: skipCount,
       shownUsers: shownCount,
+      dayCount,
     };
   })
     .filter((row) => row.shownUsers > 0 || row.primaryUsers > 0 || row.skipUsers > 0)
-    .sort((a, b) => b.primaryUsers - a.primaryUsers || b.skipUsers - a.skipUsers);
+    .sort((a, b) => b.dayCount - a.dayCount || b.primaryUsers - a.primaryUsers || b.skipUsers - a.skipUsers)
+    .map(({ dayCount, ...row }) => row);
 
   return { nodes, links, summary };
 };
@@ -1810,16 +1897,103 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
                  e.start_date AS event_start_date,
                  e.organizer_id,
                  o.name AS organizer_name,
-                 MAX(ew.created_at) AS liked_at
+                 MAX(ew.created_at) AS saved_at
           FROM public.event_wishlist ew
           JOIN public.events e ON e.id = ew.event_id
           LEFT JOIN public.organizers o ON o.id = e.organizer_id
           WHERE ew.created_at::date BETWEEN $1 AND $2
             AND ew.user_id = ANY($3)
           GROUP BY ew.user_id, e.id, e.name, e.start_date, e.organizer_id, o.name
-          ORDER BY ew.user_id, liked_at DESC;
+          ORDER BY ew.user_id, saved_at DESC;
         `,
         [startDate, endDate, userIds]
+      );
+
+      const activeDaysResult = await pgQuery(
+        `
+          SELECT ue.auth_user_id,
+                 ue.created_at::date AS active_date,
+                 COUNT(*)::int AS total_events
+          FROM public.user_events ue
+          WHERE ue.created_at::date BETWEEN $1 AND $2
+            AND ue.auth_user_id = ANY($3)
+            AND ue.user_event_name = ANY($4)
+          GROUP BY ue.auth_user_id, active_date
+          ORDER BY ue.auth_user_id, active_date;
+        `,
+        [startDate, endDate, userIds, FEATURE_USAGE_EVENTS]
+      );
+
+      const lastActiveResult = await pgQuery(
+        `
+          SELECT ue.auth_user_id,
+                 MAX(ue.created_at) AS last_active_at
+          FROM public.user_events ue
+          WHERE ue.auth_user_id = ANY($1)
+          GROUP BY ue.auth_user_id;
+        `,
+        [userIds]
+      );
+
+      const ticketClicksResult = await pgQuery(
+        `
+          WITH ticket_actions AS (
+            SELECT ue.auth_user_id,
+                   CASE
+                     WHEN (COALESCE(ue.user_event_props->>'event_id', ue.user_event_props->>'eventId')) ~ '^[0-9]+$'
+                       THEN (COALESCE(ue.user_event_props->>'event_id', ue.user_event_props->>'eventId'))::int
+                     ELSE NULL
+                   END AS event_id,
+                   ue.created_at
+            FROM public.user_events ue
+            WHERE ue.created_at::date BETWEEN $1 AND $2
+              AND ue.auth_user_id = ANY($3)
+              AND ue.user_event_name = ANY($4)
+          )
+          SELECT ta.auth_user_id,
+                 e.id AS event_id,
+                 e.name AS event_name,
+                 e.start_date AS event_start_date,
+                 e.organizer_id,
+                 o.name AS organizer_name,
+                 COUNT(*)::int AS total_clicks,
+                 MAX(ta.created_at) AS last_clicked_at
+          FROM ticket_actions ta
+          JOIN public.events e ON e.id = ta.event_id
+          LEFT JOIN public.organizers o ON o.id = e.organizer_id
+          GROUP BY ta.auth_user_id, e.id, e.name, e.start_date, e.organizer_id, o.name
+          ORDER BY ta.auth_user_id, total_clicks DESC, last_clicked_at DESC;
+        `,
+        [startDate, endDate, userIds, TICKET_CLICK_EVENTS]
+      );
+
+      const communityClicksResult = await pgQuery(
+        `
+          WITH community_actions AS (
+            SELECT ue.auth_user_id,
+                   CASE
+                     WHEN (ue.user_event_props->>'community_id') ~* '^[0-9a-f-]{36}$'
+                       THEN (ue.user_event_props->>'community_id')::uuid
+                     ELSE NULL
+                   END AS community_id,
+                   ue.created_at
+            FROM public.user_events ue
+            WHERE ue.created_at::date BETWEEN $1 AND $2
+              AND ue.auth_user_id = ANY($3)
+              AND ue.user_event_name = ANY($4)
+          )
+          SELECT ca.auth_user_id,
+                 c.id AS community_id,
+                 c.name AS community_name,
+                 COUNT(*)::int AS total_clicks,
+                 MAX(ca.created_at) AS last_clicked_at
+          FROM community_actions ca
+          LEFT JOIN public.communities c ON c.id = ca.community_id
+          WHERE ca.community_id IS NOT NULL
+          GROUP BY ca.auth_user_id, c.id, c.name
+          ORDER BY ca.auth_user_id, total_clicks DESC, last_clicked_at DESC;
+        `,
+        [startDate, endDate, userIds, COMMUNITY_CLICK_EVENTS]
       );
 
       const eventCountsByUser = new Map<string, Array<{ eventName: string; total: number }>>();
@@ -1838,6 +2012,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
           eventDate: string | null;
           organizerId: number | null;
           organizerName: string | null;
+          savedAt: string | null;
         }>
       >();
       likedResult.rows.forEach((row: any) => {
@@ -1849,8 +2024,80 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
           eventDate: formatDateValue(row.event_start_date),
           organizerId: row.organizer_id,
           organizerName: row.organizer_name,
+          savedAt: formatDateValue(row.saved_at),
         });
         likedByUser.set(key, list);
+      });
+
+      const activeDaysByUser = new Map<string, Array<{ date: string; totalEvents: number }>>();
+      const activeDaysCountByUser = new Map<string, number>();
+      const mostActiveDayByUser = new Map<string, { date: string; totalEvents: number }>();
+      activeDaysResult.rows.forEach((row: any) => {
+        const key = String(row.auth_user_id);
+        const dateValue = formatDateValue(row.active_date);
+        if (!dateValue) return;
+        const entry = { date: dateValue, totalEvents: Number(row.total_events ?? 0) };
+        const list = activeDaysByUser.get(key) ?? [];
+        list.push(entry);
+        activeDaysByUser.set(key, list);
+        activeDaysCountByUser.set(key, (activeDaysCountByUser.get(key) ?? 0) + 1);
+        const current = mostActiveDayByUser.get(key);
+        if (!current || entry.totalEvents > current.totalEvents) {
+          mostActiveDayByUser.set(key, entry);
+        }
+      });
+
+      const lastActiveByUser = new Map<string, string | null>();
+      lastActiveResult.rows.forEach((row: any) => {
+        lastActiveByUser.set(String(row.auth_user_id), formatDateValue(row.last_active_at));
+      });
+
+      const ticketClicksByUser = new Map<
+        string,
+        Array<{
+          eventId: number;
+          eventName: string | null;
+          eventDate: string | null;
+          organizerId: number | null;
+          organizerName: string | null;
+          totalClicks: number;
+          lastClickedAt: string | null;
+        }>
+      >();
+      ticketClicksResult.rows.forEach((row: any) => {
+        const key = String(row.auth_user_id);
+        const list = ticketClicksByUser.get(key) ?? [];
+        list.push({
+          eventId: row.event_id,
+          eventName: row.event_name,
+          eventDate: formatDateValue(row.event_start_date),
+          organizerId: row.organizer_id,
+          organizerName: row.organizer_name,
+          totalClicks: Number(row.total_clicks ?? 0),
+          lastClickedAt: formatDateValue(row.last_clicked_at),
+        });
+        ticketClicksByUser.set(key, list);
+      });
+
+      const communityClicksByUser = new Map<
+        string,
+        Array<{
+          communityId: string | null;
+          communityName: string | null;
+          totalClicks: number;
+          lastClickedAt: string | null;
+        }>
+      >();
+      communityClicksResult.rows.forEach((row: any) => {
+        const key = String(row.auth_user_id);
+        const list = communityClicksByUser.get(key) ?? [];
+        list.push({
+          communityId: row.community_id ?? null,
+          communityName: row.community_name ?? null,
+          totalClicks: Number(row.total_clicks ?? 0),
+          lastClickedAt: formatDateValue(row.last_clicked_at),
+        });
+        communityClicksByUser.set(key, list);
       });
 
       const rows = profileResult.rows.map((row: any) => ({
@@ -1860,8 +2107,15 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         totalEvents: Number(row.total_events ?? 0),
         uniqueEvents: Number(row.unique_events ?? 0),
         lastEventAt: formatDateValue(row.last_event_at),
+        lastActiveAt: lastActiveByUser.get(String(row.auth_user_id)) ?? null,
+        activeDays: activeDaysByUser.get(String(row.auth_user_id)) ?? [],
+        activeDaysCount: activeDaysCountByUser.get(String(row.auth_user_id)) ?? 0,
+        mostActiveDay: mostActiveDayByUser.get(String(row.auth_user_id))?.date ?? null,
+        mostActiveDayCount: mostActiveDayByUser.get(String(row.auth_user_id))?.totalEvents ?? null,
         eventCounts: eventCountsByUser.get(String(row.auth_user_id)) ?? [],
         likedEvents: likedByUser.get(String(row.auth_user_id)) ?? [],
+        ticketClicks: ticketClicksByUser.get(String(row.auth_user_id)) ?? [],
+        communityClicks: communityClicksByUser.get(String(row.auth_user_id)) ?? [],
       }));
 
       res.json({ chartId, meta, data: rows });
