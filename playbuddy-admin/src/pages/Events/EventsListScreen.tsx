@@ -451,13 +451,6 @@ export default function EventsListScreen() {
                     Import from URLs
                 </Button>
 
-                <Button
-                    variant="outlined"
-                    onClick={() => navigate('/events/duplicates')}
-                >
-                    Find Duplicates
-                </Button>
-
                 <Stack spacing={2} sx={{ mt: 2 }}>
                     <TextField
                         fullWidth

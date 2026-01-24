@@ -125,6 +125,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Weekly Picks", path: "/weekly-picks" },
       { label: "Events", path: "/events" },
+      { label: "Find Duplicates", path: "/events/duplicates" },
       { label: "Import URLs", path: "/events/import-urls" },
       { label: "Partiful", path: "/events/partiful" },
       { label: "Popups", path: "/event-popups" },
