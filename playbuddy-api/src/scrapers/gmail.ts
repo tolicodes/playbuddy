@@ -2,6 +2,7 @@ import { OAuth2Client } from 'google-auth-library';
 import type { NormalizedEventInput } from '../commonTypes.js';
 import { ScraperParams } from './types.js';
 import scrapeURLs from './helpers/scrapeURLs.js';
+import { resolveRedirectedUrl } from './helpers/resolveRedirectUrl.js';
 import { canonicalUrlKey } from './ai/normalize.js';
 import { extractEventLinksAIOnly } from './ai/discovery.js';
 import { extractEventAIOnly } from './ai/single.js';
@@ -9,6 +10,7 @@ import { extractEventAIOnly } from './ai/single.js';
 export type GmailSourceConfig = {
     source_email: string;
     event_status?: 'pending' | 'approved';
+    skip_existing?: boolean;
 };
 
 type GmailMessageHeader = { name?: string; value?: string };
@@ -28,6 +30,7 @@ const GMAIL_API_BASE = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const MAX_RESULTS_DEFAULT = Number(process.env.GMAIL_MAX_RESULTS || 1);
 const MAX_BODY_CHARS = Number(process.env.GMAIL_MAX_BODY_CHARS || 50_000);
 const DEBUG = true;
+const FORCE_PENDING_STATUS = true;
 
 const logDebug = (...args: unknown[]) => {
     if (DEBUG) console.log('[gmail]', ...args);
@@ -154,6 +157,23 @@ function dedupeUrls(urls: string[]): string[] {
     return out;
 }
 
+async function resolveGmailUrls(urls: string[]): Promise<string[]> {
+    const out: string[] = [];
+    for (const url of urls) {
+        try {
+            const resolved = await resolveRedirectedUrl(url);
+            if (resolved) {
+                console.log(`[gmail] resolved url ${url} -> ${resolved}`);
+                out.push(resolved);
+            }
+        } catch {
+            console.log(`[gmail] failed to resolve url ${url}`);
+            out.push(url);
+        }
+    }
+    return dedupeUrls(out);
+}
+
 async function extractEventUrlsWithDiscoveryAI(args: {
     body: string;
     html: string;
@@ -274,10 +294,15 @@ async function scrapeGmailSourceWithAuth(
             });
             discoveredCount += urls.length;
             logDebug('event urls', { messageId, type, urls: urls.length });
-            if (type === 'single' || urls.length === 0) {
+            if (urls.length === 0) {
                 const htmlInput = (msg.html || msg.body || '').trim();
                 if (htmlInput) {
-                    const single = await extractEventAIOnly(htmlInput, `https://email.local/${encodeURIComponent(messageId)}`, eventDefaults);
+                    const single = await extractEventAIOnly(
+                        htmlInput,
+                        `https://email.local/${encodeURIComponent(messageId)}`,
+                        eventDefaults,
+                        nowISO
+                    );
                     if (single) directEvents.push(single);
                 }
             } else {
@@ -290,7 +315,8 @@ async function scrapeGmailSourceWithAuth(
 
     const uniqueUrls = Array.from(collectedUrls);
     console.log(`[gmail] source=${sourceEmail} discovered=${discoveredCount} urls=${uniqueUrls.length} direct=${directEvents.length}`);
-    const scraped = uniqueUrls.length ? await scrapeURLs(uniqueUrls, eventDefaults) : [];
+    const resolvedUrls = uniqueUrls.length ? await resolveGmailUrls(uniqueUrls) : [];
+    const scraped = resolvedUrls.length ? await scrapeURLs(resolvedUrls, eventDefaults) : [];
     const combined = [...directEvents, ...scraped];
     if (combined.length === 0) return [];
 
@@ -313,6 +339,7 @@ export async function scrapeGmailSource(
     const sourceUrl = `gmail:${sourceEmail}`;
     const mergedDefaults: Partial<NormalizedEventInput> = {
         ...(eventDefaults || {}),
+        ...(FORCE_PENDING_STATUS ? { approval_status: 'pending' } : {}),
         source_origination_platform: eventDefaults?.source_origination_platform ?? 'gmail',
         source_url: eventDefaults?.source_url ?? sourceUrl,
     };
@@ -332,7 +359,7 @@ export async function scrapeGmailSources(
         const sourceEmail = source.source_email?.trim();
         if (!sourceEmail) continue;
         const status = (source.event_status || '').toLowerCase();
-        const approval_status = status === 'approved' || status === 'pending' ? status : undefined;
+        const approval_status = FORCE_PENDING_STATUS ? 'pending' : (status === 'approved' || status === 'pending' ? status : undefined);
         logDebug('source config', { sourceEmail, approval_status });
         const sourceUrl = `gmail:${sourceEmail}`;
         const eventDefaults: Partial<NormalizedEventInput> = {

@@ -1,4 +1,4 @@
-import { ScraperParams } from './types.js';
+import { ScraperParams, type ScrapeSkipReason } from './types.js';
 import { NormalizedEventInput } from '../commonTypes.js';
 import { addURLToQueue } from './helpers/getUsingProxy.js';
 import { scrapeEventbriteEvent } from './eventbrite.js';
@@ -20,10 +20,17 @@ type EventbriteEvent = {
 const getRegion = (ev: EventbriteEvent) =>
     ev?.venue?.address?.region || ev?.venue?.address?.addressRegion || null;
 
+type OrganizerScrapeParams = {
+    url: string;
+    eventDefaults: Partial<NormalizedEventInput>;
+    onSkip?: (skip: ScrapeSkipReason) => void;
+};
+
 const scrapeOrganizerPage = async ({
     url,
     eventDefaults,
-}: ScraperParams): Promise<NormalizedEventInput[]> => {
+    onSkip,
+}: OrganizerScrapeParams): Promise<NormalizedEventInput[]> => {
     const allEvents: NormalizedEventInput[] = [];
     const organizerDefaults = {
         ...eventDefaults,
@@ -54,7 +61,28 @@ const scrapeOrganizerPage = async ({
                 break;
             }
 
-            const filteredEvents = (response.events as EventbriteEvent[]).filter(ev => !ev.is_series_parent);
+            const rawEvents = response.events as EventbriteEvent[];
+            const seriesParents = rawEvents.filter(ev => ev.is_series_parent);
+            seriesParents.forEach(ev => {
+                onSkip?.({
+                    url: ev.url || url,
+                    reason: 'Series parent listing (not a specific event)',
+                    detail: ev.id ? `event_id=${ev.id}` : undefined,
+                    source: 'eventbrite',
+                });
+            });
+
+            const missingUrl = rawEvents.filter(ev => !ev.is_series_parent && !ev.url);
+            missingUrl.forEach(ev => {
+                onSkip?.({
+                    url,
+                    reason: 'Missing event URL from Eventbrite organizer API',
+                    detail: ev.id ? `event_id=${ev.id}` : undefined,
+                    source: 'eventbrite',
+                });
+            });
+
+            const filteredEvents = rawEvents.filter(ev => !ev.is_series_parent && !!ev.url);
             console.log(`[eventbrite-organizer] page=${page} total=${response.events.length} filtered=${filteredEvents.length}`);
 
             const detailedEvents = await Promise.allSettled(
@@ -74,13 +102,23 @@ const scrapeOrganizerPage = async ({
                                 ev?.venue?.address?.localized_multi_line_address_display?.join(' ') ||
                                 organizerDefaults?.location,
                         },
+                        onSkip,
                     })
                 )
             );
 
-            detailedEvents.forEach(res => {
+            detailedEvents.forEach((res, index) => {
                 if (res.status === 'fulfilled' && res.value) allEvents.push(...res.value);
-                if (res.status === 'rejected') console.error(`Error scraping Eventbrite event from organizer ${url}:`, res.reason);
+                if (res.status === 'rejected') {
+                    const ev = filteredEvents[index];
+                    onSkip?.({
+                        url: ev?.url || url,
+                        reason: 'Error scraping Eventbrite event',
+                        detail: res.reason?.message || String(res.reason),
+                        source: 'eventbrite',
+                    });
+                    console.error(`Error scraping Eventbrite event from organizer ${url}:`, res.reason);
+                }
             });
 
             if (!response.pagination?.has_more_items) break;
@@ -96,12 +134,14 @@ const scrapeOrganizerPage = async ({
 export const scrapeEventbriteOrganizers = async ({
     organizerURLs,
     eventDefaults,
+    onSkip,
 }: {
     organizerURLs: string[];
     eventDefaults: Partial<NormalizedEventInput>;
+    onSkip?: (skip: ScrapeSkipReason) => void;
 }): Promise<NormalizedEventInput[]> => {
     const results = await Promise.allSettled(
-        organizerURLs.map(url => scrapeOrganizerPage({ url, eventDefaults }))
+        organizerURLs.map(url => scrapeOrganizerPage({ url, eventDefaults, onSkip }))
     );
 
     return results
