@@ -585,7 +585,7 @@ export type LegacyEventType = (typeof LEGACY_EVENT_TYPES)[number];
 
 export type EventTypes = ActiveEventType | typeof FALLBACK_EVENT_TYPE | LegacyEventType;
 
-export type ImportMethod = 'chrome_scraper' | 'eb_scraper' | 'ai_scraper';
+export type ImportMethod = 'chrome_scraper' | 'eb_scraper' | 'ai_scraper' | 'custom_scraper';
 export type IdentifierType = 'handle' | 'url';
 
 export interface ImportSource {
@@ -595,6 +595,7 @@ export interface ImportSource {
     identifier: string;
     identifier_type?: IdentifierType;
     approval_status?: 'pending' | 'approved' | 'rejected' | null;
+    skip_existing?: boolean | null;
     message_sent?: boolean | null;
     is_festival?: boolean | null;
     is_excluded?: boolean | null;
@@ -796,7 +797,29 @@ export interface LocationArea {
 
     /** Array of text aliases (nullable). */
     aliases: string[] | null;
+
+    /** IANA timezone (nullable). */
+    timezone: string | null;
+
+    /** Whether this location area is shown in onboarding. */
+    shown: boolean;
 }
+
+export type CreateLocationAreaInput = {
+    name: string;
+    code?: string | null;
+    city?: string | null;
+    region?: string | null;
+    country?: string | null;
+    entity_type?: string | null;
+    aliases?: string[] | null;
+    timezone?: string | null;
+    shown?: boolean | null;
+};
+
+export type UpdateLocationAreaInput = CreateLocationAreaInput & {
+    id: string;
+};
 
 /**
  * Table: organizers
@@ -836,6 +859,9 @@ export interface Organizer {
 
     membership_app_url?: string | null;
     membership_only?: boolean | null;
+
+    vetted?: boolean | null;
+    vetted_instructions?: string | null;
 }
 
 export type CreateOrganizerInput = {
@@ -848,6 +874,8 @@ export type CreateOrganizerInput = {
     fetlife_handle?: string;
     fetlife_handles?: string[];
     instagram_handle?: string;
+    vetted?: boolean;
+    vetted_instructions?: string;
 }
 
 /**

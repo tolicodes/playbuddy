@@ -49,6 +49,7 @@ export const BuddyEventsScreen = ({ route }: { route: BuddyEventsRoute }) => {
     const analyticsProps = useAnalyticsProps();
     const { setHighlightedTab } = useTabHighlight();
     const viewLoggedRef = useRef<string | null>(null);
+    const buddyListToastLoggedRef = useRef(false);
     const [pendingBuddyId, setPendingBuddyId] = useState<string | null>(null);
     const [buddyListToastDismissed, setBuddyListToastDismissed] = useState<boolean | null>(null);
     const [buddyToastScrollToken, setBuddyToastScrollToken] = useState<number | null>(null);
@@ -175,8 +176,12 @@ export const BuddyEventsScreen = ({ route }: { route: BuddyEventsRoute }) => {
     }, [canToggleBuddy, displayName, handleAddBuddy, handleRemoveBuddy, isBuddy, isPendingBuddyAction]);
 
     const handleBuddyListPress = useCallback(() => {
+        logEvent(UE.BuddyListToastViewListPressed, {
+            ...analyticsProps,
+            buddy_user_id: buddyId,
+        });
         navigation.navigate('Buddy List');
-    }, [navigation]);
+    }, [analyticsProps, buddyId, navigation]);
 
     useEffect(() => {
         let mounted = true;
@@ -201,6 +206,19 @@ export const BuddyEventsScreen = ({ route }: { route: BuddyEventsRoute }) => {
 
     const shouldShowBuddyListToast =
         buddyListToastDismissed === false && !!authUserId && isFocused;
+
+    useEffect(() => {
+        if (!shouldShowBuddyListToast) {
+            buddyListToastLoggedRef.current = false;
+            return;
+        }
+        if (buddyListToastLoggedRef.current) return;
+        logEvent(UE.BuddyListToastShown, {
+            ...analyticsProps,
+            buddy_user_id: buddyId,
+        });
+        buddyListToastLoggedRef.current = true;
+    }, [analyticsProps, buddyId, shouldShowBuddyListToast]);
 
     useEffect(() => {
         setHighlightedTab(shouldShowBuddyListToast ? 'More' : null);
@@ -238,6 +256,10 @@ export const BuddyEventsScreen = ({ route }: { route: BuddyEventsRoute }) => {
                 <TouchableOpacity
                     style={styles.buddyToastClose}
                     onPress={() => {
+                        logEvent(UE.BuddyListToastDismissed, {
+                            ...analyticsProps,
+                            buddy_user_id: buddyId,
+                        });
                         setBuddyListToastDismissed(true);
                         void AsyncStorage.setItem(BUDDY_LIST_TOAST_DISMISSED_KEY, 'true');
                     }}

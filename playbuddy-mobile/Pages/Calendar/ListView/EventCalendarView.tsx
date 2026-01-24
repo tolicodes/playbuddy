@@ -1100,6 +1100,7 @@ const EventCalendarView: React.FC<Props> = ({
 
     const showDateToastNow = (currentMeta?: DateCoachMeta) => {
         const now = Date.now();
+        logEvent(UE.DateBarCoachToastShown, analyticsPropsPlusEntity);
         setShowDateToast(true);
         if (toastTimeoutRef.current) {
             clearTimeout(toastTimeoutRef.current);

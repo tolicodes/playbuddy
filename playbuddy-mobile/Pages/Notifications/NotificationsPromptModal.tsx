@@ -3,6 +3,9 @@ import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
+import { useAnalyticsProps } from '../../Common/hooks/useAnalytics';
+import { logEvent } from '../../Common/hooks/logger';
+import { UE } from '../../userEventTypes';
 import { colors, fontFamilies, fontSizes, lineHeights, radius, spacing } from '../../components/styles';
 
 type NotificationsPromptConfig = {
@@ -98,9 +101,11 @@ const NotificationsPromptModal = ({ visible, config, onEnable, onDismiss }: Noti
 };
 
 export const NotificationsPromptModalProvider = ({ children }: { children: React.ReactNode }) => {
+    const analyticsProps = useAnalyticsProps();
     const [visible, setVisible] = useState(false);
     const [config, setConfig] = useState(DEFAULT_CONFIG);
     const pendingRef = useRef<PromptRequest | null>(null);
+    const promptShownRef = useRef(false);
 
     const openPrompt = useCallback((overrides?: NotificationsPromptOverrides) => {
         if (pendingRef.current) return pendingRef.current.promise;
@@ -125,6 +130,26 @@ export const NotificationsPromptModalProvider = ({ children }: { children: React
         pending?.resolve(value);
     }, []);
 
+    const handleEnable = useCallback(() => {
+        logEvent(UE.NotificationsPromptModalEnablePressed, analyticsProps);
+        resolvePrompt(true);
+    }, [analyticsProps, resolvePrompt]);
+
+    const handleDismiss = useCallback(() => {
+        logEvent(UE.NotificationsPromptModalSkipped, analyticsProps);
+        resolvePrompt(false);
+    }, [analyticsProps, resolvePrompt]);
+
+    useEffect(() => {
+        if (!visible) {
+            promptShownRef.current = false;
+            return;
+        }
+        if (promptShownRef.current) return;
+        logEvent(UE.NotificationsPromptModalShown, analyticsProps);
+        promptShownRef.current = true;
+    }, [analyticsProps, visible]);
+
     useEffect(() => {
         promptHandler = openPrompt;
         return () => {
@@ -140,8 +165,8 @@ export const NotificationsPromptModalProvider = ({ children }: { children: React
             <NotificationsPromptModal
                 visible={visible}
                 config={config}
-                onEnable={() => resolvePrompt(true)}
-                onDismiss={() => resolvePrompt(false)}
+                onEnable={handleEnable}
+                onDismiss={handleDismiss}
             />
         </>
     );

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Autocomplete,
-    Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link, Collapse, IconButton,
+    Box, Stack, Typography, Paper, TextField, Button, MenuItem, Chip, Table, TableHead, TableRow, TableCell, TableBody, Tab, Tabs, Accordion, AccordionSummary, AccordionDetails, Checkbox, FormControlLabel, CircularProgress, Link, Collapse, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Alert,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
@@ -13,12 +13,14 @@ import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
 import { useApproveImportSource } from '../../common/db-axios/useApproveImportSource';
 import { useDeleteImportSource } from '../../common/db-axios/useDeleteImportSource';
 import { useMarkImportSourceMessageSent } from '../../common/db-axios/useMarkImportSourceMessageSent';
+import { useCreateImportSourceScrape, type ImportSourceScrapeResult, type ImportSourceScrapeResponse, type ImportSourceScrapeSkipped } from '../../common/db-axios/useCreateImportSourceScrape';
+import { useTicketingSources, type TicketingSource } from '../../common/db-axios/useTicketingSources';
 import { Event, ImportSource } from '../../common/types/commonTypes';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
-import { useFetchEvents } from '../../common/db-axios/useEvents';
+import { useFetchEvents, useImportEventURLs, type ImportUrlInput } from '../../common/db-axios/useEvents';
 
-const METHODS = ['chrome_scraper', 'eb_scraper', 'ai_scraper'];
-const SOURCES = ['fetlife_handle', 'eb_url', 'url'];
+const METHODS = ['chrome_scraper', 'eb_scraper', 'ai_scraper', 'custom_scraper'];
+const SOURCES = ['fetlife_handle', 'eb_url', 'url', 'plura', 'tantra_institute'];
 const ID_TYPES = ['handle', 'url'];
 const ADMIN_APPROVAL_STATUSES = ['approved', 'pending', 'rejected'];
 const SOURCES_STICKY_TOP = 48;
@@ -39,6 +41,45 @@ const normalizeUrl = (val?: string | null) => {
         return normalized.toLowerCase();
     } catch {
         return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
+    }
+};
+const isUrlImportSource = (src: ImportSource) => {
+    const identifierType = (src.identifier_type || '').toLowerCase();
+    const sourceType = (src.source || '').toLowerCase();
+    return identifierType === 'url'
+        || sourceType === 'eb_url'
+        || sourceType === 'url'
+        || /^https?:\/\//i.test(src.identifier || '');
+};
+const isGmailImportSource = (src: ImportSource) => {
+    const sourceType = (src.source || '').toLowerCase();
+    const methodType = (src.method || '').toLowerCase();
+    return sourceType === 'gmail' || methodType === 'gmail';
+};
+const isScrapeableImportSource = (src: ImportSource) => isUrlImportSource(src) || isGmailImportSource(src);
+const getSourceTypeKey = (src: ImportSource) => {
+    if (isGmailImportSource(src)) return 'gmail';
+    const sourceType = (src.source || '').trim().toLowerCase();
+    return sourceType || 'unknown';
+};
+const formatSourceTypeLabel = (sourceType: string) => {
+    switch (sourceType) {
+        case 'eb_url':
+            return 'Eventbrite URL';
+        case 'url':
+            return 'URL';
+        case 'fetlife_handle':
+            return 'FetLife handle';
+        case 'gmail':
+            return 'Gmail';
+        case 'plura':
+            return 'Plura';
+        case 'tantra_institute':
+            return 'Tantra Institute';
+        case 'unknown':
+            return 'Unknown';
+        default:
+            return sourceType.replace(/_/g, ' ');
     }
 };
 const getNormalizedEventUrls = (ev: Event) => {
@@ -174,17 +215,26 @@ export default function ImportSourcesScreen() {
         includeHidden: true,
         includeFacilitatorOnly: true,
     });
+    const { data: ticketingSources = [], isLoading: isTicketingLoading } = useTicketingSources();
     const createSource = useCreateImportSource();
     const updateSource = useUpdateImportSource();
     const updateOrganizer = useUpdateOrganizer();
     const approveSource = useApproveImportSource();
     const deleteSource = useDeleteImportSource();
     const markMessageSent = useMarkImportSourceMessageSent();
+    const createImportSourceScrape = useCreateImportSourceScrape();
+    const importEventUrls = useImportEventURLs();
     const [expandedSources, setExpandedSources] = useState<Record<string, boolean>>({});
-    const [tab, setTab] = useState<'sources' | 'fet'>('sources');
+    const [tab, setTab] = useState<'sources' | 'fet' | 'ticketing'>('sources');
     const [showSuggestedFestivals, setShowSuggestedFestivals] = useState(false);
     const [sourceSearch, setSourceSearch] = useState('');
+    const [sourceTypeFilter, setSourceTypeFilter] = useState('all');
     const scrollRestoreRef = useRef<number | null>(null);
+    const [scrapeSourceId, setScrapeSourceId] = useState<string | null>(null);
+    const [scrapeModalOpen, setScrapeModalOpen] = useState(false);
+    const [scrapeResult, setScrapeResult] = useState<ImportSourceScrapeResponse | null>(null);
+    const [scrapeError, setScrapeError] = useState<string | null>(null);
+    const [scrapeTargetLabel, setScrapeTargetLabel] = useState<string | null>(null);
     const [form, setForm] = useState({
         source: '',
         method: METHODS[0],
@@ -208,6 +258,8 @@ export default function ImportSourcesScreen() {
     }, [sources]);
 
     const handleChange = (key: string, val: string) => setForm(prev => ({ ...prev, [key]: val }));
+    const buildScrapeId = (scope: 'import' | 'ticketing', id: string | number) => `${scope}:${id}`;
+    const isScrapePending = createImportSourceScrape.isPending || importEventUrls.isPending;
 
     const updateOrganizerHandleIfNeeded = async (organizerId: string, identifier: string, identifierType?: string | null, source?: string) => {
         const isHandleType = (identifierType || '').toLowerCase() === 'handle' || source === 'fetlife_handle';
@@ -435,6 +487,63 @@ export default function ImportSourcesScreen() {
         }
     };
 
+    const handleScrapeSource = async (src: ImportSource) => {
+        if (!src?.id) return;
+        if (!isScrapeableImportSource(src) || !src.identifier) return;
+        setScrapeSourceId(buildScrapeId('import', src.id));
+        setScrapeTargetLabel(src.identifier || src.source || String(src.id));
+        setScrapeResult(null);
+        setScrapeError(null);
+        setScrapeModalOpen(true);
+        try {
+            const res = await createImportSourceScrape.mutateAsync({
+                id: String(src.id),
+                mode: 'sync',
+            });
+            setScrapeResult(res);
+        } catch (err: any) {
+            console.warn('Failed to start scrape for import source', err);
+            const message = err?.response?.data?.error || err?.message || 'Failed to scrape source.';
+            setScrapeError(message);
+        } finally {
+            setScrapeSourceId(null);
+        }
+    };
+
+    const handleScrapeTicketingSource = async (source: TicketingSource) => {
+        if (!source?.id || !source.url) return;
+        setScrapeSourceId(buildScrapeId('ticketing', source.id));
+        setScrapeTargetLabel(source.url);
+        setScrapeResult(null);
+        setScrapeError(null);
+        setScrapeModalOpen(true);
+        try {
+            const payload: ImportUrlInput = source.kind === 'extra_url'
+                ? {
+                    url: source.url,
+                    multipleEvents: source.multipleEvents,
+                    extractFromListPage: source.extractFromListPage,
+                    metadata: source.metadata,
+                }
+                : source.url;
+            const res = await importEventUrls.mutateAsync({ urls: [payload], sync: true });
+            setScrapeResult(res as ImportSourceScrapeResponse);
+        } catch (err: any) {
+            console.warn('Failed to import ticketing source', err);
+            const message = err?.response?.data?.error || err?.message || 'Failed to import ticketing source.';
+            setScrapeError(message);
+        } finally {
+            setScrapeSourceId(null);
+        }
+    };
+
+    const closeScrapeModal = () => {
+        setScrapeModalOpen(false);
+        setScrapeResult(null);
+        setScrapeError(null);
+        setScrapeTargetLabel(null);
+    };
+
     const renderFetSourceAccordion = (entry: FetSourceEntry, showMessaged: boolean) => {
         const approvalState = getSourceApprovalState(entry.approval_status);
         const isApproved = approvalState === 'approved';
@@ -555,11 +664,7 @@ export default function ImportSourcesScreen() {
             const isHandleSource =
                 (src.identifier_type || '').toLowerCase() === 'handle' ||
                 src.source === 'fetlife_handle';
-            const isUrlSource =
-                (src.identifier_type || '').toLowerCase() === 'url' ||
-                src.source === 'eb_url' ||
-                src.source === 'url' ||
-                /^https?:\/\//i.test(src.identifier || '');
+            const isUrlSource = isUrlImportSource(src);
             const identifier = src.identifier || '';
             const normalizedIdentifier = isHandleSource
                 ? normalizeHandle(identifier)
@@ -575,7 +680,11 @@ export default function ImportSourcesScreen() {
             ].filter(Boolean) as string[];
             return parts.join(' ').toLowerCase().includes(query);
         }) : [...sorted];
-        const decorated = baseList.map((src, index) => ({
+        const normalizedFilter = sourceTypeFilter.trim().toLowerCase();
+        const filteredByType = normalizedFilter && normalizedFilter !== 'all'
+            ? baseList.filter((src) => getSourceTypeKey(src) === normalizedFilter)
+            : baseList;
+        const decorated = filteredByType.map((src, index) => ({
             src,
             index,
             section: getSourceSection(src),
@@ -585,7 +694,42 @@ export default function ImportSourcesScreen() {
             return a.index - b.index;
         });
         return decorated.map(({ src }) => src);
-    }, [sorted, sourceSearch, formatOrganizerFromSources]);
+    }, [sorted, sourceSearch, sourceTypeFilter, formatOrganizerFromSources]);
+
+    const sourceTypeOptions = useMemo(() => {
+        const set = new Set<string>();
+        sources.forEach((src: ImportSource) => set.add(getSourceTypeKey(src)));
+        const list = Array.from(set).sort((a, b) => a.localeCompare(b));
+        if (list.includes('unknown')) {
+            return [...list.filter((item) => item !== 'unknown'), 'unknown'];
+        }
+        return list;
+    }, [sources]);
+
+    const eventbriteSources = useMemo(() => ticketingSources.filter((source) => source.kind === 'eventbrite_organizer'), [ticketingSources]);
+    const extraTicketingSources = useMemo(() => ticketingSources.filter((source) => source.kind === 'extra_url'), [ticketingSources]);
+
+    const scrapeResultsByEventId = useMemo(() => {
+        const map = new Map<string, ImportSourceScrapeResult>();
+        (scrapeResult?.events || []).forEach((result) => {
+            const eventId = result.event?.id;
+            if (!eventId) return;
+            map.set(String(eventId), result);
+        });
+        return map;
+    }, [scrapeResult?.events]);
+
+    const scrapedEvents = useMemo(() => {
+        const finalEvents = scrapeResult?.finalEvents || [];
+        if (finalEvents.length) return finalEvents;
+        return (scrapeResult?.events || [])
+            .map((result) => result.event)
+            .filter(Boolean) as Event[];
+    }, [scrapeResult]);
+
+    const skippedEvents = useMemo<ImportSourceScrapeSkipped[]>(() => (
+        scrapeResult?.skipped || []
+    ), [scrapeResult]);
 
     const formatEventDate = (ev: Event) => {
         const dateStr = ev.start_date || ev.end_date;
@@ -601,6 +745,18 @@ export default function ImportSourcesScreen() {
         if (normalized === 'pending') return { label: 'Pending', color: 'warning' as const };
         return { label: 'Rejected', color: 'error' as const };
     };
+
+    const getScrapeResultMeta = (result?: ImportSourceScrapeResult['result']) => {
+        if (result === 'inserted') return { label: 'Inserted', color: 'success' as const };
+        if (result === 'updated') return { label: 'Updated', color: 'info' as const };
+        if (result === 'failed') return { label: 'Failed', color: 'error' as const };
+        if (result === 'skipped') return { label: 'Skipped', color: 'default' as const };
+        return { label: 'Unknown', color: 'default' as const };
+    };
+
+    const getTicketingKindLabel = (kind: TicketingSource['kind']) => (
+        kind === 'eventbrite_organizer' ? 'Eventbrite organizer' : 'Ticketing URL'
+    );
 
     const eventsByOrganizerId = useMemo(() => {
         const map: Record<string, Event[]> = {};
@@ -734,6 +890,7 @@ export default function ImportSourcesScreen() {
 
             <Tabs value={tab} onChange={(_, val) => setTab(val)} sx={{ mb: 3 }}>
                 <Tab value="sources" label="All Sources" />
+                <Tab value="ticketing" label="Ticketing Sources" />
                 <Tab value="fet" label="Fet Sources" />
             </Tabs>
 
@@ -844,6 +1001,21 @@ export default function ImportSourcesScreen() {
                                         />
                                     }
                                 />
+                                <TextField
+                                    size="small"
+                                    label="Source type"
+                                    select
+                                    value={sourceTypeFilter}
+                                    onChange={(e) => setSourceTypeFilter(e.target.value)}
+                                    sx={{ minWidth: 180 }}
+                                >
+                                    <MenuItem value="all">All</MenuItem>
+                                    {sourceTypeOptions.map((type) => (
+                                        <MenuItem key={type} value={type}>
+                                            {formatSourceTypeLabel(type)}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
                                 <Box sx={{ flex: 1, minWidth: 16 }} />
                                 <TextField
                                     size="small"
@@ -888,6 +1060,8 @@ export default function ImportSourcesScreen() {
                                     const isHandleSource =
                                         (src.identifier_type || '').toLowerCase() === 'handle' ||
                                         src.source === 'fetlife_handle';
+                                    const isUrlSource = isUrlImportSource(src);
+                                    const isScrapeableSource = isUrlSource || isGmailImportSource(src);
                                     const normalizedHandle = isHandleSource ? normalizeHandle(src.identifier) : '';
                                     const fetlifeProfileUrl = normalizedHandle ? `https://fetlife.com/${normalizedHandle}` : '';
                                     const statusKey = getSourcePrimaryStatus(statusFlags);
@@ -1051,15 +1225,25 @@ export default function ImportSourcesScreen() {
                                                     </Stack>
                                                 </TableCell>
                                                 <TableCell>
-                                                    <Button
-                                                        size="small"
-                                                        variant="outlined"
-                                                        color="error"
-                                                        onClick={() => handleDeleteSource(src)}
-                                                        disabled={deleteSource.isPending}
-                                                    >
-                                                        Delete
-                                                    </Button>
+                                                    <Stack direction="row" spacing={1}>
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            onClick={() => handleScrapeSource(src)}
+                                                            disabled={!isScrapeableSource || !src.identifier || isScrapePending}
+                                                        >
+                                                            {isScrapePending && scrapeSourceId === buildScrapeId('import', src.id) ? 'Scraping...' : 'Scrape'}
+                                                        </Button>
+                                                        <Button
+                                                            size="small"
+                                                            variant="outlined"
+                                                            color="error"
+                                                            onClick={() => handleDeleteSource(src)}
+                                                            disabled={deleteSource.isPending}
+                                                        >
+                                                            Delete
+                                                        </Button>
+                                                    </Stack>
                                                 </TableCell>
                                             </TableRow>
                                             <TableRow sx={rowSx}>
@@ -1121,6 +1305,113 @@ export default function ImportSourcesScreen() {
                 </>
             )}
 
+            {tab === 'ticketing' && (
+                <Stack spacing={2}>
+                    <Paper sx={{ p: 2 }}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" flexWrap="wrap" rowGap={1}>
+                            <Stack spacing={0.5}>
+                                <Typography variant="h6">Ticketing Sources</Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    Eventbrite organizers and other ticketing URLs from datasets.
+                                </Typography>
+                            </Stack>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                                <Chip label={`Total ${ticketingSources.length}`} size="small" />
+                                {isTicketingLoading && <CircularProgress size={18} />}
+                            </Stack>
+                        </Stack>
+                    </Paper>
+
+                    <Paper sx={{ p: 2 }}>
+                        <Stack spacing={1.5}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                                <Typography variant="subtitle1">Eventbrite organizers</Typography>
+                                <Chip label={`${eventbriteSources.length}`} size="small" />
+                            </Stack>
+                            {eventbriteSources.length ? (
+                                <Stack spacing={1}>
+                                    {eventbriteSources.map((source) => (
+                                        <Stack
+                                            key={source.id}
+                                            direction="row"
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                            spacing={2}
+                                            sx={{ border: '1px solid #e5e7eb', borderRadius: 1, px: 1.5, py: 1 }}
+                                        >
+                                            <Stack spacing={0.25}>
+                                                <Typography variant="body2">{source.url}</Typography>
+                                                <Typography variant="caption" color="text.secondary">
+                                                    {getTicketingKindLabel(source.kind)}
+                                                </Typography>
+                                            </Stack>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                onClick={() => handleScrapeTicketingSource(source)}
+                                                disabled={isScrapePending}
+                                            >
+                                                {isScrapePending && scrapeSourceId === buildScrapeId('ticketing', source.id) ? 'Importing...' : 'Import'}
+                                            </Button>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                            ) : (
+                                <Typography color="text.secondary">No Eventbrite organizers configured.</Typography>
+                            )}
+                        </Stack>
+                    </Paper>
+
+                    <Paper sx={{ p: 2 }}>
+                        <Stack spacing={1.5}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                                <Typography variant="subtitle1">Other ticketing sources</Typography>
+                                <Chip label={`${extraTicketingSources.length}`} size="small" />
+                            </Stack>
+                            {extraTicketingSources.length ? (
+                                <Stack spacing={1}>
+                                    {extraTicketingSources.map((source) => (
+                                        <Stack
+                                            key={source.id}
+                                            direction="row"
+                                            alignItems="center"
+                                            justifyContent="space-between"
+                                            spacing={2}
+                                            sx={{ border: '1px solid #e5e7eb', borderRadius: 1, px: 1.5, py: 1 }}
+                                        >
+                                            <Stack spacing={0.25}>
+                                                <Typography variant="body2">{source.url}</Typography>
+                                                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {getTicketingKindLabel(source.kind)}
+                                                    </Typography>
+                                                    {source.multipleEvents && (
+                                                        <Chip label="Multiple events" size="small" variant="outlined" />
+                                                    )}
+                                                    {source.extractFromListPage && (
+                                                        <Chip label="List page" size="small" variant="outlined" />
+                                                    )}
+                                                </Stack>
+                                            </Stack>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                onClick={() => handleScrapeTicketingSource(source)}
+                                                disabled={isScrapePending}
+                                            >
+                                                {isScrapePending && scrapeSourceId === buildScrapeId('ticketing', source.id) ? 'Importing...' : 'Import'}
+                                            </Button>
+                                        </Stack>
+                                    ))}
+                                </Stack>
+                            ) : (
+                                <Typography color="text.secondary">No extra ticketing URLs configured.</Typography>
+                            )}
+                        </Stack>
+                    </Paper>
+                </Stack>
+            )}
+
             {tab === 'fet' && (
                 <Stack spacing={2}>
                     <Paper sx={{ p: 2 }}>
@@ -1177,6 +1468,118 @@ export default function ImportSourcesScreen() {
                     </Paper>
                 </Stack>
             )}
+            <Dialog
+                open={scrapeModalOpen}
+                onClose={closeScrapeModal}
+                fullWidth
+                maxWidth="md"
+            >
+                <DialogTitle>
+                    Scrape results{scrapeTargetLabel ? ` • ${scrapeTargetLabel}` : ''}
+                </DialogTitle>
+                <DialogContent dividers>
+                    {isScrapePending && (
+                        <Box display="flex" justifyContent="center" py={2}>
+                            <CircularProgress size={24} />
+                        </Box>
+                    )}
+                    {!isScrapePending && scrapeError && (
+                        <Alert severity="error">{scrapeError}</Alert>
+                    )}
+                    {!isScrapePending && !scrapeError && (
+                        <Stack spacing={2}>
+                            <Stack direction="row" spacing={1} flexWrap="wrap">
+                                {scrapeResult?.scraped !== undefined && (
+                                    <Chip label={`Scraped ${scrapeResult.scraped}`} size="small" />
+                                )}
+                                {scrapeResult?.counts && (
+                                    <>
+                                        <Chip label={`Inserted ${scrapeResult.counts.inserted}`} size="small" color="success" />
+                                        <Chip label={`Updated ${scrapeResult.counts.updated}`} size="small" color="info" />
+                                        <Chip label={`Failed ${scrapeResult.counts.failed}`} size="small" color="error" />
+                                    </>
+                                )}
+                                {!!skippedEvents.length && (
+                                    <Chip label={`Skipped ${skippedEvents.length}`} size="small" color="warning" />
+                                )}
+                            </Stack>
+                            {scrapedEvents.length ? (
+                                <Stack spacing={1.5}>
+                                    {scrapedEvents.map((ev) => {
+                                        const eventHref = ev.ticket_url || ev.event_url || (ev as any)?.source_url || '';
+                                        const organizerId = String((ev as any)?.organizer_id ?? ev?.organizer?.id ?? '');
+                                        const organizerLabel = organizerId ? organizerById[organizerId] : '';
+                                        const approvalMeta = getApprovalMeta(ev.approval_status);
+                                        const scrapeResultMeta = getScrapeResultMeta(scrapeResultsByEventId.get(String(ev.id))?.result);
+                                        return (
+                                            <Paper key={`scrape-event-${ev.id}`} variant="outlined" sx={{ p: 1.5 }}>
+                                                <Stack spacing={0.75}>
+                                                    <Stack direction="row" justifyContent="space-between" spacing={1} alignItems="center">
+                                                        {eventHref ? (
+                                                            <Link href={eventHref} target="_blank" rel="noopener noreferrer" underline="hover">
+                                                                <Typography variant="subtitle2" color="primary">
+                                                                    {ev.name || `Event ${ev.id}`}
+                                                                </Typography>
+                                                            </Link>
+                                                        ) : (
+                                                            <Typography variant="subtitle2">{ev.name || `Event ${ev.id}`}</Typography>
+                                                        )}
+                                                        <Stack direction="row" spacing={1} alignItems="center">
+                                                            <Chip label={scrapeResultMeta.label} size="small" color={scrapeResultMeta.color} />
+                                                            <Chip label={approvalMeta.label} size="small" color={approvalMeta.color} />
+                                                        </Stack>
+                                                    </Stack>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {formatEventDate(ev)}{ev.location ? ` • ${ev.location}` : ''}
+                                                    </Typography>
+                                                    {(organizerLabel || ev.organizer?.name) && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Organizer: {organizerLabel || ev.organizer?.name}
+                                                        </Typography>
+                                                    )}
+                                                </Stack>
+                                            </Paper>
+                                        );
+                                    })}
+                                </Stack>
+                            ) : (
+                                <Typography color="text.secondary">No events were scraped.</Typography>
+                            )}
+                            {!!skippedEvents.length && (
+                                <Stack spacing={1.5}>
+                                    <Typography variant="subtitle2">Skipped events</Typography>
+                                    <Stack spacing={1}>
+                                        {skippedEvents.map((skip, index) => (
+                                            <Paper key={`scrape-skip-${skip.url}-${index}`} variant="outlined" sx={{ p: 1.25 }}>
+                                                <Stack spacing={0.5}>
+                                                    <Typography variant="body2">{skip.reason}</Typography>
+                                                    {skip.url && (
+                                                        <Link href={skip.url} target="_blank" rel="noopener noreferrer" underline="hover">
+                                                            <Typography variant="caption" color="primary">
+                                                                {skip.url}
+                                                            </Typography>
+                                                        </Link>
+                                                    )}
+                                                    {skip.detail && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {skip.detail}
+                                                        </Typography>
+                                                    )}
+                                                </Stack>
+                                            </Paper>
+                                        ))}
+                                    </Stack>
+                                </Stack>
+                            )}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeScrapeModal} disabled={isScrapePending}>
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

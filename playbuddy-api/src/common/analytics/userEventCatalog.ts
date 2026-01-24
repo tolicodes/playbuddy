@@ -37,6 +37,7 @@ const C = {
   discover: "Discover",
   tags: "Tags",
   attendees: "Attendees",
+  buddies: "Buddies",
 } as const;
 
 const S = {
@@ -67,6 +68,28 @@ const S = {
   mediaEntity: { key: "entity_type", type: "string" } as const,
   tagEntity: { key: "entity_type", type: "string" } as const,
   munchTab: { key: "tab", type: "string" } as const,
+  buddySource: {
+    key: "source",
+    type: "string",
+    labelMap: {
+      attendees: "Event attendees",
+      search: "Buddy search",
+      buddy_list: "Buddy list",
+      popup: "Share coach",
+    },
+  } as const,
+  buddyTab: { key: "tab", type: "string" } as const,
+  buddySearch: { key: "search_text", type: "string" } as const,
+  calendarCoachVariant: {
+    key: "variant",
+    type: "string",
+    labelMap: {
+      intro: "Intro",
+      success: "Success",
+    },
+  } as const,
+  popupId: { key: "popup_id", type: "string" } as const,
+  guestSaveContext: { key: "context_label", type: "string" } as const,
 } as const;
 
 export const USER_EVENT_CATALOG: UserEventMeta[] = [
@@ -80,6 +103,9 @@ export const USER_EVENT_CATALOG: UserEventMeta[] = [
   { event: UE.LoginBannerClicked, category: C.auth, name: "Login banner clicked" },
   { event: UE.LoginToAccessButtonClicked, category: C.auth, name: "Login to access button", state: S.entityToAccess },
   { event: UE.HeaderLoginButtonClicked, category: C.auth, name: "Header login button", state: S.entityToAccess },
+  { event: UE.GuestSaveModalShown, category: C.auth, name: "Guest save modal shown", state: S.guestSaveContext },
+  { event: UE.GuestSaveModalCreateAccountPressed, category: C.auth, name: "Guest save create account", state: S.guestSaveContext },
+  { event: UE.GuestSaveModalDismissed, category: C.auth, name: "Guest save modal dismissed", state: S.guestSaveContext },
 
   // Profile + Onboarding
   { event: UE.AccountProfileDetailsFormPressSave, category: C.profile, name: "Save profile details" },
@@ -112,6 +138,12 @@ export const USER_EVENT_CATALOG: UserEventMeta[] = [
   { event: UE.EventCalendarViewGoToToday, category: C.calendar, name: "Calendar go to today", state: S.calendarEntity },
   { event: UE.EventCalendarViewSearchChanged, category: C.calendar, name: "Calendar search changed", state: S.calendarEntity },
   { event: UE.MyCalendarShareWishlistClick, category: C.calendar, name: "Share wishlist clicked" },
+  { event: UE.CalendarAddCoachShown, category: C.calendar, name: "Calendar coach shown", state: S.calendarCoachVariant },
+  { event: UE.CalendarAddCoachDismissed, category: C.calendar, name: "Calendar coach dismissed", state: S.calendarCoachVariant },
+  { event: UE.CalendarAddCoachSavePressed, category: C.calendar, name: "Calendar coach save pressed" },
+  { event: UE.CalendarMonthModalShown, category: C.calendar, name: "Calendar month modal shown" },
+  { event: UE.CalendarMonthModalDaySelected, category: C.calendar, name: "Calendar month day selected", state: S.calendarDay },
+  { event: UE.CalendarMonthModalDismissed, category: C.calendar, name: "Calendar month modal dismissed" },
 
   // Date Bar
   { event: UE.DateBarSwipePrev, category: C.dateBar, name: "Date bar swipe previous", state: S.calendarEntity },
@@ -119,6 +151,7 @@ export const USER_EVENT_CATALOG: UserEventMeta[] = [
   { event: UE.DateBarLongPress, category: C.dateBar, name: "Date bar long press", state: S.calendarDay },
   { event: UE.DateBarCalendarPressed, category: C.dateBar, name: "Date bar calendar pressed", state: S.calendarExpanded },
   { event: UE.DateBarTodayPressed, category: C.dateBar, name: "Date bar today pressed", state: S.calendarEntity },
+  { event: UE.DateBarCoachToastShown, category: C.dateBar, name: "Date bar coach toast shown", state: S.calendarEntity },
 
   // Filters
   { event: UE.FilterTagSelected, category: C.filters, name: "Filter tag selected", state: S.filterTag },
@@ -146,9 +179,36 @@ export const USER_EVENT_CATALOG: UserEventMeta[] = [
   { event: UE.EventListItemSharePressed, category: C.eventList, name: "Share pressed (list)" },
   { event: UE.EventListItemPromoModalTicketPressed, category: C.eventList, name: "Ticket pressed (promo modal)" },
   { event: UE.EventListItemPromoModalPromoCopied, category: C.eventList, name: "Promo code copied (list modal)" },
+  { event: UE.EventListViewIntroModalShown, category: C.eventList, name: "List view intro shown" },
+  { event: UE.EventListViewIntroModalKeepNew, category: C.eventList, name: "List view intro keep new" },
+  { event: UE.EventListViewIntroModalSwitchClassic, category: C.eventList, name: "List view intro switch classic" },
 
   // Attendees
   { event: UE.AttendeeAvatarCarouselPress, category: C.attendees, name: "Attendee avatar pressed" },
+
+  // Buddies
+  { event: UE.BuddyListViewed, category: C.buddies, name: "Buddy list viewed" },
+  { event: UE.BuddyListTabChanged, category: C.buddies, name: "Buddy list tab changed", state: S.buddyTab },
+  { event: UE.BuddySearchTyped, category: C.buddies, name: "Buddy search typed", state: S.buddySearch },
+  { event: UE.BuddyListBuddyPressed, category: C.buddies, name: "Buddy opened from list" },
+  { event: UE.BuddyListBuddyNoCalendar, category: C.buddies, name: "Buddy list no calendar" },
+  { event: UE.BuddyAddPressed, category: C.buddies, name: "Buddy add pressed", state: S.buddySource },
+  { event: UE.BuddyAddSucceeded, category: C.buddies, name: "Buddy add succeeded", state: S.buddySource },
+  { event: UE.BuddyAddFailed, category: C.buddies, name: "Buddy add failed", state: S.buddySource },
+  { event: UE.BuddyEventsViewed, category: C.buddies, name: "Buddy events viewed" },
+  { event: UE.BuddyShareCalendarPressed, category: C.buddies, name: "Buddy share calendar pressed", state: S.buddySource },
+  { event: UE.BuddyShareCalendarCompleted, category: C.buddies, name: "Buddy share calendar completed", state: S.buddySource },
+  { event: UE.ShareCalendarModalShown, category: C.buddies, name: "Share calendar modal shown", state: S.buddySource },
+  { event: UE.ShareCalendarModalSkipped, category: C.buddies, name: "Share calendar modal skipped", state: S.buddySource },
+  { event: UE.BuddyListCoachShown, category: C.buddies, name: "Buddy coach shown" },
+  { event: UE.BuddyListCoachDismissed, category: C.buddies, name: "Buddy coach dismissed" },
+  { event: UE.BuddyListCoachSharePressed, category: C.buddies, name: "Buddy coach share pressed" },
+  { event: UE.BuddyListToastShown, category: C.buddies, name: "Buddy list toast shown" },
+  { event: UE.BuddyListToastViewListPressed, category: C.buddies, name: "Buddy list toast open list" },
+  { event: UE.BuddyListToastDismissed, category: C.buddies, name: "Buddy list toast dismissed" },
+  { event: UE.BuddyShareToastShown, category: C.buddies, name: "Buddy share toast shown" },
+  { event: UE.BuddyShareToastDismissed, category: C.buddies, name: "Buddy share toast dismissed" },
+  { event: UE.BuddyShareToastSharePressed, category: C.buddies, name: "Buddy share toast share pressed" },
 
   // Communities
   { event: UE.CommunityTabNavigatorTabClicked, category: C.communities, name: "Community tab clicked", state: S.tabName },
@@ -180,13 +240,23 @@ export const USER_EVENT_CATALOG: UserEventMeta[] = [
   { event: UE.PromoScreenPromoCodeCopied, category: C.promo, name: "Promo screen promo copied" },
   { event: UE.PromoScreenExploreClicked, category: C.promo, name: "Promo screen explore clicked" },
   { event: UE.PromoScreenEventDetailsClicked, category: C.promo, name: "Promo event details clicked" },
+  { event: UE.EventPopupModalShown, category: C.promo, name: "Event popup shown", state: S.popupId },
+  { event: UE.EventPopupModalPrimaryAction, category: C.promo, name: "Event popup primary action", state: S.popupId },
+  { event: UE.EventPopupModalSkipped, category: C.promo, name: "Event popup skipped", state: S.popupId },
+  { event: UE.EdgePlayGroupModalShown, category: C.promo, name: "EdgePlay modal shown" },
   { event: UE.EdgePlayGroupModalDismissed, category: C.promo, name: "EdgePlay modal dismissed" },
   { event: UE.EdgePlayGroupModalOpenWhatsapp, category: C.promo, name: "EdgePlay open WhatsApp" },
+  { event: UE.RateAppModalShown, category: C.promo, name: "Rate app shown" },
+  { event: UE.RateAppModalSkipped, category: C.promo, name: "Rate app skipped" },
   { event: UE.RateAppModalOpenStore, category: C.promo, name: "Rate app open store" },
+  { event: UE.NewsletterSignupModalShown, category: C.promo, name: "Newsletter modal shown" },
   { event: UE.NewsletterSignupModalDismissed, category: C.promo, name: "Newsletter modal dismissed" },
   { event: UE.NewsletterSignupModalOpenSignup, category: C.promo, name: "Newsletter signup opened" },
 
   // Notifications
+  { event: UE.NotificationsPromptModalShown, category: C.notifications, name: "Notifications prompt shown" },
+  { event: UE.NotificationsPromptModalEnablePressed, category: C.notifications, name: "Notifications prompt enable pressed" },
+  { event: UE.NotificationsPromptModalSkipped, category: C.notifications, name: "Notifications prompt skipped" },
   { event: UE.NotificationsApprovalGranted, category: C.notifications, name: "Notifications approved" },
 
   // Swipe Mode
@@ -228,6 +298,9 @@ export const USER_EVENT_CATALOG: UserEventMeta[] = [
 
   // Discover
   { event: UE.DiscoverPageMenuItemPressed, category: C.discover, name: "Discover menu item pressed", state: S.menuItem },
+  { event: UE.DiscoverGameModalShown, category: C.discover, name: "Discover game modal shown" },
+  { event: UE.DiscoverGameModalPlayNow, category: C.discover, name: "Discover game modal play now" },
+  { event: UE.DiscoverGameModalSkipped, category: C.discover, name: "Discover game modal skipped" },
   { event: UE.DiscoverGameHideTourPressed, category: C.discover, name: "Discover game hide tour" },
   { event: UE.DiscoverGameCreateAccountPressed, category: C.discover, name: "Discover game create account" },
   { event: UE.DiscoverEventsMoreInfoClicked, category: C.discover, name: "Discover events more info" },

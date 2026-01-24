@@ -55,6 +55,11 @@ export const UE = {
     // Header Login Button
     HeaderLoginButtonClicked: 'header_login_button_clicked',
 
+    // Guest Save Modal
+    GuestSaveModalShown: 'guest_save_modal_shown',
+    GuestSaveModalCreateAccountPressed: 'guest_save_modal_create_account_pressed',
+    GuestSaveModalDismissed: 'guest_save_modal_dismissed',
+
     // Onboarding & Misc
     ProfileInitialDeepLinkAssigned: 'profile_initial_deep_link_assigned',
     OrganizerFollowPressed: 'organizer_follow_pressed',
@@ -77,6 +82,12 @@ export const UE = {
     DateBarLongPress: 'date_bar_long_press',
     DateBarCalendarPressed: 'date_bar_calendar_pressed',
     DateBarTodayPressed: 'date_bar_today_pressed',
+    DateBarCoachToastShown: 'date_bar_coach_toast_shown',
+
+    // Calendar Month Modal
+    CalendarMonthModalShown: 'calendar_month_modal_shown',
+    CalendarMonthModalDaySelected: 'calendar_month_modal_day_selected',
+    CalendarMonthModalDismissed: 'calendar_month_modal_dismissed',
 
     EventCalendarViewExpand: 'event_calendar_view_expand',
     EventCalendarViewToday: 'event_calendar_view_today',
@@ -105,6 +116,11 @@ export const UE = {
     EventDetailHeaderTitleClicked: 'event_detail_header_title_clicked',
     EventCalendarViewSearchChanged: 'event_calendar_view_search_changed',
 
+    // Calendar Coach
+    CalendarAddCoachShown: 'calendar_add_coach_shown',
+    CalendarAddCoachDismissed: 'calendar_add_coach_dismissed',
+    CalendarAddCoachSavePressed: 'calendar_add_coach_save_pressed',
+
     // Event-List
     EventListItemClicked: 'event_list_item_clicked',
     EventListItemDiscountModalOpened: 'event_list_item_discount_modal_opened',
@@ -114,8 +130,40 @@ export const UE = {
     EventListItemPromoModalTicketPressed: 'event_list_item_promo_modal_ticket_pressed',
     EventListItemPromoModalPromoCopied: 'event_list_item_promo_modal_promo_code_copied',
 
+    EventListViewIntroModalShown: 'event_list_view_intro_modal_shown',
+    EventListViewIntroModalKeepNew: 'event_list_view_intro_modal_keep_new',
+    EventListViewIntroModalSwitchClassic: 'event_list_view_intro_modal_switch_classic',
+
 
     AttendeeAvatarCarouselPress: 'attendee_avatar_carousel_press',
+
+    // Buddies
+    BuddyListViewed: 'buddy_list_viewed',
+    BuddyListTabChanged: 'buddy_list_tab_changed',
+    BuddySearchTyped: 'buddy_search_typed',
+    BuddyListBuddyPressed: 'buddy_list_buddy_pressed',
+    BuddyListBuddyNoCalendar: 'buddy_list_buddy_no_calendar',
+    BuddyAddPressed: 'buddy_add_pressed',
+    BuddyAddSucceeded: 'buddy_add_succeeded',
+    BuddyAddFailed: 'buddy_add_failed',
+    BuddyEventsViewed: 'buddy_events_viewed',
+    BuddyShareCalendarPressed: 'buddy_share_calendar_pressed',
+    BuddyShareCalendarCompleted: 'buddy_share_calendar_completed',
+
+    ShareCalendarModalShown: 'share_calendar_modal_shown',
+    ShareCalendarModalSkipped: 'share_calendar_modal_skipped',
+
+    BuddyListCoachShown: 'buddy_list_coach_shown',
+    BuddyListCoachDismissed: 'buddy_list_coach_dismissed',
+    BuddyListCoachSharePressed: 'buddy_list_coach_share_pressed',
+
+    BuddyListToastShown: 'buddy_list_toast_shown',
+    BuddyListToastDismissed: 'buddy_list_toast_dismissed',
+    BuddyListToastViewListPressed: 'buddy_list_toast_view_list_pressed',
+
+    BuddyShareToastShown: 'buddy_share_toast_shown',
+    BuddyShareToastDismissed: 'buddy_share_toast_dismissed',
+    BuddyShareToastSharePressed: 'buddy_share_toast_share_pressed',
 
     // Community Events / Lists
     CommunityTabNavigatorTabClicked: 'community_tab_navigator_tab_clicked',
@@ -194,18 +242,30 @@ export const UE = {
     WeeklyPicksPrevWeekClicked: 'weekly_picks_prev_week_clicked',
     WeeklyPicksNextWeekClicked: 'weekly_picks_next_week_clicked',
 
+    // Event Popup Modal
+    EventPopupModalShown: 'event_popup_modal_shown',
+    EventPopupModalPrimaryAction: 'event_popup_modal_primary_action',
+    EventPopupModalSkipped: 'event_popup_modal_skipped',
+
     // EdgePlay Group Modal
+    EdgePlayGroupModalShown: 'edgeplay_group_modal_shown',
     EdgePlayGroupModalDismissed: 'edgeplay_group_modal_dismissed',
     EdgePlayGroupModalOpenWhatsapp: 'edgeplay_group_modal_open_whatsapp',
 
     // Rate App Modal
+    RateAppModalShown: 'rate_app_modal_shown',
+    RateAppModalSkipped: 'rate_app_modal_skipped',
     RateAppModalOpenStore: 'rate_app_modal_open_store',
 
     // Newsletter Signup Modal
+    NewsletterSignupModalShown: 'newsletter_signup_modal_shown',
     NewsletterSignupModalDismissed: 'newsletter_signup_modal_dismissed',
     NewsletterSignupModalOpenSignup: 'newsletter_signup_modal_open_signup',
 
     // Notifications
+    NotificationsPromptModalShown: 'notifications_prompt_modal_shown',
+    NotificationsPromptModalEnablePressed: 'notifications_prompt_modal_enable_pressed',
+    NotificationsPromptModalSkipped: 'notifications_prompt_modal_skipped',
     NotificationsApprovalGranted: 'notifications_approval_granted',
 
     // Munches
@@ -220,6 +280,10 @@ export const UE = {
     DiscoverPageMenuItemPressed: 'discover_page_menu_item_pressed',
 
     // Discover Game
+    DiscoverGameModalShown: 'discover_game_modal_shown',
+    DiscoverGameModalPlayNow: 'discover_game_modal_play_now',
+    DiscoverGameModalSkipped: 'discover_game_modal_skipped',
+
     DiscoverGameHideTourPressed: 'discover_game_hide_tour_pressed',
     DiscoverGameCreateAccountPressed: 'discover_game_create_account_pressed',
     DiscoverEventsMoreInfoClicked: 'discover_events_more_info_clicked',
@@ -241,6 +305,29 @@ type AnalyticsProps = {
 type EventDetailsProps = AnalyticsProps & {
     event_id?: number | null;
 }
+
+type CalendarCoachVariant = 'intro' | 'success';
+
+type ShareCalendarSource = 'buddy_list' | 'popup';
+
+type EventPopupAnalyticsProps = AnalyticsProps & {
+    popup_id: string;
+    event_id?: number | null;
+};
+
+type BuddyToastAnalyticsProps = AnalyticsProps & {
+    buddy_user_id?: string | null;
+};
+
+type GuestSaveModalAnalyticsProps = AnalyticsProps & {
+    context_label?: string;
+};
+
+type CalendarMonthModalAnalyticsProps = AnalyticsProps & {
+    entity: string;
+    entityId?: string;
+    day?: string;
+};
 
 /**
  * 2) Map event names to their payload shapes (or null for no props)
@@ -279,6 +366,11 @@ export interface EventPayloadMap {
     [UE.HeaderLoginButtonClicked]: AnalyticsProps & {
         entity_to_access: string;
     };
+
+    // Guest Save Modal
+    [UE.GuestSaveModalShown]: GuestSaveModalAnalyticsProps;
+    [UE.GuestSaveModalCreateAccountPressed]: GuestSaveModalAnalyticsProps;
+    [UE.GuestSaveModalDismissed]: GuestSaveModalAnalyticsProps;
 
 
     // Avatar
@@ -375,6 +467,15 @@ export interface EventPayloadMap {
         entity: string;
         entityId?: string;
     };
+    [UE.DateBarCoachToastShown]: AnalyticsProps & {
+        entity: string;
+        entityId?: string;
+    };
+
+    // Calendar Month Modal
+    [UE.CalendarMonthModalShown]: CalendarMonthModalAnalyticsProps;
+    [UE.CalendarMonthModalDaySelected]: CalendarMonthModalAnalyticsProps;
+    [UE.CalendarMonthModalDismissed]: CalendarMonthModalAnalyticsProps;
 
     [UE.EventCalendarViewGoToPrev]: AnalyticsProps & {
         entity: string;
@@ -397,6 +498,15 @@ export interface EventPayloadMap {
         entity: string;
         entityId?: string;
     };
+
+    // Calendar Coach
+    [UE.CalendarAddCoachShown]: AnalyticsProps & {
+        variant: CalendarCoachVariant;
+    };
+    [UE.CalendarAddCoachDismissed]: AnalyticsProps & {
+        variant?: CalendarCoachVariant;
+    };
+    [UE.CalendarAddCoachSavePressed]: EventDetailsProps;
 
 
     // Filters
@@ -446,6 +556,10 @@ export interface EventPayloadMap {
     [UE.EventListItemPromoModalTicketPressed]: EventDetailsProps
     [UE.EventListItemPromoModalPromoCopied]: EventDetailsProps
     [UE.EventListItemSharePressed]: EventDetailsProps
+
+    [UE.EventListViewIntroModalShown]: AnalyticsProps;
+    [UE.EventListViewIntroModalKeepNew]: AnalyticsProps;
+    [UE.EventListViewIntroModalSwitchClassic]: AnalyticsProps;
 
 
     // Header
@@ -503,6 +617,63 @@ export interface EventPayloadMap {
     [UE.AttendeeAvatarCarouselPress]: AnalyticsProps & {
         attendee_user_id: string;
     }
+
+    // Buddies
+    [UE.BuddyListViewed]: AnalyticsProps;
+    [UE.BuddyListTabChanged]: AnalyticsProps & {
+        tab: 'list' | 'search';
+    };
+    [UE.BuddySearchTyped]: AnalyticsProps & {
+        search_text: string;
+    };
+    [UE.BuddyListBuddyPressed]: AnalyticsProps & {
+        buddy_user_id: string;
+    };
+    [UE.BuddyListBuddyNoCalendar]: AnalyticsProps & {
+        buddy_user_id: string;
+    };
+    [UE.BuddyAddPressed]: AnalyticsProps & {
+        buddy_user_id: string;
+        source: 'attendees' | 'search' | 'buddy_list';
+        event_id?: number | null;
+    };
+    [UE.BuddyAddSucceeded]: AnalyticsProps & {
+        buddy_user_id: string;
+        source: 'attendees' | 'search' | 'buddy_list';
+        event_id?: number | null;
+    };
+    [UE.BuddyAddFailed]: AnalyticsProps & {
+        buddy_user_id: string;
+        source: 'attendees' | 'search' | 'buddy_list';
+        event_id?: number | null;
+    };
+    [UE.BuddyEventsViewed]: AnalyticsProps & {
+        buddy_user_id: string;
+    };
+    [UE.BuddyShareCalendarPressed]: AnalyticsProps & {
+        source: 'buddy_list' | 'popup';
+    };
+    [UE.BuddyShareCalendarCompleted]: AnalyticsProps & {
+        source: 'buddy_list' | 'popup';
+    };
+
+    [UE.ShareCalendarModalShown]: AnalyticsProps & {
+        source: ShareCalendarSource;
+    };
+    [UE.ShareCalendarModalSkipped]: AnalyticsProps & {
+        source: ShareCalendarSource;
+    };
+
+    [UE.BuddyListCoachShown]: EventDetailsProps;
+    [UE.BuddyListCoachDismissed]: EventDetailsProps;
+    [UE.BuddyListCoachSharePressed]: EventDetailsProps;
+
+    [UE.BuddyShareToastShown]: BuddyToastAnalyticsProps;
+    [UE.BuddyShareToastDismissed]: BuddyToastAnalyticsProps;
+    [UE.BuddyShareToastSharePressed]: BuddyToastAnalyticsProps;
+    [UE.BuddyListToastShown]: BuddyToastAnalyticsProps;
+    [UE.BuddyListToastDismissed]: BuddyToastAnalyticsProps;
+    [UE.BuddyListToastViewListPressed]: BuddyToastAnalyticsProps;
 
     // Facilitators
 
@@ -604,6 +775,10 @@ export interface EventPayloadMap {
     };
 
     // Discover Game
+    [UE.DiscoverGameModalShown]: AnalyticsProps;
+    [UE.DiscoverGameModalPlayNow]: AnalyticsProps;
+    [UE.DiscoverGameModalSkipped]: AnalyticsProps;
+
     [UE.DiscoverGameHideTourPressed]: AnalyticsProps;
 
     [UE.DiscoverGameCreateAccountPressed]: AnalyticsProps;
@@ -619,19 +794,30 @@ export interface EventPayloadMap {
         url?: string;
     };
 
+    // Event Popup Modal
+    [UE.EventPopupModalShown]: EventPopupAnalyticsProps;
+    [UE.EventPopupModalPrimaryAction]: EventPopupAnalyticsProps;
+    [UE.EventPopupModalSkipped]: EventPopupAnalyticsProps;
 
     // EdgePlay Group Modal
+    [UE.EdgePlayGroupModalShown]: AnalyticsProps;
     [UE.EdgePlayGroupModalDismissed]: AnalyticsProps;
     [UE.EdgePlayGroupModalOpenWhatsapp]: AnalyticsProps;
 
     // Rate App Modal
+    [UE.RateAppModalShown]: AnalyticsProps;
+    [UE.RateAppModalSkipped]: AnalyticsProps;
     [UE.RateAppModalOpenStore]: AnalyticsProps;
 
     // Newsletter Signup Modal
+    [UE.NewsletterSignupModalShown]: AnalyticsProps;
     [UE.NewsletterSignupModalDismissed]: AnalyticsProps;
     [UE.NewsletterSignupModalOpenSignup]: AnalyticsProps;
 
     // Notifications
+    [UE.NotificationsPromptModalShown]: AnalyticsProps;
+    [UE.NotificationsPromptModalEnablePressed]: AnalyticsProps;
+    [UE.NotificationsPromptModalSkipped]: AnalyticsProps;
     [UE.NotificationsApprovalGranted]: AnalyticsProps;
 }
 
