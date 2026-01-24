@@ -1,7 +1,19 @@
 // src/App.tsx
 import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, Tabs, Tab, Box } from "@mui/material";
+import {
+  AppBar,
+  Autocomplete,
+  Box,
+  Button,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  TextField,
+  Toolbar,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import WeeklyPicks from "./pages/WeeklyPicks/WeeklyPicksScreen";
 import AddEventScreen from "./pages/Events/EditEventScreen";
 import FacilitatorsListScreen from "./pages/Facilitators/FacilitatorsListScreen";
@@ -26,6 +38,7 @@ import EventPopupsScreen from "./pages/EventPopups/EventPopupsScreen";
 import PushNotificationsScreen from "./pages/PushNotifications/PushNotificationsScreen";
 import BranchStatsScreen from "./pages/BranchStats/BranchStatsScreen";
 import AnalyticsScreen from "./pages/Analytics/AnalyticsScreen";
+import LocationAreasScreen from "./pages/LocationAreas/LocationAreasScreen";
 
 // ---------- Global axios auth (no instances) ----------
 let axiosAuthInitialized = false;
@@ -92,6 +105,69 @@ function initAxiosAuthOnce() {
 }
 // ------------------------------------------------------
 
+type NavItem = {
+  label: string;
+  path: string;
+};
+
+type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+type NavSearchOption = NavItem & {
+  group: string;
+};
+
+const navGroups: NavGroup[] = [
+  {
+    label: "Events",
+    items: [
+      { label: "Weekly Picks", path: "/weekly-picks" },
+      { label: "Events", path: "/events" },
+      { label: "Import URLs", path: "/events/import-urls" },
+      { label: "Partiful", path: "/events/partiful" },
+      { label: "Popups", path: "/event-popups" },
+      { label: "Location Areas", path: "/location-areas" },
+    ],
+  },
+  {
+    label: "Growth",
+    items: [
+      { label: "Promo Codes", path: "/promo-codes" },
+      { label: "Deep Links", path: "/deep-links" },
+      { label: "Branch Stats", path: "/branch-stats" },
+      { label: "Print Runs", path: "/print-runs" },
+    ],
+  },
+  {
+    label: "People",
+    items: [
+      { label: "Facilitators", path: "/facilitators" },
+      { label: "Organizers", path: "/organizers/manage" },
+    ],
+  },
+  {
+    label: "Ops",
+    items: [
+      { label: "Import Sources", path: "/import-sources" },
+      { label: "Jobs", path: "/jobs" },
+      { label: "Push Notifications", path: "/push-notifications" },
+    ],
+  },
+  {
+    label: "Insights",
+    items: [
+      { label: "Analytics", path: "/analytics" },
+      { label: "Insta/Fetlife Visualizer", path: "/visualizer" },
+    ],
+  },
+];
+
+const navSearchOptions: NavSearchOption[] = navGroups.flatMap((group) =>
+  group.items.map((item) => ({ ...item, group: group.label }))
+);
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -99,6 +175,9 @@ export default function App() {
   const isLoginRoute = pathname === "/login";
 
   const [authReady, setAuthReady] = useState(false);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [openMenuGroup, setOpenMenuGroup] = useState<NavGroup | null>(null);
+  const [navSearchInput, setNavSearchInput] = useState("");
 
   // Init axios auth once and sync defaults on auth state changes
   useEffect(() => {
@@ -151,29 +230,28 @@ export default function App() {
     })();
   }, [pathname, isLoginRoute, navigate]);
 
-  // Tabs: map + prefix-match so /events/:id stays selected
-  const tabRoutes = [
-    "/weekly-picks",
-    "/events/import-urls",
-    "/events/partiful",
-    "/events",
-    "/promo-codes",
-    "/deep-links",
-    "/branch-stats",
-    "/analytics",
-    "/event-popups",
-    "/push-notifications",
-    "/facilitators",
-    "/print-runs",
-    "/jobs",
-    "/visualizer",
-    "/import-sources",
-    "/organizers/manage",
-  ];
+  const matchesRoute = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
 
-  const currentTabIndex = tabRoutes.findIndex(
-    (r) => pathname === r || pathname.startsWith(`${r}/`)
-  );
+  const activeNavItem = navSearchOptions
+    .filter((item) => matchesRoute(item.path))
+    .sort((a, b) => b.path.length - a.path.length)[0];
+
+  const activeGroup = activeNavItem?.group;
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, group: NavGroup) => {
+    setMenuAnchorEl(event.currentTarget);
+    setOpenMenuGroup(group);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setOpenMenuGroup(null);
+  };
+
+  const handleSearchSelect = (_event: React.SyntheticEvent, value: NavSearchOption | null) => {
+    if (value) navigate(value.path);
+    setNavSearchInput("");
+  };
 
   if (!authReady) {
     return <Box p={2} color="#6B7280">Checking session…</Box>;
@@ -182,34 +260,103 @@ export default function App() {
   return (
     <Box>
       <AppBar position="sticky" color="primary">
-        <Toolbar variant="dense">
-          <Tabs
-            value={currentTabIndex >= 0 ? currentTabIndex : false}
-            textColor="inherit"
-            indicatorColor="secondary"
-            variant="scrollable"
-            scrollButtons
-            allowScrollButtonsMobile
-          >
-            <Tab label="Weekly Picks" component={RouterLink} to="/weekly-picks" />
-            <Tab label="Import URLs" component={RouterLink} to="/events/import-urls" />
-            <Tab label="Partiful" component={RouterLink} to="/events/partiful" />
-            <Tab label="Events" component={RouterLink} to="/events" />
-            <Tab label="Promo Codes" component={RouterLink} to="/promo-codes" />
-            <Tab label="Deep Links" component={RouterLink} to="/deep-links" />
-            <Tab label="Branch Stats" component={RouterLink} to="/branch-stats" />
-            <Tab label="Analytics" component={RouterLink} to="/analytics" />
-            <Tab label="Popups" component={RouterLink} to="/event-popups" />
-            <Tab label="Push" component={RouterLink} to="/push-notifications" />
-            <Tab label="Facilitators" component={RouterLink} to="/facilitators" />
-            <Tab label="Print Runs" component={RouterLink} to="/print-runs" />
-            <Tab label="Jobs" component={RouterLink} to="/jobs" />
-            <Tab label="Insta/Fetlife Visualizer" component={RouterLink} to="/visualizer" />
-            <Tab label="Import Sources" component={RouterLink} to="/import-sources" />
-            <Tab label="Organizers" component={RouterLink} to="/organizers/manage" />
-          </Tabs>
+        <Toolbar variant="dense" sx={{ gap: 2, flexWrap: "wrap" }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", flexGrow: 1 }}>
+            {navGroups.map((group) => {
+              const groupActive = activeGroup === group.label;
+              const menuOpen = openMenuGroup?.label === group.label && Boolean(menuAnchorEl);
+              return (
+                <Button
+                  key={group.label}
+                  color="inherit"
+                  variant="text"
+                  disableElevation
+                  size="small"
+                  onClick={(event) => handleMenuOpen(event, group)}
+                  endIcon={<KeyboardArrowDownIcon />}
+                  aria-haspopup="true"
+                  aria-expanded={menuOpen ? "true" : undefined}
+                  aria-controls={menuOpen ? "admin-nav-menu" : undefined}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: groupActive ? 700 : 500,
+                    borderBottom: groupActive ? "2px solid rgba(255,255,255,0.8)" : "2px solid transparent",
+                    borderRadius: 0,
+                    lineHeight: 1.4,
+                    color: "rgba(255,255,255,0.92)",
+                    backgroundColor: groupActive ? "rgba(255,255,255,0.12)" : "transparent",
+                    "&:hover": {
+                      backgroundColor: "rgba(255,255,255,0.18)",
+                    },
+                  }}
+                >
+                  {group.label}
+                </Button>
+              );
+            })}
+          </Box>
+          <Autocomplete
+            size="small"
+            inputValue={navSearchInput}
+            onInputChange={(_event, value, reason) => {
+              if (reason === "input" || reason === "clear") {
+                setNavSearchInput(value);
+              }
+            }}
+            onChange={handleSearchSelect}
+            options={navSearchOptions}
+            groupBy={(option) => option.group}
+            getOptionLabel={(option) => option.label}
+            clearOnEscape
+            sx={{
+              minWidth: 220,
+              width: { xs: "100%", sm: 260 },
+              "& .MuiOutlinedInput-root": {
+                backgroundColor: "rgba(255,255,255,0.92)",
+              },
+            }}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="Search tabs"
+                variant="outlined"
+                InputProps={{
+                  ...params.InputProps,
+                  startAdornment: (
+                    <>
+                      <InputAdornment position="start">
+                        <SearchIcon fontSize="small" />
+                      </InputAdornment>
+                      {params.InputProps.startAdornment}
+                    </>
+                  ),
+                }}
+              />
+            )}
+          />
         </Toolbar>
       </AppBar>
+      <Menu
+        id="admin-nav-menu"
+        anchorEl={menuAnchorEl}
+        open={Boolean(menuAnchorEl)}
+        onClose={handleMenuClose}
+        MenuListProps={{ dense: true }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        {openMenuGroup?.items.map((item) => (
+          <MenuItem
+            key={item.path}
+            component={RouterLink}
+            to={item.path}
+            selected={activeNavItem?.path === item.path}
+            onClick={handleMenuClose}
+          >
+            {item.label}
+          </MenuItem>
+        ))}
+      </Menu>
 
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
@@ -221,6 +368,7 @@ export default function App() {
         <Route path="/events/:id" element={<AddEventScreen />} />
         <Route path="/events/import-csv" element={<ImportCSVScreen />} />
         <Route path="/events/import-urls" element={<ImportEventURLsScreen />} />
+        <Route path="/location-areas" element={<LocationAreasScreen />} />
         <Route path="/facilitators" element={<FacilitatorsListScreen />} />
         <Route path="/facilitators/new" element={<EditFacilitatorScreen />} />
         <Route path="/facilitators/:id" element={<EditFacilitatorScreen />} />
