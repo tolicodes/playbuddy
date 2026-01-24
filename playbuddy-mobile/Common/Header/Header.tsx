@@ -114,7 +114,7 @@ const CommunityHeaderFollowButton = ({
     communityIds?: string[];
 }) => {
     const { authUserId } = useUserContext();
-    const { myCommunities, communities } = useCommonContext();
+    const { myCommunities, communities, isLoadingCommunities } = useCommonContext();
     const { data: allEvents = [] } = useFetchEvents();
     const { showGuestSaveModal } = useGuestSaveModal();
     const joinCommunity = useJoinCommunity();
@@ -149,6 +149,7 @@ const CommunityHeaderFollowButton = ({
                 .map((id) => id.toString()),
         [myCommunities]
     );
+    const hasOrganizerFollows = organizerIdsFromCommunities.length > 0;
 
     const handlePress = () => {
         if (!canFollow) return;
@@ -180,10 +181,12 @@ const CommunityHeaderFollowButton = ({
                 nextFollowedOrganizerIds.add(organizerId);
             }
         });
-        void promptOrganizerNotificationsIfNeeded({
-            events: allEvents,
-            followedOrganizerIds: nextFollowedOrganizerIds,
-        });
+        if (!hasOrganizerFollows && !isLoadingCommunities && nextFollowedOrganizerIds.size > 0) {
+            void promptOrganizerNotificationsIfNeeded({
+                events: allEvents,
+                followedOrganizerIds: nextFollowedOrganizerIds,
+            });
+        }
     };
 
     return (

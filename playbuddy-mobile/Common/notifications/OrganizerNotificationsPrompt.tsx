@@ -63,9 +63,6 @@ export const OrganizerNotificationsPrompt = () => {
 
         if (lastOrganizerCountRef.current === null) {
             lastOrganizerCountRef.current = organizerCount;
-            if (organizerCount > 0) {
-                promptForNotifications();
-            }
             return;
         }
 

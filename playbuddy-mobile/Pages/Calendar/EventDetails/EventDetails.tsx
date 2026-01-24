@@ -129,7 +129,7 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
     const { toggleWishlistEvent, isOnWishlist, wishlistEvents } = useCalendarData();
     const { data: allEvents } = useFetchEvents()
     const navigation = useNavigation<NavStack>();
-    const { myCommunities, communities } = useCommonContext();
+    const { myCommunities, communities, isLoadingCommunities } = useCommonContext();
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
     const analyticsProps = useAnalyticsProps();
@@ -346,7 +346,7 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
                 type: 'organizer_public_community',
             });
         });
-        if (organizerFollowCount === 0) {
+        if (organizerFollowCount === 0 && !isLoadingCommunities) {
             const nextFollowedOrganizerIds = new Set(followedOrganizerIds);
             if (organizerId) {
                 nextFollowedOrganizerIds.add(organizerId);

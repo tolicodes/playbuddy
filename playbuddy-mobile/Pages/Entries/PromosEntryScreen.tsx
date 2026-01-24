@@ -40,7 +40,7 @@ export const PromosEntryScreen = ({
     const { authUserId } = useUserContext();
     const promoCode = usePromoCode();
     const { data: events = [] } = useFetchEvents();
-    const { data: myCommunities = [] } = useFetchMyCommunities();
+    const { data: myCommunities = [], isLoading: isLoadingMyCommunities } = useFetchMyCommunities();
     const joinCommunity = useJoinCommunity();
     const featuredEvent = promoCode?.featuredEvent;
     const organizerId = promoCode?.organizer?.id?.toString();
@@ -50,6 +50,15 @@ export const PromosEntryScreen = ({
                 .map((community) => community.organizer_id)
                 .filter((id): id is string => Boolean(id))
                 .map((id) => id.toString()),
+        [myCommunities]
+    );
+    const hasOrganizerFollows = useMemo(
+        () =>
+            myCommunities.some(
+                (community) =>
+                    community.type === 'organizer_public_community' ||
+                    community.type === 'organizer_private_community'
+            ),
         [myCommunities]
     );
 
@@ -154,14 +163,16 @@ export const PromosEntryScreen = ({
                         type: 'organizer_public_community',
                     });
                 });
-            const nextFollowedOrganizerIds = new Set(organizerIdsFromCommunities);
-            if (organizerId) {
-                nextFollowedOrganizerIds.add(organizerId);
+            if (!hasOrganizerFollows && !isLoadingMyCommunities) {
+                const nextFollowedOrganizerIds = new Set(organizerIdsFromCommunities);
+                if (organizerId) {
+                    nextFollowedOrganizerIds.add(organizerId);
+                }
+                void promptOrganizerNotificationsIfNeeded({
+                    events,
+                    followedOrganizerIds: nextFollowedOrganizerIds,
+                });
             }
-            void promptOrganizerNotificationsIfNeeded({
-                events,
-                followedOrganizerIds: nextFollowedOrganizerIds,
-            });
         }
 
         const communityId =

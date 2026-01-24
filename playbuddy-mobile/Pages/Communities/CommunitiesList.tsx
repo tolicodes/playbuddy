@@ -114,7 +114,7 @@ export const CommunitiesList = ({
 
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
-    const { data: myCommunities = [] } = useFetchMyCommunities();
+    const { data: myCommunities = [], isLoading: isLoadingMyCommunities } = useFetchMyCommunities();
     const { data: allEvents = [] } = useFetchEvents();
     const { data: organizers = [] } = useFetchOrganizers();
     const isOrganizer = entityType === "organizer";
@@ -249,7 +249,7 @@ export const CommunitiesList = ({
                 }
             });
 
-            if (shouldJoin && isOrganizer && targetIds.length > 0) {
+            if (shouldJoin && isOrganizer && targetIds.length > 0 && !hasOrganizerFollows && !isLoadingMyCommunities) {
                 const nextFollowedOrganizerIds = buildFollowedOrganizerIds(organizerIds);
                 void promptOrganizerNotificationsIfNeeded({
                     events: allEvents,
@@ -264,6 +264,7 @@ export const CommunitiesList = ({
             buildFollowedOrganizerIds,
             entityType,
             hasOrganizerFollows,
+            isLoadingMyCommunities,
             isOrganizer,
             joinCommunity,
             leaveCommunity,
