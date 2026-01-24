@@ -16,6 +16,7 @@ import {
   ListItemText,
   MenuItem,
   Menu,
+  Pagination,
   Paper,
   Select,
     Stack,
@@ -110,6 +111,7 @@ const formatMediaSummary = (value?: Array<{ type?: string | null }> | null) => {
 };
 
 const DEFAULT_VISIBLE_EXTRA_COLUMNS = ['source'];
+const EVENTS_PAGE_SIZE = 50;
 
 export default function EventsListScreen() {
     const navigate = useNavigate();
@@ -128,6 +130,7 @@ export default function EventsListScreen() {
   const [selectedOrganizerId, setSelectedOrganizerId] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<EventTypes | 'all'>('all');
   const [userSubmittedOnly, setUserSubmittedOnly] = useState(false);
+  const [page, setPage] = useState(1);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const { mutateAsync: reclassifyEvent } = useReclassifyEvents();
   const [reclassifyStartTimes, setReclassifyStartTimes] = useState<Record<number, number>>({});
@@ -291,9 +294,22 @@ export default function EventsListScreen() {
     });
   }, [events, searchText, selectedOrganizerId, selectedType, userSubmittedOnly]);
 
+  const pageCount = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredEvents.length / EVENTS_PAGE_SIZE));
+  }, [filteredEvents.length]);
+
+  const pagedEvents = useMemo(() => {
+    const start = (page - 1) * EVENTS_PAGE_SIZE;
+    return filteredEvents.slice(start, start + EVENTS_PAGE_SIZE);
+  }, [filteredEvents, page]);
+
+  useEffect(() => {
+    setPage((current) => (current > pageCount ? pageCount : current));
+  }, [pageCount]);
+
   const selectableEventIds = useMemo(() => {
-    return filteredEvents.filter(isFutureEvent).map((event) => event.id);
-  }, [filteredEvents]);
+    return pagedEvents.filter(isFutureEvent).map((event) => event.id);
+  }, [pagedEvents]);
 
   const selectedEventIdSet = useMemo(() => new Set(selectedEventIds), [selectedEventIds]);
 
@@ -447,7 +463,10 @@ export default function EventsListScreen() {
                         fullWidth
                         label="Search"
                         value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
+                        onChange={(e) => {
+                            setSearchText(e.target.value);
+                            setPage(1);
+                        }}
                         placeholder="Search title, organizer, or location"
                     />
 
@@ -457,7 +476,10 @@ export default function EventsListScreen() {
                             <Select
                                 label="Type"
                                 value={selectedType}
-                                onChange={(e) => setSelectedType(e.target.value as EventTypes | 'all')}
+                                onChange={(e) => {
+                                    setSelectedType(e.target.value as EventTypes | 'all');
+                                    setPage(1);
+                                }}
                             >
                                 <MenuItem value="all">All types</MenuItem>
                                 {EVENT_TYPE_OPTIONS.map((option) => (
@@ -473,7 +495,10 @@ export default function EventsListScreen() {
                             options={organizerOptions}
                             getOptionLabel={(option) => option.name || ''}
                             value={selectedOrganizer}
-                            onChange={(_, value) => setSelectedOrganizerId(value ? String(value.id) : null)}
+                            onChange={(_, value) => {
+                                setSelectedOrganizerId(value ? String(value.id) : null);
+                                setPage(1);
+                            }}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                             renderInput={(params) => (
                                 <TextField
@@ -499,7 +524,10 @@ export default function EventsListScreen() {
                         control={
                             <Checkbox
                                 checked={userSubmittedOnly}
-                                onChange={(e) => setUserSubmittedOnly(e.target.checked)}
+                                onChange={(e) => {
+                                    setUserSubmittedOnly(e.target.checked);
+                                    setPage(1);
+                                }}
                             />
                         }
                         label="User submitted only"
@@ -547,7 +575,7 @@ export default function EventsListScreen() {
                     disabled={selectableEventIds.length === 0}
                   />
                 }
-                label={`Select all future (${selectableEventIds.length})`}
+                label={`Select page future (${selectableEventIds.length})`}
               />
               <Button
                 variant="contained"
@@ -569,7 +597,7 @@ export default function EventsListScreen() {
             </Stack>
 
             <EventsTable
-                events={filteredEvents}
+                events={pagedEvents}
                 actionsHeader="Actions"
                 enableTypeEditor
                 enableHorizontalScroll
@@ -632,6 +660,16 @@ export default function EventsListScreen() {
                     );
                 }}
             />
+            {filteredEvents.length > EVENTS_PAGE_SIZE && (
+                <Stack direction="row" justifyContent="center" mt={2}>
+                    <Pagination
+                        count={pageCount}
+                        page={page}
+                        onChange={(_, nextPage) => setPage(nextPage)}
+                        size="small"
+                    />
+                </Stack>
+            )}
 
             <Dialog
                 open={!!editingEvent}
