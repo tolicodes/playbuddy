@@ -23,6 +23,7 @@ import {
     DialogContent,
     DialogActions,
     Tooltip,
+    FormControlLabel,
 } from '@mui/material';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -34,8 +35,20 @@ import { useMergeOrganizer } from '../../common/db-axios/useMergeOrganizer';
 import { useUpdateOrganizer } from '../../common/db-axios/useUpdateOrganizer';
 import { Event, Organizer } from '../../common/types/commonTypes';
 
-type OrganizerDraft = Partial<Organizer> & { fetlife_handles?: string | string[] | null };
 type OrganizerOption = { id: number; label: string; handles?: string };
+type OrganizerEditForm = {
+    name: string;
+    url: string;
+    original_id: string;
+    aliases: string;
+    fetlife_handles: string;
+    instagram_handle: string;
+    membership_app_url: string;
+    membership_only: boolean;
+    hidden: boolean;
+    vetted: boolean;
+    vetted_instructions: string;
+};
 
 const normalizeHandle = (val?: string | null) => (val || '').replace(/^@/, '').trim().toLowerCase();
 const formatOrganizerLabel = (org: Organizer) =>
@@ -48,23 +61,41 @@ const collectFetlifeHandles = (org: Organizer) => {
     const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
     return Array.from(new Set(normalized));
 };
-const formatFetlifeHandlesValue = (draftValue: OrganizerDraft['fetlife_handles'], org: Organizer) => {
-    if (draftValue === undefined) {
-        return collectFetlifeHandles(org).join(', ');
-    }
-    if (typeof draftValue === 'string') return draftValue;
-    return (draftValue || []).join(', ');
+const parseDelimitedList = (value: string) => {
+    if (!value) return [];
+    return value
+        .split(/[,\n]/)
+        .map((item) => item.trim())
+        .filter(Boolean);
 };
-const parseFetlifeHandlesValue = (draftValue: OrganizerDraft['fetlife_handles'], org: Organizer) => {
-    if (draftValue === undefined) return collectFetlifeHandles(org);
-    if (typeof draftValue === 'string') {
-        return draftValue
-            .split(/[,\n]/)
-            .map((handle) => normalizeHandle(handle))
-            .filter(Boolean);
-    }
-    return (draftValue || []).map((handle) => normalizeHandle(handle)).filter(Boolean);
+const parseHandlesInput = (value: string) =>
+    parseDelimitedList(value).map((handle) => normalizeHandle(handle)).filter(Boolean);
+const emptyEditForm: OrganizerEditForm = {
+    name: '',
+    url: '',
+    original_id: '',
+    aliases: '',
+    fetlife_handles: '',
+    instagram_handle: '',
+    membership_app_url: '',
+    membership_only: false,
+    hidden: false,
+    vetted: false,
+    vetted_instructions: '',
 };
+const buildEditForm = (org: Organizer): OrganizerEditForm => ({
+    name: org.name ?? '',
+    url: org.url ?? '',
+    original_id: org.original_id ?? '',
+    aliases: (org.aliases || []).join(', '),
+    fetlife_handles: collectFetlifeHandles(org).join(', '),
+    instagram_handle: org.instagram_handle ?? '',
+    membership_app_url: org.membership_app_url ?? '',
+    membership_only: !!org.membership_only,
+    hidden: !!org.hidden,
+    vetted: !!org.vetted,
+    vetted_instructions: org.vetted_instructions ?? '',
+});
 
 const formatSourceHost = (value?: string | null) => {
     if (!value) return '';
@@ -114,7 +145,6 @@ export default function OrganizerManager() {
     const deleteOrganizerEvents = useDeleteOrganizerEvents();
     const updateOrganizer = useUpdateOrganizer();
     const mergeOrganizer = useMergeOrganizer();
-    const [drafts, setDrafts] = useState<Record<number, OrganizerDraft>>({});
     const [search, setSearch] = useState('');
     const deferredSearch = useDeferredValue(search);
     const [page, setPage] = useState(1);
@@ -124,9 +154,9 @@ export default function OrganizerManager() {
     const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
     const [deletingState, setDeletingState] = useState<{ organizerId: number; mode: 'all' | 'withoutAttendees' } | null>(null);
     const [expandedOrganizers, setExpandedOrganizers] = useState<Record<number, boolean>>({});
-    const [vettedDialog, setVettedDialog] = useState<{ org: Organizer | null; value: string }>({
+    const [editDialog, setEditDialog] = useState<{ org: Organizer | null; form: OrganizerEditForm }>({
         org: null,
-        value: '',
+        form: emptyEditForm,
     });
     const pageSize = 50;
 
@@ -282,53 +312,8 @@ export default function OrganizerManager() {
         return filtered.slice(start, start + pageSize);
     }, [filtered, page]);
 
-    const setDraft = (id: number, key: keyof OrganizerDraft, val: any) => {
-        setDrafts(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: val } }));
-    };
-    const clearDraftKey = (id: number, key: keyof OrganizerDraft) => {
-        setDrafts(prev => {
-            const current = prev[id];
-            if (!current) return prev;
-            const { [key]: _, ...rest } = current;
-            const next = { ...prev };
-            if (Object.keys(rest).length === 0) {
-                delete next[id];
-            } else {
-                next[id] = rest;
-            }
-            return next;
-        });
-    };
-
     const toggleExpanded = (organizerId: number) => {
         setExpandedOrganizers((prev) => ({ ...prev, [organizerId]: !prev[organizerId] }));
-    };
-
-    const toggleHidden = async (org: Organizer, nextHidden: boolean) => {
-        const prevHidden = (drafts[org.id]?.hidden ?? org.hidden) ?? false;
-        setDraft(org.id, 'hidden', nextHidden);
-        try {
-            await updateOrganizer.mutateAsync({ id: org.id, hidden: nextHidden });
-        } catch {
-            setDraft(org.id, 'hidden', prevHidden);
-        }
-    };
-
-    const save = async (org: Organizer) => {
-        const draft = drafts[org.id] || {};
-        await updateOrganizer.mutateAsync({
-            id: org.id,
-            name: draft.name ?? org.name,
-            url: draft.url ?? org.url,
-            aliases: typeof draft.aliases === 'string'
-                ? (draft.aliases as any).split(',').map((s: string) => s.trim()).filter(Boolean)
-                : draft.aliases ?? org.aliases,
-            fetlife_handles: parseFetlifeHandlesValue(draft.fetlife_handles, org),
-            instagram_handle: draft.instagram_handle ?? org.instagram_handle,
-            hidden: draft.hidden ?? org.hidden,
-            vetted: draft.vetted ?? org.vetted,
-            vetted_instructions: draft.vetted_instructions ?? org.vetted_instructions,
-        });
     };
 
     const canMerge = !!mergeSource && !!mergeTarget && mergeSource.id !== mergeTarget.id && !mergeOrganizer.isPending;
@@ -366,27 +351,52 @@ export default function OrganizerManager() {
         }
     };
 
-    const openVettedDialog = (org: Organizer) => {
-        const draft = drafts[org.id] || {};
-        const value = (draft.vetted_instructions ?? org.vetted_instructions ?? '') as string;
-        setVettedDialog({ org, value });
+    const openEditDialog = (org: Organizer) => {
+        setEditDialog({ org, form: buildEditForm(org) });
     };
-    const closeVettedDialog = () => {
+    const closeEditDialog = () => {
         if (updateOrganizer.isPending) return;
-        setVettedDialog({ org: null, value: '' });
+        setEditDialog({ org: null, form: emptyEditForm });
     };
-    const saveVettedDialog = async () => {
-        if (!vettedDialog.org) return;
-        const organizerId = vettedDialog.org.id;
+    const updateEditForm = <K extends keyof OrganizerEditForm>(key: K, value: OrganizerEditForm[K]) => {
+        setEditDialog((prev) => {
+            if (!prev.org) return prev;
+            return { ...prev, form: { ...prev.form, [key]: value } };
+        });
+    };
+    const saveEditDialog = async () => {
+        if (!editDialog.org) return;
+        const { org, form } = editDialog;
+        const name = form.name.trim();
+        if (!name) {
+            window.alert('Organizer name is required.');
+            return;
+        }
+        const aliases = parseDelimitedList(form.aliases);
+        const handles = parseHandlesInput(form.fetlife_handles);
+        const urlTrimmed = form.url.trim();
+        const instagramTrimmed = form.instagram_handle.trim();
+        const originalIdTrimmed = form.original_id.trim();
+        const membershipUrlTrimmed = form.membership_app_url.trim();
+        const vettedInstructionsTrimmed = form.vetted_instructions.trim();
         try {
             await updateOrganizer.mutateAsync({
-                id: organizerId,
-                vetted_instructions: vettedDialog.value,
+                id: org.id,
+                name,
+                url: urlTrimmed || (org.url ? '' : undefined),
+                original_id: originalIdTrimmed || (org.original_id ? null : undefined),
+                aliases: aliases.length ? aliases : null,
+                fetlife_handles: handles.length ? handles : [],
+                instagram_handle: instagramTrimmed || (org.instagram_handle ? '' : undefined),
+                membership_app_url: membershipUrlTrimmed || (org.membership_app_url ? null : undefined),
+                membership_only: form.membership_only,
+                hidden: form.hidden,
+                vetted: form.vetted,
+                vetted_instructions: vettedInstructionsTrimmed || (org.vetted_instructions ? null : undefined),
             });
-            clearDraftKey(organizerId, 'vetted_instructions');
-            closeVettedDialog();
+            closeEditDialog();
         } catch (err: any) {
-            window.alert(err?.message || 'Failed to update vetted instructions.');
+            window.alert(err?.message || 'Failed to update organizer.');
         }
     };
 
@@ -483,16 +493,14 @@ export default function OrganizerManager() {
                     </TableHead>
                     <TableBody>
                         {paged.map((org) => {
-                            const draft = drafts[org.id] || {};
-                            const aliasString = draft.aliases !== undefined
-                                ? (typeof draft.aliases === 'string' ? draft.aliases : (draft.aliases || []).join(', '))
-                                : (org.aliases || []).join(', ');
-                            const isHidden = (draft.hidden ?? org.hidden) ?? false;
-                            const isVetted = (draft.vetted ?? org.vetted) ?? false;
-                            const vettedInstructions = draft.vetted_instructions ?? org.vetted_instructions ?? '';
+                            const aliasString = (org.aliases || []).join(', ');
+                            const isHidden = !!org.hidden;
+                            const isVetted = !!org.vetted;
+                            const vettedInstructions = org.vetted_instructions ?? '';
                             const vettedPreview = vettedInstructions.length > 80
                                 ? `${vettedInstructions.slice(0, 80)}…`
                                 : vettedInstructions;
+                            const handlesLabel = collectFetlifeHandles(org).join(', ');
                             const totalEvents = ((org as any).events || []).length;
                             const futureCount = (org as any)._futureCount ?? 0;
                             const eventsWithAttendees = eventsWithAttendeesByOrganizerId.get(org.id) ?? [];
@@ -535,12 +543,7 @@ export default function OrganizerManager() {
                                 <React.Fragment key={org.id}>
                                     <TableRow hover sx={{ '& > *': { borderBottom: 'unset' } }}>
                                         <TableCell sx={{ minWidth: 180 }}>
-                                            <TextField
-                                                value={draft.name ?? org.name ?? ''}
-                                                onChange={e => setDraft(org.id, 'name', e.target.value)}
-                                                size="small"
-                                                fullWidth
-                                            />
+                                            <Typography variant="body2">{org.name || '—'}</Typography>
                                         </TableCell>
                                         <TableCell>
                                             <Stack direction="row" spacing={1} alignItems="center">
@@ -557,55 +560,41 @@ export default function OrganizerManager() {
                                                 </IconButton>
                                             </Stack>
                                         </TableCell>
-                                    <TableCell>
-                                        <Switch
-                                            checked={isHidden}
-                                            onChange={(e) => toggleHidden(org, e.target.checked)}
-                                            color="warning"
-                                            inputProps={{ 'aria-label': 'Toggle hidden organizer' }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Switch
-                                            checked={isVetted}
-                                            onChange={(e) => setDraft(org.id, 'vetted', e.target.checked)}
-                                            color="success"
-                                            inputProps={{ 'aria-label': 'Toggle vetted organizer' }}
-                                        />
-                                    </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={isHidden ? 'Hidden' : 'Visible'}
+                                                size="small"
+                                                color={isHidden ? 'warning' : 'default'}
+                                                variant={isHidden ? 'filled' : 'outlined'}
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={isVetted ? 'Vetted' : 'Not vetted'}
+                                                size="small"
+                                                color={isVetted ? 'success' : 'default'}
+                                                variant={isVetted ? 'filled' : 'outlined'}
+                                            />
+                                        </TableCell>
                                     <TableCell sx={{ minWidth: 200 }}>
-                                        <TextField
-                                            value={draft.url ?? org.url ?? ''}
-                                            onChange={e => setDraft(org.id, 'url', e.target.value)}
-                                            size="small"
-                                                fullWidth
-                                            />
+                                        <Typography variant="body2" color={org.url ? 'text.primary' : 'text.secondary'}>
+                                            {org.url || '—'}
+                                        </Typography>
+                                    </TableCell>
+                                        <TableCell sx={{ minWidth: 140 }}>
+                                            <Typography variant="body2" color={handlesLabel ? 'text.primary' : 'text.secondary'}>
+                                                {handlesLabel || '—'}
+                                            </Typography>
                                         </TableCell>
                                         <TableCell sx={{ minWidth: 140 }}>
-                                            <TextField
-                                                value={formatFetlifeHandlesValue(draft.fetlife_handles, org)}
-                                                onChange={e => setDraft(org.id, 'fetlife_handles', e.target.value)}
-                                                size="small"
-                                                fullWidth
-                                                placeholder="@handle1, @handle2"
-                                            />
-                                        </TableCell>
-                                        <TableCell sx={{ minWidth: 140 }}>
-                                            <TextField
-                                                value={draft.instagram_handle ?? org.instagram_handle ?? ''}
-                                                onChange={e => setDraft(org.id, 'instagram_handle', e.target.value)}
-                                                size="small"
-                                                fullWidth
-                                            />
+                                            <Typography variant="body2" color={org.instagram_handle ? 'text.primary' : 'text.secondary'}>
+                                                {org.instagram_handle || '—'}
+                                            </Typography>
                                     </TableCell>
                                     <TableCell sx={{ minWidth: 220 }}>
-                                        <TextField
-                                            value={aliasString}
-                                            onChange={e => setDraft(org.id, 'aliases', e.target.value)}
-                                                size="small"
-                                            fullWidth
-                                            placeholder="alias1, alias2"
-                                        />
+                                        <Typography variant="body2" color={aliasString ? 'text.primary' : 'text.secondary'}>
+                                            {aliasString || '—'}
+                                        </Typography>
                                     </TableCell>
                                     <TableCell sx={{ minWidth: 240 }}>
                                         <Stack spacing={1}>
@@ -617,13 +606,6 @@ export default function OrganizerManager() {
                                                     {vettedPreview || '—'}
                                                 </Typography>
                                             </Tooltip>
-                                            <Button
-                                                variant="outlined"
-                                                size="small"
-                                                onClick={() => openVettedDialog(org)}
-                                            >
-                                                Edit
-                                            </Button>
                                         </Stack>
                                     </TableCell>
                                     <TableCell width={320}>
@@ -631,11 +613,11 @@ export default function OrganizerManager() {
                                             <Button
                                                 variant="outlined"
                                                 size="small"
-                                                    onClick={() => save(org)}
-                                                    disabled={updateOrganizer.isPending}
-                                                >
-                                                    Save
-                                                </Button>
+                                                onClick={() => openEditDialog(org)}
+                                                disabled={updateOrganizer.isPending}
+                                            >
+                                                Edit
+                                            </Button>
                                                 <Button
                                                     variant="outlined"
                                                     color="error"
@@ -816,21 +798,104 @@ export default function OrganizerManager() {
                 </DialogActions>
             </Dialog>
             <Dialog
-                open={!!vettedDialog.org}
-                onClose={closeVettedDialog}
+                open={!!editDialog.org}
+                onClose={closeEditDialog}
                 fullWidth
-                maxWidth="sm"
+                maxWidth="md"
             >
-                <DialogTitle>Vetted instructions</DialogTitle>
+                <DialogTitle>Edit organizer</DialogTitle>
                 <DialogContent>
                     <Stack spacing={2} mt={1}>
                         <Typography variant="body2" color="text.secondary">
-                            This copy shows on vetted events for the organizer.
+                            {editDialog.org ? `Organizer #${editDialog.org.id}` : ''}
                         </Typography>
+                        <Box
+                            sx={{
+                                display: 'grid',
+                                gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+                                gap: 2,
+                            }}
+                        >
+                            <TextField
+                                label="Name"
+                                value={editDialog.form.name}
+                                onChange={(e) => updateEditForm('name', e.target.value)}
+                                required
+                            />
+                            <TextField
+                                label="Website"
+                                value={editDialog.form.url}
+                                onChange={(e) => updateEditForm('url', e.target.value)}
+                                placeholder="https://"
+                            />
+                            <TextField
+                                label="Original ID"
+                                value={editDialog.form.original_id}
+                                onChange={(e) => updateEditForm('original_id', e.target.value)}
+                            />
+                            <TextField
+                                label="Instagram handle"
+                                value={editDialog.form.instagram_handle}
+                                onChange={(e) => updateEditForm('instagram_handle', e.target.value)}
+                                placeholder="@handle"
+                            />
+                            <TextField
+                                label="FetLife handles"
+                                value={editDialog.form.fetlife_handles}
+                                onChange={(e) => updateEditForm('fetlife_handles', e.target.value)}
+                                placeholder="handle1, handle2"
+                                helperText="Comma or newline separated."
+                            />
+                            <TextField
+                                label="Aliases"
+                                value={editDialog.form.aliases}
+                                onChange={(e) => updateEditForm('aliases', e.target.value)}
+                                placeholder="alias1, alias2"
+                                helperText="Comma or newline separated."
+                            />
+                            <TextField
+                                label="Membership URL"
+                                value={editDialog.form.membership_app_url}
+                                onChange={(e) => updateEditForm('membership_app_url', e.target.value)}
+                                placeholder="https://"
+                            />
+                        </Box>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={editDialog.form.hidden}
+                                        onChange={(e) => updateEditForm('hidden', e.target.checked)}
+                                        color="warning"
+                                    />
+                                }
+                                label="Hidden"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={editDialog.form.membership_only}
+                                        onChange={(e) => updateEditForm('membership_only', e.target.checked)}
+                                        color="info"
+                                    />
+                                }
+                                label="Members-only"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={editDialog.form.vetted}
+                                        onChange={(e) => updateEditForm('vetted', e.target.checked)}
+                                        color="success"
+                                    />
+                                }
+                                label="Vetted organizer"
+                            />
+                        </Stack>
                         <TextField
                             label="Vetted instructions"
-                            value={vettedDialog.value}
-                            onChange={(e) => setVettedDialog((prev) => ({ ...prev, value: e.target.value }))}
+                            value={editDialog.form.vetted_instructions}
+                            onChange={(e) => updateEditForm('vetted_instructions', e.target.value)}
                             multiline
                             minRows={4}
                             placeholder="Add instructions (Markdown supported)"
@@ -839,12 +904,12 @@ export default function OrganizerManager() {
                     </Stack>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={closeVettedDialog} disabled={updateOrganizer.isPending}>
+                    <Button onClick={closeEditDialog} disabled={updateOrganizer.isPending}>
                         Cancel
                     </Button>
                     <Button
                         variant="contained"
-                        onClick={saveVettedDialog}
+                        onClick={saveEditDialog}
                         disabled={updateOrganizer.isPending}
                     >
                         {updateOrganizer.isPending ? 'Saving...' : 'Save'}

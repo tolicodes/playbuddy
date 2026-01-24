@@ -21,7 +21,7 @@ import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
 import { useFetchActiveEventPopups, useFetchEventPopups } from '../../Common/db-axios/useEventPopups';
 import { useImportSources } from '../../Common/db-axios/useImportSources';
-import type { Event, EventAttendees, EventPopup, ImportSource } from '../../Common/types/commonTypes';
+import type { Event, EventAttendees, EventPopup, ImportSource, Organizer } from '../../Common/types/commonTypes';
 import type { NavStack } from '../../Common/Nav/NavStackType';
 import { navigateToTab } from '../../Common/Nav/navigationHelpers';
 import { ADMIN_EMAILS, API_BASE_URL } from '../../config';
@@ -33,7 +33,7 @@ import { useGuestSaveModal } from '../GuestSaveModal';
 import { RateAppModal } from '../RateAppModal';
 import { ShareCalendarModal } from '../ShareCalendarModal';
 import { showNotificationsPromptModal } from '../Notifications/NotificationsPromptModal';
-import { VettedInstructionsModal } from '../Admin/VettedInstructionsModal';
+import { OrganizerEditModal, type OrganizerEditForm } from '../Admin/OrganizerEditModal';
 import {
     getForcedPopupId,
     getLatestPopupShown,
@@ -104,6 +104,15 @@ type ManualPopupItem = {
     hasSeen?: boolean;
 };
 
+type DebugQueueItem = {
+    id: string;
+    label: string;
+    subtitle: string;
+    icon: { icon: string; color: string; bg: string };
+    metaLines: string[];
+    onPress: () => void;
+};
+
 type PopupNextSummary = {
     id: PopupId;
     label: string;
@@ -139,6 +148,7 @@ const MANUAL_POPUP_ICON = {
 const EVENT_POPUP_HIDE_KEY_PREFIX = 'event_popup_hide_';
 const EVENT_POPUP_SEEN_KEY_PREFIX = 'event_popup_seen_';
 const CALENDAR_ADD_COACH_COMPLETED_KEY = 'calendar_add_coach_completed_v1';
+const DATE_COACH_DEBUG_TOAST_KEY = 'dateCoachDebugToast';
 
 const getEventPopupHideKey = (id: string) => `${EVENT_POPUP_HIDE_KEY_PREFIX}${id}`;
 const getEventPopupSeenKey = (id: string) => `${EVENT_POPUP_SEEN_KEY_PREFIX}${id}`;
@@ -246,10 +256,20 @@ export const DebugScreen = () => {
     const [popupExpanded, setPopupExpanded] = useState(true);
     const [recommendationsExpanded, setRecommendationsExpanded] = useState(false);
     const [debugPopupId, setDebugPopupId] = useState<PopupId | null>(null);
-    const [debugVettedModalVisible, setDebugVettedModalVisible] = useState(false);
-    const [debugVettedInstructions, setDebugVettedInstructions] = useState(
-        'Apply before attending. Bring a government ID and arrive 10 minutes early.'
-    );
+    const [debugOrganizerEditVisible, setDebugOrganizerEditVisible] = useState(false);
+    const [debugOrganizerEditValues, setDebugOrganizerEditValues] = useState<OrganizerEditForm>({
+        name: 'Sample Organizer',
+        url: 'https://example.com',
+        original_id: 'external-123',
+        aliases: 'Sample Org, Org Sample',
+        fetlife_handles: '@sample',
+        instagram_handle: '@sample',
+        membership_app_url: 'https://example.com/join',
+        membership_only: true,
+        hidden: false,
+        vetted: true,
+        vetted_instructions: 'Apply before attending. Bring a government ID and arrive 10 minutes early.',
+    });
     const [debugEventPopup, setDebugEventPopup] = useState<EventPopup | null>(null);
     const [debugStatus, setDebugStatus] = useState<string | null>(null);
     const [notificationDebugLines, setNotificationDebugLines] = useState<string[]>([]);
@@ -887,6 +907,20 @@ export const DebugScreen = () => {
         })();
     }, []);
 
+    const onPressShowDateCoachToast = useCallback(() => {
+        void (async () => {
+            try {
+                await AsyncStorage.setItem(DATE_COACH_DEBUG_TOAST_KEY, String(Date.now()));
+                setPopupDebugStatus('Long press toast queued.');
+                navigation.popToTop();
+                navigateToTab(navigation, 'Calendar', { screen: 'Calendar Home' });
+            } catch (error) {
+                console.warn('[debug] failed to queue date coach toast', error);
+                setPopupDebugStatus('Unable to queue long press toast.');
+            }
+        })();
+    }, [navigation]);
+
     const handleDebugListViewChoice = useCallback((mode: 'classic' | 'image') => {
         void setEventListViewMode(mode);
         void setEventListIntroSeen(true);
@@ -1031,19 +1065,14 @@ export const DebugScreen = () => {
         : overallNextSummary && 'id' in overallNextSummary
             ? POPUP_ICON_MAP[overallNextSummary.id]
             : null;
-    const handleShowNextPopup = useCallback(() => {
-        if (!overallNextSummary) return;
-        if (overallNextSummary.source === 'manual') {
-            const manualItem = nextManualPopupItem?.item;
-            if (!manualItem) {
-                setPopupDebugStatus('Unable to locate the next special popup.');
-                return;
-            }
-            onPressShowManualPopup(manualItem.source);
-            return;
-        }
-        onPressShowPopup(overallNextSummary.id);
-    }, [overallNextSummary, nextManualPopupItem, onPressShowManualPopup, onPressShowPopup]);
+    const popupActionNotes: Partial<Record<PopupId, string>> = {
+        calendar_add_coach: 'Tap Save on an event',
+        buddy_list_coach: 'Open an event with other attendees',
+    };
+    const debugOrganizer: Organizer = {
+        id: 9999,
+        name: debugOrganizerEditValues.name || 'Sample Organizer',
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -1168,9 +1197,6 @@ export const DebugScreen = () => {
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.secondaryButton} onPress={onPressClearOrganizerReminders}>
                                 <Text style={styles.secondaryButtonText}>Clear organizer reminders</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.secondaryButton} onPress={onPressNotificationsPrompt}>
-                                <Text style={styles.secondaryButtonText}>Show notifications prompt</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.secondaryButton}
@@ -1305,21 +1331,6 @@ export const DebugScreen = () => {
                                 <TouchableOpacity style={styles.secondaryButton} onPress={onPressResetPopups}>
                                     <Text style={styles.secondaryButtonText}>Reset popup history</Text>
                                 </TouchableOpacity>
-                                <TouchableOpacity style={styles.secondaryButton} onPress={onPressClearCalendarAddToast}>
-                                    <Text style={styles.secondaryButtonText}>Clear calendar add toast</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.secondaryButton}
-                                    onPress={() => showGuestSaveModal()}
-                                >
-                                    <Text style={styles.secondaryButtonText}>Show guest save modal</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity
-                                    style={styles.secondaryButton}
-                                    onPress={() => setDebugVettedModalVisible(true)}
-                                >
-                                    <Text style={styles.secondaryButtonText}>Show vetted instructions modal</Text>
-                                </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.secondaryButton}
                                     onPress={() => void refreshPopupDebugInfo('manual refresh')}
@@ -1385,12 +1396,6 @@ export const DebugScreen = () => {
                                             </Text>
                                         </View>
                                     </View>
-                                    <TouchableOpacity
-                                        style={styles.popupShowButton}
-                                        onPress={handleShowNextPopup}
-                                    >
-                                        <Text style={styles.popupShowButtonText}>Show now</Text>
-                                    </TouchableOpacity>
                                 </View>
                             )}
                             <View style={styles.popupQueueSection}>
@@ -1404,6 +1409,11 @@ export const DebugScreen = () => {
                                             const statusStyle = POPUP_STATUS_STYLES[statusTone];
                                             const statusLabel = getPopupStatusLabel(popup, statusTone);
                                             const metaLines = getPopupMetaLines(popup, now);
+                                            const actionNote = popupActionNotes[popup.id];
+                                            const displayLabel = actionNote ? `${popup.label} (Action)` : popup.label;
+                                            const displayMetaLines = actionNote
+                                                ? [...metaLines, `Action: ${actionNote}`]
+                                                : metaLines;
                                             const icon = POPUP_ICON_MAP[popup.id];
                                             return (
                                                 <View
@@ -1427,7 +1437,7 @@ export const DebugScreen = () => {
                                                             />
                                                         </View>
                                                         <View style={styles.popupCardTitleBlock}>
-                                                            <Text style={styles.popupCardTitle}>{popup.label}</Text>
+                                                            <Text style={styles.popupCardTitle}>{displayLabel}</Text>
                                                             <Text style={styles.popupCardSubtitle}>
                                                                 {`#${popup.order} · ${popup.id}`}
                                                             </Text>
@@ -1470,7 +1480,7 @@ export const DebugScreen = () => {
                                                         </View>
                                                     )}
                                                     <View style={styles.popupCardMetaRow}>
-                                                        {metaLines.map((line) => (
+                                                        {displayMetaLines.map((line) => (
                                                             <Text
                                                                 key={`${popup.id}-${line}`}
                                                                 style={styles.popupCardMeta}
@@ -1488,6 +1498,64 @@ export const DebugScreen = () => {
                                                 </View>
                                             );
                                         })}
+                                        {debugQueueItems.map((item) => (
+                                            <View key={item.id} style={styles.popupCard}>
+                                                <View style={styles.popupCardHeader}>
+                                                    <View
+                                                        style={[
+                                                            styles.popupIconWrap,
+                                                            { backgroundColor: item.icon.bg },
+                                                        ]}
+                                                    >
+                                                        <FAIcon
+                                                            name={item.icon.icon}
+                                                            size={16}
+                                                            color={item.icon.color}
+                                                        />
+                                                    </View>
+                                                    <View style={styles.popupCardTitleBlock}>
+                                                        <Text style={styles.popupCardTitle}>{item.label}</Text>
+                                                        <Text style={styles.popupCardSubtitle}>{item.subtitle}</Text>
+                                                    </View>
+                                                    <View
+                                                        style={[
+                                                            styles.popupStatusPill,
+                                                            {
+                                                                backgroundColor: POPUP_STATUS_STYLES.pending.bg,
+                                                                borderColor: POPUP_STATUS_STYLES.pending.border,
+                                                            },
+                                                        ]}
+                                                    >
+                                                        <Text
+                                                            style={[
+                                                                styles.popupStatusText,
+                                                                { color: POPUP_STATUS_STYLES.pending.color },
+                                                            ]}
+                                                        >
+                                                            Action
+                                                        </Text>
+                                                    </View>
+                                                </View>
+                                                {item.metaLines.length ? (
+                                                    <View style={styles.popupCardMetaRow}>
+                                                        {item.metaLines.map((line) => (
+                                                            <Text
+                                                                key={`${item.id}-${line}`}
+                                                                style={styles.popupCardMeta}
+                                                            >
+                                                                {line}
+                                                            </Text>
+                                                        ))}
+                                                    </View>
+                                                ) : null}
+                                                <TouchableOpacity
+                                                    style={styles.popupShowButton}
+                                                    onPress={item.onPress}
+                                                >
+                                                    <Text style={styles.popupShowButtonText}>Show now</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))}
                                     </View>
                                 )}
                             </View>
@@ -1547,7 +1615,7 @@ export const DebugScreen = () => {
                                                             {statusStyle.label}
                                                         </Text>
                                                     </View>
-                                                </View>
+                                            </View>
                                                 <View style={styles.popupCardMetaRow}>
                                                     {metaLines.map((line) => (
                                                         <Text
@@ -1618,12 +1686,13 @@ export const DebugScreen = () => {
                     onDismiss={dismissDebugPopup}
                     onSnooze={dismissDebugPopup}
                 />
-                <VettedInstructionsModal
-                    visible={debugVettedModalVisible}
-                    value={debugVettedInstructions}
-                    onChangeText={setDebugVettedInstructions}
-                    onSave={() => setDebugVettedModalVisible(false)}
-                    onClose={() => setDebugVettedModalVisible(false)}
+                <OrganizerEditModal
+                    visible={debugOrganizerEditVisible}
+                    organizer={debugOrganizer}
+                    values={debugOrganizerEditValues}
+                    onChange={(key, value) => setDebugOrganizerEditValues((prev) => ({ ...prev, [key]: value }))}
+                    onSave={() => setDebugOrganizerEditVisible(false)}
+                    onClose={() => setDebugOrganizerEditVisible(false)}
                 />
             </LinearGradient>
         </SafeAreaView>
@@ -1873,6 +1942,17 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         fontFamily: fontFamilies.body,
     },
+    modalActionList: {
+        gap: spacing.sm,
+    },
+    modalActionItem: {
+        gap: spacing.xxs,
+    },
+    modalActionNote: {
+        fontSize: fontSizes.sm,
+        color: colors.brandTextMuted,
+        fontFamily: fontFamilies.body,
+    },
     popupQueueGrid: {
         gap: spacing.sm,
     },
@@ -1971,19 +2051,6 @@ const styles = StyleSheet.create({
     popupCardMeta: {
         fontSize: fontSizes.sm,
         color: colors.brandTextMuted,
-        fontFamily: fontFamilies.body,
-    },
-    popupShowButton: {
-        backgroundColor: colors.brandIndigo,
-        borderRadius: radius.md,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xs,
-        alignSelf: 'flex-start',
-    },
-    popupShowButtonText: {
-        color: colors.white,
-        fontSize: fontSizes.sm,
-        fontWeight: '700',
         fontFamily: fontFamilies.body,
     },
     popupDetailsCard: {

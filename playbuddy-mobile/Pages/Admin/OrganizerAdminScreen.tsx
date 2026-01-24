@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     FlatList,
     Modal,
-    Switch,
     ActivityIndicator,
     Alert,
 } from 'react-native';
@@ -20,7 +19,7 @@ import { useMergeOrganizer } from '../../Common/db-axios/useMergeOrganizer';
 import { useUpdateOrganizer } from '../../Common/db-axios/useUpdateOrganizer';
 import type { Event, Organizer } from '../../Common/types/commonTypes';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { VettedInstructionsModal } from './VettedInstructionsModal';
+import { OrganizerEditModal, type OrganizerEditForm } from './OrganizerEditModal';
 import { ADMIN_EMAILS } from '../../config';
 import {
     colors,
@@ -222,6 +221,20 @@ const OrganizerAdminHeader = React.memo((props: OrganizerAdminHeaderProps) => {
 
 OrganizerAdminHeader.displayName = 'OrganizerAdminHeader';
 
+const emptyEditForm: OrganizerEditForm = {
+    name: '',
+    url: '',
+    original_id: '',
+    aliases: '',
+    fetlife_handles: '',
+    instagram_handle: '',
+    membership_app_url: '',
+    membership_only: false,
+    hidden: false,
+    vetted: false,
+    vetted_instructions: '',
+};
+
 export const OrganizerAdminScreen = () => {
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
@@ -236,49 +249,20 @@ export const OrganizerAdminScreen = () => {
     const updateOrganizer = useUpdateOrganizer();
     const mergeOrganizer = useMergeOrganizer();
 
-    const [drafts, setDrafts] = useState<Record<number, OrganizerDraft>>({});
     const [search, setSearch] = useState('');
     const [hideNoEvents, setHideNoEvents] = useState(true);
     const [showOnlyHidden, setShowOnlyHidden] = useState(false);
-    const [savingId, setSavingId] = useState<number | null>(null);
     const [mergeModalVisible, setMergeModalVisible] = useState(false);
     const [mergeSource, setMergeSource] = useState<OrganizerWithCounts | null>(null);
     const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
     const [mergeSearch, setMergeSearch] = useState('');
     const [expandedOrganizers, setExpandedOrganizers] = useState<Record<number, boolean>>({});
-    const [vettedModalVisible, setVettedModalVisible] = useState(false);
-    const [vettedModalTarget, setVettedModalTarget] = useState<OrganizerWithCounts | null>(null);
-    const [vettedModalValue, setVettedModalValue] = useState('');
-
-    const setDraft = (id: number, key: keyof OrganizerDraft, value: any) => {
-        setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: value } }));
-    };
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editTarget, setEditTarget] = useState<OrganizerWithCounts | null>(null);
+    const [editForm, setEditForm] = useState<OrganizerEditForm>(emptyEditForm);
 
     const toggleExpanded = (organizerId: number) => {
         setExpandedOrganizers((prev) => ({ ...prev, [organizerId]: !prev[organizerId] }));
-    };
-
-    const clearDraft = (id: number) => {
-        setDrafts((prev) => {
-            const next = { ...prev };
-            delete next[id];
-            return next;
-        });
-    };
-
-    const clearDraftKey = (id: number, key: keyof OrganizerDraft) => {
-        setDrafts((prev) => {
-            const current = prev[id];
-            if (!current) return prev;
-            const { [key]: _, ...rest } = current;
-            const next = { ...prev };
-            if (Object.keys(rest).length === 0) {
-                delete next[id];
-            } else {
-                next[id] = rest;
-            }
-            return next;
-        });
     };
 
     const normalized = useMemo(() => {
@@ -381,43 +365,62 @@ export const OrganizerAdminScreen = () => {
             })) as OrganizerWithCounts[];
     }, [normalized, search, hideNoEvents, showOnlyHidden]);
 
-    const toggleHidden = async (org: OrganizerWithCounts, nextHidden: boolean) => {
-        const prevHidden = (drafts[org.id]?.hidden ?? org.hidden) ?? false;
-        setDraft(org.id, 'hidden', nextHidden);
-        setSavingId(org.id);
-        try {
-            await updateOrganizer.mutateAsync({ id: org.id, hidden: nextHidden });
-            clearDraftKey(org.id, 'hidden');
-        } catch {
-            setDraft(org.id, 'hidden', prevHidden);
-            Alert.alert('Update failed', 'Unable to update organizer visibility.');
-        } finally {
-            setSavingId(null);
-        }
+    const buildEditForm = (org: OrganizerWithCounts): OrganizerEditForm => ({
+        name: org.name ?? '',
+        url: org.url ?? '',
+        original_id: org.original_id ?? '',
+        aliases: deriveAliasValue(undefined, org.aliases),
+        fetlife_handles: deriveFetlifeHandleValue(undefined, org.fetlife_handles, org.fetlife_handle),
+        instagram_handle: org.instagram_handle ?? '',
+        membership_app_url: org.membership_app_url ?? '',
+        membership_only: !!org.membership_only,
+        hidden: !!org.hidden,
+        vetted: !!org.vetted,
+        vetted_instructions: org.vetted_instructions ?? '',
+    });
+
+    const openEditModal = (org: OrganizerWithCounts) => {
+        setEditTarget(org);
+        setEditForm(buildEditForm(org));
+        setEditModalVisible(true);
     };
 
-    const saveOrganizer = async (org: OrganizerWithCounts) => {
-        const draft = drafts[org.id] || {};
-        setSavingId(org.id);
+    const closeEditModal = () => {
+        if (updateOrganizer.isPending) return;
+        setEditModalVisible(false);
+        setEditTarget(null);
+        setEditForm(emptyEditForm);
+    };
+
+    const updateEditFormField = <K extends keyof OrganizerEditForm>(key: K, value: OrganizerEditForm[K]) => {
+        setEditForm((prev) => ({ ...prev, [key]: value }));
+    };
+
+    const saveEditModal = async () => {
+        if (!editTarget) return;
+        const name = editForm.name.trim();
+        if (!name) {
+            Alert.alert('Missing name', 'Organizer name is required.');
+            return;
+        }
         try {
             await updateOrganizer.mutateAsync({
-                id: org.id,
-                name: draft.name ?? org.name,
-                url: draft.url ?? org.url,
-                aliases: parseAliases(draft.aliases, org.aliases),
-                fetlife_handles: parseFetlifeHandles(draft.fetlife_handles, org.fetlife_handles, org.fetlife_handle),
-                instagram_handle: draft.instagram_handle ?? org.instagram_handle,
-                hidden: draft.hidden ?? org.hidden,
-                membership_app_url: draft.membership_app_url ?? org.membership_app_url,
-                membership_only: draft.membership_only ?? org.membership_only,
-                vetted: draft.vetted ?? org.vetted,
-                vetted_instructions: draft.vetted_instructions ?? org.vetted_instructions,
+                id: editTarget.id,
+                name,
+                url: editForm.url.trim(),
+                original_id: editForm.original_id.trim() || null,
+                aliases: parseAliases(editForm.aliases),
+                fetlife_handles: parseFetlifeHandles(editForm.fetlife_handles, [], null),
+                instagram_handle: editForm.instagram_handle.trim(),
+                membership_app_url: editForm.membership_app_url.trim() || null,
+                membership_only: editForm.membership_only,
+                hidden: editForm.hidden,
+                vetted: editForm.vetted,
+                vetted_instructions: editForm.vetted_instructions.trim() || null,
             });
-            clearDraft(org.id);
-        } catch {
-            Alert.alert('Save failed', 'Unable to update organizer details.');
-        } finally {
-            setSavingId(null);
+            closeEditModal();
+        } catch (err: any) {
+            Alert.alert('Save failed', err?.message || 'Unable to update organizer details.');
         }
     };
 
@@ -475,37 +478,6 @@ export const OrganizerAdminScreen = () => {
         );
     };
 
-    const openVettedModal = (org: OrganizerWithCounts) => {
-        const draft = drafts[org.id] || {};
-        setVettedModalTarget(org);
-        setVettedModalValue((draft.vetted_instructions ?? org.vetted_instructions ?? '') as string);
-        setVettedModalVisible(true);
-    };
-
-    const closeVettedModal = () => {
-        if (updateOrganizer.isPending) return;
-        setVettedModalVisible(false);
-        setVettedModalTarget(null);
-        setVettedModalValue('');
-    };
-
-    const saveVettedModal = async () => {
-        if (!vettedModalTarget) return;
-        setSavingId(vettedModalTarget.id);
-        try {
-            await updateOrganizer.mutateAsync({
-                id: vettedModalTarget.id,
-                vetted_instructions: vettedModalValue,
-            });
-            clearDraftKey(vettedModalTarget.id, 'vetted_instructions');
-            closeVettedModal();
-        } catch {
-            Alert.alert('Save failed', 'Unable to update vetted instructions.');
-        } finally {
-            setSavingId(null);
-        }
-    };
-
     if (!isAdmin) {
         return (
             <View style={styles.container}>
@@ -540,14 +512,12 @@ export const OrganizerAdminScreen = () => {
     }
 
     const renderItem = ({ item }: { item: OrganizerWithCounts }) => {
-        const draft = drafts[item.id] || {};
-        const hiddenValue = (draft.hidden ?? item.hidden) ?? false;
-        const membershipOnlyValue = (draft.membership_only ?? item.membership_only) ?? false;
-        const vettedValue = (draft.vetted ?? item.vetted) ?? false;
-        const aliasValue = deriveAliasValue(draft.aliases, item.aliases);
-        const fetlifeHandlesValue = deriveFetlifeHandleValue(draft.fetlife_handles, item.fetlife_handles, item.fetlife_handle);
-        const hasChanges = Object.keys(draft).length > 0;
-        const isSaving = updateOrganizer.isPending && savingId === item.id;
+        const hiddenValue = !!item.hidden;
+        const membershipOnlyValue = !!item.membership_only;
+        const vettedValue = !!item.vetted;
+        const aliasValue = (item.aliases || []).join(', ');
+        const fetlifeHandlesValue = collectFetlifeHandles(item).join(', ');
+        const isSaving = updateOrganizer.isPending;
         const organizerEvents = eventsByOrganizerId[item.id] || [];
         const isExpanded = !!expandedOrganizers[item.id];
         const eventsHint = eventsError
@@ -573,18 +543,21 @@ export const OrganizerAdminScreen = () => {
                         <Text style={styles.metaLabel}>Total</Text>
                         <Text style={styles.metaValue}>{item._totalCount}</Text>
                     </View>
-                    <View style={styles.togglePill}>
-                        <Text style={styles.toggleLabel}>Hidden</Text>
-                        <Switch
-                            value={hiddenValue}
-                            onValueChange={(value) => toggleHidden(item, value)}
-                            trackColor={{ false: colors.borderMutedAlt, true: colors.tintViolet }}
-                            thumbColor={hiddenValue ? colors.brandIndigo : colors.surfaceWhiteStrong}
-                            ios_backgroundColor={colors.borderMutedAlt}
-                            disabled={isSaving}
-                        />
+                    <View style={styles.metaPill}>
+                        <Text style={styles.metaLabel}>Hidden</Text>
+                        <Text style={styles.metaValue}>{hiddenValue ? 'Yes' : 'No'}</Text>
+                    </View>
+                    <View style={styles.metaPill}>
+                        <Text style={styles.metaLabel}>Vetted</Text>
+                        <Text style={styles.metaValue}>{vettedValue ? 'Yes' : 'No'}</Text>
+                    </View>
+                    <View style={styles.metaPill}>
+                        <Text style={styles.metaLabel}>Members</Text>
+                        <Text style={styles.metaValue}>{membershipOnlyValue ? 'Only' : 'Open'}</Text>
                     </View>
                 </View>
+
+                <Text style={styles.organizerName}>{item.name || 'Organizer'}</Text>
 
                 <View style={styles.eventsSection}>
                     <TouchableOpacity
@@ -648,138 +621,57 @@ export const OrganizerAdminScreen = () => {
                 </View>
 
                 <View style={styles.field}>
-                    <Text style={styles.label}>Name</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={draft.name ?? item.name ?? ''}
-                        onChangeText={(value) => setDraft(item.id, 'name', value)}
-                        placeholder="Organizer name"
-                        placeholderTextColor={colors.textSubtle}
-                    />
-                </View>
-
-                <View style={styles.field}>
                     <Text style={styles.label}>Website</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={draft.url ?? item.url ?? ''}
-                        onChangeText={(value) => setDraft(item.id, 'url', value)}
-                        placeholder="https://"
-                        placeholderTextColor={colors.textSubtle}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        keyboardType="url"
-                    />
+                    <Text style={styles.valueText}>
+                        {item.url || '—'}
+                    </Text>
                 </View>
 
                 <View style={styles.fieldRow}>
                     <View style={styles.fieldCol}>
                         <Text style={styles.label}>FetLife handles</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={fetlifeHandlesValue}
-                            onChangeText={(value) => setDraft(item.id, 'fetlife_handles', value)}
-                            placeholder="@handle1, @handle2"
-                            placeholderTextColor={colors.textSubtle}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
+                        <Text style={styles.valueText}>
+                            {fetlifeHandlesValue || '—'}
+                        </Text>
                     </View>
                     <View style={styles.fieldCol}>
                         <Text style={styles.label}>Instagram</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={draft.instagram_handle ?? item.instagram_handle ?? ''}
-                            onChangeText={(value) => setDraft(item.id, 'instagram_handle', value)}
-                            placeholder="@handle"
-                            placeholderTextColor={colors.textSubtle}
-                            autoCapitalize="none"
-                            autoCorrect={false}
-                        />
+                        <Text style={styles.valueText}>
+                            {item.instagram_handle || '—'}
+                        </Text>
                     </View>
                 </View>
 
                 <View style={styles.field}>
                     <Text style={styles.label}>Aliases</Text>
-                    <TextInput
-                        style={[styles.input, styles.multilineInput]}
-                        value={aliasValue}
-                        onChangeText={(value) => setDraft(item.id, 'aliases', value)}
-                        placeholder="alias1, alias2"
-                        placeholderTextColor={colors.textSubtle}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        multiline
-                    />
+                    <Text style={styles.valueText}>
+                        {aliasValue || '—'}
+                    </Text>
                 </View>
 
                 <View style={styles.field}>
                     <Text style={styles.label}>Membership URL</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={draft.membership_app_url ?? item.membership_app_url ?? ''}
-                        onChangeText={(value) => setDraft(item.id, 'membership_app_url', value)}
-                        placeholder="https://"
-                        placeholderTextColor={colors.textSubtle}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        keyboardType="url"
-                    />
-                </View>
-
-                <View style={styles.switchRow}>
-                    <Text style={styles.label}>Members-only</Text>
-                    <Switch
-                        value={membershipOnlyValue}
-                        onValueChange={(value) => setDraft(item.id, 'membership_only', value)}
-                        trackColor={{ false: colors.borderMutedAlt, true: colors.tintViolet }}
-                        thumbColor={membershipOnlyValue ? colors.brandIndigo : colors.surfaceWhiteStrong}
-                        ios_backgroundColor={colors.borderMutedAlt}
-                        disabled={isSaving}
-                    />
-                </View>
-
-                <View style={styles.switchRow}>
-                    <Text style={styles.label}>Vetted organizer</Text>
-                    <Switch
-                        value={vettedValue}
-                        onValueChange={(value) => setDraft(item.id, 'vetted', value)}
-                        trackColor={{ false: colors.borderMutedAlt, true: colors.badgeVetted }}
-                        thumbColor={vettedValue ? colors.badgeVetted : colors.surfaceWhiteStrong}
-                        ios_backgroundColor={colors.borderMutedAlt}
-                        disabled={isSaving}
-                    />
+                    <Text style={styles.valueText}>
+                        {item.membership_app_url || '—'}
+                    </Text>
                 </View>
 
                 <View style={styles.field}>
                     <Text style={styles.label}>Vetted instructions</Text>
-                    <Text style={styles.instructionsPreview} numberOfLines={3}>
+                    <Text style={styles.valueText} numberOfLines={3}>
                         {item.vetted_instructions?.trim() || 'No instructions yet.'}
                     </Text>
-                    <TouchableOpacity
-                        style={styles.instructionsButton}
-                        onPress={() => openVettedModal(item)}
-                        disabled={isSaving}
-                    >
-                        <Text style={styles.instructionsButtonText}>Edit vetted instructions</Text>
-                    </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
                     style={[
-                        styles.saveButton,
-                        (!hasChanges || isSaving) && styles.saveButtonDisabled,
+                        styles.primaryButton,
+                        isSaving && styles.primaryButtonDisabled,
                     ]}
-                    onPress={() => saveOrganizer(item)}
-                    disabled={!hasChanges || isSaving}
+                    onPress={() => openEditModal(item)}
+                    disabled={isSaving}
                 >
-                    {isSaving ? (
-                        <ActivityIndicator size="small" color={colors.white} />
-                    ) : (
-                        <Text style={styles.saveButtonText}>
-                            {hasChanges ? 'Save changes' : 'Saved'}
-                        </Text>
-                    )}
+                    <Text style={styles.primaryButtonText}>Edit organizer</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -905,12 +797,14 @@ export const OrganizerAdminScreen = () => {
                     </View>
                 </View>
             </Modal>
-            <VettedInstructionsModal
-                visible={vettedModalVisible}
-                value={vettedModalValue}
-                onChangeText={setVettedModalValue}
-                onSave={saveVettedModal}
-                onClose={closeVettedModal}
+            <OrganizerEditModal
+                visible={editModalVisible}
+                organizer={editTarget}
+                values={editForm}
+                onChange={updateEditFormField}
+                onSave={saveEditModal}
+                onClose={closeEditModal}
+                saving={updateOrganizer.isPending}
             />
         </>
     );
@@ -1060,21 +954,12 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         fontFamily: fontFamilies.body,
     },
-    togglePill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: spacing.sm,
-        paddingVertical: spacing.xs,
-        borderRadius: radius.pill,
-        backgroundColor: colors.surfaceSubtle,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
-        gap: spacing.xs,
-    },
-    toggleLabel: {
-        fontSize: fontSizes.sm,
-        color: colors.textMuted,
-        fontFamily: fontFamilies.body,
+    organizerName: {
+        fontSize: fontSizes.title,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.display,
+        fontWeight: '700',
+        marginBottom: spacing.sm,
     },
     eventsSection: {
         borderTopWidth: 1,
@@ -1203,44 +1088,23 @@ const styles = StyleSheet.create({
         minHeight: 64,
         textAlignVertical: 'top',
     },
-    instructionsPreview: {
-        fontSize: fontSizes.sm,
-        color: colors.textMuted,
+    valueText: {
+        fontSize: fontSizes.base,
+        color: colors.textPrimary,
         lineHeight: lineHeights.md,
         fontFamily: fontFamilies.body,
-        marginBottom: spacing.sm,
     },
-    instructionsButton: {
-        paddingVertical: spacing.sm,
-        borderRadius: radius.pill,
-        borderWidth: 1,
-        borderColor: colors.borderSubtle,
-        alignItems: 'center',
-        backgroundColor: colors.surfaceSubtle,
-    },
-    instructionsButtonText: {
-        fontSize: fontSizes.smPlus,
-        fontWeight: '600',
-        color: colors.textPrimary,
-        fontFamily: fontFamilies.body,
-    },
-    switchRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: spacing.lg,
-    },
-    saveButton: {
+    primaryButton: {
         backgroundColor: colors.brandIndigo,
         borderRadius: radius.pill,
         paddingVertical: spacing.sm,
         alignItems: 'center',
         justifyContent: 'center',
     },
-    saveButtonDisabled: {
+    primaryButtonDisabled: {
         backgroundColor: colors.brandMuted,
     },
-    saveButtonText: {
+    primaryButtonText: {
         color: colors.white,
         fontSize: fontSizes.smPlus,
         fontWeight: '600',
