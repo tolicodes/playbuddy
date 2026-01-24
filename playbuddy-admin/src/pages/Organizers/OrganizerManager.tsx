@@ -1,6 +1,7 @@
 import React, { useDeferredValue, useMemo, useState } from 'react';
 import {
     Box,
+    Collapse,
     Stack,
     Typography,
     Paper,
@@ -13,6 +14,7 @@ import {
     Button,
     Chip,
     Divider,
+    IconButton,
     Pagination,
     Switch,
     Autocomplete,
@@ -22,6 +24,8 @@ import {
     DialogActions,
     Tooltip,
 } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import { useFetchAttendees } from '../../common/db-axios/useAttendees';
 import { useFetchEvents } from '../../common/db-axios/useEvents';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
@@ -83,6 +87,21 @@ const formatEventSourceLabel = (event: Event) => {
     );
 };
 
+const formatEventDate = (event: Event) => {
+    const dateStr = event.start_date || event.end_date;
+    if (!dateStr) return 'Date TBD';
+    const date = new Date(dateStr);
+    if (!Number.isFinite(date.getTime())) return dateStr;
+    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
+
+const getApprovalMeta = (status?: Event['approval_status']) => {
+    const normalized = status ?? 'approved';
+    if (normalized === 'approved') return { label: 'Approved', color: 'success' as const };
+    if (normalized === 'pending') return { label: 'Pending', color: 'warning' as const };
+    return { label: 'Rejected', color: 'error' as const };
+};
+
 export default function OrganizerManager() {
     const { data: organizers = [] } = useFetchOrganizers({ includeHidden: true });
     const { data: events = [], isLoading: eventsLoading } = useFetchEvents({
@@ -104,6 +123,11 @@ export default function OrganizerManager() {
     const [mergeSource, setMergeSource] = useState<Organizer | null>(null);
     const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
     const [deletingState, setDeletingState] = useState<{ organizerId: number; mode: 'all' | 'withoutAttendees' } | null>(null);
+    const [expandedOrganizers, setExpandedOrganizers] = useState<Record<number, boolean>>({});
+    const [vettedDialog, setVettedDialog] = useState<{ org: Organizer | null; value: string }>({
+        org: null,
+        value: '',
+    });
     const pageSize = 50;
 
     const organizerOptions = useMemo<OrganizerOption[]>(() => {
@@ -186,6 +210,28 @@ export default function OrganizerManager() {
         return counts;
     }, [attendees, organizerIdByEventId]);
 
+    const eventsByOrganizerId = useMemo(() => {
+        const map = new Map<number, Event[]>();
+        events.forEach((event) => {
+            const organizerId = event.organizer?.id ?? event.organizer_id;
+            if (!organizerId) return;
+            const list = map.get(organizerId) ?? [];
+            list.push(event);
+            map.set(organizerId, list);
+        });
+        map.forEach((list) => {
+            list.sort((a, b) => {
+                const aTime = a.start_date ? new Date(a.start_date).getTime() : Number.POSITIVE_INFINITY;
+                const bTime = b.start_date ? new Date(b.start_date).getTime() : Number.POSITIVE_INFINITY;
+                const aScore = Number.isFinite(aTime) ? aTime : Number.POSITIVE_INFINITY;
+                const bScore = Number.isFinite(bTime) ? bTime : Number.POSITIVE_INFINITY;
+                if (aScore === bScore) return (a.name || '').localeCompare(b.name || '');
+                return aScore - bScore;
+            });
+        });
+        return map;
+    }, [events]);
+
     const eventsWithAttendeesByOrganizerId = useMemo(() => {
         const map = new Map<number, Array<{ id: number; name: string; sourceLabel: string; attendeeCount: number; startDate?: string | null }>>();
         events.forEach((event) => {
@@ -239,6 +285,24 @@ export default function OrganizerManager() {
     const setDraft = (id: number, key: keyof OrganizerDraft, val: any) => {
         setDrafts(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: val } }));
     };
+    const clearDraftKey = (id: number, key: keyof OrganizerDraft) => {
+        setDrafts(prev => {
+            const current = prev[id];
+            if (!current) return prev;
+            const { [key]: _, ...rest } = current;
+            const next = { ...prev };
+            if (Object.keys(rest).length === 0) {
+                delete next[id];
+            } else {
+                next[id] = rest;
+            }
+            return next;
+        });
+    };
+
+    const toggleExpanded = (organizerId: number) => {
+        setExpandedOrganizers((prev) => ({ ...prev, [organizerId]: !prev[organizerId] }));
+    };
 
     const toggleHidden = async (org: Organizer, nextHidden: boolean) => {
         const prevHidden = (drafts[org.id]?.hidden ?? org.hidden) ?? false;
@@ -262,6 +326,8 @@ export default function OrganizerManager() {
             fetlife_handles: parseFetlifeHandlesValue(draft.fetlife_handles, org),
             instagram_handle: draft.instagram_handle ?? org.instagram_handle,
             hidden: draft.hidden ?? org.hidden,
+            vetted: draft.vetted ?? org.vetted,
+            vetted_instructions: draft.vetted_instructions ?? org.vetted_instructions,
         });
     };
 
@@ -297,6 +363,30 @@ export default function OrganizerManager() {
             }
         } catch (err: any) {
             window.alert(err?.message || 'Failed to merge organizers.');
+        }
+    };
+
+    const openVettedDialog = (org: Organizer) => {
+        const draft = drafts[org.id] || {};
+        const value = (draft.vetted_instructions ?? org.vetted_instructions ?? '') as string;
+        setVettedDialog({ org, value });
+    };
+    const closeVettedDialog = () => {
+        if (updateOrganizer.isPending) return;
+        setVettedDialog({ org: null, value: '' });
+    };
+    const saveVettedDialog = async () => {
+        if (!vettedDialog.org) return;
+        const organizerId = vettedDialog.org.id;
+        try {
+            await updateOrganizer.mutateAsync({
+                id: organizerId,
+                vetted_instructions: vettedDialog.value,
+            });
+            clearDraftKey(organizerId, 'vetted_instructions');
+            closeVettedDialog();
+        } catch (err: any) {
+            window.alert(err?.message || 'Failed to update vetted instructions.');
         }
     };
 
@@ -382,10 +472,12 @@ export default function OrganizerManager() {
                             <TableCell>Name</TableCell>
                             <TableCell>Events</TableCell>
                             <TableCell>Hidden</TableCell>
+                            <TableCell>Vetted org</TableCell>
                             <TableCell>URL</TableCell>
                             <TableCell>FetLife handles (comma separated)</TableCell>
                             <TableCell>Instagram</TableCell>
                             <TableCell>Aliases (comma separated)</TableCell>
+                            <TableCell>Vetted instructions</TableCell>
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
@@ -396,9 +488,16 @@ export default function OrganizerManager() {
                                 ? (typeof draft.aliases === 'string' ? draft.aliases : (draft.aliases || []).join(', '))
                                 : (org.aliases || []).join(', ');
                             const isHidden = (draft.hidden ?? org.hidden) ?? false;
+                            const isVetted = (draft.vetted ?? org.vetted) ?? false;
+                            const vettedInstructions = draft.vetted_instructions ?? org.vetted_instructions ?? '';
+                            const vettedPreview = vettedInstructions.length > 80
+                                ? `${vettedInstructions.slice(0, 80)}…`
+                                : vettedInstructions;
                             const totalEvents = ((org as any).events || []).length;
                             const futureCount = (org as any)._futureCount ?? 0;
                             const eventsWithAttendees = eventsWithAttendeesByOrganizerId.get(org.id) ?? [];
+                            const organizerEvents = eventsByOrganizerId.get(org.id) ?? [];
+                            const isExpanded = !!expandedOrganizers[org.id];
                             const protectedCount = eventsWithAttendees.length;
                             const deletableCount = Math.max(0, totalEvents - protectedCount);
                             const isDeleting = deleteOrganizerEvents.isPending && deletingState?.organizerId === org.id;
@@ -433,21 +532,31 @@ export default function OrganizerManager() {
                                 </Box>
                             );
                             return (
-                                <TableRow key={org.id} hover>
-                                    <TableCell sx={{ minWidth: 180 }}>
-                                        <TextField
-                                            value={draft.name ?? org.name ?? ''}
-                                            onChange={e => setDraft(org.id, 'name', e.target.value)}
-                                            size="small"
-                                            fullWidth
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Chip
-                                            label={(org as any)._futureCount ?? 0}
-                                            size="small"
-                                        />
-                                    </TableCell>
+                                <React.Fragment key={org.id}>
+                                    <TableRow hover sx={{ '& > *': { borderBottom: 'unset' } }}>
+                                        <TableCell sx={{ minWidth: 180 }}>
+                                            <TextField
+                                                value={draft.name ?? org.name ?? ''}
+                                                onChange={e => setDraft(org.id, 'name', e.target.value)}
+                                                size="small"
+                                                fullWidth
+                                            />
+                                        </TableCell>
+                                        <TableCell>
+                                            <Stack direction="row" spacing={1} alignItems="center">
+                                                <Chip
+                                                    label={(org as any)._futureCount ?? 0}
+                                                    size="small"
+                                                />
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => toggleExpanded(org.id)}
+                                                    aria-label={isExpanded ? 'Hide organizer events' : 'Show organizer events'}
+                                                >
+                                                    {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                                </IconButton>
+                                            </Stack>
+                                        </TableCell>
                                     <TableCell>
                                         <Switch
                                             checked={isHidden}
@@ -456,107 +565,182 @@ export default function OrganizerManager() {
                                             inputProps={{ 'aria-label': 'Toggle hidden organizer' }}
                                         />
                                     </TableCell>
+                                    <TableCell>
+                                        <Switch
+                                            checked={isVetted}
+                                            onChange={(e) => setDraft(org.id, 'vetted', e.target.checked)}
+                                            color="success"
+                                            inputProps={{ 'aria-label': 'Toggle vetted organizer' }}
+                                        />
+                                    </TableCell>
                                     <TableCell sx={{ minWidth: 200 }}>
                                         <TextField
                                             value={draft.url ?? org.url ?? ''}
                                             onChange={e => setDraft(org.id, 'url', e.target.value)}
                                             size="small"
-                                            fullWidth
-                                        />
-                                    </TableCell>
-                                    <TableCell sx={{ minWidth: 140 }}>
-                                        <TextField
-                                            value={formatFetlifeHandlesValue(draft.fetlife_handles, org)}
-                                            onChange={e => setDraft(org.id, 'fetlife_handles', e.target.value)}
-                                            size="small"
-                                            fullWidth
-                                            placeholder="@handle1, @handle2"
-                                        />
-                                    </TableCell>
-                                    <TableCell sx={{ minWidth: 140 }}>
-                                        <TextField
-                                            value={draft.instagram_handle ?? org.instagram_handle ?? ''}
-                                            onChange={e => setDraft(org.id, 'instagram_handle', e.target.value)}
-                                            size="small"
-                                            fullWidth
-                                        />
+                                                fullWidth
+                                            />
+                                        </TableCell>
+                                        <TableCell sx={{ minWidth: 140 }}>
+                                            <TextField
+                                                value={formatFetlifeHandlesValue(draft.fetlife_handles, org)}
+                                                onChange={e => setDraft(org.id, 'fetlife_handles', e.target.value)}
+                                                size="small"
+                                                fullWidth
+                                                placeholder="@handle1, @handle2"
+                                            />
+                                        </TableCell>
+                                        <TableCell sx={{ minWidth: 140 }}>
+                                            <TextField
+                                                value={draft.instagram_handle ?? org.instagram_handle ?? ''}
+                                                onChange={e => setDraft(org.id, 'instagram_handle', e.target.value)}
+                                                size="small"
+                                                fullWidth
+                                            />
                                     </TableCell>
                                     <TableCell sx={{ minWidth: 220 }}>
                                         <TextField
                                             value={aliasString}
                                             onChange={e => setDraft(org.id, 'aliases', e.target.value)}
-                                            size="small"
+                                                size="small"
                                             fullWidth
                                             placeholder="alias1, alias2"
                                         />
+                                    </TableCell>
+                                    <TableCell sx={{ minWidth: 240 }}>
+                                        <Stack spacing={1}>
+                                            <Tooltip title={vettedInstructions || ''} arrow disableHoverListener={!vettedInstructions}>
+                                                <Typography
+                                                    variant="body2"
+                                                    color={vettedInstructions ? 'text.primary' : 'text.secondary'}
+                                                >
+                                                    {vettedPreview || '—'}
+                                                </Typography>
+                                            </Tooltip>
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={() => openVettedDialog(org)}
+                                            >
+                                                Edit
+                                            </Button>
+                                        </Stack>
                                     </TableCell>
                                     <TableCell width={320}>
                                         <Stack direction="row" spacing={1} flexWrap="wrap">
                                             <Button
                                                 variant="outlined"
                                                 size="small"
-                                                onClick={() => save(org)}
-                                                disabled={updateOrganizer.isPending}
-                                            >
-                                                Save
-                                            </Button>
-                                            <Button
-                                                variant="outlined"
-                                                color="error"
-                                                size="small"
-                                                onClick={() => openMergeDialog(org)}
-                                                disabled={mergeOrganizer.isPending}
-                                            >
-                                                Merge
-                                            </Button>
-                                            <Tooltip title={deleteTooltipTitle} arrow>
-                                                <span>
-                                                    <Button
-                                                        variant="contained"
-                                                        color="error"
-                                                        size="small"
-                                                        onClick={() => handleDeleteEvents({
-                                                            org,
-                                                            totalEvents,
-                                                            futureCount,
-                                                            protectedCount,
-                                                            deletableCount,
-                                                            onlyWithoutAttendees: false,
-                                                        })}
-                                                        disabled={isDeleting || !totalEvents}
-                                                    >
-                                                        {isDeletingAll ? 'Deleting...' : 'Delete events'}
-                                                    </Button>
-                                                </span>
-                                            </Tooltip>
-                                            <Button
-                                                variant="outlined"
-                                                color="error"
-                                                size="small"
-                                                onClick={() => handleDeleteEvents({
-                                                    org,
-                                                    totalEvents,
-                                                    futureCount,
-                                                    protectedCount,
-                                                    deletableCount,
-                                                    onlyWithoutAttendees: true,
-                                                })}
-                                                disabled={isDeleting || deletableCount === 0}
-                                            >
-                                                {isDeletingWithout ? 'Deleting...' : 'Delete no-saves'}
-                                            </Button>
-                                            <Chip
-                                                label={savedLabel}
-                                                size="small"
-                                                variant="outlined"
-                                            />
-                                        </Stack>
-                                    </TableCell>
-                                </TableRow>
+                                                    onClick={() => save(org)}
+                                                    disabled={updateOrganizer.isPending}
+                                                >
+                                                    Save
+                                                </Button>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    size="small"
+                                                    onClick={() => openMergeDialog(org)}
+                                                    disabled={mergeOrganizer.isPending}
+                                                >
+                                                    Merge
+                                                </Button>
+                                                <Tooltip title={deleteTooltipTitle} arrow>
+                                                    <span>
+                                                        <Button
+                                                            variant="contained"
+                                                            color="error"
+                                                            size="small"
+                                                            onClick={() => handleDeleteEvents({
+                                                                org,
+                                                                totalEvents,
+                                                                futureCount,
+                                                                protectedCount,
+                                                                deletableCount,
+                                                                onlyWithoutAttendees: false,
+                                                            })}
+                                                            disabled={isDeleting || !totalEvents}
+                                                        >
+                                                            {isDeletingAll ? 'Deleting...' : 'Delete events'}
+                                                        </Button>
+                                                    </span>
+                                                </Tooltip>
+                                                <Button
+                                                    variant="outlined"
+                                                    color="error"
+                                                    size="small"
+                                                    onClick={() => handleDeleteEvents({
+                                                        org,
+                                                        totalEvents,
+                                                        futureCount,
+                                                        protectedCount,
+                                                        deletableCount,
+                                                        onlyWithoutAttendees: true,
+                                                    })}
+                                                    disabled={isDeleting || deletableCount === 0}
+                                                >
+                                                    {isDeletingWithout ? 'Deleting...' : 'Delete no-saves'}
+                                                </Button>
+                                                <Chip
+                                                    label={savedLabel}
+                                                    size="small"
+                                                    variant="outlined"
+                                                />
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                    <TableRow>
+                                        <TableCell colSpan={10} sx={{ p: 0, borderBottom: 0 }}>
+                                            <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                                <Box sx={{ px: 2, pb: 2 }}>
+                                                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                                        Events
+                                                    </Typography>
+                                                    {eventsLoading ? (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Loading events...
+                                                        </Typography>
+                                                    ) : organizerEvents.length ? (
+                                                        <Stack spacing={1}>
+                                                            {organizerEvents.map((event) => {
+                                                                const approvalMeta = getApprovalMeta(event.approval_status);
+                                                                const sourceLabel = formatEventSourceLabel(event);
+                                                                return (
+                                                                    <Stack
+                                                                        key={event.id}
+                                                                        direction="row"
+                                                                        spacing={1}
+                                                                        alignItems="center"
+                                                                        flexWrap="wrap"
+                                                                    >
+                                                                        <Typography variant="body2" sx={{ minWidth: 220 }}>
+                                                                            {event.name || `Event ${event.id}`}
+                                                                        </Typography>
+                                                                        <Typography variant="caption" color="text.secondary">
+                                                                            {formatEventDate(event)}
+                                                                        </Typography>
+                                                                        <Chip label={approvalMeta.label} color={approvalMeta.color} size="small" />
+                                                                        {sourceLabel && (
+                                                                            <Chip label={sourceLabel} size="small" variant="outlined" />
+                                                                        )}
+                                                                    </Stack>
+                                                                );
+                                                            })}
+                                                        </Stack>
+                                                    ) : (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            No events found for this organizer.
+                                                        </Typography>
+                                                    )}
+                                                </Box>
+                                            </Collapse>
+                                        </TableCell>
+                                    </TableRow>
+                                </React.Fragment>
                             );
                         })}
                         {!filtered.length && (
-                            <TableRow><TableCell colSpan={8} align="center">No organizers</TableCell></TableRow>
+                            <TableRow><TableCell colSpan={10} align="center">No organizers</TableCell></TableRow>
                         )}
                     </TableBody>
                 </Table>
@@ -628,6 +812,42 @@ export default function OrganizerManager() {
                         disabled={!canMerge}
                     >
                         {mergeOrganizer.isPending ? 'Merging...' : 'Merge into destination'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+            <Dialog
+                open={!!vettedDialog.org}
+                onClose={closeVettedDialog}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Vetted instructions</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} mt={1}>
+                        <Typography variant="body2" color="text.secondary">
+                            This copy shows on vetted events for the organizer.
+                        </Typography>
+                        <TextField
+                            label="Vetted instructions"
+                            value={vettedDialog.value}
+                            onChange={(e) => setVettedDialog((prev) => ({ ...prev, value: e.target.value }))}
+                            multiline
+                            minRows={4}
+                            placeholder="Add instructions (Markdown supported)"
+                            fullWidth
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeVettedDialog} disabled={updateOrganizer.isPending}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={saveVettedDialog}
+                        disabled={updateOrganizer.isPending}
+                    >
+                        {updateOrganizer.isPending ? 'Saving...' : 'Save'}
                     </Button>
                 </DialogActions>
             </Dialog>

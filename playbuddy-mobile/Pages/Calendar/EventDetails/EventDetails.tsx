@@ -346,14 +346,16 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
                 type: 'organizer_public_community',
             });
         });
-        const nextFollowedOrganizerIds = new Set(followedOrganizerIds);
-        if (organizerId) {
-            nextFollowedOrganizerIds.add(organizerId);
+        if (organizerFollowCount === 0) {
+            const nextFollowedOrganizerIds = new Set(followedOrganizerIds);
+            if (organizerId) {
+                nextFollowedOrganizerIds.add(organizerId);
+            }
+            void promptOrganizerNotificationsIfNeeded({
+                events: allEvents,
+                followedOrganizerIds: nextFollowedOrganizerIds,
+            });
         }
-        void promptOrganizerNotificationsIfNeeded({
-            events: allEvents,
-            followedOrganizerIds: nextFollowedOrganizerIds,
-        });
         navigateToOrganizerCommunity();
     };
 
@@ -814,6 +816,8 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
     const [showAllTags, setShowAllTags] = useState(false);
 
     const isAvailableSoon = !event.ticket_url?.includes('https');
+    const isVetted = !!(event.vetted || event.organizer?.vetted);
+    const vettedInstructions = (event.organizer?.vetted_instructions || '').trim();
 
     const rawDescription = event.description || '';
     const description = (isAvailableSoon && !rawDescription)
@@ -885,14 +889,18 @@ const DetailsTab = ({ event, handleCopyPromoCode }: { event: EventWithMetadata, 
             )}
 
 
-            {event.vetted && (
+            {isVetted && (
                 <SectionCard title="Vetted" icon="verified-user" tone="info">
-                    <Text style={styles.vettedInfoText}>
-                        This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
-                        {event.vetting_url && <Text style={{ color: colors.linkAccent, fontWeight: 'bold' }}>
-                            <Text onPress={() => Linking.openURL(event.vetting_url || '')}>here</Text>
-                        </Text>}
-                    </Text>
+                    {vettedInstructions ? (
+                        <Markdown style={vettedMarkdownStyles}>{vettedInstructions}</Markdown>
+                    ) : (
+                        <Text style={styles.vettedInfoText}>
+                            This is a <Text style={{ fontWeight: 'bold' }}>vetted</Text> event. To attend you must fill out an application{' '}
+                            {event.vetting_url && <Text style={{ color: colors.linkAccent, fontWeight: 'bold' }}>
+                                <Text onPress={() => Linking.openURL(event.vetting_url || '')}>here</Text>
+                            </Text>}
+                        </Text>
+                    )}
                 </SectionCard>
             )}
 
@@ -2140,6 +2148,26 @@ const markdownStyles = {
     },
     paragraph: {
         marginBottom: spacing.md,
+    },
+};
+
+const vettedMarkdownStyles = {
+    body: {
+        fontSize: fontSizes.base,
+        color: colors.success,
+        fontWeight: '500',
+        fontFamily: fontFamilies.body,
+    },
+    paragraph: {
+        fontSize: fontSizes.base,
+        color: colors.success,
+        fontWeight: '500',
+        fontFamily: fontFamilies.body,
+        marginBottom: spacing.sm,
+    },
+    link: {
+        color: colors.linkAccent,
+        fontWeight: '700',
     },
 };
 

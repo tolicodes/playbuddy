@@ -29,6 +29,13 @@ export const EventDetails = () => {
     const formattedDate = formatDate(event, true, true);
     const isFetlife = event.ticket_url?.includes('fetlife');
     const availableSoon = !event.ticket_url?.includes('https');
+    const isVetted = !!(event.vetted || event.organizer?.vetted);
+    const vettedInstructions = (event.organizer?.vetted_instructions || '').trim();
+    const vettedMarkdownComponents = {
+        p: ({ children }: { children?: React.ReactNode }) => (
+            <span className={styles.vettedInstructions}>{children}</span>
+        ),
+    };
     const ticketUrl = (() => {
         if (!event.ticket_url) return '';
         if (!promoCode) return event.ticket_url;
@@ -156,13 +163,20 @@ export const EventDetails = () => {
                     </div>
 
                     <div className={styles.eventDescription}>
-                        {event.vetted && (
+                        {isVetted && (
                             <div className={`${styles.eventCallout} ${styles.vetted}`}>
-                                <strong>Vetted Event:</strong> You must apply to attend.{" "}
-                                {event.vetting_url && (
-                                    <a href={event.vetting_url} target="_blank" rel="noreferrer">
-                                        Apply here
-                                    </a>
+                                <strong>Vetted Event:</strong>{" "}
+                                {vettedInstructions ? (
+                                    <ReactMarkdown components={vettedMarkdownComponents}>{vettedInstructions}</ReactMarkdown>
+                                ) : (
+                                    <>
+                                        You must apply to attend.{" "}
+                                        {event.vetting_url && (
+                                            <a href={event.vetting_url} target="_blank" rel="noreferrer">
+                                                Apply here
+                                            </a>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         )}

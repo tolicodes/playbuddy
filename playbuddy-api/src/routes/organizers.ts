@@ -95,6 +95,14 @@ const mergeOrganizerPatch = (source: any, target: any) => {
         }
     }
 
+    if (isBlank(target.vetted_instructions) && !isBlank(source.vetted_instructions)) {
+        patch.vetted_instructions = trimValue(source.vetted_instructions);
+    }
+
+    if (!target.vetted && source.vetted) {
+        patch.vetted = true;
+    }
+
     return patch;
 };
 
@@ -133,6 +141,8 @@ router.patch('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest,
         instagram_handle,
         membership_app_url,
         membership_only,
+        vetted,
+        vetted_instructions,
     } = req.body || {};
     const update: any = {};
     if (name !== undefined) update.name = name;
@@ -151,6 +161,8 @@ router.patch('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest,
     if (instagram_handle !== undefined) update.instagram_handle = instagram_handle;
     if (membership_app_url !== undefined) update.membership_app_url = membership_app_url;
     if (membership_only !== undefined) update.membership_only = membership_only;
+    if (vetted !== undefined) update.vetted = vetted;
+    if (vetted_instructions !== undefined) update.vetted_instructions = vetted_instructions;
     if (hidden !== undefined) update.hidden = hidden;
 
     try {

@@ -52,8 +52,10 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event })
         if (inclusivity.length) {
             lines.push({ label: 'Inclusivity', value: inclusivity.join(', ') });
         }
-        if (classification?.vetted != null || event.vetted != null) {
-            const vettedValue = (classification?.vetted ?? event.vetted) ? 'yes' : 'no';
+        const organizerVetted = event.organizer?.vetted;
+        const effectiveVetted = classification?.vetted ?? event.vetted ?? organizerVetted;
+        if (effectiveVetted != null) {
+            const vettedValue = effectiveVetted ? 'yes' : 'no';
             lines.push({ label: 'Vetted', value: vettedValue });
         }
         if (event.approval_status) {

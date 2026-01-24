@@ -14,11 +14,13 @@ import {
 import FAIcon from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { useFetchOrganizers } from '../../Common/db-axios/useOrganizers';
 import { useMergeOrganizer } from '../../Common/db-axios/useMergeOrganizer';
 import { useUpdateOrganizer } from '../../Common/db-axios/useUpdateOrganizer';
-import type { Organizer } from '../../Common/types/commonTypes';
+import type { Event, Organizer } from '../../Common/types/commonTypes';
 import { useUserContext } from '../Auth/hooks/UserContext';
+import { VettedInstructionsModal } from './VettedInstructionsModal';
 import { ADMIN_EMAILS } from '../../config';
 import {
     colors,
@@ -47,6 +49,42 @@ const collectFetlifeHandles = (org: Organizer) => {
     ];
     const normalized = handles.map((handle) => normalizeHandle(handle)).filter(Boolean);
     return Array.from(new Set(normalized));
+};
+
+const formatSourceHost = (value?: string | null) => {
+    if (!value) return '';
+    try {
+        return new URL(value).hostname.replace(/^www\./, '');
+    } catch {
+        return value;
+    }
+};
+
+const formatEventSourceLabel = (event: Event) => {
+    return (
+        event.source_ticketing_platform ||
+        event.source_origination_platform ||
+        event.dataset ||
+        formatSourceHost(event.source_url) ||
+        formatSourceHost(event.event_url) ||
+        formatSourceHost(event.ticket_url) ||
+        ''
+    );
+};
+
+const formatEventDate = (event: Event) => {
+    const dateStr = event.start_date || event.end_date;
+    if (!dateStr) return 'Date TBD';
+    const date = new Date(dateStr);
+    if (!Number.isFinite(date.getTime())) return dateStr;
+    return date.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+};
+
+const getApprovalMeta = (status?: Event['approval_status']) => {
+    const normalized = status ?? 'approved';
+    if (normalized === 'approved') return { label: 'Approved', color: colors.success };
+    if (normalized === 'pending') return { label: 'Pending', color: colors.warning };
+    return { label: 'Rejected', color: colors.danger };
 };
 
 const parseAliases = (value: OrganizerDraft['aliases'], fallback?: string[] | null) => {
@@ -189,6 +227,12 @@ export const OrganizerAdminScreen = () => {
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
 
     const { data: organizers = [], isLoading, error } = useFetchOrganizers({ includeHidden: true });
+    const { data: events = [], isLoading: eventsLoading, error: eventsError } = useFetchEvents({
+        includeFacilitatorOnly: true,
+        includeHiddenOrganizers: true,
+        includeHidden: true,
+        approvalStatuses: ['approved', 'pending', 'rejected'],
+    });
     const updateOrganizer = useUpdateOrganizer();
     const mergeOrganizer = useMergeOrganizer();
 
@@ -201,9 +245,17 @@ export const OrganizerAdminScreen = () => {
     const [mergeSource, setMergeSource] = useState<OrganizerWithCounts | null>(null);
     const [mergeTarget, setMergeTarget] = useState<OrganizerOption | null>(null);
     const [mergeSearch, setMergeSearch] = useState('');
+    const [expandedOrganizers, setExpandedOrganizers] = useState<Record<number, boolean>>({});
+    const [vettedModalVisible, setVettedModalVisible] = useState(false);
+    const [vettedModalTarget, setVettedModalTarget] = useState<OrganizerWithCounts | null>(null);
+    const [vettedModalValue, setVettedModalValue] = useState('');
 
     const setDraft = (id: number, key: keyof OrganizerDraft, value: any) => {
         setDrafts((prev) => ({ ...prev, [id]: { ...(prev[id] || {}), [key]: value } }));
+    };
+
+    const toggleExpanded = (organizerId: number) => {
+        setExpandedOrganizers((prev) => ({ ...prev, [organizerId]: !prev[organizerId] }));
     };
 
     const clearDraft = (id: number) => {
@@ -252,6 +304,27 @@ export const OrganizerAdminScreen = () => {
             })
             .sort((a, b) => (a.org.name || '').localeCompare(b.org.name || ''));
     }, [organizers]);
+
+    const eventsByOrganizerId = useMemo(() => {
+        const map: Record<number, Event[]> = {};
+        events.forEach((event) => {
+            const organizerId = event.organizer?.id ?? event.organizer_id;
+            if (!organizerId) return;
+            if (!map[organizerId]) map[organizerId] = [];
+            map[organizerId].push(event);
+        });
+        Object.values(map).forEach((list) => {
+            list.sort((a, b) => {
+                const aTime = a.start_date ? new Date(a.start_date).getTime() : Number.POSITIVE_INFINITY;
+                const bTime = b.start_date ? new Date(b.start_date).getTime() : Number.POSITIVE_INFINITY;
+                const aScore = Number.isFinite(aTime) ? aTime : Number.POSITIVE_INFINITY;
+                const bScore = Number.isFinite(bTime) ? bTime : Number.POSITIVE_INFINITY;
+                if (aScore === bScore) return (a.name || '').localeCompare(b.name || '');
+                return aScore - bScore;
+            });
+        });
+        return map;
+    }, [events]);
 
     const organizerOptions = useMemo<OrganizerOption[]>(() => {
         return [...organizers]
@@ -337,6 +410,8 @@ export const OrganizerAdminScreen = () => {
                 hidden: draft.hidden ?? org.hidden,
                 membership_app_url: draft.membership_app_url ?? org.membership_app_url,
                 membership_only: draft.membership_only ?? org.membership_only,
+                vetted: draft.vetted ?? org.vetted,
+                vetted_instructions: draft.vetted_instructions ?? org.vetted_instructions,
             });
             clearDraft(org.id);
         } catch {
@@ -400,6 +475,37 @@ export const OrganizerAdminScreen = () => {
         );
     };
 
+    const openVettedModal = (org: OrganizerWithCounts) => {
+        const draft = drafts[org.id] || {};
+        setVettedModalTarget(org);
+        setVettedModalValue((draft.vetted_instructions ?? org.vetted_instructions ?? '') as string);
+        setVettedModalVisible(true);
+    };
+
+    const closeVettedModal = () => {
+        if (updateOrganizer.isPending) return;
+        setVettedModalVisible(false);
+        setVettedModalTarget(null);
+        setVettedModalValue('');
+    };
+
+    const saveVettedModal = async () => {
+        if (!vettedModalTarget) return;
+        setSavingId(vettedModalTarget.id);
+        try {
+            await updateOrganizer.mutateAsync({
+                id: vettedModalTarget.id,
+                vetted_instructions: vettedModalValue,
+            });
+            clearDraftKey(vettedModalTarget.id, 'vetted_instructions');
+            closeVettedModal();
+        } catch {
+            Alert.alert('Save failed', 'Unable to update vetted instructions.');
+        } finally {
+            setSavingId(null);
+        }
+    };
+
     if (!isAdmin) {
         return (
             <View style={styles.container}>
@@ -437,10 +543,20 @@ export const OrganizerAdminScreen = () => {
         const draft = drafts[item.id] || {};
         const hiddenValue = (draft.hidden ?? item.hidden) ?? false;
         const membershipOnlyValue = (draft.membership_only ?? item.membership_only) ?? false;
+        const vettedValue = (draft.vetted ?? item.vetted) ?? false;
         const aliasValue = deriveAliasValue(draft.aliases, item.aliases);
         const fetlifeHandlesValue = deriveFetlifeHandleValue(draft.fetlife_handles, item.fetlife_handles, item.fetlife_handle);
         const hasChanges = Object.keys(draft).length > 0;
         const isSaving = updateOrganizer.isPending && savingId === item.id;
+        const organizerEvents = eventsByOrganizerId[item.id] || [];
+        const isExpanded = !!expandedOrganizers[item.id];
+        const eventsHint = eventsError
+            ? 'Events unavailable.'
+            : eventsLoading
+                ? 'Loading events...'
+                : organizerEvents.length
+                    ? 'Upcoming events'
+                    : 'No upcoming events';
 
         return (
             <View style={styles.card}>
@@ -468,6 +584,67 @@ export const OrganizerAdminScreen = () => {
                             disabled={isSaving}
                         />
                     </View>
+                </View>
+
+                <View style={styles.eventsSection}>
+                    <TouchableOpacity
+                        style={styles.eventsToggle}
+                        onPress={() => toggleExpanded(item.id)}
+                    >
+                        <View style={styles.eventsToggleRow}>
+                            <Text style={styles.eventsToggleText}>
+                                {isExpanded ? 'Hide events' : 'Show events'}
+                                {eventsLoading || eventsError ? '' : ` (${organizerEvents.length})`}
+                            </Text>
+                            <Ionicons
+                                name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                                size={16}
+                                color={colors.textMuted}
+                            />
+                        </View>
+                        <Text style={styles.eventsToggleSubtext}>{eventsHint}</Text>
+                    </TouchableOpacity>
+                    {isExpanded && (
+                        <View style={styles.eventsList}>
+                            {eventsLoading ? (
+                                <View style={styles.eventsLoadingRow}>
+                                    <ActivityIndicator size="small" color={colors.textMuted} />
+                                    <Text style={styles.eventsLoadingText}>Loading events...</Text>
+                                </View>
+                            ) : eventsError ? (
+                                <Text style={styles.eventsEmptyText}>Unable to load events.</Text>
+                            ) : organizerEvents.length ? (
+                                organizerEvents.map((event) => {
+                                    const approvalMeta = getApprovalMeta(event.approval_status);
+                                    const sourceLabel = formatEventSourceLabel(event);
+                                    return (
+                                        <View key={event.id} style={styles.eventRow}>
+                                            <Text style={styles.eventName}>
+                                                {event.name || `Event ${event.id}`}
+                                            </Text>
+                                            <View style={styles.eventMetaRow}>
+                                                <Text style={styles.eventMetaText}>
+                                                    {formatEventDate(event)}
+                                                </Text>
+                                                <View style={[styles.statusPill, { borderColor: approvalMeta.color }]}>
+                                                    <Text style={[styles.statusPillText, { color: approvalMeta.color }]}>
+                                                        {approvalMeta.label}
+                                                    </Text>
+                                                </View>
+                                                {sourceLabel ? (
+                                                    <View style={styles.sourcePill}>
+                                                        <Text style={styles.sourcePillText}>{sourceLabel}</Text>
+                                                    </View>
+                                                ) : null}
+                                            </View>
+                                        </View>
+                                    );
+                                })
+                            ) : (
+                                <Text style={styles.eventsEmptyText}>No upcoming events.</Text>
+                            )}
+                        </View>
+                    )}
                 </View>
 
                 <View style={styles.field}>
@@ -560,6 +737,32 @@ export const OrganizerAdminScreen = () => {
                         ios_backgroundColor={colors.borderMutedAlt}
                         disabled={isSaving}
                     />
+                </View>
+
+                <View style={styles.switchRow}>
+                    <Text style={styles.label}>Vetted organizer</Text>
+                    <Switch
+                        value={vettedValue}
+                        onValueChange={(value) => setDraft(item.id, 'vetted', value)}
+                        trackColor={{ false: colors.borderMutedAlt, true: colors.badgeVetted }}
+                        thumbColor={vettedValue ? colors.badgeVetted : colors.surfaceWhiteStrong}
+                        ios_backgroundColor={colors.borderMutedAlt}
+                        disabled={isSaving}
+                    />
+                </View>
+
+                <View style={styles.field}>
+                    <Text style={styles.label}>Vetted instructions</Text>
+                    <Text style={styles.instructionsPreview} numberOfLines={3}>
+                        {item.vetted_instructions?.trim() || 'No instructions yet.'}
+                    </Text>
+                    <TouchableOpacity
+                        style={styles.instructionsButton}
+                        onPress={() => openVettedModal(item)}
+                        disabled={isSaving}
+                    >
+                        <Text style={styles.instructionsButtonText}>Edit vetted instructions</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <TouchableOpacity
@@ -702,6 +905,13 @@ export const OrganizerAdminScreen = () => {
                     </View>
                 </View>
             </Modal>
+            <VettedInstructionsModal
+                visible={vettedModalVisible}
+                value={vettedModalValue}
+                onChangeText={setVettedModalValue}
+                onSave={saveVettedModal}
+                onClose={closeVettedModal}
+            />
         </>
     );
 };
@@ -866,6 +1076,101 @@ const styles = StyleSheet.create({
         color: colors.textMuted,
         fontFamily: fontFamilies.body,
     },
+    eventsSection: {
+        borderTopWidth: 1,
+        borderTopColor: colors.borderLight,
+        paddingTop: spacing.sm,
+        marginBottom: spacing.md,
+    },
+    eventsToggle: {
+        paddingVertical: spacing.sm,
+    },
+    eventsToggleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    eventsToggleText: {
+        fontSize: fontSizes.smPlus,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
+    eventsToggleSubtext: {
+        marginTop: spacing.xs,
+        fontSize: fontSizes.xs,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    eventsList: {
+        marginTop: spacing.sm,
+        gap: spacing.sm,
+    },
+    eventsLoadingRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+    },
+    eventsLoadingText: {
+        fontSize: fontSizes.xs,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    eventsEmptyText: {
+        fontSize: fontSizes.xs,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    eventRow: {
+        padding: spacing.sm,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderLight,
+        backgroundColor: colors.surfaceSubtle,
+    },
+    eventName: {
+        fontSize: fontSizes.smPlus,
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+        fontWeight: '600',
+    },
+    eventMetaRow: {
+        marginTop: spacing.xs,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        gap: spacing.xs,
+    },
+    eventMetaText: {
+        fontSize: fontSizes.xs,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    statusPill: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        backgroundColor: colors.surfaceWhiteStrong,
+    },
+    statusPillText: {
+        fontSize: fontSizes.xxs,
+        fontWeight: '600',
+        fontFamily: fontFamilies.body,
+    },
+    sourcePill: {
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        backgroundColor: colors.surfaceWhiteStrong,
+    },
+    sourcePillText: {
+        fontSize: fontSizes.xxs,
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
     field: {
         marginBottom: spacing.md,
     },
@@ -897,6 +1202,27 @@ const styles = StyleSheet.create({
     multilineInput: {
         minHeight: 64,
         textAlignVertical: 'top',
+    },
+    instructionsPreview: {
+        fontSize: fontSizes.sm,
+        color: colors.textMuted,
+        lineHeight: lineHeights.md,
+        fontFamily: fontFamilies.body,
+        marginBottom: spacing.sm,
+    },
+    instructionsButton: {
+        paddingVertical: spacing.sm,
+        borderRadius: radius.pill,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        alignItems: 'center',
+        backgroundColor: colors.surfaceSubtle,
+    },
+    instructionsButtonText: {
+        fontSize: fontSizes.smPlus,
+        fontWeight: '600',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
     },
     switchRow: {
         flexDirection: 'row',

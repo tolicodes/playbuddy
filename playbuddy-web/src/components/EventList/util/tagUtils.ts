@@ -159,6 +159,7 @@ export const getEventTypeKey = (event: Event) => {
 export const getTagChips = (event: Event, limit = 6) => {
   const tagChips: TagChip[] = [];
   const seenTags = new Set<string>();
+  const isVetted = !!(event.vetted || event.organizer?.vetted);
 
   const pushTag = (tag: string, kind: TagChipKind) => {
     const clean = tag.trim();
@@ -179,7 +180,7 @@ export const getTagChips = (event: Event, limit = 6) => {
     const level = event.classification.experience_level.toLowerCase();
     pushTag(LEVEL_LABEL_MAP[level] || level.replace(/_/g, " "), "level");
   }
-  if (event.vetted) pushTag("Vetted", "vetted");
+  if (isVetted) pushTag("Vetted", "vetted");
 
   const extraTags = [...(event.classification?.tags || []), ...(event.tags || [])];
   for (const tag of extraTags) {

@@ -33,6 +33,7 @@ import { useGuestSaveModal } from '../GuestSaveModal';
 import { RateAppModal } from '../RateAppModal';
 import { ShareCalendarModal } from '../ShareCalendarModal';
 import { showNotificationsPromptModal } from '../Notifications/NotificationsPromptModal';
+import { VettedInstructionsModal } from '../Admin/VettedInstructionsModal';
 import {
     getForcedPopupId,
     getLatestPopupShown,
@@ -245,6 +246,10 @@ export const DebugScreen = () => {
     const [popupExpanded, setPopupExpanded] = useState(true);
     const [recommendationsExpanded, setRecommendationsExpanded] = useState(false);
     const [debugPopupId, setDebugPopupId] = useState<PopupId | null>(null);
+    const [debugVettedModalVisible, setDebugVettedModalVisible] = useState(false);
+    const [debugVettedInstructions, setDebugVettedInstructions] = useState(
+        'Apply before attending. Bring a government ID and arrive 10 minutes early.'
+    );
     const [debugEventPopup, setDebugEventPopup] = useState<EventPopup | null>(null);
     const [debugStatus, setDebugStatus] = useState<string | null>(null);
     const [notificationDebugLines, setNotificationDebugLines] = useState<string[]>([]);
@@ -1311,6 +1316,12 @@ export const DebugScreen = () => {
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={styles.secondaryButton}
+                                    onPress={() => setDebugVettedModalVisible(true)}
+                                >
+                                    <Text style={styles.secondaryButtonText}>Show vetted instructions modal</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.secondaryButton}
                                     onPress={() => void refreshPopupDebugInfo('manual refresh')}
                                 >
                                     <Text style={styles.secondaryButtonText}>Refresh popup debug</Text>
@@ -1606,6 +1617,13 @@ export const DebugScreen = () => {
                     visible={debugPopupId === 'share_calendar'}
                     onDismiss={dismissDebugPopup}
                     onSnooze={dismissDebugPopup}
+                />
+                <VettedInstructionsModal
+                    visible={debugVettedModalVisible}
+                    value={debugVettedInstructions}
+                    onChangeText={setDebugVettedInstructions}
+                    onSave={() => setDebugVettedModalVisible(false)}
+                    onClose={() => setDebugVettedModalVisible(false)}
                 />
             </LinearGradient>
         </SafeAreaView>
