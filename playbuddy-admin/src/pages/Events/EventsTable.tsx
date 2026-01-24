@@ -48,6 +48,15 @@ const formatGroupDate = (value: string) => {
     return date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 };
 
+const toLocalDateKey = (value: string) => {
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return 'unknown';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
+
 const toTimestamp = (value: string) => {
     const time = new Date(value).getTime();
     return Number.isFinite(time) ? time : Number.POSITIVE_INFINITY;
@@ -90,8 +99,7 @@ export default function EventsTable({
             .slice()
             .sort((a, b) => toTimestamp(a.start_date) - toTimestamp(b.start_date))
             .reduce((groups, event) => {
-                const date = new Date(event.start_date);
-                const key = Number.isFinite(date.getTime()) ? date.toISOString().slice(0, 10) : 'unknown';
+                const key = toLocalDateKey(event.start_date);
                 const label = formatGroupDate(event.start_date);
                 const lastGroup = groups[groups.length - 1];
                 if (!lastGroup || lastGroup.key !== key) {

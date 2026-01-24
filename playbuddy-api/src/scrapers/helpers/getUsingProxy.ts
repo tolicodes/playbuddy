@@ -2,8 +2,13 @@ import axios from 'axios';
 import Bottleneck from 'bottleneck';
 
 const TIMEOUT = 60000;
-const GLOBAL_CONCURRENCY = Number(process.env.SCRAPE_MAX_CONCURRENCY || 5);
+const SCRAPEIO_MAX_CONCURRENCY = Number(process.env.SCRAPEIO_MAX_CONCURRENCY || 5);
+const GLOBAL_CONCURRENCY = Math.min(
+    Number(process.env.SCRAPE_MAX_CONCURRENCY || SCRAPEIO_MAX_CONCURRENCY),
+    SCRAPEIO_MAX_CONCURRENCY
+);
 const IDLE_REPORT_MS = 10_000;
+const MAX_RETRIES = Number(process.env.SCRAPE_RETRY_ATTEMPTS || 2);
 
 const proxyLimiter = new Bottleneck({
     maxConcurrent: GLOBAL_CONCURRENCY,
@@ -75,15 +80,28 @@ export async function getUsingProxy({
             stats.active += 1;
             console.log(`▶️ [proxy] start (active ${stats.active}/${GLOBAL_CONCURRENCY}) | ${label}`);
             try {
-                const raw = await scrapeWithScrapeDo(url);
-                const parsed = json ? JSON.parse(raw) : raw;
-                stats.success += 1;
-                console.log(`✅ [proxy] done | ${label}`);
-                return parsed;
-            } catch (err) {
-                stats.failed += 1;
-                console.error(`❌ [proxy] error | ${label} | ${(err as any)?.message || err}`);
-                throw err;
+                const attempts = Math.max(1, MAX_RETRIES + 1);
+                for (let attempt = 1; attempt <= attempts; attempt += 1) {
+                    try {
+                        if (attempt > 1) {
+                            console.warn(`↻ [proxy] retry ${attempt}/${attempts} | ${label}`);
+                        }
+                        const raw = await scrapeWithScrapeDo(url);
+                        const parsed = json ? JSON.parse(raw) : raw;
+                        stats.success += 1;
+                        console.log(`✅ [proxy] done | ${label}`);
+                        return parsed;
+                    } catch (err) {
+                        if (attempt === attempts) {
+                            stats.failed += 1;
+                            console.error(`❌ [proxy] error | ${label} | ${(err as any)?.message || err}`);
+                            throw err;
+                        }
+                        const backoff = 500 * attempt + Math.floor(Math.random() * 300);
+                        await new Promise(res => setTimeout(res, backoff));
+                    }
+                }
+                throw new Error('Scrape failed after retries');
             } finally {
                 stats.active -= 1;
                 stats.lastFinished = Date.now();

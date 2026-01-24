@@ -59,28 +59,16 @@ export const scrapeEventbriteEvent = async (
         }
     }
     if (!serverData) {
-        let apiDetail: string | undefined;
-        const apiFallback = await fetchEventbriteEventFromApi(url, eventDefaults)
-            .catch((err: any) => {
-                apiDetail = err?.message || String(err);
-                return null;
-            });
-        if (apiFallback) return [apiFallback];
-
         const jsonLdEvent = extractJsonLdEvent($);
         if (jsonLdEvent) {
             console.warn(`[eventbrite] __SERVER_DATA__ missing, using JSON-LD fallback for ${url}`);
             const fallback = buildEventFromJsonLd(jsonLdEvent, { url, eventDefaults });
             if (fallback) return [fallback];
-            const detail = apiDetail
-                ? `API fallback failed: ${apiDetail}; JSON-LD found but missing required fields`
-                : 'API fallback unavailable; JSON-LD found but missing required fields';
-            emitSkip('Missing __SERVER_DATA__ on Eventbrite page', detail);
+            emitSkip('Missing __SERVER_DATA__ on Eventbrite page', 'JSON-LD found but missing required fields');
             return [];
         }
         console.error(`No __SERVER_DATA__ found for: ${url}`);
-        const detail = apiDetail ? `API fallback failed: ${apiDetail}` : 'API fallback unavailable and JSON-LD not found';
-        emitSkip('Missing __SERVER_DATA__ on Eventbrite page', detail);
+        emitSkip('Missing __SERVER_DATA__ on Eventbrite page', 'JSON-LD not found');
         return [];
     }
 
@@ -183,87 +171,6 @@ async function fetchHtmlWithRenderFallback(url: string): Promise<string | null> 
     const renders = await fetchRenderedHtmlBoth(url);
     const pick = renders.find(r => r.ok && r.html) || renders.find(r => r.html) || null;
     return pick?.html ?? null;
-}
-
-async function fetchEventbriteEventFromApi(
-    url: string,
-    eventDefaults: Partial<NormalizedEventInput>
-): Promise<NormalizedEventInput | null> {
-    const eventId = extractEventbriteEventId(url);
-    if (!eventId) return null;
-    const apiUrl = `https://www.eventbrite.com/api/v3/events/${eventId}/?expand=ticket_availability,organizer,venue,category,subcategory,format`;
-    const data = await addURLToQueue({
-        url: apiUrl,
-        json: true,
-        label: `Eventbrite API Event: ${eventId}`,
-    });
-    if (!data?.id) return null;
-
-    const startUTC = data?.start?.utc ?? null;
-    const endUTC = data?.end?.utc ?? null;
-    const start_date = normalizeDate(data?.start) ?? startUTC;
-    const end_date = normalizeDate(data?.end) ?? endUTC;
-    if (!start_date || !end_date) return null;
-
-    const organizer = {
-        ...(eventDefaults?.organizer || {}),
-        ...(data?.organizer ? {
-            name: (data.organizer.name || '').trim() || undefined,
-            url: data.organizer.url || undefined,
-        } : {}),
-    };
-
-    const descriptionHtml = data?.description?.html || '';
-    const descriptionText = data?.description?.text || '';
-    const description = descriptionHtml
-        ? turndown.turndown(descriptionHtml)
-        : (descriptionText || '');
-
-    const image_url =
-        data?.logo?.original?.url ||
-        data?.logo?.url ||
-        undefined;
-
-    const venueAddress = data?.venue?.address;
-    const location =
-        venueAddress?.localized_address_display ||
-        venueAddress?.localized_multi_line_address_display?.join(' ') ||
-        eventDefaults?.location ||
-        'To be announced';
-
-    const region =
-        venueAddress?.region ||
-        venueAddress?.addressRegion ||
-        undefined;
-    const non_ny = region ? region !== 'NY' : eventDefaults?.non_ny ?? false;
-
-    const tags = [data?.category?.name, data?.subcategory?.name].filter(Boolean) as string[];
-
-    const price = deriveMinimumPriceFromApi(data?.ticket_availability);
-
-    const sourceFields = resolveSourceFields({
-        eventDefaults,
-        sourceUrl: url,
-        ticketingPlatform: 'Eventbrite',
-    });
-
-    return {
-        ...eventDefaults,
-        ...sourceFields,
-        original_id: `eventbrite-${data.id}`,
-        ticket_url: data.url || url,
-        name: data?.name?.text || data?.name || 'Event',
-        type: 'event',
-        start_date,
-        end_date,
-        organizer,
-        description,
-        image_url,
-        price,
-        location,
-        tags: tags.length ? tags : ((eventDefaults as any)?.tags ?? []),
-        non_ny,
-    };
 }
 
 function extractJsonLdEvent($: cheerio.CheerioAPI): any | null {

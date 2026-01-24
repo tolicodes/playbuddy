@@ -3,14 +3,75 @@ import { DiscoverParams, DiscoveredLink } from './types.js';
 import { safeParseJsonObject } from './html.js';
 import { dbg, saveLogFile } from './debug.js';
 import { aiScrapeEventsFromUrl } from './single.js';
-import { canonicalUrlKey, classifyPlatform, isFutureEvent, isStartFuture, toISO } from './normalize.js';
+import { canonicalUrlKey, canonicalizeUrl, classifyPlatform, isFutureEvent, isStartFuture, toISO } from './normalize.js';
 import { MODEL, openai } from './config.js';
 import { renderAndPick } from './renderPicker.js';
 import { prepTruncated } from './prep.js';
+import { resolveRedirectedUrl } from '../helpers/resolveRedirectUrl.js';
 
 const MAX_AI_DISCOVERY_IMPORTS = 50;
 
 const clampMaxEvents = (value: number) => Math.max(1, Math.min(MAX_AI_DISCOVERY_IMPORTS, value));
+
+const isUrlLike = (value?: string | null) => {
+    if (!value) return false;
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    if (/^https?:\/\//i.test(trimmed)) return true;
+    if (/^www\./i.test(trimmed)) return true;
+    return trimmed.includes('/');
+};
+
+const getEventDetailUrl = (event: NormalizedEventInput) => {
+    return event.event_url || event.ticket_url || event.source_url || null;
+};
+
+const shouldHydrateOrganizer = (event: NormalizedEventInput) => {
+    const name = event.organizer?.name ?? null;
+    if (!name) return true;
+    return isUrlLike(name);
+};
+
+const hydrateListOrganizers = async ({
+    events,
+    baseUrl,
+    eventDefaults,
+    nowISO,
+}: {
+    events: NormalizedEventInput[];
+    baseUrl: string;
+    eventDefaults: Partial<NormalizedEventInput>;
+    nowISO: string;
+}): Promise<NormalizedEventInput[]> => {
+    const baseKey = canonicalizeUrl(baseUrl) ?? baseUrl;
+    const tasks = events.map(async (event) => {
+        if (!shouldHydrateOrganizer(event)) return event;
+        const detailUrl = getEventDetailUrl(event);
+        if (!detailUrl) return event;
+        const detailKey = canonicalizeUrl(detailUrl) ?? detailUrl;
+        if (detailKey === baseKey) return event;
+
+        try {
+            const scraped = await aiScrapeEventsFromUrl({ url: detailUrl, eventDefaults, nowISO });
+            const candidate = scraped?.[0];
+            const candidateOrganizer = candidate?.organizer;
+            if (!candidateOrganizer) return event;
+            const nextOrganizer = { ...(event.organizer || {}), ...(candidateOrganizer || {}) };
+            if (candidateOrganizer?.name && !isUrlLike(candidateOrganizer.name)) {
+                nextOrganizer.name = candidateOrganizer.name;
+            }
+            if (candidateOrganizer?.url) {
+                nextOrganizer.url = candidateOrganizer.url;
+            }
+            return { ...event, organizer: nextOrganizer };
+        } catch (err) {
+            console.warn('[ai-discovery] failed to hydrate organizer from event page', detailUrl, err);
+            return event;
+        }
+    });
+
+    return Promise.all(tasks);
+};
 
 export const aiDiscoverAndScrapeFromUrl = async function ({
     url,
@@ -20,26 +81,40 @@ export const aiDiscoverAndScrapeFromUrl = async function ({
     extractFromListPage = false,
 }: DiscoverParams): Promise<NormalizedEventInput[]> {
     const cappedMaxEvents = clampMaxEvents(maxEvents);
-    const picked = await renderAndPick(url);
+    const resolvedUrl = await resolveRedirectedUrl(url);
+    const picked = await renderAndPick(resolvedUrl);
     if (!picked) return [];
 
     const html = picked.chosen.html;
 
     if (extractFromListPage) {
-        console.log('extractFromListPage', url);
-        const direct = await extractEventsFromListPage(html, url, eventDefaults, nowISO, cappedMaxEvents, picked.chosen.prepped);
-        if (direct.length) return direct;
+        console.log('extractFromListPage', resolvedUrl);
+        const direct = await extractEventsFromListPage(html, resolvedUrl, eventDefaults, nowISO, cappedMaxEvents, picked.chosen.prepped);
+        if (direct.length) {
+            return await hydrateListOrganizers({
+                events: direct,
+                baseUrl: resolvedUrl,
+                eventDefaults,
+                nowISO,
+            });
+        }
         console.log('continuing')
         // fall through to normal discovery if nothing parsed
     }
 
-    const discovered = await extractEventLinksAIOnly(html, url, nowISO, cappedMaxEvents, picked.chosen.prepped);
+    const discovered = await extractEventLinksAIOnly(html, resolvedUrl, nowISO, cappedMaxEvents, picked.chosen.prepped);
     dbg('DISCOVERED type', `${discovered?.type} count=${discovered?.items?.length || 0}`);
     if (!discovered || discovered.type === 'single') {
-        return await aiScrapeEventsFromUrl({ url, eventDefaults, nowISO });
+        return await aiScrapeEventsFromUrl({ url: resolvedUrl, eventDefaults, nowISO });
     }
 
-    const uniq = dedupeByUrl(discovered.items || []).slice(0, cappedMaxEvents);
+    const resolvedItems = await Promise.all(
+        (discovered.items || []).map(async (item) => ({
+            ...item,
+            url: await resolveRedirectedUrl(item.url),
+        }))
+    );
+    const uniq = dedupeByUrl(resolvedItems).slice(0, cappedMaxEvents);
     dbg('DISCOVERED (uniq, capped)', uniq.length);
 
     const results = await Promise.allSettled(
@@ -102,7 +177,7 @@ export async function extractEventLinksAIOnly(html: string, baseUrl: string, now
         let abs: string;
         try { abs = new URL(href, u).toString(); } catch { continue; }
 
-        const approxISO = toISO(it?.start_date) || null;
+        const approxISO = toISO(it?.start_date, nowISO) || null;
         if (approxISO && !isStartFuture(approxISO, nowISO)) continue;
 
         normalized.push({
@@ -163,10 +238,11 @@ async function extractEventsFromListPage(
     const out: NormalizedEventInput[] = [];
     for (const it of arr) {
         const name = it?.name?.toString().trim() || null;
-        const startISO = toISO(it?.start_time);
-        const endISO = toISO(it?.end_time);
+        const startISO = toISO(it?.start_time, nowISO);
+        const endISO = toISO(it?.end_time, nowISO);
         const ticketUrl = it?.ticket_url ? (() => { try { return new URL(it.ticket_url, u).toString(); } catch { return null; } })() : null;
-        const inferredPlatform = classifyPlatform(ticketUrl || baseUrl);
+        const normalizedTicketUrl = ticketUrl ? await resolveRedirectedUrl(ticketUrl) : null;
+        const inferredPlatform = classifyPlatform(normalizedTicketUrl || baseUrl);
 
         if (!name || !startISO) continue;
         if (!isFutureEvent({ start_date: startISO } as any, nowISO)) continue;
@@ -180,8 +256,8 @@ async function extractEventsFromListPage(
             name,
             start_date: startISO,
             end_date: endISO,
-            ticket_url: ticketUrl || baseUrl,
-            event_url: ticketUrl || baseUrl,
+            ticket_url: normalizedTicketUrl || baseUrl,
+            event_url: normalizedTicketUrl || baseUrl,
             location: it?.location || null,
             description: it?.description_md || it?.description || null,
             image_url: it?.image_url || null,

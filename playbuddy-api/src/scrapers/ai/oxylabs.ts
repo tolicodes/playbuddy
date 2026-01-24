@@ -1,5 +1,6 @@
 // src/scrapers/ai/fetchers.ts
 import fetch from 'node-fetch';
+import Bottleneck from 'bottleneck';
 import { OXY_REALTIME_URL, OXY_USERNAME, OXY_PASSWORD } from './config.js';
 import { getUsingProxy } from '../helpers/getUsingProxy.js';
 
@@ -14,8 +15,13 @@ type OxylabsResult = {
 export type RenderProvider = 'oxylabs' | 'scrapeio';
 export type RenderResult = { provider: RenderProvider; ok: boolean; html: string | null; ms: number; error?: string };
 
+const SCRAPEIO_MAX_CONCURRENCY = Number(process.env.SCRAPEIO_MAX_CONCURRENCY || 5);
+const scrapeioLimiter = new Bottleneck({
+    maxConcurrent: SCRAPEIO_MAX_CONCURRENCY,
+});
+
 async function fetchWithScrapeIO(url: string): Promise<string | null> {
-    const html = await getUsingProxy({ url, json: false });
+    const html = await scrapeioLimiter.schedule(() => getUsingProxy({ url, json: false }));
     if (html && html.trim().length > 0) return html;
     throw new Error('ScrapeIO returned empty HTML');
 }
