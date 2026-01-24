@@ -30,6 +30,7 @@ import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useAnalyticsProps } from "../../Common/hooks/useAnalytics";
 import { useFetchEvents } from "../../Common/db-axios/useEvents";
 import { useFetchOrganizers } from "../../Common/db-axios/useOrganizers";
+import { promptOrganizerNotificationsIfNeeded } from "../../Common/notifications/organizerPushNotifications";
 import { WishlistHeart } from "../Calendar/ListView/WishlistHeart";
 import { useGuestSaveModal } from "../GuestSaveModal";
 import { getSafeImageUrl, getSmallAvatarUrl } from "../../Common/hooks/imageUtils";
@@ -127,6 +128,26 @@ export const CommunitiesList = ({
                     community.type === "organizer_private_community"
             ),
         [myCommunities]
+    );
+    const organizerIdsFromCommunities = useMemo(
+        () =>
+            myCommunities
+                .map((community) => community.organizer_id)
+                .filter((id): id is string => Boolean(id))
+                .map((id) => id.toString()),
+        [myCommunities]
+    );
+    const buildFollowedOrganizerIds = useCallback(
+        (organizerIds?: string[]) => {
+            const next = new Set(organizerIdsFromCommunities);
+            (organizerIds || [])
+                .filter((id): id is string => Boolean(id))
+                .forEach((id) => {
+                    next.add(id.toString());
+                });
+            return next;
+        },
+        [organizerIdsFromCommunities]
     );
     const [searchQuery, setSearchQuery] = useState("");
     const [showNoEventOrganizers, setShowNoEventOrganizers] = useState(false);
@@ -227,10 +248,20 @@ export const CommunitiesList = ({
                     logEvent(UE.CommunityListCommunityLeft, { community_id: communityId });
                 }
             });
+
+            if (shouldJoin && isOrganizer && targetIds.length > 0) {
+                const nextFollowedOrganizerIds = buildFollowedOrganizerIds(organizerIds);
+                void promptOrganizerNotificationsIfNeeded({
+                    events: allEvents,
+                    followedOrganizerIds: nextFollowedOrganizerIds,
+                });
+            }
         },
         [
             analyticsProps,
             authUserId,
+            allEvents,
+            buildFollowedOrganizerIds,
             entityType,
             hasOrganizerFollows,
             isOrganizer,

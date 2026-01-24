@@ -33,6 +33,7 @@ import {
     setPushNotificationsPrompted,
     unregisterRemotePushToken,
 } from '../../Common/notifications/organizerPushNotifications';
+import { requestNotificationsPrompt } from '../Notifications/NotificationsPromptModal';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 
 const CONSENT_TITLE = 'Consent';
@@ -207,6 +208,14 @@ export const ConsentScreen = () => {
                         await setPushNotificationsPrompted(true);
                         await cancelOrganizerNotifications();
                         await unregisterRemotePushToken();
+                        return;
+                    }
+
+                    const wantsEnable = await requestNotificationsPrompt();
+                    if (!wantsEnable) {
+                        setNotificationsEnabledState(false);
+                        await setPushNotificationsEnabled(false);
+                        await setPushNotificationsPrompted(true);
                         return;
                     }
 

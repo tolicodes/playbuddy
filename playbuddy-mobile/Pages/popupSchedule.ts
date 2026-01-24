@@ -12,6 +12,7 @@ const EDGE_PLAY_DELAY_MS = 6 * DAY_MS;
 const RATE_APP_DELAY_MS = 9 * DAY_MS;
 const DISCOVER_GAME_DELAY_MS = 12 * DAY_MS;
 const BUDDY_LIST_COACH_DELAY_MS = DISCOVER_GAME_DELAY_MS + POPUP_INTERVAL_MS;
+const NOTIFICATIONS_PROMPT_DELAY_MS = RATE_APP_DELAY_MS;
 
 export const POPUP_SCHEDULE = [
     {
@@ -23,7 +24,7 @@ export const POPUP_SCHEDULE = [
     },
     {
         id: 'calendar_add_coach',
-        label: 'Add to calendar coach',
+        label: 'Add To Calendar',
         initialDelayMs: CALENDAR_ADD_COACH_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: false,
@@ -55,6 +56,13 @@ export const POPUP_SCHEDULE = [
         initialDelayMs: RATE_APP_DELAY_MS,
         snoozeMs: DEFAULT_SNOOZE_MS,
         useInterval: true,
+    },
+    {
+        id: 'notifications_prompt',
+        label: 'Enable notifications',
+        initialDelayMs: NOTIFICATIONS_PROMPT_DELAY_MS,
+        snoozeMs: DEFAULT_SNOOZE_MS,
+        useInterval: false,
     },
     {
         id: 'discover_game',

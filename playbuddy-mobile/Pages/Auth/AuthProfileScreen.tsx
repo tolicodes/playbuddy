@@ -29,6 +29,7 @@ import {
     setPushNotificationsPrompted,
     unregisterRemotePushToken,
 } from '../../Common/notifications/organizerPushNotifications';
+import { requestNotificationsPrompt } from '../Notifications/NotificationsPromptModal';
 
 export default function AccountDetails() {
     const { authUserId, userProfile, signOut, fullNameFromOAuthedUser } = useUserContext();
@@ -121,6 +122,14 @@ export default function AccountDetails() {
                 await cancelOrganizerNotifications();
                 await unregisterRemotePushToken();
                 await refreshScheduledNotifications();
+                return;
+            }
+
+            const wantsEnable = await requestNotificationsPrompt();
+            if (!wantsEnable) {
+                setNotificationsEnabledState(false);
+                await setPushNotificationsEnabled(false);
+                await setPushNotificationsPrompted(true);
                 return;
             }
 

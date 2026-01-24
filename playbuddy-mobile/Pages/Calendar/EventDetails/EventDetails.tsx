@@ -33,6 +33,7 @@ import { useCreateBuddy, useDeleteBuddy, useFetchBuddies, useFetchBuddyWishlists
 import { useFetchFollows } from '../../../Common/db-axios/useFollows';
 import { useCommonContext } from '../../../Common/hooks/CommonContext';
 import { useJoinCommunity, useLeaveCommunity } from '../../../Common/hooks/useCommunities';
+import { promptOrganizerNotificationsIfNeeded } from '../../../Common/notifications/organizerPushNotifications';
 import PromoCodeSection from './PromoCodeSection';
 import { useCalendarData } from '../hooks/useCalendarData';
 import TabBar from '../../../components/TabBar';
@@ -344,6 +345,14 @@ const EventHeader = ({ selectedEvent, source }: { selectedEvent: EventWithMetada
                 community_id: communityId,
                 type: 'organizer_public_community',
             });
+        });
+        const nextFollowedOrganizerIds = new Set(followedOrganizerIds);
+        if (organizerId) {
+            nextFollowedOrganizerIds.add(organizerId);
+        }
+        void promptOrganizerNotificationsIfNeeded({
+            events: allEvents,
+            followedOrganizerIds: nextFollowedOrganizerIds,
         });
         navigateToOrganizerCommunity();
     };

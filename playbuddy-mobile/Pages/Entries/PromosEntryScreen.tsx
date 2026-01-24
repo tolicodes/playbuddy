@@ -25,6 +25,7 @@ import { navigateToHome } from '../../Common/Nav/navigationHelpers';
 import { formatDate } from '../../utils/formatDate';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { useFetchMyCommunities, useJoinCommunity } from '../../Common/hooks/useCommunities';
+import { promptOrganizerNotificationsIfNeeded } from '../../Common/notifications/organizerPushNotifications';
 import { colors, fontFamilies, fontSizes, gradients, lineHeights, radius, shadows, spacing } from '../../components/styles';
 
 const logoMark = require('../../assets/logo-transparent.png');
@@ -38,11 +39,19 @@ export const PromosEntryScreen = ({
     const navigation = useNavigation<NavStack>();
     const { authUserId } = useUserContext();
     const promoCode = usePromoCode();
-    const { data: events } = useFetchEvents();
+    const { data: events = [] } = useFetchEvents();
     const { data: myCommunities = [] } = useFetchMyCommunities();
     const joinCommunity = useJoinCommunity();
     const featuredEvent = promoCode?.featuredEvent;
     const organizerId = promoCode?.organizer?.id?.toString();
+    const organizerIdsFromCommunities = useMemo(
+        () =>
+            myCommunities
+                .map((community) => community.organizer_id)
+                .filter((id): id is string => Boolean(id))
+                .map((id) => id.toString()),
+        [myCommunities]
+    );
 
     const fullEvent = useMemo(
         () => events?.find(e => e.id === featuredEvent?.id),
@@ -145,6 +154,14 @@ export const PromosEntryScreen = ({
                         type: 'organizer_public_community',
                     });
                 });
+            const nextFollowedOrganizerIds = new Set(organizerIdsFromCommunities);
+            if (organizerId) {
+                nextFollowedOrganizerIds.add(organizerId);
+            }
+            void promptOrganizerNotificationsIfNeeded({
+                events,
+                followedOrganizerIds: nextFollowedOrganizerIds,
+            });
         }
 
         const communityId =

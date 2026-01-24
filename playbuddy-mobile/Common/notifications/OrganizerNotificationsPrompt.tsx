@@ -1,18 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { Alert } from 'react-native';
 
 import { useUserContext } from '../../Pages/Auth/hooks/UserContext';
 import { useCalendarData } from '../../Pages/Calendar/hooks/useCalendarData';
 import { useFetchFollows } from '../db-axios/useFollows';
 import { useCommonContext } from '../hooks/CommonContext';
 import {
-    ensureNotificationPermissions,
-    getPushNotificationsEnabled,
-    getPushNotificationsPrompted,
-    registerRemotePushToken,
-    scheduleOrganizerNotifications,
-    setPushNotificationsEnabled,
-    setPushNotificationsPrompted,
+    promptOrganizerNotificationsIfNeeded,
 } from './organizerPushNotifications';
 
 export const OrganizerNotificationsPrompt = () => {
@@ -53,61 +46,14 @@ export const OrganizerNotificationsPrompt = () => {
             if (promptInFlightRef.current) return;
             promptInFlightRef.current = true;
 
-            const [enabled, prompted] = await Promise.all([
-                getPushNotificationsEnabled(),
-                getPushNotificationsPrompted(),
-            ]);
-
-            if (enabled || prompted) {
+            try {
+                await promptOrganizerNotificationsIfNeeded({
+                    events: allEvents,
+                    followedOrganizerIds,
+                });
+            } finally {
                 promptInFlightRef.current = false;
-                return;
             }
-
-            const handleDismiss = () => {
-                void setPushNotificationsPrompted(true);
-                promptInFlightRef.current = false;
-            };
-
-            const handleEnable = () => {
-                void (async () => {
-                    const granted = await ensureNotificationPermissions();
-                    if (!granted) {
-                        Alert.alert(
-                            'Notifications are off',
-                            'Enable notifications in Settings to get workshop reminders.'
-                        );
-                        await setPushNotificationsPrompted(true);
-                        promptInFlightRef.current = false;
-                        return;
-                    }
-
-                    await setPushNotificationsEnabled(true);
-                    await setPushNotificationsPrompted(true);
-
-                    try {
-                        await registerRemotePushToken();
-                    } catch (error) {
-                        console.warn('[notifications] failed to register push token', error);
-                    }
-
-                    await scheduleOrganizerNotifications({
-                        events: allEvents,
-                        followedOrganizerIds,
-                    });
-
-                    promptInFlightRef.current = false;
-                })();
-            };
-
-            Alert.alert(
-                'Turn on notifications?',
-                'Get workshop reminders from organizers you follow.',
-                [
-                    { text: 'Not now', style: 'cancel', onPress: handleDismiss },
-                    { text: 'Enable', onPress: handleEnable },
-                ],
-                { cancelable: true, onDismiss: handleDismiss }
-            );
         })();
     }, [allEvents, followedOrganizerIds]);
 

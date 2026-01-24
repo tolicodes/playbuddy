@@ -12,6 +12,7 @@ import { EventPopupModal } from './EventPopupModal';
 import { DiscoverGameModal } from './DiscoverGameModal';
 import { NewsletterSignupModal } from './NewsletterSignupModal';
 import { ShareCalendarModal } from './ShareCalendarModal';
+import { showNotificationsPromptModal } from './Notifications/NotificationsPromptModal';
 import { EventListViewIntroModal } from './Calendar/ListView/EventListViewIntroModal';
 import {
     EventListViewMode,
@@ -28,6 +29,7 @@ import type { EventPopup } from '../commonTypes';
 import type { EventWithMetadata, NavStack } from '../Common/Nav/NavStackType';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../components/styles';
 import { MISC_URLS } from '../config';
+import { ensureNotificationPermissions } from '../Common/notifications/organizerPushNotifications';
 import {
     createEmptyPopupManagerState,
     getForcedPopupId,
@@ -512,6 +514,7 @@ export const PopupManager: React.FC<PopupManagerProps> = ({
         if (id === 'newsletter_signup') return canShowNewsletterModal;
         if (id === 'buddy_list_coach') return false;
         if (id === 'share_calendar') return canShowShareCalendarModal;
+        if (id === 'notifications_prompt') return false;
         return true;
     }, [canShowListViewIntro, canShowNewsletterModal, canShowShareCalendarModal]);
 
@@ -671,6 +674,33 @@ export const PopupManager: React.FC<PopupManagerProps> = ({
         updatePopupState(id, { snoozeUntil: Date.now() + POPUP_CONFIG[id].snoozeMs });
         setActivePopupId((prev) => (prev === id ? null : prev));
     }, [updatePopupState]);
+
+    useEffect(() => {
+        if (activePopupId !== 'notifications_prompt') return;
+        let isActive = true;
+
+        (async () => {
+            const wantsEnable = await showNotificationsPromptModal();
+            if (!isActive) return;
+
+            if (!wantsEnable) {
+                snoozePopup('notifications_prompt');
+                return;
+            }
+
+            const granted = await ensureNotificationPermissions();
+            if (!isActive) return;
+            if (granted) {
+                dismissPopup('notifications_prompt');
+            } else {
+                snoozePopup('notifications_prompt');
+            }
+        })();
+
+        return () => {
+            isActive = false;
+        };
+    }, [activePopupId, dismissPopup, snoozePopup, ensureNotificationPermissions, showNotificationsPromptModal]);
 
     const handleCalendarCoachWishlistAdded = useCallback(async () => {
         let shouldShowToast = false;

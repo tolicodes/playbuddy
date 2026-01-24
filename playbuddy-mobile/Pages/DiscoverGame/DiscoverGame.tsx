@@ -104,7 +104,7 @@ export const DiscoverGame: React.FC = () => {
 
                 void (async () => {
                     const swipeCount = await recordDiscoverGameSwipe();
-                    if (swipeCount >= 10) {
+                    if (swipeCount === 1) {
                         await promptDiscoverGameNotifications({ availableCardsToSwipe });
                     }
                 })();

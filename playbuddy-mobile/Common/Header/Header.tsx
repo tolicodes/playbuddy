@@ -21,6 +21,8 @@ import { useAnalyticsProps } from "../hooks/useAnalytics";
 import { NavigationProp, ParamListBase, useRoute } from "@react-navigation/native";
 import { colors, eventListThemes, fontFamilies, fontSizes, gradients, radius, spacing } from "../../components/styles";
 import { useCommonContext } from "../hooks/CommonContext";
+import { useFetchEvents } from "../db-axios/useEvents";
+import { promptOrganizerNotificationsIfNeeded } from "../notifications/organizerPushNotifications";
 import { useJoinCommunity, useLeaveCommunity } from "../hooks/useCommunities";
 import { useUserContext } from "../../Pages/Auth/hooks/UserContext";
 import { useGuestSaveModal } from "../../Pages/GuestSaveModal";
@@ -112,7 +114,8 @@ const CommunityHeaderFollowButton = ({
     communityIds?: string[];
 }) => {
     const { authUserId } = useUserContext();
-    const { myCommunities } = useCommonContext();
+    const { myCommunities, communities } = useCommonContext();
+    const { data: allEvents = [] } = useFetchEvents();
     const { showGuestSaveModal } = useGuestSaveModal();
     const joinCommunity = useJoinCommunity();
     const leaveCommunity = useLeaveCommunity();
@@ -129,6 +132,23 @@ const CommunityHeaderFollowButton = ({
 
     const isJoined = joinableIds.some((id) => myCommunityIds.has(id));
     const canFollow = joinableIds.length > 0;
+    const organizerIdByCommunityId = useMemo(() => {
+        const map = new Map<string, string>();
+        (communities.allCommunities || []).forEach((community) => {
+            if (community.organizer_id) {
+                map.set(community.id, community.organizer_id.toString());
+            }
+        });
+        return map;
+    }, [communities.allCommunities]);
+    const organizerIdsFromCommunities = useMemo(
+        () =>
+            (myCommunities.allMyCommunities || [])
+                .map((community) => community.organizer_id)
+                .filter((id): id is string => Boolean(id))
+                .map((id) => id.toString()),
+        [myCommunities]
+    );
 
     const handlePress = () => {
         if (!canFollow) return;
@@ -152,6 +172,17 @@ const CommunityHeaderFollowButton = ({
             if (myCommunityIds.has(targetId)) return;
             joinCommunity.mutate({ community_id: targetId, type: 'organizer_public_community' });
             logEvent('community_events_community_joined', { communityId: targetId });
+        });
+        const nextFollowedOrganizerIds = new Set(organizerIdsFromCommunities);
+        joinableIds.forEach((targetId) => {
+            const organizerId = organizerIdByCommunityId.get(targetId);
+            if (organizerId) {
+                nextFollowedOrganizerIds.add(organizerId);
+            }
+        });
+        void promptOrganizerNotificationsIfNeeded({
+            events: allEvents,
+            followedOrganizerIds: nextFollowedOrganizerIds,
         });
     };
 

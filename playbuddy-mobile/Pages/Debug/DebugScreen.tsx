@@ -32,6 +32,7 @@ import { EventPopupModal } from '../EventPopupModal';
 import { useGuestSaveModal } from '../GuestSaveModal';
 import { RateAppModal } from '../RateAppModal';
 import { ShareCalendarModal } from '../ShareCalendarModal';
+import { showNotificationsPromptModal } from '../Notifications/NotificationsPromptModal';
 import {
     getForcedPopupId,
     getLatestPopupShown,
@@ -125,6 +126,7 @@ const POPUP_ICON_MAP: Record<PopupId, { icon: string; color: string; bg: string 
     newsletter_signup: { icon: 'envelope-open-text', color: colors.accentBlue, bg: colors.accentBlueSoft },
     buddy_list_coach: { icon: 'user-friends', color: colors.accentSkyDeep, bg: colors.accentSkySoft },
     share_calendar: { icon: 'calendar-check', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
+    notifications_prompt: { icon: 'bell', color: colors.accentSkyDeep, bg: colors.accentSkySoft },
 };
 
 const MANUAL_POPUP_ICON = {
@@ -548,7 +550,12 @@ export const DebugScreen = () => {
 
             try {
                 const popupState = await loadPopupManagerState();
-                const nextScheduled = POPUP_SCHEDULE.find((popup) => !popupState.popups[popup.id]?.dismissed) ?? null;
+                const nextScheduled =
+                    POPUP_SCHEDULE.find(
+                        (popup) =>
+                            popup.id !== 'notifications_prompt' &&
+                            !popupState.popups[popup.id]?.dismissed
+                    ) ?? null;
                 const forcedId = await getForcedPopupId();
                 const projectedReadyAt = buildPopupProjection(popupState, now);
 
@@ -743,6 +750,15 @@ export const DebugScreen = () => {
         void promptDiscoverGameNotifications({ availableCardsToSwipe });
     };
 
+    const onPressNotificationsPrompt = () => {
+        void (async () => {
+            const accepted = await showNotificationsPromptModal();
+            setDebugStatus(
+                accepted ? 'Notifications prompt accepted.' : 'Notifications prompt dismissed.'
+            );
+        })();
+    };
+
     const onPressResetDiscoverGameNotifications = () => {
         void (async () => {
             await resetDiscoverGameNotifications();
@@ -817,6 +833,18 @@ export const DebugScreen = () => {
                     selectedEvent: targetEvent,
                     title: targetEvent.name,
                 });
+            })();
+            return;
+        }
+        if (popupId === 'notifications_prompt') {
+            setDebugEventPopup(null);
+            setDebugPopupId(null);
+            setPopupDebugStatus(`Showing ${POPUP_CONFIG[popupId].label} popup.`);
+            void (async () => {
+                const accepted = await showNotificationsPromptModal();
+                setPopupDebugStatus(
+                    accepted ? 'Notifications prompt accepted.' : 'Notifications prompt dismissed.'
+                );
             })();
             return;
         }
@@ -1135,6 +1163,9 @@ export const DebugScreen = () => {
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.secondaryButton} onPress={onPressClearOrganizerReminders}>
                                 <Text style={styles.secondaryButtonText}>Clear organizer reminders</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.secondaryButton} onPress={onPressNotificationsPrompt}>
+                                <Text style={styles.secondaryButtonText}>Show notifications prompt</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.secondaryButton}

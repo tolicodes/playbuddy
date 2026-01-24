@@ -4,7 +4,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import moment from 'moment-timezone';
-import { Platform } from 'react-native';
+import { Alert, Platform } from 'react-native';
 
 import { API_BASE_URL } from '../config';
 import { logEvent } from '../hooks/logger';
@@ -15,6 +15,7 @@ import {
     getNotificationHistory,
     setNotificationHistory,
 } from './notificationHistory';
+import { requestNotificationsPrompt } from '../../Pages/Notifications/NotificationsPromptModal';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -40,6 +41,7 @@ const ORGANIZER_NOTIFICATION_SCHEDULE_KEY = 'organizerNotificationSchedule';
 const ORGANIZER_NOTIFICATION_LAST_SENT_KEY = 'organizerNotificationLastSentAt';
 const DEFAULT_NOTIFICATION_CHANNEL_ID = 'default';
 const REMOTE_PUSH_TOKEN_KEY = 'remotePushToken';
+let notificationsPromptInFlight = false;
 
 const parseStoredIds = (raw: string | null) => {
     if (!raw) return [];
@@ -584,4 +586,59 @@ export const scheduleOrganizerNotifications = async ({
     await AsyncStorage.setItem(ORGANIZER_NOTIFICATION_IDS_KEY, JSON.stringify(scheduledIds));
     await setOrganizerNotificationSchedule(scheduledPlan);
     return scheduledPlan;
+};
+
+export const promptOrganizerNotificationsIfNeeded = async ({
+    events,
+    followedOrganizerIds,
+}: {
+    events?: Event[];
+    followedOrganizerIds?: Set<string>;
+} = {}) => {
+    if (notificationsPromptInFlight) return false;
+    notificationsPromptInFlight = true;
+
+    try {
+        const [enabled, prompted] = await Promise.all([
+            getPushNotificationsEnabled(),
+            getPushNotificationsPrompted(),
+        ]);
+
+        if (enabled || prompted) {
+            return false;
+        }
+
+        const wantsEnable = await requestNotificationsPrompt();
+        if (!wantsEnable) {
+            await setPushNotificationsPrompted(true);
+            return false;
+        }
+
+        const granted = await ensureNotificationPermissions();
+        if (!granted) {
+            Alert.alert(
+                'Notifications are off',
+                'Enable notifications in Settings to get workshop reminders.'
+            );
+            await setPushNotificationsPrompted(true);
+            return false;
+        }
+
+        await setPushNotificationsEnabled(true);
+        await setPushNotificationsPrompted(true);
+
+        try {
+            await registerRemotePushToken();
+        } catch (error) {
+            console.warn('[notifications] failed to register push token', error);
+        }
+
+        if (events && events.length > 0 && followedOrganizerIds && followedOrganizerIds.size > 0) {
+            await scheduleOrganizerNotifications({ events, followedOrganizerIds });
+        }
+
+        return true;
+    } finally {
+        notificationsPromptInFlight = false;
+    }
 };

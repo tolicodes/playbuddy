@@ -23,6 +23,7 @@ import {
     setPushNotificationsEnabled,
     setPushNotificationsPrompted,
 } from '../../Common/notifications/organizerPushNotifications';
+import { requestNotificationsPrompt } from './NotificationsPromptModal';
 import {
     getNotificationHistory,
     NotificationHistoryItem,
@@ -176,12 +177,19 @@ export const NotificationsScreen = () => {
 
     const onEnableNotifications = () => {
         void (async () => {
+            const wantsEnable = await requestNotificationsPrompt();
+            if (!wantsEnable) {
+                await setPushNotificationsPrompted(true);
+                return;
+            }
+
             const granted = await ensureNotificationPermissions();
             if (!granted) {
                 Alert.alert(
                     'Notifications are off',
                     'Enable notifications in Settings to get workshop reminders.'
                 );
+                await setPushNotificationsPrompted(true);
                 return;
             }
 

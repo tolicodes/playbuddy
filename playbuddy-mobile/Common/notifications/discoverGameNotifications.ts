@@ -4,6 +4,7 @@ import * as Notifications from 'expo-notifications';
 
 import type { Event } from '../../commonTypes';
 import { ensureNotificationPermissions } from './organizerPushNotifications';
+import { requestNotificationsPrompt } from '../../Pages/Notifications/NotificationsPromptModal';
 
 type EventWithTimestamps = Event & {
     created_at?: string | null;
@@ -155,44 +156,31 @@ export const promptDiscoverGameNotifications = async ({
         return;
     }
 
-    const handleDismiss = () => {
-        void setDiscoverGameNotificationsPrompted(true);
+    try {
+        const wantsEnable = await requestNotificationsPrompt();
+        if (!wantsEnable) {
+            await setDiscoverGameNotificationsPrompted(true);
+            return;
+        }
+
+        const granted = await ensureNotificationPermissions();
+        if (!granted) {
+            Alert.alert(
+                'Notifications are off',
+                'Enable notifications in Settings to get new event reminders.'
+            );
+            await setDiscoverGameNotificationsPrompted(true);
+            return;
+        }
+
+        await setDiscoverGameNotificationsEnabled(true);
+        await setDiscoverGameNotificationsPrompted(true);
+        await scheduleDiscoverGameNotifications({ availableCardsToSwipe });
+    } catch (error) {
+        console.warn('[discover-game] failed to enable notifications', error);
+    } finally {
         promptInFlight = false;
-    };
-
-    const handleEnable = () => {
-        void (async () => {
-            try {
-                const granted = await ensureNotificationPermissions();
-                if (!granted) {
-                    Alert.alert(
-                        'Notifications are off',
-                        'Enable notifications in Settings to get new event reminders.'
-                    );
-                    await setDiscoverGameNotificationsPrompted(true);
-                    return;
-                }
-
-                await setDiscoverGameNotificationsEnabled(true);
-                await setDiscoverGameNotificationsPrompted(true);
-                await scheduleDiscoverGameNotifications({ availableCardsToSwipe });
-            } catch (error) {
-                console.warn('[discover-game] failed to enable notifications', error);
-            } finally {
-                promptInFlight = false;
-            }
-        })();
-    };
-
-    Alert.alert(
-        'Would you like to enable notifications for new events?',
-        undefined,
-        [
-            { text: 'Not now', style: 'cancel', onPress: handleDismiss },
-            { text: 'Enable', onPress: handleEnable },
-        ],
-        { cancelable: true, onDismiss: handleDismiss }
-    );
+    }
 };
 
 export const scheduleDiscoverGameNotifications = async ({
