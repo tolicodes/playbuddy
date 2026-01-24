@@ -1,29 +1,86 @@
 import TurndownService from 'turndown';
 import { DateTime } from 'luxon';
 import * as cheerio from 'cheerio';
-import { ScraperParams } from './types.js';
+import { ScraperParams, type ScrapeSkipReason } from './types.js';
 import { NormalizedEventInput } from '../commonTypes.js';
 import { EventTypes } from '../common/types/commonTypes.js';
 import { addURLToQueue } from './helpers/getUsingProxy.js';
 import { resolveSourceFields } from './helpers/sourceTracking.js';
+import { fetchRenderedHtmlBoth } from './ai/oxylabs.js';
 
 const turndown = new TurndownService();
 
 export const scrapeEventbriteEvent = async (
-    { url, eventDefaults }: ScraperParams
+    { url, eventDefaults, onSkip }: ScraperParams
 ): Promise<NormalizedEventInput[]> => {
+    const emitSkip = (reason: string, detail?: string) => {
+        const payload: ScrapeSkipReason = {
+            url,
+            reason,
+            ...(detail ? { detail } : {}),
+            source: 'eventbrite',
+        };
+        onSkip?.(payload);
+    };
     console.log(`[eventbrite] fetching ${url}`);
-    const html = await addURLToQueue({
-        url,
-        json: false,
-        label: `Eventbrite Event Page: ${url}`,
-    });
-    const $ = cheerio.load(html);
+    let html: string | null = null;
+    let usedRenderFallback = false;
+    try {
+        html = await addURLToQueue({
+            url,
+            json: false,
+            label: `Eventbrite Event Page: ${url}`,
+        });
+    } catch (err: any) {
+        console.warn(`[eventbrite] primary fetch failed, trying oxylabs/scrapeio for ${url}`, err?.message || err);
+        html = await fetchHtmlWithRenderFallback(url);
+        usedRenderFallback = true;
+    }
+
+    if (!html) {
+        console.error(`Empty HTML for Eventbrite page: ${url}`);
+        emitSkip('Eventbrite HTML fetch returned empty response');
+        return [];
+    }
+
+    let $ = cheerio.load(html);
 
     // 1) Extract window.__SERVER_DATA__ JSON
-    const serverData = extractServerData($);
+    let serverData = extractServerData($);
     if (!serverData) {
+        if (!usedRenderFallback) {
+            const fallbackHtml = await fetchHtmlWithRenderFallback(url);
+            if (fallbackHtml) {
+                usedRenderFallback = true;
+                html = fallbackHtml;
+                $ = cheerio.load(fallbackHtml);
+                serverData = extractServerData($);
+            }
+        }
+    }
+    if (!serverData) {
+        let apiDetail: string | undefined;
+        const apiFallback = await fetchEventbriteEventFromApi(url, eventDefaults)
+            .catch((err: any) => {
+                apiDetail = err?.message || String(err);
+                return null;
+            });
+        if (apiFallback) return [apiFallback];
+
+        const jsonLdEvent = extractJsonLdEvent($);
+        if (jsonLdEvent) {
+            console.warn(`[eventbrite] __SERVER_DATA__ missing, using JSON-LD fallback for ${url}`);
+            const fallback = buildEventFromJsonLd(jsonLdEvent, { url, eventDefaults });
+            if (fallback) return [fallback];
+            const detail = apiDetail
+                ? `API fallback failed: ${apiDetail}; JSON-LD found but missing required fields`
+                : 'API fallback unavailable; JSON-LD found but missing required fields';
+            emitSkip('Missing __SERVER_DATA__ on Eventbrite page', detail);
+            return [];
+        }
         console.error(`No __SERVER_DATA__ found for: ${url}`);
+        const detail = apiDetail ? `API fallback failed: ${apiDetail}` : 'API fallback unavailable and JSON-LD not found';
+        emitSkip('Missing __SERVER_DATA__ on Eventbrite page', detail);
         return [];
     }
 
@@ -47,6 +104,7 @@ export const scrapeEventbriteEvent = async (
 
     if (!start_date || !end_date) {
         console.error(`Missing start/end datetime for: ${url}`);
+        emitSkip('Missing start/end datetime');
         return [];
     }
 
@@ -121,22 +179,249 @@ export const scrapeEventbriteEvent = async (
 
 /* ----------------------- helpers ----------------------- */
 
+async function fetchHtmlWithRenderFallback(url: string): Promise<string | null> {
+    const renders = await fetchRenderedHtmlBoth(url);
+    const pick = renders.find(r => r.ok && r.html) || renders.find(r => r.html) || null;
+    return pick?.html ?? null;
+}
+
+async function fetchEventbriteEventFromApi(
+    url: string,
+    eventDefaults: Partial<NormalizedEventInput>
+): Promise<NormalizedEventInput | null> {
+    const eventId = extractEventbriteEventId(url);
+    if (!eventId) return null;
+    const apiUrl = `https://www.eventbrite.com/api/v3/events/${eventId}/?expand=ticket_availability,organizer,venue,category,subcategory,format`;
+    const data = await addURLToQueue({
+        url: apiUrl,
+        json: true,
+        label: `Eventbrite API Event: ${eventId}`,
+    });
+    if (!data?.id) return null;
+
+    const startUTC = data?.start?.utc ?? null;
+    const endUTC = data?.end?.utc ?? null;
+    const start_date = normalizeDate(data?.start) ?? startUTC;
+    const end_date = normalizeDate(data?.end) ?? endUTC;
+    if (!start_date || !end_date) return null;
+
+    const organizer = {
+        ...(eventDefaults?.organizer || {}),
+        ...(data?.organizer ? {
+            name: (data.organizer.name || '').trim() || undefined,
+            url: data.organizer.url || undefined,
+        } : {}),
+    };
+
+    const descriptionHtml = data?.description?.html || '';
+    const descriptionText = data?.description?.text || '';
+    const description = descriptionHtml
+        ? turndown.turndown(descriptionHtml)
+        : (descriptionText || '');
+
+    const image_url =
+        data?.logo?.original?.url ||
+        data?.logo?.url ||
+        undefined;
+
+    const venueAddress = data?.venue?.address;
+    const location =
+        venueAddress?.localized_address_display ||
+        venueAddress?.localized_multi_line_address_display?.join(' ') ||
+        eventDefaults?.location ||
+        'To be announced';
+
+    const region =
+        venueAddress?.region ||
+        venueAddress?.addressRegion ||
+        undefined;
+    const non_ny = region ? region !== 'NY' : eventDefaults?.non_ny ?? false;
+
+    const tags = [data?.category?.name, data?.subcategory?.name].filter(Boolean) as string[];
+
+    const price = deriveMinimumPriceFromApi(data?.ticket_availability);
+
+    const sourceFields = resolveSourceFields({
+        eventDefaults,
+        sourceUrl: url,
+        ticketingPlatform: 'Eventbrite',
+    });
+
+    return {
+        ...eventDefaults,
+        ...sourceFields,
+        original_id: `eventbrite-${data.id}`,
+        ticket_url: data.url || url,
+        name: data?.name?.text || data?.name || 'Event',
+        type: 'event',
+        start_date,
+        end_date,
+        organizer,
+        description,
+        image_url,
+        price,
+        location,
+        tags: tags.length ? tags : ((eventDefaults as any)?.tags ?? []),
+        non_ny,
+    };
+}
+
+function extractJsonLdEvent($: cheerio.CheerioAPI): any | null {
+    const scripts = $('script[type="application/ld+json"]');
+    let found: any = null;
+    scripts.each((_, el): boolean | void => {
+        const txt = $(el).html();
+        if (!txt) return;
+        try {
+            const data = JSON.parse(txt);
+            const candidates: any[] = [];
+            if (Array.isArray(data)) {
+                candidates.push(...data);
+            } else if (data && typeof data === 'object') {
+                if (Array.isArray((data as any)['@graph'])) {
+                    candidates.push(...(data as any)['@graph']);
+                } else {
+                    candidates.push(data);
+                }
+            }
+            const match = candidates.find(node => {
+                const type = (node as any)?.['@type'];
+                if (Array.isArray(type)) return type.includes('Event');
+                return type === 'Event';
+            });
+            if (match) {
+                found = match;
+                return false;
+            }
+        } catch {
+            return;
+        }
+        return;
+    });
+    return found;
+}
+
+function buildEventFromJsonLd(
+    event: any,
+    { url, eventDefaults }: { url: string; eventDefaults: Partial<NormalizedEventInput> }
+): NormalizedEventInput | null {
+    const name = event?.name || undefined;
+    if (!name) return null;
+
+    const startRaw = event?.startDate;
+    const endRaw = event?.endDate;
+    const start_date = normalizeJsonLdDate(startRaw);
+    const end_date = normalizeJsonLdDate(endRaw) || start_date;
+    if (!start_date || !end_date) return null;
+
+    const organizerRaw = Array.isArray(event?.organizer) ? event.organizer[0] : event?.organizer;
+    const organizer = {
+        ...(eventDefaults?.organizer || {}),
+        ...(organizerRaw ? {
+            name: organizerRaw?.name?.trim() || undefined,
+            url: organizerRaw?.url || undefined,
+        } : {}),
+    };
+
+    const description = typeof event?.description === 'string' ? event.description : '';
+
+    const image = Array.isArray(event?.image) ? event.image[0] : event?.image;
+    const image_url = typeof image === 'string' ? image : undefined;
+
+    const location = formatJsonLdLocation(event?.location) || eventDefaults?.location || 'To be announced';
+
+    const price = deriveMinimumPriceFromJsonLd(event?.offers);
+
+    const eventIdMatch = url.match(/tickets-(\d+)/i) || url.match(/-(\d+)(?:[/?#]|$)/);
+    const eventId = eventIdMatch?.[1];
+    const original_id = eventId ? `eventbrite-${eventId}` : undefined;
+
+    const region = (eventDefaults as any)?.region;
+    const non_ny = region ? region !== 'NY' : eventDefaults?.non_ny ?? false;
+
+    const sourceFields = resolveSourceFields({
+        eventDefaults,
+        sourceUrl: url,
+        ticketingPlatform: 'Eventbrite',
+    });
+
+    return {
+        ...eventDefaults,
+        ...sourceFields,
+        original_id,
+        ticket_url: event?.url || url,
+        name,
+        type: 'event',
+        start_date,
+        end_date,
+        organizer,
+        description,
+        image_url,
+        price,
+        location,
+        tags: (eventDefaults as any)?.tags ?? [],
+        non_ny,
+    };
+}
+
 function extractServerData($: cheerio.CheerioAPI): any | null {
     let blob: any = null;
-    $('script').each((_, el) => {
+    $('script').each((_, el): boolean | void => {
         const txt = $(el).html() || '';
-        const m = txt.match(/window\.__SERVER_DATA__\s*=\s*(\{[\s\S]*?\});/);
-        if (m) {
-            try {
-                blob = JSON.parse(m[1]);
-                return false; // break
-            } catch (e) {
-                // keep searching; sometimes multiple scripts present
-            }
+        if (!txt.includes('__SERVER_DATA__')) return;
+        const dataIndex = txt.indexOf('__SERVER_DATA__');
+        if (dataIndex === -1) return;
+        const assignIndex = txt.indexOf('=', dataIndex);
+        if (assignIndex === -1) return;
+        const braceStart = txt.indexOf('{', assignIndex);
+        if (braceStart === -1) return;
+        const jsonBlob = extractJsonObject(txt, braceStart);
+        if (!jsonBlob) return;
+        try {
+            blob = JSON.parse(jsonBlob);
+            return false; // break
+        } catch {
+            // keep searching; sometimes multiple scripts present
         }
         return;
     });
     return blob;
+}
+
+function extractJsonObject(text: string, startIndex: number): string | null {
+    let depth = 0;
+    let inString = false;
+    let escape = false;
+    for (let i = startIndex; i < text.length; i++) {
+        const ch = text[i];
+        if (inString) {
+            if (escape) {
+                escape = false;
+                continue;
+            }
+            if (ch === '\\') {
+                escape = true;
+                continue;
+            }
+            if (ch === '"') {
+                inString = false;
+            }
+            continue;
+        }
+        if (ch === '"') {
+            inString = true;
+            continue;
+        }
+        if (ch === '{') {
+            depth += 1;
+        } else if (ch === '}') {
+            depth -= 1;
+            if (depth === 0) {
+                return text.slice(startIndex, i + 1);
+            }
+        }
+    }
+    return null;
 }
 
 function normalizeDate(dt: { utc?: string; local?: string; timezone?: string } | undefined | null): string | null {
@@ -147,6 +432,12 @@ function normalizeDate(dt: { utc?: string; local?: string; timezone?: string } |
         return iso.isValid ? iso.toUTC().toISO() : null;
     }
     return null;
+}
+
+function normalizeJsonLdDate(raw?: string | null): string | null {
+    if (!raw) return null;
+    const iso = DateTime.fromISO(String(raw));
+    return iso.isValid ? iso.toUTC().toISO() : null;
 }
 
 function deriveMinimumPrice(listing: any): string | undefined {
@@ -180,6 +471,57 @@ function deriveMinimumPrice(listing: any): string | undefined {
         if (!isNaN(num)) return String(num.toFixed(2));
     }
 
+    return undefined;
+}
+
+function deriveMinimumPriceFromJsonLd(offers: any): string | undefined {
+    if (!offers) return undefined;
+    const list = Array.isArray(offers) ? offers : [offers];
+    const prices = list
+        .map((offer: any) => Number(offer?.price))
+        .filter((value: number) => Number.isFinite(value) && value >= 0);
+    if (!prices.length) return undefined;
+    const min = Math.min(...prices);
+    return String(min.toFixed(2));
+}
+
+function deriveMinimumPriceFromApi(ticketAvailability: any): string | undefined {
+    const cents = Number(ticketAvailability?.minimum_ticket_price?.value);
+    if (Number.isFinite(cents) && cents > 0) {
+        return String((cents / 100).toFixed(2));
+    }
+    const display = ticketAvailability?.minimum_ticket_price?.display;
+    if (display) {
+        const num = parseFloat(String(display).replace(/[^\d.]/g, ''));
+        if (!isNaN(num)) return String(num.toFixed(2));
+    }
+    return undefined;
+}
+
+function extractEventbriteEventId(url: string): string | null {
+    const match = url.match(/tickets-(\d+)/i) || url.match(/-(\d+)(?:[/?#]|$)/);
+    return match?.[1] || null;
+}
+
+function formatJsonLdLocation(location: any): string | undefined {
+    if (!location) return undefined;
+    if (typeof location === 'string') return location;
+    const name = location?.name;
+    const address = location?.address;
+    if (typeof address === 'string') {
+        if (name) return `${name} · ${address}`;
+        return address;
+    }
+    const parts = [
+        address?.streetAddress,
+        address?.addressLocality,
+        address?.addressRegion,
+        address?.postalCode,
+        address?.addressCountry,
+    ].filter(Boolean);
+    if (name && parts.length) return `${name} · ${parts.join(', ')}`;
+    if (name) return name;
+    if (parts.length) return parts.join(', ');
     return undefined;
 }
 
