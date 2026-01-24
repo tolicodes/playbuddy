@@ -8,8 +8,8 @@ import { canonicalizeUrl } from '../ai/normalize.js';
 import { supabaseClient } from '../../connections/supabaseClient.js';
 import type { ImportSource, NormalizedEventInput } from '../../commonTypes.js';
 
-const ENABLE_PLURA = false;
-const ENABLE_TANTRA = false;
+const ENABLE_PLURA = true;
+const ENABLE_TANTRA = true;
 const ENABLE_EVENTBRITE = process.env.ENABLE_EVENTBRITE !== 'false';
 const ENABLE_GMAIL = process.env.ENABLE_GMAIL !== 'false';
 const ENABLE_IMPORT_SOURCES = process.env.ENABLE_IMPORT_SOURCES !== 'false';
