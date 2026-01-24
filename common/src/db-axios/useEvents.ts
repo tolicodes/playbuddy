@@ -12,7 +12,9 @@ type CachedAxiosReader = (
 ) => Promise<unknown>;
 
 const getCachedAxiosReader = (): CachedAxiosReader | null => {
+    // eslint-disable-next-line no-undef
     if (typeof globalThis === "undefined") return null;
+    // eslint-disable-next-line no-undef
     const reader = (globalThis as { __PB_READ_AXIOS_CACHE__?: CachedAxiosReader }).__PB_READ_AXIOS_CACHE__;
     return typeof reader === "function" ? reader : null;
 };
