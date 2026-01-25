@@ -7,13 +7,13 @@ import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from "../../../../common/src/
 import { getTagChipTone } from "./util/tagUtils";
 
 const EVENT_FALLBACK_GRADIENTS: Record<string, [string, string]> = {
-    event: ["#F7F5FF", "#E7DEFF"],
-    play_party: ["#F3EEFF", "#E7DEFF"],
-    munch: ["#FFFAF0", "#FFF8D6"],
-    retreat: ["#F6F7F9", "#F7F5FF"],
-    festival: ["#F3F7FF", "#DCE5FF"],
-    conference: ["#F3F7FF", "#DCE5FF"],
-    workshop: ["#FFF1F2", "#FFF5F6"],
+    event: ["#F4F5F7", "#E9EEF2"],
+    play_party: ["#E5F4F9", "#D0EFFB"],
+    munch: ["#FAF3E6", "#F4D7A8"],
+    retreat: ["#EEF3F7", "#E3E9EF"],
+    festival: ["#E5EEF7", "#CADBEA"],
+    conference: ["#E5EEF7", "#CADBEA"],
+    workshop: ["#F1F4F7", "#E3E9EE"],
 };
 
 const TYPE_LABEL_MAP: Record<string, string> = {

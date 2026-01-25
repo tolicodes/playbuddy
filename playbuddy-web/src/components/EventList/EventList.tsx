@@ -152,7 +152,7 @@ export const EventList = ({
                                 ? !selectedType
                                 : selectedType === filter.key;
                             const tone = isAll
-                                ? { background: '#2f2a3a', text: '#ffffff', border: '#2f2a3a' }
+                                ? { background: 'var(--awaken-primary)', text: '#ffffff', border: 'var(--awaken-primary)' }
                                 : getTagChipTone({ label: filter.label, kind: 'type' });
                             return (
                                 <button

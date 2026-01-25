@@ -2,7 +2,12 @@
   position: relative;
   min-height: 100vh;
   padding: 32px 16px 56px;
-  background: linear-gradient(180deg, #f7f2ff 0%, #fceaf2 55%, #fff1d6 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(166, 199, 216, 0.28) 0%,
+    #f7f9fb 45%,
+    #eef3f7 100%
+  );
   overflow: hidden;
 }
 
@@ -17,7 +22,7 @@
 .eventDetail::before {
   background: radial-gradient(
     circle at 15% 0%,
-    rgba(128, 90, 255, 0.16),
+    rgba(166, 199, 216, 0.38),
     transparent 60%
   );
 }
@@ -25,7 +30,7 @@
 .eventDetail::after {
   background: radial-gradient(
     circle at 85% 90%,
-    rgba(255, 120, 180, 0.14),
+    rgba(72, 119, 163, 0.18),
     transparent 55%
   );
 }
@@ -45,8 +50,8 @@
   position: relative;
   border-radius: 24px;
   overflow: hidden;
-  background-color: #1f1b2e;
-  box-shadow: 0 18px 30px rgba(29, 20, 58, 0.2);
+  background-color: #1f2c36;
+  box-shadow: 0 18px 30px rgba(39, 38, 38, 0.2);
 }
 
 .heroMedia {
@@ -68,7 +73,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #f8f2ff;
+  color: #eef3f7;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -88,13 +93,13 @@
   position: absolute;
   left: 16px;
   top: 16px;
-  background-color: #ffd700;
+  background-color: #f4b83e;
   border-radius: 10px;
   padding: 6px 12px;
   font-size: 13px;
   font-weight: 700;
-  color: #1f1f1f;
-  box-shadow: 0 6px 14px rgba(15, 10, 32, 0.18);
+  color: #3b2d17;
+  box-shadow: 0 6px 14px rgba(39, 38, 38, 0.18);
 }
 
 .heroFooter {
@@ -117,7 +122,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 8px;
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: rgba(17, 27, 38, 0.7);
   border-radius: 999px;
   padding: 6px 12px;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -141,7 +146,7 @@
   margin-top: -18px;
   padding: 16px 16px 18px;
   border: 1px solid var(--border-lavender);
-  box-shadow: 0 10px 22px rgba(24, 16, 54, 0.12);
+  box-shadow: 0 10px 22px rgba(39, 38, 38, 0.12);
 }
 
 .metaList {
@@ -159,7 +164,7 @@
 .metaIcon {
   width: 18px;
   height: 18px;
-  color: #4b3d91;
+  color: #3a5d7a;
   flex: 0 0 auto;
   margin-top: 2px;
 }
@@ -167,7 +172,7 @@
 .metaText {
   font-size: 14px;
   font-weight: 600;
-  color: #3b2f74;
+  color: #2f4a66;
   line-height: 20px;
 }
 
@@ -194,7 +199,7 @@
 }
 
 .ticketButton {
-  background: linear-gradient(135deg, #7f5af0, #9c6ade);
+  background: linear-gradient(135deg, #4877a3, #6aa1c2);
   color: #fff;
   font-weight: 700;
   border: none;
@@ -209,18 +214,18 @@
 }
 
 .ticketButton:disabled {
-  background: #d9d9d9;
+  background: #d5dde4;
   cursor: not-allowed;
-  color: #7f7f7f;
+  color: #7b8792;
 }
 
 .promoBox {
   margin-top: 16px;
-  background: #fffbe6;
+  background: #f9f3e6;
   padding: 12px;
-  border-left: 4px solid #ffd700;
+  border-left: 4px solid #f4b83e;
   border-radius: 10px;
-  color: #333;
+  color: #5a4a2f;
   font-size: 14px;
   font-weight: 600;
 }
@@ -238,9 +243,9 @@
 }
 
 .vetted {
-  background: #e9f8ef;
-  border-left: 5px solid #2f6e4a;
-  color: #2f6e4a;
+  background: #e7f3ee;
+  border-left: 5px solid #4b7b62;
+  color: #355d4d;
 }
 
 .vettedInstructions {
@@ -253,15 +258,15 @@
 }
 
 .munch {
-  background: #fff3e0;
-  border-left: 5px solid #ffa000;
-  color: #8d6e63;
+  background: #fdf3e6;
+  border-left: 5px solid #f4b83e;
+  color: #7a5b26;
 }
 
 .fetlife {
-  background: #e1f5fe;
-  border-left: 5px solid #039be5;
-  color: #01579b;
+  background: #e7f1f6;
+  border-left: 5px solid #4877a3;
+  color: #2f4a66;
 }
 
 .sectionCard {
@@ -269,19 +274,19 @@
   border-radius: 20px;
   padding: 18px;
   border: 1px solid var(--border-lavender);
-  box-shadow: 0 8px 18px rgba(24, 16, 54, 0.08);
+  box-shadow: 0 8px 18px rgba(39, 38, 38, 0.08);
 }
 
 .sectionTitle {
   font-size: 18px;
   font-weight: 700;
-  color: #2f2a3a;
+  color: var(--text-primary);
   margin-bottom: 10px;
 }
 
 .eventMarkdown {
   line-height: 1.6;
-  color: #3a334d;
+  color: #2f3a44;
 }
 
 .eventMarkdown p {

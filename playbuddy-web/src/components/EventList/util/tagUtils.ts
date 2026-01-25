@@ -14,11 +14,11 @@ export type TagTone = {
 };
 
 const TAG_TONES: Record<string, TagTone> = {
-  spiritual: { background: "#FFF4E6", text: "#B45309", border: "#FFD7A8" },
-  social: { background: "#E9FBF3", text: "#1F8A5B", border: "#BDEDD8" },
-  skill: { background: "#EEF5FF", text: "#2B5AD7", border: "#CFE0FF" },
-  scene: { background: "#F6EEFF", text: "#6B35C6", border: "#DEC8FF" },
-  default: { background: "#F5F1FF", text: "#4B2ABF", border: "#E3DBFF" },
+  spiritual: { background: "#FAF3E6", text: "#7A5B26", border: "#F4D7A8" },
+  social: { background: "#E5F4F9", text: "#004A59", border: "#C7E3EF" },
+  skill: { background: "#E7EEF6", text: "#2F4A66", border: "#CAD8E5" },
+  scene: { background: "#EEF1F4", text: "#3B5163", border: "#D9E0E7" },
+  default: { background: "#F4F5F7", text: "#35506B", border: "#D9E0E7" },
 };
 
 const TAG_TONE_MATCHERS: Array<{ tone: keyof typeof TAG_TONES; keywords: string[] }> = [
@@ -122,29 +122,29 @@ const LEVEL_LABEL_MAP: Record<string, string> = {
 };
 
 const TYPE_CHIP_TONES: Record<string, TagTone> = {
-  "play party": { background: "#EFE9FF", text: "#5A43B5", border: "#DED7FF" },
-  munch: { background: "#FFE2B6", text: "#8A5200", border: "#F1C07A" },
-  retreat: { background: "#EAF6EE", text: "#2E6B4D", border: "#D6EBDC" },
-  festival: { background: "#E8F1FF", text: "#2F5DA8", border: "#D6E4FB" },
-  conference: { background: "#E8F1FF", text: "#2F5DA8", border: "#D6E4FB" },
-  workshop: { background: "#FDEBEC", text: "#9A3D42", border: "#F6D7DA" },
-  vetted: { background: "#E9F8EF", text: "#2F6E4A", border: "#D7F0E1" },
+  "play party": { background: "#D0EFFB", text: "#004A59", border: "#A6C7D8" },
+  munch: { background: "#FAF3E6", text: "#7A5B26", border: "#F4D7A8" },
+  retreat: { background: "#E9F1F6", text: "#2F4A66", border: "#C7D7E4" },
+  festival: { background: "#E5EEF7", text: "#31587A", border: "#CADBEA" },
+  conference: { background: "#E5EEF7", text: "#31587A", border: "#CADBEA" },
+  workshop: { background: "#F1F4F7", text: "#3D4F5F", border: "#D9E0E7" },
+  vetted: { background: "#E7F3EE", text: "#3B6B57", border: "#CFE2D9" },
 };
 
 export const LEVEL_CHIP_TONE: TagTone = {
-  background: "#E7F0FF",
-  text: "#2F5DA8",
-  border: "#D6E4FB",
+  background: "#E5EEF7",
+  text: "#2F4A66",
+  border: "#CADBEA",
 };
 
 export const EVENT_RAIL_COLORS: Record<string, string> = {
-  "play party": "#5A43B5",
-  munch: "#B45309",
-  retreat: "#2E6B4D",
-  festival: "#2F5DA8",
-  workshop: "#9A3D42",
-  event: "#9B8FD4",
-  default: "#9B8FD4",
+  "play party": "#004A59",
+  munch: "#7A5B26",
+  retreat: "#35506B",
+  festival: "#31587A",
+  workshop: "#3D4F5F",
+  event: "#4877A3",
+  default: "#4877A3",
 };
 
 export const getEventTypeKey = (event: Event) => {
