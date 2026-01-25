@@ -18,6 +18,8 @@
 
 Whenever making sql changes output the instructions with the alter SQL to the chat instead of just the SQL file
 
+Whenever creating a table make sure that RLS is on
+
 ## App Portions
 
 ### Event Card Layout
@@ -50,3 +52,16 @@ Whenever adding an a modal, make sure to add it to the debug menu as well
 ## Admin
 
 Whenever adding an admin screen, add it in web as well as mobile
+
+## Design
+
+Mirror the styling, layout and colors of
+
+- Welcome Page - background and PB logo
+- Communities Page - tabs on top
+- Event List Page - listing event cards
+
+## Tutorial Modals
+
+- Make the tutorial modals match the Whatsapp modal in style. include an icon
+- Make the coach toast match save button toast. don't auto close, have an X. and add an icon on the left
