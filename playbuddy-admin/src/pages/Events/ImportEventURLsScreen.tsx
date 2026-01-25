@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useImportEventURLs } from '../../common/db-axios/useEvents';
+import ScrapeJobsStatusBar from '../../components/ScrapeJobsStatusBar';
 import styles from './ImportEventURLsScreen.module.css';
 
 type AnyObj = Record<string, any>;
@@ -7,6 +8,15 @@ type upsertEventResult = {
   event?: AnyObj;     // server may wrap the event here
   error?: AnyObj;     // presence indicates failure
 } & AnyObj;
+type SkipEntry = {
+  url: string;
+  reason: string;
+  detail?: string;
+  source?: string;
+  stage?: string;
+  eventName?: string;
+  eventId?: string;
+};
 
 function getRowStatus(row: upsertEventResult | AnyObj): 'Inserted' | 'Updated' | 'Failed' | 'OK' {
   const r: AnyObj = row || {};
@@ -84,6 +94,9 @@ export default function ImportEventURLsScreen() {
     if (Array.isArray(result)) return result;
     return (result?.events as upsertEventResult[]) ?? [];
   }, [result]);
+  const skippedEvents = useMemo<SkipEntry[]>(() => (
+    (result?.skipped as SkipEntry[]) || []
+  ), [result]);
 
   const typeOptions = useMemo(() => {
     const set = new Set<string>();
@@ -131,10 +144,14 @@ export default function ImportEventURLsScreen() {
 
   const requested = result?.requested ?? null;
   const scraped = result?.scraped ?? null;
+  const skippedCount = skippedEvents.length;
+
+  const isHttpUrl = (url?: string) => !!url && /^https?:\/\//i.test(url);
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Import Events from URLs</h1>
+      <ScrapeJobsStatusBar />
 
       <div className={styles.card}>
         <textarea
@@ -195,6 +212,12 @@ export default function ImportEventURLsScreen() {
                   <div className={styles.statValue}>{counts.total}</div>
                 </div>
               </>
+            )}
+            {skippedCount > 0 && (
+              <div className={styles.statCard}>
+                <div className={styles.statLabel}>Skipped</div>
+                <div className={styles.statValue}>{skippedCount}</div>
+              </div>
             )}
             {!counts && (
               <div className={styles.statCard}>
@@ -292,6 +315,36 @@ export default function ImportEventURLsScreen() {
         )}
         {result && eventsArray.length === 0 && (
           <div className={styles.emptyState}>No events returned.</div>
+        )}
+        {result && skippedCount > 0 && (
+          <div className={styles.skippedBlock}>
+            <div className={styles.skippedHeader}>
+              <h3 className={styles.skippedTitle}>Skipped events</h3>
+              <span className={styles.countPill}>{skippedCount} skipped</span>
+            </div>
+            <div className={styles.skippedList}>
+              {skippedEvents.map((skip, idx) => (
+                <div key={`${skip.url || "skip"}-${idx}`} className={styles.skippedItem}>
+                  <div className={styles.skippedReason}>{skip.reason}</div>
+                  {skip.eventName && (
+                    <div className={styles.skippedName}>{skip.eventName}</div>
+                  )}
+                  {skip.url && (
+                    isHttpUrl(skip.url) ? (
+                      <a className={styles.skippedLink} href={skip.url} target="_blank" rel="noreferrer">
+                        {skip.url}
+                      </a>
+                    ) : (
+                      <div className={styles.skippedUrl}>{skip.url}</div>
+                    )
+                  )}
+                  {skip.detail && (
+                    <div className={styles.skippedDetail}>{skip.detail}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

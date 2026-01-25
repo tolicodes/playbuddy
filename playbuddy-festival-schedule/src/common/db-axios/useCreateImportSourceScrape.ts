@@ -7,6 +7,12 @@ export type ImportSourceScrapeResult = {
   result: "inserted" | "updated" | "failed" | "skipped";
   event: Event | null;
   error?: string;
+  skip?: {
+    reason: string;
+    detail?: string;
+    code?: "organizer_hidden" | "event_frozen" | "existing_event";
+    eventId?: string;
+  };
 };
 
 export type ImportSourceScrapeSkipped = {
@@ -14,12 +20,16 @@ export type ImportSourceScrapeSkipped = {
   reason: string;
   detail?: string;
   source?: string;
+  stage?: "scrape" | "upsert";
+  eventName?: string;
+  eventId?: string;
 };
 
 export type ImportSourceScrapeCounts = {
   inserted: number;
   updated: number;
   failed: number;
+  skipped?: number;
   total: number;
   upserted: number;
 };

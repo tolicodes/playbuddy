@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import PQueue from 'p-queue';
 import { authenticateAdminRequest, type AuthenticatedRequest } from '../middleware/authenticateRequest.js';
 import { createJob, getJob, listJobs } from '../scrapers/helpers/jobQueue.js';
@@ -15,7 +15,10 @@ import { replayToLargeInstance } from '../middleware/replayToLargeInstance.js';
 import { fetchGmailSources, normalizeGmailSources } from '../scrapers/helpers/gmailSources.js';
 import { fetchTicketingSources } from '../scrapers/helpers/ticketingSources.js';
 import { canonicalizeUrl } from '../scrapers/ai/normalize.js';
+import { logScrapeReport } from '../scrapers/helpers/scrapeReport.js';
+import type { HtmlScrapeCapture } from '../scrapers/helpers/htmlScrapeStore.js';
 import type { ScrapeSkipReason } from '../scrapers/types.js';
+import { subscribeScrapeJobStream } from '../scrapers/helpers/scrapeJobStream.js';
 
 const router = Router();
 const UPSERT_CONCURRENCY = Number(process.env.SCRAPE_UPSERT_CONCURRENCY || 40);
@@ -37,6 +40,57 @@ const resolveImportMode = (req: AuthenticatedRequest) => {
     }
     const syncFlag = parseSyncFlag(req.query?.sync ?? req.body?.sync);
     return syncFlag ? 'sync' : 'async';
+};
+
+const buildHtmlCapture = (source: string, ref?: string | number | null): HtmlScrapeCapture => ({
+    source,
+    ref: ref !== undefined && ref !== null ? String(ref) : undefined,
+});
+
+const loadScrapeJobsWithTasks = async (limit = 3) => {
+    const { data: jobs, error: jobsErr } = await supabaseClient
+        .from('scrape_jobs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    if (jobsErr) {
+        throw new Error(jobsErr.message);
+    }
+
+    const jobIds = (jobs || []).map((j: any) => j.id);
+    let tasks: any[] = [];
+    if (jobIds.length > 0) {
+        const { data: t, error: tasksErr } = await supabaseClient
+            .from('scrape_tasks')
+            .select('*')
+            .in('job_id', jobIds);
+        if (tasksErr) {
+            throw new Error(tasksErr.message);
+        }
+        tasks = t || [];
+    }
+
+    return (jobs || []).map((job: any) => ({
+        ...job,
+        tasks: tasks.filter((t: any) => t.job_id === job.id),
+        result: (() => {
+            const summary = { inserted: 0, updated: 0, failed: 0 };
+            tasks.forEach((t: any) => {
+                if (t.job_id !== job.id) return;
+                if (t.result?.inserted) summary.inserted += 1;
+                if (t.result?.updated) summary.updated += 1;
+                if (t.result?.failed || t.status === 'failed') summary.failed += 1;
+            });
+            return summary;
+        })(),
+    }));
+};
+
+const hydrateAuthHeaderFromQuery = (req: Request, _res: Response, next: any) => {
+    if (!req.headers.authorization && typeof req.query?.token === 'string') {
+        req.headers.authorization = `Bearer ${req.query.token}`;
+    }
+    next();
 };
 
 const resolveGmailSkipExisting = (source?: GmailSourceConfig | null) =>
@@ -106,7 +160,7 @@ const runSingleGmailScrape = async (args: {
     }
 
     const skipExisting = resolveGmailSkipExisting(args.gmailConfig);
-    const { results, finalEvents, counts } = await upsertScrapedEvents(gmailEvents, args.authUserId, {
+    const { results, finalEvents, counts, skipped } = await upsertScrapedEvents(gmailEvents, args.authUserId, {
         ...(skipExisting ? { skipExisting: true, skipExistingNoApproval: true } : {}),
     });
     return {
@@ -116,6 +170,7 @@ const runSingleGmailScrape = async (args: {
         counts,
         events: results,
         finalEvents,
+        skipped: skipped.length ? skipped : undefined,
     };
 };
 
@@ -130,6 +185,40 @@ const mergeEventDefaults = (
         ...((metadata as any)?.organizer || {}),
     },
 });
+
+const resolveEventUrl = (event?: Partial<NormalizedEventInput> | null): string => {
+    if (!event) return '';
+    const pick = (value: unknown) => {
+        if (typeof value === 'string') return value.trim();
+        if (value === null || value === undefined) return '';
+        return String(value).trim();
+    };
+    const candidates = [
+        pick((event as any).source_url),
+        pick((event as any).ticket_url),
+        pick((event as any).event_url),
+        pick((event as any).original_id),
+    ].filter(Boolean);
+    return candidates[0] || '';
+};
+
+const buildUpsertSkip = (
+    event: NormalizedEventInput | undefined,
+    result: any
+): ScrapeSkipReason | null => {
+    if (!result || result.result !== 'skipped') return null;
+    const skip = result.skip || {};
+    const url = resolveEventUrl(event) || resolveEventUrl(result.event) || 'unknown';
+    return {
+        url,
+        reason: skip.reason || 'Event skipped during import',
+        ...(skip.detail ? { detail: skip.detail } : {}),
+        source: skip.source || 'upsert',
+        stage: 'upsert',
+        ...(event?.name ? { eventName: event.name } : {}),
+        ...(skip.eventId ? { eventId: String(skip.eventId) } : {}),
+    };
+};
 
 type UpsertScrapeOptions = {
     skipExisting?: boolean;
@@ -162,6 +251,11 @@ const upsertScrapedEvents = async (
     );
 
     const finalResults = results.map((res) => res ?? { result: 'failed', event: null, error: 'Missing result' });
+    const upsertSkipped: ScrapeSkipReason[] = [];
+    finalResults.forEach((res, index) => {
+        const entry = buildUpsertSkip(scraped[index], res);
+        if (entry) upsertSkipped.push(entry);
+    });
 
     await flushEvents();
     await classifyEventsInBatches();
@@ -183,14 +277,23 @@ const upsertScrapedEvents = async (
         (acc, r: any) => {
             if (r.result === 'inserted') acc.inserted += 1;
             else if (r.result === 'updated') acc.updated += 1;
+            else if (r.result === 'skipped') acc.skipped += 1;
             else acc.failed += 1;
             acc.total += 1;
             return acc;
         },
-        { inserted: 0, updated: 0, failed: 0, total: 0 }
+        { inserted: 0, updated: 0, failed: 0, skipped: 0, total: 0 }
     );
 
-    return { results: finalResults, finalEvents, counts: { ...counts, upserted: counts.updated } };
+    logScrapeReport({
+        scope: 'sync',
+        scraped: scraped.length,
+        inserted: counts.inserted,
+        updated: counts.updated,
+        failed: counts.failed,
+    });
+
+    return { results: finalResults, finalEvents, counts: { ...counts, upserted: counts.updated }, skipped: upsertSkipped };
 };
 
 type ImportSourceTask = {
@@ -199,6 +302,7 @@ type ImportSourceTask = {
     multipleEvents?: boolean;
     extractFromListPage?: boolean;
     eventDefaults?: Record<string, any>;
+    captureHtml?: HtmlScrapeCapture;
 };
 
 const asRecord = (value: unknown): Record<string, any> => {
@@ -287,6 +391,7 @@ const buildImportSourceTask = (source: any): { task?: ImportSourceTask; error?: 
         url,
         source: source?.source || 'import_source',
         eventDefaults: eventDefaultsWithSource,
+        captureHtml: buildHtmlCapture('import_source', source?.id),
     };
     if (multipleEvents !== undefined) task.multipleEvents = multipleEvents;
     if (extractFromListPage !== undefined) task.extractFromListPage = extractFromListPage;
@@ -509,13 +614,17 @@ router.post('/scrape-import-source/:id', authenticateAdminRequest, async (req: A
             return;
         }
 
-        const skipped: ScrapeSkipReason[] = [];
+        const scrapeSkipped: ScrapeSkipReason[] = [];
         const scraped = await scrapeURLs(
             [{ url: task.url, multipleEvents: task.multipleEvents, extractFromListPage: task.extractFromListPage }],
             task.eventDefaults,
-            { onSkip: (skip) => skipped.push(skip) }
+            {
+                onSkip: (skip) => scrapeSkipped.push({ ...skip, stage: 'scrape' }),
+                captureHtml: task.captureHtml,
+            }
         );
-        const { results, finalEvents, counts } = await upsertScrapedEvents(scraped, req.authUserId);
+        const { results, finalEvents, counts, skipped: upsertSkipped } = await upsertScrapedEvents(scraped, req.authUserId);
+        const skipped = [...scrapeSkipped, ...upsertSkipped];
         res.json({
             mode,
             sourceId: String(source.id),
@@ -544,6 +653,7 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
     try {
         const mode = resolveImportMode(req);
         if (mode === 'async') {
+            const captureHtml = buildHtmlCapture('import_urls');
             const tasks = urls
                 .map((input: any) => (typeof input === 'string' ? { url: input } : input))
                 .filter((input: any) => typeof input?.url === 'string' && input.url.trim().length > 0)
@@ -552,6 +662,7 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
                     multipleEvents: input.multipleEvents,
                     extractFromListPage: input.extractFromListPage,
                     eventDefaults: mergeEventDefaults(eventDefaults, input.metadata),
+                    captureHtml,
                 }));
             if (!tasks.length) {
                 res.status(400).json({ error: 'urls (array) is required' });
@@ -567,13 +678,17 @@ router.post('/import-urls', authenticateAdminRequest, async (req: AuthenticatedR
             return;
         }
 
-        const skipped: ScrapeSkipReason[] = [];
+        const scrapeSkipped: ScrapeSkipReason[] = [];
         const scraped: NormalizedEventInput[] = await scrapeURLs(
             urls as any[],
             eventDefaults,
-            { onSkip: (skip) => skipped.push(skip) }
+            {
+                onSkip: (skip) => scrapeSkipped.push({ ...skip, stage: 'scrape' }),
+                captureHtml: buildHtmlCapture('import_urls'),
+            }
         );
-        const { results, finalEvents, counts } = await upsertScrapedEvents(scraped, req.authUserId);
+        const { results, finalEvents, counts, skipped: upsertSkipped } = await upsertScrapedEvents(scraped, req.authUserId);
+        const skipped = [...scrapeSkipped, ...upsertSkipped];
 
         res.json({
             mode,
@@ -611,48 +726,48 @@ router.get('/import-urls', authenticateAdminRequest, (_req: AuthenticatedRequest
     });
 });
 
+router.get('/scrape-jobs/stream', hydrateAuthHeaderFromQuery, authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders?.();
+
+    const writeEvent = (event: string, payload: any) => {
+        res.write(`event: ${event}\n`);
+        res.write(`data: ${JSON.stringify(payload)}\n\n`);
+    };
+
+    let closed = false;
+    const unsubscribe = subscribeScrapeJobStream((event) => {
+        if (closed) return;
+        writeEvent(event.type, event.payload);
+    });
+
+    const heartbeat = setInterval(() => {
+        if (closed) return;
+        res.write('event: ping\ndata: {}\n\n');
+    }, 25000);
+
+    try {
+        const jobs = await loadScrapeJobsWithTasks();
+        writeEvent('snapshot', { jobs });
+    } catch (err: any) {
+        writeEvent('error', { error: err?.message || 'failed to load jobs' });
+    }
+
+    req.on('close', () => {
+        closed = true;
+        clearInterval(heartbeat);
+        unsubscribe();
+    });
+});
+
 // Jobs + tasks in one payload
 router.get('/scrape-jobs', authenticateAdminRequest, async (_req: AuthenticatedRequest, res: Response) => {
     try {
-        const { data: jobs, error: jobsErr } = await supabaseClient
-            .from('scrape_jobs')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .limit(3);
-        if (jobsErr) {
-            res.status(500).json({ error: jobsErr.message });
-            return;
-        }
-
-        const jobIds = (jobs || []).map((j: any) => j.id);
-        let tasks: any[] = [];
-        if (jobIds.length > 0) {
-            const { data: t, error: tasksErr } = await supabaseClient
-                .from('scrape_tasks')
-                .select('*')
-                .in('job_id', jobIds);
-            if (tasksErr) {
-                res.status(500).json({ error: tasksErr.message });
-                return;
-            }
-            tasks = t || [];
-        }
-
-        const grouped = (jobs || []).map((job: any) => ({
-            ...job,
-            tasks: tasks.filter((t: any) => t.job_id === job.id),
-            result: (() => {
-                const summary = { inserted: 0, updated: 0, failed: 0 };
-                tasks.forEach((t: any) => {
-                    if (t.job_id !== job.id) return;
-                    if (t.result?.inserted) summary.inserted += 1;
-                    if (t.result?.updated) summary.updated += 1;
-                    if (t.result?.failed || t.status === 'failed') summary.failed += 1;
-                });
-                return summary;
-            })(),
-        }));
-        res.json({ jobs: grouped });
+        const jobs = await loadScrapeJobsWithTasks();
+        res.json({ jobs });
     } catch (err: any) {
         console.error('Failed to load jobs+tasks', err);
         res.status(500).json({ error: err?.message || 'failed to load jobs' });

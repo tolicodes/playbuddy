@@ -296,3 +296,66 @@
   font-size: 12px;
   overflow-x: auto;
 }
+
+.skippedBlock {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skippedHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.skippedTitle {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.skippedList {
+  display: grid;
+  gap: 10px;
+}
+
+.skippedItem {
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.skippedReason {
+  font-weight: 700;
+  color: #9a3412;
+  font-size: 13px;
+}
+
+.skippedName {
+  font-size: 13px;
+  color: #7c2d12;
+}
+
+.skippedUrl {
+  font-size: 12px;
+  color: #9a3412;
+  word-break: break-all;
+}
+
+.skippedLink {
+  font-size: 12px;
+  color: #b45309;
+  text-decoration: underline;
+  word-break: break-all;
+}
+
+.skippedDetail {
+  font-size: 12px;
+  color: #9a3412;
+}

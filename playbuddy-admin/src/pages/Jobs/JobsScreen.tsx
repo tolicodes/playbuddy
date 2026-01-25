@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { useSearchParams } from "react-router-dom";
 import {
   useScrapeJobs,
   type ScrapeJobWithTasks,
@@ -27,6 +28,21 @@ const statusColor = (status: string) => {
     case "failed":
       return "error";
     case "running":
+      return "warning";
+    default:
+      return "default";
+  }
+};
+
+const resultStatusColor = (status: string) => {
+  switch (status) {
+    case "inserted":
+      return "success";
+    case "updated":
+      return "info";
+    case "failed":
+      return "error";
+    case "skipped":
       return "warning";
     default:
       return "default";
@@ -52,11 +68,41 @@ const getEventIdsFromTask = (t: ScrapeTask): string[] => {
     ...(res.insertedIds || []),
     ...(res.updatedIds || []),
     ...(res.failedIds || []),
+    ...(res.skippedIds || []),
   ];
 };
 
+const getTaskFailedCount = (task: ScrapeTask): number => {
+  const result = (task.result || {}) as any;
+  const failedCount =
+    typeof result.failedCount === "number"
+      ? result.failedCount
+      : Array.isArray(result.failedIds)
+        ? result.failedIds.length
+        : 0;
+  const eventFailedCount = Array.isArray(result.eventResults)
+    ? result.eventResults.filter((item: any) => item?.status === "failed" || item?.error).length
+    : 0;
+  const count = Math.max(failedCount, eventFailedCount);
+  if (count > 0) return count;
+  return task.status === "failed" || result.failed || result.scrapeFailed ? 1 : 0;
+};
+
+const getTaskSkippedCount = (task: ScrapeTask): number => {
+  const result = (task.result || {}) as any;
+  if (typeof result.skippedCount === "number") return result.skippedCount;
+  if (Array.isArray(result.skippedIds)) return result.skippedIds.length;
+  if (Array.isArray(result.skipped)) return result.skipped.length;
+  if (Array.isArray(result.eventResults)) {
+    return result.eventResults.filter((item: any) => item?.status === "skipped" || item?.skip?.reason).length;
+  }
+  return 0;
+};
+
 const JobsScreen: React.FC = () => {
-  const { data: jobs = [], isLoading } = useScrapeJobs();
+  const { data: jobs = [], isLoading } = useScrapeJobs({ stream: true });
+  const [searchParams] = useSearchParams();
+  const targetJobId = searchParams.get("jobId");
   const { data: events = [] } = useFetchEvents({
     includeFacilitatorOnly: true,
     includeNonNY: true,
@@ -105,6 +151,16 @@ const JobsScreen: React.FC = () => {
   }, [organizers]);
 
   const [expandedTasks, setExpandedTasks] = React.useState<Record<string, boolean>>({});
+  const [expandedJobs, setExpandedJobs] = React.useState<Record<string, boolean>>({});
+
+  React.useEffect(() => {
+    if (!targetJobId) return;
+    setExpandedJobs((prev) => ({ ...prev, [targetJobId]: true }));
+    const el = document.getElementById(`job-${targetJobId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [targetJobId]);
 
   const toggleTask = (id: string) => {
     setExpandedTasks((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -142,7 +198,14 @@ const JobsScreen: React.FC = () => {
             }, {});
 
           return (
-            <Accordion key={job.id}>
+            <Accordion
+              key={job.id}
+              id={`job-${job.id}`}
+              expanded={!!expandedJobs[job.id]}
+              onChange={(_, expanded) =>
+                setExpandedJobs((prev) => ({ ...prev, [job.id]: expanded }))
+              }
+            >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Stack direction="row" spacing={2} alignItems="center" sx={{ width: "100%" }}>
                   <Typography variant="subtitle1">Job {job.id}</Typography>
@@ -169,6 +232,8 @@ const JobsScreen: React.FC = () => {
                     }).map(([group, list]) => {
                       const displayGroup = group.startsWith("organizer:") ? group.replace("organizer:", "") : group;
                       const completedCount = list.filter((t) => t.status === "completed").length;
+                      const failedCount = list.reduce((sum, t) => sum + getTaskFailedCount(t), 0);
+                      const skippedCount = list.reduce((sum, t) => sum + getTaskSkippedCount(t), 0);
                       return (
                         <Accordion key={group} disableGutters sx={{ border: "1px solid #e5e7eb", boxShadow: "none" }}>
                           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -182,6 +247,12 @@ const JobsScreen: React.FC = () => {
                               })()}
                               <Chip size="small" label={`${list.length} tasks`} />
                               <Chip size="small" color="success" variant="outlined" label={`${completedCount} done`} />
+                              {failedCount > 0 && (
+                                <Chip size="small" color="error" variant="outlined" label={`${failedCount} failed`} />
+                              )}
+                              {skippedCount > 0 && (
+                                <Chip size="small" color="warning" variant="outlined" label={`${skippedCount} skipped`} />
+                              )}
                             </Stack>
                           </AccordionSummary>
                           <AccordionDetails sx={{ pt: 0 }}>
@@ -192,6 +263,9 @@ const JobsScreen: React.FC = () => {
                                 if (result.inserted) badges.push("inserted");
                                 if (result.updated) badges.push("updated");
                                 if (result.failed) badges.push("failed");
+                                const skippedList = Array.isArray(result.skipped) ? result.skipped : [];
+                                const skippedCount = getTaskSkippedCount(t);
+                                if (skippedCount > 0) badges.push("skipped");
 
                                 const eventIds = (
                                   result.insertedIds ||
@@ -275,6 +349,11 @@ const JobsScreen: React.FC = () => {
                                             {result.errorMessage}
                                           </Typography>
                                         )}
+                                        {skippedCount > 0 && (
+                                          <Typography variant="caption" color="text.secondary">
+                                            Skipped {skippedCount}
+                                          </Typography>
+                                        )}
                                         {t.last_error && (
                                           <Typography variant="caption" color="error">
                                             {t.last_error}
@@ -284,6 +363,129 @@ const JobsScreen: React.FC = () => {
                                     </Stack>
                                     <Collapse in={!!expandedTasks[t.id]} unmountOnExit>
                                       <Box sx={{ mt: 1, bgcolor: "#f8fafc", borderRadius: 1, p: 1 }}>
+                                        {Array.isArray(result.eventResults) && result.eventResults.length > 0 && (
+                                          <Box sx={{ mb: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">
+                                              Events ({result.eventResults.length})
+                                            </Typography>
+                                            <Stack spacing={0.75} sx={{ mt: 0.5 }}>
+                                              {result.eventResults.map((item: any, idx: number) => {
+                                                const eventId = item?.eventId ? String(item.eventId) : null;
+                                                const resolvedEvent = eventId ? eventById[eventId] : undefined;
+                                                const date = resolvedEvent?.start_date || item?.start_date || null;
+                                                const name =
+                                                  resolvedEvent?.name ||
+                                                  item?.name ||
+                                                  item?.event_url ||
+                                                  item?.ticket_url ||
+                                                  item?.source_url ||
+                                                  t.url;
+                                                const displayTitle = date
+                                                  ? `${date.slice(0, 10)} ${name}`
+                                                  : name;
+                                                const status = item?.status || "unknown";
+                                                const url =
+                                                  item?.event_url ||
+                                                  item?.ticket_url ||
+                                                  item?.source_url ||
+                                                  null;
+                                                return (
+                                                  <Box key={`${t.id}-event-${idx}`} sx={{ border: "1px solid #e5e7eb", borderRadius: 1, p: 0.75, bgcolor: "#ffffff" }}>
+                                                    <Stack direction="row" spacing={1} alignItems="center">
+                                                      <Chip size="small" label={status} color={resultStatusColor(status) as any} />
+                                                      <Typography variant="caption" sx={{ flex: 1 }} noWrap>
+                                                        {displayTitle}
+                                                      </Typography>
+                                                      {eventId && (
+                                                        <Chip size="small" variant="outlined" label={`id ${eventId}`} />
+                                                      )}
+                                                    </Stack>
+                                                    {item?.organizer && (
+                                                      <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                                        Organizer: {item.organizer}
+                                                      </Typography>
+                                                    )}
+                                                    {url && (
+                                                      <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                                        URL: {url}
+                                                      </Typography>
+                                                    )}
+                                                    {item?.original_id && (
+                                                      <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                                        Original ID: {item.original_id}
+                                                      </Typography>
+                                                    )}
+                                                    {item?.location && (
+                                                      <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                                        Location: {item.location}
+                                                      </Typography>
+                                                    )}
+                                                    {item?.error && (
+                                                      <Typography variant="caption" color="error" sx={{ display: "block" }}>
+                                                        Error: {item.error}
+                                                      </Typography>
+                                                    )}
+                                                    {item?.skip?.reason && (
+                                                      <Typography variant="caption" sx={{ display: "block", color: "#9a3412" }}>
+                                                        Skip: {item.skip.reason}
+                                                      </Typography>
+                                                    )}
+                                                    {item?.skip?.detail && (
+                                                      <Typography variant="caption" sx={{ display: "block", color: "#9a3412" }}>
+                                                        {item.skip.detail}
+                                                      </Typography>
+                                                    )}
+                                                  </Box>
+                                                );
+                                              })}
+                                            </Stack>
+                                          </Box>
+                                        )}
+                                        {Array.isArray(result.htmlFiles) && result.htmlFiles.length > 0 && (
+                                          <Box sx={{ mb: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">
+                                              HTML files
+                                            </Typography>
+                                            <Stack spacing={0.25} sx={{ mt: 0.5 }}>
+                                              {result.htmlFiles.map((file: string, index: number) => (
+                                                <Typography key={`${t.id}-html-${index}`} variant="caption" sx={{ display: "block" }}>
+                                                  {file}
+                                                </Typography>
+                                              ))}
+                                            </Stack>
+                                          </Box>
+                                        )}
+                                        {skippedList.length > 0 && (
+                                          <Box sx={{ mb: 1 }}>
+                                            <Typography variant="caption" color="text.secondary">
+                                              Skipped events
+                                            </Typography>
+                                            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+                                              {skippedList.map((skip: any, index: number) => (
+                                                <Box key={`${skip.url || "skip"}-${index}`} sx={{ border: "1px solid #e5e7eb", borderRadius: 1, p: 0.75, bgcolor: "#fff7ed" }}>
+                                                  <Typography variant="caption" sx={{ fontWeight: 700, color: "#9a3412" }}>
+                                                    {skip.reason}
+                                                  </Typography>
+                                                  {skip.eventName && (
+                                                    <Typography variant="caption" sx={{ display: "block", color: "#7c2d12" }}>
+                                                      {skip.eventName}
+                                                    </Typography>
+                                                  )}
+                                                  {skip.url && (
+                                                    <Typography variant="caption" sx={{ display: "block", color: "#b45309" }}>
+                                                      {skip.url}
+                                                    </Typography>
+                                                  )}
+                                                  {skip.detail && (
+                                                    <Typography variant="caption" sx={{ display: "block", color: "#9a3412" }}>
+                                                      {skip.detail}
+                                                    </Typography>
+                                                  )}
+                                                </Box>
+                                              ))}
+                                            </Stack>
+                                          </Box>
+                                        )}
                                         <Typography variant="caption" color="text.secondary">
                                           {event ? "Event JSON" : "Result JSON"}
                                         </Typography>

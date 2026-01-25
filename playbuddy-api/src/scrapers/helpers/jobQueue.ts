@@ -1,9 +1,13 @@
 import PQueue from 'p-queue';
 import { randomUUID } from 'crypto';
 import scrapeURLs from './scrapeURLs.js';
+import { logScrapeReport } from './scrapeReport.js';
 import { supabaseClient } from '../../connections/supabaseClient.js';
 import { NormalizedEventInput } from '../../commonTypes.js';
 import { upsertEvent } from '../../routes/helpers/writeEventsToDB/upsertEvent.js';
+import type { ScrapeSkipReason } from '../types.js';
+import type { HtmlScrapeCapture } from './htmlScrapeStore.js';
+import { emitScrapeJobStreamEvent } from './scrapeJobStream.js';
 
 type TaskStatus = 'pending' | 'running' | 'completed' | 'failed';
 type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
@@ -38,6 +42,7 @@ export type ScrapeTask = {
     skipExisting?: boolean;
     skipExistingNoApproval?: boolean;
     approveExisting?: boolean;
+    captureHtml?: HtmlScrapeCapture;
     result?: any;
     error?: string;
     event_id?: string | null;
@@ -55,6 +60,49 @@ const resolveSource = (url: string): string => {
     }
 };
 
+const resolveEventUrl = (event?: Partial<NormalizedEventInput> | null, fallback?: string): string => {
+    const pick = (value: unknown) => {
+        if (typeof value === 'string') return value.trim();
+        if (value === null || value === undefined) return '';
+        return String(value).trim();
+    };
+    const candidates = [
+        event ? pick((event as any).source_url) : '',
+        event ? pick((event as any).ticket_url) : '',
+        event ? pick((event as any).event_url) : '',
+        event ? pick((event as any).original_id) : '',
+        pick(fallback),
+    ].filter(Boolean);
+    return candidates[0] || '';
+};
+
+const formatSkipReason = (skip: ScrapeSkipReason) => {
+    const detail = skip.detail ? ` (${skip.detail})` : '';
+    return `${skip.reason}${detail}`;
+};
+
+const isScrapeError = (skip: ScrapeSkipReason) => (skip.level ?? 'error') === 'error';
+
+const buildUpsertSkipEntry = (
+    event: NormalizedEventInput | undefined,
+    result: any,
+    fallbackUrl?: string
+): ScrapeSkipReason | null => {
+    if (!result || result.status !== 'skipped') return null;
+    const skip = result.skip || {};
+    const url = resolveEventUrl(event, fallbackUrl) || 'unknown';
+    return {
+        url,
+        reason: skip.reason || 'Event skipped during import',
+        ...(skip.detail ? { detail: skip.detail } : {}),
+        source: skip.source || 'upsert',
+        stage: 'upsert',
+        level: skip.level ?? 'warn',
+        ...(event?.name ? { eventName: event.name } : {}),
+        ...(skip.eventId ? { eventId: String(skip.eventId) } : {}),
+    };
+};
+
 // In-memory stores (swap to Supabase later)
 const jobs = new Map<string, ScrapeJob>();
 const tasks = new Map<string, ScrapeTask>();
@@ -63,6 +111,30 @@ const TASK_CONCURRENCY = Number(process.env.SCRAPE_TASK_CONCURRENCY || 200);
 const UPSERT_CONCURRENCY = Number(process.env.SCRAPE_UPSERT_CONCURRENCY || 40);
 const taskQueue = new PQueue({ concurrency: TASK_CONCURRENCY });
 const upsertQueue = new PQueue({ concurrency: UPSERT_CONCURRENCY });
+
+const toNumber = (value: unknown) => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+
+const summarizeJobFromTasks = (jobId: string) => {
+    let scraped = 0;
+    let inserted = 0;
+    let updated = 0;
+    let failed = 0;
+    let taskCount = 0;
+    tasks.forEach((task) => {
+        if (task.jobId !== jobId) return;
+        taskCount += 1;
+        const result = task.result || {};
+        const scrapedCount = toNumber((result as any).scrapedCount);
+        const insertedCount = toNumber((result as any).insertedCount) || ((result as any).inserted ? 1 : 0);
+        const updatedCount = toNumber((result as any).updatedCount) || ((result as any).updated ? 1 : 0);
+        const failedCount = toNumber((result as any).failedCount) || (((result as any).failed || task.status === 'failed') ? 1 : 0);
+        scraped += scrapedCount;
+        inserted += insertedCount;
+        updated += updatedCount;
+        failed += failedCount;
+    });
+    return { scraped, inserted, updated, failed, tasks: taskCount };
+};
 
 let classifyRun: Promise<any> | null = null;
 export const triggerClassification = () => {
@@ -97,6 +169,7 @@ const upsertJobRecord = async (job: ScrapeJob) => {
         const { error } = await supabaseClient.from('scrape_jobs').upsert(payload);
         if (error) console.error('Failed to persist job', payload, error);
         else console.log(`[jobs] upserted job ${job.id} status=${job.status} (${job.completedTasks}/${job.totalTasks})`);
+        emitScrapeJobStreamEvent({ type: 'job', payload });
     } catch (err) {
         console.error('Supabase error persisting job', err);
     }
@@ -122,6 +195,7 @@ const upsertTaskRecord = async (task: Partial<ScrapeTask> & { id: string; jobId:
         const { error } = await supabaseClient.from('scrape_tasks').upsert(payload);
         if (error) console.error('[jobs] Failed to persist task', task.id, payload, error);
         else console.log(`[jobs] upserted task ${task.id} status=${task.status} url=${task.url}`);
+        emitScrapeJobStreamEvent({ type: 'task', payload });
     } catch (err) {
         console.error('[jobs] Supabase error persisting task', task.id, err);
     }
@@ -166,6 +240,22 @@ const updateJobProgress = (task: ScrapeTask) => {
     if (totalDone === job.totalTasks) {
         job.status = job.failedTasks > 0 ? 'failed' : 'completed';
         job.finishedAt = new Date();
+        const summary = summarizeJobFromTasks(job.id);
+        const durationMs = job.startedAt && job.finishedAt
+            ? job.finishedAt.getTime() - job.startedAt.getTime()
+            : undefined;
+        logScrapeReport({
+            scope: 'job',
+            jobId: job.id,
+            source: job.source,
+            status: job.status,
+            scraped: summary.scraped,
+            inserted: summary.inserted,
+            updated: summary.updated,
+            failed: summary.failed,
+            tasks: summary.tasks,
+            durationMs,
+        });
         // Once a scrape job finishes (success or failure), kick off classification for newly added events.
         triggerClassification();
     } else {
@@ -196,11 +286,18 @@ const runTask = async (taskId: string) => {
 
     try {
         const scrapeStart = Date.now();
+        const scrapeSkipped: ScrapeSkipReason[] = [];
+        const scrapeOptions = {
+            onSkip: (skip: ScrapeSkipReason) => scrapeSkipped.push({ ...skip, stage: 'scrape' }),
+            ...(task.captureHtml ? { captureHtml: task.captureHtml } : {}),
+        };
         const scrapedEvents = task.prefetched ?? await scrapeURLs(
             [{ url: task.url, multipleEvents: task.multipleEvents, extractFromListPage: task.extractFromListPage }],
-            task.eventDefaults || {}
+            task.eventDefaults || {},
+            scrapeOptions
         );
-        console.log(`[jobs] scraped task ${taskId} url=${task.url} events=${scrapedEvents.length} durationMs=${Date.now() - scrapeStart}`);
+        const scrapedCount = scrapedEvents.length;
+        console.log(`[jobs] scraped task ${taskId} url=${task.url} events=${scrapedCount} durationMs=${Date.now() - scrapeStart}`);
 
         const upsertOptions = {
             ...(task.skipExisting ? { skipExisting: true } : {}),
@@ -212,9 +309,10 @@ const runTask = async (taskId: string) => {
                 try {
                     const res = await upsertEvent(ev, authUserId, upsertOptions);
                     return {
-                        status: res.result as 'inserted' | 'updated' | 'failed',
-                        eventId: res.event?.id ? String(res.event.id) : null,
-                        error: null as string | null,
+                        status: res.result as 'inserted' | 'updated' | 'failed' | 'skipped',
+                        eventId: res.event?.id ? String(res.event.id) : (res.skip?.eventId ? String(res.skip.eventId) : null),
+                        error: (res as any).error ? String((res as any).error) : null,
+                        skip: res.skip,
                     };
                 } catch (err: any) {
                     return { status: 'failed' as const, eventId: null, error: err?.message || String(err) };
@@ -226,8 +324,50 @@ const runTask = async (taskId: string) => {
         const upsertResults = await Promise.allSettled(upsertPromises);
         console.log(`[jobs] upserted task ${taskId} url=${task.url} eventResults=${upsertResults.length} durationMs=${Date.now() - upsertStart}`);
 
+        const eventResults = scrapedEvents.map((event, index) => {
+            const res = upsertResults[index];
+            if (res?.status === 'fulfilled') {
+                return {
+                    index,
+                    status: res.value.status,
+                    eventId: res.value.eventId ?? null,
+                    error: res.value.error ?? null,
+                    skip: res.value.skip ?? null,
+                    name: event?.name ?? null,
+                    start_date: event?.start_date ?? null,
+                    end_date: event?.end_date ?? null,
+                    source_url: event?.source_url ?? null,
+                    ticket_url: event?.ticket_url ?? null,
+                    event_url: event?.event_url ?? null,
+                    original_id: event?.original_id ?? null,
+                    organizer: event?.organizer?.name ?? null,
+                    location: event?.location ?? null,
+                    price: event?.price ?? null,
+                };
+            }
+            const error = res ? (res as PromiseRejectedResult).reason?.message || String((res as PromiseRejectedResult).reason) : null;
+            return {
+                index,
+                status: 'failed',
+                eventId: null,
+                error,
+                skip: null,
+                name: event?.name ?? null,
+                start_date: event?.start_date ?? null,
+                end_date: event?.end_date ?? null,
+                source_url: event?.source_url ?? null,
+                ticket_url: event?.ticket_url ?? null,
+                event_url: event?.event_url ?? null,
+                original_id: event?.original_id ?? null,
+                organizer: event?.organizer?.name ?? null,
+                location: event?.location ?? null,
+                price: event?.price ?? null,
+            };
+        });
+
+        const upsertSkipped: ScrapeSkipReason[] = [];
         const summary = upsertResults.reduce(
-            (acc, r) => {
+            (acc, r, index) => {
                 if (r.status === 'fulfilled') {
                     if (r.value.status === 'inserted') {
                         acc.inserted += 1;
@@ -235,6 +375,11 @@ const runTask = async (taskId: string) => {
                     } else if (r.value.status === 'updated') {
                         acc.updated += 1;
                         if (r.value.eventId) acc.updatedIds.push(r.value.eventId);
+                    } else if (r.value.status === 'skipped') {
+                        acc.skipped += 1;
+                        if (r.value.eventId) acc.skippedIds.push(r.value.eventId);
+                        const entry = buildUpsertSkipEntry(scrapedEvents[index], r.value, task.url);
+                        if (entry) upsertSkipped.push(entry);
                     } else {
                         acc.failed += 1;
                         if (r.value.eventId) acc.failedIds.push(r.value.eventId);
@@ -246,24 +391,65 @@ const runTask = async (taskId: string) => {
                 }
                 return acc;
             },
-            { inserted: 0, updated: 0, failed: 0, errors: [] as string[], insertedIds: [] as string[], updatedIds: [] as string[], failedIds: [] as string[] }
+            {
+                inserted: 0,
+                updated: 0,
+                skipped: 0,
+                failed: 0,
+                errors: [] as string[],
+                insertedIds: [] as string[],
+                updatedIds: [] as string[],
+                skippedIds: [] as string[],
+                failedIds: [] as string[],
+            }
         );
 
-        const status: TaskStatus = summary.failed > 0 ? 'failed' : 'completed';
+        const scrapeErrors = scrapeSkipped.filter(isScrapeError);
+        const scrapeWarnings = scrapeSkipped.filter(skip => !isScrapeError(skip));
+        let scrapeErrorMessage: string | undefined;
+        if (scrapeErrors.length) {
+            scrapeErrorMessage = formatSkipReason(scrapeErrors[0]);
+        } else if (scrapedCount === 0) {
+            scrapeErrorMessage = scrapeSkipped.length
+                ? formatSkipReason(scrapeSkipped[0])
+                : 'No events scraped';
+        }
+        const scrapeFailed = !!scrapeErrorMessage;
+        const errorMessages = [...summary.errors];
+        if (scrapeErrorMessage) errorMessages.unshift(scrapeErrorMessage);
+        const errorMessage = errorMessages.length ? errorMessages.join('; ') : undefined;
+
+        const status: TaskStatus = summary.failed > 0 || scrapeFailed ? 'failed' : 'completed';
         const finishedAt = new Date();
+        const skipped = [...scrapeSkipped, ...upsertSkipped];
+        const skippedCount = skipped.length;
         const eventIdForTask =
             summary.insertedIds[0] ||
             summary.updatedIds[0] ||
             summary.failedIds[0] ||
+            summary.skippedIds[0] ||
             null;
         const resultPayload = {
+            scrapedCount,
+            insertedCount: summary.inserted,
+            updatedCount: summary.updated,
+            failedCount: summary.failed,
+            skippedCount,
             inserted: summary.inserted > 0,
             updated: summary.updated > 0,
-            failed: summary.failed > 0,
-            errorMessage: summary.errors.length ? summary.errors.join('; ') : undefined,
+            failed: summary.failed > 0 || scrapeFailed,
+            errorMessage,
+            scrapeFailed,
+            scrapeErrorMessage,
+            scrapeErrors: scrapeErrors.length ? scrapeErrors : undefined,
+            scrapeWarnings: scrapeWarnings.length ? scrapeWarnings : undefined,
             insertedIds: summary.insertedIds,
             updatedIds: summary.updatedIds,
             failedIds: summary.failedIds,
+            skippedIds: summary.skippedIds,
+            skipped: skippedCount > 0 ? skipped : undefined,
+            eventResults: eventResults.length ? eventResults : undefined,
+            htmlFiles: task.captureHtml?.files?.length ? task.captureHtml.files : undefined,
         };
 
         tasks.set(taskId, {
@@ -286,14 +472,44 @@ const runTask = async (taskId: string) => {
             finishedAt,
         });
         updateJobProgress({ ...updated, status });
+        const totalDurationMs = Date.now() - taskStart;
+        logScrapeReport({
+            scope: 'task',
+            jobId: task.jobId,
+            taskId,
+            source: task.source,
+            url: task.url,
+            status,
+            scraped: scrapedCount,
+            inserted: summary.inserted,
+            updated: summary.updated,
+            failed: summary.failed + (scrapeFailed ? 1 : 0),
+            durationMs: totalDurationMs,
+        });
         console.log(
-            `[jobs] completed task ${taskId} url=${task.url} scraped=${scrapedEvents.length} inserted=${summary.inserted} updated=${summary.updated} failed=${summary.failed} totalDurationMs=${Date.now() - taskStart}`
+            `[jobs] completed task ${taskId} url=${task.url} scraped=${scrapedCount} inserted=${summary.inserted} updated=${summary.updated} failed=${summary.failed} totalDurationMs=${totalDurationMs}`
         );
     } catch (err: any) {
+        const errorMessage = err?.message || 'scrape failed';
+        const totalDurationMs = Date.now() - taskStart;
+        const resultPayload = {
+            scrapedCount: 0,
+            insertedCount: 0,
+            updatedCount: 0,
+            failedCount: 1,
+            inserted: false,
+            updated: false,
+            failed: true,
+            errorMessage,
+            scrapeFailed: true,
+            scrapeErrorMessage: errorMessage,
+            htmlFiles: task.captureHtml?.files?.length ? task.captureHtml.files : undefined,
+        };
         tasks.set(taskId, {
             ...updated,
             status: 'failed',
-            error: err?.message || 'scrape failed',
+            error: errorMessage,
+            result: resultPayload,
             finishedAt: new Date(),
         });
         upsertTaskRecord({
@@ -304,11 +520,26 @@ const runTask = async (taskId: string) => {
             priority: task.priority,
             attempts: updated.attempts,
             source: task.source,
-            error: err?.message || 'scrape failed',
+            error: errorMessage,
+            result: resultPayload,
             finishedAt: new Date(),
         });
         updateJobProgress({ ...updated, status: 'failed' });
-        console.error(`[jobs] failed task ${taskId} url=${task.url} durationMs=${Date.now() - taskStart} error=${err?.message || err}`);
+        logScrapeReport({
+            scope: 'task',
+            jobId: task.jobId,
+            taskId,
+            source: task.source,
+            url: task.url,
+            status: 'failed',
+            scraped: 0,
+            inserted: 0,
+            updated: 0,
+            failed: 1,
+            durationMs: totalDurationMs,
+            error: errorMessage,
+        });
+        console.error(`[jobs] failed task ${taskId} url=${task.url} durationMs=${totalDurationMs} error=${errorMessage}`);
     }
 };
 
@@ -322,6 +553,7 @@ type JobInput = string | {
     skipExisting?: boolean;
     skipExistingNoApproval?: boolean;
     approveExisting?: boolean;
+    captureHtml?: HtmlScrapeCapture;
 };
 
 type JobOptions = {
@@ -365,8 +597,18 @@ export const createJob = async (urls: JobInput[], priority = 5, options: JobOpti
         const skipExisting = typeof input === 'string' ? undefined : input.skipExisting;
         const skipExistingNoApproval = typeof input === 'string' ? undefined : input.skipExistingNoApproval;
         const approveExisting = typeof input === 'string' ? undefined : input.approveExisting;
+        const captureHtml = typeof input === 'string' ? undefined : input.captureHtml;
         const source = inputSource || resolveSource(url);
         const taskId = randomUUID();
+        const captureHtmlWithIds = captureHtml
+            ? {
+                ...captureHtml,
+                jobId,
+                taskId,
+                source: captureHtml.source || source,
+                files: [],
+            }
+            : undefined;
         const task: ScrapeTask = {
             id: taskId,
             jobId,
@@ -382,6 +624,7 @@ export const createJob = async (urls: JobInput[], priority = 5, options: JobOpti
             skipExisting,
             skipExistingNoApproval,
             approveExisting,
+            captureHtml: captureHtmlWithIds,
             createdAt: now,
         };
         tasks.set(taskId, task);

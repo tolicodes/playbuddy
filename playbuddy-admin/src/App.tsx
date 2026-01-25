@@ -39,6 +39,7 @@ import PushNotificationsScreen from "./pages/PushNotifications/PushNotifications
 import BranchStatsScreen from "./pages/BranchStats/BranchStatsScreen";
 import AnalyticsScreen from "./pages/Analytics/AnalyticsScreen";
 import LocationAreasScreen from "./pages/LocationAreas/LocationAreasScreen";
+import ScrapeJobsStatusBar from "./components/ScrapeJobsStatusBar";
 
 // ---------- Global axios auth (no instances) ----------
 let axiosAuthInitialized = false;
@@ -337,6 +338,7 @@ export default function App() {
           />
         </Toolbar>
       </AppBar>
+      <ScrapeJobsStatusBar sx={{ mx: 2 }} />
       <Menu
         id="admin-nav-menu"
         anchorEl={menuAnchorEl}

@@ -7,12 +7,19 @@ export type GmailSourceScrapeResult = {
   result: "inserted" | "updated" | "failed" | "skipped";
   event: Event | null;
   error?: string;
+  skip?: {
+    reason: string;
+    detail?: string;
+    code?: "organizer_hidden" | "event_frozen" | "existing_event";
+    eventId?: string;
+  };
 };
 
 export type GmailSourceScrapeCounts = {
   inserted: number;
   updated: number;
   failed: number;
+  skipped?: number;
   total: number;
   upserted: number;
 };
@@ -26,6 +33,15 @@ export type GmailSourceScrapeResponse = {
   counts?: GmailSourceScrapeCounts;
   events?: GmailSourceScrapeResult[];
   finalEvents?: Event[];
+  skipped?: {
+    url: string;
+    reason: string;
+    detail?: string;
+    source?: string;
+    stage?: "scrape" | "upsert";
+    eventName?: string;
+    eventId?: string;
+  }[];
 };
 
 export const useCreateGmailSourceScrape = () => {

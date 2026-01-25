@@ -5,11 +5,9 @@ import { useWishlist, type WishlistEntry } from './useWishlist';
 import { OrganizerFilterOption, getAvailableOrganizers } from './calendarUtils';
 import { useUserContext } from '../../Auth/hooks/UserContext';
 import { useFetchEvents as useCommonFetchEvents } from '../../../Common/db-axios/useEvents';
-import { useImportSources } from '../../../Common/db-axios/useImportSources';
 import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from './eventHelpers';
 import { ADMIN_EMAILS } from '../../../config';
 import type { EventWithMetadata } from '../../../Common/Nav/NavStackType';
-import type { ImportSource } from '../../../commonTypes';
 
 const dedupeEventsById = <T extends { id: number }>(events: T[]) => {
     const seen = new Map<number, T>();
@@ -21,76 +19,6 @@ const dedupeEventsById = <T extends { id: number }>(events: T[]) => {
     return Array.from(seen.values());
 };
 
-const normalizeHandle = (value?: string | null) => (value || '').replace(/^@/, '').trim().toLowerCase();
-const normalizeUrl = (value?: string | null) => {
-    if (!value) return '';
-    const raw = value.trim();
-    if (!raw) return '';
-    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
-    try {
-        const url = new URL(withScheme);
-        url.hash = '';
-        url.search = '';
-        const normalized = `${url.host}${url.pathname}`.replace(/\/$/, '');
-        return normalized.toLowerCase();
-    } catch {
-        return raw.replace(/^https?:\/\//i, '').replace(/\/$/, '').toLowerCase();
-    }
-};
-
-const addOrganizerId = (target: Set<string>, value: unknown) => {
-    if (value === undefined || value === null) return;
-    const trimmed = String(value).trim();
-    if (trimmed) target.add(trimmed);
-};
-
-const addHandle = (target: Set<string>, value: unknown) => {
-    if (value === undefined || value === null) return;
-    const normalized = normalizeHandle(String(value));
-    if (normalized) target.add(normalized);
-};
-
-const addUrl = (target: Set<string>, value: unknown) => {
-    if (value === undefined || value === null) return;
-    const normalized = normalizeUrl(String(value));
-    if (normalized) target.add(normalized);
-};
-
-const buildExcludedSourceLookup = (sources: ImportSource[]) => {
-    const organizerIds = new Set<string>();
-    const handles = new Set<string>();
-    const urls = new Set<string>();
-
-    sources.forEach((source) => {
-        if (!source?.is_excluded) return;
-        const status = source.approval_status ?? null;
-        if (status === 'approved' || status === 'rejected') return;
-
-        const defaults = source.event_defaults || {};
-        const metadata = source.metadata || {};
-        addOrganizerId(organizerIds, (defaults as any).organizer_id);
-        addOrganizerId(organizerIds, (defaults as any).organizerId);
-        addOrganizerId(organizerIds, (metadata as any).organizer_id);
-        addOrganizerId(organizerIds, (metadata as any).organizerId);
-
-        const isHandleSource =
-            (source.identifier_type || '').toLowerCase() === 'handle' ||
-            source.source === 'fetlife_handle';
-        if (isHandleSource) {
-            addHandle(handles, source.identifier);
-        }
-        const isUrlSource =
-            (source.identifier_type || '').toLowerCase() === 'url' ||
-            source.source === 'eb_url' ||
-            source.source === 'url' ||
-            /^https?:\/\//i.test(source.identifier || '');
-        if (isUrlSource) {
-            addUrl(urls, source.identifier);
-        }
-    });
-
-    return { organizerIds, handles, urls };
-};
 
 export type CalendarData = {
     organizers: OrganizerFilterOption[];
@@ -146,8 +74,6 @@ export const useCalendarData = (options: CalendarDataOptions = {}): CalendarData
 
     const events = useMemo(() => dedupeEventsById(eventsData), [eventsData]);
 
-    const { data: importSources = [] } = useImportSources({ includeAll: true, enabled: isAdmin });
-
     const organizers = useMemo(
         () => getAvailableOrganizers(events || []),
         [events]
@@ -162,38 +88,7 @@ export const useCalendarData = (options: CalendarDataOptions = {}): CalendarData
         [events, organizerColorMap]
     );
 
-    const excludedSourceLookup = useMemo(() => {
-        if (!isAdmin) {
-            return { organizerIds: new Set<string>(), handles: new Set<string>(), urls: new Set<string>() };
-        }
-        return buildExcludedSourceLookup(importSources || []);
-    }, [importSources, isAdmin]);
-
-    const isEventSourceExcluded = useCallback(
-        (event: EventWithMetadata) => {
-            if (!isAdmin) return false;
-            const urlCandidates = [
-                event.ticket_url,
-                event.event_url,
-                (event as any)?.source_url,
-            ].map(normalizeUrl).filter(Boolean);
-            if (urlCandidates.some((url) => excludedSourceLookup.urls.has(url))) {
-                return true;
-            }
-            const organizer = event.organizer;
-            if (!organizer) return false;
-            const organizerId = organizer.id != null ? String(organizer.id) : '';
-            if (organizerId && excludedSourceLookup.organizerIds.has(organizerId)) {
-                return true;
-            }
-            const handles = [
-                organizer.fetlife_handle,
-                ...(organizer.fetlife_handles || []),
-            ];
-            return handles.some((handle) => excludedSourceLookup.handles.has(normalizeHandle(handle)));
-        },
-        [excludedSourceLookup, isAdmin]
-    );
+    const isEventSourceExcluded = useCallback(() => false, []);
 
     const {
         wishlistEvents,

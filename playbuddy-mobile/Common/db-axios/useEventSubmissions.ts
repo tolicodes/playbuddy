@@ -6,6 +6,12 @@ import type { Event, UserSubmittedEventInput } from "../types/commonTypes";
 export type UserSubmittedEventResponse = {
     result: 'inserted' | 'updated' | 'failed' | 'skipped';
     event: Event | null;
+    skip?: {
+        reason: string;
+        detail?: string;
+        code?: "organizer_hidden" | "event_frozen" | "existing_event";
+        eventId?: string;
+    };
 };
 
 export type UserSubmittedImportResponse = {

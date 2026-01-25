@@ -18,6 +18,7 @@ import { useTicketingSources, type TicketingSource } from '../../common/db-axios
 import { Event, ImportSource } from '../../common/types/commonTypes';
 import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useFetchEvents, useImportEventURLs, type ImportUrlInput } from '../../common/db-axios/useEvents';
+import ScrapeJobsStatusBar from '../../components/ScrapeJobsStatusBar';
 
 const METHODS = ['chrome_scraper', 'eb_scraper', 'ai_scraper', 'custom_scraper'];
 const SOURCES = ['fetlife_handle', 'eb_url', 'url', 'plura', 'tantra_institute'];
@@ -887,6 +888,7 @@ export default function ImportSourcesScreen() {
             <Typography color="text.secondary" gutterBottom>
                 Add or view sources used by scrapers (FetLife handles, Eventbrite URLs, etc.).
             </Typography>
+            <ScrapeJobsStatusBar sx={{ mb: 3 }} />
 
             <Tabs value={tab} onChange={(_, val) => setTab(val)} sx={{ mb: 3 }}>
                 <Tab value="sources" label="All Sources" />
@@ -1553,6 +1555,11 @@ export default function ImportSourcesScreen() {
                                             <Paper key={`scrape-skip-${skip.url}-${index}`} variant="outlined" sx={{ p: 1.25 }}>
                                                 <Stack spacing={0.5}>
                                                     <Typography variant="body2">{skip.reason}</Typography>
+                                                    {skip.eventName && (
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            {skip.eventName}
+                                                        </Typography>
+                                                    )}
                                                     {skip.url && (
                                                         <Link href={skip.url} target="_blank" rel="noopener noreferrer" underline="hover">
                                                             <Typography variant="caption" color="primary">
