@@ -93,17 +93,11 @@ interface Props {
 
 const DATE_COACH_COUNT_KEY = "dateCoachShownCount";
 const DATE_COACH_LAST_SHOWN_KEY = "dateCoachLastShownAt";
+const DATE_COACH_DEBUG_TOAST_KEY = "dateCoachDebugToast";
 const DATE_COACH_MAX_SHOWS = 3;
-const DATE_COACH_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
 const COMMUNITY_BANNER_HIDDEN_KEY = "communityBannerHidden";
 const RECOMMENDATIONS_HIDDEN_KEY = "organizerRecommendationsHidden";
 const EMPTY_EVENTS: EventWithMetadata[] = [];
-const DATE_TOAST_GRADIENT = [
-    "rgba(107, 87, 208, 0.8)",
-    "rgba(75, 42, 191, 0.8)",
-    "rgba(255, 38, 117, 0.8)",
-] as const;
-const DATE_TOAST_BACKGROUND = "rgba(75, 42, 191, 0.8)";
 const CALENDAR_COACH_SCROLL_OFFSET_PX = 200;
 const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 const CALENDAR_COACH_SCREEN_SCRIM = "rgba(64, 64, 64, 0.8)";
@@ -129,6 +123,7 @@ const EventCalendarView: React.FC<Props> = ({
     type DateCoachMeta = { count: number; lastShownAt: number | null };
     const [isMonthModalOpen, setIsMonthModalOpen] = useState(false);
     const [showDateToast, setShowDateToast] = useState(false);
+    const [dateToastWiggleToken, setDateToastWiggleToken] = useState<number | null>(null);
     const [dateCoachMeta, setDateCoachMeta] = useState<DateCoachMeta | null>(null);
     const [communityBannerHidden, setCommunityBannerHidden] = useState(false);
     const [recommendationsHidden, setRecommendationsHidden] = useState<boolean | null>(null);
@@ -146,7 +141,6 @@ const EventCalendarView: React.FC<Props> = ({
     const navUpdateSourceRef = useRef<'list' | 'other'>('other');
     const weekStripAnimationDirectionRef = useRef<"prev" | "next" | null>(null);
     const pendingCoachRef = useRef(false);
-    const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const toastAnim = useRef(new Animated.Value(0)).current;
     const monthModalAnim = useRef(new Animated.Value(0)).current;
     const listScrollOffsetRef = useRef(0);
@@ -336,14 +330,23 @@ const EventCalendarView: React.FC<Props> = ({
         };
     }, [isFocused]);
 
-
     useEffect(() => {
+        let isActive = true;
+        if (!isFocused) {
+            return () => {
+                isActive = false;
+            };
+        }
+        AsyncStorage.getItem(DATE_COACH_DEBUG_TOAST_KEY).then((value) => {
+            if (!isActive || !value) return;
+            void AsyncStorage.removeItem(DATE_COACH_DEBUG_TOAST_KEY);
+            showDateToastNow(dateCoachMeta ?? undefined);
+        });
         return () => {
-            if (toastTimeoutRef.current) {
-                clearTimeout(toastTimeoutRef.current);
-            }
+            isActive = false;
         };
-    }, []);
+    }, [dateCoachMeta, isFocused]);
+
 
     useEffect(() => {
         if (showDateToast) {
@@ -1093,19 +1096,14 @@ const EventCalendarView: React.FC<Props> = ({
     }
 
     const shouldShowDateToast = (meta: DateCoachMeta) => {
-        if (meta.count >= DATE_COACH_MAX_SHOWS) return false;
-        if (!meta.lastShownAt) return true;
-        return Date.now() - meta.lastShownAt >= DATE_COACH_INTERVAL_MS;
+        return meta.count < DATE_COACH_MAX_SHOWS;
     };
 
     const showDateToastNow = (currentMeta?: DateCoachMeta) => {
         const now = Date.now();
         logEvent(UE.DateBarCoachToastShown, analyticsPropsPlusEntity);
         setShowDateToast(true);
-        if (toastTimeoutRef.current) {
-            clearTimeout(toastTimeoutRef.current);
-        }
-        toastTimeoutRef.current = setTimeout(() => setShowDateToast(false), 7800);
+        setDateToastWiggleToken(now);
         setDateCoachMeta((prev) => {
             const base = currentMeta ?? prev ?? { count: 0, lastShownAt: null };
             const next = { count: Math.min(base.count + 1, DATE_COACH_MAX_SHOWS), lastShownAt: now };
@@ -1117,11 +1115,16 @@ const EventCalendarView: React.FC<Props> = ({
         });
     };
 
+    const dismissDateToast = useCallback(() => {
+        setShowDateToast(false);
+    }, []);
+
     const triggerDateToast = () => {
         if (!dateCoachMeta) {
             pendingCoachRef.current = true;
             return;
         }
+        if (showDateToast) return;
         if (shouldShowDateToast(dateCoachMeta)) {
             showDateToastNow(dateCoachMeta);
         }
@@ -1586,6 +1589,7 @@ const EventCalendarView: React.FC<Props> = ({
                                 }}
                                 showGoogleCalendar={showGoogleCalendar}
                                 filtersEnabled={hasActiveFilters}
+                                showDateToast={showDateToast}
                                 quickFilters={quickFilters}
                                 activeFilters={activeFilterChips}
                                 selectedQuickFilterId={selectedQuickFilterId}
@@ -1683,6 +1687,8 @@ const EventCalendarView: React.FC<Props> = ({
                                 containerWidth={Math.max(0, windowWidth - spacing.lg * 2)}
                                 animateToCurrentWeek={navUpdateSourceRef.current === 'list'}
                                 animateDirection={weekStripAnimationDirectionRef.current}
+                                wiggleTodayToken={dateToastWiggleToken}
+                                showDateToast={showDateToast}
                             />
                             <View style={[styles.headerDivider, showCoachOverlay && styles.headerDividerCoach]} />
                         </View>
@@ -1762,234 +1768,241 @@ const EventCalendarView: React.FC<Props> = ({
                                 </Animated.View>
                             </Animated.View>
                         </Modal>
-            <View
-                pointerEvents="none"
-                accessibilityElementsHidden={!showDateToast}
-                importantForAccessibility={showDateToast ? "yes" : "no-hide-descendants"}
-                style={styles.dateToastBackdrop}
-            >
-                <Animated.View
-                    style={[
-                        styles.dateToastCard,
-                        {
-                            opacity: toastAnim,
-                            transform: [{ translateY: toastTranslateY }, { scale: toastScale }],
-                        },
-                    ]}
-                >
-                    <LinearGradient
-                        colors={DATE_TOAST_GRADIENT}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.dateToastGradient}
-                    >
-                        <View style={styles.dateToastIcon}>
-                            <FAIcon name="calendar-day" size={12} color={colors.white} />
-                        </View>
-                        <Text style={styles.dateToastText}>long press for month view</Text>
-                    </LinearGradient>
-                </Animated.View>
-            </View>
-
-            <View style={styles.eventListContainer}>
-                <EventList
-                    sections={sections}
-                    sectionListRef={sectionListRef}
-                    isLoadingEvents={isLoadingList}
-                    viewMode={listViewMode}
-                    isOnWishlist={isOnWishlist}
-                    onToggleWishlist={handleToggleWishlist}
-                    wishlistEventsCount={wishlistEvents.length}
-                    isEventSourceExcluded={isEventSourceExcluded}
-                    listHeaderHeight={listHeaderHeight}
-                    onListScroll={handleListScroll}
-                    onListScrollBeginDrag={handleListScrollBeginDrag}
-                    onListReady={handleListReady}
-                    listHeaderComponent={
-                        shouldShowListHeader ? (
-                            <View
-                                style={styles.listHeaderWrap}
-                                onLayout={(event) => {
-                                    const nextHeight = Math.round(event.nativeEvent.layout.height);
-                                    setListHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
-                                }}
-                            >
-                                {shouldShowCommunityBanner && (
-                                    <View style={styles.noticeWrap}>
-                                        <LinearGradient
-                                            colors={[colors.surfaceGoldWarm, colors.surfaceGoldLight]}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 1 }}
-                                            style={[styles.noticeCard, showCoachOverlay && styles.noticeCardCoach]}
+                        <View style={styles.eventListContainer}>
+                            <EventList
+                                sections={sections}
+                                sectionListRef={sectionListRef}
+                                isLoadingEvents={isLoadingList}
+                                viewMode={listViewMode}
+                                isOnWishlist={isOnWishlist}
+                                onToggleWishlist={handleToggleWishlist}
+                                wishlistEventsCount={wishlistEvents.length}
+                                isEventSourceExcluded={isEventSourceExcluded}
+                                listHeaderHeight={listHeaderHeight}
+                                onListScroll={handleListScroll}
+                                onListScrollBeginDrag={handleListScrollBeginDrag}
+                                onListReady={handleListReady}
+                                listHeaderComponent={
+                                    shouldShowListHeader ? (
+                                        <View
+                                            style={styles.listHeaderWrap}
+                                            onLayout={(event) => {
+                                                const nextHeight = Math.round(event.nativeEvent.layout.height);
+                                                setListHeaderHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+                                            }}
                                         >
-                                            <TouchableOpacity
-                                                style={[styles.noticeCloseButton, showCoachOverlay && styles.noticeCloseButtonCoach]}
-                                                onPress={handleHideCommunityBanner}
-                                                accessibilityRole="button"
-                                                accessibilityLabel="Hide banner"
-                                            >
-                                                <FAIcon name="times" size={12} color={colors.textGoldMuted} />
-                                            </TouchableOpacity>
-                                            <View style={styles.noticeHeader}>
-                                                <View style={[styles.noticeIcon, showCoachOverlay && styles.noticeIconCoach]}>
-                                                    <FAIcon name="star" size={14} color={colors.textGold} />
-                                                </View>
-                                                <View style={styles.noticeCopy}>
-                                                    <Text style={styles.noticeTitle}>Follow your favorite organizers</Text>
-                                                    <Text style={styles.noticeText}>Upcoming events + discounts</Text>
-                                                    <Text style={styles.noticeText}>from your favorite organizers</Text>
-                                                </View>
-                                            </View>
-                                            <View style={styles.noticeFooter}>
-                                                <TouchableOpacity
-                                                    style={styles.noticeCta}
-                                                    onPress={handleFollowOrganizersPress}
-                                                    accessibilityRole="button"
-                                                    accessibilityLabel={`${bannerCtaLabel} organizers`}
-                                                >
-                                                    <Text style={styles.noticeCtaText}>{bannerCtaLabel}</Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        </LinearGradient>
-                                    </View>
-                                )}
-                                {shouldShowRecommendations ? (
-                                    <View style={styles.recommendationsHeaderWrap}>
-                                        <View style={[styles.recommendationsCard, showCoachOverlay && styles.recommendationsCardCoach]}>
-                                            <View style={styles.recommendationsHeader}>
-                                                <Text style={styles.recommendationsTitle}>Recommended</Text>
-                                                <View style={styles.recommendationsActions}>
-                                                    <TouchableOpacity
-                                                        style={[
-                                                            styles.recommendationsActionButton,
-                                                            showCoachOverlay && styles.recommendationsActionButtonCoach,
-                                                        ]}
-                                                        onPress={handleHideRecommendations}
-                                                        accessibilityRole="button"
-                                                        accessibilityLabel="Hide Recommended"
+                                            {shouldShowCommunityBanner && (
+                                                <View style={styles.noticeWrap}>
+                                                    <LinearGradient
+                                                        colors={[colors.surfaceGoldWarm, colors.surfaceGoldLight]}
+                                                        start={{ x: 0, y: 0 }}
+                                                        end={{ x: 1, y: 1 }}
+                                                        style={[styles.noticeCard, showCoachOverlay && styles.noticeCardCoach]}
                                                     >
-                                                        <Text style={styles.recommendationsActionText}>Hide</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                            {recommendations.length === 0 && (
-                                                <View style={[styles.recommendationsEmpty, showCoachOverlay && styles.recommendationsEmptyCoach]}>
-                                                    <Text style={styles.recommendationsEmptyText}>
-                                                        No recommended events yet.
-                                                    </Text>
-                                                </View>
-                                            )}
-                                            {recommendations.length > 0 && (
-                                                <ScrollView
-                                                    horizontal
-                                                    showsHorizontalScrollIndicator={false}
-                                                    contentContainerStyle={styles.recommendationsScroll}
-                                                    onLayout={(event) => {
-                                                        const nextWidth = Math.round(event.nativeEvent.layout.width);
-                                                        setRecommendationsLaneWidth((prev) =>
-                                                            prev === nextWidth ? prev : nextWidth
-                                                        );
-                                                    }}
-                                                >
-                                                    {recommendations.map((event, index) => {
-                                                        const promoCodes = getPromoCodesForEvent(event);
-                                                        const promoLabels = promoCodes.map((promoCode) =>
-                                                            promoCode.discount_type === "percent"
-                                                                ? `${promoCode.discount}% off`
-                                                                : `$${promoCode.discount} off`
-                                                        );
-
-                                                        return (
                                                         <TouchableOpacity
-                                                            key={event.id}
-                                                            style={[
-                                                                styles.recommendationCard,
-                                                                showCoachOverlay && styles.recommendationCardCoach,
-                                                                {
-                                                                    width: recommendationCardWidth,
-                                                                    marginRight:
-                                                                            index === recommendations.length - 1 ? 0 : spacing.sm,
-                                                                    },
-                                                                ]}
-                                                                onPress={() => handleRecommendationPress(event)}
-                                                                activeOpacity={0.9}
+                                                            style={[styles.noticeCloseButton, showCoachOverlay && styles.noticeCloseButtonCoach]}
+                                                            onPress={handleHideCommunityBanner}
+                                                            accessibilityRole="button"
+                                                            accessibilityLabel="Hide banner"
+                                                        >
+                                                            <FAIcon name="times" size={12} color={colors.textGoldMuted} />
+                                                        </TouchableOpacity>
+                                                        <View style={styles.noticeHeader}>
+                                                            <View style={[styles.noticeIcon, showCoachOverlay && styles.noticeIconCoach]}>
+                                                                <FAIcon name="star" size={14} color={colors.textGold} />
+                                                            </View>
+                                                            <View style={styles.noticeCopy}>
+                                                                <Text style={styles.noticeTitle}>Follow your favorite organizers</Text>
+                                                                <Text style={styles.noticeText}>Upcoming events + discounts</Text>
+                                                                <Text style={styles.noticeText}>from your favorite organizers</Text>
+                                                            </View>
+                                                        </View>
+                                                        <View style={styles.noticeFooter}>
+                                                            <TouchableOpacity
+                                                                style={styles.noticeCta}
+                                                                onPress={handleFollowOrganizersPress}
+                                                                accessibilityRole="button"
+                                                                accessibilityLabel={`${bannerCtaLabel} organizers`}
                                                             >
-                                                                <View style={styles.recommendationMedia}>
-                                                                    {event.image_url ? (
-                                                                        <Image
-                                                                            source={{ uri: event.image_url }}
-                                                                            style={styles.recommendationImage}
-                                                                            resizeMode="cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <View style={styles.recommendationPlaceholder}>
-                                                                            <FAIcon name="calendar-day" size={16} color={colors.textMuted} />
-                                                                        </View>
-                                                                    )}
-                                                                    {promoLabels.length > 0 && (
-                                                                        <View style={styles.recommendationPromoBadgeStack}>
-                                                                            {promoLabels.map((label, labelIndex) => (
-                                                                                <View
-                                                                                    key={`${label}-${labelIndex}`}
-                                                                                    style={[
-                                                                                        styles.recommendationPromoBadge,
-                                                                                        labelIndex > 0 &&
-                                                                                            styles.recommendationPromoBadgeOffset,
-                                                                                    ]}
-                                                                                >
-                                                                                    <Text style={styles.recommendationPromoText}>
-                                                                                        {label}
-                                                                                    </Text>
-                                                                                </View>
-                                                                            ))}
-                                                                        </View>
-                                                                    )}
-                                                                </View>
-                                                                <View style={styles.recommendationBody}>
-                                                                    <Text style={styles.recommendationTitle} numberOfLines={2}>
-                                                                        {event.name}
-                                                                    </Text>
-                                                                    <Text style={styles.recommendationOrganizer} numberOfLines={1}>
-                                                                        {event.organizer?.name || "Organizer"}
-                                                                    </Text>
-                                                                    <Text style={styles.recommendationDate} numberOfLines={1}>
-                                                                        {formatDate(event, true)}
-                                                                    </Text>
-                                                                </View>
+                                                                <Text style={styles.noticeCtaText}>{bannerCtaLabel}</Text>
                                                             </TouchableOpacity>
-                                                        );
-                                                    })}
-                                                </ScrollView>
+                                                        </View>
+                                                    </LinearGradient>
+                                                </View>
                                             )}
+                                            {shouldShowRecommendations ? (
+                                                <View style={styles.recommendationsHeaderWrap}>
+                                                    <View style={[styles.recommendationsCard, showCoachOverlay && styles.recommendationsCardCoach]}>
+                                                        <View style={styles.recommendationsHeader}>
+                                                            <Text style={styles.recommendationsTitle}>Recommended</Text>
+                                                            <View style={styles.recommendationsActions}>
+                                                                <TouchableOpacity
+                                                                    style={[
+                                                                        styles.recommendationsActionButton,
+                                                                        showCoachOverlay && styles.recommendationsActionButtonCoach,
+                                                                    ]}
+                                                                    onPress={handleHideRecommendations}
+                                                                    accessibilityRole="button"
+                                                                    accessibilityLabel="Hide Recommended"
+                                                                >
+                                                                    <Text style={styles.recommendationsActionText}>Hide</Text>
+                                                                </TouchableOpacity>
+                                                            </View>
+                                                        </View>
+                                                        {recommendations.length === 0 && (
+                                                            <View style={[styles.recommendationsEmpty, showCoachOverlay && styles.recommendationsEmptyCoach]}>
+                                                                <Text style={styles.recommendationsEmptyText}>
+                                                                    No recommended events yet.
+                                                                </Text>
+                                                            </View>
+                                                        )}
+                                                        {recommendations.length > 0 && (
+                                                            <ScrollView
+                                                                horizontal
+                                                                showsHorizontalScrollIndicator={false}
+                                                                contentContainerStyle={styles.recommendationsScroll}
+                                                                onLayout={(event) => {
+                                                                    const nextWidth = Math.round(event.nativeEvent.layout.width);
+                                                                    setRecommendationsLaneWidth((prev) =>
+                                                                        prev === nextWidth ? prev : nextWidth
+                                                                    );
+                                                                }}
+                                                            >
+                                                                {recommendations.map((event, index) => {
+                                                                    const promoCodes = getPromoCodesForEvent(event);
+                                                                    const promoLabels = promoCodes.map((promoCode) =>
+                                                                        promoCode.discount_type === "percent"
+                                                                            ? `${promoCode.discount}% off`
+                                                                            : `$${promoCode.discount} off`
+                                                                    );
+                                                                    const approvalStatus = event.approval_status ?? null;
+                                                                    const isExcludedSource = !!isEventSourceExcluded?.(event);
+                                                                    const isRejected = approvalStatus === "rejected";
+                                                                    const isExcluded = approvalStatus === "excluded" || isExcludedSource;
+                                                                    const showAdminDangerBorder = isAdmin && (isRejected || isExcluded);
+
+                                                                    return (
+                                                                        <TouchableOpacity
+                                                                            key={event.id}
+                                                                            style={[
+                                                                                styles.recommendationCard,
+                                                                                showAdminDangerBorder && styles.recommendationCardAdminDanger,
+                                                                                showCoachOverlay && styles.recommendationCardCoach,
+                                                                                {
+                                                                                    width: recommendationCardWidth,
+                                                                                    marginRight:
+                                                                                        index === recommendations.length - 1 ? 0 : spacing.sm,
+                                                                                },
+                                                                            ]}
+                                                                            onPress={() => handleRecommendationPress(event)}
+                                                                            activeOpacity={0.9}
+                                                                        >
+                                                                            <View style={styles.recommendationMedia}>
+                                                                                {event.image_url ? (
+                                                                                    <Image
+                                                                                        source={{ uri: event.image_url }}
+                                                                                        style={styles.recommendationImage}
+                                                                                        resizeMode="cover"
+                                                                                    />
+                                                                                ) : (
+                                                                                    <View style={styles.recommendationPlaceholder}>
+                                                                                        <FAIcon name="calendar-day" size={16} color={colors.textMuted} />
+                                                                                    </View>
+                                                                                )}
+                                                                                {promoLabels.length > 0 && (
+                                                                                    <View style={styles.recommendationPromoBadgeStack}>
+                                                                                        {promoLabels.map((label, labelIndex) => (
+                                                                                            <View
+                                                                                                key={`${label}-${labelIndex}`}
+                                                                                                style={[
+                                                                                                    styles.recommendationPromoBadge,
+                                                                                                    labelIndex > 0 &&
+                                                                                                        styles.recommendationPromoBadgeOffset,
+                                                                                                ]}
+                                                                                            >
+                                                                                                <Text style={styles.recommendationPromoText}>
+                                                                                                    {label}
+                                                                                                </Text>
+                                                                                            </View>
+                                                                                        ))}
+                                                                                    </View>
+                                                                                )}
+                                                                            </View>
+                                                                            <View style={styles.recommendationBody}>
+                                                                                <Text style={styles.recommendationTitle} numberOfLines={2}>
+                                                                                    {event.name}
+                                                                                </Text>
+                                                                                <Text style={styles.recommendationOrganizer} numberOfLines={1}>
+                                                                                    {event.organizer?.name || "Organizer"}
+                                                                                </Text>
+                                                                                <Text style={styles.recommendationDate} numberOfLines={1}>
+                                                                                    {formatDate(event, true)}
+                                                                                </Text>
+                                                                            </View>
+                                                                        </TouchableOpacity>
+                                                                    );
+                                                                })}
+                                                            </ScrollView>
+                                                        )}
+                                                    </View>
+                                                </View>
+                                            ) : shouldShowHiddenRecommendations ? (
+                                                <View style={styles.recommendationsHeaderWrap}>
+                                                    <View style={[styles.recommendationsHiddenCard, showCoachOverlay && styles.recommendationsHiddenCardCoach]}>
+                                                        <Text style={styles.recommendationsHiddenText}>
+                                                            Recommended is hidden
+                                                        </Text>
+                                                        <TouchableOpacity
+                                                            style={[
+                                                                styles.recommendationsHiddenButton,
+                                                                showCoachOverlay && styles.recommendationsHiddenButtonCoach,
+                                                            ]}
+                                                            onPress={handleShowRecommendations}
+                                                            accessibilityRole="button"
+                                                            accessibilityLabel="Show Recommended"
+                                                        >
+                                                            <Text style={styles.recommendationsHiddenButtonText}>Show</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </View>
+                                            ) : null}
                                         </View>
-                                    </View>
-                                ) : shouldShowHiddenRecommendations ? (
-                                    <View style={styles.recommendationsHeaderWrap}>
-                                        <View style={[styles.recommendationsHiddenCard, showCoachOverlay && styles.recommendationsHiddenCardCoach]}>
-                                            <Text style={styles.recommendationsHiddenText}>
-                                                Recommended is hidden
-                                            </Text>
-                                            <TouchableOpacity
-                                                style={[
-                                                    styles.recommendationsHiddenButton,
-                                                    showCoachOverlay && styles.recommendationsHiddenButtonCoach,
-                                                ]}
-                                                onPress={handleShowRecommendations}
-                                                accessibilityRole="button"
-                                                accessibilityLabel="Show Recommended"
-                                            >
-                                                <Text style={styles.recommendationsHiddenButtonText}>Show</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-                                ) : null}
+                                    ) : null
+                                }
+                            />
+                        </View>
+                        {showDateToast && <View pointerEvents="none" style={styles.dateToastListScrim} />}
+                    </View>
+
+                    <View
+                        pointerEvents={showDateToast ? "box-none" : "none"}
+                        accessibilityElementsHidden={!showDateToast}
+                        importantForAccessibility={showDateToast ? "yes" : "no-hide-descendants"}
+                        style={styles.dateToastBackdrop}
+                    >
+                        <Animated.View
+                            style={[
+                                styles.dateToastCard,
+                                {
+                                    opacity: toastAnim,
+                                    transform: [{ translateY: toastTranslateY }, { scale: toastScale }],
+                                },
+                            ]}
+                        >
+                            <View style={styles.dateToastIcon}>
+                                <FAIcon name="calendar-day" size={12} color={colors.brandInk} />
                             </View>
-                        ) : null
-                    }
-                />
-            </View>
-            </View>
-            </View>
+                            <Text style={styles.dateToastText}>Long press the date for month view</Text>
+                            <TouchableOpacity
+                                style={styles.dateToastClose}
+                                onPress={dismissDateToast}
+                                accessibilityLabel="Dismiss long press hint"
+                            >
+                                <FAIcon name="times" size={12} color={colors.textSecondary} />
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </View>
+                </View>
             </PopupManager>
         </View>
     );
@@ -2010,6 +2023,11 @@ const styles = StyleSheet.create({
         zIndex: 2,
     },
     calendarCoachScreenScrim: {
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: CALENDAR_COACH_SCREEN_SCRIM,
+        zIndex: 1,
+    },
+    dateToastListScrim: {
         ...StyleSheet.absoluteFillObject,
         backgroundColor: CALENDAR_COACH_SCREEN_SCRIM,
         zIndex: 1,
@@ -2286,6 +2304,10 @@ const styles = StyleSheet.create({
         borderColor: colors.borderSubtle,
         overflow: "hidden",
     },
+    recommendationCardAdminDanger: {
+        borderColor: colors.danger,
+        borderWidth: 2,
+    },
     recommendationCardCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
         borderWidth: 0,
@@ -2446,40 +2468,46 @@ const styles = StyleSheet.create({
     dateToastCard: {
         maxWidth: 420,
         width: "100%",
-        backgroundColor: DATE_TOAST_BACKGROUND,
-        borderRadius: radius.pill,
-        borderWidth: 1,
-        borderColor: colors.borderOnDarkStrong,
-        overflow: "hidden",
-        shadowColor: colors.black,
-        shadowOpacity: 0.3,
-        shadowOffset: { width: 0, height: 12 },
-        shadowRadius: 20,
-        elevation: 12,
-    },
-    dateToastGradient: {
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
         gap: spacing.sm,
-        paddingHorizontal: spacing.lgPlus,
-        paddingVertical: spacing.mdPlus,
+        backgroundColor: colors.surfaceLavender,
+        borderRadius: radius.lg,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderStrong,
+        paddingHorizontal: spacing.mdPlus,
+        paddingVertical: spacing.smPlus,
+        ...shadows.card,
+        shadowOpacity: 0.12,
+        shadowOffset: { width: 0, height: 6 },
+        shadowRadius: 12,
+        elevation: 7,
     },
     dateToastIcon: {
-        width: spacing.xxl,
-        height: spacing.xxl,
-        borderRadius: spacing.xxl / 2,
-        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: colors.surfaceLavenderOpaque,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderStrong,
         alignItems: "center",
         justifyContent: "center",
     },
     dateToastText: {
-        color: colors.white,
-        fontSize: fontSizes.xxl,
-        fontWeight: "700",
-        fontFamily: fontFamilies.display,
-        letterSpacing: 0.4,
-        textAlign: "center",
         flexShrink: 1,
+        flexWrap: "wrap",
+        color: colors.textPrimary,
+        fontSize: fontSizes.basePlus,
+        fontWeight: "600",
+        fontFamily: fontFamilies.body,
+        lineHeight: 20,
+        textAlign: "left",
+    },
+    dateToastClose: {
+        padding: spacing.xs,
+        borderRadius: radius.pill,
+        backgroundColor: colors.surfaceLavenderOpaque,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderStrong,
     },
 });
