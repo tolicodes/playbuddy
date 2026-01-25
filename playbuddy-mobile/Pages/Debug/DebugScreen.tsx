@@ -15,7 +15,6 @@ import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { EventListViewIntroModal } from '../Calendar/ListView/EventListViewIntroModal';
 import { setEventListIntroSeen, setEventListViewMode } from '../Calendar/ListView/eventListViewMode';
 import { buildRecommendations, type RecommendationPick } from '../Calendar/hooks/recommendations';
-import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import { useFetchAttendees } from '../../Common/db-axios/useAttendees';
@@ -245,7 +244,6 @@ export const DebugScreen = () => {
     const { authUserId, userProfile, currentDeepLink } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
     const { allEvents, availableCardsToSwipe, wishlistEvents, wishlistEntryMap } = useCalendarData();
-    const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const { data: attendeeGroups = [] } = useFetchAttendees();
     const { data: publishedEventPopups = [], isLoading: isLoadingPublishedEventPopups, error: publishedEventPopupsError } =
@@ -311,21 +309,10 @@ export const DebugScreen = () => {
         refetch: refetchImportSources,
     } = useImportSources({ includeAll: true });
 
-    const organizerIdsFromCommunities = useMemo(() => {
-        const organizerCommunities = [
-            ...myCommunities.myOrganizerPublicCommunities,
-            ...myCommunities.myOrganizerPrivateCommunities,
-        ];
-        return organizerCommunities
-            .map((community) => community.organizer_id)
-            .filter(Boolean)
-            .map((id) => id.toString());
-    }, [myCommunities.myOrganizerPrivateCommunities, myCommunities.myOrganizerPublicCommunities]);
-
     const followedOrganizerIds = useMemo(() => {
         const followIds = (follows?.organizer || []).map((id) => id.toString());
-        return new Set([...followIds, ...organizerIdsFromCommunities]);
-    }, [follows?.organizer, organizerIdsFromCommunities]);
+        return new Set(followIds);
+    }, [follows?.organizer]);
 
     const attendeeEventIds = useMemo(() => {
         const ids = new Set<number>();
@@ -341,6 +328,14 @@ export const DebugScreen = () => {
         const candidates = [...(availableCardsToSwipe ?? []), ...(allEvents ?? [])];
         return candidates.find((event) => attendeeEventIds.has(event.id));
     }, [availableCardsToSwipe, allEvents, attendeeEventIds]);
+
+    const orderedScheduledNotifications = useMemo(() => {
+        return [...scheduledNotifications].sort((a, b) => a.sendAt - b.sendAt);
+    }, [scheduledNotifications]);
+
+    const nextScheduledNotification = orderedScheduledNotifications[0] ?? null;
+    const upcomingScheduledNotifications = orderedScheduledNotifications.slice(1);
+    const scheduledNow = Date.now();
 
     const eventStatusSummary = useMemo(() => {
         const buckets: Record<'approved' | 'pending' | 'rejected' | 'unknown', Event[]> = {
@@ -775,15 +770,6 @@ export const DebugScreen = () => {
         void promptDiscoverGameNotifications({ availableCardsToSwipe });
     };
 
-    const onPressNotificationsPrompt = () => {
-        void (async () => {
-            const accepted = await showNotificationsPromptModal();
-            setDebugStatus(
-                accepted ? 'Notifications prompt accepted.' : 'Notifications prompt dismissed.'
-            );
-        })();
-    };
-
     const onPressResetDiscoverGameNotifications = () => {
         void (async () => {
             await resetDiscoverGameNotifications();
@@ -1069,6 +1055,36 @@ export const DebugScreen = () => {
         calendar_add_coach: 'Tap Save on an event',
         buddy_list_coach: 'Open an event with other attendees',
     };
+    const debugQueueItems = useMemo<DebugQueueItem[]>(() => [
+        {
+            id: 'date_long_press_toast',
+            label: 'Long press date toast (Action)',
+            subtitle: 'Date bar coach',
+            icon: { icon: 'calendar-day', color: colors.accentBlue, bg: colors.accentBlueSoft },
+            metaLines: ['Action needed: Tap a date or finish a drag'],
+            onPress: onPressShowDateCoachToast,
+        },
+        {
+            id: 'guest_save_modal',
+            label: 'Guest save modal (Action)',
+            subtitle: 'Guest Save',
+            icon: { icon: 'user-plus', color: colors.accentGreen, bg: 'rgba(22, 163, 74, 0.12)' },
+            metaLines: ['Action needed: Guest taps Save/Follow'],
+            onPress: showGuestSaveModal,
+        },
+        {
+            id: 'organizer_edit_modal',
+            label: 'Organizer edit modal (Action)',
+            subtitle: 'Admin edit',
+            icon: { icon: 'edit', color: colors.accentOrange, bg: colors.accentOrangeSoft },
+            metaLines: ['Action needed: Admin taps Edit organizer'],
+            onPress: () => setDebugOrganizerEditVisible(true),
+        },
+    ], [onPressShowDateCoachToast, showGuestSaveModal, setDebugOrganizerEditVisible]);
+    const actionPopupItems = popupDebugItems.filter((popup) => !!popupActionNotes[popup.id]);
+    const scheduledPopupItems = popupDebugItems.filter((popup) => !popupActionNotes[popup.id]);
+    const hasActionQueue = actionPopupItems.length > 0 || debugQueueItems.length > 0;
+    const hasScheduledQueue = scheduledPopupItems.length > 0 || manualPopupItems.length > 0;
     const debugOrganizer: Organizer = {
         id: 9999,
         name: debugOrganizerEditValues.name || 'Sample Organizer',
@@ -1231,20 +1247,101 @@ export const DebugScreen = () => {
                                 </Text>
                             ))}
                             <View style={styles.scheduledList}>
-                                <Text style={styles.scheduledHeader}>Queued notifications</Text>
-                                {scheduledNotifications.length === 0 ? (
-                                    <Text style={styles.debugMeta}>No scheduled notifications.</Text>
-                                ) : (
-                                    scheduledNotifications.map((notification) => (
-                                        <View key={notification.id} style={styles.scheduledItem}>
-                                            <Text style={styles.debugMeta}>
-                                                {formatScheduledDate(notification.sendAt)}
-                                            </Text>
-                                            <Text style={styles.debugMeta}>
-                                                {formatScheduledMessage(notification.title, notification.body)}
+                                <View style={styles.scheduledHeaderRow}>
+                                    <Text style={styles.scheduledHeader}>Next push notifications</Text>
+                                    {orderedScheduledNotifications.length > 0 && (
+                                        <View style={styles.scheduledCountPill}>
+                                            <Text style={styles.scheduledCountText}>
+                                                {orderedScheduledNotifications.length} queued
                                             </Text>
                                         </View>
-                                    ))
+                                    )}
+                                </View>
+                                {orderedScheduledNotifications.length === 0 ? (
+                                    <View style={styles.scheduledEmptyCard}>
+                                        <View style={styles.scheduledEmptyIcon}>
+                                            <FAIcon name="bell-slash" size={16} color={colors.brandPurpleDark} />
+                                        </View>
+                                        <View style={styles.scheduledEmptyCopy}>
+                                            <Text style={styles.scheduledEmptyTitle}>No queued notifications</Text>
+                                            <Text style={styles.scheduledEmptyBody}>
+                                                Schedule organizer reminders to preview upcoming pushes.
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ) : (
+                                    <>
+                                        {nextScheduledNotification && (
+                                            <View style={[styles.popupCard, styles.popupCardNext]}>
+                                                <View style={styles.popupCardHeader}>
+                                                    <View
+                                                        style={[
+                                                            styles.popupIconWrap,
+                                                            { backgroundColor: colors.accentSkySoft },
+                                                        ]}
+                                                    >
+                                                        <FAIcon name="bell" size={14} color={colors.brandIndigo} />
+                                                    </View>
+                                                    <View style={styles.popupCardTitleBlock}>
+                                                        <Text style={styles.popupCardTitle}>
+                                                            {nextScheduledNotification.title || 'Notification'}
+                                                        </Text>
+                                                        <Text style={styles.popupCardSubtitle}>
+                                                            {formatScheduledDate(nextScheduledNotification.sendAt)}
+                                                        </Text>
+                                                    </View>
+                                                    <View style={styles.popupNextBadge}>
+                                                        <Text style={styles.popupNextBadgeText}>Next up</Text>
+                                                    </View>
+                                                </View>
+                                                {!!nextScheduledNotification.body && (
+                                                    <Text style={styles.popupCardMeta}>
+                                                        {nextScheduledNotification.body}
+                                                    </Text>
+                                                )}
+                                                <Text style={styles.popupCardMeta}>
+                                                    {formatScheduledRelative(nextScheduledNotification.sendAt, scheduledNow)}
+                                                </Text>
+                                            </View>
+                                        )}
+                                        {upcomingScheduledNotifications.length > 0 && (
+                                            <View style={styles.notificationQueue}>
+                                                <Text style={styles.notificationQueueHeader}>Coming after</Text>
+                                                {upcomingScheduledNotifications.map((notification) => (
+                                                    <View key={notification.id} style={styles.popupCard}>
+                                                        <View style={styles.popupCardHeader}>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupIconWrap,
+                                                                    { backgroundColor: colors.surfaceLavenderAlt },
+                                                                ]}
+                                                            >
+                                                                <FAIcon
+                                                                    name="bell"
+                                                                    size={12}
+                                                                    color={colors.brandPurpleDark}
+                                                                />
+                                                            </View>
+                                                            <View style={styles.popupCardTitleBlock}>
+                                                                <Text style={styles.popupCardTitle}>
+                                                                    {notification.title || 'Notification'}
+                                                                </Text>
+                                                                <Text style={styles.popupCardSubtitle}>
+                                                                    {formatScheduledDate(notification.sendAt)}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                        {!!notification.body && (
+                                                            <Text style={styles.popupCardMeta}>{notification.body}</Text>
+                                                        )}
+                                                        <Text style={styles.popupCardMeta}>
+                                                            {formatScheduledRelative(notification.sendAt, scheduledNow)}
+                                                        </Text>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        )}
+                                    </>
                                 )}
                             </View>
                         </AccordionSection>
@@ -1400,167 +1497,11 @@ export const DebugScreen = () => {
                             )}
                             <View style={styles.popupQueueSection}>
                                 <Text style={styles.popupQueueHeader}>Popup queue</Text>
-                                {popupDebugItems.length === 0 ? (
+                                {popupDebugItems.length === 0 &&
+                                    manualPopupItems.length === 0 &&
+                                    debugQueueItems.length === 0 && (
                                     <Text style={styles.debugMeta}>No popup data loaded.</Text>
-                                ) : (
-                                    <View style={styles.popupQueueGrid}>
-                                        {popupDebugItems.map((popup) => {
-                                            const statusTone = getPopupStatusTone(popup, now);
-                                            const statusStyle = POPUP_STATUS_STYLES[statusTone];
-                                            const statusLabel = getPopupStatusLabel(popup, statusTone);
-                                            const metaLines = getPopupMetaLines(popup, now);
-                                            const actionNote = popupActionNotes[popup.id];
-                                            const displayLabel = actionNote ? `${popup.label} (Action)` : popup.label;
-                                            const displayMetaLines = actionNote
-                                                ? [...metaLines, `Action: ${actionNote}`]
-                                                : metaLines;
-                                            const icon = POPUP_ICON_MAP[popup.id];
-                                            return (
-                                                <View
-                                                    key={popup.id}
-                                                    style={[
-                                                        styles.popupCard,
-                                                        popup.isNext && styles.popupCardNext,
-                                                    ]}
-                                                >
-                                                    <View style={styles.popupCardHeader}>
-                                                        <View
-                                                            style={[
-                                                                styles.popupIconWrap,
-                                                                { backgroundColor: icon.bg },
-                                                            ]}
-                                                        >
-                                                            <FAIcon
-                                                                name={icon.icon}
-                                                                size={16}
-                                                                color={icon.color}
-                                                            />
-                                                        </View>
-                                                        <View style={styles.popupCardTitleBlock}>
-                                                            <Text style={styles.popupCardTitle}>{displayLabel}</Text>
-                                                            <Text style={styles.popupCardSubtitle}>
-                                                                {`#${popup.order} · ${popup.id}`}
-                                                            </Text>
-                                                        </View>
-                                                        <View
-                                                            style={[
-                                                                styles.popupStatusPill,
-                                                                {
-                                                                    backgroundColor: statusStyle.bg,
-                                                                    borderColor: statusStyle.border,
-                                                                },
-                                                            ]}
-                                                        >
-                                                            <Text
-                                                                style={[
-                                                                    styles.popupStatusText,
-                                                                    { color: statusStyle.color },
-                                                                ]}
-                                                            >
-                                                                {statusLabel}
-                                                            </Text>
-                                                        </View>
-                                                    </View>
-                                                    {(popup.isNext || popup.isForced) && (
-                                                        <View style={styles.popupBadgeRow}>
-                                                            {popup.isNext && (
-                                                                <View style={styles.popupNextBadge}>
-                                                                    <Text style={styles.popupNextBadgeText}>
-                                                                        Up next
-                                                                    </Text>
-                                                                </View>
-                                                            )}
-                                                            {popup.isForced && (
-                                                                <View style={styles.popupForcedBadge}>
-                                                                    <Text style={styles.popupForcedBadgeText}>
-                                                                        Forced
-                                                                    </Text>
-                                                                </View>
-                                                            )}
-                                                        </View>
-                                                    )}
-                                                    <View style={styles.popupCardMetaRow}>
-                                                        {displayMetaLines.map((line) => (
-                                                            <Text
-                                                                key={`${popup.id}-${line}`}
-                                                                style={styles.popupCardMeta}
-                                                            >
-                                                                {line}
-                                                            </Text>
-                                                        ))}
-                                                    </View>
-                                                    <TouchableOpacity
-                                                        style={styles.popupShowButton}
-                                                        onPress={() => onPressShowPopup(popup.id)}
-                                                    >
-                                                        <Text style={styles.popupShowButtonText}>Show now</Text>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            );
-                                        })}
-                                        {debugQueueItems.map((item) => (
-                                            <View key={item.id} style={styles.popupCard}>
-                                                <View style={styles.popupCardHeader}>
-                                                    <View
-                                                        style={[
-                                                            styles.popupIconWrap,
-                                                            { backgroundColor: item.icon.bg },
-                                                        ]}
-                                                    >
-                                                        <FAIcon
-                                                            name={item.icon.icon}
-                                                            size={16}
-                                                            color={item.icon.color}
-                                                        />
-                                                    </View>
-                                                    <View style={styles.popupCardTitleBlock}>
-                                                        <Text style={styles.popupCardTitle}>{item.label}</Text>
-                                                        <Text style={styles.popupCardSubtitle}>{item.subtitle}</Text>
-                                                    </View>
-                                                    <View
-                                                        style={[
-                                                            styles.popupStatusPill,
-                                                            {
-                                                                backgroundColor: POPUP_STATUS_STYLES.pending.bg,
-                                                                borderColor: POPUP_STATUS_STYLES.pending.border,
-                                                            },
-                                                        ]}
-                                                    >
-                                                        <Text
-                                                            style={[
-                                                                styles.popupStatusText,
-                                                                { color: POPUP_STATUS_STYLES.pending.color },
-                                                            ]}
-                                                        >
-                                                            Action
-                                                        </Text>
-                                                    </View>
-                                                </View>
-                                                {item.metaLines.length ? (
-                                                    <View style={styles.popupCardMetaRow}>
-                                                        {item.metaLines.map((line) => (
-                                                            <Text
-                                                                key={`${item.id}-${line}`}
-                                                                style={styles.popupCardMeta}
-                                                            >
-                                                                {line}
-                                                            </Text>
-                                                        ))}
-                                                    </View>
-                                                ) : null}
-                                                <TouchableOpacity
-                                                    style={styles.popupShowButton}
-                                                    onPress={item.onPress}
-                                                >
-                                                    <Text style={styles.popupShowButtonText}>Show now</Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        ))}
-                                    </View>
                                 )}
-                            </View>
-                            <View style={styles.popupManualSection}>
-                                <Text style={styles.popupQueueHeader}>Special Message Popups</Text>
                                 {manualPopupsLoading && (
                                     <Text style={styles.debugMeta}>Loading message popups...</Text>
                                 )}
@@ -1569,73 +1510,323 @@ export const DebugScreen = () => {
                                         Message popups unavailable (admin access required).
                                     </Text>
                                 )}
-                                {!manualPopupsLoading && !manualPopupsError && manualPopupItems.length === 0 && (
-                                    <Text style={styles.debugMeta}>No message popups scheduled.</Text>
-                                )}
-                                <View style={styles.manualPopupList}>
-                                    {manualPopupItems.map((popup) => {
-                                        const statusStyle = MANUAL_POPUP_STATUS_STYLES[popup.status];
-                                        const metaLines = getManualPopupMetaLines(popup, now);
-                                        return (
-                                            <View key={popup.id} style={styles.popupCard}>
-                                                <View style={styles.popupCardHeader}>
+                                {hasActionQueue && (
+                                    <View style={styles.popupQueueSubsection}>
+                                        <Text style={styles.popupQueueSubheader}>Action-based</Text>
+                                        <View style={styles.popupQueueGrid}>
+                                            {actionPopupItems.map((popup) => {
+                                                const statusTone = getPopupStatusTone(popup, now);
+                                                const statusStyle = POPUP_STATUS_STYLES[statusTone];
+                                                const statusLabel = getPopupStatusLabel(popup, statusTone);
+                                                const metaLines = getPopupMetaLines(popup, now);
+                                                const actionNote = popupActionNotes[popup.id];
+                                                const displayLabel = actionNote ? `${popup.label} (Action)` : popup.label;
+                                                const displayMetaLines = actionNote
+                                                    ? [`Action needed: ${actionNote}`, ...metaLines]
+                                                    : metaLines;
+                                                const icon = POPUP_ICON_MAP[popup.id];
+                                                return (
                                                     <View
+                                                        key={popup.id}
                                                         style={[
-                                                            styles.popupIconWrap,
-                                                            { backgroundColor: MANUAL_POPUP_ICON.bg },
+                                                            styles.popupCard,
+                                                            popup.isNext && styles.popupCardNext,
                                                         ]}
                                                     >
-                                                        <FAIcon
-                                                            name={MANUAL_POPUP_ICON.icon}
-                                                            size={16}
-                                                            color={MANUAL_POPUP_ICON.color}
-                                                        />
+                                                        <View style={styles.popupCardHeader}>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupIconWrap,
+                                                                    { backgroundColor: icon.bg },
+                                                                ]}
+                                                            >
+                                                                <FAIcon
+                                                                    name={icon.icon}
+                                                                    size={16}
+                                                                    color={icon.color}
+                                                                />
+                                                            </View>
+                                                            <View style={styles.popupCardTitleBlock}>
+                                                                <Text style={styles.popupCardTitle}>{displayLabel}</Text>
+                                                                <Text style={styles.popupCardSubtitle}>
+                                                                    {`#${popup.order} · ${popup.id}`}
+                                                                </Text>
+                                                            </View>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupStatusPill,
+                                                                    {
+                                                                        backgroundColor: statusStyle.bg,
+                                                                        borderColor: statusStyle.border,
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                <Text
+                                                                    style={[
+                                                                        styles.popupStatusText,
+                                                                        { color: statusStyle.color },
+                                                                    ]}
+                                                                >
+                                                                    {statusLabel}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                        {(popup.isNext || popup.isForced) && (
+                                                            <View style={styles.popupBadgeRow}>
+                                                                {popup.isNext && (
+                                                                    <View style={styles.popupNextBadge}>
+                                                                        <Text style={styles.popupNextBadgeText}>
+                                                                            Up next
+                                                                        </Text>
+                                                                    </View>
+                                                                )}
+                                                                {popup.isForced && (
+                                                                    <View style={styles.popupForcedBadge}>
+                                                                        <Text style={styles.popupForcedBadgeText}>
+                                                                            Forced
+                                                                        </Text>
+                                                                    </View>
+                                                                )}
+                                                            </View>
+                                                        )}
+                                                        <View style={styles.popupCardMetaRow}>
+                                                            {displayMetaLines.map((line) => (
+                                                                <Text
+                                                                    key={`${popup.id}-${line}`}
+                                                                    style={styles.popupCardMeta}
+                                                                >
+                                                                    {line}
+                                                                </Text>
+                                                            ))}
+                                                        </View>
+                                                        <TouchableOpacity
+                                                            style={styles.popupShowButton}
+                                                            onPress={() => onPressShowPopup(popup.id)}
+                                                        >
+                                                            <Text style={styles.popupShowButtonText}>Show now</Text>
+                                                        </TouchableOpacity>
                                                     </View>
-                                                    <View style={styles.popupCardTitleBlock}>
-                                                        <Text style={styles.popupCardTitle}>{popup.title}</Text>
-                                                        <Text style={styles.popupCardSubtitle}>
-                                                            {popup.hasEvent ? `Event · ${popup.eventName}` : 'Message only'}
-                                                        </Text>
-                                                    </View>
-                                                    <View
-                                                        style={[
-                                                            styles.popupStatusPill,
-                                                            {
-                                                                backgroundColor: statusStyle.bg,
-                                                                borderColor: statusStyle.border,
-                                                            },
-                                                        ]}
-                                                    >
-                                                        <Text
+                                                );
+                                            })}
+                                            {debugQueueItems.map((item) => (
+                                                <View key={item.id} style={styles.popupCard}>
+                                                    <View style={styles.popupCardHeader}>
+                                                        <View
                                                             style={[
-                                                                styles.popupStatusText,
-                                                                { color: statusStyle.color },
+                                                                styles.popupIconWrap,
+                                                                { backgroundColor: item.icon.bg },
                                                             ]}
                                                         >
-                                                            {statusStyle.label}
-                                                        </Text>
-                                                    </View>
-                                            </View>
-                                                <View style={styles.popupCardMetaRow}>
-                                                    {metaLines.map((line) => (
-                                                        <Text
-                                                            key={`${popup.id}-${line}`}
-                                                            style={styles.popupCardMeta}
+                                                            <FAIcon
+                                                                name={item.icon.icon}
+                                                                size={16}
+                                                                color={item.icon.color}
+                                                            />
+                                                        </View>
+                                                        <View style={styles.popupCardTitleBlock}>
+                                                            <Text style={styles.popupCardTitle}>{item.label}</Text>
+                                                            <Text style={styles.popupCardSubtitle}>{item.subtitle}</Text>
+                                                        </View>
+                                                        <View
+                                                            style={[
+                                                                styles.popupStatusPill,
+                                                                {
+                                                                    backgroundColor: POPUP_STATUS_STYLES.pending.bg,
+                                                                    borderColor: POPUP_STATUS_STYLES.pending.border,
+                                                                },
+                                                            ]}
                                                         >
-                                                            {line}
-                                                        </Text>
-                                                    ))}
+                                                            <Text
+                                                                style={[
+                                                                    styles.popupStatusText,
+                                                                    { color: POPUP_STATUS_STYLES.pending.color },
+                                                                ]}
+                                                            >
+                                                                Action
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+                                                    {item.metaLines.length ? (
+                                                        <View style={styles.popupCardMetaRow}>
+                                                            {item.metaLines.map((line) => (
+                                                                <Text
+                                                                    key={`${item.id}-${line}`}
+                                                                    style={styles.popupCardMeta}
+                                                                >
+                                                                    {line}
+                                                                </Text>
+                                                            ))}
+                                                        </View>
+                                                    ) : null}
+                                                    <TouchableOpacity
+                                                        style={styles.popupShowButton}
+                                                        onPress={item.onPress}
+                                                    >
+                                                        <Text style={styles.popupShowButtonText}>Show now</Text>
+                                                    </TouchableOpacity>
                                                 </View>
-                                                <TouchableOpacity
-                                                    style={styles.popupShowButton}
-                                                    onPress={() => onPressShowManualPopup(popup.source)}
-                                                >
-                                                    <Text style={styles.popupShowButtonText}>Show now</Text>
-                                                </TouchableOpacity>
-                                            </View>
-                                        );
-                                    })}
-                                </View>
+                                            ))}
+                                        </View>
+                                    </View>
+                                )}
+                                {hasScheduledQueue && (
+                                    <View style={styles.popupQueueSubsection}>
+                                        <Text style={styles.popupQueueSubheader}>Scheduled</Text>
+                                        <View style={styles.popupQueueGrid}>
+                                            {scheduledPopupItems.map((popup) => {
+                                                const statusTone = getPopupStatusTone(popup, now);
+                                                const statusStyle = POPUP_STATUS_STYLES[statusTone];
+                                                const statusLabel = getPopupStatusLabel(popup, statusTone);
+                                                const metaLines = getPopupMetaLines(popup, now);
+                                                const icon = POPUP_ICON_MAP[popup.id];
+                                                return (
+                                                    <View
+                                                        key={popup.id}
+                                                        style={[
+                                                            styles.popupCard,
+                                                            popup.isNext && styles.popupCardNext,
+                                                        ]}
+                                                    >
+                                                        <View style={styles.popupCardHeader}>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupIconWrap,
+                                                                    { backgroundColor: icon.bg },
+                                                                ]}
+                                                            >
+                                                                <FAIcon
+                                                                    name={icon.icon}
+                                                                    size={16}
+                                                                    color={icon.color}
+                                                                />
+                                                            </View>
+                                                            <View style={styles.popupCardTitleBlock}>
+                                                                <Text style={styles.popupCardTitle}>{popup.label}</Text>
+                                                                <Text style={styles.popupCardSubtitle}>
+                                                                    {`#${popup.order} · ${popup.id}`}
+                                                                </Text>
+                                                            </View>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupStatusPill,
+                                                                    {
+                                                                        backgroundColor: statusStyle.bg,
+                                                                        borderColor: statusStyle.border,
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                <Text
+                                                                    style={[
+                                                                        styles.popupStatusText,
+                                                                        { color: statusStyle.color },
+                                                                    ]}
+                                                                >
+                                                                    {statusLabel}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                        {(popup.isNext || popup.isForced) && (
+                                                            <View style={styles.popupBadgeRow}>
+                                                                {popup.isNext && (
+                                                                    <View style={styles.popupNextBadge}>
+                                                                        <Text style={styles.popupNextBadgeText}>
+                                                                            Up next
+                                                                        </Text>
+                                                                    </View>
+                                                                )}
+                                                                {popup.isForced && (
+                                                                    <View style={styles.popupForcedBadge}>
+                                                                        <Text style={styles.popupForcedBadgeText}>
+                                                                            Forced
+                                                                        </Text>
+                                                                    </View>
+                                                                )}
+                                                            </View>
+                                                        )}
+                                                        <View style={styles.popupCardMetaRow}>
+                                                            {metaLines.map((line) => (
+                                                                <Text
+                                                                    key={`${popup.id}-${line}`}
+                                                                    style={styles.popupCardMeta}
+                                                                >
+                                                                    {line}
+                                                                </Text>
+                                                            ))}
+                                                        </View>
+                                                        <TouchableOpacity
+                                                            style={styles.popupShowButton}
+                                                            onPress={() => onPressShowPopup(popup.id)}
+                                                        >
+                                                            <Text style={styles.popupShowButtonText}>Show now</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                );
+                                            })}
+                                            {manualPopupItems.map((popup) => {
+                                                const statusStyle = MANUAL_POPUP_STATUS_STYLES[popup.status];
+                                                const metaLines = getManualPopupMetaLines(popup, now);
+                                                return (
+                                                    <View key={popup.id} style={styles.popupCard}>
+                                                        <View style={styles.popupCardHeader}>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupIconWrap,
+                                                                    { backgroundColor: MANUAL_POPUP_ICON.bg },
+                                                                ]}
+                                                            >
+                                                                <FAIcon
+                                                                    name={MANUAL_POPUP_ICON.icon}
+                                                                    size={16}
+                                                                    color={MANUAL_POPUP_ICON.color}
+                                                                />
+                                                            </View>
+                                                            <View style={styles.popupCardTitleBlock}>
+                                                                <Text style={styles.popupCardTitle}>{`Special message: ${popup.title}`}</Text>
+                                                                <Text style={styles.popupCardSubtitle}>
+                                                                    {popup.hasEvent ? `Event · ${popup.eventName}` : 'Message only'}
+                                                                </Text>
+                                                            </View>
+                                                            <View
+                                                                style={[
+                                                                    styles.popupStatusPill,
+                                                                    {
+                                                                        backgroundColor: statusStyle.bg,
+                                                                        borderColor: statusStyle.border,
+                                                                    },
+                                                                ]}
+                                                            >
+                                                                <Text
+                                                                    style={[
+                                                                        styles.popupStatusText,
+                                                                        { color: statusStyle.color },
+                                                                    ]}
+                                                                >
+                                                                    {statusStyle.label}
+                                                                </Text>
+                                                            </View>
+                                                        </View>
+                                                        <View style={styles.popupCardMetaRow}>
+                                                            {metaLines.map((line) => (
+                                                                <Text
+                                                                    key={`${popup.id}-${line}`}
+                                                                    style={styles.popupCardMeta}
+                                                                >
+                                                                    {line}
+                                                                </Text>
+                                                            ))}
+                                                        </View>
+                                                        <TouchableOpacity
+                                                            style={styles.popupShowButton}
+                                                            onPress={() => onPressShowManualPopup(popup.source)}
+                                                        >
+                                                            <Text style={styles.popupShowButtonText}>Show now</Text>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                );
+                                            })}
+                                        </View>
+                                    </View>
+                                )}
                             </View>
                             {popupDebugLines.length > 0 && (
                                 <View style={styles.popupDetailsCard}>
@@ -1796,16 +1987,77 @@ const styles = StyleSheet.create({
         marginTop: spacing.sm,
         gap: spacing.sm,
     },
+    scheduledHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: spacing.sm,
+    },
     scheduledHeader: {
         fontSize: fontSizes.base,
         fontWeight: '700',
         color: colors.textPrimary,
         fontFamily: fontFamilies.body,
     },
-    scheduledItem: {
-        paddingVertical: spacing.xs,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.borderLavenderSoft,
+    scheduledCountPill: {
+        backgroundColor: colors.surfaceLavenderLight,
+        borderRadius: radius.pill,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xxs,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+    },
+    scheduledCountText: {
+        fontSize: fontSizes.xs,
+        fontWeight: '700',
+        color: colors.textSlate,
+        fontFamily: fontFamilies.body,
+    },
+    scheduledEmptyCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        backgroundColor: colors.surfaceLavenderLight,
+        borderRadius: radius.lg,
+        padding: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+    },
+    scheduledEmptyIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.surfaceLavenderAlt,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderAlt,
+    },
+    scheduledEmptyCopy: {
+        flex: 1,
+        gap: spacing.xxs,
+    },
+    scheduledEmptyTitle: {
+        fontSize: fontSizes.base,
+        fontWeight: '700',
+        color: colors.textPrimary,
+        fontFamily: fontFamilies.body,
+    },
+    scheduledEmptyBody: {
+        fontSize: fontSizes.sm,
+        color: colors.brandTextMuted,
+        fontFamily: fontFamilies.body,
+    },
+    notificationQueue: {
+        gap: spacing.sm,
+    },
+    notificationQueueHeader: {
+        fontSize: fontSizes.sm,
+        fontWeight: '700',
+        color: colors.textPrimary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
+        fontFamily: fontFamilies.body,
     },
     popupActionRow: {
         flexDirection: 'row',
@@ -1942,24 +2194,19 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         fontFamily: fontFamilies.body,
     },
-    modalActionList: {
+    popupQueueSubsection: {
         gap: spacing.sm,
+        marginTop: spacing.sm,
     },
-    modalActionItem: {
-        gap: spacing.xxs,
-    },
-    modalActionNote: {
+    popupQueueSubheader: {
         fontSize: fontSizes.sm,
-        color: colors.brandTextMuted,
+        fontWeight: '700',
+        color: colors.textPrimary,
         fontFamily: fontFamilies.body,
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
     },
     popupQueueGrid: {
-        gap: spacing.sm,
-    },
-    popupManualSection: {
-        gap: spacing.sm,
-    },
-    manualPopupList: {
         gap: spacing.sm,
     },
     popupCard: {
@@ -2053,6 +2300,19 @@ const styles = StyleSheet.create({
         color: colors.brandTextMuted,
         fontFamily: fontFamilies.body,
     },
+    popupShowButton: {
+        backgroundColor: colors.brandIndigo,
+        borderRadius: radius.md,
+        paddingHorizontal: spacing.sm,
+        paddingVertical: spacing.xs,
+        alignSelf: 'flex-start',
+    },
+    popupShowButtonText: {
+        color: colors.white,
+        fontSize: fontSizes.sm,
+        fontWeight: '700',
+        fontFamily: fontFamilies.body,
+    },
     popupDetailsCard: {
         backgroundColor: colors.surfaceWhiteStrong,
         borderRadius: radius.lg,
@@ -2077,15 +2337,14 @@ const styles = StyleSheet.create({
 });
 
 const formatScheduledDate = (timestamp: number) => {
-    if (!timestamp) return 'Send: unknown';
-    return `Send: ${new Date(timestamp).toLocaleString()}`;
-};
-
-const formatScheduledMessage = (title: string, body: string) => {
-    if (body) {
-        return `Message: ${title} — ${body}`;
-    }
-    return `Message: ${title}`;
+    if (!timestamp) return 'Send time unknown';
+    return new Date(timestamp).toLocaleString(undefined, {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+    });
 };
 
 const formatPopupTimestamp = (timestamp?: number) => {
@@ -2106,6 +2365,15 @@ const formatDaysUntil = (daysUntil: number) => {
 const formatDaysUntilLabel = (daysUntil: number) => {
     if (daysUntil <= 0) return 'now';
     return `in ${formatDaysUntil(daysUntil)}`;
+};
+
+const formatScheduledRelative = (timestamp: number, now: number) => {
+    if (!timestamp) return 'unknown';
+    const daysUntil = getDaysFromNow(timestamp, now);
+    if (daysUntil < -0.05) {
+        return `${formatDaysUntil(Math.abs(daysUntil))} ago`;
+    }
+    return formatDaysUntilLabel(daysUntil);
 };
 
 const formatPopupReadyAt = (timestamp: number, now: number) => {

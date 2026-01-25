@@ -10,7 +10,6 @@ import axios from 'axios';
 import { colors, fontFamilies, fontSizes, radius, shadows, spacing } from '../../components/styles';
 import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { useUserContext } from '../Auth/hooks/UserContext';
-import { useCommonContext } from '../../Common/hooks/CommonContext';
 import { useFetchFollows } from '../../Common/db-axios/useFollows';
 import { navigateToHomeStackScreen, navigateToTab } from '../../Common/Nav/navigationHelpers';
 import type { NavStack } from '../../Common/Nav/NavStackType';
@@ -40,28 +39,16 @@ export const NotificationsScreen = () => {
     const isFocused = useIsFocused();
     const { authUserId, userProfile, session } = useUserContext();
     const { allEvents } = useCalendarData();
-    const { myCommunities } = useCommonContext();
     const { data: follows } = useFetchFollows(authUserId || undefined);
     const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const adminAccessToken = session?.access_token;
 
-    const organizerIdsFromCommunities = useMemo(() => {
-        const organizerCommunities = [
-            ...myCommunities.myOrganizerPublicCommunities,
-            ...myCommunities.myOrganizerPrivateCommunities,
-        ];
-        return organizerCommunities
-            .map((community) => community.organizer_id)
-            .filter(Boolean)
-            .map((id) => id.toString());
-    }, [myCommunities.myOrganizerPrivateCommunities, myCommunities.myOrganizerPublicCommunities]);
-
     const followedOrganizerIds = useMemo(() => {
         const followIds = (follows?.organizer || []).map((id) => id.toString());
-        return new Set([...followIds, ...organizerIdsFromCommunities]);
-    }, [follows?.organizer, organizerIdsFromCommunities]);
+        return new Set(followIds);
+    }, [follows?.organizer]);
 
     const hasFollowedOrganizers = followedOrganizerIds.size > 0;
     const eventsById = useMemo(() => {

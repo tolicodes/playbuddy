@@ -33,6 +33,7 @@ const NOTIFICATION_EVENT_WINDOW_START_DAYS = 2;
 const NOTIFICATION_EVENT_WINDOW_END_DAYS = 10;
 const NOTIFICATION_WINDOW_START_DAYS = 0;
 const NOTIFICATION_WINDOW_END_DAYS = 28;
+const PROMO_PICK_RATIO = 0.8;
 
 const PUSH_NOTIFICATIONS_ENABLED_KEY = 'pushNotificationsEnabled';
 const PUSH_NOTIFICATIONS_PROMPTED_KEY = 'pushNotificationsPrompted';
@@ -223,7 +224,7 @@ const getOrganizerNotificationEligibility = (
     const windowStart = now.clone().add(windowStartDays, 'days').startOf('day');
     const windowEnd = now.clone().add(windowEndDays, 'days').endOf('day');
 
-    if (!events.length || followedOrganizerIds.size === 0) {
+    if (!events.length) {
         return {
             eligible: [] as { event: Event; start: moment.Moment }[],
             windowStart,
@@ -231,10 +232,12 @@ const getOrganizerNotificationEligibility = (
         };
     }
 
+    const shouldFilterByFollowed = followedOrganizerIds.size > 0;
     const eligible = events
         .map((event) => {
             const organizerId = event.organizer?.id?.toString();
-            if (!organizerId || !followedOrganizerIds.has(organizerId)) return null;
+            if (!organizerId) return null;
+            if (shouldFilterByFollowed && !followedOrganizerIds.has(organizerId)) return null;
             const start = moment(event.start_date).tz(NOTIFICATION_TZ);
             if (!start.isValid()) return null;
             if (!start.isBetween(windowStart, windowEnd, undefined, '[]')) return null;
@@ -259,6 +262,11 @@ const hasPromoCodes = (event: Event) =>
     (event.promo_codes && event.promo_codes.length > 0) ||
     (event.organizer?.promo_codes && event.organizer.promo_codes.length > 0);
 
+const isFollowedOrganizer = (event: Event, followedOrganizerIds: Set<string>) => {
+    const organizerId = event.organizer?.id?.toString();
+    return !!organizerId && followedOrganizerIds.has(organizerId);
+};
+
 const getEventStart = (event: Event) => {
     const start = moment(event.start_date).tz(NOTIFICATION_TZ);
     return start.isValid() ? start : null;
@@ -275,10 +283,15 @@ const getNotificationWindowForSendAt = (sendAt: number) => {
 const getEligibleEventsInWindow = (
     events: Event[],
     windowStart: moment.Moment,
-    windowEnd: moment.Moment
+    windowEnd: moment.Moment,
+    followedOrganizerIds: Set<string>
 ) => {
+    const shouldFilterByFollowed = followedOrganizerIds.size > 0;
     return events
         .map((event) => {
+            if (shouldFilterByFollowed && !isFollowedOrganizer(event, followedOrganizerIds)) {
+                return null;
+            }
             const start = getEventStart(event);
             if (!start) return null;
             if (!start.isBetween(windowStart, windowEnd, undefined, '[]')) return null;
@@ -297,21 +310,10 @@ const pickEventForNotification = ({
     followedOrganizerIds: Set<string>;
     usedEventIds: Set<number>;
 }) => {
-    const isFollowed = (event: Event) => {
-        const organizerId = event.organizer?.id?.toString();
-        return !!organizerId && followedOrganizerIds.has(organizerId);
-    };
-
     const pickRandom = (candidates: { event: Event; start: moment.Moment }[]) => {
         if (!candidates.length) return null;
         const index = Math.floor(Math.random() * candidates.length);
         return candidates[index].event;
-    };
-
-    const pickPreferredRandom = (candidates: { event: Event; start: moment.Moment }[]) => {
-        if (!candidates.length) return null;
-        const followed = candidates.filter((entry) => isFollowed(entry.event));
-        return pickRandom(followed.length ? followed : candidates);
     };
 
     const pickRandomFromEligible = (candidates: { event: Event; start: moment.Moment }[]) => {
@@ -320,14 +322,37 @@ const pickEventForNotification = ({
         return pickRandom(remaining.length ? remaining : candidates);
     };
 
-    const promoEligible = eligible.filter((entry) => hasPromoCodes(entry.event));
-    if (promoEligible.length) {
+    if (!eligible.length) {
+        return null;
+    }
+
+    const followedEligible =
+        followedOrganizerIds.size > 0
+            ? eligible.filter((entry) => isFollowedOrganizer(entry.event, followedOrganizerIds))
+            : eligible;
+
+    if (!followedEligible.length) {
+        return null;
+    }
+
+    const promoEligible = followedEligible.filter((entry) => hasPromoCodes(entry.event));
+    const nonPromoEligible = followedEligible.filter((entry) => !hasPromoCodes(entry.event));
+    const shouldPickPromo = Math.random() < PROMO_PICK_RATIO;
+
+    if (shouldPickPromo && promoEligible.length) {
         // Keep promos if any exist in the window, even if it repeats an event.
         return pickRandomFromEligible(promoEligible);
     }
 
-    const remaining = eligible.filter((entry) => !usedEventIds.has(entry.event.id));
-    return pickPreferredRandom(remaining);
+    if (nonPromoEligible.length) {
+        return pickRandomFromEligible(nonPromoEligible);
+    }
+
+    if (promoEligible.length) {
+        return pickRandomFromEligible(promoEligible);
+    }
+
+    return pickRandomFromEligible(followedEligible);
 };
 
 const computeNextOrganizerNotificationSendAt = async () => {
@@ -471,7 +496,12 @@ export const getOrganizerNotificationCandidate = ({
 }) => {
     const targetSendAt = sendAt ?? Date.now();
     const { windowStart, windowEnd } = getNotificationWindowForSendAt(targetSendAt);
-    const eligible = getEligibleEventsInWindow(events, windowStart, windowEnd);
+    const eligible = getEligibleEventsInWindow(
+        events,
+        windowStart,
+        windowEnd,
+        followedOrganizerIds
+    );
     const event = pickEventForNotification({
         eligible,
         followedOrganizerIds,
@@ -536,7 +566,12 @@ export const scheduleOrganizerNotifications = async ({
     for (let index = 0; index < NOTIFICATION_BATCH_COUNT; index += 1) {
         const sendAt = nextSendAt + index * NOTIFICATION_INTERVAL_MS;
         const { windowStart, windowEnd } = getNotificationWindowForSendAt(sendAt);
-        const eligible = getEligibleEventsInWindow(events, windowStart, windowEnd);
+        const eligible = getEligibleEventsInWindow(
+            events,
+            windowStart,
+            windowEnd,
+            followedOrganizerIds
+        );
         const event = pickEventForNotification({
             eligible,
             followedOrganizerIds,
@@ -633,7 +668,7 @@ export const promptOrganizerNotificationsIfNeeded = async ({
             console.warn('[notifications] failed to register push token', error);
         }
 
-        if (events && events.length > 0 && followedOrganizerIds && followedOrganizerIds.size > 0) {
+        if (events && events.length > 0 && followedOrganizerIds) {
             await scheduleOrganizerNotifications({ events, followedOrganizerIds });
         }
 
