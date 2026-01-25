@@ -18,6 +18,7 @@ import { useFetchEvents } from '../../Common/db-axios/useEvents';
 import {
     useAddPromoCodeToEvent,
     useCreatePromoCode,
+    useDeletePromoCode,
     useDeletePromoCodeFromEvent,
     useFetchPromoCodes,
 } from '../../Common/db-axios/usePromoCodes';
@@ -85,6 +86,7 @@ export const PromoCodeAdminScreen = () => {
     const createPromo = useCreatePromoCode();
     const addPromoToEvent = useAddPromoCodeToEvent();
     const deletePromoFromEvent = useDeletePromoCodeFromEvent();
+    const deletePromoCode = useDeletePromoCode();
 
     const [search, setSearch] = useState('');
     const [selectedOrganizerId, setSelectedOrganizerId] = useState<number | null>(null);
@@ -94,6 +96,7 @@ export const PromoCodeAdminScreen = () => {
     const [scope, setScope] = useState<PromoScope>('event');
     const [selectedPromoCodeId, setSelectedPromoCodeId] = useState<string | null>(null);
     const [processingEventId, setProcessingEventId] = useState<number | null>(null);
+    const [deletingPromoCodeId, setDeletingPromoCodeId] = useState<string | null>(null);
     const wishlistEventsCount = wishlistEvents.length;
     const handleToggleWishlist = useCallback(
         (eventId: number, isOnWishlistValue: boolean) => {
@@ -138,6 +141,9 @@ export const PromoCodeAdminScreen = () => {
     const { sections } = useGroupedEvents(organizerEvents as EventWithMetadata[]);
 
     useEffect(() => {
+        if (deletingPromoCodeId) {
+            return;
+        }
         if (!selectedOrganizerId) {
             setSelectedPromoCodeId(null);
             return;
@@ -146,7 +152,7 @@ export const PromoCodeAdminScreen = () => {
             return;
         }
         setSelectedPromoCodeId(organizerPromoCodes[0]?.id ?? null);
-    }, [organizerPromoCodes, selectedOrganizerId, selectedPromoCodeId]);
+    }, [deletingPromoCodeId, organizerPromoCodes, selectedOrganizerId, selectedPromoCodeId]);
 
     const handleSearchChange = (value: string) => {
         setSearch(value);
@@ -227,6 +233,40 @@ export const PromoCodeAdminScreen = () => {
         } finally {
             setProcessingEventId(null);
         }
+    };
+
+    const performDeletePromoCode = async (promoCode: PromoCode) => {
+        setDeletingPromoCodeId(promoCode.id);
+        try {
+            const attachedEvents = organizerEvents.filter((event) =>
+                event.promo_codes?.some((code) => code.id === promoCode.id)
+            );
+            for (const event of attachedEvents) {
+                await deletePromoFromEvent.mutateAsync({
+                    promoCodeId: promoCode.id,
+                    eventId: `${event.id}`,
+                });
+            }
+            await deletePromoCode.mutateAsync(promoCode.id);
+            if (selectedPromoCodeId === promoCode.id) {
+                setSelectedPromoCodeId(null);
+            }
+        } catch {
+            Alert.alert('Delete failed', 'Unable to delete promo code. Remove it from events or deep links and try again.');
+        } finally {
+            setDeletingPromoCodeId(null);
+        }
+    };
+
+    const handleDeletePromoCode = (promoCode: PromoCode) => {
+        Alert.alert(
+            'Delete promo code?',
+            `Delete "${promoCode.promo_code}"? This will remove it from any events.`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', style: 'destructive', onPress: () => performDeletePromoCode(promoCode) },
+            ]
+        );
     };
 
     if (!isAdmin) {
@@ -498,22 +538,39 @@ export const PromoCodeAdminScreen = () => {
                                         <View style={styles.codeGrid}>
                                             {organizerPromoCodes.map((code) => {
                                                 const isSelected = selectedPromoCodeId === code.id;
+                                                const isDeleting = deletingPromoCodeId === code.id;
                                                 return (
-                                                    <TouchableOpacity
-                                                        key={code.id}
-                                                        style={[styles.codeTile, isSelected && styles.codeTileActive]}
-                                                        onPress={() => setSelectedPromoCodeId(code.id)}
-                                                    >
-                                                        <Text style={[styles.codeTileTitle, isSelected && styles.codeTileTitleActive]}>
-                                                            {code.promo_code}
-                                                        </Text>
-                                                        <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
-                                                            {formatDiscountLabel(code)}
-                                                        </Text>
-                                                        <Text style={[styles.codeTileScope, isSelected && styles.codeTileScopeActive]}>
-                                                            {code.scope === 'organizer' ? 'Organizer' : 'Event'}
-                                                        </Text>
-                                                    </TouchableOpacity>
+                                                    <View key={code.id} style={styles.codeTileWrapper}>
+                                                        <TouchableOpacity
+                                                            style={[styles.codeTile, isSelected && styles.codeTileActive]}
+                                                            onPress={() => setSelectedPromoCodeId(code.id)}
+                                                        >
+                                                            <Text style={[styles.codeTileTitle, isSelected && styles.codeTileTitleActive]}>
+                                                                {code.promo_code}
+                                                            </Text>
+                                                            <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
+                                                                {formatDiscountLabel(code)}
+                                                            </Text>
+                                                            <Text style={[styles.codeTileScope, isSelected && styles.codeTileScopeActive]}>
+                                                                {code.scope === 'organizer' ? 'Organizer' : 'Event'}
+                                                            </Text>
+                                                        </TouchableOpacity>
+                                                        <TouchableOpacity
+                                                            style={[
+                                                                styles.codeTileDelete,
+                                                                isSelected && styles.codeTileDeleteActive,
+                                                                isDeleting && styles.codeTileDeleteDisabled,
+                                                            ]}
+                                                            onPress={() => handleDeletePromoCode(code)}
+                                                            disabled={isDeleting || deletePromoCode.isPending}
+                                                        >
+                                                            {isDeleting ? (
+                                                                <ActivityIndicator size="small" color={colors.danger} />
+                                                            ) : (
+                                                                <Ionicons name="trash-outline" size={14} color={colors.danger} />
+                                                            )}
+                                                        </TouchableOpacity>
+                                                    </View>
                                                 );
                                             })}
                                         </View>
@@ -757,11 +814,15 @@ const styles = StyleSheet.create({
         flexWrap: 'wrap',
         gap: spacing.sm,
     },
+    codeTileWrapper: {
+        position: 'relative',
+    },
     codeTile: {
         borderWidth: 1,
         borderColor: colors.borderLight,
         borderRadius: radius.md,
         padding: spacing.smPlus,
+        paddingRight: spacing.xl,
         minWidth: 120,
         backgroundColor: colors.surfaceSubtle,
     },
@@ -797,6 +858,25 @@ const styles = StyleSheet.create({
     },
     codeTileScopeActive: {
         color: colors.brandIndigo,
+    },
+    codeTileDelete: {
+        position: 'absolute',
+        top: spacing.xxs,
+        right: spacing.xxs,
+        width: 26,
+        height: 26,
+        borderRadius: 13,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.borderRose,
+        backgroundColor: colors.surfaceWhiteStrong,
+    },
+    codeTileDeleteActive: {
+        backgroundColor: colors.surfaceRoseSoft,
+    },
+    codeTileDeleteDisabled: {
+        opacity: 0.6,
     },
     sectionHeaderOuterWrapper: {
         paddingBottom: spacing.lg,

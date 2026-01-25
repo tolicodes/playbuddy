@@ -3,6 +3,7 @@ import { useFetchOrganizers } from '../../common/db-axios/useOrganizers';
 import { useFetchEvents } from '../../common/db-axios/useEvents';
 import {
     useAddPromoCodeToEvent,
+    useDeletePromoCode,
     useDeletePromoCodeFromEvent,
     useFetchPromoCodes,
 } from '../../common/db-axios/usePromoCodes';
@@ -13,9 +14,13 @@ export function PromoCodeEventManager() {
     const [search, setSearch] = useState('');
     const [showDropdown, setShowDropdown] = useState(false);
     const [selectedCodes, setSelectedCodes] = useState<{ [eventId: string]: string }>({});
+    const [deletingPromoCodeId, setDeletingPromoCodeId] = useState<string | null>(null);
 
     const { data: organizers = [], isLoading: loadingOrganizers } = useFetchOrganizers();
-    const { data: events = [], isLoading: loadingEvents } = useFetchEvents();
+    const { data: events = [], isLoading: loadingEvents } = useFetchEvents({
+        includeHidden: true,
+        includeHiddenOrganizers: true,
+    });
     const { data: promoCodes = [], isLoading: loadingPromoCodes } = useFetchPromoCodes();
 
     const organizerPromoCodes = promoCodes.filter(pc => pc.organizer_id + '' === selectedOrganizerId);
@@ -25,14 +30,50 @@ export function PromoCodeEventManager() {
     );
 
     const addPromo = useAddPromoCodeToEvent();
-    const deletePromo = useDeletePromoCodeFromEvent();
+    const deletePromoFromEvent = useDeletePromoCodeFromEvent();
+    const deletePromoCode = useDeletePromoCode();
 
     const handleAttach = ({ eventId, promoCodeId }: { eventId: string, promoCodeId: string }) => {
         addPromo.mutate({ eventId, promoCodeId });
     };
 
     const handleDetach = ({ eventId, promoCodeId }: { eventId: string, promoCodeId: string }) => {
-        deletePromo.mutate({ eventId, promoCodeId });
+        deletePromoFromEvent.mutate({ eventId, promoCodeId });
+    };
+
+    const handleDeletePromoCode = async (promoCodeId: string) => {
+        const promo = promoCodes.find((code) => code.id === promoCodeId);
+        const label = promo?.promo_code ? ` "${promo.promo_code}"` : '';
+        if (!window.confirm(`Delete promo code${label}? This will remove it from any events.`)) {
+            return;
+        }
+        setDeletingPromoCodeId(promoCodeId);
+        try {
+            const attachedEvents = filteredEvents.filter((event) =>
+                event.promo_codes?.some((code) => code.id === promoCodeId)
+            );
+            for (const event of attachedEvents) {
+                await deletePromoFromEvent.mutateAsync({
+                    eventId: event.id + '',
+                    promoCodeId,
+                });
+            }
+            await deletePromoCode.mutateAsync(promoCodeId);
+            setSelectedCodes((prev) => {
+                const next = { ...prev };
+                Object.keys(next).forEach((eventId) => {
+                    if (next[eventId] === promoCodeId) {
+                        delete next[eventId];
+                    }
+                });
+                return next;
+            });
+        } catch (error) {
+            console.error('Failed to delete promo code', error);
+            alert('Unable to delete promo code. Remove it from events or deep links and try again.');
+        } finally {
+            setDeletingPromoCodeId(null);
+        }
     };
 
     if (loadingOrganizers || loadingEvents || loadingPromoCodes) {
@@ -86,14 +127,33 @@ export function PromoCodeEventManager() {
                             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                                 {organizerPromoCodes.map((pc) => (
                                     <li key={pc.id} style={{ padding: '6px 0', borderBottom: '1px solid #eee' }}>
-                                        <strong>{pc.promo_code}</strong>{' '}
-                                        <span style={{ color: '#555' }}>
-                                            {pc.discount_type === 'percent'
-                                                ? `${pc.discount}%`
-                                                : pc.discount_type === 'amount'
-                                                    ? `$${pc.discount}`
-                                                    : pc.discount_type}
-                                        </span>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                                            <div>
+                                                <strong>{pc.promo_code}</strong>{' '}
+                                                <span style={{ color: '#555' }}>
+                                                    {pc.discount_type === 'percent'
+                                                        ? `${pc.discount}%`
+                                                        : pc.discount_type === 'amount'
+                                                            ? `$${pc.discount}`
+                                                            : pc.discount_type}
+                                                </span>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleDeletePromoCode(pc.id)}
+                                                disabled={deletingPromoCodeId === pc.id}
+                                                style={{
+                                                    color: '#b00020',
+                                                    border: '1px solid #f2c4c4',
+                                                    background: deletingPromoCodeId === pc.id ? '#fbe9e9' : 'transparent',
+                                                    padding: '4px 10px',
+                                                    borderRadius: 12,
+                                                    cursor: deletingPromoCodeId === pc.id ? 'not-allowed' : 'pointer',
+                                                }}
+                                            >
+                                                {deletingPromoCodeId === pc.id ? 'Deleting...' : 'Delete'}
+                                            </button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
