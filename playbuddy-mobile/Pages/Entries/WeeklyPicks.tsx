@@ -9,9 +9,7 @@ import moment from 'moment-timezone';
 import { useEventAnalyticsProps } from '../../Common/hooks/useAnalytics';
 import { UE } from '../../userEventTypes';
 import { logEvent } from '../../Common/hooks/logger';
-import { useFetchEvents } from '../../Common/db-axios/useEvents';
-import { getAvailableOrganizers } from '../Calendar/hooks/calendarUtils';
-import { addEventMetadata, buildOrganizerColorMap as mapOrganizerColors } from '../Calendar/hooks/eventHelpers';
+import { useCalendarData } from '../Calendar/hooks/useCalendarData';
 import { EventListItem } from '../Calendar/ListView/EventListItem';
 import { navigateToHomeStackScreen } from '../../Common/Nav/navigationHelpers';
 import { colors, fontFamilies, fontSizes, gradients, radius, shadows, spacing } from '../../components/styles';
@@ -26,19 +24,14 @@ type WeeklyPickGroup = {
 };
 
 export const WeeklyPicks = () => {
-    const { data: events = [] } = useFetchEvents();
+    const { allEvents, isEventSourceExcluded } = useCalendarData();
     const navigation = useNavigation<NavigationProp<ParamListBase>>();
     const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
     const [weekDates, setWeekDates] = useState<string[]>([]);
 
     const analyticsProps = useEventAnalyticsProps();
     const emptyAttendees = useMemo<Attendee[]>(() => [], []);
-    const organizers = useMemo(() => getAvailableOrganizers(events), [events]);
-    const organizerColorMap = useMemo(() => mapOrganizerColors(organizers as any), [organizers]);
-    const eventsWithMetadata = useMemo(
-        () => addEventMetadata({ events, organizerColorMap }),
-        [events, organizerColorMap]
-    );
+    const eventsWithMetadata = allEvents;
 
     // Build the 3 week labels (this week + next two)
     useEffect(() => {
@@ -197,6 +190,7 @@ export const WeeklyPicks = () => {
                                             noPadding
                                             disableClickAnalytics
                                             hideSaveButton
+                                            isEventSourceExcluded={isEventSourceExcluded}
                                         />
                                     ))}
                                 </View>

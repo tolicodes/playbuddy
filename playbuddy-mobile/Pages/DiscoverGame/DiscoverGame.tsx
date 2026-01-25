@@ -39,7 +39,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 type SwipeDirection = 'left' | 'right';
 
 export const DiscoverGame: React.FC = () => {
-    const { availableCardsToSwipe, toggleWishlistEvent } = useCalendarData();
+    const { availableCardsToSwipe, toggleWishlistEvent, isEventSourceExcluded } = useCalendarData();
     const { authUserId } = useUserContext();
     const recordSwipe = useRecordSwipeChoice();
     const swiperRef = useRef<Swiper<any> | null>(null);
@@ -173,6 +173,7 @@ export const DiscoverGame: React.FC = () => {
                         <DiscoverEventsCard
                             key={event.id}
                             event={event}
+                            isEventSourceExcluded={isEventSourceExcluded}
                         />
                     )}
                     backgroundColor='transparent'

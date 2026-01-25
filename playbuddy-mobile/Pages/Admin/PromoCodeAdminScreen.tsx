@@ -69,7 +69,10 @@ export const PromoCodeAdminScreen = () => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
-    const { isOnWishlist, toggleWishlistEvent, wishlistEvents, isEventSourceExcluded } = useCalendarData();
+    const { isOnWishlist, toggleWishlistEvent, wishlistEvents, isEventSourceExcluded } = useCalendarData({
+        includeHidden: true,
+        includeHiddenOrganizers: true,
+    });
 
     const { data: organizers = [], isLoading: loadingOrganizers, error: organizerError } = useFetchOrganizers({ includeHidden: true });
     const { data: events = [], isLoading: loadingEvents, error: eventsError } = useFetchEvents({

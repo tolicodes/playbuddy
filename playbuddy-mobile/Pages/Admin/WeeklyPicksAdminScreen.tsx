@@ -229,7 +229,7 @@ export const WeeklyPicksAdminScreen = () => {
         isOnWishlist,
         toggleWishlistEvent,
         wishlistEvents,
-    } = useCalendarData();
+    } = useCalendarData({ includeHidden: true, includeHiddenOrganizers: true });
     const { data: attendees = [] } = useFetchAttendees();
     const { data: wishlist = [], isLoading: wishlistLoading, error: wishlistError } = useFetchWishlistByCode(PB_SHARE_CODE);
     const { mutate: toggleWeeklyPickEvent, isPending: togglePending } = useToggleWeeklyPickEvent();

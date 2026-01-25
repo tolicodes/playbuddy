@@ -996,9 +996,11 @@ const buildSvg = ({
                 const detailsY = cardY + imageHeight;
                 const approvalStatus = item.approvalStatus ?? null;
                 const isRejected = approvalStatus === 'rejected';
+                const isExcluded = approvalStatus === 'excluded';
                 const statusBadge = resolveStatusBadge(approvalStatus);
-                const cardStroke = isRejected ? THEME.colors.danger : THEME.colors.borderLavenderSoft;
-                const cardStrokeWidth = isRejected ? s(3) : s(1);
+                const shouldHighlightBorder = isRejected || isExcluded;
+                const cardStroke = shouldHighlightBorder ? THEME.colors.danger : THEME.colors.borderLavenderSoft;
+                const cardStrokeWidth = shouldHighlightBorder ? s(3) : s(1);
                 const detailsFullWidth = Math.max(0, cardWidth - detailsPaddingX * 2);
                 const maxTitleChars = Math.max(8, estimateMaxChars(detailsFullWidth, titleFont, 0.6));
                 const maxOrganizerChars = estimateMaxChars(detailsFullWidth, organizerFont, 0.6);

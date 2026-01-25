@@ -16,9 +16,10 @@ const DISCOVER_CARD_HEIGHT = ITEM_HEIGHT + spacing.xxxl;
 
 type DiscoverEventsCardProps = {
     event: EventWithMetadata;
+    isEventSourceExcluded?: (event: EventWithMetadata) => boolean;
 };
 
-export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event }) => {
+export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event, isEventSourceExcluded }) => {
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const description = (event.short_description || '').trim();
@@ -103,6 +104,7 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event })
                 listViewMode="image"
                 cardVariant="type-icon"
                 isAdmin={isAdmin}
+                isEventSourceExcluded={isEventSourceExcluded}
                 cardHeight={DISCOVER_CARD_HEIGHT}
                 footerContent={footerContent ?? undefined}
                 hideSaveButton

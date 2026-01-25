@@ -160,7 +160,10 @@ export const EventAdminScreen = () => {
     const navigation = useNavigation<NavStack>();
     const { userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
-    const { isOnWishlist, toggleWishlistEvent, wishlistEvents, isEventSourceExcluded } = useCalendarData();
+    const { isOnWishlist, toggleWishlistEvent, wishlistEvents, isEventSourceExcluded } = useCalendarData({
+        includeHidden: true,
+        includeHiddenOrganizers: true,
+    });
     const queryClient = useQueryClient();
     const insets = useSafeAreaInsets();
     const fallbackTopInset = initialWindowMetrics?.insets?.top ?? 0;

@@ -108,6 +108,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
         ? isAdmin
         : !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const isSourceExcluded = resolvedIsAdmin && isEventSourceExcluded?.(item);
+    const showExcludedBorder = !!isSourceExcluded;
     const showApprovalBorder = resolvedIsAdmin && approvalStatus && approvalStatus !== 'approved';
     const showRejectedBorder = resolvedIsAdmin && approvalStatus === 'rejected';
     const showPendingBorder = showApprovalBorder && !showRejectedBorder;
@@ -134,6 +135,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                     noPadding && styles.noPadding,
                     showPendingBorder && styles.pendingBorder,
                     showRejectedBorder && styles.rejectedBorder,
+                    showExcludedBorder && styles.excludedBorder,
                     showCoachOverlay && styles.cardWrapperCoach,
                 ]}
             >
@@ -255,6 +257,11 @@ const styles = StyleSheet.create({
         borderWidth: 3,
     },
     rejectedBorder: {
+        borderColor: colors.danger,
+        borderStyle: 'solid',
+        borderWidth: 3,
+    },
+    excludedBorder: {
         borderColor: colors.danger,
         borderStyle: 'solid',
         borderWidth: 3,

@@ -115,10 +115,21 @@ export type CalendarData = {
     isEventSourceExcluded: (event: EventWithMetadata) => boolean;
 };
 
-export const useCalendarData = (): CalendarData => {
+export type CalendarDataOptions = {
+    includeHidden?: boolean;
+    includeHiddenOrganizers?: boolean;
+    includeApprovalPending?: boolean;
+    approvalStatuses?: string[];
+};
+
+export const useCalendarData = (options: CalendarDataOptions = {}): CalendarData => {
     const { authUserId, userProfile } = useUserContext();
     const isAdmin = !!userProfile?.email && ADMIN_EMAILS.includes(userProfile.email);
     const adminApprovalStatuses = isAdmin ? ['approved', 'pending', 'rejected'] : undefined;
+    const resolvedApprovalStatuses = options.approvalStatuses ?? adminApprovalStatuses;
+    const includeHidden = options.includeHidden ?? false;
+    const includeHiddenOrganizers = options.includeHiddenOrganizers ?? false;
+    const includeApprovalPending = options.includeApprovalPending ?? false;
 
     const {
         data: eventsData = [],
@@ -126,8 +137,11 @@ export const useCalendarData = (): CalendarData => {
         refetch: reloadEvents,
         isUsingCachedFallback,
     } = useCommonFetchEvents({
-        approvalStatuses: adminApprovalStatuses,
+        approvalStatuses: resolvedApprovalStatuses,
         includePrivate: !!authUserId,
+        includeHidden,
+        includeHiddenOrganizers,
+        includeApprovalPending,
     });
 
     const events = useMemo(() => dedupeEventsById(eventsData), [eventsData]);
