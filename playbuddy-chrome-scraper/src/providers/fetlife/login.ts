@@ -7,11 +7,13 @@ const LOGIN_SELECTORS = {
     password: '[autocomplete="current-password"]',
     submit: '[type="submit"]',
 };
-const LOGIN_USERNAME = 'toli+fetext@oselot.com';
-const LOGIN_PASSWORD = 'Afsk3dc4GL-.oW.3g8z_';
+const env = (import.meta as { env?: Record<string, string | undefined> }).env;
+const LOGIN_USERNAME = env?.VITE_FETLIFE_USERNAME ?? '';
+const LOGIN_PASSWORD = env?.VITE_FETLIFE_PASSWORD ?? '';
 
 type LoginCheckResult = { signedIn: boolean };
 type LoginSubmitResult = { status: 'submitted' | 'missing_fields' };
+const hasLoginCreds = () => LOGIN_USERNAME.trim().length > 0 && LOGIN_PASSWORD.trim().length > 0;
 
 async function checkSignedIn(tabId: number): Promise<LoginCheckResult> {
     const [{ result }]: any = await chrome.scripting.executeScript({
@@ -61,6 +63,10 @@ export async function ensureFetlifeLogin(): Promise<void> {
         const firstCheck = await checkSignedIn(tab.id!);
         if (firstCheck.signedIn) {
             postStatus('✅ FetLife already signed in.');
+            return;
+        }
+        if (!hasLoginCreds()) {
+            postStatus('⚠️ FetLife credentials not set. Add VITE_FETLIFE_USERNAME and VITE_FETLIFE_PASSWORD.');
             return;
         }
 
