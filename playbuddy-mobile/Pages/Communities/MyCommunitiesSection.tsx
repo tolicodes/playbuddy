@@ -4,13 +4,11 @@ import { useCommonContext } from "../../Common/hooks/CommonContext";
 import { CommunitiesList } from "./CommunitiesList";
 
 export const MyCommunitiesSection = ({ type, onPressAllCommunities }: { type: 'organizer' | 'private'; onPressAllCommunities?: () => void } = { type: 'private' }) => {
-    const { myCommunities } = useCommonContext();
+    const { myCommunities, communities } = useCommonContext();
     const privateCommunities = [
         ...myCommunities.myPrivateCommunities,
         ...myCommunities.myOrganizerPrivateCommunities
     ];
-
-    const { myCommunities: { myOrganizerPublicCommunities } } = useCommonContext();
 
     return (
         <View style={styles.container}>
@@ -22,7 +20,7 @@ export const MyCommunitiesSection = ({ type, onPressAllCommunities }: { type: 'o
             />}
             {type === 'organizer' && <CommunitiesList
                 title="My Communities"
-                communities={myOrganizerPublicCommunities}
+                communities={communities.organizerPublicCommunities}
                 entityType="organizer"
                 showSearch={true}
                 listMode="my"

@@ -151,6 +151,7 @@ export const CommunitiesList = ({
     );
     const [searchQuery, setSearchQuery] = useState("");
     const [showNoEventOrganizers, setShowNoEventOrganizers] = useState(false);
+    const hasSearch = searchQuery.trim().length > 0;
     const searchPlaceholder =
         isOrganizer && organizerListMode === "my"
             ? "Search my communities..."
@@ -191,6 +192,53 @@ export const CommunitiesList = ({
             missingOrganizerIdCommunities,
         });
     }, [communities, isOrganizer, organizers]);
+
+    useEffect(() => {
+        if (!__DEV__) return;
+        const nonFollowable = communityEntities
+            .map((entity) => ({
+                entity,
+                joinableIds: getJoinableCommunityIds(entity.communityIds),
+            }))
+            .filter((entry) => entry.joinableIds.length === 0);
+        if (nonFollowable.length === 0) return;
+        const sample = nonFollowable.slice(0, 10).map(({ entity }) => ({
+            id: entity.id,
+            name: entity.name,
+            communityIds: entity.communityIds,
+            organizerIds: entity.organizerIds,
+            primaryCommunityId: entity.primaryCommunity?.id,
+            primaryCommunityOrganizerId: entity.primaryCommunity?.organizer_id,
+        }));
+        console.log('[communities][followable]', {
+            totalEntities: communityEntities.length,
+            nonFollowableCount: nonFollowable.length,
+            sample,
+        });
+    }, [communityEntities]);
+
+    useEffect(() => {
+        if (!__DEV__) return;
+        const matches = communityEntities.filter((entity) =>
+            entity.name.toLowerCase().includes('daddy retreat')
+        );
+        if (matches.length === 0) return;
+        const details = matches.map((entity) => {
+            const joinableIds = getJoinableCommunityIds(entity.communityIds);
+            return {
+                id: entity.id,
+                name: entity.name,
+                communityIds: entity.communityIds,
+                organizerIds: entity.organizerIds,
+                joinableCommunityIds: joinableIds,
+                canFollow: joinableIds.length > 0,
+                primaryCommunityId: entity.primaryCommunity?.id,
+                primaryCommunityType: entity.primaryCommunity?.type,
+                primaryCommunityOrganizerId: entity.primaryCommunity?.organizer_id,
+            };
+        });
+        console.log('[communities][debug][daddy-retreat]', details);
+    }, [communityEntities]);
 
     const myCommunityIds = useMemo(
         () => new Set(myCommunities.map((community) => community.id)),
@@ -572,7 +620,9 @@ export const CommunitiesList = ({
         : title;
     const listData = isOrganizer
         ? organizerListMode === "my"
-            ? myOrganizerCommunities
+            ? hasSearch
+                ? filteredEntities
+                : myOrganizerCommunities
             : organizerListMode === "discover"
                 ? discoverCommunities
                 : filteredEntities
@@ -672,8 +722,15 @@ export const CommunitiesList = ({
         );
     };
 
-    // NOT filtered communities otherwise search doesn't show
-    if (communities.length === 0) {
+    const shouldShowEmptyState =
+        !hasSearch &&
+        (
+            (isOrganizer && organizerListMode === "my" && myOrganizerCommunities.length === 0) ||
+            (!isOrganizer && communities.length === 0) ||
+            (isOrganizer && organizerListMode !== "my" && communities.length === 0)
+        );
+
+    if (shouldShowEmptyState) {
         return (
             <View style={styles.emptyContainer}>
                 <View style={styles.centeredView}>
