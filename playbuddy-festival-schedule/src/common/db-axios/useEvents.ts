@@ -273,11 +273,18 @@ export const useToggleWeeklyPickEvent = () => {
 
 export const useImportEventURLs = () => {
     return useMutation({
-        mutationFn: async (data: { urls: string[]; sync?: boolean }) => {
+        mutationFn: async (data: { urls: ImportUrlInput[]; sync?: boolean }) => {
             return axios.post(API_BASE_URL + '/events/import-urls', data).then((response: any) => response.data);
         },
     });
 }
+
+export type ImportUrlInput = string | {
+    url: string;
+    multipleEvents?: boolean;
+    extractFromListPage?: boolean;
+    metadata?: Partial<NormalizedEventInput>;
+};
 
 export type WeeklyPicksImageOptions = {
     weekOffset?: number;

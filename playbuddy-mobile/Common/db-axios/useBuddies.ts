@@ -16,6 +16,10 @@ export type BuddyWishlist = {
     events: string[];
 };
 
+export type BuddyWishlistDetail = BuddyWishlist & {
+    share_calendar?: boolean | null;
+};
+
 export type CreateBuddyPayload = {
     buddyUserId?: string;
     shareCode?: string;
@@ -55,6 +59,7 @@ export const useCreateBuddy = (authUserId?: string | null) => {
             if (!authUserId) return;
             queryClient.invalidateQueries({ queryKey: ['buddies', authUserId] });
             queryClient.invalidateQueries({ queryKey: ['buddyWishlists', authUserId] });
+            queryClient.invalidateQueries({ queryKey: ['buddyWishlist', authUserId] });
             queryClient.invalidateQueries({ queryKey: ['buddySearch', authUserId] });
         },
     });
@@ -77,6 +82,7 @@ export const useDeleteBuddy = (authUserId?: string | null) => {
             if (!authUserId) return;
             queryClient.invalidateQueries({ queryKey: ['buddies', authUserId] });
             queryClient.invalidateQueries({ queryKey: ['buddyWishlists', authUserId] });
+            queryClient.invalidateQueries({ queryKey: ['buddyWishlist', authUserId] });
             queryClient.invalidateQueries({ queryKey: ['buddySearch', authUserId] });
         },
     });
@@ -93,6 +99,24 @@ export const useFetchBuddyWishlists = (
         queryFn: async () => {
             const response = await axios.get(`${API_BASE_URL}/wishlist/buddies`);
             return normalizeList<BuddyWishlist>(response.data);
+        },
+        ...options,
+    });
+};
+
+export const useFetchBuddyWishlist = (
+    buddyUserId?: string | null,
+    authUserId?: string | null,
+    options?: Omit<UseQueryOptions<BuddyWishlistDetail | null>, 'queryKey' | 'queryFn'>
+) => {
+    const enabled = !!authUserId && !!buddyUserId && (options?.enabled ?? true);
+    return useQuery<BuddyWishlistDetail | null>({
+        queryKey: ['buddyWishlist', authUserId, buddyUserId],
+        enabled,
+        queryFn: async () => {
+            if (!buddyUserId) return null;
+            const response = await axios.get(`${API_BASE_URL}/wishlist/user/${buddyUserId}`);
+            return response.data ?? null;
         },
         ...options,
     });
