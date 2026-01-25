@@ -1589,7 +1589,6 @@ const EventCalendarView: React.FC<Props> = ({
                                 }}
                                 showGoogleCalendar={showGoogleCalendar}
                                 filtersEnabled={hasActiveFilters}
-                                showDateToast={showDateToast}
                                 quickFilters={quickFilters}
                                 activeFilters={activeFilterChips}
                                 selectedQuickFilterId={selectedQuickFilterId}

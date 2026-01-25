@@ -1,6 +1,7 @@
 // screens/Calendar/WeekStrip.tsx
 import React, { useEffect, useRef } from "react";
 import {
+    Animated,
     View,
     TouchableOpacity,
     Text,
@@ -37,7 +38,11 @@ type Props = {
     containerWidth?: number;
     animateToCurrentWeek?: boolean;
     animateDirection?: "prev" | "next" | null;
+    wiggleTodayToken?: number | null;
+    showDateToast?: boolean;
 };
+
+const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const WeekStrip: React.FC<Props> = ({
     prevWeekDays,
@@ -53,6 +58,8 @@ export const WeekStrip: React.FC<Props> = ({
     containerWidth,
     animateToCurrentWeek = false,
     animateDirection = null,
+    wiggleTodayToken = null,
+    showDateToast = false,
 }) => {
     const calendarCoach = useCalendarCoach();
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
@@ -61,6 +68,7 @@ export const WeekStrip: React.FC<Props> = ({
     const scrollRef = useRef<ScrollView>(null);
     const isUserScrollingRef = useRef(false);
     const weekAnchor = weekDays[0]?.getTime() ?? 0;
+    const wiggleAnim = useRef(new Animated.Value(0)).current;
 
     const isSameDayNY = (a: Date, b: Date) =>
         moment(a).tz(TZ).isSame(moment(b).tz(TZ), "day");
@@ -82,6 +90,38 @@ export const WeekStrip: React.FC<Props> = ({
         scrollView.scrollTo({ x: pageWidth, animated: false });
     }, [pageWidth, weekAnchor, animateToCurrentWeek, animateDirection]);
 
+    useEffect(() => {
+        if (!showDateToast && !wiggleTodayToken) return;
+        wiggleAnim.stopAnimation();
+        wiggleAnim.setValue(0);
+
+        const sequence = Animated.sequence([
+            Animated.timing(wiggleAnim, { toValue: 1, duration: 90, useNativeDriver: true }),
+            Animated.timing(wiggleAnim, { toValue: -1, duration: 120, useNativeDriver: true }),
+            Animated.timing(wiggleAnim, { toValue: 1, duration: 120, useNativeDriver: true }),
+            Animated.timing(wiggleAnim, { toValue: 0, duration: 120, useNativeDriver: true }),
+            Animated.delay(900),
+        ]);
+
+        if (showDateToast) {
+            const loop = Animated.loop(sequence);
+            loop.start();
+            return () => loop.stop();
+        }
+
+        sequence.start();
+        return undefined;
+    }, [showDateToast, wiggleAnim, wiggleTodayToken]);
+
+    const wiggleRotation = wiggleAnim.interpolate({
+        inputRange: [-1, 1],
+        outputRange: ['-6deg', '6deg'],
+    });
+    const wiggleScale = wiggleAnim.interpolate({
+        inputRange: [-1, 0, 1],
+        outputRange: [1.08, 1, 1.08],
+    });
+
     const handleMomentumEnd = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
         if (!isUserScrollingRef.current) {
             return;
@@ -97,7 +137,14 @@ export const WeekStrip: React.FC<Props> = ({
     };
 
     const renderWeek = (days: Date[]) => (
-        <View style={[s.weekStrip, { width: pageWidth }, showCoachOverlay && s.weekStripCoach]}>
+        <View
+            style={[
+                s.weekStrip,
+                { width: pageWidth },
+                showCoachOverlay && s.weekStripCoach,
+                showDateToast && s.weekStripToast,
+            ]}
+        >
             {days.map((day) => {
                 const dayMoment = moment(day).tz(TZ);
                 const key = String(day instanceof Date ? day.getTime() : +new Date(day));
@@ -105,10 +152,17 @@ export const WeekStrip: React.FC<Props> = ({
                 const hasEvent = hasEventsOnDay ? hasEventsOnDay(day) : true;
                 const selected = isSameDayNY(day, selectedDay);
                 const today = isTodayNY(day);
+                const showToastHighlight = showDateToast && selected;
+                const showToastDim = showDateToast && !showToastHighlight && !today;
+                const showTodayHighlight = today && !selected;
+                const showTodaySelected = today && selected;
+                const showTodayText = today;
                 const showTodayRing = today && !selected;
+                const wiggleStyle =
+                    showToastHighlight ? { transform: [{ rotate: wiggleRotation }, { scale: wiggleScale }] } : null;
 
                 return (
-                    <TouchableOpacity
+                    <AnimatedTouchableOpacity
                         key={key}
                         disabled={!selectable && !onLongPress}
                         onPress={() => {
@@ -129,10 +183,15 @@ export const WeekStrip: React.FC<Props> = ({
                         style={[
                             s.dayCell,
                             hasEvent ? s.dayHasEvent : s.dayNoEvent,
+                            showToastDim && s.toastDim,
+                            showTodayHighlight && s.todayHighlight,
                             selected && s.daySelected,
+                            showTodaySelected && s.todaySelected,
                             showTodayRing && s.todayRing,
+                            showToastHighlight && s.toastHighlight,
                             showCoachOverlay && selected && s.daySelectedCoach,
                             showCoachOverlay && showTodayRing && s.todayRingCoach,
+                            wiggleStyle,
                         ]}
                         accessibilityState={{ disabled: !selectable, selected }}
                         accessibilityLabel={`${dayMoment.format("dddd, MMM D")}${selectable ? "" : " (unavailable)"}`}
@@ -141,7 +200,9 @@ export const WeekStrip: React.FC<Props> = ({
                             style={[
                                 s.dowText,
                                 !selectable ? s.textOff : hasEvent ? s.textOn : s.textNoEvent,
+                                showTodayText && s.textToday,
                                 selected && s.textSelected,
+                                showToastHighlight && s.toastHighlightText,
                             ]}
                         >
                             {dayMoment.format("dd").toUpperCase()}
@@ -150,12 +211,14 @@ export const WeekStrip: React.FC<Props> = ({
                             style={[
                                 s.dayNum,
                                 !selectable ? s.textOff : hasEvent ? s.textOn : s.textNoEvent,
+                                showTodayText && s.textToday,
                                 selected && s.textSelected,
+                                showToastHighlight && s.toastHighlightText,
                             ]}
                         >
                             {dayMoment.format("D")}
                         </Text>
-                    </TouchableOpacity>
+                    </AnimatedTouchableOpacity>
                 );
             })}
         </View>
@@ -200,10 +263,19 @@ const s = StyleSheet.create({
         borderRadius: radius.lg,
         borderWidth: 1,
         borderColor: colors.borderLavenderSoft,
+        position: "relative",
     },
     weekStripCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
         borderWidth: 0,
+    },
+    weekStripToast: {
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderWidth: 0,
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
     },
     dayCell: {
         flex: 1,
@@ -216,6 +288,8 @@ const s = StyleSheet.create({
         borderRadius: radius.mdPlus,
         gap: spacing.xxs,
         backgroundColor: "transparent",
+        position: "relative",
+        zIndex: 0,
     },
     dayHasEvent: {
         backgroundColor: "transparent",
@@ -223,22 +297,48 @@ const s = StyleSheet.create({
     dayNoEvent: {
         backgroundColor: "transparent",
     },
+    toastDim: {
+        opacity: 0.35,
+    },
     daySelected: {
-        backgroundColor: colors.white,
-        borderWidth: 1,
-        borderColor: colors.borderLavenderStrong,
+        backgroundColor: colors.brandPurpleDark,
+        borderWidth: 0,
         shadowColor: colors.black,
-        shadowOpacity: 0.06,
-        shadowRadius: 4,
-        shadowOffset: { width: 0, height: 2 },
-        elevation: 2,
+        shadowOpacity: 0.12,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 },
+        elevation: 4,
     },
     daySelectedCoach: {
         borderColor: CALENDAR_COACH_BORDER_COLOR,
         borderWidth: 0,
     },
-    todayRing: { borderWidth: 1, borderColor: colors.brandPurpleDark },
+    todayHighlight: {
+        backgroundColor: colors.surfaceLavenderLight,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderActive,
+    },
+    todaySelected: {
+        backgroundColor: colors.brandPurpleDark,
+        borderWidth: 0,
+    },
+    todayRing: {
+        borderWidth: 2,
+        borderStyle: "dotted",
+        borderColor: colors.borderLavenderActive,
+    },
     todayRingCoach: { borderColor: CALENDAR_COACH_BORDER_COLOR, borderWidth: 0 },
+    toastHighlight: {
+        backgroundColor: colors.surfaceWhiteOpaque,
+        borderWidth: 3,
+        borderColor: colors.brandPurpleDark,
+        shadowColor: colors.brandPurpleDark,
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
+        shadowOffset: { width: 0, height: 6 },
+        elevation: 10,
+        zIndex: 2,
+    },
     dowText: {
         fontSize: fontSizes.xs,
         letterSpacing: 0.8,
@@ -249,7 +349,9 @@ const s = StyleSheet.create({
     textOn: { color: colors.textPrimary },
     textOff: { color: colors.textSubtle },
     textNoEvent: { color: colors.textSlate },
-    textSelected: { color: colors.brandPurpleDark },
+    textToday: { color: colors.brandPurpleDark, fontWeight: "700" },
+    toastHighlightText: { color: colors.brandPurpleDark, fontWeight: "800" },
+    textSelected: { color: colors.white, fontWeight: "700" },
 });
 
 export default WeekStrip;
