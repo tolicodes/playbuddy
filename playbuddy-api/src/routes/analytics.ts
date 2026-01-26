@@ -83,6 +83,18 @@ type BranchStatsPayload = {
   rows: BranchStatsRow[];
 };
 
+type BuddyListOptInRow = {
+  authUserId: string | null;
+  name: string | null;
+  shareCode: string | null;
+  createdAt: string | null;
+};
+
+type BuddyListOptInPayload = {
+  totalOptedIn: number;
+  rows: BuddyListOptInRow[];
+};
+
 type ModalActionRole = "primary" | "secondary" | "skip";
 
 type ModalActionDefinition = {
@@ -649,6 +661,12 @@ const DASHBOARDS: DashboardDefinition[] = [
     ],
   },
   {
+    id: "buddies",
+    title: "Buddies",
+    description: "Buddy list sharing preferences.",
+    chartIds: ["buddy_list_opted_in_users"],
+  },
+  {
     id: "auth",
     title: "Auth",
     description: "Login method preferences.",
@@ -723,6 +741,13 @@ const CHARTS: ChartDefinition[] = [
   },
   { id: "most_active_users", dashboardId: "users", title: "Most active users", type: "table" },
   { id: "users_most_ticket_clicks", dashboardId: "users", title: "Users with most ticket clicks", type: "table" },
+  {
+    id: "buddy_list_opted_in_users",
+    dashboardId: "buddies",
+    title: "Buddy list sharing opt-ins",
+    type: "table",
+    description: "Users who opted in to share their buddy list.",
+  },
   {
     id: "auth_method_breakdown",
     dashboardId: "auth",
@@ -1776,6 +1801,44 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         ticketClicks: Number(row.ticket_clicks ?? 0),
       }));
       res.json({ chartId, meta, data: rows });
+      return;
+    }
+
+    if (chartId === "buddy_list_opted_in_users") {
+      const countResult = await pgQuery(
+        `
+          SELECT COUNT(*)::int AS total
+          FROM public.users
+          WHERE share_calendar = true;
+        `
+      );
+
+      const listResult = await pgQuery(
+        `
+          SELECT user_id,
+                 name,
+                 share_code,
+                 created_at
+          FROM public.users
+          WHERE share_calendar = true
+          ORDER BY created_at DESC NULLS LAST, user_id;
+        `
+      );
+
+      const totalOptedIn = Number(countResult.rows[0]?.total ?? 0);
+      const rows = listResult.rows.map((row: any) => ({
+        authUserId: row.user_id,
+        name: row.name,
+        shareCode: row.share_code,
+        createdAt: formatDateValue(row.created_at),
+      }));
+
+      const payload: BuddyListOptInPayload = {
+        totalOptedIn,
+        rows,
+      };
+
+      res.json({ chartId, meta, data: payload });
       return;
     }
 

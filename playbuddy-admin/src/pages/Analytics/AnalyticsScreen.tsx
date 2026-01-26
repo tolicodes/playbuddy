@@ -98,6 +98,18 @@ type UserTicketClicksRow = {
   ticketClicks: number;
 };
 
+type BuddyListOptInRow = {
+  authUserId: string | null;
+  name: string | null;
+  shareCode: string | null;
+  createdAt: string | null;
+};
+
+type BuddyListOptInPayload = {
+  totalOptedIn: number;
+  rows: BuddyListOptInRow[];
+};
+
 type AuthMethodRow = {
   id: string;
   label: string;
@@ -1177,6 +1189,64 @@ const ChartCard = ({
             </TableBody>
           </Table>
         </TableContainer>
+      );
+    }
+
+    if (chart.id === "buddy_list_opted_in_users") {
+      const payload = data.data as BuddyListOptInPayload;
+      const rows = payload?.rows ?? [];
+      const totalOptedIn = payload?.totalOptedIn ?? rows.length;
+      const searchTerm = userProfileSearch.trim().toLowerCase();
+      const filteredRows = searchTerm
+        ? rows.filter((row) => {
+            const name = row.name?.toLowerCase() ?? "";
+            const authId = row.authUserId?.toLowerCase() ?? "";
+            const shareCode = row.shareCode?.toLowerCase() ?? "";
+            return name.includes(searchTerm) || authId.includes(searchTerm) || shareCode.includes(searchTerm);
+          })
+        : rows;
+      return (
+        <Stack spacing={1.5}>
+          <Box>
+            <Typography variant="h4">{formatNumber(totalOptedIn)}</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Users opted in to share their buddy list
+            </Typography>
+          </Box>
+          <TextField
+            size="small"
+            label="Search users"
+            value={userProfileSearch}
+            onChange={(event) => setUserProfileSearch(event.target.value)}
+          />
+          <TableContainer component={Paper} variant="outlined" sx={{ overflowX: "auto" }}>
+            <Table size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell>User</TableCell>
+                  <TableCell>User ID</TableCell>
+                  <TableCell>Share code</TableCell>
+                  <TableCell>Joined</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredRows.map((row, idx) => (
+                  <TableRow key={`buddy-opt-in-${row.authUserId ?? row.shareCode ?? idx}`}>
+                    <TableCell>{row.name || row.authUserId || "-"}</TableCell>
+                    <TableCell>{row.authUserId || "-"}</TableCell>
+                    <TableCell>{row.shareCode || "-"}</TableCell>
+                    <TableCell>{row.createdAt || "-"}</TableCell>
+                  </TableRow>
+                ))}
+                {filteredRows.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4}>No data.</TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Stack>
       );
     }
 
