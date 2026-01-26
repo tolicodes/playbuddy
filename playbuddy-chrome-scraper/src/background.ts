@@ -1,5 +1,6 @@
 import type { EventTypes, NormalizedEventInput } from './common/types/types/commonTypes';
 import * as fetlife from './providers/fetlife';
+import { downloadEventbritePromoCodeUsage, type EventbritePromoReport, type EventbritePromoRow } from './providers/eventbrite-promo-codes';
 import { scrapeBySource, type ScrapeSource } from './scrapeRouter';
 import type { EventResult } from './types';
 import { postStatus, setActiveRunId, resetLiveLog, sleep } from './utils';
@@ -7,7 +8,7 @@ import { getApiBase, AUTO_FETLIFE_KEY, AUTO_FETLIFE_NEARBY_KEY } from './config.
 import { fetchImportSources } from './data.js';
 import { createPartifulInvite, type PartifulInvitePayload, type PartifulInviteResult, type PartifulLogLevel } from './partiful';
 
-type BackgroundAction = 'scrapeSingleSource' | 'setStage2Handles' | 'branchStatsScrape' | 'partifulCreateInvite';
+type BackgroundAction = 'scrapeSingleSource' | 'setStage2Handles' | 'branchStatsScrape' | 'eventbritePromoCodes' | 'partifulCreateInvite';
 type DoScrapeOpts = {
     scrapeFn?: () => Promise<EventResult[]>;
     approvalStatus?: 'pending' | 'approved' | 'rejected';
@@ -53,9 +54,11 @@ type RunLogEntry = {
     filename?: string;
 };
 
+type TableSource = ScrapeSource | 'eventbritePromoCodes';
+
 type RunTableEntry = {
     runId: string;
-    source: ScrapeSource;
+    source: TableSource;
     html: string;
     updatedAt: number;
 };
@@ -85,6 +88,7 @@ type BranchStatsScrapeStatus = {
 const BRANCH_STATS_POLL_MS = 2000;
 const BRANCH_STATS_MAX_POLLS = 1800;
 let branchStatsRunning = false;
+let eventbritePromoRunning = false;
 
 type FetlifeRun = RunLogEntry & {
     events: Array<Pick<EventResult,
@@ -226,7 +230,7 @@ async function setTableLog(html: string) {
     }
 }
 
-async function saveRunTable(runId: string, source: ScrapeSource, html: string) {
+async function saveRunTable(runId: string, source: TableSource, html: string) {
     try {
         const { [TABLE_LOGS_KEY]: existing = [] } = await chrome.storage.local.get(TABLE_LOGS_KEY);
         const next = [
@@ -361,6 +365,47 @@ async function runBranchStatsScrape() {
     }
 }
 
+async function runEventbritePromoCodes() {
+    if (eventbritePromoRunning) {
+        postStatus('⚠️ Eventbrite promo code export already running.');
+        return;
+    }
+    eventbritePromoRunning = true;
+    const runId = `eventbritePromoCodes-${Date.now()}`;
+    setActiveRunId(runId);
+    await resetLiveLog();
+    postStatus(`🚀 Starting Eventbrite promo code export (${runId})`);
+
+    try {
+        const report = await downloadEventbritePromoCodeUsage();
+        if (!report) {
+            postStatus('⚠️ No promo code report data available.');
+            return;
+        }
+        const tableHtml = buildPromoCodeTable(report);
+        await saveRunTable(runId, 'eventbritePromoCodes', tableHtml);
+        await setTableLog(tableHtml);
+        try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml, runId }); } catch {}
+    } catch (err: any) {
+        postStatus(`❌ Eventbrite promo code export failed: ${err?.message || err}`);
+    } finally {
+        eventbritePromoRunning = false;
+        setActiveRunId(null);
+        postStatus(`⏹️ Finished Eventbrite promo code export (${runId})`);
+    }
+}
+
+function buildPromoCodeTable(report: EventbritePromoReport): string {
+    const safe = (value: string) => (value || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (!report.rows.length) {
+        return `<div><em>No rows found for Code=${safe(report.code)}.</em></div>`;
+    }
+    const rowsHtml = report.rows.map((row: EventbritePromoRow) => (
+        `<tr><td>${safe(row.orderDate)}</td><td>${safe(row.originalPrice)}</td><td>${safe(row.commission)}</td></tr>`
+    )).join('');
+    return `<table class="status-table"><thead><tr><th>Order date</th><th>Original price</th><th>Commission (10%)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+}
+
 type TableRowStatus = 'pending' | 'scraped' | 'skipped';
 type TableRow = {
     organizer?: string | null;
@@ -448,7 +493,12 @@ const doScrape = (source: ScrapeSource, opts: DoScrapeOpts = {}) => {
     const scrapeFn = opts.scrapeFn || (() => scrapeBySource(source));
     const runScrape = async () => {
         if (shouldEnsureFetlifeLogin(source)) {
-            await fetlife.ensureFetlifeLogin();
+            const loginResult = await fetlife.ensureFetlifeLogin();
+            if (!loginResult.ok) {
+                const reason = loginResult.reason ? ` (${loginResult.reason})` : '';
+                postStatus(`⛔ FetLife login not confirmed${reason}. Aborting scrape before API requests.`);
+                throw new Error(`FetLife login not confirmed${reason}`);
+            }
         }
         return scrapeFn();
     };
@@ -671,6 +721,12 @@ chrome.runtime.onMessage.addListener((
 
         if (msg.action === 'branchStatsScrape') {
             runBranchStatsScrape();
+            sendResponse({ ok: true });
+            return;
+        }
+
+        if (msg.action === 'eventbritePromoCodes') {
+            runEventbritePromoCodes();
             sendResponse({ ok: true });
             return;
         }
