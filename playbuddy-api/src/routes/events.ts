@@ -20,6 +20,7 @@ import { openai, MODEL } from '../scrapers/ai/config.js';
 import type { WeeklyPicksImageLogger } from '../helpers/weeklyPicksImage.js';
 import { notifyAdminsOfPendingEvents } from '../helpers/adminPushNotifications.js';
 import { replayToLargeInstance } from '../middleware/replayToLargeInstance.js';
+import { classifyEventsInBatches } from '../scripts/event-classifier/classifyEvents.js';
 import {
     forceGenerateWeeklyPicksImage,
     getCachedWeeklyPicksImage,
@@ -138,6 +139,55 @@ const STOP_WORDS = new Set([
 
 const trimValue = (val?: string | null) => (val || '').trim();
 const isBlank = (val?: string | null) => !trimValue(val);
+
+router.get('/by-ids', authenticateAdminRequest, asyncHandler(async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+    if (replayToLargeInstance(req, res)) {
+        return;
+    }
+    const rawIds = req.query.ids;
+    const list = Array.isArray(rawIds)
+        ? rawIds.flatMap((entry) => String(entry || '').split(','))
+        : typeof rawIds === 'string'
+            ? rawIds.split(',')
+            : [];
+    const ids = Array.from(new Set(
+        list
+            .map((val) => Number(String(val).trim()))
+            .filter((val) => Number.isFinite(val))
+            .map((val) => Math.trunc(val))
+    )).slice(0, 200);
+
+    if (!ids.length) {
+        res.json({ events: [] });
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from('events')
+        .select(`
+            id,
+            name,
+            start_date,
+            end_date,
+            hidden,
+            image_url,
+            short_description,
+            event_url,
+            ticket_url,
+            source_url,
+            organizer_id,
+            organizer:organizers(id, name, hidden)
+        `)
+        .in('id', ids);
+
+    if (error) {
+        console.error('[events] Failed to fetch events by ids', error);
+        res.status(500).json({ error: error.message || 'failed to load events' });
+        return;
+    }
+
+    res.json({ events: data || [] });
+}));
 const normalizeText = (val?: string | null) =>
     (val || '')
         .toLowerCase()
@@ -1090,6 +1140,7 @@ router.post('/user-submissions/import-urls', authenticateRequest, asyncHandler(a
         }
 
         await flushEvents();
+        await classifyEventsInBatches();
 
         const insertedEvents = results.filter((item: any) => item?.result === 'inserted' && item?.event);
         const submissionCount = insertedEvents.length || scraped.length || urls.length || 1;
@@ -1165,6 +1216,7 @@ router.post('/user-submissions', authenticateRequest, asyncHandler(async (req: A
         skipExistingNoApproval: true,
     });
     await flushEvents();
+    await classifyEventsInBatches();
 
     void notifyAdminsOfPendingEvents({
         count: 1,
@@ -1185,6 +1237,7 @@ router.post('/', authenticateAdminRequest, asyncHandler(async (req: Authenticate
     }
     const eventResult = await upsertEvent(event, req.authUserId, { ignoreFrozen: true })
     await flushEvents();
+    await classifyEventsInBatches();
 
     res.json(eventResult);
 }));
@@ -1651,6 +1704,7 @@ router.put('/:id', authenticateAdminRequest, asyncHandler(async (req: Authentica
     const event = req.body;
     const eventResult = await upsertEvent(event, req.authUserId, { ignoreFrozen: true })
     await flushEvents();
+    await classifyEventsInBatches();
 
     res.json(eventResult);
 }));
