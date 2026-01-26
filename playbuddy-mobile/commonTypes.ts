@@ -925,8 +925,8 @@ export interface PromoCode {
      */
     scope?: string;
 
-    /** Commission rate (percent, e.g. 10.0 for 10%). */
-    commission_rate: number | null;
+    /** Commission percentage (percent, e.g. 10.0 for 10%). */
+    commission_percentage: number | null;
 
     /** Creation timestamp (defaults to now). */
     created_at: string | null;
@@ -955,6 +955,9 @@ export interface PromoCodeRedemption {
     /** Gross amount at redemption time (numeric). */
     gross_amount: number;
 
+    /** Commission percentage snapshot. */
+    commission_percentage: number;
+
     /** Commission amount snapshot (numeric). */
     commission_amount: number;
 
@@ -966,6 +969,7 @@ export interface CreatePromoCodeRedemptionInput {
     promo_code_id: string;
     redemption_date: string;
     gross_amount: number;
+    commission_percentage?: number | null;
     commission_amount?: number | null;
 }
 
@@ -975,6 +979,7 @@ export interface PromoCodeRedemptionImportRow {
     date?: string | null;
     redemption_date?: string | null;
     gross_amount?: number | string | null;
+    commission_percentage?: number | string | null;
     commission_amount?: number | string | null;
 }
 
@@ -1056,8 +1061,8 @@ export interface CreatePromoCodeInput {
      */
     scope?: string;
 
-    /** Commission rate (percent, e.g. 10.0 for 10%). */
-    commission_rate: number;
+    /** Commission percentage (percent, e.g. 10.0 for 10%). */
+    commission_percentage: number;
 
 }
 
@@ -1085,8 +1090,8 @@ export interface UpdatePromoCodeInput {
      */
     scope?: string;
 
-    /** Commission rate (percent, e.g. 10.0 for 10%). */
-    commission_rate: number;
+    /** Commission percentage (percent, e.g. 10.0 for 10%). */
+    commission_percentage: number;
 
 }
 

@@ -46,6 +46,7 @@ const SOURCE_LABELS: Record<string, string> = {
     instagram: 'Instagram',
     tickettailor: 'TicketTailor',
     pluraPromoStats: 'Plura Promo Stats',
+    eventbritePromoCodes: 'Eventbrite Promo Code Usage',
 };
 
 const LS_KEY = 'PLAYBUDDY_API_KEY';
@@ -153,6 +154,7 @@ function init() {
     const singleHandleInput = document.getElementById('singleFetlifeHandle') as HTMLInputElement | null;
     const singleHandleBtn = document.getElementById('startSingleFetlifeHandle') as HTMLButtonElement | null;
     const branchStatsBtn = document.getElementById('startBranchStats') as HTMLButtonElement | null;
+    const eventbritePromoBtn = document.getElementById('startEventbritePromoCodes') as HTMLButtonElement | null;
     const runDetailTitle = document.getElementById('runDetailTitle') as HTMLSpanElement | null;
     const runDetailMeta = document.getElementById('runDetailMeta') as HTMLDivElement | null;
     const runDetailLog = document.getElementById('runDetailLog') as HTMLDivElement | null;
@@ -284,6 +286,15 @@ function init() {
             { action: 'branchStatsScrape' },
             (response: { ok: boolean }) => {
                 console.log('Branch stats scrape response:', response);
+            }
+        );
+    });
+
+    eventbritePromoBtn?.addEventListener('click', () => {
+        chrome.runtime.sendMessage(
+            { action: 'eventbritePromoCodes' },
+            (response: { ok: boolean }) => {
+                console.log('Eventbrite promo code export response:', response);
             }
         );
     });

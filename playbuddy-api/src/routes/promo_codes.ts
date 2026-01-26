@@ -58,14 +58,14 @@ router.get('/', async (req: Request, res: Response) => {
 
 router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { promo_code, scope, discount, discount_type, organizer_id, commission_rate, commission_percentage } = req.body;
-    const resolvedCommissionRate = commission_rate ?? commission_percentage ?? 10;
+    const resolvedCommissionPercentage = commission_percentage ?? commission_rate ?? 10;
     const { data, error } = await supabaseClient.from('promo_codes').insert({
         promo_code,
         organizer_id,
         discount,
         discount_type,
         scope,
-        commission_rate: resolvedCommissionRate,
+        commission_percentage: resolvedCommissionPercentage,
     });
 
     if (error) {
@@ -79,14 +79,14 @@ router.post('/', authenticateAdminRequest, async (req: AuthenticatedRequest, res
 router.put('/:id', authenticateAdminRequest, async (req: AuthenticatedRequest, res: Response) => {
     const { id } = req.params;
     const { promo_code, scope, discount, discount_type, organizer_id, commission_rate, commission_percentage } = req.body;
-    const resolvedCommissionRate = commission_rate ?? commission_percentage ?? 10;
+    const resolvedCommissionPercentage = commission_percentage ?? commission_rate ?? 10;
     const { data, error } = await supabaseClient.from('promo_codes').update({
         promo_code,
         scope,
         discount,
         discount_type,
         organizer_id,
-        commission_rate: resolvedCommissionRate,
+        commission_percentage: resolvedCommissionPercentage,
     }).eq('id', id);
 
     if (error) {
@@ -168,10 +168,10 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
         return res.status(400).json({ error: 'Missing rows' });
     }
 
-    const promoCodeCache = new Map<string, { id?: string; commission_rate?: number | null; error?: string }>();
-    const promoCodeIdCache = new Map<string, { id?: string; commission_rate?: number | null; error?: string }>();
+    const promoCodeCache = new Map<string, { id?: string; commission_percentage?: number | null; error?: string }>();
+    const promoCodeIdCache = new Map<string, { id?: string; commission_percentage?: number | null; error?: string }>();
 
-    type ResolvedPromoCode = { id?: string; commission_rate?: number | null; error?: string };
+    type ResolvedPromoCode = { id?: string; commission_percentage?: number | null; error?: string };
     const resolvePromoCode = async (promoCode: string | null): Promise<ResolvedPromoCode> => {
         if (!promoCode) return { error: 'Missing promo_code' };
         const cacheKey = `${promoCode}|${organizerId || ''}|${organizerName || ''}`;
@@ -180,7 +180,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
 
         const { data: promoRows, error: promoError } = await supabaseClient
             .from('promo_codes')
-            .select('id, organizer_id, commission_rate')
+            .select('id, organizer_id, commission_percentage')
             .eq('promo_code', promoCode);
 
         if (promoError) {
@@ -202,7 +202,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
             if (match) {
                 const result = {
                     id: match.id as string,
-                    commission_rate: match.commission_rate as number | null,
+                    commission_percentage: match.commission_percentage as number | null,
                 };
                 promoCodeCache.set(cacheKey, result);
                 return result;
@@ -224,7 +224,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
                         if (match) {
                             const result = {
                                 id: match.id as string,
-                                commission_rate: match.commission_rate as number | null,
+                                commission_percentage: match.commission_percentage as number | null,
                             };
                             promoCodeCache.set(cacheKey, result);
                             return result;
@@ -238,7 +238,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
             const match = matches[0];
             const result = {
                 id: match.id as string,
-                commission_rate: match.commission_rate as number | null,
+                commission_percentage: match.commission_percentage as number | null,
             };
             promoCodeCache.set(cacheKey, result);
             return result;
@@ -255,7 +255,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
         if (cached) return cached;
         const { data: promoRow, error: promoError } = await supabaseClient
             .from('promo_codes')
-            .select('id, commission_rate')
+            .select('id, commission_percentage')
             .eq('id', promoCodeId)
             .single();
         if (promoError || !promoRow) {
@@ -265,7 +265,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
         }
         const result = {
             id: promoRow.id as string,
-            commission_rate: promoRow.commission_rate as number | null,
+            commission_percentage: promoRow.commission_percentage as number | null,
         };
         promoCodeIdCache.set(promoCodeId, result);
         return result;
@@ -275,6 +275,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
         promo_code_id: string;
         redemption_date: string;
         gross_amount: number;
+        commission_percentage: number;
         commission_amount: number;
     }> = [];
     const errors: Array<{ index: number; message: string }> = [];
@@ -284,7 +285,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
         const rowPromoCodeId = row.promo_code_id ? String(row.promo_code_id) : defaultPromoCodeId;
         const rowPromoCode = row.promo_code ? String(row.promo_code) : defaultPromoCode;
         let promoCodeId = rowPromoCodeId;
-        let commissionRate: number | null = null;
+        let commissionPercentage: number | null = null;
 
         if (promoCodeId) {
             const resolved = await resolvePromoCodeById(promoCodeId);
@@ -293,7 +294,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
                 continue;
             }
             promoCodeId = resolved.id;
-            commissionRate = resolved.commission_rate ?? null;
+            commissionPercentage = resolved.commission_percentage ?? null;
         } else {
             const resolved = await resolvePromoCode(rowPromoCode);
             if (!resolved?.id) {
@@ -301,7 +302,7 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
                 continue;
             }
             promoCodeId = resolved.id;
-            commissionRate = resolved.commission_rate ?? null;
+            commissionPercentage = resolved.commission_percentage ?? null;
         }
 
         const dateInput = row.date ?? row.redemption_date;
@@ -317,13 +318,15 @@ router.post('/redemptions/import', authenticateAdminRequest, async (req: Authent
             continue;
         }
 
-        const resolvedRate = commissionRate ?? 10;
-        const commissionAmount = grossValue * (resolvedRate / 100);
+        const rowCommissionPercentage = parseNumberNullable(row.commission_percentage);
+        const resolvedPercentage = rowCommissionPercentage ?? commissionPercentage ?? 0;
+        const commissionAmount = grossValue * (resolvedPercentage / 100);
 
         prepared.push({
             promo_code_id: promoCodeId,
             redemption_date: parsedDate.toISOString(),
             gross_amount: grossValue,
+            commission_percentage: resolvedPercentage,
             commission_amount: commissionAmount,
         });
     }
@@ -525,29 +528,30 @@ router.post('/:id/redemptions', authenticateAdminRequest, async (req: Authentica
 
     const { data: promoCode, error: promoError } = await supabaseClient
         .from('promo_codes')
-        .select('commission_rate')
+        .select('commission_percentage')
         .eq('id', id)
         .single();
 
     if (promoError) {
-        console.error('Error fetching promo code commission rate', promoError);
+        console.error('Error fetching promo code commission percentage', promoError);
         return res.status(500).json({ error: promoError });
     }
 
     const grossValue = parseNumber(gross_amount);
-    const commissionRate = parseNumber(
-        promoCode?.commission_rate !== undefined && promoCode?.commission_rate !== null
-            ? promoCode?.commission_rate
-            : 10
+    const commissionPercentage = parseNumber(
+        promoCode?.commission_percentage !== undefined && promoCode?.commission_percentage !== null
+            ? promoCode?.commission_percentage
+            : 0
     );
     const commissionValue = commission_amount !== undefined && commission_amount !== null
         ? parseNumber(commission_amount)
-        : grossValue * (commissionRate / 100);
+        : grossValue * (commissionPercentage / 100);
 
     const { data, error } = await supabaseClient.from('promo_code_redemptions').insert({
         promo_code_id: id,
         redemption_date,
         gross_amount: grossValue,
+        commission_percentage: commissionPercentage,
         commission_amount: commissionValue,
     });
 

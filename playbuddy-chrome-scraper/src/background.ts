@@ -1,6 +1,6 @@
 import type { EventTypes, NormalizedEventInput } from './common/types/types/commonTypes';
 import * as fetlife from './providers/fetlife';
-import { downloadEventbritePromoCodeUsage, type EventbritePromoReport, type EventbritePromoRow } from './providers/eventbrite-promo-codes';
+import { downloadEventbritePromoCodeUsage, EVENTBRITE_ORG_TARGET, type EventbritePromoReport, type EventbritePromoRow } from './providers/eventbrite-promo-codes';
 import { scrapeBySource, type ScrapeSource } from './scrapeRouter';
 import type { EventResult } from './types';
 import { postStatus, setActiveRunId, resetLiveLog, sleep } from './utils';
@@ -386,6 +386,7 @@ async function runEventbritePromoCodes() {
         await saveRunTable(runId, 'eventbritePromoCodes', tableHtml);
         await setTableLog(tableHtml);
         try { chrome.runtime.sendMessage({ action: 'table', html: tableHtml, runId }); } catch {}
+        await uploadPromoCodeRedemptions(report);
     } catch (err: any) {
         postStatus(`❌ Eventbrite promo code export failed: ${err?.message || err}`);
     } finally {
@@ -401,9 +402,55 @@ function buildPromoCodeTable(report: EventbritePromoReport): string {
         return `<div><em>No rows found for Code=${safe(report.code)}.</em></div>`;
     }
     const rowsHtml = report.rows.map((row: EventbritePromoRow) => (
-        `<tr><td>${safe(row.orderDate)}</td><td>${safe(row.originalPrice)}</td><td>${safe(row.commission)}</td></tr>`
+        `<tr><td>${safe(row.orderDate)}</td><td>${safe(row.originalPrice)}</td></tr>`
     )).join('');
-    return `<table class="status-table"><thead><tr><th>Order date</th><th>Original price</th><th>Commission (10%)</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    return `<table class="status-table"><thead><tr><th>Order date</th><th>Original price</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+}
+
+async function uploadPromoCodeRedemptions(report: EventbritePromoReport) {
+    try {
+        const apiKey = await getApiKey();
+        if (!apiKey) {
+            postStatus('⚠️ No API key set; skipping promo code import.');
+            return;
+        }
+        const apiBase = await getApiBase();
+        const rows = report.rows
+            .map((row) => ({
+                date: row.orderDate,
+                gross_amount: row.grossAmount ?? undefined,
+            }))
+            .filter((row) => row.date && row.gross_amount !== undefined && row.gross_amount !== null);
+
+        if (!rows.length) {
+            postStatus('⚠️ No promo code rows to import.');
+            return;
+        }
+
+        const res = await fetch(`${apiBase}/promo_codes/redemptions/import`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`,
+            },
+            body: JSON.stringify({
+                promo_code: report.code,
+                organizer_name: EVENTBRITE_ORG_TARGET,
+                source: 'eventbrite',
+                rows,
+            }),
+        });
+
+        const text = await res.text();
+        if (!res.ok) {
+            postStatus(`❌ Promo code import failed (${res.status}): ${text.slice(0, 200)}`);
+            return;
+        }
+        postStatus('⬆️ Promo code redemptions imported.');
+        try { console.log('Promo code import response', JSON.parse(text)); } catch { console.log('Promo code import response', text); }
+    } catch (err: any) {
+        postStatus(`❌ Promo code import error: ${err?.message || err}`);
+    }
 }
 
 type TableRowStatus = 'pending' | 'scraped' | 'skipped';

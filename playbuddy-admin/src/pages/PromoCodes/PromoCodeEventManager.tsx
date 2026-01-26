@@ -390,7 +390,7 @@ export function PromoCodeEventManager() {
                                                     ID: {pc.id}
                                                 </div>
                                                 <div style={{ color: '#6b7280', fontSize: 12 }}>
-                                                    Commission rate: {pc.commission_rate ?? 0}%
+                                                    Commission percentage: {pc.commission_percentage ?? 0}%
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

@@ -5,7 +5,7 @@ import { useCreatePromoCode } from '../../common/db-axios/usePromoCodes';
 export function CreatePromoCode({ organizerId }: { organizerId: string }) {
     const [promoCode, setPromoCode] = useState('');
     const [discount, setDiscount] = useState('');
-    const [commissionRate, setCommissionRate] = useState('');
+    const [commissionPercentage, setCommissionPercentage] = useState('');
     const [discountType, setDiscountType] = useState('percent'); // or 'fixed'
     const [scope, setScope] = useState('event'); // or 'event'
 
@@ -15,7 +15,7 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
         e.preventDefault();
 
         if (!promoCode || !discount || !discountType) return;
-        if (!commissionRate) return;
+        if (!commissionPercentage) return;
 
         createPromo.mutate({
             promo_code: promoCode,
@@ -23,12 +23,12 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
             discount_type: discountType,
             scope,
             organizer_id: Number(organizerId),
-            commission_rate: parseFloat(commissionRate),
+            commission_percentage: parseFloat(commissionPercentage),
         });
 
         setPromoCode('');
         setDiscount('');
-        setCommissionRate('');
+        setCommissionPercentage('');
         setDiscountType('percent');
         setScope('event');
     };
@@ -61,11 +61,11 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
 
             <div style={{ marginBottom: 10 }}>
                 <input
-                    placeholder="Commission rate (%)"
+                    placeholder="Commission percentage (%)"
                     type="number"
                     step="0.01"
-                    value={commissionRate}
-                    onChange={e => setCommissionRate(e.target.value)}
+                    value={commissionPercentage}
+                    onChange={e => setCommissionPercentage(e.target.value)}
                     required
                     style={{ padding: 8, width: '100%' }}
                 />

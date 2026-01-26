@@ -92,7 +92,7 @@ export const PromoCodeAdminScreen = () => {
     const [selectedOrganizerId, setSelectedOrganizerId] = useState<number | null>(null);
     const [promoCodeInput, setPromoCodeInput] = useState('');
     const [discountInput, setDiscountInput] = useState('');
-    const [commissionRateInput, setCommissionRateInput] = useState('');
+    const [commissionPercentageInput, setCommissionPercentageInput] = useState('');
     const [discountType, setDiscountType] = useState<DiscountType>('percent');
     const [scope, setScope] = useState<PromoScope>('event');
     const [selectedPromoCodeId, setSelectedPromoCodeId] = useState<string | null>(null);
@@ -177,7 +177,7 @@ export const PromoCodeAdminScreen = () => {
         if (!selectedOrganizerId) return;
         const promoCode = promoCodeInput.trim();
         const discountValue = parseFloat(discountInput);
-        const commissionValue = parseFloat(commissionRateInput);
+        const commissionPercentageValue = parseFloat(commissionPercentageInput);
         if (!promoCode) {
             Alert.alert('Missing code', 'Enter a promo code.');
             return;
@@ -190,11 +190,11 @@ export const PromoCodeAdminScreen = () => {
             Alert.alert('Invalid discount', 'Discount must be zero or more.');
             return;
         }
-        if (!Number.isFinite(commissionValue)) {
+        if (!Number.isFinite(commissionPercentageValue)) {
             Alert.alert('Invalid commission', 'Enter a valid commission rate.');
             return;
         }
-        if (commissionValue < 0) {
+        if (commissionPercentageValue < 0) {
             Alert.alert('Invalid commission', 'Commission must be zero or more.');
             return;
         }
@@ -205,7 +205,7 @@ export const PromoCodeAdminScreen = () => {
                 discount: discountValue,
                 discount_type: discountType,
                 scope,
-                commission_rate: commissionValue,
+                commission_percentage: commissionPercentageValue,
             });
             const created = Array.isArray(response) ? response[0] : response;
             if (created?.id) {
@@ -213,7 +213,7 @@ export const PromoCodeAdminScreen = () => {
             }
             setPromoCodeInput('');
             setDiscountInput('');
-            setCommissionRateInput('');
+            setCommissionPercentageInput('');
             setDiscountType('percent');
             setScope('event');
         } catch {
@@ -494,9 +494,9 @@ export const PromoCodeAdminScreen = () => {
                                         style={styles.textInput}
                                     />
                                     <TextInput
-                                        value={commissionRateInput}
-                                        onChangeText={setCommissionRateInput}
-                                        placeholder="Commission rate (%)"
+                                        value={commissionPercentageInput}
+                                        onChangeText={setCommissionPercentageInput}
+                                        placeholder="Commission percentage (%)"
                                         placeholderTextColor={colors.textSubtle}
                                         keyboardType="decimal-pad"
                                         style={styles.textInput}
@@ -572,7 +572,7 @@ export const PromoCodeAdminScreen = () => {
                                                                 {formatDiscountLabel(code)}
                                                             </Text>
                                                             <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
-                                                                Commission {code.commission_rate ?? 0}%
+                                                                Commission {code.commission_percentage ?? 0}%
                                                             </Text>
                                                             <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
                                                                 ID {code.id}
