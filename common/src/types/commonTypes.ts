@@ -925,6 +925,9 @@ export interface PromoCode {
      */
     scope?: string;
 
+    /** Commission percentage (percent, e.g. 10.0 for 10%). */
+    commission_percentage: number | null;
+
     /** Creation timestamp (defaults to now). */
     created_at: string | null;
 
@@ -933,6 +936,108 @@ export interface PromoCode {
 
     /** Product type (nullable). */
     product_type: string | null;
+}
+
+/**
+ * Table: promo_code_redemptions
+ * Stores redemption stats for promo codes.
+ */
+export interface PromoCodeRedemption {
+    /** Primary key (UUID). Defaults to gen_random_uuid(). */
+    id: string;
+
+    /** References promo_codes.id (UUID). */
+    promo_code_id: string;
+
+    /** Date/time of redemption. */
+    redemption_date: string;
+
+    /** Gross amount at redemption time (numeric). */
+    gross_amount: number;
+
+    /** Commission percentage snapshot. */
+    commission_percentage: number;
+
+    /** Commission amount snapshot (numeric). */
+    commission_amount: number;
+
+    /** Creation timestamp (defaults to now). */
+    created_at: string | null;
+}
+
+export interface CreatePromoCodeRedemptionInput {
+    promo_code_id: string;
+    redemption_date: string;
+    gross_amount: number;
+    commission_percentage?: number | null;
+    commission_amount?: number | null;
+}
+
+export interface PromoCodeRedemptionImportRow {
+    promo_code_id?: string | null;
+    promo_code?: string | null;
+    date?: string | null;
+    redemption_date?: string | null;
+    gross_amount?: number | string | null;
+    commission_percentage?: number | string | null;
+    commission_amount?: number | string | null;
+}
+
+export interface PromoCodeRedemptionImportRequest {
+    promo_code_id?: string | null;
+    promo_code?: string | null;
+    organizer_id?: number | null;
+    organizer_name?: string | null;
+    source?: string | null;
+    rows: PromoCodeRedemptionImportRow[];
+}
+
+export interface PromoCodeRedemptionImportResult {
+    inserted_count: number;
+    skipped_count: number;
+    promo_code_ids?: string[];
+    errors?: Array<{
+        index: number;
+        message: string;
+    }>;
+}
+
+export interface PromoCodeRedemptionSummary {
+    promo_code_id: string;
+    redemption_count: number;
+}
+
+export interface PromoCodeRedemptionQuarter {
+    quarter: string;
+    start_date: string;
+    end_date: string;
+    redemption_count: number;
+    gross_total: number;
+    commission_total: number;
+}
+
+export interface PromoCodeRedemptionSeriesPoint {
+    date: string;
+    redemption_count: number;
+    gross_total: number;
+    commission_total: number;
+}
+
+export interface PromoCodeRedemptionStats {
+    promo_code_id: string;
+    totals: {
+        redemption_count: number;
+        gross_total: number;
+        commission_total: number;
+        avg_gross: number;
+        avg_commission: number;
+    };
+    quarters: PromoCodeRedemptionQuarter[];
+    series: {
+        last_30_days: PromoCodeRedemptionSeriesPoint[];
+        last_3_months: PromoCodeRedemptionSeriesPoint[];
+        all_time: PromoCodeRedemptionSeriesPoint[];
+    };
 }
 
 export interface CreatePromoCodeInput {
@@ -955,6 +1060,10 @@ export interface CreatePromoCodeInput {
      * Constrained by promo_codes_scope_check.
      */
     scope?: string;
+
+    /** Commission percentage (percent, e.g. 10.0 for 10%). */
+    commission_percentage: number;
+
 }
 
 export interface UpdatePromoCodeInput {
@@ -980,6 +1089,10 @@ export interface UpdatePromoCodeInput {
      * Constrained by promo_codes_scope_check.
      */
     scope?: string;
+
+    /** Commission percentage (percent, e.g. 10.0 for 10%). */
+    commission_percentage: number;
+
 }
 
 /**

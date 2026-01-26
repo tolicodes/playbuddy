@@ -5,6 +5,7 @@ import { useCreatePromoCode } from '../../common/db-axios/usePromoCodes';
 export function CreatePromoCode({ organizerId }: { organizerId: string }) {
     const [promoCode, setPromoCode] = useState('');
     const [discount, setDiscount] = useState('');
+    const [commissionRate, setCommissionRate] = useState('');
     const [discountType, setDiscountType] = useState('percent'); // or 'fixed'
     const [scope, setScope] = useState('event'); // or 'event'
 
@@ -14,6 +15,7 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
         e.preventDefault();
 
         if (!promoCode || !discount || !discountType) return;
+        if (!commissionRate) return;
 
         createPromo.mutate({
             promo_code: promoCode,
@@ -21,10 +23,12 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
             discount_type: discountType,
             scope,
             organizer_id: Number(organizerId),
+            commission_rate: parseFloat(commissionRate),
         });
 
         setPromoCode('');
         setDiscount('');
+        setCommissionRate('');
         setDiscountType('percent');
         setScope('event');
     };
@@ -50,6 +54,18 @@ export function CreatePromoCode({ organizerId }: { organizerId: string }) {
                     step="0.01"
                     value={discount}
                     onChange={e => setDiscount(e.target.value)}
+                    required
+                    style={{ padding: 8, width: '100%' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: 10 }}>
+                <input
+                    placeholder="Commission rate (%)"
+                    type="number"
+                    step="0.01"
+                    value={commissionRate}
+                    onChange={e => setCommissionRate(e.target.value)}
                     required
                     style={{ padding: 8, width: '100%' }}
                 />

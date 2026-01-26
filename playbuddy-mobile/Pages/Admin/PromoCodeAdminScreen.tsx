@@ -92,6 +92,7 @@ export const PromoCodeAdminScreen = () => {
     const [selectedOrganizerId, setSelectedOrganizerId] = useState<number | null>(null);
     const [promoCodeInput, setPromoCodeInput] = useState('');
     const [discountInput, setDiscountInput] = useState('');
+    const [commissionRateInput, setCommissionRateInput] = useState('');
     const [discountType, setDiscountType] = useState<DiscountType>('percent');
     const [scope, setScope] = useState<PromoScope>('event');
     const [selectedPromoCodeId, setSelectedPromoCodeId] = useState<string | null>(null);
@@ -176,6 +177,7 @@ export const PromoCodeAdminScreen = () => {
         if (!selectedOrganizerId) return;
         const promoCode = promoCodeInput.trim();
         const discountValue = parseFloat(discountInput);
+        const commissionValue = parseFloat(commissionRateInput);
         if (!promoCode) {
             Alert.alert('Missing code', 'Enter a promo code.');
             return;
@@ -188,6 +190,14 @@ export const PromoCodeAdminScreen = () => {
             Alert.alert('Invalid discount', 'Discount must be zero or more.');
             return;
         }
+        if (!Number.isFinite(commissionValue)) {
+            Alert.alert('Invalid commission', 'Enter a valid commission rate.');
+            return;
+        }
+        if (commissionValue < 0) {
+            Alert.alert('Invalid commission', 'Commission must be zero or more.');
+            return;
+        }
         try {
             const response = await createPromo.mutateAsync({
                 organizer_id: selectedOrganizerId,
@@ -195,6 +205,7 @@ export const PromoCodeAdminScreen = () => {
                 discount: discountValue,
                 discount_type: discountType,
                 scope,
+                commission_rate: commissionValue,
             });
             const created = Array.isArray(response) ? response[0] : response;
             if (created?.id) {
@@ -202,6 +213,7 @@ export const PromoCodeAdminScreen = () => {
             }
             setPromoCodeInput('');
             setDiscountInput('');
+            setCommissionRateInput('');
             setDiscountType('percent');
             setScope('event');
         } catch {
@@ -481,6 +493,14 @@ export const PromoCodeAdminScreen = () => {
                                         keyboardType="decimal-pad"
                                         style={styles.textInput}
                                     />
+                                    <TextInput
+                                        value={commissionRateInput}
+                                        onChangeText={setCommissionRateInput}
+                                        placeholder="Commission rate (%)"
+                                        placeholderTextColor={colors.textSubtle}
+                                        keyboardType="decimal-pad"
+                                        style={styles.textInput}
+                                    />
 
                                     <View style={styles.optionRow}>
                                         <Text style={styles.optionLabel}>Discount Type</Text>
@@ -550,6 +570,12 @@ export const PromoCodeAdminScreen = () => {
                                                             </Text>
                                                             <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
                                                                 {formatDiscountLabel(code)}
+                                                            </Text>
+                                                            <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
+                                                                Commission {code.commission_rate ?? 0}%
+                                                            </Text>
+                                                            <Text style={[styles.codeTileMeta, isSelected && styles.codeTileMetaActive]}>
+                                                                ID {code.id}
                                                             </Text>
                                                             <Text style={[styles.codeTileScope, isSelected && styles.codeTileScopeActive]}>
                                                                 {code.scope === 'organizer' ? 'Organizer' : 'Event'}
