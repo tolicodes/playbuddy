@@ -206,8 +206,7 @@ type DeepLinkRow = {
   attributedUsers: number;
   attributedCount: number;
   eventClickUsers: number;
-  ticketClickUsers: number;
-  ticketClicks: number;
+  ticketClickUserEvents: number;
 };
 
 type TopUserEventRow = {
@@ -1784,7 +1783,6 @@ const ChartCard = ({
                 <TableCell align="right">Attributed (unique)</TableCell>
                 <TableCell align="right">Event clicked (unique)</TableCell>
                 <TableCell align="right">Ticket clicked (unique)</TableCell>
-                <TableCell align="right">Ticket clicks</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -1812,14 +1810,13 @@ const ChartCard = ({
                     <TableCell align="right">{formatNumber(row.detectedUsers)}</TableCell>
                     <TableCell align="right">{formatNumber(row.attributedUsers)}</TableCell>
                     <TableCell align="right">{formatNumber(row.eventClickUsers)}</TableCell>
-                    <TableCell align="right">{formatNumber(row.ticketClickUsers)}</TableCell>
-                    <TableCell align="right">{formatNumber(row.ticketClicks)}</TableCell>
+                    <TableCell align="right">{formatNumber(row.ticketClickUserEvents)}</TableCell>
                   </TableRow>
                 );
               })}
               {rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={14}>No data.</TableCell>
+                  <TableCell colSpan={13}>No data.</TableCell>
                 </TableRow>
               )}
             </TableBody>

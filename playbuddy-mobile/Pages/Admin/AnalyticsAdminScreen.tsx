@@ -134,8 +134,7 @@ type DeepLinkRow = {
     detectedUsers: number;
     attributedUsers: number;
     eventClickUsers: number;
-    ticketClickUsers: number;
-    ticketClicks: number;
+    ticketClickUserEvents: number;
 };
 
 type TopUserEventRow = {
@@ -597,7 +596,7 @@ const ChartCard = ({
             const listRows = rows.map((row) => ({
                 label: row.slug || row.campaign || row.channel || row.id,
                 value: formatNumber(row.eventClickUsers),
-                subtitle: `Ticket clicks ${formatNumber(row.ticketClicks)}`,
+                subtitle: `Ticket clicked (unique) ${formatNumber(row.ticketClickUserEvents)}`,
             }));
             return renderListRows(listRows, 'No deep links yet.');
         }

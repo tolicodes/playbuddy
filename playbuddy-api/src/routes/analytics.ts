@@ -2380,6 +2380,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
           WITH base AS (
             SELECT
               NULLIF(COALESCE(user_event_props->>'deep_link_id', user_event_props->>'deepLinkId'), '') AS deep_link_id,
+              NULLIF(COALESCE(user_event_props->>'event_id', user_event_props->>'eventId'), '') AS event_id,
               user_event_name,
               COALESCE(auth_user_id::text, device_id) AS actor_id
             FROM public.user_events
@@ -2394,8 +2395,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
               COUNT(DISTINCT actor_id) FILTER (WHERE user_event_name = 'deep_link_attributed')::int AS attributed_users,
               COUNT(*) FILTER (WHERE user_event_name = ANY($3))::int AS event_clicks,
               COUNT(DISTINCT actor_id) FILTER (WHERE user_event_name = ANY($3))::int AS event_click_users,
-              COUNT(*) FILTER (WHERE user_event_name = ANY($4))::int AS ticket_clicks,
-              COUNT(DISTINCT actor_id) FILTER (WHERE user_event_name = ANY($4))::int AS ticket_click_users
+              COUNT(DISTINCT (actor_id, event_id)) FILTER (WHERE user_event_name = ANY($4) AND event_id IS NOT NULL)::int AS ticket_click_user_events
             FROM base
             WHERE deep_link_id IS NOT NULL
             GROUP BY deep_link_id
@@ -2417,15 +2417,14 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
             COALESCE(metrics.attributed_users, 0)::int AS attributed_users,
             COALESCE(metrics.attributed_count, 0)::int AS attributed_count,
             COALESCE(metrics.event_click_users, 0)::int AS event_click_users,
-            COALESCE(metrics.ticket_click_users, 0)::int AS ticket_click_users,
-            COALESCE(metrics.ticket_clicks, 0)::int AS ticket_clicks
+            COALESCE(metrics.ticket_click_user_events, 0)::int AS ticket_click_user_events
           FROM public.deep_links dl
           LEFT JOIN metrics ON metrics.deep_link_id = dl.id::text
           LEFT JOIN public.organizers o ON o.id = dl.organizer_id
           LEFT JOIN public.events e ON e.id = dl.featured_event_id
           LEFT JOIN public.promo_codes pc ON pc.id = dl.featured_promo_code_id
           ORDER BY event_click_users DESC NULLS LAST,
-                   ticket_click_users DESC NULLS LAST,
+                   ticket_click_user_events DESC NULLS LAST,
                    attributed_users DESC NULLS LAST,
                    dl.created_at DESC;
         `,
@@ -2449,8 +2448,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         attributedUsers: Number(row.attributed_users ?? 0),
         attributedCount: Number(row.attributed_count ?? 0),
         eventClickUsers: Number(row.event_click_users ?? 0),
-        ticketClickUsers: Number(row.ticket_click_users ?? 0),
-        ticketClicks: Number(row.ticket_clicks ?? 0),
+        ticketClickUserEvents: Number(row.ticket_click_user_events ?? 0),
       }));
 
       res.json({ chartId, meta, data: rows });
