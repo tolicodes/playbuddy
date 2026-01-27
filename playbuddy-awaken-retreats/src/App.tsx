@@ -201,13 +201,7 @@ const isRetreatLike = (event: ApiEvent) => {
     'conference',
   ])
 
-  if (typeAllowlist.has(type)) return true
-
-  const tags = getTags(event).map(normalize)
-  return tags.some((tag) =>
-    ['retreat', 'festival', 'conference', 'immersion', 'residency']
-      .includes(tag)
-  )
+  return typeAllowlist.has(type)
 }
 
 const matchesQuery = (event: ApiEvent, query: string) => {
@@ -450,10 +444,10 @@ function App() {
         <nav className="nav">
           <div className="brand">
             <div className="brand-mark">
-              <img src="/awaken-mark.svg" alt="Awaken Retreats" />
+              <img src="/awaken-mark.svg" alt="AltRetreats.life" />
             </div>
             <div>
-              <p className="brand-title">Awaken Retreats</p>
+              <p className="brand-title">AltRetreats.life</p>
               <p className="brand-subtitle">Find your people, find your pleasure</p>
             </div>
           </div>

@@ -22,8 +22,8 @@ export const event_classifications = [
             },
             {
                 name: "retreat",
-                description: "Retreat, immersion, residency, multi-day.",
-                examples: ["Retreat", "Immersion", "Residency", "Multi-Day"]
+                description: "Retreat, immersion, residency, multi-day training or intensive.",
+                examples: ["Retreat", "Immersion", "Residency", "Training", "Intensive", "Practicum", "Multi-Day"]
             },
             {
                 name: "festival",
@@ -179,7 +179,7 @@ export const event_classifications = [
     {
         "classification": "vetted",
         "name": "Vetted",
-        "description": `is this event vetted? Be SUPER CAREFUL to make sure this is a vetted event. It should say "vetted" or "membership required"`,
+        "description": `is this event vetted? Be SUPER CAREFUL to make sure this is a vetted event. It should say "vetted" or "membership required", or language like "members only", "members-only", "member-only", or "only available to members".`,
     },
 
     {
