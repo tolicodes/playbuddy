@@ -68,7 +68,6 @@ import {
     TZ,
     NavState,
     ny,
-    hasEventsOnDayNY,
     findEventDayFrom,
     computeInitialState,
     deriveWeekArrays,
@@ -103,6 +102,7 @@ const CALENDAR_COACH_BORDER_COLOR = 'transparent';
 const CALENDAR_COACH_SCREEN_SCRIM = "rgba(64, 64, 64, 0.8)";
 const EXTRA_SCROLL_DELAY_MS = 180;
 const SMOOTH_SCROLL_DURATION_MS = 320;
+const DAY_KEY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const CalendarCoachScreenScrim = () => {
     const calendarCoach = useCalendarCoach();
@@ -964,6 +964,27 @@ const EventCalendarView: React.FC<Props> = ({
     const hasActiveFilters = activeFilterChips.length > 0;
 
     const { sections } = useGroupedEvents(filteredEvents, featuredEvents);
+    const eventDayKeySet = useMemo(() => {
+        const keys = new Set<string>();
+        filteredEvents.forEach((event) => {
+            if (!event.start_date) return;
+            const key = moment(event.start_date).tz(TZ).format("YYYY-MM-DD");
+            if (key !== "Invalid date") {
+                keys.add(key);
+            }
+        });
+        return keys;
+    }, [filteredEvents]);
+
+    const resolveDayKey = (day: Date | string) => {
+        if (typeof day === "string") {
+            if (DAY_KEY_RE.test(day)) {
+                return day;
+            }
+            return moment(day).tz(TZ).format("YYYY-MM-DD");
+        }
+        return formatDayKey(day);
+    };
 
     // ===== NY-time Navigation State =====
     const initialNav = useMemo(() => computeInitialState(filteredEvents), [filteredEvents]);
@@ -974,7 +995,7 @@ const EventCalendarView: React.FC<Props> = ({
 
     // Treat all days before today as disabled/grey.
     const isDaySelectable = (d: Date | string) => !ny.isBeforeToday(d);
-    const hasEventsOnDay = (d: Date | string) => hasEventsOnDayNY(filteredEvents, d);
+    const hasEventsOnDay = (d: Date | string) => eventDayKeySet.has(resolveDayKey(d));
     const resolveEventDay = (day: Date) => {
         if (hasEventsOnDay(day)) {
             return day;
