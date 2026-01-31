@@ -29,7 +29,30 @@ interface BackgroundResponse {
     ok: boolean;
     result?: PartifulInviteResult;
     error?: string;
+    deferred?: boolean;
 }
+
+type PartifulPortMessage = {
+    action: 'partifulCreateInvite';
+    requestId?: string;
+    payload?: PartifulInvitePayload;
+};
+
+type PartifulPortOutbound =
+    | {
+        action: 'partifulLog';
+        requestId: string;
+        level: PartifulLogLevel;
+        message: string;
+        data?: Record<string, unknown>;
+    }
+    | {
+        action: 'partifulResponse';
+        requestId: string;
+        ok: boolean;
+        result?: PartifulInviteResult;
+        error?: string;
+    };
 
 // Minimal browser JS: map your FetLife JSON array -> /events/bulk (no batching)
 
@@ -695,6 +718,17 @@ chrome.runtime.onMessage.addListener((
         if (msg.action === 'partifulCreateInvite') {
             const requestId = msg.requestId || `partiful-${Date.now()}`;
             const tabId = sender?.tab?.id;
+            const useTabResponse = typeof tabId === 'number';
+            let responseSent = false;
+            const safeSendResponse = (response: BackgroundResponse) => {
+                if (responseSent) return;
+                responseSent = true;
+                try {
+                    sendResponse(response);
+                } catch (err) {
+                    console.warn('Failed to send Partiful response', err);
+                }
+            };
             const relayLog = (level: PartifulLogLevel, message: string, data?: Record<string, unknown>) => {
                 if (typeof tabId !== 'number') {
                     console.log(`[partiful:${level}] ${message}`, data || {});
@@ -712,22 +746,43 @@ chrome.runtime.onMessage.addListener((
                     console.warn('Failed to relay Partiful log', err);
                 }
             };
+            const relayResponse = (response: BackgroundResponse) => {
+                if (!useTabResponse) {
+                    safeSendResponse(response);
+                    return;
+                }
+                try {
+                    chrome.tabs.sendMessage(tabId, {
+                        action: 'partifulResponse',
+                        requestId,
+                        ...response,
+                    });
+                } catch (err) {
+                    console.warn('Failed to relay Partiful response', err);
+                }
+            };
 
             const payload = msg.payload;
             if (!payload || typeof payload !== 'object' || !('event' in payload)) {
                 relayLog('error', 'Missing Partiful invite payload.');
-                sendResponse({ ok: false, error: 'Missing Partiful invite payload.' });
+                relayResponse({ ok: false, error: 'Missing Partiful invite payload.' });
+                if (useTabResponse) {
+                    safeSendResponse({ ok: true, deferred: true });
+                }
                 return;
             }
 
             try {
                 relayLog('info', 'Starting Partiful invite flow.');
+                if (useTabResponse) {
+                    safeSendResponse({ ok: true, deferred: true });
+                }
                 const result = await createPartifulInvite(payload, relayLog);
-                sendResponse({ ok: true, result });
+                relayResponse({ ok: true, result });
             } catch (err: any) {
                 const errorMessage = err?.message || String(err);
                 relayLog('error', 'Partiful invite failed.', { error: errorMessage });
-                sendResponse({ ok: false, error: errorMessage });
+                relayResponse({ ok: false, error: errorMessage });
             }
             return;
         }
@@ -791,6 +846,54 @@ chrome.runtime.onMessage.addListener((
     })();
 
     return true;
+});
+
+chrome.runtime.onConnect.addListener((port) => {
+    if (port.name !== 'partiful') return;
+    port.onMessage.addListener((msg: PartifulPortMessage) => {
+        if (!msg || typeof msg !== 'object') return;
+        if (msg.action !== 'partifulCreateInvite') return;
+
+        const requestId = msg.requestId || `partiful-${Date.now()}`;
+        const safePost = (payload: PartifulPortOutbound) => {
+            try {
+                port.postMessage(payload);
+            } catch (err) {
+                console.warn('Failed to post Partiful port message', err);
+            }
+        };
+        const log = (level: PartifulLogLevel, message: string, data?: Record<string, unknown>) => {
+            safePost({ action: 'partifulLog', requestId, level, message, data });
+        };
+        const respond = (response: BackgroundResponse) => {
+            safePost({
+                action: 'partifulResponse',
+                requestId,
+                ok: response.ok,
+                result: response.result,
+                error: response.error,
+            });
+        };
+
+        const payload = msg.payload;
+        if (!payload || typeof payload !== 'object' || !('event' in payload)) {
+            log('error', 'Missing Partiful invite payload.');
+            respond({ ok: false, error: 'Missing Partiful invite payload.' });
+            return;
+        }
+
+        (async () => {
+            try {
+                log('info', 'Starting Partiful invite flow.');
+                const result = await createPartifulInvite(payload, log);
+                respond({ ok: true, result });
+            } catch (err: any) {
+                const errorMessage = err?.message || String(err);
+                log('error', 'Partiful invite failed.', { error: errorMessage });
+                respond({ ok: false, error: errorMessage });
+            }
+        })();
+    });
 });
 
 console.log('🛠️ [SW] background.ts loaded');

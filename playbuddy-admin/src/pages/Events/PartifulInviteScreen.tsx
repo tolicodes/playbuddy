@@ -285,6 +285,9 @@ export default function PartifulInviteScreen() {
         if (data.ok && data.result) {
           setLastInvite(data.result);
           setActionError(null);
+          if (data.result.url) {
+            window.open(data.result.url, "_blank", "noopener,noreferrer");
+          }
         } else {
           setActionError(data.error || "Failed to create Partiful invite.");
         }

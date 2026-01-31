@@ -6,6 +6,44 @@ const postToPage = (payload: unknown) => {
   window.postMessage(payload, window.location.origin);
 };
 
+let partifulPort: chrome.runtime.Port | null = null;
+
+const connectPartifulPort = () => {
+  if (partifulPort) return partifulPort;
+  try {
+    const port = chrome.runtime.connect({ name: "partiful" });
+    port.onMessage.addListener((msg) => {
+      if (!msg || typeof msg !== "object") return;
+      if (msg.action === "partifulLog") {
+        postToPage({
+          type: "pb-partiful-log",
+          requestId: msg.requestId,
+          level: msg.level,
+          message: msg.message,
+          data: msg.data,
+        });
+        return;
+      }
+      if (msg.action === "partifulResponse") {
+        postToPage({
+          type: "pb-partiful-response",
+          requestId: msg.requestId,
+          ok: msg.ok,
+          result: msg.result,
+          error: msg.error,
+        });
+      }
+    });
+    port.onDisconnect.addListener(() => {
+      partifulPort = null;
+    });
+    partifulPort = port;
+  } catch {
+    partifulPort = null;
+  }
+  return partifulPort;
+};
+
 window.addEventListener("message", (event) => {
   if (event.source !== window) return;
   if (event.origin !== window.location.origin) return;
@@ -41,42 +79,53 @@ window.addEventListener("message", (event) => {
       return;
     }
 
-    chrome.runtime.sendMessage(
-      {
+    const port = connectPartifulPort();
+    if (!port) {
+      postToPage({
+        type: "pb-partiful-response",
+        requestId: data.requestId,
+        ok: false,
+        error: "Failed to connect to the extension background.",
+      });
+      return;
+    }
+    try {
+      port.postMessage({
         action: "partifulCreateInvite",
         requestId: data.requestId,
         payload: data.payload,
-      },
-      (response) => {
-        const lastError = chrome.runtime.lastError;
-        if (lastError) {
-          postToPage({
-            type: "pb-partiful-response",
-            requestId: data.requestId,
-            ok: false,
-            error: lastError.message,
-          });
-          return;
-        }
-        postToPage({
-          type: "pb-partiful-response",
-          requestId: data.requestId,
-          ...(response || { ok: false, error: "No response from extension." }),
-        });
-      }
-    );
+      });
+    } catch (err) {
+      postToPage({
+        type: "pb-partiful-response",
+        requestId: data.requestId,
+        ok: false,
+        error: err instanceof Error ? err.message : "Failed to send request.",
+      });
+    }
   }
 });
 
 chrome.runtime.onMessage.addListener((msg) => {
   if (!msg || typeof msg !== "object") return;
-  if (msg.action !== "partifulLog") return;
   if (!isAllowedHost) return;
-  postToPage({
-    type: "pb-partiful-log",
-    requestId: msg.requestId,
-    level: msg.level,
-    message: msg.message,
-    data: msg.data,
-  });
+  if (msg.action === "partifulLog") {
+    postToPage({
+      type: "pb-partiful-log",
+      requestId: msg.requestId,
+      level: msg.level,
+      message: msg.message,
+      data: msg.data,
+    });
+    return;
+  }
+  if (msg.action === "partifulResponse") {
+    postToPage({
+      type: "pb-partiful-response",
+      requestId: msg.requestId,
+      ok: msg.ok,
+      result: msg.result,
+      error: msg.error,
+    });
+  }
 });

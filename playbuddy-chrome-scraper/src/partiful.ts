@@ -33,6 +33,99 @@ const LOGIN_WAIT_TIMEOUT_MS = 45_000;
 const LOGIN_POLL_MS = 1000;
 const RESPONSE_BODY_LOG_LIMIT = 500;
 const DEFAULT_EVENT_DURATION_MS = 2 * 60 * 60 * 1000;
+const PARTIFUL_EVENT_URL_BASE = "https://partiful.com/e/";
+
+const normalizeKey = (key: string) => key.replace(/[^a-z0-9]/gi, "").toLowerCase();
+
+const findStringByKeys = (
+  value: unknown,
+  keys: string[],
+  maxDepth = 4
+): string | null => {
+  if (!value || typeof value !== "object") return null;
+  const targetKeys = new Set(keys.map(normalizeKey));
+  const seen = new Set<object>();
+  const queue: Array<{ node: unknown; depth: number }> = [{ node: value, depth: 0 }];
+
+  while (queue.length) {
+    const current = queue.shift();
+    if (!current) continue;
+    const { node, depth } = current;
+    if (!node || typeof node !== "object") continue;
+    if (seen.has(node as object)) continue;
+    seen.add(node as object);
+    if (depth > maxDepth) continue;
+
+    for (const [key, child] of Object.entries(node as Record<string, unknown>)) {
+      if (targetKeys.has(normalizeKey(key))) {
+        if (typeof child === "string" && child.trim()) return child;
+        if (typeof child === "number") return String(child);
+      }
+      if (child && typeof child === "object") {
+        queue.push({ node: child, depth: depth + 1 });
+      }
+    }
+  }
+
+  return null;
+};
+
+const findStringMatching = (
+  value: unknown,
+  match: (val: string) => boolean,
+  maxDepth = 4
+): string | null => {
+  if (typeof value === "string") {
+    return match(value) ? value : null;
+  }
+  if (!value || typeof value !== "object") return null;
+  const seen = new Set<object>();
+  const queue: Array<{ node: unknown; depth: number }> = [{ node: value, depth: 0 }];
+
+  while (queue.length) {
+    const current = queue.shift();
+    if (!current) continue;
+    const { node, depth } = current;
+    if (typeof node === "string") {
+      if (match(node)) return node;
+      continue;
+    }
+    if (!node || typeof node !== "object") continue;
+    if (seen.has(node as object)) continue;
+    seen.add(node as object);
+    if (depth > maxDepth) continue;
+
+    for (const child of Object.values(node as Record<string, unknown>)) {
+      if (typeof child === "string") {
+        if (match(child)) return child;
+        continue;
+      }
+      if (child && typeof child === "object") {
+        queue.push({ node: child, depth: depth + 1 });
+      }
+    }
+  }
+
+  return null;
+};
+
+const extractPartifulUrl = (value: unknown): string | null => {
+  const direct = findStringMatching(value, (val) =>
+    /partiful\.com\/e\//i.test(val)
+  );
+  if (direct) {
+    const match = direct.match(
+      /https?:\/\/(?:www\.)?partiful\.com\/e\/[A-Za-z0-9]+/i
+    );
+    if (match) return match[0];
+  }
+  const pathOnly = findStringMatching(value, (val) => /\/e\/[A-Za-z0-9]+/i.test(val));
+  if (pathOnly) {
+    const match = pathOnly.match(/\/e\/[A-Za-z0-9]+/i);
+    if (match) return `https://partiful.com${match[0]}`;
+  }
+  return null;
+};
 
 const ensurePartifulEndDate = (
   event: Record<string, unknown>,
@@ -338,23 +431,52 @@ export const createPartifulInvite = async (
         ? (parsedRecord.result as Record<string, unknown>)
         : null;
     const partifulIdValue = resultRecord?.data;
-    const partifulId =
+    const partifulIdRaw =
       typeof partifulIdValue === "string"
         ? partifulIdValue
         : typeof partifulIdValue === "number"
           ? String(partifulIdValue)
           : null;
-    if (!partifulId) {
+
+    const responseRoot = resultRecord?.data ?? resultRecord ?? parsedRecord ?? parsed;
+    const urlFromResponse = extractPartifulUrl(responseRoot);
+    const shortCode =
+      findStringByKeys(responseRoot, [
+        "shortId",
+        "shortCode",
+        "short_id",
+        "short_code",
+        "shareCode",
+        "share_code",
+        "inviteCode",
+        "invite_code",
+        "eventCode",
+        "event_code",
+        "code",
+        "slug",
+        "publicId",
+        "public_id",
+      ]) ?? null;
+    const eventId =
+      findStringByKeys(responseRoot, ["eventId", "event_id", "id"]) ?? null;
+
+    const partifulId = partifulIdRaw ?? shortCode ?? eventId;
+    const url =
+      urlFromResponse ??
+      (shortCode ? `${PARTIFUL_EVENT_URL_BASE}${shortCode}` : null) ??
+      (partifulId ? `${PARTIFUL_EVENT_URL_BASE}${partifulId}` : null);
+
+    if (!partifulId && !url) {
       log("error", "Missing Partiful event id in response.", {
         body: bodyText.slice(0, RESPONSE_BODY_LOG_LIMIT),
       });
       throw new Error("Missing Partiful event id in response.");
     }
 
-    log("info", "Partiful invite created.", { partifulId });
+    log("info", "Partiful invite created.", { partifulId, url });
     return {
-      partifulId,
-      url: `https://partiful.com/e/v/${partifulId}`,
+      partifulId: partifulId ?? "unknown",
+      url: url ?? "",
     };
   } finally {
     try {
