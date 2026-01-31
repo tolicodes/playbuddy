@@ -177,6 +177,7 @@ export const DiscoverGame: React.FC = () => {
                         />
                     )}
                     backgroundColor='transparent'
+                    onStartShouldSetPanResponder={() => false}
                     onSwipedRight={onSwipeRight}
                     onSwipedLeft={onSwipeLeft}
                     cardIndex={0}

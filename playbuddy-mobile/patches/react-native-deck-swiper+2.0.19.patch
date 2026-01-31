@@ -1,0 +1,33 @@
+diff --git a/node_modules/react-native-deck-swiper/Swiper.js b/node_modules/react-native-deck-swiper/Swiper.js
+index ba9fafe..e55f487 100644
+--- a/node_modules/react-native-deck-swiper/Swiper.js
++++ b/node_modules/react-native-deck-swiper/Swiper.js
+@@ -118,8 +118,11 @@ class Swiper extends Component {
+   }
+ 
+   initializePanResponder = () => {
++    const { onStartShouldSetPanResponder } = this.props
+     this._panResponder = PanResponder.create({
+-      onStartShouldSetPanResponder: (event, gestureState) => true,
++      onStartShouldSetPanResponder: onStartShouldSetPanResponder
++        ? onStartShouldSetPanResponder
++        : (event, gestureState) => true,
+       onMoveShouldSetPanResponder: (event, gestureState) => false,
+ 
+       onMoveShouldSetPanResponderCapture: (evt, gestureState) => {
+@@ -918,6 +921,7 @@ Swiper.propTypes = {
+   overlayOpacityHorizontalThreshold: PropTypes.number,
+   overlayOpacityVerticalThreshold: PropTypes.number,
+   pointerEvents: PropTypes.oneOf(['box-none', 'none', 'box-only', 'auto']),
++  onStartShouldSetPanResponder: PropTypes.func,
+   previousCardDefaultPositionX: PropTypes.number,
+   previousCardDefaultPositionY: PropTypes.number,
+   renderCard: PropTypes.func.isRequired,
+@@ -1014,6 +1018,7 @@ Swiper.defaultProps = {
+   overlayOpacityHorizontalThreshold: width / 4,
+   overlayOpacityVerticalThreshold: height / 5,
+   pointerEvents: 'auto',
++  onStartShouldSetPanResponder: null,
+   previousCardDefaultPositionX: -width,
+   previousCardDefaultPositionY: -height,
+   secondCardZoom: 0.97,

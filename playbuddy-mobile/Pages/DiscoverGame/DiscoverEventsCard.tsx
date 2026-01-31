@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, ScrollView, Dimensions } from 'react-native';
 
 import type { EventWithMetadata } from '../../Common/Nav/NavStackType';
 import type { Attendee } from '../../commonTypes';
@@ -13,6 +13,8 @@ import { ACTIVE_EVENT_TYPES, FALLBACK_EVENT_TYPE } from '../../Common/types/comm
 
 const emptyAttendees: Attendee[] = [];
 const DISCOVER_CARD_HEIGHT = ITEM_HEIGHT + spacing.xxxl;
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+const DISCOVER_FOOTER_MAX_HEIGHT = Math.min(220, Math.max(150, Math.round(SCREEN_HEIGHT * 0.28)));
 
 type DiscoverEventsCardProps = {
     event: EventWithMetadata;
@@ -74,8 +76,19 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event, i
         logEvent(UE.DiscoverEventsMoreInfoClicked, { event_id: event.id });
     }, [event.id, ticketUrl]);
 
-    const footerContent = description || ticketUrl ? (
-        <View>
+    const hasFooterContent = !!(description || ticketUrl || adminLines.length);
+    const footerContent = hasFooterContent ? (
+        <ScrollView
+            style={styles.footerScroll}
+            contentContainerStyle={styles.footerScrollContent}
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+            scrollEnabled
+            onStartShouldSetResponder={() => true}
+            onMoveShouldSetResponder={() => true}
+            onStartShouldSetResponderCapture={() => true}
+            onMoveShouldSetResponderCapture={() => true}
+        >
             <View style={styles.footerDivider} />
             {description ? (
                 <Text style={styles.description} numberOfLines={4}>
@@ -84,14 +97,27 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event, i
             ) : null}
             {ticketUrl ? (
                 <TouchableOpacity
-                    style={styles.ctaButton}
+                    style={[
+                        styles.ctaButton,
+                        adminLines.length ? styles.ctaButtonWithAdmin : null,
+                    ]}
                     onPress={handleMoreInfo}
                     activeOpacity={0.85}
                 >
                     <Text style={styles.ctaText}>Get Tickets</Text>
                 </TouchableOpacity>
             ) : null}
-        </View>
+            {adminLines.length ? (
+                <View style={styles.adminSection}>
+                    <Text style={styles.adminHeading}>Admin details</Text>
+                    {adminLines.map(line => (
+                        <Text key={line.label} style={styles.adminLine}>
+                            <Text style={styles.adminLabel}>{line.label}:</Text> {line.value}
+                        </Text>
+                    ))}
+                </View>
+            ) : null}
+        </ScrollView>
     ) : null;
 
     return (
@@ -109,22 +135,6 @@ export const DiscoverEventsCard: React.FC<DiscoverEventsCardProps> = ({ event, i
                 footerContent={footerContent ?? undefined}
                 hideSaveButton
             />
-            {adminLines.length ? (
-                <View style={styles.adminSection}>
-                    <Text style={styles.adminHeading}>Admin details</Text>
-                    <ScrollView
-                        style={styles.adminScroll}
-                        contentContainerStyle={styles.adminScrollContent}
-                        showsVerticalScrollIndicator
-                    >
-                        {adminLines.map(line => (
-                            <Text key={line.label} style={styles.adminLine}>
-                                <Text style={styles.adminLabel}>{line.label}:</Text> {line.value}
-                            </Text>
-                        ))}
-                    </ScrollView>
-                </View>
-            ) : null}
         </View>
     );
 };
@@ -147,9 +157,20 @@ const styles = StyleSheet.create({
         marginBottom: spacing.mdPlus,
         borderRadius: 1,
     },
+    footerScroll: {
+        maxHeight: DISCOVER_FOOTER_MAX_HEIGHT,
+    },
+    footerScrollContent: {
+        paddingBottom: spacing.sm,
+    },
     adminSection: {
         marginTop: spacing.mdPlus,
-        marginBottom: spacing.mdPlus,
+        borderRadius: radius.md,
+        borderWidth: 1,
+        borderColor: colors.borderLavenderSoft,
+        backgroundColor: colors.surfaceLavenderLight,
+        paddingHorizontal: spacing.smPlus,
+        paddingVertical: spacing.sm,
     },
     adminHeading: {
         fontSize: fontSizes.smPlus,
@@ -157,17 +178,6 @@ const styles = StyleSheet.create({
         color: colors.textMuted,
         fontFamily: fontFamilies.body,
         marginBottom: spacing.xs,
-    },
-    adminScroll: {
-        maxHeight: 96,
-        borderRadius: radius.md,
-        borderWidth: 1,
-        borderColor: colors.borderLavenderSoft,
-        backgroundColor: colors.surfaceLavenderLight,
-    },
-    adminScrollContent: {
-        paddingHorizontal: spacing.smPlus,
-        paddingVertical: spacing.sm,
     },
     adminLine: {
         fontSize: fontSizes.sm,
@@ -186,6 +196,9 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         alignItems: 'center',
         alignSelf: 'stretch',
+    },
+    ctaButtonWithAdmin: {
+        marginBottom: spacing.mdPlus,
     },
     ctaText: {
         color: colors.white,
