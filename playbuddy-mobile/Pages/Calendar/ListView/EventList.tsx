@@ -78,9 +78,13 @@ const EventList: React.FC<EventListProps> = ({
     const ItemComponent = resolvedViewMode === 'classic' ? EventListItemClassic : EventListItem;
     const calendarCoach = useCalendarCoach();
     const showCoachOverlay = !!calendarCoach?.showOverlay;
+    const coachAnchorId = calendarCoach?.anchorEventId ?? null;
+    const firstEventId = sections[0]?.data?.[0]?.id ?? null;
 
     const renderItem = ({ item: event }: SectionListRenderItemInfo<EventWithMetadata>) => {
         const attendeesForEvent = attendees?.find((a) => a.event_id === event.id)?.attendees || [];
+        const shouldShowCoachTooltip = !!calendarCoach?.toast
+            && (coachAnchorId ? coachAnchorId === event.id : firstEventId === event.id);
         return (
             <View style={styles.eventItemWrapper}>
                 <ItemComponent
@@ -98,6 +102,7 @@ const EventList: React.FC<EventListProps> = ({
                     onToggleWishlist={onToggleWishlist}
                     wishlistEventsCount={wishlistEventsCount}
                     isEventSourceExcluded={isEventSourceExcluded}
+                    showCalendarCoachTooltip={shouldShowCoachTooltip}
                 />
             </View>
         );

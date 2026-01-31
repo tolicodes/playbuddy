@@ -17,6 +17,7 @@ import { ADMIN_EMAILS } from '../../../config';
 import type { EventListItemProps } from './EventListItem';
 import { useCalendarCoach } from '../../PopupManager';
 import { useGuestSaveModal } from '../../GuestSaveModal';
+import { CalendarCoachTooltip } from './CalendarCoachTooltip';
 
 export const CLASSIC_ITEM_HEIGHT = 128;
 const THUMB_SIZE = 56;
@@ -38,6 +39,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     autoHeight,
     listViewMode,
     hideSaveButton,
+    showCalendarCoachTooltip = false,
 }) => {
     const { authUserId, userProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
@@ -47,6 +49,9 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
     const canToggleWishlist = typeof onToggleWishlist === 'function';
     const resolvedWishlistCount = wishlistEventsCount ?? 0;
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
+    const calendarCoachToast = calendarCoach?.toast ?? null;
+    const showActionButton = !hideSaveButton && canToggleWishlist;
+    const shouldShowCoachTooltip = showCalendarCoachTooltip && showActionButton && !!calendarCoachToast;
     const formattedDate = formatDate(item, fullDate);
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const organizerName = item.organizer?.name?.trim();
@@ -82,8 +87,13 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
         }
         if (!canToggleWishlist) return;
 
-        if (!itemIsOnWishlist && resolvedWishlistCount === 0) {
+        const willAdd = !itemIsOnWishlist;
+
+        if (willAdd && resolvedWishlistCount === 0) {
             logEvent(UE.WishlistFirstAdded, eventAnalyticsProps);
+        }
+        if (willAdd && calendarCoach?.wobblePlus) {
+            logEvent(UE.CalendarAddCoachSavePressed, eventAnalyticsProps);
         }
         logEvent(UE.EventListItemWishlistToggled, {
             ...eventAnalyticsProps,
@@ -91,6 +101,10 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
         });
 
         onToggleWishlist(item.id, !itemIsOnWishlist);
+
+        if (willAdd) {
+            calendarCoach?.notifyWishlistAdded(item.id);
+        }
     };
 
     const isPlayParty = item.play_party || item.type === 'play_party';
@@ -122,12 +136,23 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                     : null
         : null;
 
+    const cardHorizontalMargin = noPadding ? 0 : spacing.lg;
     const resolvedHeight = cardHeight ?? CLASSIC_ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
     const useAutoHeight = autoHeight === true;
+    const wishlistButtonSize = 18 + spacing.xs * 2;
+    const wishlistButtonTop = spacing.sm;
+    const tooltipTop = wishlistButtonTop + wishlistButtonSize + spacing.xs;
+    const tooltipArrowOffset = Math.max(spacing.xs, Math.round(wishlistButtonSize / 2 - 8));
 
     return (
-        <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
+        <View
+            style={[
+                styles.wrapper,
+                !useAutoHeight && { height: resolvedHeight },
+                shouldShowCoachTooltip && styles.wrapperCoach,
+            ]}
+        >
             <View
                 style={[
                     styles.cardWrapper,
@@ -184,7 +209,7 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                 {showCoachOverlay && (
                     <View pointerEvents="none" style={styles.calendarCoachScrim} />
                 )}
-                {!hideSaveButton && canToggleWishlist && (
+                {showActionButton && (
                     <TouchableOpacity
                         style={[styles.wishlistButton, showCoachOverlay && styles.wishlistButtonCoach]}
                         onPress={(event) => {
@@ -223,12 +248,34 @@ export const EventListItemClassic: React.FC<EventListItemProps> = ({
                 )}
                 {footerContent && <View style={styles.footer}>{footerContent}</View>}
             </View>
+            {shouldShowCoachTooltip && (
+                <CalendarCoachTooltip
+                    message={calendarCoachToast?.message ?? ''}
+                    onClose={calendarCoach?.dismissToast ?? (() => {})}
+                    anim={calendarCoach?.anim}
+                    placement="below"
+                    containerStyle={[
+                        styles.calendarCoachTooltip,
+                        {
+                            right: cardHorizontalMargin + spacing.sm,
+                            top: tooltipTop,
+                        },
+                    ]}
+                    arrowStyle={{ marginRight: tooltipArrowOffset }}
+                />
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    wrapper: {},
+    wrapper: {
+        position: 'relative',
+    },
+    wrapperCoach: {
+        zIndex: 20,
+        elevation: 20,
+    },
     cardWrapper: {
         backgroundColor: colors.white,
         borderWidth: 1,
@@ -342,6 +389,11 @@ const styles = StyleSheet.create({
     wishlistButtonCoach: {
         zIndex: 2,
         elevation: 6,
+    },
+    calendarCoachTooltip: {
+        position: 'absolute',
+        zIndex: 30,
+        elevation: 30,
     },
     calendarCoachScrim: {
         ...StyleSheet.absoluteFillObject,

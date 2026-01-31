@@ -147,6 +147,7 @@ const MANUAL_POPUP_ICON = {
 const EVENT_POPUP_HIDE_KEY_PREFIX = 'event_popup_hide_';
 const EVENT_POPUP_SEEN_KEY_PREFIX = 'event_popup_seen_';
 const CALENDAR_ADD_COACH_COMPLETED_KEY = 'calendar_add_coach_completed_v1';
+const CALENDAR_ADD_COACH_SEEN_KEY = 'calendar_add_coach_seen_v1';
 const DATE_COACH_DEBUG_TOAST_KEY = 'dateCoachDebugToast';
 
 const getEventPopupHideKey = (id: string) => `${EVENT_POPUP_HIDE_KEY_PREFIX}${id}`;
@@ -864,6 +865,10 @@ export const DebugScreen = () => {
             setDebugPopupId(null);
             setPopupDebugStatus(`Showing ${POPUP_CONFIG[popupId].label} popup.`);
             void (async () => {
+                await AsyncStorage.multiRemove([
+                    CALENDAR_ADD_COACH_COMPLETED_KEY,
+                    CALENDAR_ADD_COACH_SEEN_KEY,
+                ]);
                 await setForcedPopupId(popupId);
                 navigation.popToTop();
                 navigateToTab(navigation, 'Calendar', { screen: 'Calendar Home' });
@@ -884,7 +889,10 @@ export const DebugScreen = () => {
     const onPressClearCalendarAddToast = useCallback(() => {
         void (async () => {
             try {
-                await AsyncStorage.removeItem(CALENDAR_ADD_COACH_COMPLETED_KEY);
+                await AsyncStorage.multiRemove([
+                    CALENDAR_ADD_COACH_COMPLETED_KEY,
+                    CALENDAR_ADD_COACH_SEEN_KEY,
+                ]);
                 setPopupDebugStatus('Calendar add toast cleared.');
             } catch (error) {
                 console.warn('[debug] failed to clear calendar add toast', error);

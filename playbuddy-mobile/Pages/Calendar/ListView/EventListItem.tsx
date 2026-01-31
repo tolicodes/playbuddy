@@ -24,6 +24,7 @@ import { ActionSheet } from '../../../components/ActionSheet';
 import { buildTicketUrl } from '../hooks/ticketUrlUtils';
 import { useCalendarCoach } from '../../PopupManager';
 import { useGuestSaveModal } from '../../GuestSaveModal';
+import { CalendarCoachTooltip } from './CalendarCoachTooltip';
 
 const DETAILS_PANEL_HEIGHT = 100;
 const CARD_IMAGE_ASPECT_RATIO = 2;
@@ -53,6 +54,7 @@ export interface EventListItemProps {
     disableClickAnalytics?: boolean;
     hideSaveButton?: boolean;
     wobbleSaveButton?: boolean;
+    showCalendarCoachTooltip?: boolean;
 }
 
 export const EventListItem: React.FC<EventListItemProps> = ({
@@ -74,6 +76,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     disableClickAnalytics,
     hideSaveButton,
     wobbleSaveButton,
+    showCalendarCoachTooltip = false,
 }) => {
     const { authUserId, userProfile } = useUserContext();
     const { showGuestSaveModal } = useGuestSaveModal();
@@ -91,6 +94,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const resolvedWishlistCount = wishlistEventsCount ?? 0;
     const wobblePlus = calendarCoach?.wobblePlus ?? false;
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
+    const calendarCoachToast = calendarCoach?.toast ?? null;
     const shouldWobbleSave = wobblePlus || wobbleSaveButton;
     const imageUrl = getSafeImageUrl(item.image_url ? getSmallAvatarUrl(item.image_url) : undefined);
     const locationLabel = (item.neighborhood || '').trim();
@@ -180,7 +184,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         onToggleWishlist(item.id, !itemIsOnWishlist);
 
         if (willAdd) {
-            calendarCoach?.notifyWishlistAdded();
+            calendarCoach?.notifyWishlistAdded(item.id);
         }
     };
 
@@ -219,6 +223,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
         : null;
     const resolvedCardVariant = cardVariant ?? 'heart';
     const showActionButton = !hideSaveButton && canToggleWishlist;
+    const shouldShowCoachTooltip = showCalendarCoachTooltip && showActionButton && !!calendarCoachToast;
 
     const resolvedHeight = cardHeight ?? ITEM_HEIGHT;
     const resolvedCardHeight = Math.max(0, resolvedHeight - spacing.lg);
@@ -231,6 +236,7 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const actionButtonSize = Math.max(30, Math.min(42, Math.round(resolvedCardHeight * 0.14)));
     const actionButtonWidth = getWishlistButtonWidth(actionButtonSize);
     const badgeInset = spacing.sm;
+    const cardHorizontalMargin = noPadding ? 0 : spacing.lg;
     const actionButtonInset = spacing.lg;
     const actionButtonRight = spacing.lg;
     const typeIconBubbleSize = Math.round(Math.max(32, Math.min(48, actionButtonSize * 1.1)));
@@ -244,9 +250,18 @@ export const EventListItem: React.FC<EventListItemProps> = ({
     const metaTextPaddingRight = showActionButton
         ? actionButtonRight + actionButtonWidth + spacing.sm
         : 0;
+    const actionButtonTop = imageHeight + Math.max(0, detailsHeight - actionButtonInset - actionButtonSize);
+    const tooltipTop = Math.max(0, actionButtonTop + actionButtonSize + spacing.xs);
+    const tooltipArrowOffset = Math.max(spacing.xs, Math.round(actionButtonWidth / 2 - 8));
 
     return (
-        <View style={[styles.wrapper, !useAutoHeight && { height: resolvedHeight }]}>
+        <View
+            style={[
+                styles.wrapper,
+                !useAutoHeight && { height: resolvedHeight },
+                shouldShowCoachTooltip && styles.wrapperCoach,
+            ]}
+        >
             <View
                 style={[
                     styles.cardWrapper,
@@ -409,6 +424,22 @@ export const EventListItem: React.FC<EventListItemProps> = ({
                     <View style={styles.footer}>{footerContent}</View>
                 )}
             </View>
+            {shouldShowCoachTooltip && (
+                <CalendarCoachTooltip
+                    message={calendarCoachToast?.message ?? ''}
+                    onClose={calendarCoach?.dismissToast ?? (() => {})}
+                    anim={calendarCoach?.anim}
+                    placement="below"
+                    containerStyle={[
+                        styles.calendarCoachTooltip,
+                        {
+                            right: cardHorizontalMargin + actionButtonRight,
+                            top: tooltipTop,
+                        },
+                    ]}
+                    arrowStyle={{ marginRight: tooltipArrowOffset }}
+                />
+            )}
             <ActionSheet
                 visible={shareMenuOpen}
                 height={120}
@@ -446,7 +477,13 @@ export const EventListItem: React.FC<EventListItemProps> = ({
 
 const styles = StyleSheet.create({
     // Container
-    wrapper: {},
+    wrapper: {
+        position: 'relative',
+    },
+    wrapperCoach: {
+        zIndex: 20,
+        elevation: 20,
+    },
     cardWrapper: {
         backgroundColor: colors.white,
         borderWidth: 1,
@@ -518,6 +555,11 @@ const styles = StyleSheet.create({
         elevation: 6,
         borderWidth: 0,
         borderColor: 'transparent',
+    },
+    calendarCoachTooltip: {
+        position: 'absolute',
+        zIndex: 30,
+        elevation: 30,
     },
     calendarCoachScrim: {
         ...StyleSheet.absoluteFillObject,

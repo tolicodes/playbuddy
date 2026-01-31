@@ -377,6 +377,22 @@ const EventCalendarView: React.FC<Props> = ({
         }).start();
     }, [isMonthModalOpen, monthModalAnim]);
 
+    useEffect(() => {
+        if (isFocused) return;
+        if (!showDateToast) return;
+        const now = Date.now();
+        setShowDateToast(false);
+        setDateCoachMeta((prev) => {
+            const base = prev ?? { count: 0, lastShownAt: null };
+            const next = { count: DATE_COACH_MAX_SHOWS, lastShownAt: now };
+            void AsyncStorage.multiSet([
+                [DATE_COACH_COUNT_KEY, String(next.count)],
+                [DATE_COACH_LAST_SHOWN_KEY, String(now)],
+            ]);
+            return next;
+        });
+    }, [isFocused, showDateToast]);
+
     const allClassifications = useMemo(() => {
         if (!sourceEvents)
             return { tags: [], experience_levels: [], interactivity_levels: [], event_types: [] };
@@ -1510,15 +1526,6 @@ const EventCalendarView: React.FC<Props> = ({
         weekStripAnimationDirectionRef.current = null;
     }, [nav.selectedDate, nav.weekAnchorDate]);
 
-    const toastTranslateY = toastAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [24, 0],
-    });
-    const toastScale = toastAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.96, 1],
-    });
-
     const handleSearchQueryChange = (q: string) => {
         logEvent(UE.FilterSearchTyped, { ...analyticsPropsPlusEntity, search_text: q });
         setSearchQuery(q);
@@ -1578,7 +1585,7 @@ const EventCalendarView: React.FC<Props> = ({
                             {headerContent}
                         </View>
                     ) : null}
-                    <View style={styles.headerLayer}>
+                    <View style={[styles.headerLayer, showDateToast && styles.headerLayerToast]}>
                         <View style={[styles.headerSurface, showCoachOverlay && styles.headerSurfaceCoach]}>
                             <TopBar
                                 searchQuery={searchQuery}
@@ -1709,6 +1716,8 @@ const EventCalendarView: React.FC<Props> = ({
                                 animateDirection={weekStripAnimationDirectionRef.current}
                                 wiggleTodayToken={dateToastWiggleToken}
                                 showDateToast={showDateToast}
+                                dateToastAnim={toastAnim}
+                                onDismissDateToast={dismissDateToast}
                             />
                             <View style={[styles.headerDivider, showCoachOverlay && styles.headerDividerCoach]} />
                         </View>
@@ -1994,34 +2003,6 @@ const EventCalendarView: React.FC<Props> = ({
                         {showDateToast && <View pointerEvents="none" style={styles.dateToastListScrim} />}
                     </View>
 
-                    <View
-                        pointerEvents={showDateToast ? "box-none" : "none"}
-                        accessibilityElementsHidden={!showDateToast}
-                        importantForAccessibility={showDateToast ? "yes" : "no-hide-descendants"}
-                        style={styles.dateToastBackdrop}
-                    >
-                        <Animated.View
-                            style={[
-                                styles.dateToastCard,
-                                {
-                                    opacity: toastAnim,
-                                    transform: [{ translateY: toastTranslateY }, { scale: toastScale }],
-                                },
-                            ]}
-                        >
-                            <View style={styles.dateToastIcon}>
-                                <FAIcon name="calendar-day" size={12} color={colors.brandInk} />
-                            </View>
-                            <Text style={styles.dateToastText}>Long press the date for month view</Text>
-                            <TouchableOpacity
-                                style={styles.dateToastClose}
-                                onPress={dismissDateToast}
-                                accessibilityLabel="Dismiss long press hint"
-                            >
-                                <FAIcon name="times" size={12} color={colors.textSecondary} />
-                            </TouchableOpacity>
-                        </Animated.View>
-                    </View>
                 </View>
             </PopupManager>
         </View>
@@ -2037,6 +2018,9 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "transparent", position: "relative" },
     headerLayer: {
         zIndex: 0,
+    },
+    headerLayerToast: {
+        zIndex: 3,
     },
     listLayer: {
         flex: 1,
@@ -2475,59 +2459,5 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         fontFamily: fontFamilies.body,
         letterSpacing: 0.3,
-    },
-    dateToastBackdrop: {
-        position: "absolute",
-        bottom: spacing.xxxl,
-        left: 0,
-        right: 0,
-        alignItems: "center",
-        paddingHorizontal: spacing.lg,
-        zIndex: 20,
-    },
-    dateToastCard: {
-        maxWidth: 420,
-        width: "100%",
-        flexDirection: "row",
-        alignItems: "center",
-        gap: spacing.sm,
-        backgroundColor: colors.surfaceLavender,
-        borderRadius: radius.lg,
-        borderWidth: 1,
-        borderColor: colors.borderLavenderStrong,
-        paddingHorizontal: spacing.mdPlus,
-        paddingVertical: spacing.smPlus,
-        ...shadows.card,
-        shadowOpacity: 0.12,
-        shadowOffset: { width: 0, height: 6 },
-        shadowRadius: 12,
-        elevation: 7,
-    },
-    dateToastIcon: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: colors.surfaceLavenderOpaque,
-        borderWidth: 1,
-        borderColor: colors.borderLavenderStrong,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    dateToastText: {
-        flexShrink: 1,
-        flexWrap: "wrap",
-        color: colors.textPrimary,
-        fontSize: fontSizes.basePlus,
-        fontWeight: "600",
-        fontFamily: fontFamilies.body,
-        lineHeight: 20,
-        textAlign: "left",
-    },
-    dateToastClose: {
-        padding: spacing.xs,
-        borderRadius: radius.pill,
-        backgroundColor: colors.surfaceLavenderOpaque,
-        borderWidth: 1,
-        borderColor: colors.borderLavenderStrong,
     },
 });

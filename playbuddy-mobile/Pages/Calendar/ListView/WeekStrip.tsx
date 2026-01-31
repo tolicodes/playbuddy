@@ -1,5 +1,5 @@
 // screens/Calendar/WeekStrip.tsx
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Animated,
     View,
@@ -15,6 +15,7 @@ import moment from "moment-timezone";
 import { colors, fontFamilies, fontSizes, radius, spacing } from "../../../components/styles";
 import { TZ } from "./calendarNavUtils";
 import { useCalendarCoach } from "../../PopupManager";
+import { CalendarCoachTooltip } from "./CalendarCoachTooltip";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CALENDAR_COACH_BORDER_COLOR = 'transparent';
@@ -40,6 +41,8 @@ type Props = {
     animateDirection?: "prev" | "next" | null;
     wiggleTodayToken?: number | null;
     showDateToast?: boolean;
+    dateToastAnim?: Animated.Value;
+    onDismissDateToast?: () => void;
 };
 
 const AnimatedTouchableOpacity = Animated.createAnimatedComponent(TouchableOpacity);
@@ -60,6 +63,8 @@ export const WeekStrip: React.FC<Props> = ({
     animateDirection = null,
     wiggleTodayToken = null,
     showDateToast = false,
+    dateToastAnim,
+    onDismissDateToast,
 }) => {
     const calendarCoach = useCalendarCoach();
     const showCoachOverlay = calendarCoach?.showOverlay ?? false;
@@ -69,6 +74,7 @@ export const WeekStrip: React.FC<Props> = ({
     const isUserScrollingRef = useRef(false);
     const weekAnchor = weekDays[0]?.getTime() ?? 0;
     const wiggleAnim = useRef(new Animated.Value(0)).current;
+    const [weekStripHeight, setWeekStripHeight] = useState(0);
 
     const isSameDayNY = (a: Date, b: Date) =>
         moment(a).tz(TZ).isSame(moment(b).tz(TZ), "day");
@@ -225,7 +231,10 @@ export const WeekStrip: React.FC<Props> = ({
     );
 
     return (
-        <View style={{ width: pageWidth, backgroundColor: "transparent", alignSelf: "center" }}>
+        <View
+            style={[s.wrapper, { width: pageWidth }]}
+            onLayout={(event) => setWeekStripHeight(event.nativeEvent.layout.height)}
+        >
             <ScrollView
                 ref={scrollRef}
                 horizontal
@@ -242,11 +251,30 @@ export const WeekStrip: React.FC<Props> = ({
                 {renderWeek(weekDays)}
                 {renderWeek(nextWeekDays)}
             </ScrollView>
+            {showDateToast && (
+                <CalendarCoachTooltip
+                    title="Calendar Tip"
+                    iconName="calendar"
+                    message="Long press the date for month view"
+                    onClose={onDismissDateToast ?? (() => {})}
+                    anim={dateToastAnim}
+                    placement="below"
+                    containerStyle={[
+                        s.dateToastTooltip,
+                        { top: Math.max(0, weekStripHeight + spacing.xs) },
+                    ]}
+                />
+            )}
         </View>
     );
 };
 
 const s = StyleSheet.create({
+    wrapper: {
+        alignSelf: "center",
+        backgroundColor: "transparent",
+        position: "relative",
+    },
     scrollContainer: {
         alignItems: "center",
     },
@@ -352,6 +380,14 @@ const s = StyleSheet.create({
     textToday: { color: colors.brandPurpleDark, fontWeight: "700" },
     toastHighlightText: { color: colors.brandPurpleDark, fontWeight: "800" },
     textSelected: { color: colors.white, fontWeight: "700" },
+    dateToastTooltip: {
+        position: "absolute",
+        left: 0,
+        right: 0,
+        alignItems: "center",
+        zIndex: 30,
+        elevation: 30,
+    },
 });
 
 export default WeekStrip;
