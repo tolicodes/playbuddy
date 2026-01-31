@@ -29,32 +29,56 @@ const WelcomeScreen = () => {
     const { authenticateWithGoogle, authenticateWithApple } = useUserContext();
     const analyticsProps = useEventAnalyticsProps();
     const heroAnim = useRef(new Animated.Value(0)).current;
+    const taglineLineOneAnim = useRef(new Animated.Value(0)).current;
+    const taglineLineTwoAnim = useRef(new Animated.Value(0)).current;
     const cardAnim = useRef(new Animated.Value(0)).current;
     const footerAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        Animated.stagger(120, [
-            Animated.timing(heroAnim, {
-                toValue: 1,
-                duration: 420,
-                useNativeDriver: true,
-            }),
-            Animated.timing(cardAnim, {
-                toValue: 1,
-                duration: 420,
-                useNativeDriver: true,
-            }),
-            Animated.timing(footerAnim, {
-                toValue: 1,
-                duration: 360,
-                useNativeDriver: true,
-            }),
+        Animated.parallel([
+            Animated.sequence([
+                Animated.timing(taglineLineOneAnim, {
+                    toValue: 1,
+                    duration: 260,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(taglineLineTwoAnim, {
+                    toValue: 1,
+                    duration: 260,
+                    useNativeDriver: true,
+                }),
+            ]),
+            Animated.stagger(120, [
+                Animated.timing(heroAnim, {
+                    toValue: 1,
+                    duration: 420,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(cardAnim, {
+                    toValue: 1,
+                    duration: 420,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(footerAnim, {
+                    toValue: 1,
+                    duration: 360,
+                    useNativeDriver: true,
+                }),
+            ]),
         ]).start();
-    }, [heroAnim, cardAnim, footerAnim]);
+    }, [heroAnim, taglineLineOneAnim, taglineLineTwoAnim, cardAnim, footerAnim]);
 
     const heroTranslate = heroAnim.interpolate({
         inputRange: [0, 1],
         outputRange: [18, 0],
+    });
+    const taglineLineOneTranslate = taglineLineOneAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [10, 0],
+    });
+    const taglineLineTwoTranslate = taglineLineTwoAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [10, 0],
     });
     const cardTranslate = cardAnim.interpolate({
         inputRange: [0, 1],
@@ -99,20 +123,47 @@ const WelcomeScreen = () => {
             <SafeAreaView style={styles.safe}>
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     <Animated.View
-                        style={[
-                            styles.hero,
-                            { opacity: heroAnim, transform: [{ translateY: heroTranslate }] },
-                        ]}
+                        style={styles.hero}
                     >
-                        <View style={styles.logoHalo}>
+                        <Animated.View
+                            style={[
+                                styles.logoHalo,
+                                { opacity: heroAnim, transform: [{ translateY: heroTranslate }] },
+                            ]}
+                        >
                             <Image source={logoMark} style={styles.logo} resizeMode="contain" />
+                        </Animated.View>
+                        <View style={styles.taglineGroup}>
+                            <Animated.Text
+                                style={[
+                                    styles.taglineText,
+                                    { opacity: taglineLineOneAnim, transform: [{ translateY: taglineLineOneTranslate }] },
+                                ]}
+                            >
+                                Find Your People
+                            </Animated.Text>
+                            <Animated.Text
+                                style={[
+                                    styles.taglineText,
+                                    styles.taglineTextSpacing,
+                                    { opacity: taglineLineTwoAnim, transform: [{ translateY: taglineLineTwoTranslate }] },
+                                ]}
+                            >
+                                Find Your Pleasure
+                            </Animated.Text>
                         </View>
-                        <Text style={styles.kicker}>Find your people</Text>
-                        <Text style={styles.title}>Welcome to PlayBuddy</Text>
-                        <Text style={styles.subtitle}>
-                            Sign up to <Text style={styles.subtitleEmphasis}>favorite</Text> events and unlock{' '}
-                            <Text style={styles.subtitleEmphasis}>play parties</Text> and 17+ events.
-                        </Text>
+                        <Animated.View
+                            style={[
+                                styles.heroCopy,
+                                { opacity: heroAnim, transform: [{ translateY: heroTranslate }] },
+                            ]}
+                        >
+                            <Text style={styles.title}>Welcome to PlayBuddy</Text>
+                            <Text style={styles.subtitle}>
+                                Sign up to <Text style={styles.subtitleEmphasis}>favorite</Text> events and unlock{' '}
+                                <Text style={styles.subtitleEmphasis}>play parties</Text> and 17+ events.
+                            </Text>
+                        </Animated.View>
                     </Animated.View>
 
                     <Animated.View
@@ -263,13 +314,23 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
     },
-    kicker: {
-        fontSize: fontSizes.sm,
-        letterSpacing: 1.6,
-        textTransform: 'uppercase',
+    taglineGroup: {
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    taglineText: {
+        fontSize: fontSizes.basePlus,
+        fontWeight: '600',
         color: colors.textOnDarkMuted,
-        marginBottom: spacing.sm,
+        textAlign: 'center',
         fontFamily: fontFamilies.body,
+        letterSpacing: 0.3,
+    },
+    taglineTextSpacing: {
+        marginTop: spacing.xs,
+    },
+    heroCopy: {
+        alignItems: 'center',
     },
     title: {
         fontSize: fontSizes.display,

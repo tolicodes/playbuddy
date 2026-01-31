@@ -152,13 +152,7 @@ export function HomeStackNavigator() {
     const shouldShowEventsLoading = !!authUserId && isLoadingEvents;
 
     if (!hasFetchedSession || isLoadingUserProfile || shouldShowEventsLoading) {
-        const isLoggedIn = !!authUserId;
-        return (
-            <EventsLoadingScreen
-                title={isLoggedIn ? 'Loading events' : 'Loading PlayBuddy'}
-                subtitle={isLoggedIn ? 'Curating your calendar' : 'Checking your account'}
-            />
-        );
+        return <EventsLoadingScreen />;
     }
 
     return (
