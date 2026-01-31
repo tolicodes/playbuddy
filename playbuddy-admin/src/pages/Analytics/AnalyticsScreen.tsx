@@ -4,6 +4,7 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
+  Avatar,
   Box,
   Button,
   Divider,
@@ -89,18 +90,21 @@ type UniqueDeviceRow = {
 type UserActionsRow = {
   authUserId: string | null;
   name: string | null;
+  avatarUrl: string | null;
   actions: number;
 };
 
 type UserTicketClicksRow = {
   authUserId: string | null;
   name: string | null;
+  avatarUrl: string | null;
   ticketClicks: number;
 };
 
 type BuddyListOptInRow = {
   authUserId: string | null;
   name: string | null;
+  avatarUrl: string | null;
   shareCode: string | null;
   createdAt: string | null;
 };
@@ -120,6 +124,7 @@ type AuthMethodRow = {
 type UserProfileRow = {
   authUserId: string;
   name: string | null;
+  avatarUrl: string | null;
   createdAt: string | null;
   totalEvents: number;
   uniqueEvents: number;
@@ -345,6 +350,32 @@ const formatDuration = (seconds?: number | null) => {
   const totalDays = totalHours / 24;
   return `${totalDays.toFixed(1)}d`;
 };
+
+const getUserLabel = (name?: string | null, authUserId?: string | null) => name || authUserId || "-";
+
+const getUserInitials = (name?: string | null, authUserId?: string | null) => {
+  const source = (name || authUserId || "").trim();
+  if (!source) return "?";
+  const parts = source.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase() || "?";
+};
+
+const UserAvatar = ({
+  name,
+  authUserId,
+  avatarUrl,
+  size = 32,
+}: {
+  name?: string | null;
+  authUserId?: string | null;
+  avatarUrl?: string | null;
+  size?: number;
+}) => (
+  <Avatar src={avatarUrl || undefined} sx={{ width: size, height: size, fontSize: Math.max(12, size * 0.45) }}>
+    {getUserInitials(name, authUserId)}
+  </Avatar>
+);
 
 const CHART_SPACING: number[] = [16, 40, 16, 24];
 
@@ -1147,7 +1178,12 @@ const ChartCard = ({
             <TableBody>
               {rows.map((row, idx) => (
                 <TableRow key={`most-active-${row.authUserId ?? "unknown"}-${idx}`}>
-                  <TableCell>{row.name || row.authUserId || "-"}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <UserAvatar name={row.name} authUserId={row.authUserId} avatarUrl={row.avatarUrl} size={28} />
+                      <Typography variant="body2">{getUserLabel(row.name, row.authUserId)}</Typography>
+                    </Stack>
+                  </TableCell>
                   <TableCell align="right">{formatNumber(row.actions)}</TableCell>
                 </TableRow>
               ))}
@@ -1176,7 +1212,12 @@ const ChartCard = ({
             <TableBody>
               {rows.map((row, idx) => (
                 <TableRow key={`ticket-user-${row.authUserId ?? "unknown"}-${idx}`}>
-                  <TableCell>{row.name || row.authUserId || "-"}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <UserAvatar name={row.name} authUserId={row.authUserId} avatarUrl={row.avatarUrl} size={28} />
+                      <Typography variant="body2">{getUserLabel(row.name, row.authUserId)}</Typography>
+                    </Stack>
+                  </TableCell>
                   <TableCell align="right">{formatNumber(row.ticketClicks)}</TableCell>
                 </TableRow>
               ))}
@@ -1231,7 +1272,12 @@ const ChartCard = ({
               <TableBody>
                 {filteredRows.map((row, idx) => (
                   <TableRow key={`buddy-opt-in-${row.authUserId ?? row.shareCode ?? idx}`}>
-                    <TableCell>{row.name || row.authUserId || "-"}</TableCell>
+                    <TableCell>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <UserAvatar name={row.name} authUserId={row.authUserId} avatarUrl={row.avatarUrl} size={28} />
+                        <Typography variant="body2">{getUserLabel(row.name, row.authUserId)}</Typography>
+                      </Stack>
+                    </TableCell>
                     <TableCell>{row.authUserId || "-"}</TableCell>
                     <TableCell>{row.shareCode || "-"}</TableCell>
                     <TableCell>{row.createdAt || "-"}</TableCell>
@@ -1326,15 +1372,18 @@ const ChartCard = ({
             return (
               <Accordion key={`profile-${row.authUserId}`} variant="outlined" sx={{ borderLeft: `6px solid ${usageColor}` }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {row.name || row.authUserId}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {row.authUserId}
-                      {row.createdAt ? ` · Joined ${row.createdAt}` : ""}
-                      {lastActive ? ` · Last active ${lastActive}` : ""}
-                    </Typography>
+                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flexGrow: 1 }}>
+                    <UserAvatar name={row.name} authUserId={row.authUserId} avatarUrl={row.avatarUrl} size={36} />
+                    <Stack spacing={0.5} sx={{ flexGrow: 1 }}>
+                      <Typography variant="subtitle1" fontWeight={600}>
+                        {getUserLabel(row.name, row.authUserId)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.authUserId}
+                        {row.createdAt ? ` · Joined ${row.createdAt}` : ""}
+                        {lastActive ? ` · Last active ${lastActive}` : ""}
+                      </Typography>
+                    </Stack>
                   </Stack>
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Box textAlign="right">

@@ -86,6 +86,7 @@ type BranchStatsPayload = {
 type BuddyListOptInRow = {
   authUserId: string | null;
   name: string | null;
+  avatarUrl: string | null;
   shareCode: string | null;
   createdAt: string | null;
 };
@@ -1758,12 +1759,13 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         `
           SELECT ue.auth_user_id,
                  u.name,
+                 u.avatar_url,
                  COUNT(*)::int AS actions
           FROM public.user_events ue
           LEFT JOIN public.users u ON u.user_id = ue.auth_user_id
           WHERE ue.created_at::date BETWEEN $1 AND $2
             AND ue.auth_user_id IS NOT NULL
-          GROUP BY ue.auth_user_id, u.name
+          GROUP BY ue.auth_user_id, u.name, u.avatar_url
           ORDER BY actions DESC
           LIMIT $3;
         `,
@@ -1772,6 +1774,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
       const rows = result.rows.map((row: any) => ({
         authUserId: row.auth_user_id,
         name: row.name,
+        avatarUrl: row.avatar_url ?? null,
         actions: Number(row.actions ?? 0),
       }));
       res.json({ chartId, meta, data: rows });
@@ -1783,13 +1786,14 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         `
           SELECT ue.auth_user_id,
                  u.name,
+                 u.avatar_url,
                  COUNT(*)::int AS ticket_clicks
           FROM public.user_events ue
           LEFT JOIN public.users u ON u.user_id = ue.auth_user_id
           WHERE ue.created_at::date BETWEEN $1 AND $2
             AND ue.auth_user_id IS NOT NULL
             AND ue.user_event_name = ANY($3)
-          GROUP BY ue.auth_user_id, u.name
+          GROUP BY ue.auth_user_id, u.name, u.avatar_url
           ORDER BY ticket_clicks DESC
           LIMIT $4;
         `,
@@ -1798,6 +1802,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
       const rows = result.rows.map((row: any) => ({
         authUserId: row.auth_user_id,
         name: row.name,
+        avatarUrl: row.avatar_url ?? null,
         ticketClicks: Number(row.ticket_clicks ?? 0),
       }));
       res.json({ chartId, meta, data: rows });
@@ -1817,6 +1822,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         `
           SELECT user_id,
                  name,
+                 avatar_url,
                  share_code,
                  created_at
           FROM public.users
@@ -1829,6 +1835,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
       const rows = listResult.rows.map((row: any) => ({
         authUserId: row.user_id,
         name: row.name,
+        avatarUrl: row.avatar_url ?? null,
         shareCode: row.share_code,
         createdAt: formatDateValue(row.created_at),
       }));
@@ -1915,6 +1922,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
         `
           SELECT ue.auth_user_id,
                  u.name,
+                 u.avatar_url,
                  u.created_at AS user_created_at,
                  COUNT(*)::int AS total_events,
                  COUNT(DISTINCT ue.user_event_name)::int AS unique_events,
@@ -1924,7 +1932,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
           WHERE ue.created_at::date BETWEEN $1 AND $2
             AND ue.auth_user_id IS NOT NULL
             AND ue.user_event_name = ANY($3)
-          GROUP BY ue.auth_user_id, u.name, u.created_at
+          GROUP BY ue.auth_user_id, u.name, u.avatar_url, u.created_at
           ORDER BY unique_events DESC, total_events DESC
           LIMIT $4;
         `,
@@ -2166,6 +2174,7 @@ router.get("/charts/:chartId", authenticateAdminRequest, async (req: Authenticat
       const rows = profileResult.rows.map((row: any) => ({
         authUserId: row.auth_user_id,
         name: row.name,
+        avatarUrl: row.avatar_url ?? null,
         createdAt: formatDateValue(row.user_created_at),
         totalEvents: Number(row.total_events ?? 0),
         uniqueEvents: Number(row.unique_events ?? 0),

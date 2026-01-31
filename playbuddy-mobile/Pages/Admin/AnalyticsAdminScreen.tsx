@@ -24,6 +24,7 @@ import {
     getUserEventDisplayName,
 } from '../../Common/analytics/userEventCatalog';
 import type { BranchStatsMeta, BranchStatsRow } from '../../Common/db-axios/useBranchStats';
+import { getSafeImageUrl, getSmallAvatarUrl } from '../../Common/hooks/imageUtils';
 import { useUserContext } from '../Auth/hooks/UserContext';
 import { ADMIN_EMAILS } from '../../config';
 import {
@@ -68,12 +69,14 @@ type UniqueDeviceRow = {
 type UserActionsRow = {
     authUserId: string | null;
     name: string | null;
+    avatarUrl: string | null;
     actions: number;
 };
 
 type UserTicketClicksRow = {
     authUserId: string | null;
     name: string | null;
+    avatarUrl: string | null;
     ticketClicks: number;
 };
 
@@ -87,6 +90,7 @@ type AuthMethodRow = {
 type UserProfileRow = {
     authUserId: string;
     name: string | null;
+    avatarUrl: string | null;
     createdAt: string | null;
     totalEvents: number;
     uniqueEvents: number;
@@ -187,6 +191,8 @@ type ListRow = {
     label: string;
     value: string;
     subtitle?: string;
+    avatarUrl?: string | null;
+    avatarLabel?: string;
 };
 
 const PRESET_OPTIONS: Array<{ value: RangePreset; label: string }> = [
@@ -221,6 +227,14 @@ const formatDuration = (seconds?: number | null) => {
     }
     const totalDays = totalHours / 24;
     return `${totalDays.toFixed(1)}d`;
+};
+
+const getInitials = (value?: string | null) => {
+    const source = (value || '').trim();
+    if (!source) return '?';
+    const parts = source.split(/\s+/).filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase() || '?';
 };
 
 const formatDateInput = (date: Date) => date.toISOString().slice(0, 10);
@@ -313,24 +327,43 @@ const renderListRows = (rows: ListRow[], emptyLabel = 'No data.') => {
     }
     return (
         <View style={styles.list}>
-            {rows.map((row, index) => (
-                <View
-                    key={`${row.label}-${index}`}
-                    style={[styles.listRow, index === rows.length - 1 && styles.listRowLast]}
-                >
-                    <View style={styles.listRowBody}>
-                        <Text style={styles.listRowLabel} numberOfLines={1}>
-                            {row.label}
-                        </Text>
-                        {row.subtitle ? (
-                            <Text style={styles.listRowSubtitle} numberOfLines={1}>
-                                {row.subtitle}
-                            </Text>
-                        ) : null}
+            {rows.map((row, index) => {
+                const avatarUrl = row.avatarUrl ? getSafeImageUrl(getSmallAvatarUrl(row.avatarUrl, 64)) : null;
+                const showAvatar = Boolean(row.avatarLabel || row.avatarUrl);
+                return (
+                    <View
+                        key={`${row.label}-${index}`}
+                        style={[styles.listRow, index === rows.length - 1 && styles.listRowLast]}
+                    >
+                        <View style={styles.listRowBody}>
+                            {showAvatar ? (
+                                <View style={styles.listRowAvatar}>
+                                    {avatarUrl ? (
+                                        <Image source={{ uri: avatarUrl }} style={styles.listRowAvatarImage} />
+                                    ) : (
+                                        <View style={styles.listRowAvatarFallback}>
+                                            <Text style={styles.listRowAvatarText}>
+                                                {getInitials(row.avatarLabel || row.label)}
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
+                            ) : null}
+                            <View style={styles.listRowText}>
+                                <Text style={styles.listRowLabel} numberOfLines={1}>
+                                    {row.label}
+                                </Text>
+                                {row.subtitle ? (
+                                    <Text style={styles.listRowSubtitle} numberOfLines={1}>
+                                        {row.subtitle}
+                                    </Text>
+                                ) : null}
+                            </View>
+                        </View>
+                        <Text style={styles.listRowValue}>{row.value}</Text>
                     </View>
-                    <Text style={styles.listRowValue}>{row.value}</Text>
-                </View>
-            ))}
+                );
+            })}
         </View>
     );
 };
@@ -509,19 +542,29 @@ const ChartCard = ({
 
         if (chart.id === 'most_active_users') {
             const rows = (chartData as UserActionsRow[]).slice(0, 5);
-            const listRows = rows.map((row) => ({
-                label: row.name || row.authUserId || 'Unknown user',
-                value: formatNumber(row.actions),
-            }));
+            const listRows = rows.map((row) => {
+                const label = row.name || row.authUserId || 'Unknown user';
+                return {
+                    label,
+                    value: formatNumber(row.actions),
+                    avatarUrl: row.avatarUrl,
+                    avatarLabel: label,
+                };
+            });
             return renderListRows(listRows, 'No users yet.');
         }
 
         if (chart.id === 'users_most_ticket_clicks') {
             const rows = (chartData as UserTicketClicksRow[]).slice(0, 5);
-            const listRows = rows.map((row) => ({
-                label: row.name || row.authUserId || 'Unknown user',
-                value: formatNumber(row.ticketClicks),
-            }));
+            const listRows = rows.map((row) => {
+                const label = row.name || row.authUserId || 'Unknown user';
+                return {
+                    label,
+                    value: formatNumber(row.ticketClicks),
+                    avatarUrl: row.avatarUrl,
+                    avatarLabel: label,
+                };
+            });
             return renderListRows(listRows, 'No ticket click data.');
         }
 
@@ -537,11 +580,16 @@ const ChartCard = ({
 
         if (chart.id === 'user_profiles') {
             const rows = (chartData as UserProfileRow[]).slice(0, 5);
-            const listRows = rows.map((row) => ({
-                label: row.name || row.authUserId || 'Unknown user',
-                value: `${formatNumber(row.uniqueEvents)} unique`,
-                subtitle: `Total ${formatNumber(row.totalEvents)}`,
-            }));
+            const listRows = rows.map((row) => {
+                const label = row.name || row.authUserId || 'Unknown user';
+                return {
+                    label,
+                    value: `${formatNumber(row.uniqueEvents)} unique`,
+                    subtitle: `Total ${formatNumber(row.totalEvents)}`,
+                    avatarUrl: row.avatarUrl,
+                    avatarLabel: label,
+                };
+            });
             return renderListRows(listRows, 'No profiles yet.');
         }
 
@@ -1126,7 +1174,41 @@ const styles = StyleSheet.create({
     },
     listRowBody: {
         flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
         marginRight: spacing.sm,
+    },
+    listRowAvatar: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        marginRight: spacing.sm,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    listRowAvatarImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 16,
+    },
+    listRowAvatarFallback: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 16,
+        backgroundColor: colors.surfaceGlassStrong,
+        borderWidth: 1,
+        borderColor: colors.borderSubtle,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    listRowAvatarText: {
+        fontSize: fontSizes.sm,
+        fontWeight: '700',
+        color: colors.textMuted,
+        fontFamily: fontFamilies.body,
+    },
+    listRowText: {
+        flex: 1,
     },
     listRowLabel: {
         fontSize: fontSizes.base,
